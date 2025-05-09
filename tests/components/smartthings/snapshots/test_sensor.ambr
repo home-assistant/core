@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aeotec Energy Monitor Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -29,7 +30,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Aeotec Energy Monitor Energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'f0af21a2-d5a1-437c-b10a-b34a87394b71_main_energyMeter_energy_energy',
@@ -57,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aeotec Energy Monitor Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -82,7 +84,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Aeotec Energy Monitor Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'f0af21a2-d5a1-437c-b10a-b34a87394b71_main_powerMeter_power_power',
@@ -110,6 +112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aeotec Energy Monitor Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -135,7 +138,7 @@
     'original_name': 'Voltage',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Aeotec Energy Monitor Voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'f0af21a2-d5a1-437c-b10a-b34a87394b71_main_voltageMeasurement_voltage_voltage',
@@ -162,6 +165,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AUX A/C on-off Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -187,7 +191,7 @@
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'AUX A/C on-off Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'bf53a150-f8a4-45d1-aac4-86252475d551_main_temperatureMeasurement_temperature_temperature',
@@ -215,6 +219,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aeon Energy Monitor Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -240,7 +245,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Aeon Energy Monitor Energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '68e786a6-7f61-4c3a-9e13-70b803cf782b_main_energyMeter_energy_energy',
@@ -268,6 +273,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aeon Energy Monitor Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -293,7 +299,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Aeon Energy Monitor Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '68e786a6-7f61-4c3a-9e13-70b803cf782b_main_powerMeter_power_power',
@@ -321,6 +327,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Radiator Thermostat II [+M] Wohnzimmer Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -344,7 +351,7 @@
     'original_name': 'Battery',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Radiator Thermostat II [+M] Wohnzimmer Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '286ba274-4093-4bcb-849c-a1a3efe7b1e5_main_battery_battery_battery',
@@ -371,6 +378,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Radiator Thermostat II [+M] Wohnzimmer Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -396,7 +404,7 @@
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Radiator Thermostat II [+M] Wohnzimmer Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '286ba274-4093-4bcb-849c-a1a3efe7b1e5_main_temperatureMeasurement_temperature_temperature',
@@ -424,6 +432,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '2nd Floor Hallway Alarm',
     'capabilities': dict({
       'options': list([
         'both',
@@ -454,7 +463,7 @@
     'original_name': 'Alarm',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': '2nd Floor Hallway Alarm',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm',
     'unique_id': '10e06a70-ee7d-4832-85e9-a0a06a7a05bd_main_alarm_alarm_alarm',
@@ -486,6 +495,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '2nd Floor Hallway Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -509,7 +519,7 @@
     'original_name': 'Battery',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': '2nd Floor Hallway Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '10e06a70-ee7d-4832-85e9-a0a06a7a05bd_main_battery_battery_battery',
@@ -536,6 +546,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dimmer Debian Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -561,7 +572,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dimmer Debian Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'd0268a69-abfb-4c92-a646-61cec2e510ad_main_powerMeter_power_power',
@@ -589,6 +600,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '.Front Door Open/Closed Sensor Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -612,7 +624,7 @@
     'original_name': 'Battery',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': '.Front Door Open/Closed Sensor Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '2d9a892b-1c93-45a5-84cb-0e81889498c6_main_battery_battery_battery',
@@ -639,6 +651,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '.Front Door Open/Closed Sensor Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -664,7 +677,7 @@
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': '.Front Door Open/Closed Sensor Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '2d9a892b-1c93-45a5-84cb-0e81889498c6_main_temperatureMeasurement_temperature_temperature',
@@ -692,6 +705,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '에어모니터 플러스 Air quality',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -717,7 +731,7 @@
     'original_name': 'Air quality',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': '에어모니터 플러스 Air quality',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_quality',
     'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_airQualitySensor_airQuality_airQuality',
@@ -744,6 +758,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '에어모니터 플러스 Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -769,7 +784,7 @@
     'original_name': 'Carbon dioxide',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': '에어모니터 플러스 Carbon dioxide',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_carbonDioxideMeasurement_carbonDioxide_carbonDioxide',
@@ -797,6 +812,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '에어모니터 플러스 Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -822,7 +838,7 @@
     'original_name': 'Humidity',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': '에어모니터 플러스 Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_relativeHumidityMeasurement_humidity_humidity',
@@ -850,6 +866,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '에어모니터 플러스 Odor sensor',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -873,7 +890,7 @@
     'original_name': 'Odor sensor',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': '에어모니터 플러스 Odor sensor',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'odor_sensor',
     'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_odorSensor_odorLevel_odorLevel',
@@ -898,6 +915,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '에어모니터 플러스 PM1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -923,7 +941,7 @@
     'original_name': 'PM1',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': '에어모니터 플러스 PM1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_veryFineDustSensor_veryFineDustLevel_veryFineDustLevel',
@@ -951,6 +969,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '에어모니터 플러스 PM10',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -976,7 +995,7 @@
     'original_name': 'PM10',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': '에어모니터 플러스 PM10',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_dustSensor_dustLevel_dustLevel',
@@ -1004,6 +1023,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '에어모니터 플러스 PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1029,7 +1049,7 @@
     'original_name': 'PM2.5',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': '에어모니터 플러스 PM2.5',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_dustSensor_fineDustLevel_fineDustLevel',
@@ -1057,6 +1077,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '에어모니터 플러스 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1082,7 +1103,7 @@
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': '에어모니터 플러스 Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_temperatureMeasurement_temperature_temperature',
@@ -1110,6 +1131,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AC Office Granit Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1138,7 +1160,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'AC Office Granit Energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -1166,6 +1188,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AC Office Granit Energy difference',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1194,7 +1217,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'AC Office Granit Energy difference',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -1222,6 +1245,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AC Office Granit Energy saved',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1250,7 +1274,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'AC Office Granit Energy saved',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -1278,6 +1302,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AC Office Granit Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1303,7 +1328,7 @@
     'original_name': 'Humidity',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'AC Office Granit Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_relativeHumidityMeasurement_humidity_humidity',
@@ -1331,6 +1356,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AC Office Granit Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1359,7 +1385,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'AC Office Granit Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -1389,6 +1415,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AC Office Granit Power energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1417,7 +1444,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'AC Office Granit Power energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -1445,6 +1472,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AC Office Granit Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1470,7 +1498,7 @@
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'AC Office Granit Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_temperatureMeasurement_temperature_temperature',
@@ -1498,6 +1526,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AC Office Granit Volume',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1521,7 +1550,7 @@
     'original_name': 'Volume',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'AC Office Granit Volume',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'audio_volume',
     'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_audioVolume_volume_volume',
@@ -1547,6 +1576,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Office AirFree Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1575,7 +1605,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Office AirFree Energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -1603,6 +1633,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Office AirFree Energy difference',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1631,7 +1662,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Office AirFree Energy difference',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -1659,6 +1690,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Office AirFree Energy saved',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1687,7 +1719,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Office AirFree Energy saved',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -1715,6 +1747,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Office AirFree Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1740,7 +1773,7 @@
     'original_name': 'Humidity',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Office AirFree Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_relativeHumidityMeasurement_humidity_humidity',
@@ -1768,6 +1801,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Office AirFree Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1796,7 +1830,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Office AirFree Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -1826,6 +1860,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Office AirFree Power energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1854,7 +1889,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Office AirFree Power energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -1882,6 +1917,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Office AirFree Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1907,7 +1943,7 @@
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Office AirFree Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_temperatureMeasurement_temperature_temperature',
@@ -1935,6 +1971,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Office AirFree Volume',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1958,7 +1995,7 @@
     'original_name': 'Volume',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Office AirFree Volume',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'audio_volume',
     'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_audioVolume_volume_volume',
@@ -1984,6 +2021,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aire Dormitorio Principal Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2012,7 +2050,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Aire Dormitorio Principal Energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -2040,6 +2078,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aire Dormitorio Principal Energy difference',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2068,7 +2107,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Aire Dormitorio Principal Energy difference',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -2096,6 +2135,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aire Dormitorio Principal Energy saved',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2124,7 +2164,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Aire Dormitorio Principal Energy saved',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -2152,6 +2192,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aire Dormitorio Principal Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2177,7 +2218,7 @@
     'original_name': 'Humidity',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Aire Dormitorio Principal Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_relativeHumidityMeasurement_humidity_humidity',
@@ -2205,6 +2246,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aire Dormitorio Principal Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2233,7 +2275,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Aire Dormitorio Principal Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -2263,6 +2305,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aire Dormitorio Principal Power energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2291,7 +2334,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Aire Dormitorio Principal Power energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -2319,6 +2362,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aire Dormitorio Principal Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2344,7 +2388,7 @@
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Aire Dormitorio Principal Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_temperatureMeasurement_temperature_temperature',
@@ -2372,6 +2416,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aire Dormitorio Principal Volume',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2395,7 +2440,7 @@
     'original_name': 'Volume',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Aire Dormitorio Principal Volume',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'audio_volume',
     'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_audioVolume_volume_volume',
@@ -2421,6 +2466,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Corridor A/C Air quality',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2446,7 +2492,7 @@
     'original_name': 'Air quality',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Corridor A/C Air quality',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_quality',
     'unique_id': 'F8042E25-0E53-0000-0000-000000000000_main_airQualitySensor_airQuality_airQuality',
@@ -2473,6 +2519,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Corridor A/C PM10',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2498,7 +2545,7 @@
     'original_name': 'PM10',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Corridor A/C PM10',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'F8042E25-0E53-0000-0000-000000000000_main_dustSensor_dustLevel_dustLevel',
@@ -2526,6 +2573,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Corridor A/C PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2551,7 +2599,7 @@
     'original_name': 'PM2.5',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Corridor A/C PM2.5',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'F8042E25-0E53-0000-0000-000000000000_main_dustSensor_fineDustLevel_fineDustLevel',
@@ -2579,6 +2627,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Corridor A/C Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2604,7 +2653,7 @@
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Corridor A/C Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'F8042E25-0E53-0000-0000-000000000000_main_temperatureMeasurement_temperature_temperature',
@@ -2632,6 +2681,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Induction Hob Burner 1 heating mode',
     'capabilities': dict({
       'options': list([
         'manual',
@@ -2661,7 +2711,7 @@
     'original_name': 'Burner 1 heating mode',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Induction Hob Burner 1 heating mode',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heating_mode',
     'unique_id': '808dbd84-f357-47e2-a0cd-3b66fa22d584_burner-01_samsungce.cooktopHeatingPower_heatingMode_heatingMode',
@@ -2692,6 +2742,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Induction Hob Burner 1 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2715,7 +2766,7 @@
     'original_name': 'Burner 1 level',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Induction Hob Burner 1 level',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'manual_level',
     'unique_id': '808dbd84-f357-47e2-a0cd-3b66fa22d584_burner-01_samsungce.cooktopHeatingPower_manualLevel_manualLevel',
@@ -2740,6 +2791,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Induction Hob Burner 2 heating mode',
     'capabilities': dict({
       'options': list([
         'manual',
@@ -2769,7 +2821,7 @@
     'original_name': 'Burner 2 heating mode',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Induction Hob Burner 2 heating mode',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heating_mode',
     'unique_id': '808dbd84-f357-47e2-a0cd-3b66fa22d584_burner-02_samsungce.cooktopHeatingPower_heatingMode_heatingMode',
@@ -2800,6 +2852,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Induction Hob Burner 2 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2823,7 +2876,7 @@
     'original_name': 'Burner 2 level',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Induction Hob Burner 2 level',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'manual_level',
     'unique_id': '808dbd84-f357-47e2-a0cd-3b66fa22d584_burner-02_samsungce.cooktopHeatingPower_manualLevel_manualLevel',
@@ -2848,6 +2901,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Induction Hob Burner 3 heating mode',
     'capabilities': dict({
       'options': list([
         'manual',
@@ -2877,7 +2931,7 @@
     'original_name': 'Burner 3 heating mode',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Induction Hob Burner 3 heating mode',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heating_mode',
     'unique_id': '808dbd84-f357-47e2-a0cd-3b66fa22d584_burner-03_samsungce.cooktopHeatingPower_heatingMode_heatingMode',
@@ -2908,6 +2962,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Induction Hob Burner 3 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2931,7 +2986,7 @@
     'original_name': 'Burner 3 level',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Induction Hob Burner 3 level',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'manual_level',
     'unique_id': '808dbd84-f357-47e2-a0cd-3b66fa22d584_burner-03_samsungce.cooktopHeatingPower_manualLevel_manualLevel',
@@ -2956,6 +3011,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Induction Hob Burner 4 heating mode',
     'capabilities': dict({
       'options': list([
         'manual',
@@ -2985,7 +3041,7 @@
     'original_name': 'Burner 4 heating mode',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Induction Hob Burner 4 heating mode',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heating_mode',
     'unique_id': '808dbd84-f357-47e2-a0cd-3b66fa22d584_burner-04_samsungce.cooktopHeatingPower_heatingMode_heatingMode',
@@ -3016,6 +3072,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Induction Hob Burner 4 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3039,7 +3096,7 @@
     'original_name': 'Burner 4 level',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Induction Hob Burner 4 level',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'manual_level',
     'unique_id': '808dbd84-f357-47e2-a0cd-3b66fa22d584_burner-04_samsungce.cooktopHeatingPower_manualLevel_manualLevel',
@@ -3064,6 +3121,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Induction Hob Operating state',
     'capabilities': dict({
       'options': list([
         'ready',
@@ -3093,7 +3151,7 @@
     'original_name': 'Operating state',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Induction Hob Operating state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cooktop_operating_state',
     'unique_id': '808dbd84-f357-47e2-a0cd-3b66fa22d584_main_custom.cooktopOperatingState_cooktopOperatingState_cooktopOperatingState',
@@ -3124,6 +3182,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Microwave Completion time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3147,7 +3206,7 @@
     'original_name': 'Completion time',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Microwave Completion time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
     'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_main_ovenOperatingState_completionTime_completionTime',
@@ -3173,6 +3232,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Microwave Job state',
     'capabilities': dict({
       'options': list([
         'cleaning',
@@ -3216,7 +3276,7 @@
     'original_name': 'Job state',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Microwave Job state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_job_state',
     'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_main_ovenOperatingState_ovenJobState_ovenJobState',
@@ -3261,6 +3321,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Microwave Machine state',
     'capabilities': dict({
       'options': list([
         'ready',
@@ -3290,7 +3351,7 @@
     'original_name': 'Machine state',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Microwave Machine state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_machine_state',
     'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_main_ovenOperatingState_machineState_machineState',
@@ -3321,6 +3382,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Microwave Oven mode',
     'capabilities': dict({
       'options': list([
         'conventional',
@@ -3372,7 +3434,7 @@
     'original_name': 'Oven mode',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Microwave Oven mode',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_mode',
     'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_main_ovenMode_ovenMode_ovenMode',
@@ -3425,6 +3487,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Microwave Set point',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3448,7 +3511,7 @@
     'original_name': 'Set point',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Microwave Set point',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_setpoint',
     'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_main_ovenSetpoint_ovenSetpoint_ovenSetpoint',
@@ -3475,6 +3538,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Microwave Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3500,7 +3564,7 @@
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Microwave Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_main_temperatureMeasurement_temperature_temperature',
@@ -3528,6 +3592,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Oven Completion time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3551,7 +3616,7 @@
     'original_name': 'Completion time',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Oven Completion time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
     'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f_main_ovenOperatingState_completionTime_completionTime',
@@ -3577,6 +3642,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Oven Job state',
     'capabilities': dict({
       'options': list([
         'cleaning',
@@ -3620,7 +3686,7 @@
     'original_name': 'Job state',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Oven Job state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_job_state',
     'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f_main_ovenOperatingState_ovenJobState_ovenJobState',
@@ -3665,6 +3731,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Oven Machine state',
     'capabilities': dict({
       'options': list([
         'ready',
@@ -3694,7 +3761,7 @@
     'original_name': 'Machine state',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Oven Machine state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_machine_state',
     'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f_main_ovenOperatingState_machineState_machineState',
@@ -3725,6 +3792,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Oven Oven mode',
     'capabilities': dict({
       'options': list([
         'conventional',
@@ -3776,7 +3844,7 @@
     'original_name': 'Oven mode',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Oven Oven mode',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_mode',
     'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f_main_ovenMode_ovenMode_ovenMode',
@@ -3829,6 +3897,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Oven Set point',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3852,7 +3921,7 @@
     'original_name': 'Set point',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Oven Set point',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_setpoint',
     'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f_main_ovenSetpoint_ovenSetpoint_ovenSetpoint',
@@ -3879,6 +3948,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Oven Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3904,7 +3974,7 @@
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Oven Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f_main_temperatureMeasurement_temperature_temperature',
@@ -3932,6 +4002,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Vulcan Completion time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3955,7 +4026,7 @@
     'original_name': 'Completion time',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Vulcan Completion time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
     'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_ovenOperatingState_completionTime_completionTime',
@@ -3981,6 +4052,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Vulcan Job state',
     'capabilities': dict({
       'options': list([
         'cleaning',
@@ -4024,7 +4096,7 @@
     'original_name': 'Job state',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Vulcan Job state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_job_state',
     'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_ovenOperatingState_ovenJobState_ovenJobState',
@@ -4069,6 +4141,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Vulcan Machine state',
     'capabilities': dict({
       'options': list([
         'ready',
@@ -4098,7 +4171,7 @@
     'original_name': 'Machine state',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Vulcan Machine state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_machine_state',
     'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_ovenOperatingState_machineState_machineState',
@@ -4129,6 +4202,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Vulcan Operating state',
     'capabilities': dict({
       'options': list([
         'run',
@@ -4157,7 +4231,7 @@
     'original_name': 'Operating state',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Vulcan Operating state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cooktop_operating_state',
     'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_custom.cooktopOperatingState_cooktopOperatingState_cooktopOperatingState',
@@ -4187,6 +4261,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Vulcan Oven mode',
     'capabilities': dict({
       'options': list([
         'conventional',
@@ -4238,7 +4313,7 @@
     'original_name': 'Oven mode',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Vulcan Oven mode',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_mode',
     'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_ovenMode_ovenMode_ovenMode',
@@ -4291,6 +4366,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Vulcan Set point',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4314,7 +4390,7 @@
     'original_name': 'Set point',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Vulcan Set point',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_setpoint',
     'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_ovenSetpoint_ovenSetpoint_ovenSetpoint',
@@ -4341,6 +4417,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Vulcan Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4366,7 +4443,7 @@
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Vulcan Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_temperatureMeasurement_temperature_temperature',
@@ -4394,6 +4471,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Refrigerator Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -4422,7 +4500,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Refrigerator Energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -4450,6 +4528,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Refrigerator Energy difference',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -4478,7 +4557,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Refrigerator Energy difference',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -4506,6 +4585,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Refrigerator Energy saved',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -4534,7 +4614,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Refrigerator Energy saved',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -4562,6 +4642,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Refrigerator Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4590,7 +4671,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Refrigerator Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -4620,6 +4701,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Refrigerator Power energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -4648,7 +4730,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Refrigerator Power energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -4676,6 +4758,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Refrigerator Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -4704,7 +4787,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Refrigerator Energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -4732,6 +4815,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Refrigerator Energy difference',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -4760,7 +4844,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Refrigerator Energy difference',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -4788,6 +4872,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Refrigerator Energy saved',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -4816,7 +4901,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Refrigerator Energy saved',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -4844,6 +4929,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Refrigerator Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4872,7 +4958,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Refrigerator Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -4902,6 +4988,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Refrigerator Power energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -4930,7 +5017,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Refrigerator Power energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -4958,6 +5045,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frigo Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -4986,7 +5074,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Frigo Energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -5014,6 +5102,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frigo Energy difference',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -5042,7 +5131,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Frigo Energy difference',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -5070,6 +5159,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frigo Energy saved',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5098,7 +5188,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Frigo Energy saved',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -5126,6 +5216,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frigo Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5154,7 +5245,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Frigo Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -5184,6 +5275,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frigo Power energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -5212,7 +5304,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Frigo Power energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -5240,6 +5332,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Robot vacuum Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5263,7 +5356,7 @@
     'original_name': 'Battery',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Robot vacuum Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '3442dfc6-17c0-a65f-dae0-4c6e01786f44_main_battery_battery_battery',
@@ -5290,6 +5383,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Robot vacuum Cleaning mode',
     'capabilities': dict({
       'options': list([
         'auto',
@@ -5322,7 +5416,7 @@
     'original_name': 'Cleaning mode',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Robot vacuum Cleaning mode',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'robot_cleaner_cleaning_mode',
     'unique_id': '3442dfc6-17c0-a65f-dae0-4c6e01786f44_main_robotCleanerCleaningMode_robotCleanerCleaningMode_robotCleanerCleaningMode',
@@ -5356,6 +5450,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Robot vacuum Movement',
     'capabilities': dict({
       'options': list([
         'homing',
@@ -5392,7 +5487,7 @@
     'original_name': 'Movement',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Robot vacuum Movement',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'robot_cleaner_movement',
     'unique_id': '3442dfc6-17c0-a65f-dae0-4c6e01786f44_main_robotCleanerMovement_robotCleanerMovement_robotCleanerMovement',
@@ -5430,6 +5525,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Robot vacuum Turbo mode',
     'capabilities': dict({
       'options': list([
         'on',
@@ -5460,7 +5556,7 @@
     'original_name': 'Turbo mode',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Robot vacuum Turbo mode',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'robot_cleaner_turbo_mode',
     'unique_id': '3442dfc6-17c0-a65f-dae0-4c6e01786f44_main_robotCleanerTurboMode_robotCleanerTurboMode_robotCleanerTurboMode',
@@ -5492,6 +5588,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eco Heating System Cooling set point',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5515,7 +5612,7 @@
     'original_name': 'Cooling set point',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Eco Heating System Cooling set point',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thermostat_cooling_setpoint',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_thermostatCoolingSetpoint_coolingSetpoint_coolingSetpoint',
@@ -5542,6 +5639,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eco Heating System Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5570,7 +5668,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Eco Heating System Energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -5598,6 +5696,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eco Heating System Energy difference',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -5626,7 +5725,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Eco Heating System Energy difference',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -5654,6 +5753,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eco Heating System Energy saved',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5682,7 +5782,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Eco Heating System Energy saved',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -5710,6 +5810,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eco Heating System Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5738,7 +5839,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Eco Heating System Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -5768,6 +5869,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eco Heating System Power energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -5796,7 +5898,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Eco Heating System Power energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -5824,6 +5926,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eco Heating System Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5849,7 +5952,7 @@
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Eco Heating System Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_temperatureMeasurement_temperature_temperature',
@@ -5877,6 +5980,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dishwasher Completion time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5900,7 +6004,7 @@
     'original_name': 'Completion time',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dishwasher Completion time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
     'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_dishwasherOperatingState_completionTime_completionTime',
@@ -5926,6 +6030,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dishwasher Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5954,7 +6059,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dishwasher Energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -5982,6 +6087,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dishwasher Energy difference',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -6010,7 +6116,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dishwasher Energy difference',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -6038,6 +6144,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dishwasher Energy saved',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -6066,7 +6173,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dishwasher Energy saved',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -6094,6 +6201,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dishwasher Job state',
     'capabilities': dict({
       'options': list([
         'air_wash',
@@ -6130,7 +6238,7 @@
     'original_name': 'Job state',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dishwasher Job state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dishwasher_job_state',
     'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_dishwasherOperatingState_dishwasherJobState_dishwasherJobState',
@@ -6168,6 +6276,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dishwasher Machine state',
     'capabilities': dict({
       'options': list([
         'pause',
@@ -6197,7 +6306,7 @@
     'original_name': 'Machine state',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dishwasher Machine state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dishwasher_machine_state',
     'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_dishwasherOperatingState_machineState_machineState',
@@ -6228,6 +6337,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dishwasher Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6256,7 +6366,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dishwasher Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -6286,6 +6396,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dishwasher Power energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -6314,7 +6425,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dishwasher Power energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -6342,6 +6453,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AirDresser Completion time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6365,7 +6477,7 @@
     'original_name': 'Completion time',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'AirDresser Completion time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
     'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_dryerOperatingState_completionTime_completionTime',
@@ -6391,6 +6503,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AirDresser Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -6419,7 +6532,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'AirDresser Energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -6447,6 +6560,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AirDresser Energy difference',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -6475,7 +6589,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'AirDresser Energy difference',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -6503,6 +6617,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AirDresser Energy saved',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -6531,7 +6646,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'AirDresser Energy saved',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -6559,6 +6674,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AirDresser Job state',
     'capabilities': dict({
       'options': list([
         'cooling',
@@ -6600,7 +6716,7 @@
     'original_name': 'Job state',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'AirDresser Job state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dryer_job_state',
     'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_dryerOperatingState_dryerJobState_dryerJobState',
@@ -6643,6 +6759,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AirDresser Machine state',
     'capabilities': dict({
       'options': list([
         'pause',
@@ -6672,7 +6789,7 @@
     'original_name': 'Machine state',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'AirDresser Machine state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dryer_machine_state',
     'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_dryerOperatingState_machineState_machineState',
@@ -6703,6 +6820,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AirDresser Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6731,7 +6849,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'AirDresser Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -6761,6 +6879,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AirDresser Power energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -6789,7 +6908,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'AirDresser Power energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -6817,6 +6936,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dryer Completion time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6840,7 +6960,7 @@
     'original_name': 'Completion time',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dryer Completion time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
     'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_dryerOperatingState_completionTime_completionTime',
@@ -6866,6 +6986,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dryer Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -6894,7 +7015,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dryer Energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -6922,6 +7043,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dryer Energy difference',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -6950,7 +7072,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dryer Energy difference',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -6978,6 +7100,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dryer Energy saved',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -7006,7 +7129,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dryer Energy saved',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -7034,6 +7157,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dryer Job state',
     'capabilities': dict({
       'options': list([
         'cooling',
@@ -7075,7 +7199,7 @@
     'original_name': 'Job state',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dryer Job state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dryer_job_state',
     'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_dryerOperatingState_dryerJobState_dryerJobState',
@@ -7118,6 +7242,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dryer Machine state',
     'capabilities': dict({
       'options': list([
         'pause',
@@ -7147,7 +7272,7 @@
     'original_name': 'Machine state',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dryer Machine state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dryer_machine_state',
     'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_dryerOperatingState_machineState_machineState',
@@ -7178,6 +7303,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dryer Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7206,7 +7332,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dryer Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -7236,6 +7362,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dryer Power energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -7264,7 +7391,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dryer Power energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -7292,6 +7419,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Seca-Roupa Completion time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7315,7 +7443,7 @@
     'original_name': 'Completion time',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Seca-Roupa Completion time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
     'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_dryerOperatingState_completionTime_completionTime',
@@ -7341,6 +7469,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Seca-Roupa Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -7369,7 +7498,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Seca-Roupa Energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -7397,6 +7526,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Seca-Roupa Energy difference',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -7425,7 +7555,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Seca-Roupa Energy difference',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -7453,6 +7583,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Seca-Roupa Energy saved',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -7481,7 +7612,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Seca-Roupa Energy saved',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -7509,6 +7640,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Seca-Roupa Job state',
     'capabilities': dict({
       'options': list([
         'cooling',
@@ -7550,7 +7682,7 @@
     'original_name': 'Job state',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Seca-Roupa Job state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dryer_job_state',
     'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_dryerOperatingState_dryerJobState_dryerJobState',
@@ -7593,6 +7725,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Seca-Roupa Machine state',
     'capabilities': dict({
       'options': list([
         'pause',
@@ -7622,7 +7755,7 @@
     'original_name': 'Machine state',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Seca-Roupa Machine state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dryer_machine_state',
     'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_dryerOperatingState_machineState_machineState',
@@ -7653,6 +7786,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Seca-Roupa Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7681,7 +7815,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Seca-Roupa Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -7711,6 +7845,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Seca-Roupa Power energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -7739,7 +7874,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Seca-Roupa Power energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -7767,6 +7902,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washer Completion time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7790,7 +7926,7 @@
     'original_name': 'Completion time',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washer Completion time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
     'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_washerOperatingState_completionTime_completionTime',
@@ -7816,6 +7952,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washer Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -7844,7 +7981,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washer Energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -7872,6 +8009,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washer Energy difference',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -7900,7 +8038,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washer Energy difference',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -7928,6 +8066,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washer Energy saved',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -7956,7 +8095,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washer Energy saved',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -7984,6 +8123,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washer Job state',
     'capabilities': dict({
       'options': list([
         'air_wash',
@@ -8026,7 +8166,7 @@
     'original_name': 'Job state',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washer Job state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'washer_job_state',
     'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_washerOperatingState_washerJobState_washerJobState',
@@ -8070,6 +8210,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washer Machine state',
     'capabilities': dict({
       'options': list([
         'pause',
@@ -8099,7 +8240,7 @@
     'original_name': 'Machine state',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washer Machine state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'washer_machine_state',
     'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_washerOperatingState_machineState_machineState',
@@ -8130,6 +8271,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washer Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8158,7 +8300,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washer Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -8188,6 +8330,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washer Power energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -8216,7 +8359,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washer Power energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -8244,6 +8387,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washing Machine Completion time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8267,7 +8411,7 @@
     'original_name': 'Completion time',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washing Machine Completion time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
     'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_washerOperatingState_completionTime_completionTime',
@@ -8293,6 +8437,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washing Machine Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8321,7 +8466,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washing Machine Energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -8349,6 +8494,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washing Machine Energy difference',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -8377,7 +8523,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washing Machine Energy difference',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -8405,6 +8551,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washing Machine Energy saved',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8433,7 +8580,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washing Machine Energy saved',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -8461,6 +8608,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washing Machine Job state',
     'capabilities': dict({
       'options': list([
         'air_wash',
@@ -8503,7 +8651,7 @@
     'original_name': 'Job state',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washing Machine Job state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'washer_job_state',
     'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_washerOperatingState_washerJobState_washerJobState',
@@ -8547,6 +8695,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washing Machine Machine state',
     'capabilities': dict({
       'options': list([
         'pause',
@@ -8576,7 +8725,7 @@
     'original_name': 'Machine state',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washing Machine Machine state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'washer_machine_state',
     'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_washerOperatingState_machineState_machineState',
@@ -8607,6 +8756,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washing Machine Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8635,7 +8785,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washing Machine Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -8665,6 +8815,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washing Machine Power energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -8693,7 +8844,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washing Machine Power energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -8721,6 +8872,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Machine à Laver Completion time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8744,7 +8896,7 @@
     'original_name': 'Completion time',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Machine à Laver Completion time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
     'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_washerOperatingState_completionTime_completionTime',
@@ -8770,6 +8922,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Machine à Laver Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8798,7 +8951,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Machine à Laver Energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -8826,6 +8979,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Machine à Laver Energy difference',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -8854,7 +9008,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Machine à Laver Energy difference',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -8882,6 +9036,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Machine à Laver Energy saved',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8910,7 +9065,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Machine à Laver Energy saved',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -8938,6 +9093,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Machine à Laver Job state',
     'capabilities': dict({
       'options': list([
         'air_wash',
@@ -8980,7 +9136,7 @@
     'original_name': 'Job state',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Machine à Laver Job state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'washer_job_state',
     'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_washerOperatingState_washerJobState_washerJobState',
@@ -9024,6 +9180,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Machine à Laver Machine state',
     'capabilities': dict({
       'options': list([
         'pause',
@@ -9053,7 +9210,7 @@
     'original_name': 'Machine state',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Machine à Laver Machine state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'washer_machine_state',
     'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_washerOperatingState_machineState_machineState',
@@ -9084,6 +9241,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Machine à Laver Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9112,7 +9270,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Machine à Laver Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -9142,6 +9300,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Machine à Laver Power energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -9170,7 +9329,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Machine à Laver Power energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -9198,6 +9357,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Machine à Laver Water consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9223,7 +9383,7 @@
     'original_name': 'Water consumption',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Machine à Laver Water consumption',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_consumption',
     'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_samsungce.waterConsumptionReport_waterConsumption_waterConsumption',
@@ -9251,6 +9411,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washer Completion time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9274,7 +9435,7 @@
     'original_name': 'Completion time',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washer Completion time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
     'unique_id': 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee_main_washerOperatingState_completionTime_completionTime',
@@ -9300,6 +9461,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washer Job state',
     'capabilities': dict({
       'options': list([
         'air_wash',
@@ -9342,7 +9504,7 @@
     'original_name': 'Job state',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washer Job state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'washer_job_state',
     'unique_id': 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee_main_washerOperatingState_washerJobState_washerJobState',
@@ -9386,6 +9548,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washer Machine state',
     'capabilities': dict({
       'options': list([
         'pause',
@@ -9415,7 +9578,7 @@
     'original_name': 'Machine state',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washer Machine state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'washer_machine_state',
     'unique_id': 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee_main_washerOperatingState_machineState_machineState',
@@ -9446,6 +9609,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child Bedroom Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9471,7 +9635,7 @@
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Child Bedroom Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'd5dc3299-c266-41c7-bd08-f540aea54b89_main_temperatureMeasurement_temperature_temperature',
@@ -9499,6 +9663,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Main Floor Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9524,7 +9689,7 @@
     'original_name': 'Humidity',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Main Floor Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '028469cb-6e89-4f14-8d9a-bfbca5e0fbfc_main_relativeHumidityMeasurement_humidity_humidity',
@@ -9552,6 +9717,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Main Floor Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9577,7 +9743,7 @@
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Main Floor Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '028469cb-6e89-4f14-8d9a-bfbca5e0fbfc_main_temperatureMeasurement_temperature_temperature',
@@ -9605,6 +9771,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Downstairs Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9630,7 +9797,7 @@
     'original_name': 'Humidity',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Downstairs Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1888b38f-6246-4f1e-911b-bfcfb66999db_main_relativeHumidityMeasurement_humidity_humidity',
@@ -9658,6 +9825,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Downstairs Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9683,7 +9851,7 @@
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Downstairs Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1888b38f-6246-4f1e-911b-bfcfb66999db_main_temperatureMeasurement_temperature_temperature',
@@ -9710,6 +9878,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gas Meter Gas',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -9738,7 +9907,7 @@
     'original_name': 'Gas',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gas Meter Gas',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '3b57dca3-9a90-4f27-ba80-f947b1e60d58_main_gasMeter_gasMeterVolume_gasMeterVolume',
@@ -9766,6 +9935,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gas Meter Gas meter',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -9791,7 +9961,7 @@
     'original_name': 'Gas meter',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gas Meter Gas meter',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gas_meter',
     'unique_id': '3b57dca3-9a90-4f27-ba80-f947b1e60d58_main_gasMeter_gasMeter_gasMeter',
@@ -9819,6 +9989,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gas Meter Gas meter calorific',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9842,7 +10013,7 @@
     'original_name': 'Gas meter calorific',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gas Meter Gas meter calorific',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gas_meter_calorific',
     'unique_id': '3b57dca3-9a90-4f27-ba80-f947b1e60d58_main_gasMeter_gasMeterCalorific_gasMeterCalorific',
@@ -9867,6 +10038,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gas Meter Gas meter time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9890,7 +10062,7 @@
     'original_name': 'Gas meter time',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gas Meter Gas meter time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gas_meter_time',
     'unique_id': '3b57dca3-9a90-4f27-ba80-f947b1e60d58_main_gasMeter_gasMeterTime_gasMeterTime',
@@ -9916,6 +10088,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Thermostat Küche Link quality',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9941,7 +10114,7 @@
     'original_name': 'Link quality',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Thermostat Küche Link quality',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'link_quality',
     'unique_id': '656569c2-7976-4232-a789-34b4d1176c3a_main_signalStrength_lqi_lqi',
@@ -9967,6 +10140,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Thermostat Küche Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9992,7 +10166,7 @@
     'original_name': 'Signal strength',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Thermostat Küche Signal strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '656569c2-7976-4232-a789-34b4d1176c3a_main_signalStrength_rssi_rssi',
@@ -10020,6 +10194,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Thermostat Küche Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10045,7 +10220,7 @@
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Thermostat Küche Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '656569c2-7976-4232-a789-34b4d1176c3a_main_temperatureMeasurement_temperature_temperature',
@@ -10073,6 +10248,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Livingroom smart switch Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10096,7 +10272,7 @@
     'original_name': 'Battery',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Livingroom smart switch Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '5e5b97f3-3094-44e6-abc0-f61283412d6a_main_battery_battery_battery',
@@ -10123,6 +10299,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hall thermostat Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -10148,7 +10325,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Hall thermostat Energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '69a271f6-6537-4982-8cd9-979866872692_main_energyMeter_energy_energy',
@@ -10176,6 +10353,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hall thermostat Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10201,7 +10379,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Hall thermostat Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '69a271f6-6537-4982-8cd9-979866872692_main_powerMeter_power_power',
@@ -10229,6 +10407,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hall thermostat Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10254,7 +10433,7 @@
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Hall thermostat Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '69a271f6-6537-4982-8cd9-979866872692_main_temperatureMeasurement_temperature_temperature',
@@ -10282,6 +10461,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kitchen IKEA KADRILJ Window blind Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10305,7 +10485,7 @@
     'original_name': 'Battery',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kitchen IKEA KADRILJ Window blind Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '71afed1c-006d-4e48-b16e-e7f88f9fd638_main_battery_battery_battery',
@@ -10332,6 +10512,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Deck Door Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10355,7 +10536,7 @@
     'original_name': 'Battery',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Deck Door Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c_main_battery_battery_battery',
@@ -10382,6 +10563,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Deck Door Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10407,7 +10589,7 @@
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Deck Door Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c_main_temperatureMeasurement_temperature_temperature',
@@ -10435,6 +10617,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Deck Door X coordinate',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10458,7 +10641,7 @@
     'original_name': 'X coordinate',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Deck Door X coordinate',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'x_coordinate',
     'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c_main_threeAxis_threeAxis_x_coordinate',
@@ -10483,6 +10666,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Deck Door Y coordinate',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10506,7 +10690,7 @@
     'original_name': 'Y coordinate',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Deck Door Y coordinate',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'y_coordinate',
     'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c_main_threeAxis_threeAxis_y_coordinate',
@@ -10531,6 +10715,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Deck Door Z coordinate',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10554,7 +10739,7 @@
     'original_name': 'Z coordinate',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Deck Door Z coordinate',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'z_coordinate',
     'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c_main_threeAxis_threeAxis_z_coordinate',
@@ -10579,6 +10764,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Office Air conditioner mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10602,7 +10788,7 @@
     'original_name': 'Air conditioner mode',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Office Air conditioner mode',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_conditioner_mode',
     'unique_id': 'bf4b1167-48a3-4af7-9186-0900a678ffa5_main_airConditionerMode_airConditionerMode_airConditionerMode',
@@ -10627,6 +10813,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Office Cooling set point',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10650,7 +10837,7 @@
     'original_name': 'Cooling set point',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Office Cooling set point',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thermostat_cooling_setpoint',
     'unique_id': 'bf4b1167-48a3-4af7-9186-0900a678ffa5_main_thermostatCoolingSetpoint_coolingSetpoint_coolingSetpoint',
@@ -10677,6 +10864,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Spülmaschine Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -10705,7 +10893,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Spülmaschine Energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '6602696a-1e48-49e4-919f-69406f5b5da1_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -10733,6 +10921,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Spülmaschine Energy difference',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -10761,7 +10950,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Spülmaschine Energy difference',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': '6602696a-1e48-49e4-919f-69406f5b5da1_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -10789,6 +10978,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Light Sensor - 55" The Frame Brightness intensity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10814,7 +11004,7 @@
     'original_name': 'Brightness intensity',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Light Sensor - 55" The Frame Brightness intensity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'brightness_intensity',
     'unique_id': '5cc1c096-98b9-460c-8f1c-1045509ec605_main_relativeBrightness_brightnessIntensity_brightnessIntensity',
@@ -10841,6 +11031,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '[TV] Samsung 8 Series (49) TV channel',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10864,7 +11055,7 @@
     'original_name': 'TV channel',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': '[TV] Samsung 8 Series (49) TV channel',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tv_channel',
     'unique_id': '4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_main_tvChannel_tvChannel_tvChannel',
@@ -10889,6 +11080,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '[TV] Samsung 8 Series (49) TV channel name',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10912,7 +11104,7 @@
     'original_name': 'TV channel name',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': '[TV] Samsung 8 Series (49) TV channel name',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tv_channel_name',
     'unique_id': '4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_main_tvChannel_tvChannelName_tvChannelName',
@@ -10937,6 +11129,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'asd Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10960,7 +11153,7 @@
     'original_name': 'Battery',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'asd Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '2894dc93-0f11-49cc-8a81-3a684cebebf6_main_battery_battery_battery',
@@ -10987,6 +11180,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'asd Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -11012,7 +11206,7 @@
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'asd Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '2894dc93-0f11-49cc-8a81-3a684cebebf6_main_temperatureMeasurement_temperature_temperature',
@@ -11040,6 +11234,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'asd Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11063,7 +11258,7 @@
     'original_name': 'Battery',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'asd Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a2a6018b-2663-4727-9d1d-8f56953b5116_main_battery_battery_battery',
@@ -11090,6 +11285,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Basement Door Lock Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11113,7 +11309,7 @@
     'original_name': 'Battery',
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'suggested_object_id': 'Basement Door Lock Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a9f587c5-5d8b-4273-8907-e7f609af5158_main_battery_battery_battery',

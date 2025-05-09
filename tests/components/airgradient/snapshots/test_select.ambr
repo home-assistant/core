@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient CO2 automatic baseline duration',
     'capabilities': dict({
       'options': list([
         '1',
@@ -36,7 +37,7 @@
     'original_name': 'CO2 automatic baseline duration',
     'platform': 'airgradient',
     'previous_unique_id': None,
-    'suggested_object_id': 'Airgradient CO2 automatic baseline duration',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'co2_automatic_baseline_calibration',
     'unique_id': '84fce612f5b8-co2_automatic_baseline_calibration',
@@ -69,6 +70,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient Configuration source',
     'capabilities': dict({
       'options': list([
         'cloud',
@@ -97,7 +99,7 @@
     'original_name': 'Configuration source',
     'platform': 'airgradient',
     'previous_unique_id': None,
-    'suggested_object_id': 'Airgradient Configuration source',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'configuration_control',
     'unique_id': '84fce612f5b8-configuration_control',
@@ -126,6 +128,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient Display PM standard',
     'capabilities': dict({
       'options': list([
         'ugm3',
@@ -154,7 +157,7 @@
     'original_name': 'Display PM standard',
     'platform': 'airgradient',
     'previous_unique_id': None,
-    'suggested_object_id': 'Airgradient Display PM standard',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'display_pm_standard',
     'unique_id': '84fce612f5b8-display_pm_standard',
@@ -183,6 +186,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient Display temperature unit',
     'capabilities': dict({
       'options': list([
         'c',
@@ -211,7 +215,7 @@
     'original_name': 'Display temperature unit',
     'platform': 'airgradient',
     'previous_unique_id': None,
-    'suggested_object_id': 'Airgradient Display temperature unit',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'display_temperature_unit',
     'unique_id': '84fce612f5b8-display_temperature_unit',
@@ -240,6 +244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient LED bar mode',
     'capabilities': dict({
       'options': list([
         'off',
@@ -269,7 +274,7 @@
     'original_name': 'LED bar mode',
     'platform': 'airgradient',
     'previous_unique_id': None,
-    'suggested_object_id': 'Airgradient LED bar mode',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'led_bar_mode',
     'unique_id': '84fce612f5b8-led_bar_mode',
@@ -299,6 +304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient NOx index learning offset',
     'capabilities': dict({
       'options': list([
         '12',
@@ -330,7 +336,7 @@
     'original_name': 'NOx index learning offset',
     'platform': 'airgradient',
     'previous_unique_id': None,
-    'suggested_object_id': 'Airgradient NOx index learning offset',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nox_index_learning_time_offset',
     'unique_id': '84fce612f5b8-nox_index_learning_time_offset',
@@ -362,6 +368,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient VOC index learning offset',
     'capabilities': dict({
       'options': list([
         '12',
@@ -393,7 +400,7 @@
     'original_name': 'VOC index learning offset',
     'platform': 'airgradient',
     'previous_unique_id': None,
-    'suggested_object_id': 'Airgradient VOC index learning offset',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voc_index_learning_time_offset',
     'unique_id': '84fce612f5b8-voc_index_learning_time_offset',
@@ -425,6 +432,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient CO2 automatic baseline duration',
     'capabilities': dict({
       'options': list([
         '1',
@@ -457,7 +465,7 @@
     'original_name': 'CO2 automatic baseline duration',
     'platform': 'airgradient',
     'previous_unique_id': None,
-    'suggested_object_id': 'Airgradient CO2 automatic baseline duration',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'co2_automatic_baseline_calibration',
     'unique_id': '84fce612f5b8-co2_automatic_baseline_calibration',
@@ -490,6 +498,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient Configuration source',
     'capabilities': dict({
       'options': list([
         'cloud',
@@ -518,7 +527,7 @@
     'original_name': 'Configuration source',
     'platform': 'airgradient',
     'previous_unique_id': None,
-    'suggested_object_id': 'Airgradient Configuration source',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'configuration_control',
     'unique_id': '84fce612f5b8-configuration_control',
@@ -547,6 +556,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient NOx index learning offset',
     'capabilities': dict({
       'options': list([
         '12',
@@ -578,7 +588,7 @@
     'original_name': 'NOx index learning offset',
     'platform': 'airgradient',
     'previous_unique_id': None,
-    'suggested_object_id': 'Airgradient NOx index learning offset',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nox_index_learning_time_offset',
     'unique_id': '84fce612f5b8-nox_index_learning_time_offset',
@@ -610,6 +620,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient VOC index learning offset',
     'capabilities': dict({
       'options': list([
         '12',
@@ -641,7 +652,7 @@
     'original_name': 'VOC index learning offset',
     'platform': 'airgradient',
     'previous_unique_id': None,
-    'suggested_object_id': 'Airgradient VOC index learning offset',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voc_index_learning_time_offset',
     'unique_id': '84fce612f5b8-voc_index_learning_time_offset',

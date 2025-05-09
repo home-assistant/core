@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aqara FP1 Device Mode',
     'capabilities': dict({
       'options': list([
         'leftright',
@@ -32,7 +33,7 @@
     'original_name': 'Aqara FP1 Device Mode',
     'platform': 'deconz',
     'previous_unique_id': None,
-    'suggested_object_id': 'Aqara FP1 Device Mode',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-device_mode',
@@ -61,6 +62,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aqara FP1 Sensitivity',
     'capabilities': dict({
       'options': list([
         'High',
@@ -90,7 +92,7 @@
     'original_name': 'Aqara FP1 Sensitivity',
     'platform': 'deconz',
     'previous_unique_id': None,
-    'suggested_object_id': 'Aqara FP1 Sensitivity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-sensitivity',
@@ -120,6 +122,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aqara FP1 Trigger Distance',
     'capabilities': dict({
       'options': list([
         'far',
@@ -149,7 +152,7 @@
     'original_name': 'Aqara FP1 Trigger Distance',
     'platform': 'deconz',
     'previous_unique_id': None,
-    'suggested_object_id': 'Aqara FP1 Trigger Distance',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-trigger_distance',
@@ -179,6 +182,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aqara FP1 Device Mode',
     'capabilities': dict({
       'options': list([
         'leftright',
@@ -207,7 +211,7 @@
     'original_name': 'Aqara FP1 Device Mode',
     'platform': 'deconz',
     'previous_unique_id': None,
-    'suggested_object_id': 'Aqara FP1 Device Mode',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-device_mode',
@@ -236,6 +240,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aqara FP1 Sensitivity',
     'capabilities': dict({
       'options': list([
         'High',
@@ -265,7 +270,7 @@
     'original_name': 'Aqara FP1 Sensitivity',
     'platform': 'deconz',
     'previous_unique_id': None,
-    'suggested_object_id': 'Aqara FP1 Sensitivity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-sensitivity',
@@ -295,6 +300,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aqara FP1 Trigger Distance',
     'capabilities': dict({
       'options': list([
         'far',
@@ -324,7 +330,7 @@
     'original_name': 'Aqara FP1 Trigger Distance',
     'platform': 'deconz',
     'previous_unique_id': None,
-    'suggested_object_id': 'Aqara FP1 Trigger Distance',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-trigger_distance',
@@ -354,6 +360,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aqara FP1 Device Mode',
     'capabilities': dict({
       'options': list([
         'leftright',
@@ -382,7 +389,7 @@
     'original_name': 'Aqara FP1 Device Mode',
     'platform': 'deconz',
     'previous_unique_id': None,
-    'suggested_object_id': 'Aqara FP1 Device Mode',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-device_mode',
@@ -411,6 +418,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aqara FP1 Sensitivity',
     'capabilities': dict({
       'options': list([
         'High',
@@ -440,7 +448,7 @@
     'original_name': 'Aqara FP1 Sensitivity',
     'platform': 'deconz',
     'previous_unique_id': None,
-    'suggested_object_id': 'Aqara FP1 Sensitivity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-sensitivity',
@@ -470,6 +478,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aqara FP1 Trigger Distance',
     'capabilities': dict({
       'options': list([
         'far',
@@ -499,7 +508,7 @@
     'original_name': 'Aqara FP1 Trigger Distance',
     'platform': 'deconz',
     'previous_unique_id': None,
-    'suggested_object_id': 'Aqara FP1 Trigger Distance',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-trigger_distance',
@@ -529,6 +538,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'IKEA Starkvind Fan Mode',
     'capabilities': dict({
       'options': list([
         'off',
@@ -562,7 +572,7 @@
     'original_name': 'IKEA Starkvind Fan Mode',
     'platform': 'deconz',
     'previous_unique_id': None,
-    'suggested_object_id': 'IKEA Starkvind Fan Mode',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '0c:43:14:ff:fe:6c:20:12-01-fc7d-fan_mode',

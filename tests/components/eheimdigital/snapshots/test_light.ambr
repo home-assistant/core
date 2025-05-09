@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock classicLEDcontrol+e Channel 0',
     'capabilities': dict({
       'effect_list': list([
         'daycl_mode',
@@ -34,7 +35,7 @@
     'original_name': 'Channel 0',
     'platform': 'eheimdigital',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock classicLEDcontrol+e Channel 0',
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 4>,
     'translation_key': 'channel',
     'unique_id': '00:00:00:00:00:01_0',
@@ -69,6 +70,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock classicLEDcontrol+e Channel 0',
     'capabilities': dict({
       'effect_list': list([
         'daycl_mode',
@@ -99,7 +101,7 @@
     'original_name': 'Channel 0',
     'platform': 'eheimdigital',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock classicLEDcontrol+e Channel 0',
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 4>,
     'translation_key': 'channel',
     'unique_id': '00:00:00:00:00:01_0',
@@ -134,6 +136,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock classicLEDcontrol+e Channel 1',
     'capabilities': dict({
       'effect_list': list([
         'daycl_mode',
@@ -164,7 +167,7 @@
     'original_name': 'Channel 1',
     'platform': 'eheimdigital',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock classicLEDcontrol+e Channel 1',
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 4>,
     'translation_key': 'channel',
     'unique_id': '00:00:00:00:00:01_1',
@@ -199,6 +202,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock classicLEDcontrol+e Channel 0',
     'capabilities': dict({
       'effect_list': list([
         'daycl_mode',
@@ -229,7 +233,7 @@
     'original_name': 'Channel 0',
     'platform': 'eheimdigital',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock classicLEDcontrol+e Channel 0',
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 4>,
     'translation_key': 'channel',
     'unique_id': '00:00:00:00:00:01_0',
@@ -264,6 +268,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock classicLEDcontrol+e Channel 1',
     'capabilities': dict({
       'effect_list': list([
         'daycl_mode',
@@ -294,7 +299,7 @@
     'original_name': 'Channel 1',
     'platform': 'eheimdigital',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock classicLEDcontrol+e Channel 1',
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 4>,
     'translation_key': 'channel',
     'unique_id': '00:00:00:00:00:01_1',

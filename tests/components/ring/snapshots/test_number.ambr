@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Downstairs Volume',
     'capabilities': dict({
       'max': 11,
       'min': 0,
@@ -32,7 +33,7 @@
     'original_name': 'Volume',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Downstairs Volume',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
     'unique_id': '123456-volume',
@@ -62,6 +63,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front Door Volume',
     'capabilities': dict({
       'max': 11,
       'min': 0,
@@ -90,7 +92,7 @@
     'original_name': 'Volume',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Front Door Volume',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
     'unique_id': '987654-volume',
@@ -120,6 +122,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front Volume',
     'capabilities': dict({
       'max': 11,
       'min': 0,
@@ -148,7 +151,7 @@
     'original_name': 'Volume',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Front Volume',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
     'unique_id': '765432-volume',
@@ -178,6 +181,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ingress Doorbell volume',
     'capabilities': dict({
       'max': 8,
       'min': 0,
@@ -206,7 +210,7 @@
     'original_name': 'Doorbell volume',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Ingress Doorbell volume',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'doorbell_volume',
     'unique_id': '185036587-doorbell_volume',
@@ -236,6 +240,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ingress Mic volume',
     'capabilities': dict({
       'max': 11,
       'min': 0,
@@ -264,7 +269,7 @@
     'original_name': 'Mic volume',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Ingress Mic volume',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mic_volume',
     'unique_id': '185036587-mic_volume',
@@ -294,6 +299,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ingress Voice volume',
     'capabilities': dict({
       'max': 11,
       'min': 0,
@@ -322,7 +328,7 @@
     'original_name': 'Voice volume',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Ingress Voice volume',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voice_volume',
     'unique_id': '185036587-voice_volume',
@@ -352,6 +358,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Internal Volume',
     'capabilities': dict({
       'max': 11,
       'min': 0,
@@ -380,7 +387,7 @@
     'original_name': 'Volume',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Internal Volume',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
     'unique_id': '345678-volume',

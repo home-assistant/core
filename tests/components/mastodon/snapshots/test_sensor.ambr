@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mastodon @trwnh@mastodon.social Followers',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -29,7 +30,7 @@
     'original_name': 'Followers',
     'platform': 'mastodon',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mastodon @trwnh@mastodon.social Followers',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'followers',
     'unique_id': 'trwnh_mastodon_social_followers',
@@ -56,6 +57,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mastodon @trwnh@mastodon.social Following',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -81,7 +83,7 @@
     'original_name': 'Following',
     'platform': 'mastodon',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mastodon @trwnh@mastodon.social Following',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'following',
     'unique_id': 'trwnh_mastodon_social_following',
@@ -108,6 +110,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mastodon @trwnh@mastodon.social Posts',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -133,7 +136,7 @@
     'original_name': 'Posts',
     'platform': 'mastodon',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mastodon @trwnh@mastodon.social Posts',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'posts',
     'unique_id': 'trwnh_mastodon_social_posts',

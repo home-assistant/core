@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device',
     'capabilities': dict({
       'preset_modes': None,
     }),
@@ -29,7 +30,7 @@
     'original_name': None,
     'platform': 'tplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'my_device',
+    'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 49>,
     'translation_key': None,
     'unique_id': '123456789ABCDEFGH',
@@ -59,6 +60,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device my_fan_0',
     'capabilities': dict({
       'preset_modes': None,
     }),
@@ -84,7 +86,7 @@
     'original_name': 'my_fan_0',
     'platform': 'tplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'my_device my_fan_0',
+    'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 49>,
     'translation_key': None,
     'unique_id': '123456789ABCDEFGH00',
@@ -114,6 +116,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device my_fan_1',
     'capabilities': dict({
       'preset_modes': None,
     }),
@@ -139,7 +142,7 @@
     'original_name': 'my_fan_1',
     'platform': 'tplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'my_device my_fan_1',
+    'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 49>,
     'translation_key': None,
     'unique_id': '123456789ABCDEFGH01',

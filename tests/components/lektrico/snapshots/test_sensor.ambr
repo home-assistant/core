@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '1p7k_500006 Charging time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,7 +28,7 @@
     'original_name': 'Charging time',
     'platform': 'lektrico',
     'previous_unique_id': None,
-    'suggested_object_id': '1p7k_500006 Charging time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_time',
     'unique_id': '500006_charging_time',
@@ -54,6 +55,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '1p7k_500006 Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -79,7 +81,7 @@
     'original_name': 'Current',
     'platform': 'lektrico',
     'previous_unique_id': None,
-    'suggested_object_id': '1p7k_500006 Current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '500006_current',
@@ -107,6 +109,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '1p7k_500006 Energy',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -130,7 +133,7 @@
     'original_name': 'Energy',
     'platform': 'lektrico',
     'previous_unique_id': None,
-    'suggested_object_id': '1p7k_500006 Energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '500006_energy',
@@ -157,6 +160,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '1p7k_500006 Installation current',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -180,7 +184,7 @@
     'original_name': 'Installation current',
     'platform': 'lektrico',
     'previous_unique_id': None,
-    'suggested_object_id': '1p7k_500006 Installation current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'installation_current',
     'unique_id': '500006_installation_current',
@@ -207,6 +211,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '1p7k_500006 Lifetime energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -232,7 +237,7 @@
     'original_name': 'Lifetime energy',
     'platform': 'lektrico',
     'previous_unique_id': None,
-    'suggested_object_id': '1p7k_500006 Lifetime energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifetime_energy',
     'unique_id': '500006_lifetime_energy',
@@ -260,6 +265,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '1p7k_500006 Limit reason',
     'capabilities': dict({
       'options': list([
         'no_limit',
@@ -297,7 +303,7 @@
     'original_name': 'Limit reason',
     'platform': 'lektrico',
     'previous_unique_id': None,
-    'suggested_object_id': '1p7k_500006 Limit reason',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'limit_reason',
     'unique_id': '500006_limit_reason',
@@ -336,6 +342,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '1p7k_500006 Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -364,7 +371,7 @@
     'original_name': 'Power',
     'platform': 'lektrico',
     'previous_unique_id': None,
-    'suggested_object_id': '1p7k_500006 Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '500006_power',
@@ -392,6 +399,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '1p7k_500006 State',
     'capabilities': dict({
       'options': list([
         'available',
@@ -427,7 +435,7 @@
     'original_name': 'State',
     'platform': 'lektrico',
     'previous_unique_id': None,
-    'suggested_object_id': '1p7k_500006 State',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'state',
     'unique_id': '500006_state',
@@ -464,6 +472,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '1p7k_500006 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -489,7 +498,7 @@
     'original_name': 'Temperature',
     'platform': 'lektrico',
     'previous_unique_id': None,
-    'suggested_object_id': '1p7k_500006 Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '500006_temperature',
@@ -517,6 +526,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '1p7k_500006 Voltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -540,7 +550,7 @@
     'original_name': 'Voltage',
     'platform': 'lektrico',
     'previous_unique_id': None,
-    'suggested_object_id': '1p7k_500006 Voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '500006_voltage',

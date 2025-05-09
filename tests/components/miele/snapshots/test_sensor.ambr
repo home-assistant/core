@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Freezer',
     'capabilities': dict({
       'options': list([
         'autocleaning',
@@ -48,7 +49,7 @@
     'original_name': None,
     'platform': 'miele',
     'previous_unique_id': None,
-    'suggested_object_id': 'Freezer',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
     'unique_id': 'Dummy_Appliance_1-state_status',
@@ -95,6 +96,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Freezer Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -120,7 +122,7 @@
     'original_name': 'Temperature',
     'platform': 'miele',
     'previous_unique_id': None,
-    'suggested_object_id': 'Freezer Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'Dummy_Appliance_1-state_temperature_1',
@@ -148,6 +150,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hood',
     'capabilities': dict({
       'options': list([
         'autocleaning',
@@ -192,7 +195,7 @@
     'original_name': None,
     'platform': 'miele',
     'previous_unique_id': None,
-    'suggested_object_id': 'Hood',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
     'unique_id': 'DummyAppliance_18-state_status',
@@ -239,6 +242,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Refrigerator',
     'capabilities': dict({
       'options': list([
         'autocleaning',
@@ -283,7 +287,7 @@
     'original_name': None,
     'platform': 'miele',
     'previous_unique_id': None,
-    'suggested_object_id': 'Refrigerator',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
     'unique_id': 'Dummy_Appliance_2-state_status',
@@ -330,6 +334,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Refrigerator Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -355,7 +360,7 @@
     'original_name': 'Temperature',
     'platform': 'miele',
     'previous_unique_id': None,
-    'suggested_object_id': 'Refrigerator Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'Dummy_Appliance_2-state_temperature_1',
@@ -383,6 +388,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washing machine',
     'capabilities': dict({
       'options': list([
         'autocleaning',
@@ -427,7 +433,7 @@
     'original_name': None,
     'platform': 'miele',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washing machine',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
     'unique_id': 'Dummy_Appliance_3-state_status',
@@ -474,6 +480,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washing machine Elapsed time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -497,7 +504,7 @@
     'original_name': 'Elapsed time',
     'platform': 'miele',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washing machine Elapsed time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'elapsed_time',
     'unique_id': 'Dummy_Appliance_3-state_elapsed_time',
@@ -524,6 +531,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washing machine Energy consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -549,7 +557,7 @@
     'original_name': 'Energy consumption',
     'platform': 'miele',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washing machine Energy consumption',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_consumption',
     'unique_id': 'Dummy_Appliance_3-current_energy_consumption',
@@ -577,6 +585,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washing machine Program',
     'capabilities': dict({
       'options': list([
         'automatic_plus',
@@ -637,7 +646,7 @@
     'original_name': 'Program',
     'platform': 'miele',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washing machine Program',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'program_id',
     'unique_id': 'Dummy_Appliance_3-state_program_id',
@@ -699,6 +708,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washing machine Program phase',
     'capabilities': dict({
       'options': list([
         'anti_crease',
@@ -744,7 +754,7 @@
     'original_name': 'Program phase',
     'platform': 'miele',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washing machine Program phase',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'program_phase',
     'unique_id': 'Dummy_Appliance_3-state_program_phase',
@@ -791,6 +801,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washing machine Program type',
     'capabilities': dict({
       'options': list([
         'automatic_program',
@@ -823,7 +834,7 @@
     'original_name': 'Program type',
     'platform': 'miele',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washing machine Program type',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'program_type',
     'unique_id': 'Dummy_Appliance_3-state_program_type',
@@ -857,6 +868,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washing machine Remaining time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -880,7 +892,7 @@
     'original_name': 'Remaining time',
     'platform': 'miele',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washing machine Remaining time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_time',
     'unique_id': 'Dummy_Appliance_3-state_remaining_time',
@@ -907,6 +919,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washing machine Spin speed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -930,7 +943,7 @@
     'original_name': 'Spin speed',
     'platform': 'miele',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washing machine Spin speed',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'spin_speed',
     'unique_id': 'Dummy_Appliance_3-state_spinning_speed',
@@ -956,6 +969,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washing machine Start in',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -985,7 +999,7 @@
     'original_name': 'Start in',
     'platform': 'miele',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washing machine Start in',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'start_time',
     'unique_id': 'Dummy_Appliance_3-state_start_time',
@@ -1012,6 +1026,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washing machine Water consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1037,7 +1052,7 @@
     'original_name': 'Water consumption',
     'platform': 'miele',
     'previous_unique_id': None,
-    'suggested_object_id': 'Washing machine Water consumption',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_consumption',
     'unique_id': 'Dummy_Appliance_3-current_water_consumption',

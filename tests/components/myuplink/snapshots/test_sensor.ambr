@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Average outdoor temp (BT1)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,7 +30,7 @@
     'original_name': 'Average outdoor temp (BT1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Average outdoor temp (BT1)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40067',
@@ -57,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Average outdoor temp (BT1)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -82,7 +84,7 @@
     'original_name': 'Average outdoor temp (BT1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Average outdoor temp (BT1)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40067',
@@ -110,6 +112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Calculated supply climate system 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -135,7 +138,7 @@
     'original_name': 'Calculated supply climate system 1',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Calculated supply climate system 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43009',
@@ -163,6 +166,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Calculated supply climate system 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -188,7 +192,7 @@
     'original_name': 'Calculated supply climate system 1',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Calculated supply climate system 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43009',
@@ -216,6 +220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Condenser (BT12)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -241,7 +246,7 @@
     'original_name': 'Condenser (BT12)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Condenser (BT12)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40017',
@@ -269,6 +274,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Condenser (BT12)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -294,7 +300,7 @@
     'original_name': 'Condenser (BT12)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Condenser (BT12)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40017',
@@ -322,6 +328,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Current (BE1)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -347,7 +354,7 @@
     'original_name': 'Current (BE1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Current (BE1)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40079',
@@ -375,6 +382,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Current (BE1)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -400,7 +408,7 @@
     'original_name': 'Current (BE1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Current (BE1)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40079',
@@ -428,6 +436,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Current (BE2)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -453,7 +462,7 @@
     'original_name': 'Current (BE2)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Current (BE2)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40081',
@@ -481,6 +490,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Current (BE2)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -506,7 +516,7 @@
     'original_name': 'Current (BE2)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Current (BE2)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40081',
@@ -534,6 +544,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Current (BE3)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -559,7 +570,7 @@
     'original_name': 'Current (BE3)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Current (BE3)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40083',
@@ -587,6 +598,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Current (BE3)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -612,7 +624,7 @@
     'original_name': 'Current (BE3)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Current (BE3)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40083',
@@ -640,6 +652,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Current compressor frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -665,7 +678,7 @@
     'original_name': 'Current compressor frequency',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Current compressor frequency',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-41778',
@@ -693,6 +706,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Current compressor frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -718,7 +732,7 @@
     'original_name': 'Current compressor frequency',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Current compressor frequency',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-41778',
@@ -746,6 +760,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Current fan mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -769,7 +784,7 @@
     'original_name': 'Current fan mode',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Current fan mode',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fan_mode',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43108',
@@ -794,6 +809,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Current fan mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -817,7 +833,7 @@
     'original_name': 'Current fan mode',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Current fan mode',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fan_mode',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43108',
@@ -842,6 +858,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Current hot water mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -865,7 +882,7 @@
     'original_name': 'Current hot water mode',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Current hot water mode',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43109',
@@ -891,6 +908,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Current hot water mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -914,7 +932,7 @@
     'original_name': 'Current hot water mode',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Current hot water mode',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43109',
@@ -940,6 +958,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Current outd temp (BT1)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -965,7 +984,7 @@
     'original_name': 'Current outd temp (BT1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Current outd temp (BT1)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40004',
@@ -993,6 +1012,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Current outd temp (BT1)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1018,7 +1038,7 @@
     'original_name': 'Current outd temp (BT1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Current outd temp (BT1)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40004',
@@ -1046,6 +1066,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Decrease from reference value',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1069,7 +1090,7 @@
     'original_name': 'Decrease from reference value',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Decrease from reference value',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43125',
@@ -1095,6 +1116,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Decrease from reference value',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1118,7 +1140,7 @@
     'original_name': 'Decrease from reference value',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Decrease from reference value',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43125',
@@ -1144,6 +1166,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Defrosting time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1172,7 +1195,7 @@
     'original_name': 'Defrosting time',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Defrosting time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43066',
@@ -1200,6 +1223,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Defrosting time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1228,7 +1252,7 @@
     'original_name': 'Defrosting time',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Defrosting time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43066',
@@ -1256,6 +1280,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Degree minutes',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1279,7 +1304,7 @@
     'original_name': 'Degree minutes',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Degree minutes',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40940',
@@ -1305,6 +1330,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Degree minutes',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1328,7 +1354,7 @@
     'original_name': 'Degree minutes',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Degree minutes',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40940',
@@ -1354,6 +1380,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Desired humidity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1377,7 +1404,7 @@
     'original_name': 'Desired humidity',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Desired humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-42770',
@@ -1403,6 +1430,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Desired humidity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1426,7 +1454,7 @@
     'original_name': 'Desired humidity',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Desired humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49633',
@@ -1452,6 +1480,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Desired humidity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1475,7 +1504,7 @@
     'original_name': 'Desired humidity',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Desired humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-42770',
@@ -1501,6 +1530,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Desired humidity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1524,7 +1554,7 @@
     'original_name': 'Desired humidity',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Desired humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49633',
@@ -1550,6 +1580,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Discharge (BT14)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1575,7 +1606,7 @@
     'original_name': 'Discharge (BT14)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Discharge (BT14)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40018',
@@ -1603,6 +1634,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Discharge (BT14)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1628,7 +1660,7 @@
     'original_name': 'Discharge (BT14)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Discharge (BT14)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40018',
@@ -1656,6 +1688,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City dT Inverter - exh air (BT20)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1681,7 +1714,7 @@
     'original_name': 'dT Inverter - exh air (BT20)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City dT Inverter - exh air (BT20)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43146',
@@ -1709,6 +1742,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City dT Inverter - exh air (BT20)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1734,7 +1768,7 @@
     'original_name': 'dT Inverter - exh air (BT20)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City dT Inverter - exh air (BT20)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43146',
@@ -1762,6 +1796,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Evaporator (BT16)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1787,7 +1822,7 @@
     'original_name': 'Evaporator (BT16)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Evaporator (BT16)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40020',
@@ -1815,6 +1850,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Evaporator (BT16)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1840,7 +1876,7 @@
     'original_name': 'Evaporator (BT16)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Evaporator (BT16)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40020',
@@ -1868,6 +1904,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Exhaust air (BT20)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1893,7 +1930,7 @@
     'original_name': 'Exhaust air (BT20)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Exhaust air (BT20)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40025',
@@ -1921,6 +1958,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Exhaust air (BT20)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1946,7 +1984,7 @@
     'original_name': 'Exhaust air (BT20)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Exhaust air (BT20)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40025',
@@ -1974,6 +2012,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Extract air (BT21)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1999,7 +2038,7 @@
     'original_name': 'Extract air (BT21)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Extract air (BT21)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40026',
@@ -2027,6 +2066,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Extract air (BT21)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2052,7 +2092,7 @@
     'original_name': 'Extract air (BT21)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Extract air (BT21)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40026',
@@ -2080,6 +2120,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Heating medium pump speed (GP1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2103,7 +2144,7 @@
     'original_name': 'Heating medium pump speed (GP1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Heating medium pump speed (GP1)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43437',
@@ -2129,6 +2170,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Heating medium pump speed (GP1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2152,7 +2194,7 @@
     'original_name': 'Heating medium pump speed (GP1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Heating medium pump speed (GP1)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43437',
@@ -2178,6 +2220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Hot water: charge current value ((BT12 | BT63))',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2203,7 +2246,7 @@
     'original_name': 'Hot water: charge current value ((BT12 | BT63))',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Hot water: charge current value ((BT12 | BT63))',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43116',
@@ -2231,6 +2274,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Hot water: charge current value ((BT12 | BT63))',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2256,7 +2300,7 @@
     'original_name': 'Hot water: charge current value ((BT12 | BT63))',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Hot water: charge current value ((BT12 | BT63))',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43116',
@@ -2284,6 +2328,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Hot water: charge set point value',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2309,7 +2354,7 @@
     'original_name': 'Hot water: charge set point value',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Hot water: charge set point value',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43115',
@@ -2337,6 +2382,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Hot water: charge set point value',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2362,7 +2408,7 @@
     'original_name': 'Hot water: charge set point value',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Hot water: charge set point value',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43115',
@@ -2390,6 +2436,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Hot water charging (BT6)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2415,7 +2462,7 @@
     'original_name': 'Hot water charging (BT6)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Hot water charging (BT6)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40014',
@@ -2443,6 +2490,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Hot water charging (BT6)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2468,7 +2516,7 @@
     'original_name': 'Hot water charging (BT6)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Hot water charging (BT6)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40014',
@@ -2496,6 +2544,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Hot water top (BT7)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2521,7 +2570,7 @@
     'original_name': 'Hot water top (BT7)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Hot water top (BT7)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40013',
@@ -2549,6 +2598,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Hot water top (BT7)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2574,7 +2624,7 @@
     'original_name': 'Hot water top (BT7)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Hot water top (BT7)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40013',
@@ -2602,6 +2652,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Int elec add heat',
     'capabilities': dict({
       'options': list([
         'Alarm',
@@ -2635,7 +2686,7 @@
     'original_name': 'Int elec add heat',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Int elec add heat',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'elect_add',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49993',
@@ -2670,6 +2721,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Int elec add heat',
     'capabilities': dict({
       'options': list([
         'Alarm',
@@ -2703,7 +2755,7 @@
     'original_name': 'Int elec add heat',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Int elec add heat',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'elect_add',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49993',
@@ -2738,6 +2790,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Int elec add heat raw',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2761,7 +2814,7 @@
     'original_name': 'Int elec add heat raw',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Int elec add heat raw',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'elect_add',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49993-raw',
@@ -2786,6 +2839,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Int elec add heat raw',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2809,7 +2863,7 @@
     'original_name': 'Int elec add heat raw',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Int elec add heat raw',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'elect_add',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49993-raw',
@@ -2834,6 +2888,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Inverter temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2859,7 +2914,7 @@
     'original_name': 'Inverter temperature',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Inverter temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43140',
@@ -2887,6 +2942,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Inverter temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2912,7 +2968,7 @@
     'original_name': 'Inverter temperature',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Inverter temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43140',
@@ -2940,6 +2996,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Liquid line (BT15)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2965,7 +3022,7 @@
     'original_name': 'Liquid line (BT15)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Liquid line (BT15)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40019',
@@ -2993,6 +3050,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Liquid line (BT15)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3018,7 +3076,7 @@
     'original_name': 'Liquid line (BT15)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Liquid line (BT15)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40019',
@@ -3046,6 +3104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Max compressor frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3071,7 +3130,7 @@
     'original_name': 'Max compressor frequency',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Max compressor frequency',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43123',
@@ -3099,6 +3158,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Max compressor frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3124,7 +3184,7 @@
     'original_name': 'Max compressor frequency',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Max compressor frequency',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43123',
@@ -3152,6 +3212,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Min compressor frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3177,7 +3238,7 @@
     'original_name': 'Min compressor frequency',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Min compressor frequency',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43122',
@@ -3205,6 +3266,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Min compressor frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3230,7 +3292,7 @@
     'original_name': 'Min compressor frequency',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Min compressor frequency',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43122',
@@ -3258,6 +3320,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Oil temperature (BT29)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3283,7 +3346,7 @@
     'original_name': 'Oil temperature (BT29)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Oil temperature (BT29)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40146',
@@ -3311,6 +3374,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Oil temperature (BT29)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3336,7 +3400,7 @@
     'original_name': 'Oil temperature (BT29)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Oil temperature (BT29)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40146',
@@ -3364,6 +3428,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Oil temperature (EP15-BT29)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3389,7 +3454,7 @@
     'original_name': 'Oil temperature (EP15-BT29)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Oil temperature (EP15-BT29)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40145',
@@ -3417,6 +3482,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Oil temperature (EP15-BT29)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3442,7 +3508,7 @@
     'original_name': 'Oil temperature (EP15-BT29)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Oil temperature (EP15-BT29)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40145',
@@ -3470,6 +3536,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Priority',
     'capabilities': dict({
       'options': list([
         'Off',
@@ -3503,7 +3570,7 @@
     'original_name': 'Priority',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Priority',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'priority',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49994',
@@ -3538,6 +3605,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Priority',
     'capabilities': dict({
       'options': list([
         'Off',
@@ -3571,7 +3639,7 @@
     'original_name': 'Priority',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Priority',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'priority',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49994',
@@ -3606,6 +3674,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Prior\xadity raw',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3629,7 +3698,7 @@
     'original_name': 'Prior\xadity raw',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Prior\xadity raw',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'priority',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49994-raw',
@@ -3654,6 +3723,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Prior\xadity raw',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3677,7 +3747,7 @@
     'original_name': 'Prior\xadity raw',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Prior\xadity raw',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'priority',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49994-raw',
@@ -3702,6 +3772,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City r start diff additional heat',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3725,7 +3796,7 @@
     'original_name': 'r start diff additional heat',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City r start diff additional heat',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-148072r',
@@ -3751,6 +3822,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City r start diff additional heat',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3774,7 +3846,7 @@
     'original_name': 'r start diff additional heat',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City r start diff additional heat',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-148072r',
@@ -3800,6 +3872,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Reference, air speed sensor',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3825,7 +3898,7 @@
     'original_name': 'Reference, air speed sensor',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Reference, air speed sensor',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'airflow',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43124',
@@ -3853,6 +3926,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Reference, air speed sensor',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3878,7 +3952,7 @@
     'original_name': 'Reference, air speed sensor',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Reference, air speed sensor',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'airflow',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43124',
@@ -3906,6 +3980,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Return line (BT3)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3931,7 +4006,7 @@
     'original_name': 'Return line (BT3)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Return line (BT3)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40012',
@@ -3959,6 +4034,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Return line (BT3)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3984,7 +4060,7 @@
     'original_name': 'Return line (BT3)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Return line (BT3)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40012',
@@ -4012,6 +4088,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Return line (BT62)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4037,7 +4114,7 @@
     'original_name': 'Return line (BT62)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Return line (BT62)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40048',
@@ -4065,6 +4142,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Return line (BT62)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4090,7 +4168,7 @@
     'original_name': 'Return line (BT62)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Return line (BT62)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40048',
@@ -4118,6 +4196,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Room temperature (BT50)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4143,7 +4222,7 @@
     'original_name': 'Room temperature (BT50)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Room temperature (BT50)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40033',
@@ -4171,6 +4250,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Room temperature (BT50)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4196,7 +4276,7 @@
     'original_name': 'Room temperature (BT50)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Room temperature (BT50)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40033',
@@ -4224,6 +4304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Status compressor',
     'capabilities': dict({
       'options': list([
         'Off',
@@ -4254,7 +4335,7 @@
     'original_name': 'Status compressor',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Status compressor',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_compressor',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43427',
@@ -4286,6 +4367,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Status compressor',
     'capabilities': dict({
       'options': list([
         'Off',
@@ -4316,7 +4398,7 @@
     'original_name': 'Status compressor',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Status compressor',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_compressor',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43427',
@@ -4348,6 +4430,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Status com\xadpressor raw',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4371,7 +4454,7 @@
     'original_name': 'Status com\xadpressor raw',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Status com\xadpressor raw',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_compressor',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43427-raw',
@@ -4396,6 +4479,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Status com\xadpressor raw',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4419,7 +4503,7 @@
     'original_name': 'Status com\xadpressor raw',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Status com\xadpressor raw',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_compressor',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43427-raw',
@@ -4444,6 +4528,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Suction gas (BT17)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4469,7 +4554,7 @@
     'original_name': 'Suction gas (BT17)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Suction gas (BT17)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40022',
@@ -4497,6 +4582,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Suction gas (BT17)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4522,7 +4608,7 @@
     'original_name': 'Suction gas (BT17)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Suction gas (BT17)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40022',
@@ -4550,6 +4636,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Supply line (BT2)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4575,7 +4662,7 @@
     'original_name': 'Supply line (BT2)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Supply line (BT2)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40008',
@@ -4603,6 +4690,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Supply line (BT2)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4628,7 +4716,7 @@
     'original_name': 'Supply line (BT2)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Supply line (BT2)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40008',
@@ -4656,6 +4744,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Supply line (BT61)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4681,7 +4770,7 @@
     'original_name': 'Supply line (BT61)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Supply line (BT61)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40047',
@@ -4709,6 +4798,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Supply line (BT61)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4734,7 +4824,7 @@
     'original_name': 'Supply line (BT61)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Supply line (BT61)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40047',
@@ -4762,6 +4852,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Time factor add heat',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4785,7 +4876,7 @@
     'original_name': 'Time factor add heat',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Time factor add heat',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43081',
@@ -4811,6 +4902,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Time factor add heat',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4834,7 +4926,7 @@
     'original_name': 'Time factor add heat',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Time factor add heat',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43081',
@@ -4860,6 +4952,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Value, air velocity sensor (BS1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4883,7 +4976,7 @@
     'original_name': 'Value, air velocity sensor (BS1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Value, air velocity sensor (BS1)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40050',
@@ -4909,6 +5002,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Value, air velocity sensor (BS1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4932,7 +5026,7 @@
     'original_name': 'Value, air velocity sensor (BS1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Value, air velocity sensor (BS1)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40050',

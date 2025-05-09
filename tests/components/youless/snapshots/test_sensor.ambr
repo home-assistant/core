@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy delivery meter Energy export tariff 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -29,7 +30,7 @@
     'original_name': 'Energy export tariff 1',
     'platform': 'youless',
     'previous_unique_id': None,
-    'suggested_object_id': 'Energy delivery meter Energy export tariff 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'youless_localhost_delivery_low',
@@ -57,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy delivery meter Energy export tariff 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -82,7 +84,7 @@
     'original_name': 'Energy export tariff 2',
     'platform': 'youless',
     'previous_unique_id': None,
-    'suggested_object_id': 'Energy delivery meter Energy export tariff 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'youless_localhost_delivery_high',
@@ -110,6 +112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gas meter Total gas usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -135,7 +138,7 @@
     'original_name': 'Total gas usage',
     'platform': 'youless',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gas meter Total gas usage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_gas_m3',
     'unique_id': 'youless_localhost_gas',
@@ -163,6 +166,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power meter Average peak',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -188,7 +192,7 @@
     'original_name': 'Average peak',
     'platform': 'youless',
     'previous_unique_id': None,
-    'suggested_object_id': 'Power meter Average peak',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'average_peak',
     'unique_id': 'youless_localhost_average_peak',
@@ -216,6 +220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power meter Current phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -241,7 +246,7 @@
     'original_name': 'Current phase 1',
     'platform': 'youless',
     'previous_unique_id': None,
-    'suggested_object_id': 'Power meter Current phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'youless_localhost_phase_1_current',
@@ -269,6 +274,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power meter Current phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -294,7 +300,7 @@
     'original_name': 'Current phase 2',
     'platform': 'youless',
     'previous_unique_id': None,
-    'suggested_object_id': 'Power meter Current phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'youless_localhost_phase_2_current',
@@ -322,6 +328,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power meter Current phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -347,7 +354,7 @@
     'original_name': 'Current phase 3',
     'platform': 'youless',
     'previous_unique_id': None,
-    'suggested_object_id': 'Power meter Current phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'youless_localhost_phase_3_current',
@@ -375,6 +382,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power meter Current power usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -400,7 +408,7 @@
     'original_name': 'Current power usage',
     'platform': 'youless',
     'previous_unique_id': None,
-    'suggested_object_id': 'Power meter Current power usage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_w',
     'unique_id': 'youless_localhost_usage',
@@ -428,6 +436,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power meter Energy import tariff 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -453,7 +462,7 @@
     'original_name': 'Energy import tariff 1',
     'platform': 'youless',
     'previous_unique_id': None,
-    'suggested_object_id': 'Power meter Energy import tariff 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'youless_localhost_power_low',
@@ -481,6 +490,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power meter Energy import tariff 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -506,7 +516,7 @@
     'original_name': 'Energy import tariff 2',
     'platform': 'youless',
     'previous_unique_id': None,
-    'suggested_object_id': 'Power meter Energy import tariff 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'youless_localhost_power_high',
@@ -534,6 +544,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power meter Month peak',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -559,7 +570,7 @@
     'original_name': 'Month peak',
     'platform': 'youless',
     'previous_unique_id': None,
-    'suggested_object_id': 'Power meter Month peak',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'month_peak',
     'unique_id': 'youless_localhost_month_peak',
@@ -587,6 +598,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power meter Power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -612,7 +624,7 @@
     'original_name': 'Power phase 1',
     'platform': 'youless',
     'previous_unique_id': None,
-    'suggested_object_id': 'Power meter Power phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'youless_localhost_phase_1_power',
@@ -640,6 +652,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power meter Power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -665,7 +678,7 @@
     'original_name': 'Power phase 2',
     'platform': 'youless',
     'previous_unique_id': None,
-    'suggested_object_id': 'Power meter Power phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'youless_localhost_phase_2_power',
@@ -693,6 +706,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power meter Power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -718,7 +732,7 @@
     'original_name': 'Power phase 3',
     'platform': 'youless',
     'previous_unique_id': None,
-    'suggested_object_id': 'Power meter Power phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'youless_localhost_phase_3_power',
@@ -746,6 +760,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power meter Tariff',
     'capabilities': dict({
       'options': list([
         '1',
@@ -774,7 +789,7 @@
     'original_name': 'Tariff',
     'platform': 'youless',
     'previous_unique_id': None,
-    'suggested_object_id': 'Power meter Tariff',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_tariff',
     'unique_id': 'youless_localhost_tariff',
@@ -804,6 +819,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power meter Total energy import',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -829,7 +845,7 @@
     'original_name': 'Total energy import',
     'platform': 'youless',
     'previous_unique_id': None,
-    'suggested_object_id': 'Power meter Total energy import',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
     'unique_id': 'youless_localhost_power_total',
@@ -857,6 +873,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power meter Voltage phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -882,7 +899,7 @@
     'original_name': 'Voltage phase 1',
     'platform': 'youless',
     'previous_unique_id': None,
-    'suggested_object_id': 'Power meter Voltage phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'youless_localhost_phase_1_voltage',
@@ -910,6 +927,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power meter Voltage phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -935,7 +953,7 @@
     'original_name': 'Voltage phase 2',
     'platform': 'youless',
     'previous_unique_id': None,
-    'suggested_object_id': 'Power meter Voltage phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'youless_localhost_phase_2_voltage',
@@ -963,6 +981,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power meter Voltage phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -988,7 +1007,7 @@
     'original_name': 'Voltage phase 3',
     'platform': 'youless',
     'previous_unique_id': None,
-    'suggested_object_id': 'Power meter Voltage phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'youless_localhost_phase_3_voltage',
@@ -1016,6 +1035,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'S0 meter Current usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1041,7 +1061,7 @@
     'original_name': 'Current usage',
     'platform': 'youless',
     'previous_unique_id': None,
-    'suggested_object_id': 'S0 meter Current usage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_s0_w',
     'unique_id': 'youless_localhost_extra_usage',
@@ -1069,6 +1089,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'S0 meter Total energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1094,7 +1115,7 @@
     'original_name': 'Total energy',
     'platform': 'youless',
     'previous_unique_id': None,
-    'suggested_object_id': 'S0 meter Total energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_s0_kwh',
     'unique_id': 'youless_localhost_extra_total',
@@ -1122,6 +1143,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water meter Total water usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1147,7 +1169,7 @@
     'original_name': 'Total water usage',
     'platform': 'youless',
     'previous_unique_id': None,
-    'suggested_object_id': 'Water meter Total water usage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_water',
     'unique_id': 'youless_localhost_water',

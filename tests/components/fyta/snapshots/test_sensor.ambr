@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gummibaum Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,7 +30,7 @@
     'original_name': 'Battery',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gummibaum Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-battery_level',
@@ -57,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gummibaum Last fertilized',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -80,7 +82,7 @@
     'original_name': 'Last fertilized',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gummibaum Last fertilized',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_fertilised',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-fertilise_last',
@@ -106,6 +108,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gummibaum Light',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -131,7 +134,7 @@
     'original_name': 'Light',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gummibaum Light',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-light',
@@ -158,6 +161,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gummibaum Light state',
     'capabilities': dict({
       'options': list([
         'no_data',
@@ -190,7 +194,7 @@
     'original_name': 'Light state',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gummibaum Light state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light_status',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-light_status',
@@ -224,6 +228,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gummibaum Moisture',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -249,7 +254,7 @@
     'original_name': 'Moisture',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gummibaum Moisture',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-moisture',
@@ -277,6 +282,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gummibaum Moisture state',
     'capabilities': dict({
       'options': list([
         'no_data',
@@ -309,7 +315,7 @@
     'original_name': 'Moisture state',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gummibaum Moisture state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'moisture_status',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-moisture_status',
@@ -343,6 +349,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gummibaum Next fertilization',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -366,7 +373,7 @@
     'original_name': 'Next fertilization',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gummibaum Next fertilization',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'next_fertilisation',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-fertilise_next',
@@ -392,6 +399,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gummibaum Nutrients state',
     'capabilities': dict({
       'options': list([
         'no_data',
@@ -424,7 +432,7 @@
     'original_name': 'Nutrients state',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gummibaum Nutrients state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nutrients_status',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-nutrients_status',
@@ -458,6 +466,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gummibaum pH',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -483,7 +492,7 @@
     'original_name': 'pH',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gummibaum pH',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-ph',
@@ -510,6 +519,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gummibaum Plant state',
     'capabilities': dict({
       'options': list([
         'deleted',
@@ -540,7 +550,7 @@
     'original_name': 'Plant state',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gummibaum Plant state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'plant_status',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-status',
@@ -572,6 +582,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gummibaum Salinity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -597,7 +608,7 @@
     'original_name': 'Salinity',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gummibaum Salinity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'salinity',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-salinity',
@@ -625,6 +636,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gummibaum Salinity state',
     'capabilities': dict({
       'options': list([
         'no_data',
@@ -657,7 +669,7 @@
     'original_name': 'Salinity state',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gummibaum Salinity state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'salinity_status',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-salinity_status',
@@ -691,6 +703,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gummibaum Scientific name',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -714,7 +727,7 @@
     'original_name': 'Scientific name',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gummibaum Scientific name',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'scientific_name',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-scientific_name',
@@ -739,6 +752,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gummibaum Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -764,7 +778,7 @@
     'original_name': 'Temperature',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gummibaum Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-temperature',
@@ -792,6 +806,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gummibaum Temperature state',
     'capabilities': dict({
       'options': list([
         'no_data',
@@ -824,7 +839,7 @@
     'original_name': 'Temperature state',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gummibaum Temperature state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_status',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-temperature_status',
@@ -858,6 +873,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kakaobaum Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -883,7 +899,7 @@
     'original_name': 'Battery',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kakaobaum Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-battery_level',
@@ -911,6 +927,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kakaobaum Last fertilized',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -934,7 +951,7 @@
     'original_name': 'Last fertilized',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kakaobaum Last fertilized',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_fertilised',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-fertilise_last',
@@ -960,6 +977,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kakaobaum Light',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -985,7 +1003,7 @@
     'original_name': 'Light',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kakaobaum Light',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-light',
@@ -1012,6 +1030,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kakaobaum Light state',
     'capabilities': dict({
       'options': list([
         'no_data',
@@ -1044,7 +1063,7 @@
     'original_name': 'Light state',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kakaobaum Light state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light_status',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-light_status',
@@ -1078,6 +1097,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kakaobaum Moisture',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1103,7 +1123,7 @@
     'original_name': 'Moisture',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kakaobaum Moisture',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-moisture',
@@ -1131,6 +1151,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kakaobaum Moisture state',
     'capabilities': dict({
       'options': list([
         'no_data',
@@ -1163,7 +1184,7 @@
     'original_name': 'Moisture state',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kakaobaum Moisture state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'moisture_status',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-moisture_status',
@@ -1197,6 +1218,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kakaobaum Next fertilization',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1220,7 +1242,7 @@
     'original_name': 'Next fertilization',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kakaobaum Next fertilization',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'next_fertilisation',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-fertilise_next',
@@ -1246,6 +1268,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kakaobaum Nutrients state',
     'capabilities': dict({
       'options': list([
         'no_data',
@@ -1278,7 +1301,7 @@
     'original_name': 'Nutrients state',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kakaobaum Nutrients state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nutrients_status',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-nutrients_status',
@@ -1312,6 +1335,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kakaobaum pH',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1337,7 +1361,7 @@
     'original_name': 'pH',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kakaobaum pH',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-ph',
@@ -1364,6 +1388,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kakaobaum Plant state',
     'capabilities': dict({
       'options': list([
         'deleted',
@@ -1394,7 +1419,7 @@
     'original_name': 'Plant state',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kakaobaum Plant state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'plant_status',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-status',
@@ -1426,6 +1451,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kakaobaum Salinity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1451,7 +1477,7 @@
     'original_name': 'Salinity',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kakaobaum Salinity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'salinity',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-salinity',
@@ -1479,6 +1505,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kakaobaum Salinity state',
     'capabilities': dict({
       'options': list([
         'no_data',
@@ -1511,7 +1538,7 @@
     'original_name': 'Salinity state',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kakaobaum Salinity state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'salinity_status',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-salinity_status',
@@ -1545,6 +1572,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kakaobaum Scientific name',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1568,7 +1596,7 @@
     'original_name': 'Scientific name',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kakaobaum Scientific name',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'scientific_name',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-scientific_name',
@@ -1593,6 +1621,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kakaobaum Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1618,7 +1647,7 @@
     'original_name': 'Temperature',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kakaobaum Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-temperature',
@@ -1646,6 +1675,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kakaobaum Temperature state',
     'capabilities': dict({
       'options': list([
         'no_data',
@@ -1678,7 +1708,7 @@
     'original_name': 'Temperature state',
     'platform': 'fyta',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kakaobaum Temperature state',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_status',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-temperature_status',

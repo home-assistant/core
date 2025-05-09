@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airzone 2:1 Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,7 +30,7 @@
     'original_name': 'Humidity',
     'platform': 'airzone',
     'previous_unique_id': None,
-    'suggested_object_id': 'Airzone 2:1 Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'airzone_unique_id_2:1_humidity',
@@ -57,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airzone 2:1 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -82,7 +84,7 @@
     'original_name': 'Temperature',
     'platform': 'airzone',
     'previous_unique_id': None,
-    'suggested_object_id': 'Airzone 2:1 Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'airzone_unique_id_2:1_temp',
@@ -110,6 +112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airzone DHW Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -135,7 +138,7 @@
     'original_name': 'Temperature',
     'platform': 'airzone',
     'previous_unique_id': None,
-    'suggested_object_id': 'Airzone DHW Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'airzone_unique_id_dhw_temp',
@@ -163,6 +166,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airzone WebServer RSSI',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -188,7 +192,7 @@
     'original_name': 'RSSI',
     'platform': 'airzone',
     'previous_unique_id': None,
-    'suggested_object_id': 'Airzone WebServer RSSI',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rssi',
     'unique_id': 'airzone_unique_id_ws_wifi-rssi',
@@ -216,6 +220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aux Heat Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -241,7 +246,7 @@
     'original_name': 'Temperature',
     'platform': 'airzone',
     'previous_unique_id': None,
-    'suggested_object_id': 'Aux Heat Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'airzone_unique_id_4:1_temp',
@@ -269,6 +274,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Despacho Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -294,7 +300,7 @@
     'original_name': 'Battery',
     'platform': 'airzone',
     'previous_unique_id': None,
-    'suggested_object_id': 'Despacho Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'airzone_unique_id_1:4_thermostat-battery',
@@ -322,6 +328,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Despacho Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -347,7 +354,7 @@
     'original_name': 'Humidity',
     'platform': 'airzone',
     'previous_unique_id': None,
-    'suggested_object_id': 'Despacho Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'airzone_unique_id_1:4_humidity',
@@ -375,6 +382,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Despacho Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -400,7 +408,7 @@
     'original_name': 'Signal strength',
     'platform': 'airzone',
     'previous_unique_id': None,
-    'suggested_object_id': 'Despacho Signal strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thermostat_signal',
     'unique_id': 'airzone_unique_id_1:4_thermostat-signal',
@@ -427,6 +435,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Despacho Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -452,7 +461,7 @@
     'original_name': 'Temperature',
     'platform': 'airzone',
     'previous_unique_id': None,
-    'suggested_object_id': 'Despacho Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'airzone_unique_id_1:4_temp',
@@ -480,6 +489,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DKN Plus Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -505,7 +515,7 @@
     'original_name': 'Temperature',
     'platform': 'airzone',
     'previous_unique_id': None,
-    'suggested_object_id': 'DKN Plus Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'airzone_unique_id_3:1_temp',
@@ -533,6 +543,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dorm #1 Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -558,7 +569,7 @@
     'original_name': 'Battery',
     'platform': 'airzone',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dorm #1 Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'airzone_unique_id_1:3_thermostat-battery',
@@ -586,6 +597,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dorm #1 Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -611,7 +623,7 @@
     'original_name': 'Humidity',
     'platform': 'airzone',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dorm #1 Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'airzone_unique_id_1:3_humidity',
@@ -639,6 +651,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dorm #1 Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -664,7 +677,7 @@
     'original_name': 'Signal strength',
     'platform': 'airzone',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dorm #1 Signal strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thermostat_signal',
     'unique_id': 'airzone_unique_id_1:3_thermostat-signal',
@@ -691,6 +704,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dorm #1 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -716,7 +730,7 @@
     'original_name': 'Temperature',
     'platform': 'airzone',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dorm #1 Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'airzone_unique_id_1:3_temp',
@@ -744,6 +758,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dorm #2 Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -769,7 +784,7 @@
     'original_name': 'Battery',
     'platform': 'airzone',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dorm #2 Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'airzone_unique_id_1:5_thermostat-battery',
@@ -797,6 +812,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dorm #2 Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -822,7 +838,7 @@
     'original_name': 'Humidity',
     'platform': 'airzone',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dorm #2 Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'airzone_unique_id_1:5_humidity',
@@ -850,6 +866,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dorm #2 Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -875,7 +892,7 @@
     'original_name': 'Signal strength',
     'platform': 'airzone',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dorm #2 Signal strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thermostat_signal',
     'unique_id': 'airzone_unique_id_1:5_thermostat-signal',
@@ -902,6 +919,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dorm #2 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -927,7 +945,7 @@
     'original_name': 'Temperature',
     'platform': 'airzone',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dorm #2 Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'airzone_unique_id_1:5_temp',
@@ -955,6 +973,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dorm Ppal Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -980,7 +999,7 @@
     'original_name': 'Battery',
     'platform': 'airzone',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dorm Ppal Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'airzone_unique_id_1:2_thermostat-battery',
@@ -1008,6 +1027,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dorm Ppal Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1033,7 +1053,7 @@
     'original_name': 'Humidity',
     'platform': 'airzone',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dorm Ppal Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'airzone_unique_id_1:2_humidity',
@@ -1061,6 +1081,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dorm Ppal Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1086,7 +1107,7 @@
     'original_name': 'Signal strength',
     'platform': 'airzone',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dorm Ppal Signal strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thermostat_signal',
     'unique_id': 'airzone_unique_id_1:2_thermostat-signal',
@@ -1113,6 +1134,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dorm Ppal Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1138,7 +1160,7 @@
     'original_name': 'Temperature',
     'platform': 'airzone',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dorm Ppal Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'airzone_unique_id_1:2_temp',
@@ -1166,6 +1188,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Salon Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1191,7 +1214,7 @@
     'original_name': 'Humidity',
     'platform': 'airzone',
     'previous_unique_id': None,
-    'suggested_object_id': 'Salon Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'airzone_unique_id_1:1_humidity',
@@ -1219,6 +1242,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Salon Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1244,7 +1268,7 @@
     'original_name': 'Temperature',
     'platform': 'airzone',
     'previous_unique_id': None,
-    'suggested_object_id': 'Salon Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'airzone_unique_id_1:1_temp',

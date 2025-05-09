@@ -20,6 +20,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frenck Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -48,7 +49,7 @@
     'original_name': 'Battery',
     'platform': 'elgato',
     'previous_unique_id': None,
-    'suggested_object_id': 'Frenck Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'GW24L1A02987_battery',
@@ -113,6 +114,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frenck Battery voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -144,7 +146,7 @@
     'original_name': 'Battery voltage',
     'platform': 'elgato',
     'previous_unique_id': None,
-    'suggested_object_id': 'Frenck Battery voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage',
     'unique_id': 'GW24L1A02987_voltage',
@@ -209,6 +211,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frenck Charging current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -240,7 +243,7 @@
     'original_name': 'Charging current',
     'platform': 'elgato',
     'previous_unique_id': None,
-    'suggested_object_id': 'Frenck Charging current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'input_charge_current',
     'unique_id': 'GW24L1A02987_input_charge_current',
@@ -305,6 +308,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frenck Charging power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -333,7 +337,7 @@
     'original_name': 'Charging power',
     'platform': 'elgato',
     'previous_unique_id': None,
-    'suggested_object_id': 'Frenck Charging power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_power',
     'unique_id': 'GW24L1A02987_charge_power',
@@ -398,6 +402,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frenck Charging voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -429,7 +434,7 @@
     'original_name': 'Charging voltage',
     'platform': 'elgato',
     'previous_unique_id': None,
-    'suggested_object_id': 'Frenck Charging voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'input_charge_voltage',
     'unique_id': 'GW24L1A02987_input_charge_voltage',

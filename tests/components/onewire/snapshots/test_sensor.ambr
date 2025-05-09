@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '10.111111111111 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,7 +30,7 @@
     'original_name': 'Temperature',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '10.111111111111 Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/10.111111111111/temperature',
@@ -59,6 +60,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '12.111111111111 Pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -84,7 +86,7 @@
     'original_name': 'Pressure',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '12.111111111111 Pressure',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/12.111111111111/TAI8570/pressure',
@@ -114,6 +116,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '12.111111111111 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -139,7 +142,7 @@
     'original_name': 'Temperature',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '12.111111111111 Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/12.111111111111/TAI8570/temperature',
@@ -169,6 +172,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '1D.111111111111 Counter A',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -194,7 +198,7 @@
     'original_name': 'Counter A',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '1D.111111111111 Counter A',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'counter_id',
     'unique_id': '/1D.111111111111/counter.A',
@@ -222,6 +226,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '1D.111111111111 Counter B',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -247,7 +252,7 @@
     'original_name': 'Counter B',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '1D.111111111111 Counter B',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'counter_id',
     'unique_id': '/1D.111111111111/counter.B',
@@ -275,6 +280,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '20.111111111111 Latest voltage A',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -300,7 +306,7 @@
     'original_name': 'Latest voltage A',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '20.111111111111 Latest voltage A',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'latest_voltage_id',
     'unique_id': '/20.111111111111/latestvolt.A',
@@ -330,6 +336,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '20.111111111111 Latest voltage B',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -355,7 +362,7 @@
     'original_name': 'Latest voltage B',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '20.111111111111 Latest voltage B',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'latest_voltage_id',
     'unique_id': '/20.111111111111/latestvolt.B',
@@ -385,6 +392,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '20.111111111111 Latest voltage C',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -410,7 +418,7 @@
     'original_name': 'Latest voltage C',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '20.111111111111 Latest voltage C',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'latest_voltage_id',
     'unique_id': '/20.111111111111/latestvolt.C',
@@ -440,6 +448,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '20.111111111111 Latest voltage D',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -465,7 +474,7 @@
     'original_name': 'Latest voltage D',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '20.111111111111 Latest voltage D',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'latest_voltage_id',
     'unique_id': '/20.111111111111/latestvolt.D',
@@ -495,6 +504,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '20.111111111111 Voltage A',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -520,7 +530,7 @@
     'original_name': 'Voltage A',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '20.111111111111 Voltage A',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_id',
     'unique_id': '/20.111111111111/volt.A',
@@ -550,6 +560,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '20.111111111111 Voltage B',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -575,7 +586,7 @@
     'original_name': 'Voltage B',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '20.111111111111 Voltage B',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_id',
     'unique_id': '/20.111111111111/volt.B',
@@ -605,6 +616,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '20.111111111111 Voltage C',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -630,7 +642,7 @@
     'original_name': 'Voltage C',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '20.111111111111 Voltage C',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_id',
     'unique_id': '/20.111111111111/volt.C',
@@ -660,6 +672,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '20.111111111111 Voltage D',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -685,7 +698,7 @@
     'original_name': 'Voltage D',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '20.111111111111 Voltage D',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_id',
     'unique_id': '/20.111111111111/volt.D',
@@ -715,6 +728,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '22.111111111111 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -740,7 +754,7 @@
     'original_name': 'Temperature',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '22.111111111111 Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/22.111111111111/temperature',
@@ -770,6 +784,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '26.111111111111 HIH3600 humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -795,7 +810,7 @@
     'original_name': 'HIH3600 humidity',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '26.111111111111 HIH3600 humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity_hih3600',
     'unique_id': '/26.111111111111/HIH3600/humidity',
@@ -825,6 +840,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '26.111111111111 HIH4000 humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -850,7 +866,7 @@
     'original_name': 'HIH4000 humidity',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '26.111111111111 HIH4000 humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity_hih4000',
     'unique_id': '/26.111111111111/HIH4000/humidity',
@@ -880,6 +896,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '26.111111111111 HIH5030 humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -905,7 +922,7 @@
     'original_name': 'HIH5030 humidity',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '26.111111111111 HIH5030 humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity_hih5030',
     'unique_id': '/26.111111111111/HIH5030/humidity',
@@ -935,6 +952,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '26.111111111111 HTM1735 humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -960,7 +978,7 @@
     'original_name': 'HTM1735 humidity',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '26.111111111111 HTM1735 humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity_htm1735',
     'unique_id': '/26.111111111111/HTM1735/humidity',
@@ -990,6 +1008,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '26.111111111111 Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1015,7 +1034,7 @@
     'original_name': 'Humidity',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '26.111111111111 Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/26.111111111111/humidity',
@@ -1045,6 +1064,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '26.111111111111 Illuminance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1070,7 +1090,7 @@
     'original_name': 'Illuminance',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '26.111111111111 Illuminance',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/26.111111111111/S3-R1-A/illuminance',
@@ -1100,6 +1120,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '26.111111111111 Pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1125,7 +1146,7 @@
     'original_name': 'Pressure',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '26.111111111111 Pressure',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/26.111111111111/B1-R1-A/pressure',
@@ -1155,6 +1176,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '26.111111111111 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1180,7 +1202,7 @@
     'original_name': 'Temperature',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '26.111111111111 Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/26.111111111111/temperature',
@@ -1210,6 +1232,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '26.111111111111 VAD voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1235,7 +1258,7 @@
     'original_name': 'VAD voltage',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '26.111111111111 VAD voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_vad',
     'unique_id': '/26.111111111111/VAD',
@@ -1265,6 +1288,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '26.111111111111 VDD voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1290,7 +1314,7 @@
     'original_name': 'VDD voltage',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '26.111111111111 VDD voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_vdd',
     'unique_id': '/26.111111111111/VDD',
@@ -1320,6 +1344,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '26.111111111111 VIS voltage difference',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1345,7 +1370,7 @@
     'original_name': 'VIS voltage difference',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '26.111111111111 VIS voltage difference',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_vis',
     'unique_id': '/26.111111111111/vis',
@@ -1375,6 +1400,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '28.111111111111 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1400,7 +1426,7 @@
     'original_name': 'Temperature',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '28.111111111111 Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/28.111111111111/temperature',
@@ -1430,6 +1456,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '28.222222222222 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1455,7 +1482,7 @@
     'original_name': 'Temperature',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '28.222222222222 Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/28.222222222222/temperature',
@@ -1485,6 +1512,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '28.222222222223 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1510,7 +1538,7 @@
     'original_name': 'Temperature',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '28.222222222223 Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/28.222222222223/temperature',
@@ -1540,6 +1568,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '30.111111111111 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1565,7 +1594,7 @@
     'original_name': 'Temperature',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '30.111111111111 Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/30.111111111111/temperature',
@@ -1595,6 +1624,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '30.111111111111 Thermocouple K temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1620,7 +1650,7 @@
     'original_name': 'Thermocouple K temperature',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '30.111111111111 Thermocouple K temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thermocouple_temperature_k',
     'unique_id': '/30.111111111111/typeX/temperature',
@@ -1650,6 +1680,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '30.111111111111 VIS voltage gradient',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1675,7 +1706,7 @@
     'original_name': 'VIS voltage gradient',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '30.111111111111 VIS voltage gradient',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_vis_gradient',
     'unique_id': '/30.111111111111/vis',
@@ -1705,6 +1736,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '30.111111111111 Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1730,7 +1762,7 @@
     'original_name': 'Voltage',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '30.111111111111 Voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/30.111111111111/volt',
@@ -1760,6 +1792,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '3B.111111111111 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1785,7 +1818,7 @@
     'original_name': 'Temperature',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '3B.111111111111 Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/3B.111111111111/temperature',
@@ -1815,6 +1848,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '42.111111111111 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1840,7 +1874,7 @@
     'original_name': 'Temperature',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '42.111111111111 Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/42.111111111111/temperature',
@@ -1870,6 +1904,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '7E.111111111111 Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1895,7 +1930,7 @@
     'original_name': 'Humidity',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '7E.111111111111 Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/7E.111111111111/EDS0068/humidity',
@@ -1925,6 +1960,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '7E.111111111111 Illuminance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1950,7 +1986,7 @@
     'original_name': 'Illuminance',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '7E.111111111111 Illuminance',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/7E.111111111111/EDS0068/light',
@@ -1980,6 +2016,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '7E.111111111111 Pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2005,7 +2042,7 @@
     'original_name': 'Pressure',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '7E.111111111111 Pressure',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/7E.111111111111/EDS0068/pressure',
@@ -2035,6 +2072,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '7E.111111111111 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2060,7 +2098,7 @@
     'original_name': 'Temperature',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '7E.111111111111 Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/7E.111111111111/EDS0068/temperature',
@@ -2090,6 +2128,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '7E.222222222222 Pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2115,7 +2154,7 @@
     'original_name': 'Pressure',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '7E.222222222222 Pressure',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/7E.222222222222/EDS0066/pressure',
@@ -2145,6 +2184,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '7E.222222222222 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2170,7 +2210,7 @@
     'original_name': 'Temperature',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': '7E.222222222222 Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/7E.222222222222/EDS0066/temperature',
@@ -2200,6 +2240,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'A6.111111111111 HIH3600 humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2225,7 +2266,7 @@
     'original_name': 'HIH3600 humidity',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': 'A6.111111111111 HIH3600 humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity_hih3600',
     'unique_id': '/A6.111111111111/HIH3600/humidity',
@@ -2255,6 +2296,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'A6.111111111111 HIH4000 humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2280,7 +2322,7 @@
     'original_name': 'HIH4000 humidity',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': 'A6.111111111111 HIH4000 humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity_hih4000',
     'unique_id': '/A6.111111111111/HIH4000/humidity',
@@ -2310,6 +2352,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'A6.111111111111 HIH5030 humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2335,7 +2378,7 @@
     'original_name': 'HIH5030 humidity',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': 'A6.111111111111 HIH5030 humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity_hih5030',
     'unique_id': '/A6.111111111111/HIH5030/humidity',
@@ -2365,6 +2408,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'A6.111111111111 HTM1735 humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2390,7 +2434,7 @@
     'original_name': 'HTM1735 humidity',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': 'A6.111111111111 HTM1735 humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity_htm1735',
     'unique_id': '/A6.111111111111/HTM1735/humidity',
@@ -2420,6 +2464,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'A6.111111111111 Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2445,7 +2490,7 @@
     'original_name': 'Humidity',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': 'A6.111111111111 Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/A6.111111111111/humidity',
@@ -2475,6 +2520,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'A6.111111111111 Illuminance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2500,7 +2546,7 @@
     'original_name': 'Illuminance',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': 'A6.111111111111 Illuminance',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/A6.111111111111/S3-R1-A/illuminance',
@@ -2530,6 +2576,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'A6.111111111111 Pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2555,7 +2602,7 @@
     'original_name': 'Pressure',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': 'A6.111111111111 Pressure',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/A6.111111111111/B1-R1-A/pressure',
@@ -2585,6 +2632,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'A6.111111111111 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2610,7 +2658,7 @@
     'original_name': 'Temperature',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': 'A6.111111111111 Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/A6.111111111111/temperature',
@@ -2640,6 +2688,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'A6.111111111111 VAD voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2665,7 +2714,7 @@
     'original_name': 'VAD voltage',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': 'A6.111111111111 VAD voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_vad',
     'unique_id': '/A6.111111111111/VAD',
@@ -2695,6 +2744,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'A6.111111111111 VDD voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2720,7 +2770,7 @@
     'original_name': 'VDD voltage',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': 'A6.111111111111 VDD voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_vdd',
     'unique_id': '/A6.111111111111/VDD',
@@ -2750,6 +2800,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'A6.111111111111 VIS voltage difference',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2775,7 +2826,7 @@
     'original_name': 'VIS voltage difference',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': 'A6.111111111111 VIS voltage difference',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_vis',
     'unique_id': '/A6.111111111111/vis',
@@ -2805,6 +2856,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'EF.111111111111 Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2830,7 +2882,7 @@
     'original_name': 'Humidity',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': 'EF.111111111111 Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/EF.111111111111/humidity/humidity_corrected',
@@ -2860,6 +2912,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'EF.111111111111 Raw humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2885,7 +2938,7 @@
     'original_name': 'Raw humidity',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': 'EF.111111111111 Raw humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity_raw',
     'unique_id': '/EF.111111111111/humidity/humidity_raw',
@@ -2915,6 +2968,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'EF.111111111111 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2940,7 +2994,7 @@
     'original_name': 'Temperature',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': 'EF.111111111111 Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/EF.111111111111/humidity/temperature',
@@ -2970,6 +3024,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'EF.111111111112 Moisture 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2995,7 +3050,7 @@
     'original_name': 'Moisture 2',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': 'EF.111111111112 Moisture 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'moisture_id',
     'unique_id': '/EF.111111111112/moisture/sensor.2',
@@ -3025,6 +3080,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'EF.111111111112 Moisture 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3050,7 +3106,7 @@
     'original_name': 'Moisture 3',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': 'EF.111111111112 Moisture 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'moisture_id',
     'unique_id': '/EF.111111111112/moisture/sensor.3',
@@ -3080,6 +3136,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'EF.111111111112 Wetness 0',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3105,7 +3162,7 @@
     'original_name': 'Wetness 0',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': 'EF.111111111112 Wetness 0',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wetness_id',
     'unique_id': '/EF.111111111112/moisture/sensor.0',
@@ -3135,6 +3192,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'EF.111111111112 Wetness 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3160,7 +3218,7 @@
     'original_name': 'Wetness 1',
     'platform': 'onewire',
     'previous_unique_id': None,
-    'suggested_object_id': 'EF.111111111112 Wetness 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wetness_id',
     'unique_id': '/EF.111111111112/moisture/sensor.1',

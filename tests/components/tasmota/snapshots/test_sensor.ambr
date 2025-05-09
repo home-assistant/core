@@ -20,6 +20,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tasmota DHT11 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -45,7 +46,7 @@
     'original_name': 'DHT11 Temperature',
     'platform': 'tasmota',
     'previous_unique_id': None,
-    'suggested_object_id': 'Tasmota DHT11 Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_DHT11_Temperature',
@@ -103,6 +104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tasmota TX23 Speed Act',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -126,7 +128,7 @@
     'original_name': 'TX23 Speed Act',
     'platform': 'tasmota',
     'previous_unique_id': None,
-    'suggested_object_id': 'Tasmota TX23 Speed Act',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_TX23_Speed_Act',
@@ -151,6 +153,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tasmota TX23 Dir Card',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -174,7 +177,7 @@
     'original_name': 'TX23 Dir Card',
     'platform': 'tasmota',
     'previous_unique_id': None,
-    'suggested_object_id': 'Tasmota TX23 Dir Card',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_TX23_Dir_Card',
@@ -256,6 +259,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tasmota ENERGY TotalTariff 0',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -281,7 +285,7 @@
     'original_name': 'ENERGY TotalTariff 0',
     'platform': 'tasmota',
     'previous_unique_id': None,
-    'suggested_object_id': 'Tasmota ENERGY TotalTariff 0',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ENERGY_TotalTariff_0',
@@ -405,6 +409,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tasmota ENERGY TotalTariff 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -430,7 +435,7 @@
     'original_name': 'ENERGY TotalTariff 1',
     'platform': 'tasmota',
     'previous_unique_id': None,
-    'suggested_object_id': 'Tasmota ENERGY TotalTariff 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ENERGY_TotalTariff_1',
@@ -458,6 +463,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tasmota ENERGY ExportTariff 0',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -483,7 +489,7 @@
     'original_name': 'ENERGY ExportTariff 0',
     'platform': 'tasmota',
     'previous_unique_id': None,
-    'suggested_object_id': 'Tasmota ENERGY ExportTariff 0',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ENERGY_ExportTariff_0',
@@ -511,6 +517,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tasmota ENERGY ExportTariff 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -536,7 +543,7 @@
     'original_name': 'ENERGY ExportTariff 1',
     'platform': 'tasmota',
     'previous_unique_id': None,
-    'suggested_object_id': 'Tasmota ENERGY ExportTariff 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ENERGY_ExportTariff_1',
@@ -596,6 +603,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tasmota DS18B20 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -621,7 +629,7 @@
     'original_name': 'DS18B20 Temperature',
     'platform': 'tasmota',
     'previous_unique_id': None,
-    'suggested_object_id': 'Tasmota DS18B20 Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_DS18B20_Temperature',
@@ -646,6 +654,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tasmota DS18B20 Id',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -669,7 +678,7 @@
     'original_name': 'DS18B20 Id',
     'platform': 'tasmota',
     'previous_unique_id': None,
-    'suggested_object_id': 'Tasmota DS18B20 Id',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_DS18B20_Id',
@@ -755,6 +764,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tasmota ENERGY Total',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -780,7 +790,7 @@
     'original_name': 'ENERGY Total',
     'platform': 'tasmota',
     'previous_unique_id': None,
-    'suggested_object_id': 'Tasmota ENERGY Total',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ENERGY_Total',
@@ -840,6 +850,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tasmota ENERGY Total 0',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -865,7 +876,7 @@
     'original_name': 'ENERGY Total 0',
     'platform': 'tasmota',
     'previous_unique_id': None,
-    'suggested_object_id': 'Tasmota ENERGY Total 0',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ENERGY_Total_0',
@@ -893,6 +904,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tasmota ENERGY Total 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -918,7 +930,7 @@
     'original_name': 'ENERGY Total 1',
     'platform': 'tasmota',
     'previous_unique_id': None,
-    'suggested_object_id': 'Tasmota ENERGY Total 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ENERGY_Total_1',
@@ -1010,6 +1022,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tasmota ENERGY Total Phase1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1035,7 +1048,7 @@
     'original_name': 'ENERGY Total Phase1',
     'platform': 'tasmota',
     'previous_unique_id': None,
-    'suggested_object_id': 'Tasmota ENERGY Total Phase1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ENERGY_Total_Phase1',
@@ -1063,6 +1076,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tasmota ENERGY Total Phase2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1088,7 +1102,7 @@
     'original_name': 'ENERGY Total Phase2',
     'platform': 'tasmota',
     'previous_unique_id': None,
-    'suggested_object_id': 'Tasmota ENERGY Total Phase2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ENERGY_Total_Phase2',
@@ -1180,6 +1194,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tasmota ANALOG Temperature1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1205,7 +1220,7 @@
     'original_name': 'ANALOG Temperature1',
     'platform': 'tasmota',
     'previous_unique_id': None,
-    'suggested_object_id': 'Tasmota ANALOG Temperature1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ANALOG_Temperature1',
@@ -1265,6 +1280,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tasmota ANALOG Temperature2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1290,7 +1306,7 @@
     'original_name': 'ANALOG Temperature2',
     'platform': 'tasmota',
     'previous_unique_id': None,
-    'suggested_object_id': 'Tasmota ANALOG Temperature2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ANALOG_Temperature2',
@@ -1318,6 +1334,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tasmota ANALOG Illuminance3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1343,7 +1360,7 @@
     'original_name': 'ANALOG Illuminance3',
     'platform': 'tasmota',
     'previous_unique_id': None,
-    'suggested_object_id': 'Tasmota ANALOG Illuminance3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ANALOG_Illuminance3',
@@ -1435,6 +1452,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tasmota ANALOG CTEnergy1 Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1460,7 +1478,7 @@
     'original_name': 'ANALOG CTEnergy1 Energy',
     'platform': 'tasmota',
     'previous_unique_id': None,
-    'suggested_object_id': 'Tasmota ANALOG CTEnergy1 Energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ANALOG_CTEnergy1_Energy',
@@ -1584,6 +1602,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tasmota ANALOG CTEnergy1 Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1609,7 +1628,7 @@
     'original_name': 'ANALOG CTEnergy1 Power',
     'platform': 'tasmota',
     'previous_unique_id': None,
-    'suggested_object_id': 'Tasmota ANALOG CTEnergy1 Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ANALOG_CTEnergy1_Power',
@@ -1637,6 +1656,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tasmota ANALOG CTEnergy1 Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1662,7 +1682,7 @@
     'original_name': 'ANALOG CTEnergy1 Voltage',
     'platform': 'tasmota',
     'previous_unique_id': None,
-    'suggested_object_id': 'Tasmota ANALOG CTEnergy1 Voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ANALOG_CTEnergy1_Voltage',
@@ -1690,6 +1710,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tasmota ANALOG CTEnergy1 Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1715,7 +1736,7 @@
     'original_name': 'ANALOG CTEnergy1 Current',
     'platform': 'tasmota',
     'previous_unique_id': None,
-    'suggested_object_id': 'Tasmota ANALOG CTEnergy1 Current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ANALOG_CTEnergy1_Current',
@@ -1772,6 +1793,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tasmota SENSOR1 Unknown',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1795,7 +1817,7 @@
     'original_name': 'SENSOR1 Unknown',
     'platform': 'tasmota',
     'previous_unique_id': None,
-    'suggested_object_id': 'Tasmota SENSOR1 Unknown',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_SENSOR1_Unknown',
@@ -1902,6 +1924,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tasmota SENSOR2 Unknown',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1925,7 +1948,7 @@
     'original_name': 'SENSOR2 Unknown',
     'platform': 'tasmota',
     'previous_unique_id': None,
-    'suggested_object_id': 'Tasmota SENSOR2 Unknown',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_SENSOR2_Unknown',
@@ -1951,6 +1974,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tasmota SENSOR3 Unknown',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1976,7 +2000,7 @@
     'original_name': 'SENSOR3 Unknown',
     'platform': 'tasmota',
     'previous_unique_id': None,
-    'suggested_object_id': 'Tasmota SENSOR3 Unknown',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_SENSOR3_Unknown',
@@ -2002,6 +2026,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tasmota SENSOR4 Unknown',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2027,7 +2052,7 @@
     'original_name': 'SENSOR4 Unknown',
     'platform': 'tasmota',
     'previous_unique_id': None,
-    'suggested_object_id': 'Tasmota SENSOR4 Unknown',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_SENSOR4_Unknown',

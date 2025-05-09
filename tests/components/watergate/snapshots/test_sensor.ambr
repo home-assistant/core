@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sonic MQTT up since',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,7 +28,7 @@
     'original_name': 'MQTT up since',
     'platform': 'watergate',
     'previous_unique_id': None,
-    'suggested_object_id': 'Sonic MQTT up since',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mqtt_up_since',
     'unique_id': 'a63182948ce2896a.mqtt_up_since',
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sonic Power supply mode',
     'capabilities': dict({
       'options': list([
         'battery',
@@ -82,7 +84,7 @@
     'original_name': 'Power supply mode',
     'platform': 'watergate',
     'previous_unique_id': None,
-    'suggested_object_id': 'Sonic Power supply mode',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_supply_mode',
     'unique_id': 'a63182948ce2896a.power_supply_mode',
@@ -113,6 +115,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sonic Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -138,7 +141,7 @@
     'original_name': 'Signal strength',
     'platform': 'watergate',
     'previous_unique_id': None,
-    'suggested_object_id': 'Sonic Signal strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a63182948ce2896a.rssi',
@@ -166,6 +169,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sonic Up since',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -189,7 +193,7 @@
     'original_name': 'Up since',
     'platform': 'watergate',
     'previous_unique_id': None,
-    'suggested_object_id': 'Sonic Up since',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'up_since',
     'unique_id': 'a63182948ce2896a.up_since',
@@ -215,6 +219,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sonic Volume flow rate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -240,7 +245,7 @@
     'original_name': 'Volume flow rate',
     'platform': 'watergate',
     'previous_unique_id': None,
-    'suggested_object_id': 'Sonic Volume flow rate',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a63182948ce2896a.water_flow_rate',
@@ -268,6 +273,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sonic Water meter duration',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -293,7 +299,7 @@
     'original_name': 'Water meter duration',
     'platform': 'watergate',
     'previous_unique_id': None,
-    'suggested_object_id': 'Sonic Water meter duration',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_meter_duration',
     'unique_id': 'a63182948ce2896a.water_meter_duration',
@@ -321,6 +327,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sonic Water meter volume',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -346,7 +353,7 @@
     'original_name': 'Water meter volume',
     'platform': 'watergate',
     'previous_unique_id': None,
-    'suggested_object_id': 'Sonic Water meter volume',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_meter_volume',
     'unique_id': 'a63182948ce2896a.water_meter_volume',
@@ -374,6 +381,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sonic Water pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -399,7 +407,7 @@
     'original_name': 'Water pressure',
     'platform': 'watergate',
     'previous_unique_id': None,
-    'suggested_object_id': 'Sonic Water pressure',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_pressure',
     'unique_id': 'a63182948ce2896a.water_pressure',
@@ -427,6 +435,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sonic Water temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -452,7 +461,7 @@
     'original_name': 'Water temperature',
     'platform': 'watergate',
     'previous_unique_id': None,
-    'suggested_object_id': 'Sonic Water temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_temperature',
     'unique_id': 'a63182948ce2896a.water_temperature',
@@ -480,6 +489,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sonic Wi-Fi up since',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -503,7 +513,7 @@
     'original_name': 'Wi-Fi up since',
     'platform': 'watergate',
     'previous_unique_id': None,
-    'suggested_object_id': 'Sonic Wi-Fi up since',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_up_since',
     'unique_id': 'a63182948ce2896a.wifi_up_since',

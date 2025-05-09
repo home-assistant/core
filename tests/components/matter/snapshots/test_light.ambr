@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Color Temperature Light',
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
       'max_mireds': 500,
@@ -35,7 +36,7 @@
     'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock Color Temperature Light',
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 32>,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterLight-6-0',
@@ -85,6 +86,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Dimmable Light',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -112,7 +114,7 @@
     'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock Dimmable Light',
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 32>,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterLight-6-0',
@@ -143,6 +145,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dimmable Plugin Unit',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -170,7 +173,7 @@
     'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dimmable Plugin Unit',
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 32>,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-MatterLight-6-0',
@@ -201,6 +204,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Extended Color Light',
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
       'max_mireds': 500,
@@ -234,7 +238,7 @@
     'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock Extended Color Light',
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 32>,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterLight-6-0',
@@ -286,6 +290,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inovelli Light (1)',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -313,7 +318,7 @@
     'original_name': 'Light (1)',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Inovelli Light (1)',
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 32>,
     'translation_key': 'light',
     'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-1-MatterLight-6-0',
@@ -344,6 +349,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inovelli Light (6)',
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
       'max_mireds': 500,
@@ -377,7 +383,7 @@
     'original_name': 'Light (6)',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Inovelli Light (6)',
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 32>,
     'translation_key': 'light',
     'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-6-MatterLight-6-0',
@@ -419,6 +425,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock OnOff Light',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.ONOFF: 'onoff'>,
@@ -446,7 +453,7 @@
     'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock OnOff Light',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterLight-6-0',
@@ -476,6 +483,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock OnOff Light',
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
       'max_mireds': 500,
@@ -509,7 +517,7 @@
     'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock OnOff Light',
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 32>,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterLight-6-0',
@@ -551,6 +559,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Light',
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
       'max_mireds': 500,
@@ -584,7 +593,7 @@
     'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock Light',
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 32>,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterLight-6-0',
@@ -626,6 +635,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'D215S',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.ONOFF: 'onoff'>,
@@ -653,7 +663,7 @@
     'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'D215S',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-MatterLight-6-0',

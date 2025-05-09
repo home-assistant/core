@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disk free inodes /',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,7 +30,7 @@
     'original_name': 'Disk free inodes /',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disk free inodes /',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_ifree',
     'unique_id': '12:34:56:78:9a:bc_/_ifree',
@@ -55,6 +56,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disk free inodes /media/disk1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -80,7 +82,7 @@
     'original_name': 'Disk free inodes /media/disk1',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disk free inodes /media/disk1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_ifree',
     'unique_id': '12:34:56:78:9a:bc_/media/disk1_ifree',
@@ -106,6 +108,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disk free inodes /media/disk2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -131,7 +134,7 @@
     'original_name': 'Disk free inodes /media/disk2',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disk free inodes /media/disk2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_ifree',
     'unique_id': '12:34:56:78:9a:bc_/media/disk2_ifree',
@@ -157,6 +160,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disk free space /',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -188,7 +192,7 @@
     'original_name': 'Disk free space /',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disk free space /',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_free',
     'unique_id': '12:34:56:78:9a:bc_/_free',
@@ -216,6 +220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disk free space /media/disk1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -247,7 +252,7 @@
     'original_name': 'Disk free space /media/disk1',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disk free space /media/disk1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_free',
     'unique_id': '12:34:56:78:9a:bc_/media/disk1_free',
@@ -275,6 +280,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disk free space /media/disk2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -306,7 +312,7 @@
     'original_name': 'Disk free space /media/disk2',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disk free space /media/disk2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_free',
     'unique_id': '12:34:56:78:9a:bc_/media/disk2_free',
@@ -334,6 +340,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disk inode usage /',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -359,7 +366,7 @@
     'original_name': 'Disk inode usage /',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disk inode usage /',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_iused_percent',
     'unique_id': '12:34:56:78:9a:bc_/_iused_percent',
@@ -386,6 +393,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disk inode usage /media/disk1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -411,7 +419,7 @@
     'original_name': 'Disk inode usage /media/disk1',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disk inode usage /media/disk1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_iused_percent',
     'unique_id': '12:34:56:78:9a:bc_/media/disk1_iused_percent',
@@ -438,6 +446,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disk inode usage /media/disk2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -463,7 +472,7 @@
     'original_name': 'Disk inode usage /media/disk2',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disk inode usage /media/disk2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_iused_percent',
     'unique_id': '12:34:56:78:9a:bc_/media/disk2_iused_percent',
@@ -490,6 +499,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disk total inodes /',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -515,7 +525,7 @@
     'original_name': 'Disk total inodes /',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disk total inodes /',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_itotal',
     'unique_id': '12:34:56:78:9a:bc_/_itotal',
@@ -541,6 +551,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disk total inodes /media/disk1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -566,7 +577,7 @@
     'original_name': 'Disk total inodes /media/disk1',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disk total inodes /media/disk1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_itotal',
     'unique_id': '12:34:56:78:9a:bc_/media/disk1_itotal',
@@ -592,6 +603,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disk total inodes /media/disk2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -617,7 +629,7 @@
     'original_name': 'Disk total inodes /media/disk2',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disk total inodes /media/disk2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_itotal',
     'unique_id': '12:34:56:78:9a:bc_/media/disk2_itotal',
@@ -643,6 +655,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disk total space /',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -674,7 +687,7 @@
     'original_name': 'Disk total space /',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disk total space /',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_total',
     'unique_id': '12:34:56:78:9a:bc_/_total',
@@ -702,6 +715,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disk total space /media/disk1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -733,7 +747,7 @@
     'original_name': 'Disk total space /media/disk1',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disk total space /media/disk1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_total',
     'unique_id': '12:34:56:78:9a:bc_/media/disk1_total',
@@ -761,6 +775,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disk total space /media/disk2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -792,7 +807,7 @@
     'original_name': 'Disk total space /media/disk2',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disk total space /media/disk2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_total',
     'unique_id': '12:34:56:78:9a:bc_/media/disk2_total',
@@ -820,6 +835,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disk usage /',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -845,7 +861,7 @@
     'original_name': 'Disk usage /',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disk usage /',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_used_percent',
     'unique_id': '12:34:56:78:9a:bc_/_used_percent',
@@ -872,6 +888,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disk usage /media/disk1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -897,7 +914,7 @@
     'original_name': 'Disk usage /media/disk1',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disk usage /media/disk1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_used_percent',
     'unique_id': '12:34:56:78:9a:bc_/media/disk1_used_percent',
@@ -924,6 +941,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disk usage /media/disk2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -949,7 +967,7 @@
     'original_name': 'Disk usage /media/disk2',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disk usage /media/disk2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_used_percent',
     'unique_id': '12:34:56:78:9a:bc_/media/disk2_used_percent',
@@ -976,6 +994,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disk used inodes /',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1001,7 +1020,7 @@
     'original_name': 'Disk used inodes /',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disk used inodes /',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_iused',
     'unique_id': '12:34:56:78:9a:bc_/_iused',
@@ -1027,6 +1046,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disk used inodes /media/disk1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1052,7 +1072,7 @@
     'original_name': 'Disk used inodes /media/disk1',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disk used inodes /media/disk1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_iused',
     'unique_id': '12:34:56:78:9a:bc_/media/disk1_iused',
@@ -1078,6 +1098,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disk used inodes /media/disk2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1103,7 +1124,7 @@
     'original_name': 'Disk used inodes /media/disk2',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disk used inodes /media/disk2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_iused',
     'unique_id': '12:34:56:78:9a:bc_/media/disk2_iused',
@@ -1129,6 +1150,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disk used space /',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1160,7 +1182,7 @@
     'original_name': 'Disk used space /',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disk used space /',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_used',
     'unique_id': '12:34:56:78:9a:bc_/_used',
@@ -1188,6 +1210,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disk used space /media/disk1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1219,7 +1242,7 @@
     'original_name': 'Disk used space /media/disk1',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disk used space /media/disk1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_used',
     'unique_id': '12:34:56:78:9a:bc_/media/disk1_used',
@@ -1247,6 +1270,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disk used space /media/disk2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1278,7 +1302,7 @@
     'original_name': 'Disk used space /media/disk2',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disk used space /media/disk2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_used',
     'unique_id': '12:34:56:78:9a:bc_/media/disk2_used',
@@ -1306,6 +1330,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disks free space',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1337,7 +1362,7 @@
     'original_name': 'Disks free space',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disks free space',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_free',
     'unique_id': '12:34:56:78:9a:bc_disk_free',
@@ -1365,6 +1390,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disks total space',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1396,7 +1422,7 @@
     'original_name': 'Disks total space',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disks total space',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_total',
     'unique_id': '12:34:56:78:9a:bc_disk_total',
@@ -1424,6 +1450,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Disks used space',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1455,7 +1482,7 @@
     'original_name': 'Disks used space',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Disks used space',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_used',
     'unique_id': '12:34:56:78:9a:bc_disk_used',
@@ -1483,6 +1510,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Load (15 min)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1508,7 +1536,7 @@
     'original_name': 'Load (15 min)',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Load (15 min)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'load_15m',
     'unique_id': '12:34:56:78:9a:bc_load_15m',
@@ -1534,6 +1562,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Load (1 min)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1559,7 +1588,7 @@
     'original_name': 'Load (1 min)',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Load (1 min)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'load_1m',
     'unique_id': '12:34:56:78:9a:bc_load_1m',
@@ -1585,6 +1614,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Load (5 min)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1610,7 +1640,7 @@
     'original_name': 'Load (5 min)',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Load (5 min)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'load_5m',
     'unique_id': '12:34:56:78:9a:bc_load_5m',
@@ -1636,6 +1666,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Memory free',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1667,7 +1698,7 @@
     'original_name': 'Memory free',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Memory free',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mem_free',
     'unique_id': '12:34:56:78:9a:bc_mem_free',
@@ -1695,6 +1726,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Memory total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1726,7 +1758,7 @@
     'original_name': 'Memory total',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Memory total',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mem_total',
     'unique_id': '12:34:56:78:9a:bc_mem_total',
@@ -1754,6 +1786,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Swap free',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1785,7 +1818,7 @@
     'original_name': 'Swap free',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Swap free',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'swap_free',
     'unique_id': '12:34:56:78:9a:bc_swap_free',
@@ -1813,6 +1846,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '192.168.1.1 Swap total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1844,7 +1878,7 @@
     'original_name': 'Swap total',
     'platform': 'webmin',
     'previous_unique_id': None,
-    'suggested_object_id': '192.168.1.1 Swap total',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'swap_total',
     'unique_id': '12:34:56:78:9a:bc_swap_total',

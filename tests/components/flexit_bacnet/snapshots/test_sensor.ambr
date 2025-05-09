@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name Air filter operating time',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -32,7 +33,7 @@
     'original_name': 'Air filter operating time',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Name Air filter operating time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_filter_operating_time',
     'unique_id': '0000-0001-air_filter_operating_time',
@@ -59,6 +60,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name Electric heater power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -85,7 +87,7 @@
     'original_name': 'Electric heater power',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Name Electric heater power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'electric_heater_power',
     'unique_id': '0000-0001-electric_heater_power',
@@ -112,6 +114,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name Exhaust air fan',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -137,7 +140,7 @@
     'original_name': 'Exhaust air fan',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Name Exhaust air fan',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'exhaust_air_fan_rpm',
     'unique_id': '0000-0001-exhaust_air_fan_rpm',
@@ -164,6 +167,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name Exhaust air fan control signal',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -189,7 +193,7 @@
     'original_name': 'Exhaust air fan control signal',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Name Exhaust air fan control signal',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'exhaust_air_fan_control_signal',
     'unique_id': '0000-0001-exhaust_air_fan_control_signal',
@@ -216,6 +220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name Exhaust air temperature',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -239,7 +244,7 @@
     'original_name': 'Exhaust air temperature',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Name Exhaust air temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'exhaust_air_temperature',
     'unique_id': '0000-0001-exhaust_air_temperature',
@@ -266,6 +271,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name Extract air temperature',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -289,7 +295,7 @@
     'original_name': 'Extract air temperature',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Name Extract air temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'extract_air_temperature',
     'unique_id': '0000-0001-extract_air_temperature',
@@ -316,6 +322,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name Fireplace ventilation remaining duration',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -344,7 +351,7 @@
     'original_name': 'Fireplace ventilation remaining duration',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Name Fireplace ventilation remaining duration',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fireplace_ventilation_remaining_duration',
     'unique_id': '0000-0001-fireplace_ventilation_remaining_duration',
@@ -372,6 +379,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name Heat exchanger efficiency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -397,7 +405,7 @@
     'original_name': 'Heat exchanger efficiency',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Name Heat exchanger efficiency',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heat_exchanger_efficiency',
     'unique_id': '0000-0001-heat_exchanger_efficiency',
@@ -424,6 +432,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name Heat exchanger speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -449,7 +458,7 @@
     'original_name': 'Heat exchanger speed',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Name Heat exchanger speed',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heat_exchanger_speed',
     'unique_id': '0000-0001-heat_exchanger_speed',
@@ -476,6 +485,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name Outside air temperature',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -499,7 +509,7 @@
     'original_name': 'Outside air temperature',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Name Outside air temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outside_air_temperature',
     'unique_id': '0000-0001-outside_air_temperature',
@@ -526,6 +536,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name Rapid ventilation remaining duration',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -554,7 +565,7 @@
     'original_name': 'Rapid ventilation remaining duration',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Name Rapid ventilation remaining duration',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rapid_ventilation_remaining_duration',
     'unique_id': '0000-0001-rapid_ventilation_remaining_duration',
@@ -582,6 +593,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name Room temperature',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -605,7 +617,7 @@
     'original_name': 'Room temperature',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Name Room temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'room_temperature',
     'unique_id': '0000-0001-room_temperature',
@@ -632,6 +644,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name Supply air fan',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -657,7 +670,7 @@
     'original_name': 'Supply air fan',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Name Supply air fan',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'supply_air_fan_rpm',
     'unique_id': '0000-0001-supply_air_fan_rpm',
@@ -684,6 +697,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name Supply air fan control signal',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -709,7 +723,7 @@
     'original_name': 'Supply air fan control signal',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Name Supply air fan control signal',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'supply_air_fan_control_signal',
     'unique_id': '0000-0001-supply_air_fan_control_signal',
@@ -736,6 +750,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name Supply air temperature',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -759,7 +774,7 @@
     'original_name': 'Supply air temperature',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Name Supply air temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'supply_air_temperature',
     'unique_id': '0000-0001-supply_air_temperature',

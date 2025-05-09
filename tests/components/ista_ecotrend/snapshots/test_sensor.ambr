@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bahnhofsstr. 1A Heating',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -32,7 +33,7 @@
     'original_name': 'Heating',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
-    'suggested_object_id': 'Bahnhofsstr. 1A Heating',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HEATING: 'heating'>,
     'unique_id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762_heating',
@@ -59,6 +60,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bahnhofsstr. 1A Heating cost',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -87,7 +89,7 @@
     'original_name': 'Heating cost',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
-    'suggested_object_id': 'Bahnhofsstr. 1A Heating cost',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HEATING_COST: 'heating_cost'>,
     'unique_id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762_heating_cost',
@@ -115,6 +117,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bahnhofsstr. 1A Heating energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -143,7 +146,7 @@
     'original_name': 'Heating energy',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
-    'suggested_object_id': 'Bahnhofsstr. 1A Heating energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HEATING_ENERGY: 'heating_energy'>,
     'unique_id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762_heating_energy',
@@ -171,6 +174,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bahnhofsstr. 1A Hot water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -199,7 +203,7 @@
     'original_name': 'Hot water',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
-    'suggested_object_id': 'Bahnhofsstr. 1A Hot water',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HOT_WATER: 'hot_water'>,
     'unique_id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762_hot_water',
@@ -227,6 +231,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bahnhofsstr. 1A Hot water cost',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -255,7 +260,7 @@
     'original_name': 'Hot water cost',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
-    'suggested_object_id': 'Bahnhofsstr. 1A Hot water cost',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HOT_WATER_COST: 'hot_water_cost'>,
     'unique_id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762_hot_water_cost',
@@ -283,6 +288,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bahnhofsstr. 1A Hot water energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -311,7 +317,7 @@
     'original_name': 'Hot water energy',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
-    'suggested_object_id': 'Bahnhofsstr. 1A Hot water energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HOT_WATER_ENERGY: 'hot_water_energy'>,
     'unique_id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762_hot_water_energy',
@@ -339,6 +345,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bahnhofsstr. 1A Water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -367,7 +374,7 @@
     'original_name': 'Water',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
-    'suggested_object_id': 'Bahnhofsstr. 1A Water',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.WATER: 'water'>,
     'unique_id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762_water',
@@ -395,6 +402,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bahnhofsstr. 1A Water cost',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -423,7 +431,7 @@
     'original_name': 'Water cost',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
-    'suggested_object_id': 'Bahnhofsstr. 1A Water cost',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.WATER_COST: 'water_cost'>,
     'unique_id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762_water_cost',
@@ -451,6 +459,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Luxemburger Str. 1 Heating',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -479,7 +488,7 @@
     'original_name': 'Heating',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
-    'suggested_object_id': 'Luxemburger Str. 1 Heating',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HEATING: 'heating'>,
     'unique_id': '26e93f1a-c828-11ea-87d0-0242ac130003_heating',
@@ -506,6 +515,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Luxemburger Str. 1 Heating cost',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -534,7 +544,7 @@
     'original_name': 'Heating cost',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
-    'suggested_object_id': 'Luxemburger Str. 1 Heating cost',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HEATING_COST: 'heating_cost'>,
     'unique_id': '26e93f1a-c828-11ea-87d0-0242ac130003_heating_cost',
@@ -562,6 +572,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Luxemburger Str. 1 Heating energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -590,7 +601,7 @@
     'original_name': 'Heating energy',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
-    'suggested_object_id': 'Luxemburger Str. 1 Heating energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HEATING_ENERGY: 'heating_energy'>,
     'unique_id': '26e93f1a-c828-11ea-87d0-0242ac130003_heating_energy',
@@ -618,6 +629,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Luxemburger Str. 1 Hot water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -646,7 +658,7 @@
     'original_name': 'Hot water',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
-    'suggested_object_id': 'Luxemburger Str. 1 Hot water',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HOT_WATER: 'hot_water'>,
     'unique_id': '26e93f1a-c828-11ea-87d0-0242ac130003_hot_water',
@@ -674,6 +686,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Luxemburger Str. 1 Hot water cost',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -702,7 +715,7 @@
     'original_name': 'Hot water cost',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
-    'suggested_object_id': 'Luxemburger Str. 1 Hot water cost',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HOT_WATER_COST: 'hot_water_cost'>,
     'unique_id': '26e93f1a-c828-11ea-87d0-0242ac130003_hot_water_cost',
@@ -730,6 +743,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Luxemburger Str. 1 Hot water energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -758,7 +772,7 @@
     'original_name': 'Hot water energy',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
-    'suggested_object_id': 'Luxemburger Str. 1 Hot water energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HOT_WATER_ENERGY: 'hot_water_energy'>,
     'unique_id': '26e93f1a-c828-11ea-87d0-0242ac130003_hot_water_energy',
@@ -786,6 +800,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Luxemburger Str. 1 Water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -814,7 +829,7 @@
     'original_name': 'Water',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
-    'suggested_object_id': 'Luxemburger Str. 1 Water',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.WATER: 'water'>,
     'unique_id': '26e93f1a-c828-11ea-87d0-0242ac130003_water',
@@ -842,6 +857,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Luxemburger Str. 1 Water cost',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -870,7 +886,7 @@
     'original_name': 'Water cost',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
-    'suggested_object_id': 'Luxemburger Str. 1 Water cost',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.WATER_COST: 'water_cost'>,
     'unique_id': '26e93f1a-c828-11ea-87d0-0242ac130003_water_cost',

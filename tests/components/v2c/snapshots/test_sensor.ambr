@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'EVSE 1.1.1.1 Battery power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,7 +30,7 @@
     'original_name': 'Battery power',
     'platform': 'v2c',
     'previous_unique_id': None,
-    'suggested_object_id': 'EVSE 1.1.1.1 Battery power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_power',
     'unique_id': 'da58ee91f38c2406c2a36d0a1a7f8569_battery_power',
@@ -57,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'EVSE 1.1.1.1 Charge energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -82,7 +84,7 @@
     'original_name': 'Charge energy',
     'platform': 'v2c',
     'previous_unique_id': None,
-    'suggested_object_id': 'EVSE 1.1.1.1 Charge energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_energy',
     'unique_id': 'da58ee91f38c2406c2a36d0a1a7f8569_charge_energy',
@@ -110,6 +112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'EVSE 1.1.1.1 Charge power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -135,7 +138,7 @@
     'original_name': 'Charge power',
     'platform': 'v2c',
     'previous_unique_id': None,
-    'suggested_object_id': 'EVSE 1.1.1.1 Charge power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_power',
     'unique_id': 'da58ee91f38c2406c2a36d0a1a7f8569_charge_power',
@@ -163,6 +166,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'EVSE 1.1.1.1 Charge time',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -188,7 +192,7 @@
     'original_name': 'Charge time',
     'platform': 'v2c',
     'previous_unique_id': None,
-    'suggested_object_id': 'EVSE 1.1.1.1 Charge time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_time',
     'unique_id': 'da58ee91f38c2406c2a36d0a1a7f8569_charge_time',
@@ -216,6 +220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'EVSE 1.1.1.1 House power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -241,7 +246,7 @@
     'original_name': 'House power',
     'platform': 'v2c',
     'previous_unique_id': None,
-    'suggested_object_id': 'EVSE 1.1.1.1 House power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'house_power',
     'unique_id': 'da58ee91f38c2406c2a36d0a1a7f8569_house_power',
@@ -269,6 +274,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'EVSE 1.1.1.1 Installation voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -294,7 +300,7 @@
     'original_name': 'Installation voltage',
     'platform': 'v2c',
     'previous_unique_id': None,
-    'suggested_object_id': 'EVSE 1.1.1.1 Installation voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_installation',
     'unique_id': 'da58ee91f38c2406c2a36d0a1a7f8569_voltage_installation',
@@ -322,6 +328,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'EVSE 1.1.1.1 IP address',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -345,7 +352,7 @@
     'original_name': 'IP address',
     'platform': 'v2c',
     'previous_unique_id': None,
-    'suggested_object_id': 'EVSE 1.1.1.1 IP address',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ip_address',
     'unique_id': 'da58ee91f38c2406c2a36d0a1a7f8569_ip_address',
@@ -370,6 +377,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'EVSE 1.1.1.1 Meter error',
     'capabilities': dict({
       'options': list([
         'no_error',
@@ -431,7 +439,7 @@
     'original_name': 'Meter error',
     'platform': 'v2c',
     'previous_unique_id': None,
-    'suggested_object_id': 'EVSE 1.1.1.1 Meter error',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_error',
     'unique_id': 'da58ee91f38c2406c2a36d0a1a7f8569_meter_error',
@@ -494,6 +502,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'EVSE 1.1.1.1 Photovoltaic power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -519,7 +528,7 @@
     'original_name': 'Photovoltaic power',
     'platform': 'v2c',
     'previous_unique_id': None,
-    'suggested_object_id': 'EVSE 1.1.1.1 Photovoltaic power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fv_power',
     'unique_id': 'da58ee91f38c2406c2a36d0a1a7f8569_fv_power',
@@ -547,6 +556,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'EVSE 1.1.1.1 Signal status',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -572,7 +582,7 @@
     'original_name': 'Signal status',
     'platform': 'v2c',
     'previous_unique_id': None,
-    'suggested_object_id': 'EVSE 1.1.1.1 Signal status',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'signal_status',
     'unique_id': 'da58ee91f38c2406c2a36d0a1a7f8569_signal_status',
@@ -598,6 +608,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'EVSE 1.1.1.1 SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -621,7 +632,7 @@
     'original_name': 'SSID',
     'platform': 'v2c',
     'previous_unique_id': None,
-    'suggested_object_id': 'EVSE 1.1.1.1 SSID',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ssid',
     'unique_id': 'da58ee91f38c2406c2a36d0a1a7f8569_ssid',

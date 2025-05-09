@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Baumarkt Discount only',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,7 +28,7 @@
     'original_name': 'Discount only',
     'platform': 'bring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Baumarkt Discount only',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <BringSensor.DISCOUNTED: 'discounted'>,
     'unique_id': '00000000-00000000-00000000-00000000_b4776778-7f6c-496e-951b-92a35d3db0dd_discounted',
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Baumarkt List access',
     'capabilities': dict({
       'options': list([
         'registered',
@@ -82,7 +84,7 @@
     'original_name': 'List access',
     'platform': 'bring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Baumarkt List access',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <BringSensor.LIST_ACCESS: 'list_access'>,
     'unique_id': '00000000-00000000-00000000-00000000_b4776778-7f6c-496e-951b-92a35d3db0dd_list_access',
@@ -113,6 +115,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Baumarkt On occasion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -136,7 +139,7 @@
     'original_name': 'On occasion',
     'platform': 'bring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Baumarkt On occasion',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <BringSensor.CONVENIENT: 'convenient'>,
     'unique_id': '00000000-00000000-00000000-00000000_b4776778-7f6c-496e-951b-92a35d3db0dd_convenient',
@@ -162,6 +165,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Baumarkt Region & language',
     'capabilities': dict({
       'options': list([
         'de-at',
@@ -208,7 +212,7 @@
     'original_name': 'Region & language',
     'platform': 'bring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Baumarkt Region & language',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <BringSensor.LIST_LANGUAGE: 'list_language'>,
     'unique_id': '00000000-00000000-00000000-00000000_b4776778-7f6c-496e-951b-92a35d3db0dd_list_language',
@@ -256,6 +260,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Baumarkt Urgent',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -279,7 +284,7 @@
     'original_name': 'Urgent',
     'platform': 'bring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Baumarkt Urgent',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <BringSensor.URGENT: 'urgent'>,
     'unique_id': '00000000-00000000-00000000-00000000_b4776778-7f6c-496e-951b-92a35d3db0dd_urgent',
@@ -305,6 +310,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Einkauf Discount only',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -328,7 +334,7 @@
     'original_name': 'Discount only',
     'platform': 'bring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Einkauf Discount only',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <BringSensor.DISCOUNTED: 'discounted'>,
     'unique_id': '00000000-00000000-00000000-00000000_e542eef6-dba7-4c31-a52c-29e6ab9d83a5_discounted',
@@ -354,6 +360,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Einkauf List access',
     'capabilities': dict({
       'options': list([
         'registered',
@@ -383,7 +390,7 @@
     'original_name': 'List access',
     'platform': 'bring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Einkauf List access',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <BringSensor.LIST_ACCESS: 'list_access'>,
     'unique_id': '00000000-00000000-00000000-00000000_e542eef6-dba7-4c31-a52c-29e6ab9d83a5_list_access',
@@ -414,6 +421,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Einkauf On occasion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -437,7 +445,7 @@
     'original_name': 'On occasion',
     'platform': 'bring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Einkauf On occasion',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <BringSensor.CONVENIENT: 'convenient'>,
     'unique_id': '00000000-00000000-00000000-00000000_e542eef6-dba7-4c31-a52c-29e6ab9d83a5_convenient',
@@ -463,6 +471,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Einkauf Region & language',
     'capabilities': dict({
       'options': list([
         'de-at',
@@ -509,7 +518,7 @@
     'original_name': 'Region & language',
     'platform': 'bring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Einkauf Region & language',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <BringSensor.LIST_LANGUAGE: 'list_language'>,
     'unique_id': '00000000-00000000-00000000-00000000_e542eef6-dba7-4c31-a52c-29e6ab9d83a5_list_language',
@@ -557,6 +566,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Einkauf Urgent',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -580,7 +590,7 @@
     'original_name': 'Urgent',
     'platform': 'bring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Einkauf Urgent',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <BringSensor.URGENT: 'urgent'>,
     'unique_id': '00000000-00000000-00000000-00000000_e542eef6-dba7-4c31-a52c-29e6ab9d83a5_urgent',

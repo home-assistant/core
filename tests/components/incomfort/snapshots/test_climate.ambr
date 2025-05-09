@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Thermostat 1',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
@@ -33,7 +34,7 @@
     'original_name': None,
     'platform': 'incomfort',
     'previous_unique_id': None,
-    'suggested_object_id': 'Thermostat 1',
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 1>,
     'translation_key': None,
     'unique_id': 'c0ffeec0ffee_1',
@@ -72,6 +73,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Thermostat 1',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
@@ -101,7 +103,7 @@
     'original_name': None,
     'platform': 'incomfort',
     'previous_unique_id': None,
-    'suggested_object_id': 'Thermostat 1',
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 1>,
     'translation_key': None,
     'unique_id': 'c0ffeec0ffee_1',
@@ -140,6 +142,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Thermostat 1',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
@@ -169,7 +172,7 @@
     'original_name': None,
     'platform': 'incomfort',
     'previous_unique_id': None,
-    'suggested_object_id': 'Thermostat 1',
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 1>,
     'translation_key': None,
     'unique_id': 'c0ffeec0ffee_1',
@@ -208,6 +211,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Thermostat 1',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
@@ -237,7 +241,7 @@
     'original_name': None,
     'platform': 'incomfort',
     'previous_unique_id': None,
-    'suggested_object_id': 'Thermostat 1',
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 1>,
     'translation_key': None,
     'unique_id': 'c0ffeec0ffee_1',
