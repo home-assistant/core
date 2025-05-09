@@ -86,6 +86,9 @@
       },
       "evse_fault_state": {
         "default": "mdi:ev-station"
+      },
+      "pump_status": {
+        "default": "mdi:pump"
       }
     },
     "switch": {

@@ -102,6 +102,30 @@ EVSE_FAULT_STATE_MAP = {
     clusters.EnergyEvse.Enums.FaultStateEnum.kOther: "other",
 }
 
+PUMP_CONTROL_MODE_MAP = {
+    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kConstantTemperature: "constant_temperature"
+}
+
+PUMP_STATUS_MAP = {
+    0x1: "device_fault",
+    0x4: "speed_low",
+    0x5: "devicefault_speedlow",
+    0x8: "speed_high",
+}
+
+"""
+{
+    kDeviceFault       = 0x1,
+    kSupplyFault       = 0x2,
+    kSpeedLow          = 0x4,
+    kSpeedHigh         = 0x8,
+    kLocalOverride     = 0x10,
+    kRunning           = 0x20,
+    kRemotePressure    = 0x40,
+    kRemoteFlow        = 0x80,
+    kRemoteTemperature = 0x100,
+"""
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -1059,6 +1083,36 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSensor,
         required_attributes=(
             clusters.WaterHeaterManagement.Attributes.EstimatedHeatRequired,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="PumpStatus",
+            translation_key="pump_status",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            options=list(PUMP_STATUS_MAP.values()),
+            measurement_to_ha=PUMP_STATUS_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.PumpConfigurationAndControl.Attributes.PumpStatus,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="PumpControlMode",
+            translation_key="pump_control_mode",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            options=list(PUMP_CONTROL_MODE_MAP.values()),
+            measurement_to_ha=PUMP_CONTROL_MODE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.PumpConfigurationAndControl.Attributes.ControlMode,
         ),
     ),
 ]
