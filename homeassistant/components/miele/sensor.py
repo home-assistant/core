@@ -32,6 +32,7 @@ from .const import (
     STATE_PROGRAM_PHASE,
     STATE_STATUS_TAGS,
     MieleAppliance,
+    StateDryingStep,
     StateProgramType,
     StateStatus,
 )
@@ -414,6 +415,23 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
                 lambda value: cast(int, value.state_core_temperature[0].temperature)
                 / 100.0
             ),
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.WASHER_DRYER,
+            MieleAppliance.TUMBLE_DRYER,
+            MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL,
+        ),
+        description=MieleSensorDescription(
+            key="state_drying_step",
+            translation_key="drying_step",
+            value_fn=lambda value: StateDryingStep(
+                cast(int, value.state_drying_step)
+            ).name,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_class=SensorDeviceClass.ENUM,
+            options=sorted(StateDryingStep.keys()),
         ),
     ),
 )
