@@ -86,7 +86,7 @@
       "fields": {
         "package_tracking_number": {
           "name": "Package tracking number to add",
-          "description": "The package will the specified tracking number will be added."
+          "description": "The package with the tracking number will be added."
         },
         "package_friendly_name": {
           "name": "Package friendly name",
