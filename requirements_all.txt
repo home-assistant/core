@@ -223,7 +223,7 @@ aiodhcpwatcher==1.1.1
 aiodiscover==2.6.1
 
 # homeassistant.components.dnsip
-aiodns==3.3.0
+aiodns==3.4.0
 
 # homeassistant.components.duke_energy
 aiodukeenergy==0.3.0
@@ -958,7 +958,7 @@ fnv-hash-fast==1.5.0
 foobot_async==1.0.0
 
 # homeassistant.components.forecast_solar
-forecast-solar==4.1.0
+forecast-solar==4.2.0
 
 # homeassistant.components.fortios
 fortiosapi==1.0.5
@@ -1161,7 +1161,7 @@ hole==0.8.0
 holidays==0.70
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250507.0
+home-assistant-frontend==20250509.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.5.7
@@ -2093,7 +2093,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.0
+pylamarzocco==2.0.1
 
 # homeassistant.components.lastfm
 pylast==5.1.0
