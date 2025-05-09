@@ -103,6 +103,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         manual=True,
     )
 
+    # Remember each device identifier we create
+    current_devices: set[tuple[str, str]] = set()
+
     for product in products:
         if (
             "vin" in product
@@ -122,6 +125,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 model=api.model,
                 serial_number=vin,
             )
+            current_devices.add((DOMAIN, vin))
 
             remove_listener = stream.async_add_listener(
                 create_handle_vehicle_stream(vin, coordinator),
@@ -167,6 +171,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 name=product.get("site_name", "Energy Site"),
                 serial_number=str(site_id),
             )
+            current_devices.add((DOMAIN, str(site_id)))
 
             # Check live status endpoint works before creating its coordinator
             try:
@@ -235,6 +240,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id, **energysite.device
         )
+
+    # Remove devices that are no longer present
+    for device_entry in dr.async_entries_for_config_entry(
+        device_registry, entry.entry_id
+    ):
+        if not any(
+            identifier in current_devices for identifier in device_entry.identifiers
+        ):
+            LOGGER.debug("Removing stale device %s", device_entry.id)
+            device_registry.async_update_device(
+                device_id=device_entry.id,
+                remove_config_entry_id=entry.entry_id,
+            )
 
     # Setup Platforms
     entry.runtime_data = TeslemetryData(vehicles, energysites, scopes)
