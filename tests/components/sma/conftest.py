@@ -1,5 +1,6 @@
 """Fixtures for sma tests."""
 
+from collections.abc import AsyncGenerator
 from unittest.mock import patch
 
 from pysma.const import GENERIC_SENSORS
@@ -32,18 +33,12 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
-async def init_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> MockConfigEntry:
-    """Create a fake SMA Config Entry."""
-    mock_config_entry.add_to_hass(hass)
-
+async def mock_sma_client() -> AsyncGenerator[None]:
+    """Mock the SMA client."""
     with (
         patch("pysma.SMA.read"),
         patch(
             "pysma.SMA.get_sensors", return_value=Sensors(sensor_map[GENERIC_SENSORS])
-        ),
+        ) as mock_client,
     ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    return mock_config_entry
+        yield mock_client
