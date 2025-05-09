@@ -5,7 +5,6 @@ from homeassistant.components.adax.const import SCAN_INTERVAL
 from homeassistant.components.climate import ATTR_CURRENT_TEMPERATURE, HVACMode
 from homeassistant.const import ATTR_TEMPERATURE, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_component import async_update_entity
 
 from . import setup_integration
 from .conftest import CLOUD_DEVICE_DATA, LOCAL_DEVICE_DATA
