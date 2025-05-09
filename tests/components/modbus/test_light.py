@@ -442,13 +442,13 @@ async def test_light_service_turn(
     ],
 )
 async def test_color_temp_brightness_light(
-    hass,
+    hass: HomeAssistant,
     mock_modbus_ha,
     brightness_input,
     color_temp_input,
     expected_brightness,
     expected_color_temp,
-):
+) -> None:
     """Test Modbus Light color temperature and brightness."""
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
@@ -539,7 +539,7 @@ async def test_color_temp_no_valid_params(
     color_temp_input,
     color_temp_percent_input,
     expected_color_temp,
-):
+) -> None:
     """Test Modbus Light color temperature with no valid parameters."""
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
     service_data = {
