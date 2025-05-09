@@ -4,26 +4,25 @@ from __future__ import annotations
 
 from typing import Any
 
+from pybriiv import BriivAPI
+
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BriivAPI
+from . import BriivConfigEntry  # Add this import
 from .const import DOMAIN, LOGGER, SENSOR_TYPES
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: BriivConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Briiv sensors."""
-    api: BriivAPI = hass.data[DOMAIN][entry.entry_id]
-
-    # Start listening for updates
-    await api.start_listening(hass.loop)
+    api: BriivAPI = entry.runtime_data.api
 
     # Get serial number from entry data
     serial_number = entry.data["serial_number"]

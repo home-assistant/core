@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/briiv",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "requirements": []
+  "requirements": ["pybriiv==0.1.1"]
 }

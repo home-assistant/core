@@ -4,23 +4,24 @@ from __future__ import annotations
 
 from typing import Any
 
+from pybriiv import BriivAPI
+
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .api import BriivAPI
+from . import BriivConfigEntry  # Add this import
 from .const import DOMAIN, LOGGER, PRESET_MODE_BOOST
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: BriivConfigEntry,  # Updated to use the type alias
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Briiv fan based on config entry."""
-    api: BriivAPI = hass.data[DOMAIN][entry.entry_id]
+    api: BriivAPI = entry.runtime_data.api  # Updated to use runtime_data
     async_add_entities([BriivFan(api, entry.data["serial_number"])])
 
 
@@ -58,6 +59,7 @@ class BriivFan(FanEntity):
         LOGGER.debug("Initializing Briiv fan with serial: %s", serial_number)
         self._api.register_callback(self._handle_update)
 
+    # The rest of the class remains unchanged
     async def _handle_update(self, data: dict[str, Any]) -> None:
         """Handle updated data from device."""
         LOGGER.debug("Received update data: %s", data)

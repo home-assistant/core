@@ -219,6 +219,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/braviatv/ @bieniu @Drafteed
 /tests/components/braviatv/ @bieniu @Drafteed
 /homeassistant/components/briiv/ @FiveCreate
+/tests/components/briiv/ @FiveCreate
 /homeassistant/components/bring/ @miaucl @tr4nt0r
 /tests/components/bring/ @miaucl @tr4nt0r
 /homeassistant/components/broadlink/ @danielhiversen @felipediel @L-I-Am @eifinger

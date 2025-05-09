@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
+from pybriiv import BriivAPI, BriivError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-from .api import BriivAPI, BriivError
 from .const import CONF_SERIAL_NUMBER, DEFAULT_PORT, DISCOVERY_TIMEOUT, DOMAIN, LOGGER
 
 
@@ -42,7 +43,18 @@ class BriivConfigFlow(ConfigFlow, domain=DOMAIN):
         ):
             try:
                 LOGGER.debug("Starting device discovery")
+
+                # Configure debug logging for pybriiv
+                pybriiv_logger = logging.getLogger("pybriiv")
+                pybriiv_logger.setLevel(logging.DEBUG)
+                handler = logging.StreamHandler()
+                handler.setLevel(logging.DEBUG)
+                pybriiv_logger.addHandler(handler)
+
+                # Run discovery
                 devices = await BriivAPI.discover(timeout=DISCOVERY_TIMEOUT)
+
+                LOGGER.debug("Discovery returned %d devices", len(devices))
 
                 self._discovered_devices.clear()
                 for device in devices:
