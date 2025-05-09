@@ -79,13 +79,6 @@ ATTR_VALUE = "value"
 AFFECTS_TO_ACTIVE_PROGRAM = "active_program"
 AFFECTS_TO_SELECTED_PROGRAM = "selected_program"
 
-SVE_TRANSLATION_KEY_SET_SETTING = "set_setting_entity"
-SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME = "appliance_name"
-SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID = "entity_id"
-SVE_TRANSLATION_PLACEHOLDER_PROGRAM = "program"
-SVE_TRANSLATION_PLACEHOLDER_KEY = "key"
-SVE_TRANSLATION_PLACEHOLDER_VALUE = "value"
-
 
 TRANSLATION_KEYS_PROGRAMS_MAP = {
     bsh_key_to_translation_key(program.value): cast(ProgramKey, program)

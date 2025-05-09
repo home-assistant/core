@@ -29,5 +29,6 @@
   "documentation": "https://www.home-assistant.io/integrations/smartthings",
   "iot_class": "cloud_push",
   "loggers": ["pysmartthings"],
-  "requirements": ["pysmartthings==2.7.4"]
+  "quality_scale": "bronze",
+  "requirements": ["pysmartthings==3.2.1"]
 }

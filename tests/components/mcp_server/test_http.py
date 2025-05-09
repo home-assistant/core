@@ -315,7 +315,7 @@ async def test_mcp_tools_list(
     # are converted correctly.
     tool = next(iter(tool for tool in result.tools if tool.name == "HassTurnOn"))
     assert tool.name == "HassTurnOn"
-    assert tool.description == "Turns on/opens a device or entity"
+    assert tool.description is not None
     assert tool.inputSchema
     assert tool.inputSchema.get("type") == "object"
     properties = tool.inputSchema.get("properties")

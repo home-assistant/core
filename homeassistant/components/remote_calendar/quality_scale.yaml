@@ -53,9 +53,7 @@ rules:
   devices:
     status: exempt
     comment: No devices. One URL is always assigned to one calendar.
-  diagnostics:
-    status: todo
-    comment: Diagnostics not implemented, yet.
+  diagnostics: done
   discovery-update-info:
     status: todo
     comment: No discovery protocol available.

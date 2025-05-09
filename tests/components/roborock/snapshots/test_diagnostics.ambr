@@ -357,7 +357,7 @@
           }),
           'network_info': dict({
             'bssid': '**REDACTED**',
-            'ip': '123.232.12.2',
+            'ip': '123.232.12.1',
             'mac': '**REDACTED**',
             'rssi': 90,
             'ssid': 'wifi',
