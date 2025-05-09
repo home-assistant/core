@@ -211,7 +211,6 @@ async def test_ws_get_client_config(
                 },
             ],
         },
-        "getCandidatesUpfront": False,
     }
 
     @callback
@@ -250,7 +249,6 @@ async def test_ws_get_client_config(
                 },
             ],
         },
-        "getCandidatesUpfront": False,
     }
 
 
@@ -277,7 +275,6 @@ async def test_ws_get_client_config_custom_config(
     assert msg["success"]
     assert msg["result"] == {
         "configuration": {"iceServers": [{"urls": ["stun:custom_stun_server:3478"]}]},
-        "getCandidatesUpfront": False,
     }
 
 
