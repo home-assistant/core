@@ -4,6 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_configured_detailed": "A device `{name}`, with MAC address `{mac}` is already configured as `{title}`.",
       "already_configured_updates": "A device `{name}`, with MAC address `{mac}` is already configured as `{title}`; the existing configuration will be updated with the validated data.",
+      "reconfigure_already_configured": "A device `{name}` with MAC address `{mac}` is already configured as `{title}`. Reconfiguration was aborted because the new configuration appears to refer to a different device.",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "mdns_missing_mac": "Missing MAC address in mDNS properties.",
@@ -102,11 +103,6 @@
         "name": "[%key:component::assist_satellite::entity_component::_::name%]"
       }
     },
-    "binary_sensor": {
-      "assist_in_progress": {
-        "name": "[%key:component::assist_pipeline::entity::binary_sensor::assist_in_progress::name%]"
-      }
-    },
     "select": {
       "pipeline": {
         "name": "[%key:component::assist_pipeline::entity::select::pipeline::name%]",
@@ -199,7 +195,10 @@
       "message": "Error compiling {configuration}; Try again in ESPHome dashboard for more information."
     },
     "error_uploading": {
-      "message": "Error during OTA of {configuration}; Try again in ESPHome dashboard for more information."
+      "message": "Error during OTA (Over-The-Air) of {configuration}; Try again in ESPHome dashboard for more information."
+    },
+    "ota_in_progress": {
+      "message": "An OTA (Over-The-Air) update is already in progress for {configuration}."
     }
   }
 }

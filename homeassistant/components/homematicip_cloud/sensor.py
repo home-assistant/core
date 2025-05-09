@@ -46,6 +46,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     LIGHT_LUX,
     PERCENTAGE,
     UnitOfEnergy,
@@ -127,6 +128,7 @@ async def async_setup_entry(
         ):
             entities.append(HomematicipTemperatureSensor(hap, device))
             entities.append(HomematicipHumiditySensor(hap, device))
+            entities.append(HomematicipAbsoluteHumiditySensor(hap, device))
         elif isinstance(device, (RoomControlDeviceAnalog,)):
             entities.append(HomematicipTemperatureSensor(hap, device))
         if isinstance(
@@ -346,6 +348,35 @@ class HomematicipTemperatureSensor(HomematicipGenericEntity, SensorEntity):
             state_attr[ATTR_TEMPERATURE_OFFSET] = temperature_offset
 
         return state_attr
+
+
+class HomematicipAbsoluteHumiditySensor(HomematicipGenericEntity, SensorEntity):
+    """Representation of the HomematicIP absolute humidity sensor."""
+
+    _attr_native_unit_of_measurement = CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the thermometer device."""
+        super().__init__(hap, device, post="Absolute Humidity")
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the state."""
+        if self.functional_channel is None:
+            return None
+
+        value = self.functional_channel.vaporAmount
+
+        # Handle case where value might be None
+        if (
+            self.functional_channel.vaporAmount is None
+            or self.functional_channel.vaporAmount == ""
+        ):
+            return None
+
+        # Convert from g/m³ to mg/m³
+        return int(float(value) * 1000)
 
 
 class HomematicipIlluminanceSensor(HomematicipGenericEntity, SensorEntity):
