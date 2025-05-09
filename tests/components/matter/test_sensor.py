@@ -511,3 +511,15 @@ async def test_water_heater(
     state = hass.states.get("sensor.water_heater_hot_water_level")
     assert state
     assert state.state == "50"
+
+    # DeviceEnergyManagement -> ESAState attribute
+    state = hass.states.get("sensor.water_heater_appliance_energy_state")
+    assert state
+    assert state.state == "online"
+
+    set_node_attribute(matter_node, 2, 152, 2, 0)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.water_heater_appliance_energy_state")
+    assert state
+    assert state.state == "offline"
