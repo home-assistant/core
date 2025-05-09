@@ -2,11 +2,11 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect to EnergyID (Step 1 of 3)",
-        "description": "Enter your EnergyID Webhook Provisioning Key and Secret. Find these in your EnergyID portal under Device Provisioning or Webhook settings. More info: [EnergyID Docs]({docs_url})",
+        "title": "Connect to EnergyID (step 1 of 3)",
+        "description": "Enter your EnergyID webhook provisioning key and secret. Find these in your EnergyID portal under Device Provisioning or Webhook settings. More info: [EnergyID Docs]({docs_url})",
         "data": {
-          "provisioning_key": "Provisioning Key",
-          "provisioning_secret": "Provisioning Secret"
+          "provisioning_key": "Provisioning key",
+          "provisioning_secret": "Provisioning secret"
         },
         "data_description": {
           "provisioning_key": "Your unique key for provisioning.",
@@ -14,22 +14,22 @@
         }
       },
       "auth_and_claim": {
-        "title": "Claim Device in EnergyID (Step 2 of 3)",
-        "description": "This Home Assistant connection needs to be claimed in your EnergyID portal before it can send data.\n\n1. Go to: {claim_url}\n2. Enter Code: **{claim_code}**\n3. (Code expires: {valid_until})\n\nAfter successfully claiming the device in EnergyID, click **Submit** below to continue.",
+        "title": "Claim device in EnergyID (step 2 of 3)",
+        "description": "This Home Assistant connection needs to be claimed in your EnergyID portal before it can send data.\n\n1. Go to: {claim_url}\n2. Enter code: **{claim_code}**\n3. (Code expires: {valid_until})\n\nAfter successfully claiming the device in EnergyID, click **Submit** below to continue.",
         "data": {}
       },
       "finalize": {
-        "title": "Finalize Setup (Step 3 of 3)",
+        "title": "Finalize setup (step 3 of 3)",
         "description": "Successfully connected to EnergyID!\n\nPlease confirm or set the name this Home Assistant instance should use when communicating with EnergyID. This name will appear in your EnergyID webhook device list, helping you identify this connection.",
         "data": {
-          "device_name": "Device Name (for EnergyID Webhook)"
+          "device_name": "Device name (for EnergyID webhook)"
         },
         "data_description": {
           "device_name": "This friendly name identifies this Home Assistant connection in your EnergyID portal's webhook list."
         }
       },
       "reconfigure": {
-        "title": "Reconfigure EnergyID Connection",
+        "title": "Reconfigure EnergyID connection",
         "description": "Update your EnergyID provisioning credentials or the device name used for this connection.",
         "data": {
           "provisioning_key": "[%key:component::energyid::config::step::user::data::provisioning_key%]",
@@ -74,9 +74,9 @@
   "options": {
     "step": {
       "init": {
-        "title": "Manage EnergyID Mappings",
+        "title": "Manage EnergyID mappings",
         "data": {
-          "next_step": "Select Action"
+          "next_step": "Select action"
         },
         "description": "Configure mappings for EnergyID device. Select an action below.",
         "data_description": {
@@ -84,10 +84,10 @@
         }
       },
       "add_mapping": {
-        "title": "Add Sensor to EnergyID",
+        "title": "Add sensor to EnergyID",
         "data": {
-          "ha_entity_id": "Home Assistant Sensor",
-          "energyid_key": "EnergyID Metric Key",
+          "ha_entity_id": "Home Assistant sensor",
+          "energyid_key": "EnergyID metric key",
           "show_all_sensors": "Show all sensors"
         },
         "description": "Select a sensor and enter the EnergyID metric key to map it to.",
@@ -98,9 +98,9 @@
         }
       },
       "manage_mappings": {
-        "title": "Select Mapping to Modify/Delete",
+        "title": "Select mapping to modify/delete",
         "data": {
-          "selected_mapping": "Select Mapping"
+          "selected_mapping": "Select mapping"
         },
         "description": "Choose one of the existing mappings:",
         "data_description": {
@@ -108,17 +108,17 @@
         }
       },
       "mapping_action": {
-        "title": "Modify or Delete Mapping",
+        "title": "Modify or delete mapping",
         "menu_options": {
-          "edit_mapping": "Update EnergyID Key",
-          "delete_mapping": "Delete This Mapping"
+          "edit_mapping": "Update EnergyID key",
+          "delete_mapping": "Delete this mapping"
         },
         "description": "Selected mapping. Choose an action to perform."
       },
       "edit_mapping": {
-        "title": "Update EnergyID Key",
+        "title": "Update EnergyID key",
         "data": {
-          "energyid_key": "New EnergyID Metric Key"
+          "energyid_key": "New EnergyID metric key"
         },
         "description": "Update the EnergyID key for the selected entity.",
         "data_description": {
@@ -126,7 +126,7 @@
         }
       },
       "delete_mapping": {
-        "title": "Confirm Delete Mapping",
+        "title": "Confirm delete mapping",
         "description": "Are you sure you want to stop sending data from this entity? The EnergyID key will no longer be updated by this entity."
       }
     },
