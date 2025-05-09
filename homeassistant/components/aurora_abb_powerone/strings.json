@@ -16,7 +16,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_serial_ports": "No com ports found. Need a valid RS485 device to communicate."
+      "no_serial_ports": "No com ports found. The integration needs a valid RS485 device to communicate."
     }
   },
   "entity": {
