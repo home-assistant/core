@@ -3,20 +3,13 @@
 from __future__ import annotations
 
 from aiohttp import CookieJar
-from pyportainer import (
-    Portainer,
-    PortainerAuthenticationError,
-    PortainerConnectionError,
-    PortainerTimeoutError,
-)
+from pyportainer import Portainer
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import DOMAIN
 from .coordinator import PortainerCoordinator
 
 _PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR]
@@ -37,27 +30,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
         api_key=entry.data[CONF_ACCESS_TOKEN],
         session=session,
     )
-
-    try:
-        await client.get_endpoints()
-    except PortainerAuthenticationError as err:
-        raise ConfigEntryError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_auth",
-            translation_placeholders={"error": repr(err)},
-        ) from err
-    except PortainerConnectionError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="cannot_connect",
-            translation_placeholders={"error": repr(err)},
-        ) from err
-    except PortainerTimeoutError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="timeout_connect",
-            translation_placeholders={"error": repr(err)},
-        ) from err
 
     coordinator = PortainerCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()

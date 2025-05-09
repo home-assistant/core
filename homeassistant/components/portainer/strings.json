@@ -3,18 +3,16 @@
     "step": {
       "user": {
         "data": {
-          "url": "[%key:common::config_flow::data::url%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "access_token": "[%key:common::config_flow::data::access_token%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "url": "The URL of your Portainer instance. For example: https://127.0.0.1:9000",
-          "port": "The port number of your Portainer instance",
-          "access_token": "The access token for authenticating with Portainer",
+          "host": "The host/URL, including the port, of your Portainer instance",
+          "api_key": "The API key for authenticating with Portainer",
           "verify_ssl": "Verify the SSL certificate of the Portainer instance"
         },
-        "description": "You can create an access token in the Portainer UI. Go to **My account > Access tokens** and click on **Add access token**"
+        "description": "You can create an API key in the Portainer UI. Go to **My account > API keys** and click on **Add API key**"
       }
     },
     "error": {

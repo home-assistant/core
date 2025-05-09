@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
-from aiohttp import CookieJar
 from pyportainer import (
     Portainer,
     PortainerAuthenticationError,
@@ -13,37 +13,34 @@ from pyportainer import (
     PortainerTimeoutError,
 )
 import voluptuous as vol
-from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_URL): str,
-        vol.Required(CONF_ACCESS_TOKEN): str,
-        vol.Required(CONF_VERIFY_SSL, default=True): bool,
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_API_KEY): str,
+        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
     }
 )
 
 
 async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
-    session = async_create_clientsession(
-        hass,
-        data[CONF_VERIFY_SSL],
-        cookie_jar=CookieJar(unsafe=True),
-    )
+
+    api_url = f"{data[CONF_HOST]}"
+
     client = Portainer(
-        api_url=data[CONF_URL],
-        api_key=data[CONF_ACCESS_TOKEN],
-        session=session,
+        api_url=api_url,
+        api_key=data[CONF_API_KEY],
+        session=async_get_clientsession(hass),
     )
 
     try:
@@ -55,7 +52,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
     except PortainerTimeoutError as err:
         raise PortainerTimeout from err
 
-    _LOGGER.debug("Connected to Portainer API: %s", data[CONF_URL])
+    _LOGGER.debug("Connected to Portainer API: %s", api_url)
 
     portainer_data: list[dict[str, Any]] = []
 
@@ -74,7 +71,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
         )
 
     return {
-        "title": data[CONF_URL],
+        "title": api_url,
         "portainer": portainer_data,
     }
 
@@ -86,12 +83,8 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-
         errors: dict[str, str] = {}
         if user_input is not None:
-            url = URL(user_input[CONF_URL]).human_repr()
-            self._async_abort_entries_match({CONF_URL: url})
-
             try:
                 api = await _validate_input(self.hass, user_input)
             except CannotConnect:
@@ -104,17 +97,31 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(
-                    title=api["title"], data={**user_input, CONF_URL: url}
-                )
+                await self.async_set_unique_id(user_input[CONF_API_KEY])
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(title=api["title"], data=user_input)
 
         return self.async_show_form(
-            step_id="user",
-            data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, user_input
-            ),
-            errors=errors,
+            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+            )
+
+        return await self.async_step_user()
 
 
 class CannotConnect(HomeAssistantError):

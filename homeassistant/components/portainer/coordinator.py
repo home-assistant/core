@@ -11,12 +11,14 @@ from pyportainer import (
     Portainer,
     PortainerAuthenticationError,
     PortainerConnectionError,
+    PortainerTimeoutError,
 )
 from pyportainer.models.docker import DockerContainer
 from pyportainer.models.portainer import Endpoint
 
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -60,6 +62,29 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
         self.portainer = portainer
+
+    async def _async_setup(self) -> None:
+        """Set up the Portainer Data Update Coordinator."""
+        try:
+            await self.portainer.get_endpoints()
+        except PortainerAuthenticationError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except PortainerConnectionError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except PortainerTimeoutError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="timeout_connect",
+                translation_placeholders={"error": repr(err)},
+            ) from err
 
     async def _async_update_data(self) -> dict[int, PortainerCoordinatorData]:
         """Fetch data from Portainer API."""
