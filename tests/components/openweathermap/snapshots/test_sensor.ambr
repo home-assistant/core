@@ -31,7 +31,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-clouds',
+    'unique_id': '12.34-56.78-clouds',
     'unit_of_measurement': '%',
   })
 # ---
@@ -81,7 +81,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-condition',
+    'unique_id': '12.34-56.78-condition',
     'unit_of_measurement': None,
   })
 # ---
@@ -131,7 +131,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-dew_point',
+    'unique_id': '12.34-56.78-dew_point',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -184,7 +184,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-feels_like_temperature',
+    'unique_id': '12.34-56.78-feels_like_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -237,7 +237,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-humidity',
+    'unique_id': '12.34-56.78-humidity',
     'unit_of_measurement': '%',
   })
 # ---
@@ -288,7 +288,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-precipitation_kind',
+    'unique_id': '12.34-56.78-precipitation_kind',
     'unit_of_measurement': None,
   })
 # ---
@@ -338,7 +338,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-pressure',
+    'unique_id': '12.34-56.78-pressure',
     'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
   })
 # ---
@@ -391,7 +391,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-rain',
+    'unique_id': '12.34-56.78-rain',
     'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
@@ -444,7 +444,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-snow',
+    'unique_id': '12.34-56.78-snow',
     'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
@@ -497,7 +497,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-temperature',
+    'unique_id': '12.34-56.78-temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -550,7 +550,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-uv_index',
+    'unique_id': '12.34-56.78-uv_index',
     'unit_of_measurement': 'UV index',
   })
 # ---
@@ -602,7 +602,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-visibility_distance',
+    'unique_id': '12.34-56.78-visibility_distance',
     'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
   })
 # ---
@@ -653,7 +653,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-weather',
+    'unique_id': '12.34-56.78-weather',
     'unit_of_measurement': None,
   })
 # ---
@@ -701,7 +701,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-weather_code',
+    'unique_id': '12.34-56.78-weather_code',
     'unit_of_measurement': None,
   })
 # ---
@@ -751,7 +751,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-wind_bearing',
+    'unique_id': '12.34-56.78-wind_bearing',
     'unit_of_measurement': '°',
   })
 # ---
@@ -807,7 +807,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-wind_speed',
+    'unique_id': '12.34-56.78-wind_speed',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
 # ---
@@ -860,7 +860,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-clouds',
+    'unique_id': '12.34-56.78-clouds',
     'unit_of_measurement': '%',
   })
 # ---
@@ -910,7 +910,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-condition',
+    'unique_id': '12.34-56.78-condition',
     'unit_of_measurement': None,
   })
 # ---
@@ -960,7 +960,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-dew_point',
+    'unique_id': '12.34-56.78-dew_point',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1013,7 +1013,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-feels_like_temperature',
+    'unique_id': '12.34-56.78-feels_like_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1066,7 +1066,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-humidity',
+    'unique_id': '12.34-56.78-humidity',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1117,7 +1117,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-precipitation_kind',
+    'unique_id': '12.34-56.78-precipitation_kind',
     'unit_of_measurement': None,
   })
 # ---
@@ -1167,7 +1167,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-pressure',
+    'unique_id': '12.34-56.78-pressure',
     'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
   })
 # ---
@@ -1220,7 +1220,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-rain',
+    'unique_id': '12.34-56.78-rain',
     'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
@@ -1273,7 +1273,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-snow',
+    'unique_id': '12.34-56.78-snow',
     'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
@@ -1326,7 +1326,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-temperature',
+    'unique_id': '12.34-56.78-temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1379,7 +1379,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-uv_index',
+    'unique_id': '12.34-56.78-uv_index',
     'unit_of_measurement': 'UV index',
   })
 # ---
@@ -1431,7 +1431,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-visibility_distance',
+    'unique_id': '12.34-56.78-visibility_distance',
     'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
   })
 # ---
@@ -1482,7 +1482,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-weather',
+    'unique_id': '12.34-56.78-weather',
     'unit_of_measurement': None,
   })
 # ---
@@ -1530,7 +1530,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-weather_code',
+    'unique_id': '12.34-56.78-weather_code',
     'unit_of_measurement': None,
   })
 # ---
@@ -1580,7 +1580,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-wind_bearing',
+    'unique_id': '12.34-56.78-wind_bearing',
     'unit_of_measurement': '°',
   })
 # ---
@@ -1636,7 +1636,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'None-wind_speed',
+    'unique_id': '12.34-56.78-wind_speed',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
 # ---

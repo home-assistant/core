@@ -34,7 +34,7 @@ async def test_get_minute_forecast(
 ) -> None:
     """Test the get_minute_forecast Service call."""
 
-    await setup_platform(hass, mock_config_entry, owm_client_mock, [Platform.WEATHER])
+    await setup_platform(hass, mock_config_entry, [Platform.WEATHER])
     result = await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_MINUTE_FORECAST,
@@ -57,7 +57,7 @@ async def test_get_minute_forecast_unavailable(
 ) -> None:
     """Test that Minute forecasting fails when mode is not v3.0."""
 
-    await setup_platform(hass, mock_config_entry, owm_client_mock, [Platform.WEATHER])
+    await setup_platform(hass, mock_config_entry, [Platform.WEATHER])
     with pytest.raises(
         ServiceValidationError,
         match="Minute forecast is available only when OpenWeatherMap mode is set to v3.0",
@@ -83,5 +83,5 @@ async def test_weather_states(
 ) -> None:
     """Test weather states are correctly collected from library with different modes and mocked function responses."""
 
-    await setup_platform(hass, mock_config_entry, owm_client_mock, [Platform.WEATHER])
+    await setup_platform(hass, mock_config_entry, [Platform.WEATHER])
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
