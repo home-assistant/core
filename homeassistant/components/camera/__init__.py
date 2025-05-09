@@ -85,7 +85,6 @@ from .img_util import scale_jpeg_camera_image
 from .prefs import CameraPreferences, DynamicStreamSettings  # noqa: F401
 from .webrtc import (
     DATA_ICE_SERVERS,
-    CameraWebRTCLegacyProvider,
     CameraWebRTCProvider,
     WebRTCAnswer,
     WebRTCCandidate,  # noqa: F401
@@ -93,10 +92,8 @@ from .webrtc import (
     WebRTCError,
     WebRTCMessage,  # noqa: F401
     WebRTCSendMessage,
-    async_get_supported_legacy_provider,
     async_get_supported_provider,
     async_register_ice_servers,
-    async_register_rtsp_to_web_rtc_provider,  # noqa: F401
     async_register_webrtc_provider,  # noqa: F401
     async_register_ws,
 )
@@ -476,7 +473,6 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self.async_update_token()
         self._create_stream_lock: asyncio.Lock | None = None
         self._webrtc_provider: CameraWebRTCProvider | None = None
-        self._legacy_webrtc_provider: CameraWebRTCLegacyProvider | None = None
         self._supports_native_sync_webrtc = (
             type(self).async_handle_web_rtc_offer != Camera.async_handle_web_rtc_offer
         )
@@ -646,14 +642,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             )
             return
 
-        if self._legacy_webrtc_provider and (
-            answer := await self._legacy_webrtc_provider.async_handle_web_rtc_offer(
-                self, offer_sdp
-            )
-        ):
-            send_message(WebRTCAnswer(answer))
-        else:
-            raise HomeAssistantError("Camera does not support WebRTC")
+        raise HomeAssistantError("Camera does not support WebRTC")
 
     def camera_image(
         self, width: int | None = None, height: int | None = None
@@ -772,9 +761,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         providers or inputs to the state attributes change.
         """
         old_provider = self._webrtc_provider
-        old_legacy_provider = self._legacy_webrtc_provider
         new_provider = None
-        new_legacy_provider = None
 
         # Skip all providers if the camera has a native WebRTC implementation
         if not (
@@ -785,15 +772,8 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 async_get_supported_provider
             )
 
-            if new_provider is None:
-                # Only add the legacy provider if the new provider is not available
-                new_legacy_provider = await self._async_get_supported_webrtc_provider(
-                    async_get_supported_legacy_provider
-                )
-
-        if old_provider != new_provider or old_legacy_provider != new_legacy_provider:
+        if old_provider != new_provider:
             self._webrtc_provider = new_provider
-            self._legacy_webrtc_provider = new_legacy_provider
             self._invalidate_camera_capabilities_cache()
             if write_state:
                 self.async_write_ha_state()
@@ -828,10 +808,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ]
             config.configuration.ice_servers.extend(ice_servers)
 
-        config.get_candidates_upfront = (
-            self._supports_native_sync_webrtc
-            or self._legacy_webrtc_provider is not None
-        )
+        config.get_candidates_upfront = self._supports_native_sync_webrtc
 
         return config
 
@@ -867,7 +844,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             else:
                 frontend_stream_types.add(StreamType.HLS)
 
-                if self._webrtc_provider or self._legacy_webrtc_provider:
+                if self._webrtc_provider:
                     frontend_stream_types.add(StreamType.WEB_RTC)
 
         return CameraCapabilities(frontend_stream_types)
