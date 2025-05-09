@@ -1,19 +1,10 @@
 {
   "domain": "adax",
   "name": "Adax",
-  "codeowners": [
-    "@danielhiversen",
-    "@lazytarget"
-  ],
+  "codeowners": ["@danielhiversen", "@lazytarget"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/adax",
   "iot_class": "local_polling",
-  "loggers": [
-    "adax",
-    "adax_local"
-  ],
-  "requirements": [
-    "adax==0.4.0",
-    "Adax-local==0.1.5"
-  ]
+  "loggers": ["adax", "adax_local"],
+  "requirements": ["adax==0.4.0", "Adax-local==0.1.5"]
 }
