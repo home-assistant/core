@@ -82,7 +82,7 @@
     },
     "add_package": {
       "name": "Add a package",
-      "description": "Add a package using the 17track API.",
+      "description": "Adds a package using the 17track API.",
       "fields": {
         "package_tracking_number": {
           "name": "Package tracking number to add",
@@ -94,7 +94,7 @@
         },
         "config_entry_id": {
           "name": "17Track service",
-          "description": "The selected service which to add the package."
+          "description": "The selected service to add the package to."
         }
       }
     },
