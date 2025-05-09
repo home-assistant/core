@@ -69,10 +69,6 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
             self.async_set_updated_data,
             self._async_device_data_changed,
         )
-        _LOGGER.debug("Initializing INKBIRD device %s", self.address)
-        _LOGGER.debug("Device type %s", self._device_type)
-        _LOGGER.debug("Device data %s", self._device_data)
-        _LOGGER.debug("Uses notify %s", self._data.uses_notify)
         if not self._data.uses_notify:
             self._entry.async_on_unload(
                 async_track_time_interval(
@@ -80,17 +76,12 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
                 )
             )
             return
-        _LOGGER.debug("Checking for last service info of address %s", self.address)
-        if not (
-            service_info := async_last_service_info(self.hass, self.address, False)
-        ):
-            _LOGGER.debug("No last service info found for address %s", self.address)
+        if not (service_info := async_last_service_info(self.hass, self.address)):
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="no_advertisement",
                 translation_placeholders={"address": self.address},
             )
-        _LOGGER.debug("Got last service info %s", service_info)
         await self._data.async_start(service_info, service_info.device)
         self._entry.async_on_unload(self._data.async_stop)
 
