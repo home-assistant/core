@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -131,6 +132,51 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_GROUP, default=self._data[CONF_GROUP]): vol.In(
                         GROUPS
                     ),
+                    vol.Required(CONF_PASSWORD): cv.string,
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauth on credential failure."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Prepare reauth."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            reauth_entry = self._get_reauth_entry()
+            errors, device_info = await self._handle_user_input(
+                user_input={
+                    CONF_HOST: reauth_entry.data[CONF_HOST],
+                    CONF_SSL: reauth_entry.data[CONF_SSL],
+                    CONF_VERIFY_SSL: reauth_entry.data[CONF_VERIFY_SSL],
+                    CONF_GROUP: reauth_entry.data[CONF_GROUP],
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
+                }
+            )
+
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data={
+                        CONF_HOST: reauth_entry.data[CONF_HOST],
+                        CONF_SSL: reauth_entry.data[CONF_SSL],
+                        CONF_VERIFY_SSL: reauth_entry.data[CONF_VERIFY_SSL],
+                        CONF_GROUP: reauth_entry.data[CONF_GROUP],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
                     vol.Required(CONF_PASSWORD): cv.string,
                 }
             ),

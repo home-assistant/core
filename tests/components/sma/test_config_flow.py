@@ -20,6 +20,7 @@ from . import (
     MOCK_DHCP_DISCOVERY,
     MOCK_DHCP_DISCOVERY_INPUT,
     MOCK_USER_INPUT,
+    MOCK_USER_REAUTH,
     _patch_async_setup_entry,
 )
 
@@ -221,3 +222,37 @@ async def test_dhcp_exceptions(
     assert result["title"] == MOCK_DHCP_DISCOVERY["host"]
     assert result["data"] == MOCK_DHCP_DISCOVERY
     assert result["result"].unique_id == DHCP_DISCOVERY.hostname.replace("SMA", "")
+
+
+async def test_full_flow_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the full flow of the config flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    # There is no user input
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with (
+        patch("pysma.SMA.new_session", return_value=True),
+        patch("pysma.SMA.device_info", return_value=MOCK_DEVICE),
+        _patch_async_setup_entry() as mock_setup_entry,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            MOCK_USER_REAUTH,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert len(mock_setup_entry.mock_calls) == 1
