@@ -1,7 +1,7 @@
 {
   "common": {
-    "data_country": "The hostname or IP address of your FRITZ!Box router.",
-    "data_code": "One Time Password (OTP code)",
+    "data_country": "Country code",
+    "data_code": "One-time password (OTP code)",
     "data_description_country": "The country of your Amazon account.",
     "data_description_username": "The email address of your Amazon account.",
     "data_description_password": "The password of your Amazon account.",
@@ -11,7 +11,7 @@
     "flow_title": "{username}",
     "step": {
       "reauth_confirm": {
-        "description": "Please enter the correct password for {username}",
+        "description": "Please enter the correct password and code for {username}",
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "code": "[%key:component::amazon_devices::common::data_description_code%]"
@@ -19,7 +19,7 @@
       },
       "user": {
         "data": {
-          "country": "[%key:component::amazon_devices::common::data_code%]",
+          "country": "[%key:component::amazon_devices::common::data_country%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "code": "[%key:component::amazon_devices::common::data_description_code%]"
