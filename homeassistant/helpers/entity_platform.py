@@ -764,7 +764,7 @@ class EntityPlatform:
                 already_exists = True
         return (already_exists, restored)
 
-    async def _async_add_entity(  # noqa: C901
+    async def _async_add_entity(
         self,
         entity: Entity,
         update_before_add: bool,
@@ -843,31 +843,18 @@ class EntityPlatform:
             else:
                 device = None
 
-            if not registered_entity_id:
-                # Do not bother working out a suggested_object_id
-                # if the entity is already registered as it will
-                # be ignored.
-                #
-                # An entity may suggest the entity_id by setting entity_id itself
-                suggested_entity_id: str | None = entity.entity_id
-                if suggested_entity_id is not None:
-                    suggested_object_id = split_entity_id(entity.entity_id)[1]
-                else:
-                    if device and entity.has_entity_name:
-                        device_name = device.name_by_user or device.name
-                        if entity.use_device_name:
-                            suggested_object_id = device_name
-                        else:
-                            suggested_object_id = (
-                                f"{device_name} {entity.suggested_object_id}"
-                            )
-                    if not suggested_object_id:
-                        suggested_object_id = entity.suggested_object_id
+            # An entity may suggest the entity_id by setting entity_id itself
+            calculated_object_id: str | None = None
+            suggested_entity_id: str | None = entity.entity_id
+            if suggested_entity_id is not None:
+                suggested_object_id = split_entity_id(entity.entity_id)[1]
+            else:
+                calculated_object_id = async_calculate_suggested_object_id(
+                    entity, device
+                )
 
-                if self.entity_namespace is not None:
-                    suggested_object_id = (
-                        f"{self.entity_namespace} {suggested_object_id}"
-                    )
+            if self.entity_namespace is not None and suggested_object_id is not None:
+                suggested_object_id = f"{self.entity_namespace} {suggested_object_id}"
 
             disabled_by: RegistryEntryDisabler | None = None
             if not entity.entity_registry_enabled_default:
@@ -881,6 +868,7 @@ class EntityPlatform:
                 self.domain,
                 self.platform_name,
                 entity.unique_id,
+                calculated_object_id=calculated_object_id,
                 capabilities=entity.capability_attributes,
                 config_entry=self.config_entry,
                 config_subentry_id=config_subentry_id,
@@ -1122,6 +1110,27 @@ class EntityPlatform:
                 if entity.should_poll
             ]:
                 await asyncio.gather(*tasks)
+
+
+@callback
+def async_calculate_suggested_object_id(
+    entity: Entity, device: dev_reg.DeviceEntry | None
+) -> str | None:
+    """Calculate the suggested object ID for an entity."""
+    calculated_object_id: str | None = None
+    if device and entity.has_entity_name:
+        device_name = device.name_by_user or device.name
+        if entity.use_device_name:
+            calculated_object_id = device_name
+        else:
+            calculated_object_id = f"{device_name} {entity.suggested_object_id}"
+    if not calculated_object_id:
+        calculated_object_id = entity.suggested_object_id
+
+    if (platform := entity.platform) and platform.entity_namespace is not None:
+        calculated_object_id = f"{platform.entity_namespace} {calculated_object_id}"
+
+    return calculated_object_id
 
 
 current_platform: ContextVar[EntityPlatform | None] = ContextVar(
