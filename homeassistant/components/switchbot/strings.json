@@ -181,5 +181,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "operation_error": {
+      "message": "An error occurred while performing the action: {error}"
+    }
   }
 }

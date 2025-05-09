@@ -35,7 +35,6 @@ from homeassistant.components.samsungtv.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
-    CONF_IP_ADDRESS,
     CONF_MAC,
     CONF_METHOD,
     CONF_MODEL,
@@ -89,7 +88,6 @@ MOCK_ZEROCONF_DATA = ZeroconfServiceInfo(
 )
 MOCK_OLD_ENTRY = {
     CONF_HOST: "10.10.12.34",
-    CONF_IP_ADDRESS: EXISTING_IP,
     CONF_METHOD: "legacy",
     CONF_PORT: None,
 }
@@ -1257,14 +1255,13 @@ async def test_autodetect_none(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
 async def test_update_old_entry(hass: HomeAssistant) -> None:
-    """Test update of old entry."""
+    """Test update of old entry sets unique id."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY)
     entry.add_to_hass(hass)
 
     config_entries_domain = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries_domain) == 1
     assert entry is config_entries_domain[0]
-    assert entry.data[CONF_IP_ADDRESS] == EXISTING_IP
     assert not entry.unique_id
 
     assert await async_setup_component(hass, DOMAIN, {}) is True
@@ -1282,7 +1279,6 @@ async def test_update_old_entry(hass: HomeAssistant) -> None:
     entry2 = config_entries_domain[0]
 
     # check updated device info
-    assert entry2.data.get(CONF_IP_ADDRESS) is not None
     assert entry2.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 

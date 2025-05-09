@@ -110,6 +110,7 @@ async def integration_fixture(
         "silabs_dishwasher",
         "silabs_evse_charging",
         "silabs_laundrywasher",
+        "silabs_refrigerator",
         "silabs_water_heater",
         "smoke_detector",
         "solar_power",
