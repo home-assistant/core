@@ -1,6 +1,7 @@
 """Test entity_registry API."""
 
 from datetime import datetime
+import logging
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -11,6 +12,7 @@ from homeassistant.const import ATTR_ICON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_registry import (
     RegistryEntryDisabler,
     RegistryEntryHider,
@@ -1290,6 +1292,10 @@ async def test_remove_non_existing_entity(
     assert not msg["success"]
 
 
+_LOGGER = logging.getLogger(__name__)
+DOMAIN = "test_domain"
+
+
 async def test_get_automatic_entity_ids(
     hass: HomeAssistant, client: MockHAClientWebSocket
 ) -> None:
@@ -1306,13 +1312,54 @@ async def test_get_automatic_entity_ids(
                 entity_id="test_domain.test_2",
                 unique_id="uniq2",
                 platform="test_platform",
-                suggested_object_id="blabla",
+                suggested_object_id="suggested_2",
             ),
             "test_domain.test_3": RegistryEntryWithDefaults(
                 entity_id="test_domain.test_3",
                 unique_id="uniq3",
                 platform="test_platform",
                 suggested_object_id="collision",
+            ),
+            "test_domain.test_4": RegistryEntryWithDefaults(
+                calculated_object_id="calculated_4",
+                entity_id="test_domain.test_4",
+                unique_id="uniq4",
+                platform="test_platform",
+                suggested_object_id="suggested_4",
+            ),
+            "test_domain.test_5": RegistryEntryWithDefaults(
+                calculated_object_id="calculated_5",
+                entity_id="test_domain.test_5",
+                unique_id="uniq5",
+                platform="test_platform",
+            ),
+            "test_domain.test_6": RegistryEntryWithDefaults(
+                calculated_object_id="calculated_6",
+                entity_id="test_domain.test_6",
+                unique_id="uniq6",
+                platform="test_domain",
+                suggested_object_id="suggested_6",
+            ),
+            "test_domain.test_7": RegistryEntryWithDefaults(
+                calculated_object_id="calculated_7",
+                entity_id="test_domain.test_7",
+                unique_id="uniq7",
+                platform="test_domain",
+            ),
+            "test_domain.test_8": RegistryEntryWithDefaults(
+                calculated_object_id="calculated_8",
+                entity_id="test_domain.test_8",
+                name="name_by_user_8",
+                unique_id="uniq8",
+                platform="test_domain",
+                suggested_object_id="suggested_8",
+            ),
+            "test_domain.test_9": RegistryEntryWithDefaults(
+                calculated_object_id="calculated_9",
+                entity_id="test_domain.test_9",
+                name="name_by_user_9",
+                unique_id="uniq9",
+                platform="test_domain",
             ),
             "test_domain.collision": RegistryEntryWithDefaults(
                 entity_id="test_domain.collision",
@@ -1322,6 +1369,14 @@ async def test_get_automatic_entity_ids(
         },
     )
 
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
+    entity6 = MockEntity(unique_id="uniq6", name="entity_name_6")
+    entity7 = MockEntity(unique_id="uniq7", name="entity_name_7")
+    entity8 = MockEntity(unique_id="uniq8", name="entity_name_8")
+    entity9 = MockEntity(unique_id="uniq9", name="entity_name_9")
+    await component.async_add_entities([entity6, entity7, entity8, entity9])
+
     await client.send_json_auto_id(
         {
             "type": "config/entity_registry/get_automatic_entity_ids",
@@ -1329,6 +1384,12 @@ async def test_get_automatic_entity_ids(
                 "test_domain.test_1",
                 "test_domain.test_2",
                 "test_domain.test_3",
+                "test_domain.test_4",
+                "test_domain.test_5",
+                "test_domain.test_6",
+                "test_domain.test_7",
+                "test_domain.test_8",
+                "test_domain.test_9",
                 "test_domain.unknown",
             ],
         }
@@ -1339,7 +1400,13 @@ async def test_get_automatic_entity_ids(
     assert msg["success"]
     assert msg["result"] == {
         "test_domain.test_1": "test_domain.test_platform_uniq1",  # platform + unique_id
-        "test_domain.test_2": "test_domain.blabla",  # suggested_object_id
+        "test_domain.test_2": "test_domain.suggested_2",  # suggested_object_id
         "test_domain.test_3": "test_domain.collision_2",  # suggested_object_id + _2
+        "test_domain.test_4": "test_domain.suggested_4",  # suggested_object_id
+        "test_domain.test_5": "test_domain.calculated_5",  # calculated_object_id
+        "test_domain.test_6": "test_domain.suggested_6",  # suggested_object_id
+        "test_domain.test_7": "test_domain.entity_name_7",  # entity name property
+        "test_domain.test_8": "test_domain.suggested_6",  # suggested_object_id
+        "test_domain.test_9": "test_domain.entity_name_7",  # name by user in registry
         "test_domain.unknown": None,  # no test_domain.unknown in registry
     }
