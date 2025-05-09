@@ -28,7 +28,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
-from . import create_influx_v2, get_influx_connection, validate_version_specific_config
+from . import create_influx_url, get_influx_connection, validate_version_specific_config
 from .const import (
     API_VERSION_2,
     COMPONENT_CONFIG_SCHEMA_CONNECTION,
@@ -151,7 +151,7 @@ PLATFORM_SCHEMA = vol.All(
     ),
     validate_version_specific_config,
     validate_query_format_for_version,
-    create_influx_v2,
+    create_influx_url,
 )
 
 
