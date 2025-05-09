@@ -29,6 +29,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util import color as color_util
 
 from ..bridge import HueBridge
@@ -43,6 +44,9 @@ from .helpers import (
 FALLBACK_MIN_KELVIN = 6500
 FALLBACK_MAX_KELVIN = 2000
 FALLBACK_KELVIN = 5800  # halfway
+
+# HA 2025.4 replaced the deprecated effect "None" with HA default "off"
+DEPRECATED_EFFECT_NONE = "None"
 
 
 async def async_setup_entry(
@@ -233,6 +237,23 @@ class HueLight(HueBaseEntity, LightEntity):
         self._color_temp_active = color_temp is not None
         flash = kwargs.get(ATTR_FLASH)
         effect = effect_str = kwargs.get(ATTR_EFFECT)
+        if effect_str == DEPRECATED_EFFECT_NONE:
+            # deprecated effect "None" is now "off"
+            effect_str = EFFECT_OFF
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                "deprecated_effect_none",
+                breaks_in_ha_version="2025.10.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_effect_none",
+            )
+            self.logger.warning(
+                "Detected deprecated effect 'None' in %s, use 'off' instead. "
+                "This will stop working in HA 2025.10",
+                self.entity_id,
+            )
         if effect_str == EFFECT_OFF:
             # ignore effect if set to "off" and we have no effect active
             # the special effect "off" is only used to stop an active effect

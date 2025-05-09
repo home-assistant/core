@@ -10,8 +10,8 @@
         },
         "data_description": {
           "host": "Hostname or IP-address of the Intergas gateway.",
-          "username": "The username to log into the gateway. This is `admin` in most cases.",
-          "password": "The password to log into the gateway, is printed at the bottom of the gateway or is `intergas` for some older devices."
+          "username": "The username to log in to the gateway. This is `admin` in most cases.",
+          "password": "The password to log in to the gateway, is printed at the bottom of the gateway or is `intergas` for some older devices."
         }
       },
       "dhcp_auth": {
@@ -22,8 +22,8 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "username": "The username to log into the gateway. This is `admin` in most cases.",
-          "password": "The password to log into the gateway, is printed at the bottom of the Gateway or is `intergas` for some older devices."
+          "username": "[%key:component::incomfort::config::step::user::data_description::username%]",
+          "password": "[%key:component::incomfort::config::step::user::data_description::password%]"
         }
       },
       "dhcp_confirm": {
@@ -119,13 +119,14 @@
           "sensor_test": "Sensor test",
           "central_heating": "Central heating",
           "standby": "[%key:common::state::standby%]",
+          "off": "[%key:common::state::off%]",
           "postrun_boyler": "Post run boiler",
           "service": "Service",
           "tapwater": "Tap water",
           "postrun_ch": "Post run central heating",
           "boiler_int": "Boiler internal",
           "buffer": "Buffer",
-          "sensor_fault_after_self_check_e0": "Sensor fault after self check",
+          "sensor_fault_after_self_check_e0": "Sensor fault after self-check",
           "cv_temperature_too_high_e1": "Temperature too high",
           "s1_and_s2_interchanged_e2": "S1 and S2 interchanged",
           "no_flame_signal_e4": "No flame signal",

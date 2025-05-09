@@ -40,9 +40,13 @@
           "enable_google_search_tool": "Enable Google Search tool"
         },
         "data_description": {
-          "prompt": "Instruct how the LLM should respond. This can be a template."
+          "prompt": "Instruct how the LLM should respond. This can be a template.",
+          "enable_google_search_tool": "Only works with \"No control\" in the \"Control Home Assistant\" setting. See docs for a workaround using it with \"Assist\"."
         }
       }
+    },
+    "error": {
+      "invalid_google_search_option": "Google Search cannot be enabled alongside any Assist capability, this can only be used when Assist is set to \"No control\"."
     }
   },
   "services": {

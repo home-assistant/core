@@ -21,7 +21,7 @@ from socket import (  # type: ignore[attr-defined]  # private, not in typeshed
     _GLOBAL_DEFAULT_TIMEOUT,
 )
 import threading
-from typing import Any, cast, overload
+from typing import TYPE_CHECKING, Any, cast, overload
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -355,7 +355,13 @@ def ensure_list[_T](value: _T | None) -> list[_T] | list[Any]:
     """Wrap value in list if it is not one."""
     if value is None:
         return []
-    return cast(list[_T], value) if isinstance(value, list) else [value]
+    if isinstance(value, list):
+        if TYPE_CHECKING:
+            # https://github.com/home-assistant/core/pull/71960
+            # cast with a type variable is still slow.
+            return cast(list[_T], value)
+        return value  # type: ignore[unreachable]
+    return [value]
 
 
 def entity_id(value: Any) -> str:
@@ -1051,6 +1057,31 @@ def removed(
         raise_if_present=raise_if_present or False,
         option_removed=True,
     )
+
+
+def renamed(
+    old_key: str,
+    new_key: str,
+) -> Callable[[Any], Any]:
+    """Replace key with a new key.
+
+    Fails if both the new and old key are present.
+    """
+
+    def validator(value: Any) -> Any:
+        if not isinstance(value, dict):
+            return value
+
+        if old_key in value:
+            if new_key in value:
+                raise vol.Invalid(
+                    f"Cannot specify both '{old_key}' and '{new_key}'. Please use '{new_key}' only."
+                )
+            value[new_key] = value.pop(old_key)
+
+        return value
+
+    return validator
 
 
 def key_value_schemas(

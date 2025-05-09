@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools==77.0.3"]
+requires = ["setuptools==78.1.1"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "homeassistant"
-version = "2025.5.0.dev0"
+version = "2025.6.0.dev0"
 license = "Apache-2.0"
 license-files = ["LICENSE*", "homeassistant/backports/LICENSE*"]
 description = "Open-source home automation platform running on Python 3."
@@ -21,14 +21,14 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Topic :: Home Automation",
 ]
-requires-python = ">=3.13.0"
+requires-python = ">=3.13.2"
 dependencies = [
-  "aiodns==3.2.0",
+  "aiodns==3.4.0",
   # Integrations may depend on hassio integration without listing it to
   # change behavior based on presence of supervisor. Deprecated with #127228
   # Lib can be removed with 2025.11
-  "aiohasupervisor==0.3.0",
-  "aiohttp==3.11.14",
+  "aiohasupervisor==0.3.1",
+  "aiohttp==3.11.18",
   "aiohttp_cors==0.7.0",
   "aiohttp-fast-zlib==0.2.3",
   "aiohttp-asyncmdnsresolver==0.1.1",
@@ -44,27 +44,67 @@ dependencies = [
   "certifi>=2021.5.30",
   "ciso8601==2.3.2",
   "cronsim==2.6",
-  "fnv-hash-fast==1.4.0",
+  "fnv-hash-fast==1.5.0",
+  # ha-ffmpeg is indirectly imported from onboarding via the import chain
+  # onboarding->cloud->assist_pipeline->tts->ffmpeg. Onboarding needs
+  # to be setup in stage 0, but we don't want to also promote cloud with all its
+  # dependencies to stage 0.
+  "ha-ffmpeg==3.2.2",
   # hass-nabucasa is imported by helpers which don't depend on the cloud
   # integration
-  "hass-nabucasa==0.94.0",
+  "hass-nabucasa==0.100.0",
+  # hassil is indirectly imported from onboarding via the import chain
+  # onboarding->cloud->assist_pipeline->conversation->hassil. Onboarding needs
+  # to be setup in stage 0, but we don't want to also promote cloud with all its
+  # dependencies to stage 0.
+  "hassil==2.2.3",
   # When bumping httpx, please check the version pins of
   # httpcore, anyio, and h11 in gen_requirements_all
   "httpx==0.28.1",
   "home-assistant-bluetooth==1.13.1",
+  # home_assistant_intents is indirectly imported from onboarding via the import chain
+  # onboarding->cloud->assist_pipeline->conversation->home_assistant_intents. Onboarding needs
+  # to be setup in stage 0, but we don't want to also promote cloud with all its
+  # dependencies to stage 0.
+  "home-assistant-intents==2025.5.7",
   "ifaddr==0.2.0",
   "Jinja2==3.1.6",
   "lru-dict==1.3.0",
+  # mutagen is indirectly imported from onboarding via the import chain
+  # onboarding->cloud->assist_pipeline->tts->mutagen. Onboarding needs
+  # to be setup in stage 0, but we don't want to also promote cloud with all its
+  # dependencies to stage 0.
+  "mutagen==1.47.0",
+  # numpy is indirectly imported from onboarding via the import chain
+  # onboarding->cloud->alexa->camera->stream->numpy. Onboarding needs
+  # to be setup in stage 0, but we don't want to also promote cloud with all its
+  # dependencies to stage 0.
+  "numpy==2.2.2",
   "PyJWT==2.10.1",
   # PyJWT has loose dependency. We want the latest one.
   "cryptography==44.0.1",
-  "Pillow==11.1.0",
+  "Pillow==11.2.1",
   "propcache==0.3.1",
   "pyOpenSSL==25.0.0",
-  "orjson==3.10.16",
+  "orjson==3.10.18",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
+  # pymicro_vad is indirectly imported from onboarding via the import chain
+  # onboarding->cloud->assist_pipeline->pymicro_vad. Onboarding needs
+  # to be setup in stage 0, but we don't want to also promote cloud with all its
+  # dependencies to stage 0.
+  "pymicro-vad==1.0.1",
+  # pyspeex-noise is indirectly imported from onboarding via the import chain
+  # onboarding->cloud->assist_pipeline->pyspeex_noise. Onboarding needs
+  # to be setup in stage 0, but we don't want to also promote cloud with all its
+  # dependencies to stage 0.
+  "pyspeex-noise==1.0.2",
   "python-slugify==8.0.4",
+  # PyTurboJPEG is indirectly imported from onboarding via the import chain
+  # onboarding->cloud->camera->pyturbojpeg. Onboarding needs
+  # to be setup in stage 0, but we don't want to also promote cloud with all its
+  # dependencies to stage 0.
+  "PyTurboJPEG==1.7.5",
   "PyYAML==6.0.2",
   "requests==2.32.3",
   "securetar==2025.2.1",
@@ -77,13 +117,13 @@ dependencies = [
   # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
   # https://github.com/home-assistant/core/issues/97248
   "urllib3>=1.26.5,<2",
-  "uv==0.6.10",
+  "uv==0.7.1",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.6.0",
-  "voluptuous-openapi==0.0.6",
-  "yarl==1.18.3",
+  "voluptuous-openapi==0.0.7",
+  "yarl==1.20.0",
   "webrtc-models==0.3.0",
-  "zeroconf==0.146.0",
+  "zeroconf==0.147.0",
 ]
 
 [project.urls]
@@ -461,17 +501,18 @@ filterwarnings = [
   # Modify app state for testing
   "ignore:Changing state of started or joined application is deprecated:DeprecationWarning:tests.components.http.test_ban",
 
-    # -- Tests
-    # Ignore custom pytest marks
-    "ignore:Unknown pytest.mark.disable_autouse_fixture:pytest.PytestUnknownMarkWarning:tests.components.met",
-    "ignore:Unknown pytest.mark.dataset:pytest.PytestUnknownMarkWarning:tests.components.screenlogic",
+  # -- Tests
+  # Ignore custom pytest marks
+  "ignore:Unknown pytest.mark.disable_autouse_fixture:pytest.PytestUnknownMarkWarning:tests.components.met",
+  "ignore:Unknown pytest.mark.dataset:pytest.PytestUnknownMarkWarning:tests.components.screenlogic",
+
+  # -- DeprecationWarning already fixed in our codebase
+  # https://github.com/kurtmckee/feedparser/pull/389 - 6.0.11
+  "ignore:.*a temporary mapping .* from `updated_parsed` to `published_parsed` if `updated_parsed` doesn't exist:DeprecationWarning:feedparser.util",
 
   # -- design choice 3rd party
-  # https://github.com/gwww/elkm1/blob/2.2.10/elkm1_lib/util.py#L8-L19
+  # https://github.com/gwww/elkm1/blob/2.2.11/elkm1_lib/util.py#L8-L19
   "ignore:ssl.TLSVersion.TLSv1 is deprecated:DeprecationWarning:elkm1_lib.util",
-  # https://github.com/allenporter/ical/pull/215
-  # https://github.com/allenporter/ical/blob/8.2.0/ical/util.py#L21-L23
-  "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:ical.util",
   # https://github.com/bachya/regenmaschine/blob/2024.03.0/regenmaschine/client.py#L52
   "ignore:ssl.TLSVersion.SSLv3 is deprecated:DeprecationWarning:regenmaschine.client",
 
@@ -482,28 +523,14 @@ filterwarnings = [
   "ignore:Deprecated call to `pkg_resources.declare_namespace\\(('azure'|'google.*'|'pywinusb'|'repoze'|'xbox'|'zope')\\)`:DeprecationWarning:pkg_resources",
 
   # -- tracked upstream / open PRs
-  # - pyOpenSSL v24.2.1
-  # https://github.com/certbot/certbot/issues/9828 - v2.11.0
-  # https://github.com/certbot/certbot/issues/9992
-  "ignore:X509Extension support in pyOpenSSL is deprecated. You should use the APIs in cryptography:DeprecationWarning:acme.crypto_util",
-  "ignore:CSR support in pyOpenSSL is deprecated. You should use the APIs in cryptography:DeprecationWarning:acme.crypto_util",
-  "ignore:CSR support in pyOpenSSL is deprecated. You should use the APIs in cryptography:DeprecationWarning:josepy.util",
-  # - other
-  # https://github.com/foxel/python_ndms2_client/issues/6 - v0.1.3
-  # https://github.com/foxel/python_ndms2_client/pull/8
-  "ignore:'telnetlib' is deprecated and slated for removal in Python 3.13:DeprecationWarning:ndms2_client.connection",
+  # https://github.com/hacf-fr/meteofrance-api/pull/688 - v1.4.0 - 2025-03-26
+  "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:meteofrance_api.model.forecast",
 
   # -- fixed, waiting for release / update
-  # https://github.com/bachya/aiopurpleair/pull/200 - >=2023.10.0
-  "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:aiopurpleair.helpers.validators",
-  # https://bugs.launchpad.net/beautifulsoup/+bug/2076897 - >4.12.3
-  "ignore:The 'strip_cdata' option of HTMLParser\\(\\) has never done anything and will eventually be removed:DeprecationWarning:bs4.builder._lxml",
   # https://github.com/DataDog/datadogpy/pull/290 - >=0.23.0
   "ignore:invalid escape sequence:SyntaxWarning:.*datadog.dogstatsd.base",
   # https://github.com/DataDog/datadogpy/pull/566/files - >=0.37.0
   "ignore:pkg_resources is deprecated as an API:DeprecationWarning:datadog.util.compat",
-  # https://github.com/fwestenberg/devialet/pull/6 - >1.4.5
-  "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:devialet.devialet_api",
   # https://github.com/httplib2/httplib2/pull/226 - >=0.21.0
   "ignore:ssl.PROTOCOL_TLS is deprecated:DeprecationWarning:httplib2",
   # https://github.com/influxdata/influxdb-client-python/issues/603 >=1.45.0
@@ -511,27 +538,24 @@ filterwarnings = [
   "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:influxdb_client.client.write.point",
   # https://github.com/majuss/lupupy/pull/15 - >0.3.2
   "ignore:\"is not\" with 'str' literal. Did you mean \"!=\"?:SyntaxWarning:.*lupupy.devices.alarm",
-  # https://github.com/nextcord/nextcord/pull/1095 - >2.6.1
+  # https://github.com/nextcord/nextcord/pull/1095 - >=3.0.0
   "ignore:pkg_resources is deprecated as an API:DeprecationWarning:nextcord.health_check",
-  # https://github.com/eclipse/paho.mqtt.python/issues/653 - >=2.0.0
-  # https://github.com/eclipse/paho.mqtt.python/pull/665
-  "ignore:ssl.PROTOCOL_TLS is deprecated:DeprecationWarning:paho.mqtt.client",
   # https://github.com/vacanza/python-holidays/discussions/1800 - >1.0.0
   "ignore::DeprecationWarning:holidays",
   # https://github.com/rytilahti/python-miio/pull/1809 - >=0.6.0.dev0
   "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:miio.protocol",
   "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:miio.miioprotocol",
+  # https://github.com/rytilahti/python-miio/pull/1993 - >0.6.0.dev0
+  "ignore:functools.partial will be a method descriptor in future Python versions; wrap it in enum.member\\(\\) if you want to preserve the old behavior:FutureWarning:miio.miot_device",
   # https://github.com/okunishinishi/python-stringcase/commit/6a5c5bbd3fe5337862abc7fd0853a0f36e18b2e1 - >1.2.0
   "ignore:invalid escape sequence:SyntaxWarning:.*stringcase",
-
-  # -- fixed for Python 3.13
-  # https://github.com/rhasspy/wyoming/commit/e34af30d455b6f2bb9e5cfb25fad8d276914bc54 - >=1.4.2
-  "ignore:'audioop' is deprecated and slated for removal in Python 3.13:DeprecationWarning:wyoming.audio",
 
   # -- other
   # Locale changes might take some time to resolve upstream
   # https://github.com/Squachen/micloud/blob/v_0.6/micloud/micloud.py#L35 - v0.6 - 2022-12-08
   "ignore:'locale.getdefaultlocale' is deprecated and slated for removal in Python 3.15:DeprecationWarning:micloud.micloud",
+  # https://pypi.org/project/agent-py/ - v0.0.24 - 2024-11-07
+  "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:agent.a",
   # https://github.com/MatsNl/pyatag/issues/11 - v0.3.7.1 - 2023-10-09
   "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:pyatag.gateway",
   # https://github.com/lidatong/dataclasses-json/issues/328
@@ -540,20 +564,24 @@ filterwarnings = [
   # https://pypi.org/project/emulated-roku/ - v0.3.0 - 2023-12-19
   # https://github.com/martonperei/emulated_roku
   "ignore:loop argument is deprecated:DeprecationWarning:emulated_roku",
-  # https://github.com/w1ll1am23/pyeconet/blob/v0.1.23/src/pyeconet/api.py#L38 - v0.1.23 - 2024-10-08
+  # https://pypi.org/project/foobot_async/ - v1.0.1 - 2024-08-16
+  "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:foobot_async",
+  # https://pypi.org/project/pyeconet/ - v0.1.28 - 2025-02-15
+  # https://github.com/w1ll1am23/pyeconet/blob/v0.1.28/src/pyeconet/api.py#L38
   "ignore:ssl.PROTOCOL_TLS is deprecated:DeprecationWarning:pyeconet.api",
   # https://github.com/thecynic/pylutron - v0.2.16 - 2024-10-22
   "ignore:setDaemon\\(\\) is deprecated, set the daemon attribute instead:DeprecationWarning:pylutron",
+  # https://pypi.org/project/PyMetEireann/ - v2024.11.0 - 2024-11-23
+  "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:meteireann",
   # https://github.com/pschmitt/pynuki/blob/1.6.3/pynuki/utils.py#L21 - v1.6.3 - 2024-02-24
   "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:pynuki.utils",
-  # https://github.com/lextudio/pysnmp/blob/v7.1.10/pysnmp/smi/compiler.py#L23-L31 - v7.1.10 - 2024-11-04
+  # https://github.com/lextudio/pysnmp/blob/v7.1.17/pysnmp/smi/compiler.py#L23-L31 - v7.1.17 - 2025-03-19
   "ignore:smiV1Relaxed is deprecated. Please use smi_v1_relaxed instead:DeprecationWarning:pysnmp.smi.compiler",
-  "ignore:getReadersFromUrls is deprecated. Please use get_readers_from_urls instead:DeprecationWarning:pysmi.reader.url", # wrong stacklevel
+  "ignore:getReadersFromUrls is deprecated. Please use get_readers_from_urls instead:DeprecationWarning:pysnmp.smi.compiler",
+  # https://github.com/Python-roborock/python-roborock/issues/305 - 2.18.0 - 2025-04-06
+  "ignore:Callback API version 1 is deprecated, update to latest version:DeprecationWarning:roborock.cloud_api",
   # https://github.com/briis/pyweatherflowudp/blob/v1.4.5/pyweatherflowudp/const.py#L20 - v1.4.5 - 2023-10-10
   "ignore:This function will be removed in future versions of pint:DeprecationWarning:pyweatherflowudp.const",
-  # Wrong stacklevel
-  # https://bugs.launchpad.net/beautifulsoup/+bug/2034451 fixed in >4.12.3
-  "ignore:It looks like you're parsing an XML document using an HTML parser:UserWarning:html.parser",
   # New in aiohttp - v3.9.0
   "ignore:It is recommended to use web.AppKey instances for keys:UserWarning:(homeassistant|tests|aiohttp_cors)",
   # - SyntaxWarnings
@@ -580,34 +608,10 @@ filterwarnings = [
   "ignore:pkg_resources is deprecated as an API:DeprecationWarning:habitipy.api",
   # https://github.com/eavanvalkenburg/pysiaalarm/blob/v3.1.1/src/pysiaalarm/data/data.py#L7 - v3.1.1 - 2023-04-17
   "ignore:pkg_resources is deprecated as an API:DeprecationWarning:pysiaalarm.data.data",
-  # https://pypi.org/project/pybotvac/ - v0.0.25 - 2024-04-11
+  # https://pypi.org/project/pybotvac/ - v0.0.26 - 2025-02-26
   "ignore:pkg_resources is deprecated as an API:DeprecationWarning:pybotvac.version",
   # https://github.com/home-assistant-ecosystem/python-mystrom/blob/2.2.0/pymystrom/__init__.py#L10 - v2.2.0 - 2023-05-21
   "ignore:pkg_resources is deprecated as an API:DeprecationWarning:pymystrom",
-
-  # -- Python 3.13
-  # HomeAssistant
-  "ignore:'audioop' is deprecated and slated for removal in Python 3.13:DeprecationWarning:homeassistant.components.assist_pipeline.websocket_api",
-  "ignore:'telnetlib' is deprecated and slated for removal in Python 3.13:DeprecationWarning:homeassistant.components.hddtemp.sensor",
-  # https://pypi.org/project/nextcord/ - v2.6.0 - 2023-09-23
-  # https://github.com/nextcord/nextcord/issues/1174
-  # https://github.com/nextcord/nextcord/blob/v2.6.1/nextcord/player.py#L5
-  "ignore:'audioop' is deprecated and slated for removal in Python 3.13:DeprecationWarning:nextcord.player",
-  # https://pypi.org/project/SpeechRecognition/ - v3.11.0 - 2024-05-05
-  # https://github.com/Uberi/speech_recognition/blob/3.11.0/speech_recognition/__init__.py#L7
-  "ignore:'aifc' is deprecated and slated for removal in Python 3.13:DeprecationWarning:speech_recognition",
-  # https://pypi.org/project/voip-utils/ - v0.2.0 - 2024-09-06
-  # https://github.com/home-assistant-libs/voip-utils/blob/0.2.0/voip_utils/rtp_audio.py#L3
-  "ignore:'audioop' is deprecated and slated for removal in Python 3.13:DeprecationWarning:voip_utils.rtp_audio",
-
-  # -- Python 3.13 - unmaintained projects, last release about 2+ years
-  # https://pypi.org/project/pydub/ - v0.25.1 - 2021-03-10
-  "ignore:'audioop' is deprecated and slated for removal in Python 3.13:DeprecationWarning:pydub.utils",
-  # https://github.com/heathbar/plum-lightpad-python/issues/7 - v0.0.11 - 2018-10-16
-  "ignore:'telnetlib' is deprecated and slated for removal in Python 3.13:DeprecationWarning:plumlightpad.lightpad",
-  # https://pypi.org/project/pyws66i/ - v1.1 - 2022-04-05
-  # https://github.com/ssaenger/pyws66i/blob/v1.1/pyws66i/__init__.py#L2
-  "ignore:'telnetlib' is deprecated and slated for removal in Python 3.13:DeprecationWarning:pyws66i",
 
   # -- New in Python 3.13
   # https://github.com/kurtmckee/feedparser/pull/389 - >6.0.11
@@ -620,18 +624,24 @@ filterwarnings = [
   "ignore:telnetlib was removed in Python 3.13.*'standard-telnetlib':DeprecationWarning:plumlightpad.lightpad",
   "ignore:telnetlib was removed in Python 3.13.*'standard-telnetlib':DeprecationWarning:pyws66i",
 
+  # -- Websockets 14.1
+  # https://websockets.readthedocs.io/en/stable/howto/upgrade.html
+  "ignore:websockets.legacy is deprecated:DeprecationWarning:websockets.legacy",
+  # https://github.com/bluecurrent/HomeAssistantAPI
+  "ignore:websockets.client.connect is deprecated:DeprecationWarning:bluecurrent_api.websocket",
+  "ignore:websockets.client.WebSocketClientProtocol is deprecated:DeprecationWarning:bluecurrent_api.websocket",
+  "ignore:websockets.exceptions.InvalidStatusCode is deprecated:DeprecationWarning:bluecurrent_api.websocket",
+  # https://github.com/graphql-python/gql
+  "ignore:websockets.client.WebSocketClientProtocol is deprecated:DeprecationWarning:gql.transport.websockets_base",
+
   # -- unmaintained projects, last release about 2+ years
-  # https://pypi.org/project/agent-py/ - v0.0.23 - 2020-06-04
-  "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:agent.a",
   # https://pypi.org/project/aiomodernforms/ - v0.1.8 - 2021-06-27
   "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:aiomodernforms.modernforms",
-  # https://pypi.org/project/alarmdecoder/ - v1.13.11 - 2021-06-01
-  "ignore:invalid escape sequence:SyntaxWarning:.*alarmdecoder",
   # https://pypi.org/project/directv/ - v0.4.0 - 2020-09-12
   "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:directv.directv",
   "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:directv.models",
-  # https://pypi.org/project/foobot_async/ - v1.0.1 - 2024-08-16
-  "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:foobot_async",
+  # https://pypi.org/project/enocean/ - v0.50.1 (installed) -> v0.60.1 - 2021-06-18
+  "ignore:It looks like you're using an HTML parser to parse an XML document:UserWarning:enocean.protocol.eep",
   # https://pypi.org/project/httpsig/ - v1.3.0 - 2018-11-28
   "ignore:pkg_resources is deprecated as an API:DeprecationWarning:httpsig",
   # https://pypi.org/project/influxdb/ - v5.3.2 - 2024-04-18 (archived)
@@ -648,8 +658,6 @@ filterwarnings = [
   "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:oauth2client.client",
   # https://pypi.org/project/opuslib/ - v3.0.1 - 2018-01-16
   "ignore:\"is not\" with 'int' literal. Did you mean \"!=\"?:SyntaxWarning:.*opuslib.api.decoder",
-  # https://pypi.org/project/passlib/ - v1.7.4 - 2020-10-08
-  "ignore:'crypt' is deprecated and slated for removal in Python 3.13:DeprecationWarning:passlib.utils",
   # https://pypi.org/project/pilight/ - v0.1.1 - 2016-10-19
   "ignore:pkg_resources is deprecated as an API:DeprecationWarning:pilight",
   # https://pypi.org/project/plumlightpad/ - v0.0.11 - 2018-10-16
@@ -661,8 +669,6 @@ filterwarnings = [
   "ignore:invalid escape sequence:SyntaxWarning:.*pydub.utils",
   # https://pypi.org/project/pyiss/ - v1.0.1 - 2016-12-19
   "ignore:\"is\" with 'int' literal. Did you mean \"==\"?:SyntaxWarning:.*pyiss",
-  # https://pypi.org/project/PyMetEireann/ - v2021.8.0 - 2021-08-16
-  "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:meteireann",
   # https://pypi.org/project/PyPasser/ - v0.0.5 - 2021-10-21
   "ignore:invalid escape sequence:SyntaxWarning:.*pypasser.utils",
   # https://pypi.org/project/pyqwikswitch/ - v0.94 - 2019-08-19

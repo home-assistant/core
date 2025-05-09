@@ -41,9 +41,9 @@
         "name": "Noise suppression level",
         "state": {
           "off": "[%key:common::state::off%]",
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]",
           "max": "Max"
         }
       },

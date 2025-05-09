@@ -62,6 +62,10 @@
         }
       }
     },
+    "no_subscription": {
+      "title": "No subscription detected",
+      "description": "You do not have a Home Assistant Cloud subscription. Subscribe at {account_url}."
+    },
     "warn_bad_custom_domain_configuration": {
       "title": "Detected wrong custom domain configuration",
       "description": "The DNS configuration for your custom domain ({custom_domains}) is not correct. Please check the DNS configuration of your domain and make sure it points to the correct CNAME."

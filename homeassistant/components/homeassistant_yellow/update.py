@@ -44,6 +44,7 @@ FIRMWARE_ENTITY_DESCRIPTIONS: dict[
 ] = {
     ApplicationType.EZSP: FirmwareUpdateEntityDescription(
         key="radio_firmware",
+        translation_key="radio_firmware",
         display_precision=0,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
@@ -55,6 +56,7 @@ FIRMWARE_ENTITY_DESCRIPTIONS: dict[
     ),
     ApplicationType.SPINEL: FirmwareUpdateEntityDescription(
         key="radio_firmware",
+        translation_key="radio_firmware",
         display_precision=0,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
@@ -65,7 +67,8 @@ FIRMWARE_ENTITY_DESCRIPTIONS: dict[
         firmware_name="OpenThread RCP",
     ),
     ApplicationType.CPC: FirmwareUpdateEntityDescription(
-        key="firmware",
+        key="radio_firmware",
+        translation_key="radio_firmware",
         display_precision=0,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
@@ -76,7 +79,8 @@ FIRMWARE_ENTITY_DESCRIPTIONS: dict[
         firmware_name="Multiprotocol",
     ),
     ApplicationType.GECKO_BOOTLOADER: FirmwareUpdateEntityDescription(
-        key="firmware",
+        key="radio_firmware",
+        translation_key="radio_firmware",
         display_precision=0,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
@@ -88,6 +92,7 @@ FIRMWARE_ENTITY_DESCRIPTIONS: dict[
     ),
     None: FirmwareUpdateEntityDescription(
         key="radio_firmware",
+        translation_key="radio_firmware",
         display_precision=0,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
@@ -168,7 +173,6 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """Yellow firmware update entity."""
 
     bootloader_reset_type = "yellow"  # Triggers a GPIO reset
-    _attr_has_entity_name = True
 
     def __init__(
         self,

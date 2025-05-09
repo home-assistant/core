@@ -307,7 +307,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         return None
 
     @property
-    def target_temperature_low(self):
+    def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self.get_attribute_value(
@@ -333,7 +333,6 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     """Define a SmartThings Air Conditioner."""
 
     _attr_name = None
-    _attr_preset_mode = None
 
     def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Init the class."""
@@ -544,6 +543,18 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             ),
             SWING_OFF,
         )
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the preset mode."""
+        if self.supports_capability(Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE):
+            mode = self.get_attribute_value(
+                Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
+                Attribute.AC_OPTIONAL_MODE,
+            )
+            if mode == WINDFREE:
+                return WINDFREE
+        return None
 
     def _determine_preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""

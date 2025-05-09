@@ -45,7 +45,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) 
     # if this is the last entry, remove the storage
     if len(entries) == 1:
         hass.data.pop(MY_KEY)
-    return await hass.config_entries.async_unload_platforms(entry, Platform.EVENT)
+    return await hass.config_entries.async_unload_platforms(entry, [Platform.EVENT])
 
 
 async def _async_update_listener(
