@@ -68,6 +68,10 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
             self.async_set_updated_data,
             self._async_device_data_changed,
         )
+        _LOGGER.debug("Initializing INKBIRD device %s", self.address)
+        _LOGGER.debug("Device type %s", self._device_type)
+        _LOGGER.debug("Device data %s", self._device_data)
+        _LOGGER.debug("Uses notify %s", self._data.uses_notify)
         if not self._data.uses_notify:
             self._entry.async_on_unload(
                 async_track_time_interval(
