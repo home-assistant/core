@@ -6,7 +6,7 @@ import asyncio
 import io
 from ipaddress import ip_network
 import logging
-from typing import Any
+from typing import Any, Optional
 
 import httpx
 from telegram import (
@@ -881,7 +881,7 @@ class TelegramNotificationService:
         chat_id: int,
         reaction: list[str],
         is_big: bool = False,
-        context: Context = None,
+        context: Optional[Context] = None,
         **kwargs,
     ):
         """Set the bot's reaction for a given message."""
