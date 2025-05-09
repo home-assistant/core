@@ -110,34 +110,29 @@ _LOGGER = logging.getLogger(__name__)
 type InfluxDBConfigEntry = ConfigEntry[InfluxThread]
 
 
-def create_influx_v2(conf: dict) -> dict:
-    """Set values for v2 API."""
+def create_influx_url(conf: dict) -> dict:
+    """Build URL used from config inputs and default when necessary."""
     if conf[CONF_API_VERSION] == API_VERSION_2:
         if CONF_SSL not in conf:
             conf[CONF_SSL] = DEFAULT_SSL_V2
         if CONF_HOST not in conf:
             conf[CONF_HOST] = DEFAULT_HOST_V2
 
-        conf[CONF_URL] = create_influx_url(conf)
+        url = conf[CONF_HOST]
+        if conf[CONF_SSL]:
+            url = f"https://{url}"
+        else:
+            url = f"http://{url}"
+
+        if CONF_PORT in conf:
+            url = f"{url}:{conf[CONF_PORT]}"
+
+        if CONF_PATH in conf:
+            url = f"{url}{conf[CONF_PATH]}"
+
+        conf[CONF_URL] = url
 
     return conf
-
-
-def create_influx_url(conf: dict) -> str:
-    """Build URL used from config inputs and default when necessary."""
-    url = conf[CONF_HOST]
-    if conf[CONF_SSL]:
-        url = f"https://{url}"
-    else:
-        url = f"http://{url}"
-
-    if (port := conf.get(CONF_PORT)) is not None:
-        url = f"{url}:{port}"
-
-    if (path := conf.get(CONF_PATH)) is not None:
-        url = f"{url}{path}"
-
-    return url
 
 
 def validate_version_specific_config(conf: dict) -> dict:
@@ -201,6 +196,7 @@ _INFLUX_BASE_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
 INFLUX_SCHEMA = vol.All(
     _INFLUX_BASE_SCHEMA.extend(COMPONENT_CONFIG_SCHEMA_CONNECTION),
     validate_version_specific_config,
+    create_influx_url,
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -352,7 +348,7 @@ def get_influx_connection(  # noqa: C901
 
     if conf[CONF_API_VERSION] == API_VERSION_2:
         kwargs[CONF_TIMEOUT] = TIMEOUT * 1000
-        kwargs[CONF_URL] = create_influx_url(conf)
+        kwargs[CONF_URL] = conf[CONF_URL]
         kwargs[CONF_TOKEN] = conf[CONF_TOKEN]
         kwargs[INFLUX_CONF_ORG] = conf[CONF_ORG]
         kwargs[CONF_VERIFY_SSL] = conf[CONF_VERIFY_SSL]
