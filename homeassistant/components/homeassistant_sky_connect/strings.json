@@ -195,5 +195,10 @@
       "run_zigbee_flasher_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::run_zigbee_flasher_addon%]",
       "uninstall_zigbee_flasher_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::uninstall_zigbee_flasher_addon%]"
     }
+  },
+  "exceptions": {
+    "device_disconnected": {
+      "message": "The device is not plugged in"
+    }
   }
 }

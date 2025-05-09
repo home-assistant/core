@@ -39,5 +39,5 @@
   "documentation": "https://www.home-assistant.io/integrations/switchbot",
   "iot_class": "local_push",
   "loggers": ["switchbot"],
-  "requirements": ["PySwitchbot==0.57.1"]
+  "requirements": ["PySwitchbot==0.62.0"]
 }

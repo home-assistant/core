@@ -136,6 +136,33 @@ async def test_generate_image_service_error(
             return_response=True,
         )
 
+    with (
+        patch(
+            "openai.resources.images.AsyncImages.generate",
+            return_value=ImagesResponse(
+                created=1700000000,
+                data=[
+                    Image(
+                        b64_json=None,
+                        revised_prompt=None,
+                        url=None,
+                    )
+                ],
+            ),
+        ),
+        pytest.raises(HomeAssistantError, match="No image returned"),
+    ):
+        await hass.services.async_call(
+            "openai_conversation",
+            "generate_image",
+            {
+                "config_entry": mock_config_entry.entry_id,
+                "prompt": "Image of an epic fail",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
 
 @pytest.mark.usefixtures("mock_init_component")
 async def test_generate_content_service_with_image_not_allowed_path(
@@ -261,6 +288,27 @@ async def test_init_error(
                 ],
             },
             0,
+        ),
+        (
+            {"prompt": "Picture of a dog", "filenames": ["/a/b/c.pdf"]},
+            {
+                "input": [
+                    {
+                        "content": [
+                            {
+                                "type": "input_text",
+                                "text": "Picture of a dog",
+                            },
+                            {
+                                "type": "input_file",
+                                "file_data": "data:application/pdf;base64,BASE64IMAGE1",
+                                "filename": "/a/b/c.pdf",
+                            },
+                        ],
+                    },
+                ],
+            },
+            1,
         ),
         (
             {"prompt": "Picture of a dog", "filenames": ["/a/b/c.jpg"]},
@@ -415,8 +463,8 @@ async def test_generate_content_service(
             [True, False],
         ),
         (
-            {"prompt": "Not a picture of a dog", "filenames": ["/a/b/c.pdf"]},
-            "Only images are supported by the OpenAI API,`/a/b/c.pdf` is not an image file",
+            {"prompt": "Not a picture of a dog", "filenames": ["/a/b/c.mov"]},
+            "Only images and PDF are supported by the OpenAI API,`/a/b/c.mov` is not an image file or PDF",
             1,
             [True],
             [True],

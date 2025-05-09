@@ -65,8 +65,8 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "invalid_auth"}
         except FytaPasswordError:
             return {"base": "invalid_auth", CONF_PASSWORD: "password_error"}
-        except Exception as e:  # noqa: BLE001
-            _LOGGER.error(e)
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
             return {"base": "unknown"}
         finally:
             await fyta.client.close()

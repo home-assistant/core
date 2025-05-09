@@ -8,6 +8,6 @@
   "integration_type": "service",
   "iot_class": "local_push",
   "quality_scale": "silver",
-  "requirements": ["mcp==1.1.2", "aiohttp_sse==2.2.0", "anyio==4.8.0"],
+  "requirements": ["mcp==1.5.0", "aiohttp_sse==2.2.0", "anyio==4.9.0"],
   "single_config_entry": true
 }

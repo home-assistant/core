@@ -37,7 +37,7 @@
     'previous_unique_id': None,
     'supported_features': <LightEntityFeature: 32>,
     'translation_key': None,
-    'unique_id': '7c16163e-c94e-482f-95f6-139ae0cd9d5e',
+    'unique_id': '7c16163e-c94e-482f-95f6-139ae0cd9d5e_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -103,7 +103,7 @@
     'previous_unique_id': None,
     'supported_features': <LightEntityFeature: 32>,
     'translation_key': None,
-    'unique_id': 'd0268a69-abfb-4c92-a646-61cec2e510ad',
+    'unique_id': 'd0268a69-abfb-4c92-a646-61cec2e510ad_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -160,7 +160,7 @@
     'previous_unique_id': None,
     'supported_features': <LightEntityFeature: 32>,
     'translation_key': None,
-    'unique_id': 'aaedaf28-2ae0-4c1d-b57e-87f6a420c298',
+    'unique_id': 'aaedaf28-2ae0-4c1d-b57e-87f6a420c298_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -221,7 +221,7 @@
     'previous_unique_id': None,
     'supported_features': <LightEntityFeature: 32>,
     'translation_key': None,
-    'unique_id': '440063de-a200-40b5-8a6b-f3399eaa0370',
+    'unique_id': '440063de-a200-40b5-8a6b-f3399eaa0370_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -302,7 +302,7 @@
     'previous_unique_id': None,
     'supported_features': <LightEntityFeature: 32>,
     'translation_key': None,
-    'unique_id': 'cb958955-b015-498c-9e62-fc0c51abd054',
+    'unique_id': 'cb958955-b015-498c-9e62-fc0c51abd054_main',
     'unit_of_measurement': None,
   })
 # ---

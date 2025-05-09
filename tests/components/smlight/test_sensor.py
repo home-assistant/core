@@ -2,17 +2,18 @@
 
 from unittest.mock import MagicMock
 
-from pysmlight import Sensors
+from pysmlight import Info, Sensors
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.smlight.const import DOMAIN
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, load_json_object_fixture, snapshot_platform
 
 pytestmark = [
     pytest.mark.usefixtures(
@@ -73,3 +74,38 @@ async def test_zigbee_uptime_disconnected(
 
     state = hass.states.get("sensor.mock_title_zigbee_uptime")
     assert state.state == STATE_UNKNOWN
+
+
+async def test_zigbee2_temp_sensor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test for zb_temp2 if device has second radio."""
+    mock_smlight_client.get_sensors.return_value = Sensors(zb_temp2=20.45)
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.mock_title_zigbee_chip_temp_2")
+    assert state
+    assert state.state == "20.45"
+
+
+async def test_zigbee_type_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test for zigbee type sensor with second radio."""
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = Info.from_dict(
+        load_json_object_fixture("info-MR1.json", DOMAIN)
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.mock_title_zigbee_type")
+    assert state
+    assert state.state == "coordinator"
+
+    state = hass.states.get("sensor.mock_title_zigbee_type_2")
+    assert state
+    assert state.state == "router"

@@ -35,7 +35,7 @@
     },
     "sensor": {
       "charge_state": {
-        "default": "mdi:mdi:flash-off",
+        "default": "mdi:flash-off",
         "state": {
           "charge_in_progress": "mdi:flash"
         }

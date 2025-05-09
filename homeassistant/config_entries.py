@@ -30,7 +30,6 @@ from propcache.api import cached_property
 import voluptuous as vol
 
 from . import data_entry_flow, loader
-from .components import persistent_notification
 from .const import (
     CONF_NAME,
     EVENT_HOMEASSISTANT_STARTED,
@@ -73,12 +72,12 @@ from .helpers.json import json_bytes, json_bytes_sorted, json_fragment
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
 from .loader import async_suggest_report_issue
 from .setup import (
-    DATA_SETUP_DONE,
     SetupPhases,
     async_pause_setup,
     async_process_deps_reqs,
     async_setup_component,
     async_start_setup,
+    async_wait_component,
 )
 from .util import ulid as ulid_util
 from .util.async_ import create_eager_task
@@ -178,7 +177,6 @@ class ConfigEntryState(Enum):
 
 
 DEFAULT_DISCOVERY_UNIQUE_ID = "default_discovery_unique_id"
-DISCOVERY_NOTIFICATION_ID = "config_entry_discovery"
 DISCOVERY_SOURCES = {
     SOURCE_BLUETOOTH,
     SOURCE_DHCP,
@@ -194,8 +192,6 @@ DISCOVERY_SOURCES = {
     SOURCE_USB,
     SOURCE_ZEROCONF,
 }
-
-RECONFIGURE_NOTIFICATION_ID = "config_entry_reconfigure"
 
 EVENT_FLOW_DISCOVERED = "config_entry_discovered"
 
@@ -1371,14 +1367,15 @@ class ConfigEntriesFlowManager(
         self._initialize_futures: defaultdict[str, set[asyncio.Future[None]]] = (
             defaultdict(set)
         )
-        self._discovery_debouncer = Debouncer[None](
+        self._discovery_event_debouncer = Debouncer[None](
             hass,
             _LOGGER,
             cooldown=DISCOVERY_COOLDOWN,
             immediate=True,
-            function=self._async_discovery,
+            function=self._async_fire_discovery_event,
             background=True,
         )
+        self._flow_subscriptions: list[Callable[[str, str], None]] = []
 
     async def async_wait_import_flow_initialized(self, handler: str) -> None:
         """Wait till all import flows in progress are initialized."""
@@ -1386,14 +1383,6 @@ class ConfigEntriesFlowManager(
             return
 
         await asyncio.wait(current.values())
-
-    @callback
-    def _async_has_other_discovery_flows(self, flow_id: str) -> bool:
-        """Check if there are any other discovery flows in progress."""
-        for flow in self._progress.values():
-            if flow.flow_id != flow_id and flow.context["source"] in DISCOVERY_SOURCES:
-                return True
-        return False
 
     async def async_init(
         self,
@@ -1466,8 +1455,19 @@ class ConfigEntriesFlowManager(
                 if not self._pending_import_flows[handler]:
                     del self._pending_import_flows[handler]
 
-        if result["type"] != data_entry_flow.FlowResultType.ABORT:
-            await self.async_post_init(flow, result)
+        if (
+            result["type"] != data_entry_flow.FlowResultType.ABORT
+            and source in DISCOVERY_SOURCES
+        ):
+            # Fire discovery event
+            await self._discovery_event_debouncer.async_call()
+
+        if result["type"] != data_entry_flow.FlowResultType.ABORT and source in (
+            DISCOVERY_SOURCES | {SOURCE_REAUTH}
+        ):
+            # Notify listeners that a flow is created
+            for subscription in self._flow_subscriptions:
+                subscription("added", flow.flow_id)
 
         return result
 
@@ -1509,7 +1509,22 @@ class ConfigEntriesFlowManager(
         for future_list in self._initialize_futures.values():
             for future in future_list:
                 future.set_result(None)
-        self._discovery_debouncer.async_shutdown()
+        self._discovery_event_debouncer.async_shutdown()
+
+    @callback
+    def async_flow_removed(
+        self,
+        flow: data_entry_flow.FlowHandler[ConfigFlowContext, ConfigFlowResult],
+    ) -> None:
+        """Handle a removed config flow."""
+        flow = cast(ConfigFlow, flow)
+
+        # Clean up issue if this is a reauth flow
+        if flow.context["source"] == SOURCE_REAUTH:
+            if (entry_id := flow.context.get("entry_id")) is not None:
+                # The config entry's domain is flow.handler
+                issue_id = f"config_entry_reauth_{flow.handler}_{entry_id}"
+                ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
     async def async_finish_flow(
         self,
@@ -1523,26 +1538,8 @@ class ConfigEntriesFlowManager(
         """
         flow = cast(ConfigFlow, flow)
 
-        # Mark the step as done.
-        # We do this to avoid a circular dependency where async_finish_flow sets up a
-        # new entry, which needs the integration to be set up, which is waiting for
-        # init to be done.
-        self._set_pending_import_done(flow)
-
-        # Remove notification if no other discovery config entries in progress
-        if not self._async_has_other_discovery_flows(flow.flow_id):
-            persistent_notification.async_dismiss(self.hass, DISCOVERY_NOTIFICATION_ID)
-
-        # Clean up issue if this is a reauth flow
-        if flow.context["source"] == SOURCE_REAUTH:
-            if (entry_id := flow.context.get("entry_id")) is not None and (
-                entry := self.config_entries.async_get_entry(entry_id)
-            ) is not None:
-                issue_id = f"config_entry_reauth_{entry.domain}_{entry.entry_id}"
-                ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
-
         if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
-            # If there's an ignored config entry with a matching unique ID,
+            # If there's a config entry with a matching unique ID,
             # update the discovery key.
             if (
                 (discovery_key := flow.context.get("discovery_key"))
@@ -1578,6 +1575,12 @@ class ConfigEntriesFlowManager(
                     entry, discovery_keys=new_discovery_keys
                 )
             return result
+
+        # Mark the step as done.
+        # We do this to avoid a circular dependency where async_finish_flow sets up a
+        # new entry, which needs the integration to be set up, which is waiting for
+        # init to be done.
+        self._set_pending_import_done(flow)
 
         # Avoid adding a config entry for a integration
         # that only supports a single config entry, but already has an entry
@@ -1628,7 +1631,11 @@ class ConfigEntriesFlowManager(
                 result["handler"], flow.unique_id
             )
 
-        if existing_entry is not None and flow.handler != "mobile_app":
+        if (
+            existing_entry is not None
+            and flow.handler != "mobile_app"
+            and existing_entry.source != SOURCE_IGNORE
+        ):
             # This causes the old entry to be removed and replaced, when the flow
             # should instead be aborted.
             # In case of manual flows, integrations should implement options, reauth,
@@ -1703,43 +1710,12 @@ class ConfigEntriesFlowManager(
         flow.init_step = context["source"]
         return flow
 
-    async def async_post_init(
-        self,
-        flow: data_entry_flow.FlowHandler[ConfigFlowContext, ConfigFlowResult],
-        result: ConfigFlowResult,
-    ) -> None:
-        """After a flow is initialised trigger new flow notifications."""
-        source = flow.context["source"]
-
-        # Create notification.
-        if source in DISCOVERY_SOURCES:
-            await self._discovery_debouncer.async_call()
-        elif source == SOURCE_REAUTH:
-            persistent_notification.async_create(
-                self.hass,
-                title="Integration requires reconfiguration",
-                message=(
-                    "At least one of your integrations requires reconfiguration to "
-                    "continue functioning. [Check it out](/config/integrations)."
-                ),
-                notification_id=RECONFIGURE_NOTIFICATION_ID,
-            )
-
     @callback
-    def _async_discovery(self) -> None:
-        """Handle discovery."""
+    def _async_fire_discovery_event(self) -> None:
+        """Fire discovery event."""
         # async_fire_internal is used here because this is only
         # called from the Debouncer so we know the usage is safe
         self.hass.bus.async_fire_internal(EVENT_FLOW_DISCOVERED)
-        persistent_notification.async_create(
-            self.hass,
-            title="New devices discovered",
-            message=(
-                "We have discovered new devices on your network. "
-                "[Check it out](/config/integrations)."
-            ),
-            notification_id=DISCOVERY_NOTIFICATION_ID,
-        )
 
     @callback
     def async_has_matching_discovery_flow(
@@ -1769,6 +1745,29 @@ class ConfigEntriesFlowManager(
             if other_flow is not flow and flow.is_matching(other_flow):  # type: ignore[arg-type]
                 return True
         return False
+
+    @callback
+    def async_subscribe_flow(
+        self, listener: Callable[[str, str], None]
+    ) -> CALLBACK_TYPE:
+        """Subscribe to non user initiated flow init or remove."""
+        self._flow_subscriptions.append(listener)
+        return lambda: self._flow_subscriptions.remove(listener)
+
+    @callback
+    def _async_remove_flow_progress(self, flow_id: str) -> None:
+        """Remove a flow from in progress."""
+        flow = self._progress.get(flow_id)
+        super()._async_remove_flow_progress(flow_id)
+        # Fire remove event for initialized non user initiated flows
+        if (
+            not flow
+            or flow.cur_step is None
+            or flow.source not in (DISCOVERY_SOURCES | {SOURCE_REAUTH})
+        ):
+            return
+        for listeners in self._flow_subscriptions:
+            listeners("removed", flow_id)
 
 
 class ConfigEntryItems(UserDict[str, ConfigEntry]):
@@ -2128,13 +2127,7 @@ class ConfigEntries:
         # If the configuration entry is removed during reauth, it should
         # abort any reauth flow that is active for the removed entry and
         # linked issues.
-        for progress_flow in self.hass.config_entries.flow.async_progress_by_handler(
-            entry.domain, match_context={"entry_id": entry_id, "source": SOURCE_REAUTH}
-        ):
-            if "flow_id" in progress_flow:
-                self.hass.config_entries.flow.async_abort(progress_flow["flow_id"])
-                issue_id = f"config_entry_reauth_{entry.domain}_{entry.entry_id}"
-                ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
+        _abort_reauth_flows(self.hass, entry.domain, entry_id)
 
         self._async_dispatch(ConfigEntryChange.REMOVED, entry)
 
@@ -2266,6 +2259,9 @@ class ConfigEntries:
         # attempts.
         entry.async_cancel_retry_setup()
 
+        # Abort any in-progress reauth flow and linked issues
+        _abort_reauth_flows(self.hass, entry.domain, entry_id)
+
         if entry.domain not in self.hass.config.components:
             # If the component is not loaded, just load it as
             # the config entry will be loaded as well. We need
@@ -2388,12 +2384,7 @@ class ConfigEntries:
         if unique_id is not UNDEFINED and entry.unique_id != unique_id:
             # Deprecated in 2024.11, should fail in 2025.11
             if (
-                # flipr creates duplicates during migration, and asks users to
-                # remove the duplicate. We don't need warn about it here too.
-                # We should remove the special case for "flipr" in HA Core 2025.4,
-                # when the flipr migration period ends
-                entry.domain != "flipr"
-                and unique_id is not None
+                unique_id is not None
                 and self.async_entry_for_domain_unique_id(entry.domain, unique_id)
                 is not None
             ):
@@ -2612,46 +2603,6 @@ class ConfigEntries:
             )
         )
 
-    async def async_forward_entry_setup(
-        self, entry: ConfigEntry, domain: Platform | str
-    ) -> bool:
-        """Forward the setup of an entry to a different component.
-
-        By default an entry is setup with the component it belongs to. If that
-        component also has related platforms, the component will have to
-        forward the entry to be setup by that component.
-
-        This method is deprecated and will stop working in Home Assistant 2025.6.
-
-        Instead, await async_forward_entry_setups as it can load
-        multiple platforms at once and is more efficient since it
-        does not require a separate import executor job for each platform.
-        """
-        report_usage(
-            "calls async_forward_entry_setup for "
-            f"integration, {entry.domain} with title: {entry.title} "
-            f"and entry_id: {entry.entry_id}, which is deprecated, "
-            "await async_forward_entry_setups instead",
-            core_behavior=ReportBehavior.LOG,
-            breaks_in_ha_version="2025.6",
-        )
-        if not entry.setup_lock.locked():
-            async with entry.setup_lock:
-                if entry.state is not ConfigEntryState.LOADED:
-                    raise OperationNotAllowed(
-                        f"The config entry '{entry.title}' ({entry.domain}) with "
-                        f"entry_id '{entry.entry_id}' cannot forward setup for "
-                        f"{domain} because it is in state {entry.state}, but needs "
-                        f"to be in the {ConfigEntryState.LOADED} state"
-                    )
-                return await self._async_forward_entry_setup(entry, domain, True)
-        result = await self._async_forward_entry_setup(entry, domain, True)
-        # If the lock was held when we stated, and it was released during
-        # the platform setup, it means they did not await the setup call.
-        if not entry.setup_lock.locked():
-            _report_non_awaited_platform_forwards(entry, "async_forward_entry_setup")
-        return result
-
     async def _async_forward_entry_setup(
         self,
         entry: ConfigEntry,
@@ -2740,11 +2691,7 @@ class ConfigEntries:
         Config entries which are created after Home Assistant is started can't be waited
         for, the function will just return if the config entry is loaded or not.
         """
-        setup_done = self.hass.data.get(DATA_SETUP_DONE, {})
-        if setup_future := setup_done.get(entry.domain):
-            await setup_future
-        # The component was not loaded.
-        if entry.domain not in self.hass.config.components:
+        if not await async_wait_component(self.hass, entry.domain):
             return False
         return entry.state is ConfigEntryState.LOADED
 
@@ -2764,12 +2711,6 @@ class ConfigEntries:
             issues.add(issue.issue_id)
 
         for domain, unique_ids in self._entries._domain_unique_id_index.items():  # noqa: SLF001
-            # flipr creates duplicates during migration, and asks users to
-            # remove the duplicate. We don't need warn about it here too.
-            # We should remove the special case for "flipr" in HA Core 2025.4,
-            # when the flipr migration period ends
-            if domain == "flipr":
-                continue
             for unique_id, entries in unique_ids.items():
                 # We might mutate the list of entries, so we need a copy to not mess up
                 # the index
@@ -2938,6 +2879,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         reload_on_update: bool = True,
         *,
         error: str = "already_configured",
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
         """Abort if the unique ID is already configured.
 
@@ -2978,7 +2920,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
             return
         if should_reload:
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
-        raise data_entry_flow.AbortFlow(error)
+        raise data_entry_flow.AbortFlow(error, description_placeholders)
 
     async def async_set_unique_id(
         self, unique_id: str | None = None, *, raise_on_progress: bool = True
@@ -3124,29 +3066,6 @@ class ConfigFlow(ConfigEntryBaseFlow):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
         return await self._async_step_discovery_without_unique_id()
-
-    @callback
-    def async_abort(
-        self,
-        *,
-        reason: str,
-        description_placeholders: Mapping[str, str] | None = None,
-    ) -> ConfigFlowResult:
-        """Abort the config flow."""
-        # Remove reauth notification if no reauth flows are in progress
-        if self.source == SOURCE_REAUTH and not any(
-            ent["flow_id"] != self.flow_id
-            for ent in self.hass.config_entries.flow.async_progress_by_handler(
-                self.handler, match_context={"source": SOURCE_REAUTH}
-            )
-        ):
-            persistent_notification.async_dismiss(
-                self.hass, RECONFIGURE_NOTIFICATION_ID
-            )
-
-        return super().async_abort(
-            reason=reason, description_placeholders=description_placeholders
-        )
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
@@ -3497,18 +3416,14 @@ class ConfigSubentryFlow(
         return self.async_abort(reason="reconfigure_successful")
 
     @property
-    def _reconfigure_entry_id(self) -> str:
-        """Return reconfigure entry id."""
-        if self.source != SOURCE_RECONFIGURE:
-            raise ValueError(f"Source is {self.source}, expected {SOURCE_RECONFIGURE}")
+    def _entry_id(self) -> str:
+        """Return config entry id."""
         return self.handler[0]
 
     @callback
-    def _get_reconfigure_entry(self) -> ConfigEntry:
-        """Return the reconfigure config entry linked to the current context."""
-        return self.hass.config_entries.async_get_known_entry(
-            self._reconfigure_entry_id
-        )
+    def _get_entry(self) -> ConfigEntry:
+        """Return the config entry linked to the current context."""
+        return self.hass.config_entries.async_get_known_entry(self._entry_id)
 
     @property
     def _reconfigure_subentry_id(self) -> str:
@@ -3520,9 +3435,7 @@ class ConfigSubentryFlow(
     @callback
     def _get_reconfigure_subentry(self) -> ConfigSubentry:
         """Return the reconfigure config subentry linked to the current context."""
-        entry = self.hass.config_entries.async_get_known_entry(
-            self._reconfigure_entry_id
-        )
+        entry = self.hass.config_entries.async_get_known_entry(self._entry_id)
         subentry_id = self._reconfigure_subentry_id
         if subentry_id not in entry.subentries:
             raise UnknownSubEntry(subentry_id)
@@ -3836,3 +3749,13 @@ async def _async_get_flow_handler(
         return handler
 
     raise data_entry_flow.UnknownHandler
+
+
+@callback
+def _abort_reauth_flows(hass: HomeAssistant, domain: str, entry_id: str) -> None:
+    """Abort reauth flows for an entry."""
+    for progress_flow in hass.config_entries.flow.async_progress_by_handler(
+        domain, match_context={"entry_id": entry_id, "source": SOURCE_REAUTH}
+    ):
+        if "flow_id" in progress_flow:
+            hass.config_entries.flow.async_abort(progress_flow["flow_id"])
