@@ -2019,6 +2019,11 @@ def add(value, amount, default=_SENTINEL):
         return default
 
 
+def apply(value, fn, *args, **kwargs):
+    """Call the given callable with the provided arguments and keyword arguments."""
+    return fn(value, *args, **kwargs)
+
+
 def logarithm(value, base=math.e, default=_SENTINEL):
     """Filter and function to get logarithm of the value with a specific base."""
     try:
@@ -3110,6 +3115,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.filters["acos"] = arc_cosine
         self.filters["add"] = add
+        self.filters["apply"] = apply
         self.filters["as_datetime"] = as_datetime
         self.filters["as_local"] = dt_util.as_local
         self.filters["as_timedelta"] = as_timedelta
@@ -3169,6 +3175,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["unpack"] = struct_unpack
         self.filters["version"] = version
 
+        self.tests["apply"] = apply
         self.tests["contains"] = contains
         self.tests["datetime"] = _is_datetime
         self.tests["is_number"] = is_number
