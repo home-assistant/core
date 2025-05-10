@@ -50,14 +50,8 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 _ = (await api.get_data()).main_device_names
             except LibreHardwareMonitorConnectionError:
-                _LOGGER.debug(
-                    "ConnectionError: Is LibreHardwareMonitor running and the web server option enabled?"
-                )
                 errors["base"] = "cannot_connect"
             except LibreHardwareMonitorNoDevicesError:
-                _LOGGER.debug(
-                    "NoDevicesError: LibreHardwareMonitor did not return any devices"
-                )
                 errors["base"] = "no_devices"
             else:
                 return self.async_create_entry(
