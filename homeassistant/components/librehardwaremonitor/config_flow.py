@@ -19,6 +19,13 @@ from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+    }
+)
+
 
 class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for LibreHardwareMonitor."""
@@ -29,12 +36,6 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        config_data_schema = vol.Schema(
-            {
-                vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
-                vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-            }
-        )
         errors = {}
 
         if user_input is not None:
@@ -61,5 +62,5 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=config_data_schema, errors=errors
+            step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
         )
