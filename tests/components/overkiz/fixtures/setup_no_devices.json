@@ -1,0 +1,75 @@
+{
+  "creationTime": 1665238624000,
+  "lastUpdateTime": 1665238624000,
+  "id": "SETUP-1234-5678-1234",
+  "location": {
+    "creationTime": 1665238624000,
+    "lastUpdateTime": 1667054735000,
+    "city": "** **",
+    "country": "**",
+    "postalCode": "** **",
+    "addressLine1": "** **",
+    "addressLine2": "*",
+    "timezone": "Europe/Amsterdam",
+    "longitude": "**",
+    "latitude": "**",
+    "twilightMode": 2,
+    "twilightAngle": "SOLAR",
+    "twilightCity": "amsterdam",
+    "summerSolsticeDuskMinutes": 1290,
+    "winterSolsticeDuskMinutes": 990,
+    "twilightOffsetEnabled": false,
+    "dawnOffset": 0,
+    "duskOffset": 0,
+    "countryCode": "NL"
+  },
+  "gateways": [
+    {
+      "gatewayId": "1234-5678-1234",
+      "type": 98,
+      "subType": 1,
+      "placeOID": "41d63e43-bfa8-4e24-8c16-4faae0448cab",
+      "autoUpdateEnabled": true,
+      "alive": true,
+      "timeReliable": true,
+      "connectivity": {
+        "status": "OK",
+        "protocolVersion": "2023.4.4"
+      },
+      "upToDate": true,
+      "updateStatus": "UP_TO_DATE",
+      "syncInProgress": false,
+      "mode": "ACTIVE",
+      "functions": "INTERNET_AUTHORIZATION,SCENARIO_DOWNLOAD,SCENARIO_AUTO_LAUNCHING,SCENARIO_TELECO_LAUNCHING,INTERNET_UPLOAD,INTERNET_UPDATE,TRIGGERS_SENSORS"
+    }
+  ],
+  "devices": [],
+  "zones": [],
+  "resellerDelegationType": "NEVER",
+  "disconnectionConfiguration": {
+    "notificationTitle": "[User] : Your Somfy box is disconnected",
+    "notificationText": "Your Somfy box is disconnected",
+    "targetPushSubscriptions": ["8849df9a-b61a-498f-ab81-67a767adba31"],
+    "notificationType": "PUSH"
+  },
+  "oid": "15eaf55a-8af9-483b-ae4a-ffd4254fd762",
+  "rootPlace": {
+    "creationTime": 1665238624000,
+    "lastUpdateTime": 1665238630000,
+    "label": "** **",
+    "type": 200,
+    "oid": "41d63e43-bfa8-4e24-8c16-4faae0448cab",
+    "subPlaces": [
+      {
+        "creationTime": 1667840432000,
+        "lastUpdateTime": 1667840432000,
+        "label": "**",
+        "type": 108,
+        "metadata": "{\"color\":\"#08C27F\"}",
+        "oid": "9e3d6899-50bb-4869-9c5e-46c2b57f7c9e",
+        "subPlaces": []
+      }
+    ]
+  },
+  "features": []
+}
