@@ -503,8 +503,8 @@ async def async_setup_entry(
                         if definition.description.value_fn(
                             device
                         ) in DISABLED_TEMP_ENTITIES and (
-                            definition.description.zone is None
-                            or definition.description.zone > 1
+                            definition.description.zone is not None
+                            and definition.description.zone > 1
                         ):
                             # All appliances supporting temperature have at least zone 1 or None (for core temperature)
                             # Don't create entity if API signals that datapoint is disabled (other zones)
