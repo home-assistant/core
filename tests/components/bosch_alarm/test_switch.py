@@ -119,9 +119,9 @@ async def test_cycle_door(
     door: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that door state changes after unlocking the door."""
+    """Test that door state changes after unlatching the door."""
     await setup_integration(hass, mock_config_entry)
-    entity_id = "switch.main_door_cycling"
+    entity_id = "switch.main_door_momentarily_unlatched"
     assert hass.states.get(entity_id).state == STATE_OFF
     await hass.services.async_call(
         SWITCH_DOMAIN,
