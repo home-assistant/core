@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
-    DeviceScanner,
+    ScannerEntity,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -49,7 +49,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> TomatoDeviceScanner:
     return TomatoDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
 
 
-class TomatoDeviceScanner(DeviceScanner):
+class TomatoDeviceScanner(ScannerEntity):
     """Class which queries a wireless router running Tomato firmware."""
 
     def __init__(self, config):
