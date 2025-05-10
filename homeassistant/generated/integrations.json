@@ -219,6 +219,12 @@
           "iot_class": "cloud_push",
           "name": "Amazon Web Services (AWS)"
         },
+        "aws_s3": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "AWS S3"
+        },
         "fire_tv": {
           "integration_type": "virtual",
           "config_flow": false,
@@ -5570,12 +5576,6 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "rtsp_to_webrtc": {
-      "name": "RTSPtoWebRTC",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_push"
-    },
     "ruckus_unleashed": {
       "name": "Ruckus",
       "integration_type": "hub",
@@ -5621,12 +5621,6 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
-    },
-    "s3": {
-      "name": "S3",
-      "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "cloud_push"
     },
     "sabnzbd": {
       "name": "SABnzbd",
@@ -7629,6 +7623,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "zimi": {
+      "name": "zimi",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "zodiac": {
       "integration_type": "hub",

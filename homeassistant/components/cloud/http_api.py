@@ -16,7 +16,7 @@ from typing import Any, Concatenate, cast
 import aiohttp
 from aiohttp import web
 import attr
-from hass_nabucasa import AlreadyConnectedError, Cloud, auth, thingtalk
+from hass_nabucasa import AlreadyConnectedError, Cloud, auth
 from hass_nabucasa.const import STATE_DISCONNECTED
 from hass_nabucasa.voice_data import TTS_VOICES
 import voluptuous as vol
@@ -104,7 +104,6 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, alexa_list)
     websocket_api.async_register_command(hass, alexa_sync)
 
-    websocket_api.async_register_command(hass, thingtalk_convert)
     websocket_api.async_register_command(hass, tts_info)
 
     hass.http.register_view(GoogleActionsSyncView)
@@ -996,25 +995,6 @@ async def alexa_sync(
         connection.send_error(
             msg["id"], websocket_api.ERR_UNKNOWN_ERROR, "Unknown error"
         )
-
-
-@websocket_api.websocket_command({"type": "cloud/thingtalk/convert", "query": str})
-@websocket_api.async_response
-async def thingtalk_convert(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """Convert a query."""
-    cloud = hass.data[DATA_CLOUD]
-
-    async with asyncio.timeout(10):
-        try:
-            connection.send_result(
-                msg["id"], await thingtalk.async_convert(cloud, msg["query"])
-            )
-        except thingtalk.ThingTalkConversionError as err:
-            connection.send_error(msg["id"], websocket_api.ERR_UNKNOWN_ERROR, str(err))
 
 
 @websocket_api.websocket_command({"type": "cloud/tts/info"})

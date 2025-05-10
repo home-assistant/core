@@ -116,22 +116,34 @@ async def async_setup_entry(
 ) -> None:
     """Set up the switch platform."""
     coordinator = config_entry.runtime_data
+    added_devices: set[str] = set()
 
-    entities: list = []
-    entity_class: type[MieleSwitch]
-    for device_id, device in coordinator.data.devices.items():
-        for definition in SWITCH_TYPES:
-            if device.device_type in definition.types:
-                match definition.description.key:
-                    case "poweronoff":
-                        entity_class = MielePowerSwitch
-                    case "supercooling" | "superfreezing":
-                        entity_class = MieleSuperSwitch
+    def _async_add_new_devices() -> None:
+        nonlocal added_devices
+        new_devices_set, current_devices = coordinator.async_add_devices(added_devices)
+        added_devices = current_devices
 
-                entities.append(
-                    entity_class(coordinator, device_id, definition.description)
-                )
-    async_add_entities(entities)
+        entities = []
+        for device_id, device in coordinator.data.devices.items():
+            for definition in SWITCH_TYPES:
+                if (
+                    device_id in new_devices_set
+                    and device.device_type in definition.types
+                ):
+                    entity_class: type[MieleSwitch] = MieleSwitch
+                    match definition.description.key:
+                        case "poweronoff":
+                            entity_class = MielePowerSwitch
+                        case "supercooling" | "superfreezing":
+                            entity_class = MieleSuperSwitch
+
+                    entities.append(
+                        entity_class(coordinator, device_id, definition.description)
+                    )
+        async_add_entities(entities)
+
+    config_entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
+    _async_add_new_devices()
 
 
 class MieleSwitch(MieleEntity, SwitchEntity):
@@ -169,15 +181,14 @@ class MielePowerSwitch(MieleSwitch):
     @property
     def is_on(self) -> bool | None:
         """Return the state of the switch."""
-        return self.coordinator.data.actions[self._device_id].power_off_enabled
+        return self.action.power_off_enabled
 
     @property
     def available(self) -> bool:
         """Return the availability of the entity."""
 
         return (
-            self.coordinator.data.actions[self._device_id].power_off_enabled
-            or self.coordinator.data.actions[self._device_id].power_on_enabled
+            self.action.power_off_enabled or self.action.power_on_enabled
         ) and super().available
 
     async def async_turn_switch(self, mode: dict[str, str | int | bool]) -> None:
@@ -192,12 +203,8 @@ class MielePowerSwitch(MieleSwitch):
                     "entity": self.entity_id,
                 },
             ) from err
-        self.coordinator.data.actions[self._device_id].power_on_enabled = cast(
-            bool, mode
-        )
-        self.coordinator.data.actions[self._device_id].power_off_enabled = not cast(
-            bool, mode
-        )
+        self.action.power_on_enabled = cast(bool, mode)
+        self.action.power_off_enabled = not cast(bool, mode)
         self.async_write_ha_state()
 
 
