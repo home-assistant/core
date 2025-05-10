@@ -117,6 +117,64 @@
     'state': 'previous',
   })
 # ---
+# name: test_selects[cooktop][select.mock_cooktop_temperature_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Low',
+        'Medium',
+        'High',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.mock_cooktop_temperature_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature level',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_level',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-2-TemperatureControlSelectedTemperatureLevel-86-4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[cooktop][select.mock_cooktop_temperature_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Cooktop Temperature level',
+      'options': list([
+        'Low',
+        'Medium',
+        'High',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_cooktop_temperature_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Medium',
+  })
+# ---
 # name: test_selects[dimmable_light][select.mock_dimmable_light_led_color-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -727,6 +785,124 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'previous',
+  })
+# ---
+# name: test_selects[laundry_dryer][select.mock_laundrydryer_temperature_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Low',
+        'Medium',
+        'High',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.mock_laundrydryer_temperature_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature level',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_level',
+    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-TemperatureControlSelectedTemperatureLevel-86-4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[laundry_dryer][select.mock_laundrydryer_temperature_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Laundrydryer Temperature level',
+      'options': list([
+        'Low',
+        'Medium',
+        'High',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_laundrydryer_temperature_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Low',
+  })
+# ---
+# name: test_selects[mounted_dimmable_load_control_fixture][select.mock_mounted_dimmable_load_control_power_on_behavior_on_startup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_mounted_dimmable_load_control_power_on_behavior_on_startup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-000000000000000E-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mounted_dimmable_load_control_fixture][select.mock_mounted_dimmable_load_control_power_on_behavior_on_startup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Mounted dimmable load control Power-on behavior on startup',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_mounted_dimmable_load_control_power_on_behavior_on_startup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
   })
 # ---
 # name: test_selects[multi_endpoint_light][select.inovelli_dimming_edge-entry]
@@ -1837,6 +2013,126 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Colors',
+  })
+# ---
+# name: test_selects[silabs_refrigerator][select.refrigerator_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Normal',
+        'Rapid Cool',
+        'Rapid Freeze',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.refrigerator_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-000000000000003A-MatterNodeDevice-1-MatterRefrigeratorAndTemperatureControlledCabinetMode-82-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[silabs_refrigerator][select.refrigerator_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Refrigerator Mode',
+      'options': list([
+        'Normal',
+        'Rapid Cool',
+        'Rapid Freeze',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.refrigerator_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Normal',
+  })
+# ---
+# name: test_selects[silabs_water_heater][select.water_heater_energy_management_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'No energy management (forecast only)',
+        'Device optimizes (no local or grid control)',
+        'Optimized within building',
+        'Optimized for grid',
+        'Optimized for grid and building',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.water_heater_energy_management_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Energy management mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_energy_management_mode',
+    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-MatterDeviceEnergyManagementMode-159-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[silabs_water_heater][select.water_heater_energy_management_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Water Heater Energy management mode',
+      'options': list([
+        'No energy management (forecast only)',
+        'Device optimizes (no local or grid control)',
+        'Optimized within building',
+        'Optimized for grid',
+        'Optimized for grid and building',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.water_heater_energy_management_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'No energy management (forecast only)',
   })
 # ---
 # name: test_selects[switch_unit][select.mock_switchunit_power_on_behavior_on_startup-entry]

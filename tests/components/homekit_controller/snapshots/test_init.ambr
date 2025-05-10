@@ -86,7 +86,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'preset_modes': None,
+              'preset_modes': list([
+                'auto',
+              ]),
             }),
             'categories': dict({
             }),
@@ -110,7 +112,7 @@
             'original_name': 'Airversa AP2 1808 AirPurifier',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <FanEntityFeature: 49>,
+            'supported_features': <FanEntityFeature: 57>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_32832',
             'unit_of_measurement': None,
@@ -120,9 +122,11 @@
               'friendly_name': 'Airversa AP2 1808 AirPurifier',
               'percentage': 0,
               'percentage_step': 20.0,
-              'preset_mode': None,
-              'preset_modes': None,
-              'supported_features': <FanEntityFeature: 49>,
+              'preset_mode': 'auto',
+              'preset_modes': list([
+                'auto',
+              ]),
+              'supported_features': <FanEntityFeature: 57>,
             }),
             'entity_id': 'fan.airversa_ap2_1808_airpurifier',
             'state': 'off',
@@ -10562,7 +10566,8 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
             }),
             'categories': dict({
             }),
@@ -10597,7 +10602,8 @@
               'percentage': 66,
               'percentage_step': 33.333333333333336,
               'preset_mode': None,
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
               'supported_features': <FanEntityFeature: 49>,
             }),
             'entity_id': 'fan.haa_c718b3',
@@ -11248,7 +11254,8 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
             }),
             'categories': dict({
             }),
@@ -11283,7 +11290,8 @@
               'percentage': 0,
               'percentage_step': 1.0,
               'preset_mode': None,
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
               'supported_features': <FanEntityFeature: 49>,
             }),
             'entity_id': 'fan.ceiling_fan',
@@ -11458,7 +11466,8 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
             }),
             'categories': dict({
             }),
@@ -11494,7 +11503,8 @@
               'percentage': 0,
               'percentage_step': 1.0,
               'preset_mode': None,
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
               'supported_features': <FanEntityFeature: 53>,
             }),
             'entity_id': 'fan.living_room_fan',
@@ -11655,7 +11665,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'preset_modes': None,
+              'preset_modes': list([
+                'auto',
+              ]),
             }),
             'categories': dict({
             }),
@@ -11679,7 +11691,7 @@
             'original_name': '89 Living Room',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <FanEntityFeature: 51>,
+            'supported_features': <FanEntityFeature: 59>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1233851541_175',
             'unit_of_measurement': None,
@@ -11691,8 +11703,10 @@
               'percentage': 33,
               'percentage_step': 33.333333333333336,
               'preset_mode': None,
-              'preset_modes': None,
-              'supported_features': <FanEntityFeature: 51>,
+              'preset_modes': list([
+                'auto',
+              ]),
+              'supported_features': <FanEntityFeature: 59>,
             }),
             'entity_id': 'fan.89_living_room',
             'state': 'on',
@@ -12703,7 +12717,8 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
             }),
             'categories': dict({
             }),
@@ -12738,7 +12753,8 @@
               'percentage': 0,
               'percentage_step': 1.0,
               'preset_mode': None,
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
               'supported_features': <FanEntityFeature: 49>,
             }),
             'entity_id': 'fan.ceiling_fan',
@@ -12913,7 +12929,8 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
             }),
             'categories': dict({
             }),
@@ -12950,7 +12967,8 @@
               'percentage': 0,
               'percentage_step': 1.0,
               'preset_mode': None,
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
               'supported_features': <FanEntityFeature: 55>,
             }),
             'entity_id': 'fan.living_room_fan',
@@ -13129,7 +13147,8 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
             }),
             'categories': dict({
             }),
@@ -13166,7 +13185,8 @@
               'percentage': 0,
               'percentage_step': 1.0,
               'preset_mode': None,
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
               'supported_features': <FanEntityFeature: 55>,
             }),
             'entity_id': 'fan.living_room_fan',
@@ -13336,7 +13356,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'preset_modes': None,
+              'preset_modes': list([
+                'auto',
+              ]),
             }),
             'categories': dict({
             }),
@@ -13360,7 +13382,7 @@
             'original_name': '89 Living Room',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <FanEntityFeature: 51>,
+            'supported_features': <FanEntityFeature: 59>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1233851541_175',
             'unit_of_measurement': None,
@@ -13372,8 +13394,10 @@
               'percentage': 33,
               'percentage_step': 33.333333333333336,
               'preset_mode': None,
-              'preset_modes': None,
-              'supported_features': <FanEntityFeature: 51>,
+              'preset_modes': list([
+                'auto',
+              ]),
+              'supported_features': <FanEntityFeature: 59>,
             }),
             'entity_id': 'fan.89_living_room',
             'state': 'on',
@@ -17967,7 +17991,8 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
             }),
             'categories': dict({
             }),
@@ -18002,7 +18027,8 @@
               'percentage': 0,
               'percentage_step': 25.0,
               'preset_mode': None,
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
               'supported_features': <FanEntityFeature: 49>,
             }),
             'entity_id': 'fan.caseta_r_wireless_fan_speed_control',
@@ -21777,7 +21803,8 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
             }),
             'categories': dict({
             }),
@@ -21813,7 +21840,8 @@
               'percentage': 0,
               'percentage_step': 25.0,
               'preset_mode': None,
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
               'supported_features': <FanEntityFeature: 53>,
             }),
             'entity_id': 'fan.simpleconnect_fan_06f674_hunter_fan',

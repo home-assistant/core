@@ -4,6 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+import jwt
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
@@ -19,7 +20,7 @@ class OAuth2FlowHandler(
 
     DOMAIN = DOMAIN
 
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @property
     def logger(self) -> logging.Logger:
@@ -45,9 +46,15 @@ class OAuth2FlowHandler(
 
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
+        await self.async_set_unique_id(
+            jwt.decode(
+                data["token"]["access_token"], options={"verify_signature": False}
+            )["sub"]
+        )
         if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
             return self.async_update_reload_and_abort(
-                self._get_reauth_entry(),
-                data_updates=data,
+                self._get_reauth_entry(), data_updates=data
             )
+        self._abort_if_unique_id_configured()
         return await super().async_oauth_create_entry(data)
