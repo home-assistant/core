@@ -6,6 +6,27 @@
       }
     },
     "light": {
+      "state_attributes": {
+        "effect": {
+          "beatdrop": "mdi:music-circle",
+          "blaze": "mdi:fire",
+          "cocoa_beach": "mdi:beach",
+          "cotton_candy": "mdi:candy",
+          "date_night": "mdi:heart",
+          "hip_hop": "mdi:headphones",
+          "hot_sauce": "mdi:chili-mild",
+          "jungle": "mdi:pine-tree",
+          "lightscape": "mdi:spotlight",
+          "morning_sky": "mdi:white-balance-sunny",
+          "northern_lights": "mdi:weather-night",
+          "pop_rocks": "mdi:emoticon-excited-outline",
+          "prism": "mdi:triangle-outline",
+          "shulked": "mdi:sword",
+          "starlight": "mdi:star-outline",
+          "sundown": "mdi:weather-sunset-down",
+          "waterfall": "mdi:waves"
+        }
+      },
       "light": {
         "default": "mdi:triangle-outline"
       }
