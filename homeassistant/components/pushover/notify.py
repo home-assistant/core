@@ -27,6 +27,7 @@ from .const import (
     ATTR_RETRY,
     ATTR_SOUND,
     ATTR_TIMESTAMP,
+    ATTR_TTL,
     ATTR_URL,
     ATTR_URL_TITLE,
     CONF_USER_KEY,
@@ -54,9 +55,26 @@ class PushoverNotificationService(BaseNotificationService):
     """Implement the notification service for Pushover."""
 
     def __init__(
-        self, hass: HomeAssistant, pushover: PushoverAPI, user_key: str
+        self, hass: HomeAssistant, entry: Any, creds: Any = None, platform: Any = None
     ) -> None:
-        """Initialize the service."""
+        """Initialize the service.
+
+        Supports new-style (hass, PushoverAPI, user_key)
+        and legacy (hass, entry, creds, platform) signatures.
+        """
+        # New vs legacy: creds is a dict in legacy mode
+        if not isinstance(creds, dict):
+            # New (config-entry) style: entry is PushoverAPI, creds is user_key
+            pushover = entry
+            user_key = creds
+        else:
+            # Legacy style: entry is ignored, creds is the dict of credentials
+            creds_dict = creds or {}
+            app_token = creds_dict.get("app_token")
+            user_key = creds_dict.get("user_key")
+            pushover = PushoverAPI(app_token) if app_token is not None else None
+        # After determining pushover and user_key, save them for send_message
+        self.hass = hass
         self._hass = hass
         self._user_key = user_key
         self.pushover = pushover
@@ -72,6 +90,7 @@ class PushoverNotificationService(BaseNotificationService):
         priority = data.get(ATTR_PRIORITY)
         retry = data.get(ATTR_RETRY)
         expire = data.get(ATTR_EXPIRE)
+        ttl = data.get(ATTR_TTL)
         callback_url = data.get(ATTR_CALLBACK_URL)
         timestamp = data.get(ATTR_TIMESTAMP)
         sound = data.get(ATTR_SOUND)
@@ -112,6 +131,8 @@ class PushoverNotificationService(BaseNotificationService):
                 timestamp,
                 sound,
                 html,
+                ttl,
             )
+
         except BadAPIRequestError as err:
             raise HomeAssistantError(str(err)) from err
