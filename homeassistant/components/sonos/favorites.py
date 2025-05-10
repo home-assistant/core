@@ -106,6 +106,9 @@ class SonosFavorites(SonosHouseholdCoordinator):
     def update_cache(self, soco: SoCo, update_id: int | None = None) -> bool:
         """Update cache of known favorites and return if cache has changed."""
         new_favorites = soco.music_library.get_sonos_favorites(full_album_art_uri=True)
+        new_playlists = soco.music_library.get_music_library_information(
+            "sonos_playlists", full_album_art_uri=True
+        )
 
         # Polled update_id values do not match event_id values
         # Each speaker can return a different polled update_id
@@ -131,6 +134,21 @@ class SonosFavorites(SonosHouseholdCoordinator):
             except SoCoException as ex:
                 # Skip unknown types
                 _LOGGER.error("Unhandled favorite '%s': %s", fav.title, ex)
+        for playlist in new_playlists:
+            playlist_reference = DidlFavorite(
+                title=playlist.title,
+                parent_id=playlist.parent_id,
+                item_id=playlist.item_id,
+                resources=playlist.resources,
+                desc=playlist.desc,
+            )
+            playlist_reference.reference = playlist
+            try:
+                self._favorites.append(playlist_reference)
+            except SoCoException as ex:
+                _LOGGER.error(
+                    "Unhandled favorite: '%s': %s", playlist_reference.title, ex
+                )
 
         _LOGGER.debug(
             "Cached %s favorites for household %s using %s",
