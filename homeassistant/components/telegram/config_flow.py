@@ -31,7 +31,7 @@ class TelgramConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
-                title=user_input[CONF_NAME],
+                title=f"{user_input[CONF_NAME]} ({user_input[CONF_CHAT_ID]})",
                 data={
                     CONF_NAME: user_input[CONF_NAME],
                     CONF_CHAT_ID: user_input[CONF_CHAT_ID],

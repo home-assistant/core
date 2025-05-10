@@ -13,7 +13,7 @@
           "chat_id": "Chat ID"
         },
         "data_description": {
-          "name": "The name of the notifier.",
+          "name": "The name of the notifier. Must be unique.",
           "chat_id": "The Telegram chat ID."
         },
         "description": "Please enter the notifier information",
