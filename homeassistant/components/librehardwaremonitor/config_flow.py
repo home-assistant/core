@@ -39,10 +39,7 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            await self.async_set_unique_id(
-                f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
-            )
-            self._abort_if_unique_id_configured()
+            self._async_abort_entries_match(user_input)
 
             api = LibreHardwareMonitorClient(
                 user_input[CONF_HOST], user_input[CONF_PORT]
