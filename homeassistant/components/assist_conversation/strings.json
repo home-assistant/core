@@ -1,0 +1,7 @@
+{
+  "conversation": {
+    "agent": {
+      "done": "[%key:component::conversation::conversation::agent::done%]"
+    }
+  }
+}
