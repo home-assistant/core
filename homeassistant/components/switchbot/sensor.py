@@ -104,7 +104,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     ),
     "aqi_level": SensorEntityDescription(
         key="aqi_level",
-        translation_key="aqi_level",
+        translation_key="aqi_quality_level",
     ),
 }
 
