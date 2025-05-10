@@ -14,6 +14,11 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Pass notify platform config from configuration.yaml to config flow for import."""
+
+    # Handle scenario where there's no notifiers in configuration.yaml
+    if Platform.NOTIFY not in config:
+        return True
+
     for notify in config[Platform.NOTIFY]:
         if notify[CONF_PLATFORM] == DOMAIN:  # Only import Telegram notifiers
             hass.async_create_task(
