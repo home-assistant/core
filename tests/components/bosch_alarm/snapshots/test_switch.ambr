@@ -1,51 +1,4 @@
 # serializer version: 1
-# name: test_switch[amax_3000][switch.main_door_cycling-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.main_door_cycling',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Cycling',
-    'platform': 'bosch_alarm',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'cycling',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_door_1_cycling',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switch[amax_3000][switch.main_door_cycling-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Main Door Cycling',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.main_door_cycling',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_switch[amax_3000][switch.main_door_locked-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -91,6 +44,53 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_switch[amax_3000][switch.main_door_momentarily_unlatched-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.main_door_momentarily_unlatched',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Momentarily unlatched',
+    'platform': 'bosch_alarm',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cycling',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_door_1_cycling',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[amax_3000][switch.main_door_momentarily_unlatched-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Main Door Momentarily unlatched',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.main_door_momentarily_unlatched',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_switch[amax_3000][switch.main_door_secured-entry]
@@ -187,53 +187,6 @@
     'state': 'off',
   })
 # ---
-# name: test_switch[b5512][switch.main_door_cycling-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.main_door_cycling',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Cycling',
-    'platform': 'bosch_alarm',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'cycling',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_door_1_cycling',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switch[b5512][switch.main_door_cycling-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Main Door Cycling',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.main_door_cycling',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_switch[b5512][switch.main_door_locked-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -279,6 +232,53 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_switch[b5512][switch.main_door_momentarily_unlatched-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.main_door_momentarily_unlatched',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Momentarily unlatched',
+    'platform': 'bosch_alarm',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cycling',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_door_1_cycling',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[b5512][switch.main_door_momentarily_unlatched-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Main Door Momentarily unlatched',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.main_door_momentarily_unlatched',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_switch[b5512][switch.main_door_secured-entry]
@@ -375,53 +375,6 @@
     'state': 'off',
   })
 # ---
-# name: test_switch[solution_3000][switch.main_door_cycling-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.main_door_cycling',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Cycling',
-    'platform': 'bosch_alarm',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'cycling',
-    'unique_id': '1234567890_door_1_cycling',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switch[solution_3000][switch.main_door_cycling-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Main Door Cycling',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.main_door_cycling',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_switch[solution_3000][switch.main_door_locked-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -467,6 +420,53 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_switch[solution_3000][switch.main_door_momentarily_unlatched-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.main_door_momentarily_unlatched',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Momentarily unlatched',
+    'platform': 'bosch_alarm',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cycling',
+    'unique_id': '1234567890_door_1_cycling',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[solution_3000][switch.main_door_momentarily_unlatched-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Main Door Momentarily unlatched',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.main_door_momentarily_unlatched',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_switch[solution_3000][switch.main_door_secured-entry]
