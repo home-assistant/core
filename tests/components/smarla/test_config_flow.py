@@ -18,14 +18,14 @@ async def test_config_flow(hass: HomeAssistant, mock_refresh_token_success) -> N
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_INPUT
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_SERIAL_NUMBER
     assert result["data"] == MOCK_USER_INPUT
     assert result["result"].unique_id == MOCK_SERIAL_NUMBER
@@ -52,7 +52,7 @@ async def test_form_error(
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_INPUT
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_device_exists_abort(
