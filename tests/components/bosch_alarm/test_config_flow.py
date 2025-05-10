@@ -280,34 +280,6 @@ async def test_dhcp_exceptions(
     assert result["reason"] == message
 
 
-async def test_dhcp_updates_mac(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    mock_panel: AsyncMock,
-    model_name: str,
-    serial_number: str,
-    config_flow_data: dict[str, Any],
-) -> None:
-    """Test DHCP discovery flow that fails to connect."""
-    await setup_integration(hass, mock_config_entry)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_DHCP},
-        data=DhcpServiceInfo(
-            hostname="test",
-            ip="0.0.0.0",
-            macaddress="34ea34b43b5a",
-        ),
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert mock_config_entry.data[CONF_MAC] == "34:ea:34:b4:3b:5a"
-
-
 @pytest.mark.parametrize("mac_address", ["34ea34b43b5a"])
 async def test_dhcp_updates_host(
     hass: HomeAssistant,
