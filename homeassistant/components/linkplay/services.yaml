@@ -12,3 +12,20 @@ play_preset:
         number:
           min: 1
           mode: box
+audio_output_hw_mode_set:
+  target:
+    entity:
+      integration: linkplay
+      domain: media_player
+  fields:
+    audio_output_hw_mode:
+      example: Coaxial
+      required: true
+      default: Optical
+      selector:
+        select:
+          options:
+            - "Optical"
+            - "Line Out"
+            - "Coaxial"
+            - "Headphones"
