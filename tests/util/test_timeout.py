@@ -235,12 +235,12 @@ async def test_simple_zone_timeout() -> None:
 
 
 async def test_simple_zone_timeout_cancel_message() -> None:
-    """Test a simple zone timeout ignores cancel message."""
+    """Test a simple zone timeout cancel message."""
     timeout = TimeoutManager()
 
     with suppress(TimeoutError):
         async with timeout.async_timeout(0.1, "test", cancel_message="Test"):
-            with pytest.raises(asyncio.CancelledError, match="Zone timeout"):
+            with pytest.raises(asyncio.CancelledError, match="Zone timeout: Test"):
                 await asyncio.sleep(0.3)
 
 
