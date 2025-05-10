@@ -1,0 +1,33 @@
+{
+    "token": "00000000000000000000000000000000",
+    "utilisateur": {
+        "id": 1892,
+        "email": "firstname.lastname@domain.com",
+        "civilite": "M",
+        "nom": "Firstname",
+        "prenom": "LASTNAME",
+        "numero": "1",
+        "rue": "street name",
+        "code_postal": "012345",
+        "ville": "Town city",
+        "code_pays": "FR",
+        "telephone": "0606060606",
+        "langue": "FR",
+        "acceptation_cgu_web": false,
+        "acceptation_cgu_mobile": true,
+        "debug": false,
+        "sites_pre_associes": [],
+        "notifications": true,
+        "sites": [
+            {
+                "identifiant_chaudiere": "12345678901234",
+                "nom": "Somewhere",
+                "alarmes": [
+                    {
+                        "nom": "Box Frisquet Connect déconnectée"
+                    }
+                ]
+            }
+        ]
+    }
+}
