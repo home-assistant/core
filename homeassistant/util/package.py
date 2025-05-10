@@ -30,7 +30,10 @@ def is_virtual_env() -> bool:
 
 @cache
 def is_docker_env() -> bool:
-    """Return True if we run in a container env."""
+    """Return True if we run in a container env, unless CONTAINER_NON_PRIVILEGED=True."""
+    if os.environ.get("CONTAINER_NON_PRIVILEGED") == "True":
+        return False
+
     return (
         Path("/.dockerenv").exists()
         or Path("/run/.containerenv").exists()
