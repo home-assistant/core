@@ -27,7 +27,7 @@ from aioesphomeapi import (
 import pytest
 from zeroconf import Zeroconf
 
-from homeassistant.components.esphome import dashboard
+from homeassistant.components.esphome import dashboard, domain_data
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_BLUETOOTH_MAC_ADDRESS,
@@ -110,6 +110,12 @@ async def load_homeassistant(hass: HomeAssistant) -> None:
 @pytest.fixture(autouse=True)
 def mock_tts(mock_tts_cache_dir: Path) -> None:
     """Auto mock the tts cache."""
+
+
+@pytest.fixture(autouse=True)
+def reset_domain_data_cache() -> None:
+    """Reset the DomainData cache."""
+    domain_data.DomainData.get.cache_clear()
 
 
 @pytest.fixture

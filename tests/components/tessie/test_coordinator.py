@@ -15,10 +15,10 @@ from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 
 from .common import (
-    ERROR_AUTH,
-    ERROR_CONNECTION,
-    ERROR_UNKNOWN,
     TEST_VEHICLE_STATUS_ASLEEP,
+    error_auth,
+    error_connection,
+    error_unknown,
     setup_platform,
 )
 
@@ -62,7 +62,7 @@ async def test_coordinator_clienterror(
 ) -> None:
     """Tests that the coordinator handles client errors."""
 
-    mock_get_status.side_effect = ERROR_UNKNOWN
+    mock_get_status.side_effect = error_unknown()
     await setup_platform(hass, [Platform.BINARY_SENSOR])
 
     freezer.tick(WAIT)
@@ -77,7 +77,7 @@ async def test_coordinator_auth(
 ) -> None:
     """Tests that the coordinator handles auth errors."""
 
-    mock_get_status.side_effect = ERROR_AUTH
+    mock_get_status.side_effect = error_auth()
     await setup_platform(hass, [Platform.BINARY_SENSOR])
 
     freezer.tick(WAIT)
@@ -91,7 +91,7 @@ async def test_coordinator_connection(
 ) -> None:
     """Tests that the coordinator handles connection errors."""
 
-    mock_get_status.side_effect = ERROR_CONNECTION
+    mock_get_status.side_effect = error_connection()
     await setup_platform(hass, [Platform.BINARY_SENSOR])
     freezer.tick(WAIT)
     async_fire_time_changed(hass)

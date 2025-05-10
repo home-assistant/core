@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .common import ERROR_UNKNOWN, TEST_RESPONSE, assert_entities, setup_platform
+from .common import TEST_RESPONSE, assert_entities, error_unknown, setup_platform
 
 
 async def test_climate(
@@ -115,10 +115,11 @@ async def test_errors(hass: HomeAssistant) -> None:
     entity_id = "climate.test_climate"
 
     # Test setting climate on with unknown error
+    exc = error_unknown()
     with (
         patch(
             "homeassistant.components.tessie.climate.stop_climate",
-            side_effect=ERROR_UNKNOWN,
+            side_effect=exc,
         ) as mock_set,
         pytest.raises(HomeAssistantError) as error,
     ):
@@ -129,4 +130,4 @@ async def test_errors(hass: HomeAssistant) -> None:
             blocking=True,
         )
     mock_set.assert_called_once()
-    assert error.value.__cause__ == ERROR_UNKNOWN
+    assert error.value.__cause__ == exc

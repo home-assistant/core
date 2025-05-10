@@ -3,7 +3,7 @@
 From http://doc.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures
 """
 
-from collections.abc import Generator, Iterable
+from collections.abc import Callable, Generator, Iterable
 from contextlib import ExitStack
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -60,22 +60,24 @@ async def internal_url_mock(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-async def mock_tts(hass: HomeAssistant, mock_provider) -> None:
+async def mock_tts(
+    hass: HomeAssistant, mock_provider: Callable[[], MockTTSProvider]
+) -> None:
     """Mock TTS."""
     mock_integration(hass, MockModule(domain="test"))
-    mock_platform(hass, "test.tts", MockTTS(mock_provider))
+    mock_platform(hass, "test.tts", MockTTS(mock_provider()))
 
 
 @pytest.fixture
-def mock_provider() -> MockTTSProvider:
+def mock_provider() -> Callable[[], MockTTSProvider]:
     """Test TTS provider."""
-    return MockTTSProvider(DEFAULT_LANG)
+    return lambda: MockTTSProvider(DEFAULT_LANG)
 
 
 @pytest.fixture
-def mock_tts_entity() -> MockTTSEntity:
+def mock_tts_entity() -> Callable[[], MockTTSEntity]:
     """Test TTS entity."""
-    return MockTTSEntity(DEFAULT_LANG)
+    return lambda: MockTTSEntity(DEFAULT_LANG)
 
 
 class TTSFlow(ConfigFlow):
@@ -106,13 +108,13 @@ def config_flow_fixture(
 async def setup_fixture(
     hass: HomeAssistant,
     request: pytest.FixtureRequest,
-    mock_provider: MockTTSProvider,
-    mock_tts_entity: MockTTSEntity,
+    mock_provider: Callable[[], MockTTSProvider],
+    mock_tts_entity: Callable[[], MockTTSEntity],
 ) -> None:
     """Set up the test environment."""
     if request.param == "mock_setup":
-        await mock_setup(hass, mock_provider)
+        await mock_setup(hass, mock_provider())
     elif request.param == "mock_config_entry_setup":
-        await mock_config_entry_setup(hass, mock_tts_entity)
+        await mock_config_entry_setup(hass, mock_tts_entity())
     else:
         raise RuntimeError("Invalid setup fixture")

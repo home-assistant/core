@@ -1,5 +1,6 @@
 """Tests for TTS media source."""
 
+from collections.abc import Callable
 from http import HTTPStatus
 import re
 from unittest.mock import MagicMock
@@ -47,7 +48,7 @@ async def setup_media_source(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("mock_provider", "mock_tts_entity"),
-    [(MSProvider(DEFAULT_LANG), MSEntity(DEFAULT_LANG))],
+    [(lambda: MSProvider(DEFAULT_LANG), lambda: MSEntity(DEFAULT_LANG))],
 )
 @pytest.mark.parametrize(
     "setup",
@@ -101,24 +102,28 @@ async def test_browsing(hass: HomeAssistant, setup: str) -> None:
 @pytest.mark.parametrize(
     ("mock_provider", "extra_options"),
     [
-        (MSProvider(DEFAULT_LANG), "&tts_options=%7B%22voice%22%3A%22Paulus%22%7D"),
-        (MSProvider(DEFAULT_LANG), "&voice=Paulus"),
+        (
+            lambda: MSProvider(DEFAULT_LANG),
+            "&tts_options=%7B%22voice%22%3A%22Paulus%22%7D",
+        ),
+        (lambda: MSProvider(DEFAULT_LANG), "&voice=Paulus"),
     ],
 )
 async def test_legacy_resolving(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_provider: MSProvider,
+    mock_provider: Callable[[], MSProvider],
     extra_options: str,
 ) -> None:
     """Test resolving legacy provider."""
-    await mock_setup(hass, mock_provider)
-    mock_get_tts_audio = mock_provider.get_tts_audio
+    provider = mock_provider()
+    await mock_setup(hass, provider)
+    mock_get_tts_audio = provider.get_tts_audio
 
-    mock_provider.has_entity = True
+    provider.has_entity = True
     root = await media_source.async_browse_media(hass, "media-source://tts")
     assert len(root.children) == 0
-    mock_provider.has_entity = False
+    provider.has_entity = False
     root = await media_source.async_browse_media(hass, "media-source://tts")
     assert len(root.children) == 1
 
@@ -155,19 +160,23 @@ async def test_legacy_resolving(
 @pytest.mark.parametrize(
     ("mock_tts_entity", "extra_options"),
     [
-        (MSEntity(DEFAULT_LANG), "&tts_options=%7B%22voice%22%3A%22Paulus%22%7D"),
-        (MSEntity(DEFAULT_LANG), "&voice=Paulus"),
+        (
+            lambda: MSEntity(DEFAULT_LANG),
+            "&tts_options=%7B%22voice%22%3A%22Paulus%22%7D",
+        ),
+        (lambda: MSEntity(DEFAULT_LANG), "&voice=Paulus"),
     ],
 )
 async def test_resolving(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_tts_entity: MSEntity,
+    mock_tts_entity: Callable[[], MSEntity],
     extra_options: str,
 ) -> None:
     """Test resolving entity."""
-    await mock_config_entry_setup(hass, mock_tts_entity)
-    mock_get_tts_audio = mock_tts_entity.get_tts_audio
+    tts_entity = mock_tts_entity()
+    await mock_config_entry_setup(hass, tts_entity)
+    mock_get_tts_audio = tts_entity.get_tts_audio
 
     mock_get_tts_audio.reset_mock()
     media_id = "media-source://tts/tts.test?message=Hello%20World"
@@ -201,7 +210,7 @@ async def test_resolving(
 
 @pytest.mark.parametrize(
     ("mock_provider", "mock_tts_entity"),
-    [(MSProvider(DEFAULT_LANG), MSEntity(DEFAULT_LANG))],
+    [(lambda: MSProvider(DEFAULT_LANG), lambda: MSEntity(DEFAULT_LANG))],
 )
 @pytest.mark.parametrize(
     ("setup", "engine"),

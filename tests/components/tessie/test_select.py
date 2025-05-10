@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .common import ERROR_UNKNOWN, TEST_RESPONSE, assert_entities, setup_platform
+from .common import TEST_RESPONSE, assert_entities, error_unknown, setup_platform
 
 
 async def test_select(
@@ -107,10 +107,11 @@ async def test_errors(hass: HomeAssistant) -> None:
     await setup_platform(hass, [Platform.SELECT])
 
     # Test changing vehicle select with unknown error
+    exc = error_unknown()
     with (
         patch(
             "homeassistant.components.tessie.select.set_seat_heat",
-            side_effect=ERROR_UNKNOWN,
+            side_effect=exc,
         ) as mock_set,
         pytest.raises(HomeAssistantError) as error,
     ):
@@ -124,7 +125,7 @@ async def test_errors(hass: HomeAssistant) -> None:
             blocking=True,
         )
     mock_set.assert_called_once()
-    assert error.value.__cause__ == ERROR_UNKNOWN
+    assert error.value.__cause__ == exc
 
     # Test changing energy select with unknown error
     with (

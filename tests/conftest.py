@@ -21,7 +21,8 @@ import threading
 from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, _patch, patch
 
-from aiohttp import client
+import _pytest.python_api
+from aiohttp import client, web_app
 from aiohttp.resolver import AsyncResolver
 from aiohttp.test_utils import (
     BaseTestServer,
@@ -58,6 +59,7 @@ from homeassistant import components, core as ha, loader, runner
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant
+from homeassistant.components import api, mobile_app, websocket_api
 from homeassistant.components.device_tracker.legacy import Device
 
 # pylint: disable-next=hass-component-root-import
@@ -96,6 +98,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
     label_registry as lr,
     recorder as recorder_helper,
+    template,
     translation as translation_helper,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -153,6 +156,40 @@ logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 # Disable fixtures overriding our beautiful policy
 asyncio.set_event_loop_policy = lambda policy: None
+
+
+class HackLogRecord(logging.LogRecord):
+    """Hack."""
+
+    def __init__(
+        self,
+        name,
+        level,
+        pathname,
+        lineno,
+        msg,
+        args,
+        exc_info,
+        func=None,
+        sinfo=None,
+        **kwargs,
+    ) -> None:
+        """Initialize the log record."""
+        super().__init__(
+            name, level, pathname, lineno, msg, args, exc_info, func, sinfo, **kwargs
+        )
+        msg = str(self.msg)
+        if self.args:
+            msg = msg % self.args
+        self.msg = msg
+        self.args = None
+
+    def getMessage(self):
+        """Return the message for this LogRecord."""
+        return self.msg
+
+
+logging.setLogRecordFactory(HackLogRecord)
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -278,6 +315,67 @@ def caplog_fixture(caplog: pytest.LogCaptureFixture) -> pytest.LogCaptureFixture
     return caplog
 
 
+@pytest.fixture(autouse=True)
+def clear_exception_traceback(request: pytest.FixtureRequest) -> Generator[None]:
+    """Clear exception traceback after each test."""
+    exceptions: list[BaseException] = []
+    raises_ctx: list[_pytest.python_api.RaisesContext] = []
+    for fixture_name in request.fixturenames:
+        if fixture_name not in {
+            "addon_info_error",
+            "addon_store_info_error",
+            "api_exception",
+            "backup_info_side_effect",
+            "create_backup_error",
+            "doorbell_state_side_effect",
+            "error_type",
+            "error",
+            "exc",
+            "exception",
+            "expand_side_effect",
+            "expectation",
+            "expected_result",
+            "go2rtc_error",
+            "imap_wait_server_push_exception",
+            "init_tts_cache_dir_side_effect",
+            "install_addon_error",
+            "p_error",
+            "raise_error",
+            "remove_side_effect",
+            "raised",
+            "raises",
+            "set_active_program_option_side_effect",
+            "set_active_program_options_side_effect",
+            "set_addon_options_error",
+            "set_query_mock",
+            "set_selected_program_option_side_effect",
+            "set_selected_program_options_side_effect",
+            "side_eff",
+            "side_effect",
+            "sideeffect",
+            "start_addon_error",
+            "subscriber_side_effect",
+            "supervisor_error",
+            "test_exception",
+            "update_addon_error",
+        }:
+            continue
+        if isinstance(request.getfixturevalue(fixture_name), BaseException):
+            exceptions.append(request.getfixturevalue(fixture_name))
+        if isinstance(
+            request.getfixturevalue(fixture_name), _pytest.python_api.RaisesContext
+        ):
+            raises_ctx.append(request.getfixturevalue(fixture_name))
+
+    yield
+    for ex in exceptions:
+        ex.__cause__ = None
+        ex.__context__ = None
+        ex.__traceback__ = None
+    for ctx in raises_ctx:
+        ctx.excinfo = None
+
+
 @pytest.fixture(autouse=True, scope="module")
 def garbage_collection() -> None:
     """Run garbage collection at known locations.
@@ -288,8 +386,25 @@ def garbage_collection() -> None:
     handles the most common cases and let each module override
     to run per test case if needed.
     """
+    start_live_hass_instances = len(
+        [hass() for hass in ha.hass_instances if hass() is not None]
+    )
+    yield
     gc.collect()
-    gc.freeze()
+    end_live_hass_instances = len(
+        [hass() for hass in ha.hass_instances if hass() is not None]
+    )
+    if abs(start_live_hass_instances - end_live_hass_instances) > 1:
+        _LOGGER.error(
+            "Garbage collection did not clean up all Home Assistant instances. "
+            "Start: %s, End: %s",
+            start_live_hass_instances,
+            end_live_hass_instances,
+        )
+        pytest.fail(
+            f"Garbage collection did not clean up all Home Assistant instances. "
+            f"Start: {start_live_hass_instances}, End: {end_live_hass_instances}"
+        )
 
 
 @pytest.fixture(autouse=True)
@@ -451,6 +566,20 @@ def reset_globals() -> Generator[None]:
     # Reset the frame helper globals
     frame.async_setup(None)
     frame._REPORTED_INTEGRATIONS.clear()
+
+    # Reset the aiohttp cache
+    web_app._cached_build_middleware.cache_clear()
+
+    # Reset the recorder helper get_instance cache
+    recorder_helper.get_instance.cache_clear()
+
+    # Reset the template caches
+    api._cached_template.cache_clear()
+    mobile_app.webhook._cached_template.cache_clear()
+    websocket_api.commands._cached_template.cache_clear()
+    template.CACHED_TEMPLATE_LRU.clear()
+    template.CACHED_TEMPLATE_NO_COLLECT_LRU.clear()
+    template._domain_states.cache_clear()
 
     # Reset patch_json
     if patch_json.mock_objects:
@@ -1226,7 +1355,7 @@ async def mqtt_mock_entry(
         yield _setup_mqtt_entry
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(autouse=True, scope="module")
 def mock_network() -> Generator[None]:
     """Mock network."""
     with (
@@ -1292,7 +1421,9 @@ def translations_once() -> Generator[_patch]:
 
 
 @pytest.fixture(autouse=True, scope="module")
-def evict_faked_translations(translations_once) -> Generator[_patch]:
+def evict_faked_translations(
+    garbage_collection, translations_once
+) -> Generator[_patch]:
     """Clear translations for mocked integrations from the cache after each module."""
     real_component_strings = translation_helper._async_get_component_strings
     with patch(
@@ -1325,7 +1456,8 @@ def disable_translations_once(
     translations_once.start()
 
 
-@pytest_asyncio.fixture(autouse=True, scope="session", loop_scope="session")
+# @pytest_asyncio.fixture(autouse=True, scope="session", loop_scope="session")
+@pytest_asyncio.fixture(autouse=True)
 async def mock_zeroconf_resolver() -> AsyncGenerator[_patch]:
     """Mock out the zeroconf resolver."""
     resolver = AsyncResolver()

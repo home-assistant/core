@@ -413,7 +413,6 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "extra_state_attributes",
     "force_update",
     "icon",
-    "name",
     "should_poll",
     "state",
     "supported_features",
@@ -730,7 +729,7 @@ class Entity(
             name = self.name
         return None if name is UNDEFINED else name
 
-    @cached_property
+    @property
     def name(self) -> str | UndefinedType | None:
         """Return the name of the entity."""
         # The check for self.platform guards against integrations not using an

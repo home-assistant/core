@@ -32,21 +32,41 @@ TEST_REQUEST_INFO = RequestInfo(
     url=TESSIE_URL, method="GET", headers={}, real_url=TESSIE_URL
 )
 
-ERROR_AUTH = ClientResponseError(
-    request_info=TEST_REQUEST_INFO, history=None, status=HTTPStatus.UNAUTHORIZED
-)
-ERROR_TIMEOUT = ClientResponseError(
-    request_info=TEST_REQUEST_INFO, history=None, status=HTTPStatus.REQUEST_TIMEOUT
-)
-ERROR_UNKNOWN = ClientResponseError(
-    request_info=TEST_REQUEST_INFO, history=None, status=HTTPStatus.BAD_REQUEST
-)
-ERROR_VIRTUAL_KEY = ClientResponseError(
-    request_info=TEST_REQUEST_INFO,
-    history=None,
-    status=HTTPStatus.INTERNAL_SERVER_ERROR,
-)
-ERROR_CONNECTION = ClientConnectionError()
+
+def error_auth() -> ClientResponseError:
+    """Return an error."""
+    return ClientResponseError(
+        request_info=TEST_REQUEST_INFO, history=None, status=HTTPStatus.UNAUTHORIZED
+    )
+
+
+def error_timeout() -> ClientResponseError:
+    """Return an error."""
+    return ClientResponseError(
+        request_info=TEST_REQUEST_INFO, history=None, status=HTTPStatus.REQUEST_TIMEOUT
+    )
+
+
+def error_unknown() -> ClientResponseError:
+    """Return an error."""
+    return ClientResponseError(
+        request_info=TEST_REQUEST_INFO, history=None, status=HTTPStatus.BAD_REQUEST
+    )
+
+
+def error_virtual_key() -> ClientResponseError:
+    """Return an error."""
+    return ClientResponseError(
+        request_info=TEST_REQUEST_INFO,
+        history=None,
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
+    )
+
+
+def error_connection() -> ClientResponseError:
+    """Return an error."""
+    return ClientConnectionError()
+
 
 # Fleet API library
 PRODUCTS = load_json_object_fixture("products.json", DOMAIN)

@@ -7,7 +7,7 @@ from tesla_fleet_api.exceptions import TeslaFleetError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .common import ERROR_AUTH, ERROR_CONNECTION, ERROR_UNKNOWN, setup_platform
+from .common import error_auth, error_connection, error_unknown, setup_platform
 
 
 async def test_load_unload(hass: HomeAssistant) -> None:
@@ -25,7 +25,7 @@ async def test_auth_failure(
 ) -> None:
     """Test init with an authentication error."""
 
-    mock_get_state_of_all_vehicles.side_effect = ERROR_AUTH
+    mock_get_state_of_all_vehicles.side_effect = error_auth()
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
@@ -35,7 +35,7 @@ async def test_unknown_failure(
 ) -> None:
     """Test init with an client response error."""
 
-    mock_get_state_of_all_vehicles.side_effect = ERROR_UNKNOWN
+    mock_get_state_of_all_vehicles.side_effect = error_unknown()
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
@@ -45,7 +45,7 @@ async def test_connection_failure(
 ) -> None:
     """Test init with a network connection error."""
 
-    mock_get_state_of_all_vehicles.side_effect = ERROR_CONNECTION
+    mock_get_state_of_all_vehicles.side_effect = error_connection()
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.SETUP_RETRY
 

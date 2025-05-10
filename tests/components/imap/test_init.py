@@ -1,6 +1,9 @@
 """Test the imap entry initialization."""
 
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
@@ -422,8 +425,8 @@ async def test_late_folder_error(
 @pytest.mark.parametrize(
     "imap_close",
     [
-        AsyncMock(side_effect=AioImapException("Something went wrong")),
-        AsyncMock(side_effect=TimeoutError),
+        lambda: AsyncMock(side_effect=AioImapException("Something went wrong")),
+        lambda: AsyncMock(side_effect=TimeoutError),
     ],
     ids=["AioImapException", "TimeoutError"],
 )
@@ -431,7 +434,7 @@ async def test_handle_cleanup_exception(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     mock_imap_protocol: MagicMock,
-    imap_close: Exception,
+    imap_close: Callable[[], AsyncMock],
 ) -> None:
     """Test handling an excepton during cleaning up."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
@@ -448,7 +451,7 @@ async def test_handle_cleanup_exception(
     assert state.state == "0"
 
     # Fail cleaning up
-    mock_imap_protocol.close.side_effect = imap_close
+    mock_imap_protocol.close.side_effect = imap_close()
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()

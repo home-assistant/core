@@ -178,10 +178,10 @@ async def test_send_base(
 
     await analytics.send_analytics()
 
-    logged_data = caplog.records[-1].args
+    logged_data = caplog.records[-1].getMessage()
     submitted_data = _last_call_payload(aioclient_mock)
 
-    assert submitted_data == logged_data
+    assert logged_data.endswith(str(submitted_data))
     assert snapshot == submitted_data
 
 
@@ -231,10 +231,10 @@ async def test_send_base_with_supervisor(
 
         await analytics.send_analytics()
 
-    logged_data = caplog.records[-1].args
+    logged_data = caplog.records[-1].getMessage()
     submitted_data = _last_call_payload(aioclient_mock)
 
-    assert submitted_data == logged_data
+    assert logged_data.endswith(str(submitted_data))
     assert snapshot == submitted_data
 
 
@@ -266,10 +266,10 @@ async def test_send_usage(
         in caplog.text
     )
 
-    logged_data = caplog.records[-1].args
+    logged_data = caplog.records[-1].getMessage()
     submitted_data = _last_call_payload(aioclient_mock)
 
-    assert submitted_data == logged_data
+    assert logged_data.endswith(str(submitted_data))
     assert snapshot == submitted_data
 
 
@@ -328,10 +328,10 @@ async def test_send_usage_with_supervisor(
     ):
         await analytics.send_analytics()
 
-    logged_data = caplog.records[-1].args
+    logged_data = caplog.records[-1].getMessage()
     submitted_data = _last_call_payload(aioclient_mock)
 
-    assert submitted_data == logged_data
+    assert logged_data.endswith(str(submitted_data))
     assert snapshot == submitted_data
 
 
@@ -356,10 +356,10 @@ async def test_send_statistics(
     ):
         await analytics.send_analytics()
 
-    logged_data = caplog.records[-1].args
+    logged_data = caplog.records[-1].getMessage()
     submitted_data = _last_call_payload(aioclient_mock)
 
-    assert submitted_data == logged_data
+    assert logged_data.endswith(str(submitted_data))
     assert snapshot == submitted_data
 
 
@@ -419,10 +419,10 @@ async def test_send_statistics_disabled_integration(
     ):
         await analytics.send_analytics()
 
-    logged_data = caplog.records[-1].args
+    logged_data = caplog.records[-1].getMessage()
     submitted_data = _last_call_payload(aioclient_mock)
 
-    assert submitted_data == logged_data
+    assert logged_data.endswith(str(submitted_data))
     assert snapshot == submitted_data
 
 
@@ -464,10 +464,10 @@ async def test_send_statistics_ignored_integration(
     ):
         await analytics.send_analytics()
 
-    logged_data = caplog.records[-1].args
+    logged_data = caplog.records[-1].getMessage()
     submitted_data = _last_call_payload(aioclient_mock)
 
-    assert submitted_data == logged_data
+    assert logged_data.endswith(str(submitted_data))
     assert snapshot == submitted_data
 
 
@@ -547,10 +547,10 @@ async def test_send_statistics_with_supervisor(
     ):
         await analytics.send_analytics()
 
-    logged_data = caplog.records[-1].args
+    logged_data = caplog.records[-1].getMessage()
     submitted_data = _last_call_payload(aioclient_mock)
 
-    assert submitted_data == logged_data
+    assert logged_data.endswith(str(submitted_data))
     assert snapshot == submitted_data
 
 
@@ -594,10 +594,10 @@ async def test_custom_integrations(
     ):
         await analytics.send_analytics()
 
-    logged_data = caplog.records[-1].args
+    logged_data = caplog.records[-1].getMessage()
     submitted_data = _last_call_payload(aioclient_mock)
 
-    assert submitted_data == logged_data
+    assert logged_data.endswith(str(submitted_data))
     assert snapshot == submitted_data
 
 
@@ -693,11 +693,11 @@ async def test_send_with_no_energy(
         get_recorder_instance.return_value = Mock(database_engine=Mock())
         await analytics.send_analytics()
 
-    logged_data = caplog.records[-1].args
+    logged_data = caplog.records[-1].getMessage()
     submitted_data = _last_call_payload(aioclient_mock)
 
     assert "energy" not in submitted_data
-    assert submitted_data == logged_data
+    assert logged_data.endswith(str(submitted_data))
     assert snapshot == submitted_data
 
 
@@ -723,11 +723,11 @@ async def test_send_with_no_energy_config(
         energy_is_configured.return_value = False
         await analytics.send_analytics()
 
-    logged_data = caplog.records[-1].args
+    logged_data = caplog.records[-1].getMessage()
     submitted_data = _last_call_payload(aioclient_mock)
 
     assert submitted_data["energy"]["configured"] is False
-    assert submitted_data == logged_data
+    assert logged_data.endswith(str(submitted_data))
     assert (
         snapshot(matcher=path_type({"recorder.version": (AwesomeVersion,)}))
         == submitted_data
@@ -756,11 +756,11 @@ async def test_send_with_energy_config(
         energy_is_configured.return_value = True
         await analytics.send_analytics()
 
-    logged_data = caplog.records[-1].args
+    logged_data = caplog.records[-1].getMessage()
     submitted_data = _last_call_payload(aioclient_mock)
 
     assert submitted_data["energy"]["configured"] is True
-    assert submitted_data == logged_data
+    assert logged_data.endswith(str(submitted_data))
     assert (
         snapshot(matcher=path_type({"recorder.version": (AwesomeVersion,)}))
         == submitted_data
@@ -787,11 +787,11 @@ async def test_send_usage_with_certificate(
 
     await analytics.send_analytics()
 
-    logged_data = caplog.records[-1].args
+    logged_data = caplog.records[-1].getMessage()
     submitted_data = _last_call_payload(aioclient_mock)
 
     assert submitted_data["certificate"] is True
-    assert submitted_data == logged_data
+    assert logged_data.endswith(str(submitted_data))
     assert snapshot == submitted_data
 
 
@@ -815,11 +815,11 @@ async def test_send_with_recorder(
     ):
         await analytics.send_analytics()
 
-    logged_data = caplog.records[-1].args
+    logged_data = caplog.records[-1].getMessage()
     submitted_data = _last_call_payload(aioclient_mock)
 
     assert submitted_data["recorder"]["engine"] == "sqlite"
-    assert submitted_data == logged_data
+    assert logged_data.endswith(str(submitted_data))
     assert (
         snapshot(matcher=path_type({"recorder.version": (AwesomeVersion,)}))
         == submitted_data
@@ -913,10 +913,10 @@ async def test_not_check_config_entries_if_yaml(
     ):
         await analytics.send_analytics()
 
-    logged_data = caplog.records[-1].args
+    logged_data = caplog.records[-1].getMessage()
     submitted_data = _last_call_payload(aioclient_mock)
 
     assert submitted_data["integration_count"] == 1
     assert submitted_data["integrations"] == ["default_config"]
-    assert submitted_data == logged_data
+    assert logged_data.endswith(str(submitted_data))
     assert snapshot == submitted_data
