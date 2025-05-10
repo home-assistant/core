@@ -21,7 +21,6 @@ from . import (
     INFLUX_CLIENT_PATH,
     _get_write_api_mock_v1,
     _get_write_api_mock_v2,
-    _split_config,
 )
 
 
@@ -40,25 +39,27 @@ def mock_client_fixture(
 
 
 @pytest.mark.parametrize(
-    ("mock_client", "config_base", "get_write_api", "db_name"),
+    ("mock_client", "config_base", "get_write_api", "db_name", "host"),
     [
         (
             DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
             _get_write_api_mock_v1,
             BASE_V1_CONFIG["database"],
+            BASE_V1_CONFIG["host"],
         ),
         (
             API_VERSION_2,
             BASE_V2_CONFIG,
             _get_write_api_mock_v2,
             BASE_V2_CONFIG["bucket"],
+            BASE_V2_CONFIG["url"],
         ),
     ],
     indirect=["mock_client"],
 )
 async def test_import(
-    hass: HomeAssistant, mock_client, config_base, get_write_api, db_name
+    hass: HomeAssistant, mock_client, config_base, get_write_api, db_name, host
 ) -> None:
     """Test we can import."""
     with patch(
@@ -70,11 +71,9 @@ async def test_import(
             data=config_base,
         )
 
-    config = _split_config(config_base)
-
     assert result["type"] == "create_entry"
-    assert result["title"] == f"{db_name} ({config_base['host']})"
-    assert result["data"] == config["data"]
+    assert result["title"] == f"{db_name} ({host})"
+    assert result["data"] == config_base
 
     assert get_write_api(mock_client).call_count == 1
 
