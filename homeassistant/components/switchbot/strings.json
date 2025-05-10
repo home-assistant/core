@@ -107,7 +107,7 @@
         "name": "Light level"
       },
       "aqi_quality_level": {
-        "name": "Air Quality Level",
+        "name": "Air quality level",
         "state": {
           "excellent": "Excellent",
           "good": "Good",
