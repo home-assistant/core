@@ -1406,7 +1406,7 @@ async def test_get_automatic_entity_ids(
         "test_domain.test_5": "test_domain.calculated_5",  # calculated_object_id
         "test_domain.test_6": "test_domain.suggested_6",  # suggested_object_id
         "test_domain.test_7": "test_domain.entity_name_7",  # entity name property
-        "test_domain.test_8": "test_domain.suggested_6",  # suggested_object_id
-        "test_domain.test_9": "test_domain.entity_name_7",  # name by user in registry
+        "test_domain.test_8": "test_domain.suggested_8",  # suggested_object_id
+        "test_domain.test_9": "test_domain.name_by_user_9",  # name by user in registry
         "test_domain.unknown": None,  # no test_domain.unknown in registry
     }
