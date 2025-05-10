@@ -104,7 +104,7 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             await self.player.async_update()
 
             if self.player.connected is False:
-                _LOGGER.debug("Player %s is not available", self.name)
+                _LOGGER.info("Player %s is not available", self.name)
                 self.available = False
 
                 # start listening for restored players
@@ -118,6 +118,6 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Make a player available again."""
         if unique_id == self.player.player_id and connected:
             self.available = True
-            _LOGGER.debug("Player %s is available again", self.name)
+            _LOGGER.info("Player %s is available again", self.name)
             if self._remove_dispatcher:
                 self._remove_dispatcher()
