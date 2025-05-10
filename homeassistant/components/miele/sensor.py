@@ -28,6 +28,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
+    DISABLED_TEMP_ENTITIES,
     STATE_PROGRAM_ID,
     STATE_PROGRAM_PHASE,
     STATE_STATUS_TAGS,
@@ -40,8 +41,6 @@ from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
 from .entity import MieleEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-DISABLED_TEMPERATURE = -32768
 
 
 def _convert_duration(value_list: list[int]) -> int | None:
@@ -505,7 +504,7 @@ async def async_setup_entry(
                         entity_class = MieleTemperatureSensor
                         if (
                             definition.description.value_fn(device)
-                            == DISABLED_TEMPERATURE / 100
+                            in DISABLED_TEMP_ENTITIES
                             and definition.description.zone is not None
                             and definition.description.zone > 1
                         ):
@@ -646,6 +645,6 @@ class MieleTemperatureSensor(MieleSensor):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         ret_val = self.entity_description.value_fn(self.device)
-        if ret_val == DISABLED_TEMPERATURE / 100:
+        if ret_val in DISABLED_TEMP_ENTITIES:
             return None
         return ret_val
