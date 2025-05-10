@@ -1,5 +1,6 @@
 """Tests for La Marzocco binary sensors."""
 
+from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
@@ -16,6 +17,8 @@ from . import async_init_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
+pytestmark = pytest.mark.usefixtures("mock_websocket_terminated")
+
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensors(
@@ -31,6 +34,16 @@ async def test_binary_sensors(
     ):
         await async_init_integration(hass, mock_config_entry)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.fixture(autouse=True)
+def mock_websocket_terminated() -> Generator[bool]:
+    """Mock websocket terminated."""
+    with patch(
+        "homeassistant.components.lamarzocco.coordinator.LaMarzoccoUpdateCoordinator.websocket_terminated",
+        new=False,
+    ) as mock_websocket_terminated:
+        yield mock_websocket_terminated
 
 
 async def test_brew_active_unavailable(

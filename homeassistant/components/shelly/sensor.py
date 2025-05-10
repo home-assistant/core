@@ -63,6 +63,8 @@ from .utils import (
     is_rpc_wifi_stations_disabled,
 )
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class BlockSensorDescription(BlockEntityDescription, SensorEntityDescription):
