@@ -6,12 +6,12 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.bosch_alarm.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_PORT
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import setup_integration
 
@@ -77,7 +77,7 @@ async def test_form_exceptions(
     """Test we handle exceptions correctly."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -174,13 +174,6 @@ async def test_entry_already_configured_host(
         result["flow_id"], {CONF_HOST: "0.0.0.0"}
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "auth"
-    assert result["errors"] == {}
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], config_flow_data
-    )
-
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
@@ -200,7 +193,7 @@ async def test_entry_already_configured_serial(
     )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: "0.0.0.0"}
+        result["flow_id"], {CONF_HOST: "1.1.1.1"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -212,6 +205,140 @@ async def test_entry_already_configured_serial(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_dhcp_can_finish(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_panel: AsyncMock,
+    model_name: str,
+    serial_number: str,
+    config_flow_data: dict[str, Any],
+) -> None:
+    """Test DHCP discovery flow can finish right away."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            hostname="test",
+            ip="1.1.1.1",
+            macaddress="34ea34b43b5a",
+        ),
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+    assert result["errors"] == {}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        config_flow_data,
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"Bosch {model_name}"
+    assert result["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_MAC: "34:ea:34:b4:3b:5a",
+        CONF_PORT: 7700,
+        CONF_MODEL: model_name,
+        **config_flow_data,
+    }
+
+
+@pytest.mark.parametrize(
+    ("exception", "message"),
+    [
+        (asyncio.exceptions.TimeoutError(), "cannot_connect"),
+        (Exception(), "unknown"),
+    ],
+)
+async def test_dhcp_exceptions(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_panel: AsyncMock,
+    model_name: str,
+    serial_number: str,
+    config_flow_data: dict[str, Any],
+    exception: Exception,
+    message: str,
+) -> None:
+    """Test DHCP discovery flow that fails to connect."""
+    mock_panel.connect.side_effect = exception
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            hostname="test",
+            ip="1.1.1.1",
+            macaddress="34ea34b43b5a",
+        ),
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == message
+
+
+@pytest.mark.parametrize("mac_address", ["34ea34b43b5a"])
+async def test_dhcp_updates_host(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_panel: AsyncMock,
+    mac_address: str | None,
+    serial_number: str,
+    config_flow_data: dict[str, Any],
+) -> None:
+    """Test DHCP updates host."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            hostname="test",
+            ip="4.5.6.7",
+            macaddress=mac_address,
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == "4.5.6.7"
+
+
+@pytest.mark.parametrize("model", ["solution_3000", "amax_3000"])
+async def test_dhcp_abort_ongoing_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_panel: AsyncMock,
+    config_flow_data: dict[str, Any],
+) -> None:
+    """Test if a dhcp flow is aborted if there is already an ongoing flow."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "0.0.0.0"}
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            hostname="test",
+            ip="0.0.0.0",
+            macaddress="34ea34b43b5a",
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
 
 
 async def test_reauth_flow_success(
@@ -274,7 +401,6 @@ async def test_reauth_flow_error(
     )
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"]["base"] == message
-
     mock_panel.connect.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -301,7 +427,7 @@ async def test_reconfig_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
-            "source": config_entries.SOURCE_RECONFIGURE,
+            "source": SOURCE_RECONFIGURE,
             "entry_id": mock_config_entry.entry_id,
         },
     )
@@ -347,7 +473,7 @@ async def test_reconfig_flow_incorrect_model(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
-            "source": config_entries.SOURCE_RECONFIGURE,
+            "source": SOURCE_RECONFIGURE,
             "entry_id": mock_config_entry.entry_id,
         },
     )
