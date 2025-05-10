@@ -16,8 +16,11 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) 
     await hass.async_block_till_done()
 
 
-def get_callback(
-    mock: AsyncMock, the_callback: str
-) -> Callable[[int], Awaitable[None]]:
-    """Get registered callbacks for api push."""
-    return mock.listen_events.call_args_list[0].kwargs.get(the_callback)
+def get_data_callback(mock: AsyncMock) -> Callable[[int], Awaitable[None]]:
+    """Get registered callback for api data push."""
+    return mock.listen_events.call_args_list[0].kwargs.get("data_callback")
+
+
+def get_actions_callback(mock: AsyncMock) -> Callable[[int], Awaitable[None]]:
+    """Get registered callback for api data push."""
+    return mock.listen_events.call_args_list[0].kwargs.get("actions_callback")

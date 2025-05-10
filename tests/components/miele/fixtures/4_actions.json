@@ -9,8 +9,8 @@
     "targetTemperature": [
       {
         "zone": 1,
-        "min": -28,
-        "max": -14
+        "min": -27,
+        "max": -13
       }
     ],
     "deviceName": true,

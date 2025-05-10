@@ -7,18 +7,17 @@ from unittest.mock import MagicMock
 
 from aiohttp import ClientConnectionError
 from freezegun.api import FrozenDateTimeFactory
-from pymiele import OAUTH2_TOKEN, MieleAction, MieleDevices
+from pymiele import OAUTH2_TOKEN
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.climate import ATTR_MAX_TEMP, ATTR_MIN_TEMP
 from homeassistant.components.miele.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from . import get_callback, setup_integration
+from . import setup_integration
 
 from tests.common import (
     MockConfigEntry,
@@ -164,47 +163,6 @@ async def test_device_remove_devices(
         old_device_entry.id, mock_config_entry.entry_id
     )
     assert response["success"]
-
-
-async def test_api_push(
-    hass: HomeAssistant,
-    mock_miele_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    device_fixture: MieleDevices,
-    action_fixture: MieleAction,
-) -> None:
-    """Test the processing of pushed data updates."""
-    # We test that data updates pushed by SSE stream are processed
-    # properly in the integration. This is asserted by checking that two randomly selected
-    # entity attributes (ATTR_MIN_TEMP and ATTR_MAX_TEMP on a climate entity are changed as
-    # expected.
-
-    await setup_integration(hass, mock_config_entry)
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "Dummy_Appliance_1")}
-    )
-    assert device_entry is not None
-
-    entity_id = "climate.refrigerator"
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.attributes.get(ATTR_MIN_TEMP) == -28
-    assert state.attributes.get(ATTR_MAX_TEMP) == 28
-
-    data_callback = get_callback(mock_miele_client, "data_callback")
-    await data_callback(device_fixture)
-    await hass.async_block_till_done()
-
-    act_file = load_json_object_fixture("4_actions.json", DOMAIN)
-    action_callback = get_callback(mock_miele_client, "actions_callback")
-    await action_callback(act_file)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.attributes.get(ATTR_MIN_TEMP) == 1
-    assert state.attributes.get(ATTR_MAX_TEMP) == 9
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
