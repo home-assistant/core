@@ -592,7 +592,12 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
                 if child.media_content_type in query.media_filter_classes
             ]
 
-        return SearchMedia(result=[search_response])
+        result: list[BrowseMedia] = []
+
+        if search_response.children:
+            result = list(search_response.children)
+
+        return SearchMedia(result=result)
 
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set the repeat mode."""

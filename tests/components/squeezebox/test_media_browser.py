@@ -208,9 +208,7 @@ async def test_async_search_media(
         response = await client.receive_json()
         assert response["success"]
         category_level = response["result"]["result"]
-        assert category_level[0]["title"] == MEDIA_TYPE_TO_SQUEEZEBOX[category]
-        assert category_level[0]["children"][0]["title"] == "Fake Item 1"
-        assert len(category_level[0]["children"]) == child_count
+        assert category_level[0]["title"] == "Fake Item 1"
 
 
 async def test_generate_playlist_for_app(
