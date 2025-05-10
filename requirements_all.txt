@@ -1952,7 +1952,7 @@ pyeiscp==0.0.7
 pyemoncms==0.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.26.0
+pyenphase==1.26.1
 
 # homeassistant.components.envisalink
 pyenvisalink==4.7
