@@ -32,21 +32,21 @@ FAULT_TYPES = [
         key="panel_fault_battery_low",
         translation_key="panel_fault_battery_low",
         entity_registry_enabled_default=True,
-        device_class=BinarySensorDeviceClass.BATTERY,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         fault=ALARM_PANEL_FAULTS.BATTERY_LOW,
     ),
     BoschAlarmFaultEntityDescription(
         key="panel_fault_battery_mising",
         translation_key="panel_fault_battery_mising",
         entity_registry_enabled_default=True,
-        device_class=BinarySensorDeviceClass.BATTERY,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         fault=ALARM_PANEL_FAULTS.BATTERY_MISING,
     ),
     BoschAlarmFaultEntityDescription(
         key="panel_fault_ac_fail",
         translation_key="panel_fault_ac_fail",
         entity_registry_enabled_default=True,
-        device_class=BinarySensorDeviceClass.PLUG,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         fault=ALARM_PANEL_FAULTS.AC_FAIL,
     ),
     BoschAlarmFaultEntityDescription(
@@ -60,24 +60,28 @@ FAULT_TYPES = [
         key="panel_fault_parameter_crc_fail_in_pif",
         translation_key="panel_fault_parameter_crc_fail_in_pif",
         entity_registry_enabled_default=False,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         fault=ALARM_PANEL_FAULTS.PARAMETER_CRC_FAIL_IN_PIF,
     ),
     BoschAlarmFaultEntityDescription(
         key="panel_fault_communication_fail_since_rps_hang_up",
         translation_key="panel_fault_communication_fail_since_rps_hang_up",
         entity_registry_enabled_default=False,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         fault=ALARM_PANEL_FAULTS.COMMUNICATION_FAIL_SINCE_RPS_HANG_UP,
     ),
     BoschAlarmFaultEntityDescription(
         key="panel_fault_sdi_fail_since_rps_hang_up",
         translation_key="panel_fault_sdi_fail_since_rps_hang_up",
         entity_registry_enabled_default=False,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         fault=ALARM_PANEL_FAULTS.SDI_FAIL_SINCE_RPS_HANG_UP,
     ),
     BoschAlarmFaultEntityDescription(
         key="panel_fault_user_code_tamper_since_rps_hang_up",
         translation_key="panel_fault_user_code_tamper_since_rps_hang_up",
         entity_registry_enabled_default=False,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         fault=ALARM_PANEL_FAULTS.USER_CODE_TAMPER_SINCE_RPS_HANG_UP,
     ),
     BoschAlarmFaultEntityDescription(
@@ -90,18 +94,21 @@ FAULT_TYPES = [
         key="panel_fault_point_bus_fail_since_rps_hang_up",
         translation_key="panel_fault_point_bus_fail_since_rps_hang_up",
         entity_registry_enabled_default=False,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         fault=ALARM_PANEL_FAULTS.POINT_BUS_FAIL_SINCE_RPS_HANG_UP,
     ),
     BoschAlarmFaultEntityDescription(
         key="panel_fault_log_overflow",
         translation_key="panel_fault_log_overflow",
         entity_registry_enabled_default=False,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         fault=ALARM_PANEL_FAULTS.LOG_OVERFLOW,
     ),
     BoschAlarmFaultEntityDescription(
         key="panel_fault_log_threshold",
         translation_key="panel_fault_log_threshold",
         entity_registry_enabled_default=False,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         fault=ALARM_PANEL_FAULTS.LOG_THRESHOLD,
     ),
 ]
@@ -152,7 +159,6 @@ PARALLEL_UPDATES = 0
 class PanelFaultsSensor(BoschAlarmEntity, BinarySensorEntity):
     """A binary sensor entity for each fault type in a bosch alarm panel."""
 
-    _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     entity_description: BoschAlarmFaultEntityDescription
 
@@ -177,7 +183,6 @@ class PanelFaultsSensor(BoschAlarmEntity, BinarySensorEntity):
 class AreaReadyToArmSensor(BoschAlarmAreaEntity, BinarySensorEntity):
     """A binary sensor entity showing if a panel is ready to arm."""
 
-    _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
@@ -203,7 +208,6 @@ class AreaReadyToArmSensor(BoschAlarmAreaEntity, BinarySensorEntity):
 class PointSensor(BoschAlarmPointEntity, BinarySensorEntity):
     """A binary sensor entity for a point in a bosch alarm panel."""
 
-    _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(self, panel: Panel, point_id: int, unique_id: str) -> None:
