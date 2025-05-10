@@ -33,7 +33,11 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
+from homeassistant.helpers.device_registry import (
+    CONNECTION_BLUETOOTH,
+    CONNECTION_NETWORK_MAC,
+    format_mac,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .bluetooth import async_connect_scanner
@@ -164,10 +168,13 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         """Set up the coordinator."""
         self._pending_platforms = pending_platforms
         dev_reg = dr.async_get(self.hass)
+        connections = {(CONNECTION_NETWORK_MAC, self.mac)}
+        if not self.sleep_period and hasattr(self, "bluetooth_source"):
+            connections.add((CONNECTION_BLUETOOTH, self.bluetooth_source))
         device_entry = dev_reg.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             name=self.name,
-            connections={(CONNECTION_NETWORK_MAC, self.mac)},
+            connections=connections,
             identifiers={(DOMAIN, self.mac)},
             manufacturer="Shelly",
             model=get_shelly_model_name(self.model, self.sleep_period, self.device),
