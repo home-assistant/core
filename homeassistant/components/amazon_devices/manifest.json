@@ -1,0 +1,12 @@
+{
+  "domain": "amazon_devices",
+  "name": "Amazon Devices",
+  "codeowners": ["@chemelli74"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/amazon_devices",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["aioamazondevices"],
+  "quality_scale": "bronze",
+  "requirements": ["aioamazondevices==1.8.0"]
+}
