@@ -99,12 +99,12 @@ async def test_circulator_fan_controlling(
 
 
 @pytest.mark.parametrize(
-    "service_info",
+    ("service_info", "sensor_type"),
     [
-        AIR_PURIFIER_VOC_SERVICE_INFO,
-        AIR_PURIFIER_TABLE_VOC_SERVICE_INFO,
-        AIR_PURIFIER_PM25_SERVICE_INFO,
-        AIR_PURIFIER_TBALE_PM25_SERVICE_INFO,
+        (AIR_PURIFIER_VOC_SERVICE_INFO, "air_purifier"),
+        (AIR_PURIFIER_TABLE_VOC_SERVICE_INFO, "air_purifier_table"),
+        (AIR_PURIFIER_PM25_SERVICE_INFO, "air_purifier"),
+        (AIR_PURIFIER_TBALE_PM25_SERVICE_INFO, "air_purifier_table"),
     ],
 )
 @pytest.mark.parametrize(
@@ -131,6 +131,7 @@ async def test_air_purifier_controlling(
     hass: HomeAssistant,
     mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
     service_info: BluetoothServiceInfoBleak,
+    sensor_type: str,
     service: str,
     service_data: dict,
     mock_method: str,
@@ -138,7 +139,7 @@ async def test_air_purifier_controlling(
     """Test controlling the air purifier with different services."""
     inject_bluetooth_service_info(hass, service_info)
 
-    entry = mock_entry_encrypted_factory(sensor_type="air_purifier")
+    entry = mock_entry_encrypted_factory(sensor_type)
     entity_id = "fan.test_name"
     entry.add_to_hass(hass)
 
