@@ -9,19 +9,19 @@
           "endpoint_url": "Endpoint URL"
         },
         "data_description": {
-          "access_key_id": "Access key ID to connect to AWS S3 API",
-          "secret_access_key": "Secret access key to connect to AWS S3 API",
+          "access_key_id": "Access key ID to connect to S3 API",
+          "secret_access_key": "Secret access key to connect to S3 API",
           "bucket": "Bucket must already exist and be writable by the provided credentials.",
-          "endpoint_url": "Endpoint URL provided to [Boto3 Session]({boto3_docs_url}). Region-specific [AWS S3 endpoints]({aws_s3_docs_url}) are available in their docs."
+          "endpoint_url": "Endpoint URL provided to [Boto3 Session]({boto3_docs_url}). For AWS, region-specific endpoints are available [in their docs]({aws_s3_docs_url})."
         },
-        "title": "Add AWS S3 bucket"
+        "title": "Add S3 bucket"
       }
     },
     "error": {
       "cannot_connect": "[%key:component::aws_s3::exceptions::cannot_connect::message%]",
       "invalid_bucket_name": "[%key:component::aws_s3::exceptions::invalid_bucket_name::message%]",
       "invalid_credentials": "[%key:component::aws_s3::exceptions::invalid_credentials::message%]",
-      "invalid_endpoint_url": "Invalid endpoint URL. Please make sure it's a valid AWS S3 endpoint URL."
+      "invalid_endpoint_url": "Invalid endpoint URL. Please make sure it's a valid S3 endpoint URL."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
