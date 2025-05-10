@@ -53,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschAlarmConfigEntry) -
 
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections=mac and {(CONNECTION_NETWORK_MAC, mac)},
+        connections=(mac and {(CONNECTION_NETWORK_MAC, mac)}) or None,
         identifiers={(DOMAIN, entry.unique_id or entry.entry_id)},
         name=f"Bosch {panel.model}",
         manufacturer="Bosch Security Systems",
