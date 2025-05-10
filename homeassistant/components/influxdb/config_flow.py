@@ -17,7 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import DOMAIN, create_influx_url, get_influx_connection
+from . import DOMAIN, get_influx_connection
 from .const import (
     CONF_API_VERSION,
     CONF_BUCKET,
@@ -78,11 +78,11 @@ class InfluxDBConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_SSL_CA_CERT: import_data.get(CONF_SSL_CA_CERT),
             }
         else:
-            url = create_influx_url(import_data)
-            title = f"{bucket} ({host})"
+            url = import_data.get(CONF_URL)
+            title = f"{bucket} ({url})"
             data = {
                 CONF_API_VERSION: api_version,
-                CONF_URL: url,
+                CONF_URL: import_data.get(CONF_URL),
                 CONF_TOKEN: import_data.get(CONF_TOKEN),
                 CONF_ORG: import_data.get(CONF_ORG),
                 CONF_BUCKET: bucket,
