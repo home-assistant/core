@@ -21,7 +21,7 @@
         },
         "data_description": {
           "host": "[%key:component::squeezebox::config::step::user::data_description::host%]",
-          "port": "The web interface port on the LMS server.  The default is 9000.",
+          "port": "The web interface port on the LMS.  The default is 9000.",
           "username": "The username from LMS Advanced Security if defined,",
           "password": "The password from LMS Advanced Security if defined,",
           "https": "Connect to the LMS over HTTPS (requires reverse proxy)"
@@ -36,7 +36,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_server_found": "No LMS server found."
+      "no_server_found": "No LMS found."
     }
   },
   "services": {
