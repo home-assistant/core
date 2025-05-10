@@ -36,6 +36,18 @@ async def test_simple_global_timeout_freeze() -> None:
         await asyncio.sleep(0.3)
 
 
+async def test_simple_global_timeout_cancel_message() -> None:
+    """Test a simple global timeout cancel message."""
+    timeout = TimeoutManager()
+
+    with suppress(TimeoutError):
+        async with timeout.async_timeout(0.1, cancel_message="Test"):
+            with pytest.raises(
+                asyncio.CancelledError, match="Global task timeout: Test"
+            ):
+                await asyncio.sleep(0.3)
+
+
 async def test_simple_zone_timeout_freeze_inside_executor_job(
     hass: HomeAssistant,
 ) -> None:
@@ -220,6 +232,16 @@ async def test_simple_zone_timeout() -> None:
     with pytest.raises(TimeoutError):
         async with timeout.async_timeout(0.1, "test"):
             await asyncio.sleep(0.3)
+
+
+async def test_simple_zone_timeout_cancel_message() -> None:
+    """Test a simple zone timeout ignores cancel message."""
+    timeout = TimeoutManager()
+
+    with suppress(TimeoutError):
+        async with timeout.async_timeout(0.1, "test", cancel_message="Test"):
+            with pytest.raises(asyncio.CancelledError, match="Zone timeout"):
+                await asyncio.sleep(0.3)
 
 
 async def test_simple_zone_timeout_does_not_leak_upward(
