@@ -22,6 +22,7 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteAnnouncement,
     SatelliteBusyError,
 )
+from homeassistant.components.assist_satellite.const import PREANNOUNCE_URL
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
 from homeassistant.components.media_source import PlayMedia
 from homeassistant.config_entries import ConfigEntry
@@ -185,7 +186,7 @@ async def test_new_pipeline_cancels_pipeline(
     ("service_data", "expected_params"),
     [
         (
-            {"message": "Hello"},
+            {"message": "Hello", "preannounce": False},
             AssistSatelliteAnnouncement(
                 message="Hello",
                 media_id="http://10.10.10.10:8123/api/tts_proxy/test-token",
@@ -198,6 +199,7 @@ async def test_new_pipeline_cancels_pipeline(
             {
                 "message": "Hello",
                 "media_id": "media-source://given",
+                "preannounce": False,
             },
             AssistSatelliteAnnouncement(
                 message="Hello",
@@ -208,7 +210,7 @@ async def test_new_pipeline_cancels_pipeline(
             ),
         ),
         (
-            {"media_id": "http://example.com/bla.mp3"},
+            {"media_id": "http://example.com/bla.mp3", "preannounce": False},
             AssistSatelliteAnnouncement(
                 message="",
                 media_id="http://example.com/bla.mp3",
@@ -368,6 +370,24 @@ async def test_announce_cancels_pipeline(
         mock_async_announce.assert_called_once()
 
 
+async def test_announce_default_preannounce(
+    hass: HomeAssistant, init_components: ConfigEntry, entity: MockAssistSatellite
+) -> None:
+    """Test announcing on a device with the default preannouncement sound."""
+
+    async def async_announce(announcement):
+        assert announcement.preannounce_media_id.endswith(PREANNOUNCE_URL)
+
+    with patch.object(entity, "async_announce", new=async_announce):
+        await hass.services.async_call(
+            "assist_satellite",
+            "announce",
+            {"media_id": "test-media-id"},
+            target={"entity_id": "assist_satellite.test_entity"},
+            blocking=True,
+        )
+
+
 async def test_context_refresh(
     hass: HomeAssistant, init_components: ConfigEntry, entity: MockAssistSatellite
 ) -> None:
@@ -521,6 +541,7 @@ async def test_vad_sensitivity_entity_not_found(
             {
                 "start_message": "Hello",
                 "extra_system_prompt": "Better system prompt",
+                "preannounce": False,
             },
             (
                 "mock-conversation-id",
@@ -538,6 +559,7 @@ async def test_vad_sensitivity_entity_not_found(
             {
                 "start_message": "Hello",
                 "start_media_id": "media-source://given",
+                "preannounce": False,
             },
             (
                 "mock-conversation-id",
@@ -552,7 +574,10 @@ async def test_vad_sensitivity_entity_not_found(
             ),
         ),
         (
-            {"start_media_id": "http://example.com/given.mp3"},
+            {
+                "start_media_id": "http://example.com/given.mp3",
+                "preannounce": False,
+            },
             (
                 "mock-conversation-id",
                 None,
@@ -652,6 +677,32 @@ async def test_start_conversation_reject_builtin_agent(
             "assist_satellite",
             "start_conversation",
             {"start_message": "Hey!"},
+            target={"entity_id": "assist_satellite.test_entity"},
+            blocking=True,
+        )
+
+
+async def test_start_conversation_default_preannounce(
+    hass: HomeAssistant, init_components: ConfigEntry, entity: MockAssistSatellite
+) -> None:
+    """Test starting a conversation on a device with the default preannouncement sound."""
+
+    async def async_start_conversation(start_announcement):
+        assert PREANNOUNCE_URL in start_announcement.preannounce_media_id
+
+    await async_update_pipeline(
+        hass,
+        async_get_pipeline(hass),
+        conversation_engine="conversation.some_llm",
+    )
+
+    with (
+        patch.object(entity, "async_start_conversation", new=async_start_conversation),
+    ):
+        await hass.services.async_call(
+            "assist_satellite",
+            "start_conversation",
+            {"start_media_id": "test-media-id"},
             target={"entity_id": "assist_satellite.test_entity"},
             blocking=True,
         )

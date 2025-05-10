@@ -9,12 +9,16 @@ from bosch_alarm_mode2 import Panel
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import CONF_INSTALLER_CODE, CONF_USER_CODE, DOMAIN
 
-PLATFORMS: list[Platform] = [Platform.ALARM_CONTROL_PANEL]
+PLATFORMS: list[Platform] = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 type BoschAlarmConfigEntry = ConfigEntry[Panel]
 
@@ -34,10 +38,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschAlarmConfigEntry) -
         await panel.connect()
     except (PermissionError, ValueError) as err:
         await panel.disconnect()
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="authentication_failed"
+        ) from err
     except (TimeoutError, OSError, ConnectionRefusedError, SSLError) as err:
         await panel.disconnect()
-        raise ConfigEntryNotReady("Connection failed") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from err
 
     entry.runtime_data = panel
 

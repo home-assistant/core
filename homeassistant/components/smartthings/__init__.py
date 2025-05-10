@@ -24,6 +24,7 @@ from pysmartthings import (
     SmartThingsSinkError,
     Status,
 )
+from pysmartthings.models import HealthStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -79,6 +80,7 @@ class FullDevice:
 
     device: Device
     status: dict[str, ComponentStatus]
+    online: bool
 
 
 type SmartThingsConfigEntry = ConfigEntry[SmartThingsData]
@@ -192,7 +194,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         devices = await client.get_devices()
         for device in devices:
             status = process_status(await client.get_device_status(device.device_id))
-            device_status[device.device_id] = FullDevice(device=device, status=status)
+            online = await client.get_device_health(device.device_id)
+            device_status[device.device_id] = FullDevice(
+                device=device, status=status, online=online.state == HealthStatus.ONLINE
+            )
     except SmartThingsAuthenticationFailedError as err:
         raise ConfigEntryAuthFailed from err
 
@@ -352,7 +357,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         return {
                             "new_unique_id": f"{device_id}_{MAIN}_{Capability.THREE_AXIS}_{Attribute.THREE_AXIS}_{new_attribute}",
                         }
-                    if attribute == Attribute.MACHINE_STATE:
+                    if attribute in {
+                        Attribute.MACHINE_STATE,
+                        Attribute.COMPLETION_TIME,
+                    }:
                         capability = determine_machine_type(
                             hass, entry.entry_id, device_id
                         )
@@ -410,7 +418,9 @@ def create_devices(
     rooms: dict[str, str],
 ) -> None:
     """Create devices in the device registry."""
-    for device in devices.values():
+    for device in sorted(
+        devices.values(), key=lambda d: d.device.parent_device_id or ""
+    ):
         kwargs: dict[str, Any] = {}
         if device.device.hub is not None:
             kwargs = {
@@ -421,7 +431,7 @@ def create_devices(
                 kwargs[ATTR_CONNECTIONS] = {
                     (dr.CONNECTION_NETWORK_MAC, device.device.hub.mac_address)
                 }
-        if device.device.parent_device_id:
+        if device.device.parent_device_id and device.device.parent_device_id in devices:
             kwargs[ATTR_VIA_DEVICE] = (DOMAIN, device.device.parent_device_id)
         if (ocf := device.device.ocf) is not None:
             kwargs.update(
@@ -473,7 +483,32 @@ def process_status(status: dict[str, ComponentStatus]) -> dict[str, ComponentSta
     if (main_component := status.get(MAIN)) is None:
         return status
     if (
-        disabled_capabilities_capability := main_component.get(
+        disabled_components_capability := main_component.get(
+            Capability.CUSTOM_DISABLED_COMPONENTS
+        )
+    ) is not None:
+        disabled_components = cast(
+            list[str],
+            disabled_components_capability[Attribute.DISABLED_COMPONENTS].value,
+        )
+        if disabled_components is not None:
+            for component in disabled_components:
+                # Burner components are named burner-06
+                # but disabledComponents contain burner-6
+                if "burner" in component:
+                    burner_id = int(component.split("-")[-1])
+                    component = f"burner-0{burner_id}"
+                if component in status:
+                    del status[component]
+    for component_status in status.values():
+        process_component_status(component_status)
+    return status
+
+
+def process_component_status(status: ComponentStatus) -> None:
+    """Remove disabled capabilities from component status."""
+    if (
+        disabled_capabilities_capability := status.get(
             Capability.CUSTOM_DISABLED_CAPABILITIES
         )
     ) is not None:
@@ -483,9 +518,8 @@ def process_status(status: dict[str, ComponentStatus]) -> dict[str, ComponentSta
         )
         if disabled_capabilities is not None:
             for capability in disabled_capabilities:
-                if capability in main_component and (
+                if capability in status and (
                     capability not in KEEP_CAPABILITY_QUIRK
-                    or not KEEP_CAPABILITY_QUIRK[capability](main_component[capability])
+                    or not KEEP_CAPABILITY_QUIRK[capability](status[capability])
                 ):
-                    del main_component[capability]
-    return status
+                    del status[capability]

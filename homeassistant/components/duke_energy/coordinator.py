@@ -179,22 +179,18 @@ class DukeEnergyCoordinator(DataUpdateCoordinator[None]):
         one = timedelta(days=1)
         if start_time is None:
             # Max 3 years of data
-            agreement_date = dt_util.parse_datetime(meter["agreementActiveDate"])
-            if agreement_date is None:
-                start = dt_util.now(tz) - timedelta(days=3 * 365)
-            else:
-                start = max(
-                    agreement_date.replace(tzinfo=tz),
-                    dt_util.now(tz) - timedelta(days=3 * 365),
-                )
+            start = dt_util.now(tz) - timedelta(days=3 * 365)
         else:
             start = datetime.fromtimestamp(start_time, tz=tz) - lookback
+        agreement_date = dt_util.parse_datetime(meter["agreementActiveDate"])
+        if agreement_date is not None:
+            start = max(agreement_date.replace(tzinfo=tz), start)
 
         start = start.replace(hour=0, minute=0, second=0, microsecond=0)
         end = dt_util.now(tz).replace(hour=0, minute=0, second=0, microsecond=0) - one
         _LOGGER.debug("Data lookup range: %s - %s", start, end)
 
-        start_step = end - lookback
+        start_step = max(end - lookback, start)
         end_step = end
         usage: dict[datetime, dict[str, float | int]] = {}
         while True:

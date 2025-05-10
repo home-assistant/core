@@ -39,11 +39,11 @@ PARALLEL_UPDATES = 1
 class HomeConnectLightEntityDescription(LightEntityDescription):
     """Light entity description."""
 
-    brightness_key: SettingKey | None = None
+    brightness_key: SettingKey
+    brightness_scale: tuple[float, float]
     color_key: SettingKey | None = None
     enable_custom_color_value_key: str | None = None
     custom_color_key: SettingKey | None = None
-    brightness_scale: tuple[float, float] = (0.0, 100.0)
 
 
 LIGHTS: tuple[HomeConnectLightEntityDescription, ...] = (
@@ -207,11 +207,13 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 brightness = round(
                     color_util.brightness_to_value(
                         self._brightness_scale,
-                        kwargs.get(ATTR_BRIGHTNESS, self._attr_brightness),
+                        cast(int, kwargs.get(ATTR_BRIGHTNESS, self._attr_brightness)),
                     )
                 )
 
-                hs_color = kwargs.get(ATTR_HS_COLOR, self._attr_hs_color)
+                hs_color = cast(
+                    tuple[float, float], kwargs.get(ATTR_HS_COLOR, self._attr_hs_color)
+                )
 
                 rgb = color_util.color_hsv_to_RGB(hs_color[0], hs_color[1], brightness)
                 hex_val = color_util.color_rgb_to_hex(*rgb)

@@ -659,13 +659,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         # e.g. a thermostat is "heating" a room to 75 degrees Fahrenheit.
         # Can be 0 - 2 (Off, Heat, Cool)
 
-        # If the HVAC is switched off, it must be idle
-        # This works around a bug in some devices (like Eve radiator valves) that
-        # return they are heating when they are not.
         target = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
-        if target == HeatingCoolingTargetValues.OFF:
-            return HVACAction.IDLE
-
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_CURRENT)
         current_hass_value = CURRENT_MODE_HOMEKIT_TO_HASS.get(value)
 
@@ -678,6 +672,12 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
             == CurrentFanStateValues.ACTIVE
         ):
             return HVACAction.FAN
+
+        # If the HVAC is switched off, it must be idle
+        # This works around a bug in some devices (like Eve radiator valves) that
+        # return they are heating when they are not.
+        if target == HeatingCoolingTargetValues.OFF:
+            return HVACAction.IDLE
 
         return current_hass_value
 

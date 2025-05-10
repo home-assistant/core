@@ -278,10 +278,10 @@
       "name": "Timestamp"
     },
     "volatile_organic_compounds": {
-      "name": "VOCs"
+      "name": "Volatile organic compounds"
     },
     "volatile_organic_compounds_parts": {
-      "name": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]"
+      "name": "Volatile organic compounds parts"
     },
     "voltage": {
       "name": "Voltage"

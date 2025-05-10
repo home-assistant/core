@@ -41,7 +41,7 @@ ENTITIES: tuple[TedeeBinarySensorEntityDescription, ...] = (
     TedeeBinarySensorEntityDescription(
         key="semi_locked",
         translation_key="semi_locked",
-        is_on_fn=lambda lock: lock.state == TedeeLockState.HALF_OPEN,
+        is_on_fn=lambda lock: lock.state is TedeeLockState.HALF_OPEN,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TedeeBinarySensorEntityDescription(
@@ -53,7 +53,10 @@ ENTITIES: tuple[TedeeBinarySensorEntityDescription, ...] = (
     TedeeBinarySensorEntityDescription(
         key="uncalibrated",
         translation_key="uncalibrated",
-        is_on_fn=lambda lock: lock.state == TedeeLockState.UNCALIBRATED,
+        is_on_fn=(
+            lambda lock: lock.state is TedeeLockState.UNCALIBRATED
+            or lock.state is TedeeLockState.UNKNOWN
+        ),
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,

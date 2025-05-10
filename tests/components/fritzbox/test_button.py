@@ -1,44 +1,50 @@
 """Tests for AVM Fritz!Box templates."""
 
 from datetime import timedelta
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
+
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    CONF_DEVICES,
-    STATE_UNKNOWN,
-)
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_ENTITY_ID, CONF_DEVICES, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import FritzEntityBaseMock, set_devices, setup_config_entry
 from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = f"{BUTTON_DOMAIN}.{CONF_FAKE_NAME}"
 
 
-async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
+async def test_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    fritz: Mock,
+) -> None:
     """Test if is initialized correctly."""
     template = FritzEntityBaseMock()
-    assert await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], fritz=fritz, template=template
-    )
+    with patch("homeassistant.components.fritzbox.PLATFORMS", [Platform.BUTTON]):
+        entry = await setup_config_entry(
+            hass,
+            MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+            fritz=fritz,
+            template=template,
+        )
+    assert entry.state is ConfigEntryState.LOADED
 
-    state = hass.states.get(ENTITY_ID)
-    assert state
-    assert state.attributes[ATTR_FRIENDLY_NAME] == CONF_FAKE_NAME
-    assert state.state == STATE_UNKNOWN
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 async def test_apply_template(hass: HomeAssistant, fritz: Mock) -> None:
     """Test if applies works."""
     template = FritzEntityBaseMock()
-    assert await setup_config_entry(
+    await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], fritz=fritz, template=template
     )
 
@@ -51,7 +57,7 @@ async def test_apply_template(hass: HomeAssistant, fritz: Mock) -> None:
 async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
     """Test adding new discovered devices during runtime."""
     template = FritzEntityBaseMock()
-    assert await setup_config_entry(
+    await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], fritz=fritz, template=template
     )
 
