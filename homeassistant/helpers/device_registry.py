@@ -575,9 +575,11 @@ class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](
         """Unindex an entry."""
         old_entry = self.data[key]
         for connection in old_entry.connections:
-            del self._connections[connection]
+            if connection in self._connections:
+                del self._connections[connection]
         for identifier in old_entry.identifiers:
-            del self._identifiers[identifier]
+            if identifier in self._identifiers:
+                del self._identifiers[identifier]
 
     def get_entry(
         self,

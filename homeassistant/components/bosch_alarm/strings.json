@@ -69,6 +69,9 @@
     },
     "authentication_failed": {
       "message": "Incorrect credentials for panel."
+    },
+    "incorrect_door_state": {
+      "message": "Door cannot be manipulated while it is being cycled."
     }
   },
   "services": {
@@ -88,6 +91,17 @@
     }
   },
   "entity": {
+    "switch": {
+      "secured": {
+        "name": "Secured"
+      },
+      "cycling": {
+        "name": "Cycling"
+      },
+      "locked": {
+        "name": "Locked"
+      }
+    },
     "sensor": {
       "faulting_points": {
         "name": "Faulting points",

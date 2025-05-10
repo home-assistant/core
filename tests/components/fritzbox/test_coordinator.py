@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
-from . import FritzDeviceCoverMock, FritzDeviceSwitchMock
+from . import FritzDeviceCoverMock, FritzDeviceSwitchMock, FritzEntityBaseMock
 from .const import MOCK_CONFIG
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -84,9 +84,26 @@ async def test_coordinator_automatic_registry_cleanup(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test automatic registry cleanup."""
+
+    # init with 2 devices and 1 template
     fritz().get_devices.return_value = [
-        FritzDeviceSwitchMock(ain="fake ain switch", name="fake_switch"),
-        FritzDeviceCoverMock(ain="fake ain cover", name="fake_cover"),
+        FritzDeviceSwitchMock(
+            ain="fake ain switch",
+            device_and_unit_id=("fake ain switch", None),
+            name="fake_switch",
+        ),
+        FritzDeviceCoverMock(
+            ain="fake ain cover",
+            device_and_unit_id=("fake ain cover", None),
+            name="fake_cover",
+        ),
+    ]
+    fritz().get_templates.return_value = [
+        FritzEntityBaseMock(
+            ain="fake ain template",
+            device_and_unit_id=("fake ain template", None),
+            name="fake_template",
+        )
     ]
     entry = MockConfigEntry(
         domain=FB_DOMAIN,
@@ -97,15 +114,29 @@ async def test_coordinator_automatic_registry_cleanup(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 11
-    assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 2
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 20
+    assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 3
 
+    # remove one device, keep the template
     fritz().get_devices.return_value = [
-        FritzDeviceSwitchMock(ain="fake ain switch", name="fake_switch")
+        FritzDeviceSwitchMock(
+            ain="fake ain switch",
+            device_and_unit_id=("fake ain switch", None),
+            name="fake_switch",
+        )
     ]
 
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=35))
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 8
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 13
+    assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 2
+
+    # remove the template, keep the device
+    fritz().get_templates.return_value = []
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=35))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 12
     assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 1

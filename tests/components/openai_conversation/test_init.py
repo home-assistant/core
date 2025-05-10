@@ -136,6 +136,33 @@ async def test_generate_image_service_error(
             return_response=True,
         )
 
+    with (
+        patch(
+            "openai.resources.images.AsyncImages.generate",
+            return_value=ImagesResponse(
+                created=1700000000,
+                data=[
+                    Image(
+                        b64_json=None,
+                        revised_prompt=None,
+                        url=None,
+                    )
+                ],
+            ),
+        ),
+        pytest.raises(HomeAssistantError, match="No image returned"),
+    ):
+        await hass.services.async_call(
+            "openai_conversation",
+            "generate_image",
+            {
+                "config_entry": mock_config_entry.entry_id,
+                "prompt": "Image of an epic fail",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
 
 @pytest.mark.usefixtures("mock_init_component")
 async def test_generate_content_service_with_image_not_allowed_path(

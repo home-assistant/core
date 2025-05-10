@@ -18,7 +18,11 @@ from .types import BoschAlarmConfigEntry
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-PLATFORMS: list[Platform] = [Platform.ALARM_CONTROL_PANEL, Platform.SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
