@@ -27,6 +27,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.button import ButtonDeviceClass
+from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.components.light import (
@@ -78,6 +79,10 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow, SectionConfig, section
@@ -150,6 +155,8 @@ from .const import (
     CONF_FLASH,
     CONF_FLASH_TIME_LONG,
     CONF_FLASH_TIME_SHORT,
+    CONF_GET_POSITION_TEMPLATE,
+    CONF_GET_POSITION_TOPIC,
     CONF_GREEN_TEMPLATE,
     CONF_HS_COMMAND_TEMPLATE,
     CONF_HS_COMMAND_TOPIC,
@@ -163,8 +170,14 @@ from .const import (
     CONF_ON_COMMAND_TYPE,
     CONF_OPTIONS,
     CONF_PAYLOAD_AVAILABLE,
+    CONF_PAYLOAD_CLOSE,
     CONF_PAYLOAD_NOT_AVAILABLE,
+    CONF_PAYLOAD_OPEN,
     CONF_PAYLOAD_PRESS,
+    CONF_PAYLOAD_STOP,
+    CONF_PAYLOAD_STOP_TILT,
+    CONF_POSITION_CLOSED,
+    CONF_POSITION_OPEN,
     CONF_QOS,
     CONF_RED_TEMPLATE,
     CONF_RETAIN,
@@ -181,10 +194,26 @@ from .const import (
     CONF_RGBWW_STATE_TOPIC,
     CONF_RGBWW_VALUE_TEMPLATE,
     CONF_SCHEMA,
+    CONF_SET_POSITION_TEMPLATE,
+    CONF_SET_POSITION_TOPIC,
+    CONF_STATE_CLOSED,
+    CONF_STATE_CLOSING,
+    CONF_STATE_OPEN,
+    CONF_STATE_OPENING,
+    CONF_STATE_STOPPED,
     CONF_STATE_TOPIC,
     CONF_STATE_VALUE_TEMPLATE,
     CONF_SUGGESTED_DISPLAY_PRECISION,
     CONF_SUPPORTED_COLOR_MODES,
+    CONF_TILT_CLOSED_POSITION,
+    CONF_TILT_COMMAND_TEMPLATE,
+    CONF_TILT_COMMAND_TOPIC,
+    CONF_TILT_MAX,
+    CONF_TILT_MIN,
+    CONF_TILT_OPEN_POSITION,
+    CONF_TILT_STATE_OPTIMISTIC,
+    CONF_TILT_STATUS_TEMPLATE,
+    CONF_TILT_STATUS_TOPIC,
     CONF_TLS_INSECURE,
     CONF_TRANSITION,
     CONF_TRANSPORT,
@@ -205,14 +234,24 @@ from .const import (
     DEFAULT_KEEPALIVE,
     DEFAULT_ON_COMMAND_TYPE,
     DEFAULT_PAYLOAD_AVAILABLE,
+    DEFAULT_PAYLOAD_CLOSE,
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
     DEFAULT_PAYLOAD_OFF,
     DEFAULT_PAYLOAD_ON,
+    DEFAULT_PAYLOAD_OPEN,
     DEFAULT_PAYLOAD_PRESS,
+    DEFAULT_PAYLOAD_STOP,
     DEFAULT_PORT,
+    DEFAULT_POSITION_CLOSED,
+    DEFAULT_POSITION_OPEN,
     DEFAULT_PREFIX,
     DEFAULT_PROTOCOL,
     DEFAULT_QOS,
+    DEFAULT_STATE_STOPPED,
+    DEFAULT_TILT_CLOSED_POSITION,
+    DEFAULT_TILT_MAX,
+    DEFAULT_TILT_MIN,
+    DEFAULT_TILT_OPEN_POSITION,
     DEFAULT_TRANSPORT,
     DEFAULT_WILL,
     DEFAULT_WS_PATH,
@@ -313,6 +352,7 @@ KEY_UPLOAD_SELECTOR = FileSelector(
 SUBENTRY_PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.COVER,
     Platform.LIGHT,
     Platform.NOTIFY,
     Platform.SENSOR,
@@ -365,6 +405,14 @@ BUTTON_DEVICE_CLASS_SELECTOR = SelectSelector(
         sort=True,
     )
 )
+COVER_DEVICE_CLASS_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=[device_class.value for device_class in CoverDeviceClass],
+        mode=SelectSelectorMode.DROPDOWN,
+        translation_key="device_class_cover",
+        sort=True,
+    )
+)
 SENSOR_STATE_CLASS_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=[device_class.value for device_class in SensorStateClass],
@@ -385,6 +433,9 @@ SUGGESTED_DISPLAY_PRECISION_SELECTOR = NumberSelector(
 TIMEOUT_SELECTOR = NumberSelector(
     NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0)
 )
+
+# Cover specific selectors
+POSITION_SELECTOR = NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX))
 
 # Switch specific selectors
 SWITCH_DEVICE_CLASS_SELECTOR = SelectSelector(
@@ -442,6 +493,48 @@ SUPPORTED_COLOR_MODES_SELECTOR = SelectSelector(
         sort=True,
     )
 )
+
+
+@callback
+def validate_cover_platform_config(
+    config: dict[str, Any],
+) -> dict[str, str]:
+    """Validate the cover platform options."""
+    errors: dict[str, str] = {}
+
+    # If set position topic is set then get position topic is set as well.
+    if CONF_SET_POSITION_TOPIC in config and CONF_GET_POSITION_TOPIC not in config:
+        errors["cover_position_settings"] = (
+            "cover_get_and_set_position_must_be_set_together"
+        )
+
+    # if templates are set make sure the topic for the template is also set
+    if CONF_VALUE_TEMPLATE in config and CONF_STATE_TOPIC not in config:
+        errors[CONF_VALUE_TEMPLATE] = (
+            "cover_value_template_must_be_used_with_state_topic"
+        )
+
+    if CONF_GET_POSITION_TEMPLATE in config and CONF_GET_POSITION_TOPIC not in config:
+        errors["cover_position_settings"] = (
+            "cover_get_position_template_must_be_used_with_get_position_topic"
+        )
+
+    if CONF_SET_POSITION_TEMPLATE in config and CONF_SET_POSITION_TOPIC not in config:
+        errors["cover_position_settings"] = (
+            "cover_set_position_template_must_be_used_with_set_position_topic"
+        )
+
+    if CONF_TILT_COMMAND_TEMPLATE in config and CONF_TILT_COMMAND_TOPIC not in config:
+        errors["cover_tilt_settings"] = (
+            "cover_tilt_command_template_must_be_used_with_tilt_command_topic"
+        )
+
+    if CONF_TILT_STATUS_TEMPLATE in config and CONF_TILT_STATUS_TOPIC not in config:
+        errors["cover_tilt_settings"] = (
+            "cover_tilt_status_template_must_be_used_with_tilt_status_topic"
+        )
+
+    return errors
 
 
 @callback
@@ -571,6 +664,13 @@ PLATFORM_ENTITY_FIELDS = {
             required=False,
         ),
     },
+    Platform.COVER.value: {
+        CONF_DEVICE_CLASS: PlatformField(
+            selector=COVER_DEVICE_CLASS_SELECTOR,
+            required=False,
+            validator=str,
+        ),
+    },
     Platform.NOTIFY.value: {},
     Platform.SENSOR.value: {
         CONF_DEVICE_CLASS: PlatformField(
@@ -672,6 +772,199 @@ PLATFORM_MQTT_FIELDS = {
             default=DEFAULT_PAYLOAD_PRESS,
         ),
         CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
+    },
+    Platform.COVER.value: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+        ),
+        CONF_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+        ),
+        CONF_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+        ),
+        CONF_RETAIN: PlatformField(
+            selector=BOOLEAN_SELECTOR, required=False, validator=bool
+        ),
+        CONF_OPTIMISTIC: PlatformField(
+            selector=BOOLEAN_SELECTOR, required=False, validator=bool
+        ),
+        CONF_PAYLOAD_CLOSE: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=str,
+            default=DEFAULT_PAYLOAD_CLOSE,
+            section="cover_payload_settings",
+        ),
+        CONF_PAYLOAD_OPEN: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=str,
+            default=DEFAULT_PAYLOAD_OPEN,
+            section="cover_payload_settings",
+        ),
+        CONF_PAYLOAD_STOP: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=str,
+            default=None,
+            section="cover_payload_settings",
+        ),
+        CONF_PAYLOAD_STOP_TILT: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=str,
+            default=DEFAULT_PAYLOAD_STOP,
+            section="cover_payload_settings",
+        ),
+        CONF_STATE_CLOSED: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=str,
+            default=STATE_CLOSED,
+            section="cover_payload_settings",
+        ),
+        CONF_STATE_CLOSING: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=str,
+            default=STATE_CLOSING,
+            section="cover_payload_settings",
+        ),
+        CONF_STATE_OPEN: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=str,
+            default=STATE_OPEN,
+            section="cover_payload_settings",
+        ),
+        CONF_STATE_OPENING: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=str,
+            default=STATE_OPENING,
+            section="cover_payload_settings",
+        ),
+        CONF_STATE_STOPPED: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=str,
+            default=DEFAULT_STATE_STOPPED,
+            section="cover_payload_settings",
+        ),
+        CONF_SET_POSITION_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            section="cover_position_settings",
+        ),
+        CONF_SET_POSITION_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            section="cover_position_settings",
+        ),
+        CONF_GET_POSITION_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            section="cover_position_settings",
+        ),
+        CONF_GET_POSITION_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            section="cover_position_settings",
+        ),
+        CONF_POSITION_CLOSED: PlatformField(
+            selector=POSITION_SELECTOR,
+            required=False,
+            validator=int,
+            default=DEFAULT_POSITION_CLOSED,
+            section="cover_position_settings",
+        ),
+        CONF_POSITION_OPEN: PlatformField(
+            selector=POSITION_SELECTOR,
+            required=False,
+            validator=int,
+            default=DEFAULT_POSITION_OPEN,
+            section="cover_position_settings",
+        ),
+        CONF_TILT_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            section="cover_tilt_settings",
+        ),
+        CONF_TILT_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            section="cover_tilt_settings",
+        ),
+        CONF_TILT_CLOSED_POSITION: PlatformField(
+            selector=POSITION_SELECTOR,
+            required=False,
+            validator=int,
+            default=DEFAULT_TILT_CLOSED_POSITION,
+            section="cover_tilt_settings",
+        ),
+        CONF_TILT_OPEN_POSITION: PlatformField(
+            selector=POSITION_SELECTOR,
+            required=False,
+            validator=int,
+            default=DEFAULT_TILT_OPEN_POSITION,
+            section="cover_tilt_settings",
+        ),
+        CONF_TILT_STATUS_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            section="cover_tilt_settings",
+        ),
+        CONF_TILT_STATUS_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            section="cover_tilt_settings",
+        ),
+        CONF_TILT_MIN: PlatformField(
+            selector=POSITION_SELECTOR,
+            required=False,
+            validator=int,
+            default=DEFAULT_TILT_MIN,
+            section="cover_tilt_settings",
+        ),
+        CONF_TILT_MAX: PlatformField(
+            selector=POSITION_SELECTOR,
+            required=False,
+            validator=int,
+            default=DEFAULT_TILT_MAX,
+            section="cover_tilt_settings",
+        ),
+        CONF_TILT_STATE_OPTIMISTIC: PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=False,
+            validator=bool,
+            section="cover_tilt_settings",
+        ),
     },
     Platform.NOTIFY.value: {
         CONF_COMMAND_TOPIC: PlatformField(
@@ -1231,6 +1524,7 @@ ENTITY_CONFIG_VALIDATOR: dict[
 ] = {
     Platform.BINARY_SENSOR.value: None,
     Platform.BUTTON.value: None,
+    Platform.COVER.value: validate_cover_platform_config,
     Platform.LIGHT.value: validate_light_platform_config,
     Platform.NOTIFY.value: None,
     Platform.SENSOR.value: validate_sensor_platform_config,
