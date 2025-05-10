@@ -548,6 +548,7 @@ class RachioValve(RachioHoseTimerEntity, SwitchEntity):
         self._person = person
         self._base = base
         self._attr_unique_id = f"{self.id}-valve"
+        self._update_attr()
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on this valve."""
