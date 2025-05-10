@@ -44,7 +44,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor from a config entry created in the integrations UI."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.data
     lists_added: set[str] = set()
 
     @callback
@@ -88,6 +88,7 @@ class BringTodoListEntity(BringBaseEntity, TodoListEntity):
         | TodoListEntityFeature.DELETE_TODO_ITEM
         | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
     )
+    coordinator: BringDataUpdateCoordinator
 
     def __init__(
         self, coordinator: BringDataUpdateCoordinator, bring_list: BringList

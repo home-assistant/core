@@ -5,7 +5,6 @@ from homeassistant.components.weather import (
     WeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -22,19 +21,18 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
 )
-from .coordinator import HKOUpdateCoordinator
+from .coordinator import HKOConfigEntry, HKOUpdateCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HKOConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a HKO weather entity from a config_entry."""
     assert config_entry.unique_id is not None
     unique_id = config_entry.unique_id
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([HKOEntity(unique_id, coordinator)], False)
+    async_add_entities([HKOEntity(unique_id, config_entry.runtime_data)], False)
 
 
 class HKOEntity(CoordinatorEntity[HKOUpdateCoordinator], WeatherEntity):

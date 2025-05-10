@@ -121,3 +121,57 @@ class BoschAlarmPointEntity(BoschAlarmEntity):
         """Stop observing state changes."""
         await super().async_added_to_hass()
         self._point.status_observer.detach(self.schedule_update_ha_state)
+
+
+class BoschAlarmDoorEntity(BoschAlarmEntity):
+    """A base entity for area related entities within a bosch alarm panel."""
+
+    def __init__(self, panel: Panel, door_id: int, unique_id: str) -> None:
+        """Set up a area related entity for a bosch alarm panel."""
+        super().__init__(panel, unique_id)
+        self._door_id = door_id
+        self._door = panel.doors[door_id]
+        self._door_unique_id = f"{unique_id}_door_{door_id}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._door_unique_id)},
+            name=self._door.name,
+            manufacturer="Bosch Security Systems",
+            via_device=(DOMAIN, unique_id),
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Observe state changes."""
+        await super().async_added_to_hass()
+        self._door.status_observer.attach(self.schedule_update_ha_state)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Stop observing state changes."""
+        await super().async_added_to_hass()
+        self._door.status_observer.detach(self.schedule_update_ha_state)
+
+
+class BoschAlarmOutputEntity(BoschAlarmEntity):
+    """A base entity for area related entities within a bosch alarm panel."""
+
+    def __init__(self, panel: Panel, output_id: int, unique_id: str) -> None:
+        """Set up a output related entity for a bosch alarm panel."""
+        super().__init__(panel, unique_id)
+        self._output_id = output_id
+        self._output = panel.outputs[output_id]
+        self._output_unique_id = f"{unique_id}_output_{output_id}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._output_unique_id)},
+            name=self._output.name,
+            manufacturer="Bosch Security Systems",
+            via_device=(DOMAIN, unique_id),
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Observe state changes."""
+        await super().async_added_to_hass()
+        self._output.status_observer.attach(self.schedule_update_ha_state)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Stop observing state changes."""
+        await super().async_added_to_hass()
+        self._output.status_observer.detach(self.schedule_update_ha_state)

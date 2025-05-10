@@ -1,9 +1,12 @@
 """The tests for the Template fan platform."""
 
+from typing import Any
+
 import pytest
 import voluptuous as vol
 
 from homeassistant import setup
+from homeassistant.components import fan
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
     ATTR_OSCILLATING,
@@ -17,11 +20,15 @@ from homeassistant.components.fan import (
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.setup import async_setup_component
+
+from .conftest import ConfigurationStyle
 
 from tests.common import assert_setup_component
 from tests.components.fan import common
 
-_TEST_FAN = "fan.test_fan"
+_TEST_OBJECT_ID = "test_fan"
+_TEST_FAN = f"fan.{_TEST_OBJECT_ID}"
 # Represent for fan's state
 _STATE_INPUT_BOOLEAN = "input_boolean.state"
 # Represent for fan's state
@@ -34,6 +41,169 @@ _PERCENTAGE_INPUT_NUMBER = "input_number.percentage"
 _OSC_INPUT = "input_select.osc"
 # Represent for fan's direction
 _DIRECTION_INPUT_SELECT = "input_select.direction"
+
+
+OPTIMISTIC_ON_OFF_CONFIG = {
+    "turn_on": {
+        "service": "test.automation",
+        "data": {
+            "action": "turn_on",
+            "caller": "{{ this.entity_id }}",
+        },
+    },
+    "turn_off": {
+        "service": "test.automation",
+        "data": {
+            "action": "turn_off",
+            "caller": "{{ this.entity_id }}",
+        },
+    },
+}
+
+
+PERCENTAGE_ACTION = {
+    "set_percentage": {
+        "action": "test.automation",
+        "data": {
+            "action": "set_percentage",
+            "percentage": "{{ percentage }}",
+            "caller": "{{ this.entity_id }}",
+        },
+    },
+}
+OPTIMISTIC_PERCENTAGE_CONFIG = {
+    **OPTIMISTIC_ON_OFF_CONFIG,
+    **PERCENTAGE_ACTION,
+}
+
+PRESET_MODE_ACTION = {
+    "set_preset_mode": {
+        "action": "test.automation",
+        "data": {
+            "action": "set_preset_mode",
+            "preset_mode": "{{ preset_mode }}",
+            "caller": "{{ this.entity_id }}",
+        },
+    },
+}
+OPTIMISTIC_PRESET_MODE_CONFIG = {
+    **OPTIMISTIC_ON_OFF_CONFIG,
+    **PRESET_MODE_ACTION,
+}
+OPTIMISTIC_PRESET_MODE_CONFIG2 = {
+    **OPTIMISTIC_PRESET_MODE_CONFIG,
+    "preset_modes": ["auto", "low", "medium", "high"],
+}
+
+OSCILLATE_ACTION = {
+    "set_oscillating": {
+        "action": "test.automation",
+        "data": {
+            "action": "set_oscillating",
+            "oscillating": "{{ oscillating }}",
+            "caller": "{{ this.entity_id }}",
+        },
+    },
+}
+OPTIMISTIC_OSCILLATE_CONFIG = {
+    **OPTIMISTIC_ON_OFF_CONFIG,
+    **OSCILLATE_ACTION,
+}
+
+DIRECTION_ACTION = {
+    "set_direction": {
+        "action": "test.automation",
+        "data": {
+            "action": "set_direction",
+            "direction": "{{ direction }}",
+            "caller": "{{ this.entity_id }}",
+        },
+    },
+}
+OPTIMISTIC_DIRECTION_CONFIG = {
+    **OPTIMISTIC_ON_OFF_CONFIG,
+    **DIRECTION_ACTION,
+}
+
+
+async def async_setup_legacy_format(
+    hass: HomeAssistant, count: int, light_config: dict[str, Any]
+) -> None:
+    """Do setup of fan integration via legacy format."""
+    config = {"fan": {"platform": "template", "fans": light_config}}
+
+    with assert_setup_component(count, fan.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            fan.DOMAIN,
+            config,
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+
+async def async_setup_legacy_format_with_attribute(
+    hass: HomeAssistant,
+    count: int,
+    attribute: str,
+    attribute_template: str,
+    extra_config: dict,
+) -> None:
+    """Do setup of a legacy fan that has a single templated attribute."""
+    extra = {attribute: attribute_template} if attribute and attribute_template else {}
+    await async_setup_legacy_format(
+        hass,
+        count,
+        {
+            _TEST_OBJECT_ID: {
+                **extra_config,
+                "value_template": "{{ 1 == 1 }}",
+                **extra,
+            }
+        },
+    )
+
+
+@pytest.fixture
+async def setup_fan(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    light_config: dict[str, Any],
+) -> None:
+    """Do setup of fan integration."""
+    if style == ConfigurationStyle.LEGACY:
+        await async_setup_legacy_format(hass, count, light_config)
+
+
+@pytest.fixture
+async def setup_test_fan_with_extra_config(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    fan_config: dict[str, Any],
+    extra_config: dict[str, Any],
+) -> None:
+    """Do setup of fan integration."""
+    config = {_TEST_OBJECT_ID: {**fan_config, **extra_config}}
+    if style == ConfigurationStyle.LEGACY:
+        await async_setup_legacy_format(hass, count, config)
+
+
+@pytest.fixture
+async def setup_optimistic_fan_attribute(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    extra_config: dict,
+) -> None:
+    """Do setup of a non-optimistic fan with an optimistic attribute."""
+    if style == ConfigurationStyle.LEGACY:
+        await async_setup_legacy_format_with_attribute(
+            hass, count, "", "", extra_config
+        )
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, FAN_DOMAIN)])
@@ -123,28 +293,21 @@ async def test_wrong_template_config(hass: HomeAssistant) -> None:
                 "platform": "template",
                 "fans": {
                     "test_fan": {
-                        "value_template": """
-        {% if is_state('input_boolean.state', 'True') %}
-            {{ 'on' }}
-        {% else %}
-            {{ 'off' }}
-        {% endif %}
-    """,
+                        "value_template": "{{ is_state('input_boolean.state', 'True') }}",
                         "percentage_template": (
                             "{{ states('input_number.percentage') }}"
                         ),
+                        **OPTIMISTIC_ON_OFF_CONFIG,
+                        **PERCENTAGE_ACTION,
                         "preset_mode_template": (
                             "{{ states('input_select.preset_mode') }}"
                         ),
+                        **PRESET_MODE_ACTION,
                         "oscillating_template": "{{ states('input_select.osc') }}",
+                        **OSCILLATE_ACTION,
                         "direction_template": "{{ states('input_select.direction') }}",
+                        **DIRECTION_ACTION,
                         "speed_count": "3",
-                        "set_percentage": {
-                            "service": "script.fans_set_speed",
-                            "data_template": {"percentage": "{{ percentage }}"},
-                        },
-                        "turn_on": {"service": "script.fan_on"},
-                        "turn_off": {"service": "script.fan_off"},
                     }
                 },
             }
@@ -188,8 +351,7 @@ async def test_templates_with_entities(hass: HomeAssistant) -> None:
                         "test_fan": {
                             "value_template": "{{ 'on' }}",
                             "percentage_template": "{{ states('sensor.percentage') }}",
-                            "turn_on": {"service": "script.fan_on"},
-                            "turn_off": {"service": "script.fan_off"},
+                            **OPTIMISTIC_PERCENTAGE_CONFIG,
                         },
                     },
                 }
@@ -215,8 +377,7 @@ async def test_templates_with_entities(hass: HomeAssistant) -> None:
                             "preset_mode_template": (
                                 "{{ states('sensor.preset_mode') }}"
                             ),
-                            "turn_on": {"service": "script.fan_on"},
-                            "turn_off": {"service": "script.fan_off"},
+                            **OPTIMISTIC_PRESET_MODE_CONFIG,
                         },
                     },
                 }
@@ -284,8 +445,7 @@ async def test_availability_template_with_entities(hass: HomeAssistant) -> None:
                     "fans": {
                         "test_fan": {
                             "value_template": "{{ 'unavailable' }}",
-                            "turn_on": {"service": "script.fan_on"},
-                            "turn_off": {"service": "script.fan_off"},
+                            **OPTIMISTIC_ON_OFF_CONFIG,
                         }
                     },
                 }
@@ -299,11 +459,12 @@ async def test_availability_template_with_entities(hass: HomeAssistant) -> None:
                     "fans": {
                         "test_fan": {
                             "value_template": "{{ 'on' }}",
-                            "oscillating_template": "{{ 'unavailable' }}",
-                            "direction_template": "{{ 'unavailable' }}",
                             "percentage_template": "{{ 0 }}",
-                            "turn_on": {"service": "script.fan_on"},
-                            "turn_off": {"service": "script.fan_off"},
+                            **OPTIMISTIC_PERCENTAGE_CONFIG,
+                            "oscillating_template": "{{ 'unavailable' }}",
+                            **OSCILLATE_ACTION,
+                            "direction_template": "{{ 'unavailable' }}",
+                            **DIRECTION_ACTION,
                         }
                     },
                 }
@@ -317,11 +478,12 @@ async def test_availability_template_with_entities(hass: HomeAssistant) -> None:
                     "fans": {
                         "test_fan": {
                             "value_template": "{{ 'on' }}",
-                            "oscillating_template": "{{ 1 == 1 }}",
-                            "direction_template": "{{ 'forward' }}",
                             "percentage_template": "{{ 66 }}",
-                            "turn_on": {"service": "script.fan_on"},
-                            "turn_off": {"service": "script.fan_off"},
+                            **OPTIMISTIC_PERCENTAGE_CONFIG,
+                            "oscillating_template": "{{ 1 == 1 }}",
+                            **OSCILLATE_ACTION,
+                            "direction_template": "{{ 'forward' }}",
+                            **DIRECTION_ACTION,
                         }
                     },
                 }
@@ -335,11 +497,12 @@ async def test_availability_template_with_entities(hass: HomeAssistant) -> None:
                     "fans": {
                         "test_fan": {
                             "value_template": "{{ 'abc' }}",
-                            "oscillating_template": "{{ 'xyz' }}",
-                            "direction_template": "{{ 'right' }}",
                             "percentage_template": "{{ 0 }}",
-                            "turn_on": {"service": "script.fan_on"},
-                            "turn_off": {"service": "script.fan_off"},
+                            **OPTIMISTIC_PERCENTAGE_CONFIG,
+                            "oscillating_template": "{{ 'xyz' }}",
+                            **OSCILLATE_ACTION,
+                            "direction_template": "{{ 'right' }}",
+                            **DIRECTION_ACTION,
                         }
                     },
                 }
@@ -541,77 +704,18 @@ async def test_increase_decrease_speed(
         _verify(hass, state, value, None, None, None)
 
 
-async def test_no_value_template(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
+async def test_optimistic_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test a fan without a value_template."""
     await _register_fan_sources(hass)
 
     with assert_setup_component(1, "fan"):
         test_fan_config = {
-            "preset_mode_template": "{{ states('input_select.preset_mode') }}",
+            **OPTIMISTIC_ON_OFF_CONFIG,
             "preset_modes": ["auto"],
-            "percentage_template": "{{ states('input_number.percentage') }}",
-            "oscillating_template": "{{ states('input_select.osc') }}",
-            "direction_template": "{{ states('input_select.direction') }}",
-            "turn_on": [
-                {
-                    "service": "input_boolean.turn_on",
-                    "entity_id": _STATE_INPUT_BOOLEAN,
-                },
-                {
-                    "service": "test.automation",
-                    "data_template": {
-                        "action": "turn_on",
-                        "caller": "{{ this.entity_id }}",
-                    },
-                },
-            ],
-            "turn_off": [
-                {
-                    "service": "input_boolean.turn_off",
-                    "entity_id": _STATE_INPUT_BOOLEAN,
-                },
-                {
-                    "service": "test.automation",
-                    "data_template": {
-                        "action": "turn_off",
-                        "caller": "{{ this.entity_id }}",
-                    },
-                },
-            ],
-            "set_preset_mode": [
-                {
-                    "service": "input_select.select_option",
-                    "data_template": {
-                        "entity_id": _PRESET_MODE_INPUT_SELECT,
-                        "option": "{{ preset_mode }}",
-                    },
-                },
-                {
-                    "service": "test.automation",
-                    "data_template": {
-                        "action": "set_preset_mode",
-                        "caller": "{{ this.entity_id }}",
-                        "option": "{{ preset_mode }}",
-                    },
-                },
-            ],
-            "set_percentage": [
-                {
-                    "service": "input_number.set_value",
-                    "data_template": {
-                        "entity_id": _PERCENTAGE_INPUT_NUMBER,
-                        "value": "{{ percentage }}",
-                    },
-                },
-                {
-                    "service": "test.automation",
-                    "data_template": {
-                        "action": "set_value",
-                        "caller": "{{ this.entity_id }}",
-                        "value": "{{ percentage }}",
-                    },
-                },
-            ],
+            **PRESET_MODE_ACTION,
+            **PERCENTAGE_ACTION,
+            **OSCILLATE_ACTION,
+            **DIRECTION_ACTION,
         }
         assert await setup.async_setup_component(
             hass,
@@ -624,32 +728,127 @@ async def test_no_value_template(hass: HomeAssistant, calls: list[ServiceCall]) 
     await hass.async_block_till_done()
 
     await common.async_turn_on(hass, _TEST_FAN)
-    _verify(hass, STATE_ON, 0, None, None, "auto")
+    _verify(hass, STATE_ON)
+
+    assert len(calls) == 1
+    assert calls[-1].data["action"] == "turn_on"
+    assert calls[-1].data["caller"] == _TEST_FAN
 
     await common.async_turn_off(hass, _TEST_FAN)
-    _verify(hass, STATE_OFF, 0, None, None, "auto")
+    _verify(hass, STATE_OFF)
+
+    assert len(calls) == 2
+    assert calls[-1].data["action"] == "turn_off"
+    assert calls[-1].data["caller"] == _TEST_FAN
 
     percent = 100
     await common.async_set_percentage(hass, _TEST_FAN, percent)
-    assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == percent
-    _verify(hass, STATE_ON, percent, None, None, "auto")
+    _verify(hass, STATE_ON, percent)
+
+    assert len(calls) == 3
+    assert calls[-1].data["action"] == "set_percentage"
+    assert calls[-1].data["percentage"] == 100
+    assert calls[-1].data["caller"] == _TEST_FAN
 
     await common.async_turn_off(hass, _TEST_FAN)
-    _verify(hass, STATE_OFF, percent, None, None, "auto")
+    _verify(hass, STATE_OFF, percent)
+
+    assert len(calls) == 4
+    assert calls[-1].data["action"] == "turn_off"
+    assert calls[-1].data["caller"] == _TEST_FAN
 
     preset = "auto"
     await common.async_set_preset_mode(hass, _TEST_FAN, preset)
     assert hass.states.get(_PRESET_MODE_INPUT_SELECT).state == preset
     _verify(hass, STATE_ON, percent, None, None, preset)
 
+    assert len(calls) == 5
+    assert calls[-1].data["action"] == "set_preset_mode"
+    assert calls[-1].data["preset_mode"] == preset
+    assert calls[-1].data["caller"] == _TEST_FAN
+
     await common.async_turn_off(hass, _TEST_FAN)
     _verify(hass, STATE_OFF, percent, None, None, preset)
 
-    await common.async_set_direction(hass, _TEST_FAN, True)
-    _verify(hass, STATE_OFF, percent, None, None, preset)
+    assert len(calls) == 6
+    assert calls[-1].data["action"] == "turn_off"
+    assert calls[-1].data["caller"] == _TEST_FAN
+
+    await common.async_set_direction(hass, _TEST_FAN, DIRECTION_FORWARD)
+    _verify(hass, STATE_OFF, percent, None, DIRECTION_FORWARD, preset)
+
+    assert len(calls) == 7
+    assert calls[-1].data["action"] == "set_direction"
+    assert calls[-1].data["direction"] == DIRECTION_FORWARD
+    assert calls[-1].data["caller"] == _TEST_FAN
 
     await common.async_oscillate(hass, _TEST_FAN, True)
-    _verify(hass, STATE_OFF, percent, None, None, preset)
+    _verify(hass, STATE_OFF, percent, True, DIRECTION_FORWARD, preset)
+
+    assert len(calls) == 8
+    assert calls[-1].data["action"] == "set_oscillating"
+    assert calls[-1].data["oscillating"] is True
+    assert calls[-1].data["caller"] == _TEST_FAN
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize("style", [ConfigurationStyle.LEGACY])
+@pytest.mark.parametrize(
+    ("extra_config", "attribute", "action", "verify_attr", "coro", "value"),
+    [
+        (
+            OPTIMISTIC_PERCENTAGE_CONFIG,
+            "percentage",
+            "set_percentage",
+            "expected_percentage",
+            common.async_set_percentage,
+            50,
+        ),
+        (
+            OPTIMISTIC_PRESET_MODE_CONFIG2,
+            "preset_mode",
+            "set_preset_mode",
+            "expected_preset_mode",
+            common.async_set_preset_mode,
+            "auto",
+        ),
+        (
+            OPTIMISTIC_OSCILLATE_CONFIG,
+            "oscillating",
+            "set_oscillating",
+            "expected_oscillating",
+            common.async_oscillate,
+            True,
+        ),
+        (
+            OPTIMISTIC_DIRECTION_CONFIG,
+            "direction",
+            "set_direction",
+            "expected_direction",
+            common.async_set_direction,
+            DIRECTION_FORWARD,
+        ),
+    ],
+)
+async def test_optimistic_attributes(
+    hass: HomeAssistant,
+    attribute: str,
+    action: str,
+    verify_attr: str,
+    coro,
+    value: Any,
+    setup_optimistic_fan_attribute,
+    calls: list[ServiceCall],
+) -> None:
+    """Test setting percentage with optimistic template."""
+
+    await coro(hass, _TEST_FAN, value)
+    _verify(hass, STATE_ON, **{verify_attr: value})
+
+    assert len(calls) == 1
+    assert calls[-1].data["action"] == action
+    assert calls[-1].data[attribute] == value
+    assert calls[-1].data["caller"] == _TEST_FAN
 
 
 async def test_increase_decrease_speed_default_speed_count(
@@ -702,10 +901,10 @@ async def test_set_invalid_osc(hass: HomeAssistant, calls: list[ServiceCall]) ->
 def _verify(
     hass: HomeAssistant,
     expected_state: str,
-    expected_percentage: int | None,
-    expected_oscillating: bool | None,
-    expected_direction: str | None,
-    expected_preset_mode: str | None,
+    expected_percentage: int | None = None,
+    expected_oscillating: bool | None = None,
+    expected_direction: str | None = None,
+    expected_preset_mode: str | None = None,
 ) -> None:
     """Verify fan's state, speed and osc."""
     state = hass.states.get(_TEST_FAN)
@@ -1093,3 +1292,57 @@ async def test_implemented_preset_mode(hass: HomeAssistant) -> None:
     attributes = state.attributes
     assert attributes.get("percentage") is None
     assert attributes.get("supported_features") & FanEntityFeature.PRESET_MODE
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    ("style", "fan_config"),
+    [
+        (
+            ConfigurationStyle.LEGACY,
+            {
+                "turn_on": [],
+                "turn_off": [],
+            },
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("extra_config", "supported_features"),
+    [
+        (
+            {
+                "set_percentage": [],
+            },
+            FanEntityFeature.SET_SPEED,
+        ),
+        (
+            {
+                "set_preset_mode": [],
+            },
+            FanEntityFeature.PRESET_MODE,
+        ),
+        (
+            {
+                "set_oscillating": [],
+            },
+            FanEntityFeature.OSCILLATE,
+        ),
+        (
+            {
+                "set_direction": [],
+            },
+            FanEntityFeature.DIRECTION,
+        ),
+    ],
+)
+async def test_empty_action_config(
+    hass: HomeAssistant,
+    supported_features: FanEntityFeature,
+    setup_test_fan_with_extra_config,
+) -> None:
+    """Test configuration with empty script."""
+    state = hass.states.get(_TEST_FAN)
+    assert state.attributes["supported_features"] == (
+        FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON | supported_features
+    )
