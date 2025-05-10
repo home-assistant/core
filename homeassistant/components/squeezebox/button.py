@@ -18,6 +18,9 @@ from .entity import SqueezeboxEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 HARDWARE_MODELS_WITH_SCREEN = [
     "Squeezebox Boom",
     "Squeezebox Radio",
