@@ -5,25 +5,20 @@ from __future__ import annotations
 from asyncio import timeout
 import logging
 
-from androidtvremote2 import (
-    AndroidTVRemote,
-    CannotConnect,
-    ConnectionClosed,
-    InvalidAuth,
-)
+from androidtvremote2 import CannotConnect, ConnectionClosed, InvalidAuth
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
+from .const import AndroidTVRemoteConfigEntry
 from .helpers import create_api, get_enable_ime
+from .services import async_register_services
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER, Platform.REMOTE]
-
-AndroidTVRemoteConfigEntry = ConfigEntry[AndroidTVRemote]
 
 
 async def async_setup_entry(
@@ -78,6 +73,8 @@ async def async_setup_entry(
     )
     entry.async_on_unload(entry.add_update_listener(async_update_options))
     entry.async_on_unload(api.disconnect)
+
+    async_register_services(hass)
 
     return True
 
