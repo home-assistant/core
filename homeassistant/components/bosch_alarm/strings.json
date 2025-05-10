@@ -61,38 +61,35 @@
   },
   "entity": {
     "binary_sensor": {
-      "panel_fault_battery_low": {
-        "name": "Fault: Battery Low"
-      },
       "panel_fault_battery_mising": {
-        "name": "Fault: Battery missing"
+        "name": "Battery missing"
       },
       "panel_fault_ac_fail": {
-        "name": "Fault: AC Failure"
+        "name": "AC Failure"
       },
       "panel_fault_parameter_crc_fail_in_pif": {
-        "name": "Fault: CRC failure in panel configuration"
+        "name": "CRC failure in panel configuration"
       },
       "panel_fault_phone_line_failure": {
-        "name": "Fault: Phone line failure"
+        "name": "Phone line failure"
       },
       "panel_fault_sdi_fail_since_rps_hang_up": {
-        "name": "Fault: SDI failure since RPS hang up"
+        "name": "SDI failure since RPS hang up"
       },
       "panel_fault_user_code_tamper_since_rps_hang_up": {
-        "name": "Fault: User code tamper since RPS hang up"
+        "name": "User code tamper since RPS hang up"
       },
       "panel_fault_fail_to_call_rps_since_rps_hang_up": {
-        "name": "Fault: Failure to call RPS since RPS hang up"
+        "name": "Failure to call RPS since RPS hang up"
       },
       "panel_fault_point_bus_fail_since_rps_hang_up": {
-        "name": "Fault: Point bus failure since RPS hang up"
+        "name": "Point bus failure since RPS hang up"
       },
       "panel_fault_log_overflow": {
-        "name": "Fault: Log overflow"
+        "name": "Log overflow"
       },
       "panel_fault_log_threshold": {
-        "name": "Fault: Log threshold reached"
+        "name": "Log threshold reached"
       },
       "area_ready_to_arm_away": {
         "name": "Area ready to arm away",

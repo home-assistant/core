@@ -30,9 +30,8 @@ class BoschAlarmFaultEntityDescription(BinarySensorEntityDescription):
 FAULT_TYPES = [
     BoschAlarmFaultEntityDescription(
         key="panel_fault_battery_low",
-        translation_key="panel_fault_battery_low",
         entity_registry_enabled_default=True,
-        device_class=BinarySensorDeviceClass.PROBLEM,
+        device_class=BinarySensorDeviceClass.BATTERY,
         fault=ALARM_PANEL_FAULTS.BATTERY_LOW,
     ),
     BoschAlarmFaultEntityDescription(
