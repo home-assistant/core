@@ -951,6 +951,42 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
+            key="MinPINCodeLength",
+            translation_key="min_pin_code_length",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_class=None,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.DoorLock.Attributes.MinPINCodeLength,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="MaxPINCodeLength",
+            translation_key="max_pin_code_length",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_class=None,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.DoorLock.Attributes.MaxPINCodeLength,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="TargetPositionLiftPercent100ths",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            translation_key="window_covering_target_position",
+            measurement_to_ha=lambda x: round((10000 - x) / 100),
+            native_unit_of_measurement=PERCENTAGE,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.WindowCovering.Attributes.TargetPositionLiftPercent100ths,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
             key="EnergyEvseFaultState",
             translation_key="evse_fault_state",
             device_class=SensorDeviceClass.ENUM,
