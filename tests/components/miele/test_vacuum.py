@@ -3,10 +3,11 @@
 from unittest.mock import MagicMock
 
 from aiohttp import ClientResponseError
+from pymiele import MieleDevices
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.miele.const import PROCESS_ACTION, PROGRAM_ID
+from homeassistant.components.miele.const import DOMAIN, PROCESS_ACTION, PROGRAM_ID
 from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
     DOMAIN as VACUUM_DOMAIN,
@@ -21,7 +22,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from . import get_actions_callback, get_data_callback
+
+from tests.common import MockConfigEntry, load_json_object_fixture, snapshot_platform
 
 TEST_PLATFORM = VACUUM_DOMAIN
 ENTITY_ID = "vacuum.robot_vacuum_cleaner"
@@ -44,6 +47,29 @@ async def test_sensor_states(
     """Test vacuum entity setup."""
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_vacuum_states_api_push(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    setup_platform: MockConfigEntry,
+    device_fixture: MieleDevices,
+) -> None:
+    """Test vacuum state when the API pushes data via SSE."""
+
+    data_callback = get_data_callback(mock_miele_client)
+    await data_callback(device_fixture)
+    await hass.async_block_till_done()
+
+    act_file = load_json_object_fixture("action_push_vacuum.json", DOMAIN)
+    action_callback = get_actions_callback(mock_miele_client)
+    await action_callback(act_file)
+    await hass.async_block_till_done()
+
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
 
 @pytest.mark.parametrize(
