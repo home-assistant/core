@@ -32,6 +32,9 @@
       "core_target_temperature": {
         "default": "mdi:thermometer-probe"
       },
+      "target_temperature": {
+        "default": "mdi:thermometer-check"
+      },
       "drying_step": {
         "default": "mdi:water-outline"
       },
