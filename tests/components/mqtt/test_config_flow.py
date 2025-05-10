@@ -35,6 +35,7 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from .common import (
     MOCK_BINARY_SENSOR_SUBENTRY_DATA_SINGLE,
     MOCK_BUTTON_SUBENTRY_DATA_SINGLE,
+    MOCK_COVER_SUBENTRY_DATA_SINGLE,
     MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE,
     MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
     MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME,
@@ -2699,6 +2700,92 @@ async def test_migrate_of_incompatible_config_entry(
             "Milk notifier Restart",
         ),
         (
+            MOCK_COVER_SUBENTRY_DATA_SINGLE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Blind"},
+            {"device_class": "blind"},
+            (),
+            {
+                "command_topic": "test-topic",
+                "cover_position_settings": {
+                    "position_template": "{{ value_json.position }}",
+                    "position_topic": "test-topic/position",
+                    "set_position_template": "{{ value }}",
+                    "set_position_topic": "test-topic/position-set",
+                },
+                "state_topic": "test-topic",
+                "retain": False,
+                "cover_tilt_settings": {
+                    "tilt_command_topic": "test-topic/tilt-set",
+                    "tilt_command_template": "{{ value }}",
+                    "tilt_status_topic": "test-topic/tilt",
+                    "tilt_status_template": "{{ value_json.position }}",
+                    "tilt_closed_value": 0,
+                    "tilt_opened_value": 100,
+                    "tilt_max": 100,
+                    "tilt_min": 0,
+                    "tilt_optimistic": False,
+                },
+            },
+            (
+                (
+                    {"value_template": "{{ json_value.state }}"},
+                    {
+                        "value_template": "cover_value_template_must_be_used_with_state_topic"
+                    },
+                ),
+                (
+                    {"cover_position_settings": {"set_position_topic": "test-topic"}},
+                    {
+                        "cover_position_settings": "cover_get_and_set_position_must_be_set_together"
+                    },
+                ),
+                (
+                    {
+                        "cover_position_settings": {
+                            "set_position_template": "{{ value }}"
+                        }
+                    },
+                    {
+                        "cover_position_settings": "cover_set_position_template_must_be_used_with_set_position_topic"
+                    },
+                ),
+                (
+                    {
+                        "cover_position_settings": {
+                            "position_template": "{{ json_value.position }}"
+                        }
+                    },
+                    {
+                        "cover_position_settings": "cover_get_position_template_must_be_used_with_get_position_topic"
+                    },
+                ),
+                (
+                    {"cover_position_settings": {"set_position_topic": "{{ value }}"}},
+                    {
+                        "cover_position_settings": "cover_get_and_set_position_must_be_set_together"
+                    },
+                ),
+                (
+                    {"cover_tilt_settings": {"tilt_command_template": "{{ value }}"}},
+                    {
+                        "cover_tilt_settings": "cover_tilt_command_template_must_be_used_with_tilt_command_topic"
+                    },
+                ),
+                (
+                    {
+                        "cover_tilt_settings": {
+                            "tilt_status_template": "{{ json_value.position }}"
+                        }
+                    },
+                    {
+                        "cover_tilt_settings": "cover_tilt_status_template_must_be_used_with_tilt_status_topic"
+                    },
+                ),
+            ),
+            "Milk notifier Blind",
+        ),
+        (
             MOCK_NOTIFY_SUBENTRY_DATA_SINGLE,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 1}},
             {"name": "Milkman alert"},
@@ -2883,6 +2970,7 @@ async def test_migrate_of_incompatible_config_entry(
     ids=[
         "binary_sensor",
         "button",
+        "cover",
         "notify_with_entity_name",
         "notify_no_entity_name",
         "sensor_options",
