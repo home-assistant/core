@@ -61,14 +61,10 @@ STATE_CYCLE_SENSING = "cycle_sensing"
 STATE_CYCLE_SOAKING = "cycle_soaking"
 STATE_CYCLE_SPINNING = "cycle_spinning"
 STATE_CYCLE_WASHING = "cycle_washing"
-STATE_DOOR_OPEN = "door_open"
 
 
 def washer_dryer_state(washer_dryer: WasherDryer) -> str | None:
     """Determine correct states for a washer/dryer."""
-
-    if washer_dryer.get_door_open():
-        return STATE_DOOR_OPEN
 
     machine_state = washer_dryer.get_machine_state()
 
@@ -104,7 +100,6 @@ WASHER_DRYER_STATE_OPTIONS = [
     STATE_CYCLE_SOAKING,
     STATE_CYCLE_SPINNING,
     STATE_CYCLE_WASHING,
-    STATE_DOOR_OPEN,
 ]
 
 WASHER_SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
