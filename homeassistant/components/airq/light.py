@@ -87,7 +87,7 @@ class AirQLight(CoordinatorEntity, LightEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle the LED value received from the coordinator."""
         self._update_attr()
-        super()._handle_coordinator_update()
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
@@ -102,11 +102,13 @@ class AirQLight(CoordinatorEntity, LightEntity):
         led_value = brightness_to_value(LED_VALUE_SCALE, brightness)
         _LOGGER.debug("Switching LED to value of %f", led_value)
         await self._device.set_current_brightness(led_value)
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         self._attr_is_on = False
         await self._device.set_current_brightness(0)
+        self.async_write_ha_state()
 
     @property
     def _device(self) -> AirQ:
