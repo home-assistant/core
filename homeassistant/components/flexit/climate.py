@@ -205,12 +205,11 @@ class Flexit(ClimateEntity):
         self, register_type: str, register: int
     ) -> float | None:
         """Read register using the Modbus hub slave."""
-        temp_int = await self._async_read_int16_from_register(register_type, register)
-        if temp_int is None:
+        result = await self._async_read_int16_from_register(register_type, register)
+        if result is None:
             _LOGGER.error("Error reading value from Flexit modbus adapter")
             return None
-        result = float(temp_int)
-        return result / 10.0
+        return float(result) / 10.0
 
     async def _async_write_int16_to_register(self, register: int, value: int) -> bool:
         result = await self._hub.async_pb_call(
