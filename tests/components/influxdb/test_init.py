@@ -17,13 +17,13 @@ from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.setup import async_setup_component
 
 from . import (
+    BASE_OPTIONS,
     BASE_V1_CONFIG,
     BASE_V2_CONFIG,
     INFLUX_CLIENT_PATH,
     INFLUX_PATH,
     _get_write_api_mock_v1,
     _get_write_api_mock_v2,
-    _split_config,
 )
 
 from tests.common import MockConfigEntry
@@ -92,10 +92,17 @@ def get_mock_call_fixture(request: pytest.FixtureRequest):
 
 
 @pytest.mark.parametrize(
-    ("hass_config", "mock_client", "config_base", "config_ext", "get_write_api"),
+    (
+        "hass_config",
+        "mock_client",
+        "config_base",
+        "config_ext",
+        "config_update",
+        "get_write_api",
+    ),
     [
         (
-            {"influxdb": BASE_V1_CONFIG},
+            {"influxdb": BASE_OPTIONS},
             influxdb.DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
             {
@@ -103,12 +110,17 @@ def get_mock_call_fixture(request: pytest.FixtureRequest):
                 "username": "user",
                 "password": "password",
                 "database": "db",
+                "ssl": False,
                 "verify_ssl": False,
+            },
+            {
+                "host": "host",
+                "port": 123,
             },
             _get_write_api_mock_v1,
         ),
         (
-            {"influxdb": BASE_V2_CONFIG},
+            {"influxdb": BASE_OPTIONS},
             influxdb.API_VERSION_2,
             BASE_V2_CONFIG,
             {
@@ -117,21 +129,25 @@ def get_mock_call_fixture(request: pytest.FixtureRequest):
                 "organization": "organization",
                 "bucket": "bucket",
             },
+            {"url": "https://host:123"},
             _get_write_api_mock_v2,
         ),
     ],
     indirect=["mock_client"],
 )
 async def test_setup_config_full(
-    hass: HomeAssistant, mock_client, config_base, config_ext, get_write_api
+    hass: HomeAssistant,
+    mock_client,
+    config_base,
+    config_ext,
+    config_update,
+    get_write_api,
 ) -> None:
     """Test the setup with full configuration."""
     config = {
         "influxdb": {
             "host": "host",
             "port": 123,
-            "max_retries": 4,
-            "ssl": False,
         }
     }
     config["influxdb"].update(config_ext)
@@ -148,20 +164,18 @@ async def test_setup_config_full(
     entry = conf_entries[0]
 
     full_config = config_base.copy()
-    full_config.update(config["influxdb"])
+    full_config.update(config_update)
     full_config.update(config_ext)
 
-    config_verify = _split_config(full_config)
-
     assert entry.state == ConfigEntryState.LOADED
-    assert entry.data == config_verify["data"]
+    assert entry.data == full_config
 
 
 @pytest.mark.parametrize(
     ("hass_config", "mock_client", "config_base", "config_ext", "expected_client_args"),
     [
         (
-            {"influxdb": BASE_V1_CONFIG},
+            {"influxdb": BASE_OPTIONS},
             influxdb.DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
             {
@@ -174,7 +188,7 @@ async def test_setup_config_full(
             },
         ),
         (
-            {"influxdb": BASE_V1_CONFIG},
+            {"influxdb": BASE_OPTIONS},
             influxdb.DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
             {
@@ -187,7 +201,7 @@ async def test_setup_config_full(
             },
         ),
         (
-            {"influxdb": BASE_V1_CONFIG},
+            {"influxdb": BASE_OPTIONS},
             influxdb.DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
             {
@@ -201,7 +215,7 @@ async def test_setup_config_full(
             },
         ),
         (
-            {"influxdb": BASE_V1_CONFIG},
+            {"influxdb": BASE_OPTIONS},
             influxdb.DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
             {
@@ -214,7 +228,7 @@ async def test_setup_config_full(
             },
         ),
         (
-            {"influxdb": BASE_V1_CONFIG},
+            {"influxdb": BASE_OPTIONS},
             influxdb.DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
             {
@@ -228,7 +242,7 @@ async def test_setup_config_full(
             },
         ),
         (
-            {"influxdb": BASE_V2_CONFIG},
+            {"influxdb": BASE_OPTIONS},
             influxdb.API_VERSION_2,
             BASE_V2_CONFIG,
             {
@@ -240,7 +254,7 @@ async def test_setup_config_full(
             },
         ),
         (
-            {"influxdb": BASE_V2_CONFIG},
+            {"influxdb": BASE_OPTIONS},
             influxdb.API_VERSION_2,
             BASE_V2_CONFIG,
             {
@@ -252,7 +266,7 @@ async def test_setup_config_full(
             },
         ),
         (
-            {"influxdb": BASE_V2_CONFIG},
+            {"influxdb": BASE_OPTIONS},
             influxdb.API_VERSION_2,
             BASE_V2_CONFIG,
             {
@@ -266,7 +280,7 @@ async def test_setup_config_full(
             },
         ),
         (
-            {"influxdb": BASE_V2_CONFIG},
+            {"influxdb": BASE_OPTIONS},
             influxdb.API_VERSION_2,
             BASE_V2_CONFIG,
             {
@@ -288,13 +302,12 @@ async def test_setup_config_ssl(
     """Test the setup with various verify_ssl values."""
     config = config_base.copy()
     config.update(config_ext)
-    config = _split_config(config)
 
     with (
         patch("os.access", return_value=True),
         patch("os.path.isfile", return_value=True),
     ):
-        mock_entry = MockConfigEntry(domain="influxdb", data=config["data"])
+        mock_entry = MockConfigEntry(domain="influxdb", data=config)
 
         mock_entry.add_to_hass(hass)
 
@@ -344,10 +357,8 @@ async def test_setup_minimal_config(
 
     entry = conf_entries[0]
 
-    config_verify = _split_config(config_base)
-
     assert entry.state == ConfigEntryState.LOADED
-    assert entry.data == config_verify["data"]
+    assert entry.data == config_base
 
 
 @pytest.mark.parametrize(
@@ -397,11 +408,9 @@ async def _setup(
     hass: HomeAssistant, mock_influx_client, config, get_write_api
 ) -> None:
     """Prepare client for next test and return event handler method."""
-    config = _split_config(config)
-
     mock_entry = MockConfigEntry(
         domain="influxdb",
-        data=config["data"],
+        data=config,
     )
 
     mock_entry.add_to_hass(hass)
@@ -417,14 +426,14 @@ async def _setup(
     ("hass_config", "mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
-            {"influxdb": BASE_V1_CONFIG},
+            {"influxdb": BASE_OPTIONS},
             influxdb.DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
             _get_write_api_mock_v1,
             influxdb.DEFAULT_API_VERSION,
         ),
         (
-            {"influxdb": BASE_V2_CONFIG},
+            {"influxdb": BASE_OPTIONS},
             influxdb.API_VERSION_2,
             BASE_V2_CONFIG,
             _get_write_api_mock_v2,
@@ -498,14 +507,14 @@ async def test_event_listener(
     ("hass_config", "mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
-            {"influxdb": BASE_V1_CONFIG},
+            {"influxdb": BASE_OPTIONS},
             influxdb.DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
             _get_write_api_mock_v1,
             influxdb.DEFAULT_API_VERSION,
         ),
         (
-            {"influxdb": BASE_V2_CONFIG},
+            {"influxdb": BASE_OPTIONS},
             influxdb.API_VERSION_2,
             BASE_V2_CONFIG,
             _get_write_api_mock_v2,
@@ -547,14 +556,14 @@ async def test_event_listener_no_units(
     ("hass_config", "mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
-            {"influxdb": BASE_V1_CONFIG},
+            {"influxdb": BASE_OPTIONS},
             influxdb.DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
             _get_write_api_mock_v1,
             influxdb.DEFAULT_API_VERSION,
         ),
         (
-            {"influxdb": BASE_V2_CONFIG},
+            {"influxdb": BASE_OPTIONS},
             influxdb.API_VERSION_2,
             BASE_V2_CONFIG,
             _get_write_api_mock_v2,
@@ -591,14 +600,14 @@ async def test_event_listener_inf(
     ("hass_config", "mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
-            {"influxdb": BASE_V1_CONFIG},
+            {"influxdb": BASE_OPTIONS},
             influxdb.DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
             _get_write_api_mock_v1,
             influxdb.DEFAULT_API_VERSION,
         ),
         (
-            {"influxdb": BASE_V2_CONFIG},
+            {"influxdb": BASE_OPTIONS},
             influxdb.API_VERSION_2,
             BASE_V2_CONFIG,
             _get_write_api_mock_v2,
@@ -1810,15 +1819,12 @@ async def test_connection_failure_on_startup(
     test_exception,
 ) -> None:
     """Test the event listener when it fails to connect to Influx on startup."""
-    config = config_base
-    config = _split_config(config)
-
     write_api = get_write_api(mock_client)
     write_api.side_effect = test_exception
 
     mock_entry = MockConfigEntry(
         domain="influxdb",
-        data=config["data"],
+        data=config_base,
     )
 
     mock_entry.add_to_hass(hass)

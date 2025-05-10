@@ -414,26 +414,26 @@ def get_influx_connection(  # noqa: C901
     else:
         kwargs[CONF_VERIFY_SSL] = conf[CONF_VERIFY_SSL]
 
-    if CONF_DB_NAME in conf:
-        kwargs[CONF_DB_NAME] = conf[CONF_DB_NAME]
+    if (db_name := conf.get(CONF_DB_NAME)) is not None:
+        kwargs[CONF_DB_NAME] = db_name
 
-    if CONF_USERNAME in conf:
-        kwargs[CONF_USERNAME] = conf[CONF_USERNAME]
+    if (user_name := conf.get(CONF_USERNAME)) is not None:
+        kwargs[CONF_USERNAME] = user_name
 
-    if CONF_PASSWORD in conf:
-        kwargs[CONF_PASSWORD] = conf[CONF_PASSWORD]
+    if (password := conf.get(CONF_PASSWORD)) is not None:
+        kwargs[CONF_PASSWORD] = password
 
     if CONF_HOST in conf:
         kwargs[CONF_HOST] = conf[CONF_HOST]
 
-    if CONF_PATH in conf:
-        kwargs[CONF_PATH] = conf[CONF_PATH]
+    if (path := conf.get(CONF_PATH)) is not None:
+        kwargs[CONF_PATH] = path
 
-    if CONF_PORT in conf:
-        kwargs[CONF_PORT] = conf[CONF_PORT]
+    if (port := conf.get(CONF_PORT)) is not None:
+        kwargs[CONF_PORT] = port
 
-    if CONF_SSL in conf:
-        kwargs[CONF_SSL] = conf[CONF_SSL]
+    if (ssl := conf.get(CONF_SSL)) is not None:
+        kwargs[CONF_SSL] = ssl
 
     influx = InfluxDBClient(**kwargs)
 
