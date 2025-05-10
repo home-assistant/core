@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from pysmarlaapi import Connection
+from pysmarlaapi.classes import AuthToken
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -20,23 +21,21 @@ class SmarlaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def _handle_token(self, token: str) -> tuple[dict[str, str], dict[str, str]]:
+    async def _handle_token(self, token: str) -> tuple[dict[str, str], AuthToken]:
         """Handle the token input."""
         errors: dict[str, str] = {}
-        info: dict[str, str] = {}
 
         try:
             conn = Connection(url=HOST, token_b64=token)
         except ValueError:
-            errors["base"] = "invalid_token"
-            return (errors, info)
+            errors["base"] = "malformed_token"
+            return (errors, None)
 
-        if await conn.refresh_token():
-            info["serial_number"] = conn.token.serialNumber
-        else:
+        if not await conn.refresh_token():
             errors["base"] = "invalid_auth"
+            return (errors, None)
 
-        return (errors, info)
+        return (errors, conn.token)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -45,19 +44,16 @@ class SmarlaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            token = user_input[CONF_ACCESS_TOKEN]
-
-            errors, info = await self._handle_token(token=token)
+            raw_token = user_input[CONF_ACCESS_TOKEN]
+            errors, token = await self._handle_token(token=raw_token)
 
             if not errors:
-                serial_number = info["serial_number"]
-
-                await self.async_set_unique_id(serial_number)
+                await self.async_set_unique_id(token.serialNumber)
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=serial_number,
-                    data={CONF_ACCESS_TOKEN: token},
+                    title=token.serialNumber,
+                    data={CONF_ACCESS_TOKEN: raw_token},
                 )
 
         return self.async_show_form(
