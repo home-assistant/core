@@ -569,6 +569,7 @@ FLOWS = {
         "sky_remote",
         "skybell",
         "slack",
+        "sleep",
         "sleepiq",
         "slide_local",
         "slimproto",
