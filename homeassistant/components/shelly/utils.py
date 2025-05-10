@@ -40,7 +40,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
     singleton,
 )
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.util.dt import utcnow
 
@@ -66,6 +66,7 @@ from .const import (
     SHIX3_1_INPUTS_EVENTS_TYPES,
     UPTIME_DEVIATION,
     VIRTUAL_COMPONENTS_MAP,
+    All_LIGHT_TYPES,
 )
 
 
@@ -142,10 +143,11 @@ def get_block_channel_name(device: BlockDevice, block: Block | None) -> str:
 
     if device.settings["device"]["type"] == MODEL_EM3:
         base = ord("A")
-    else:
-        base = ord("1")
+        return f"{entity_name} channel {chr(int(block.channel) + base)}"
 
-    return f"{entity_name} channel {chr(int(block.channel) + base)}"
+    base = ord("1")
+
+    return f"Channel {chr(int(block.channel) + base)}"
 
 
 def is_block_momentary_input(
@@ -376,12 +378,14 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
     if entity_name is None:
         channel = key.split(":")[0]
         channel_id = key.split(":")[-1]
-        if key.startswith(("cover:", "input:", "light:", "switch:", "thermostat:")):
+        if key.startswith(("input:", "thermostat:")):
             return f"{device_name} {channel.title()} {channel_id}"
-        if key.startswith(("cct", "rgb:", "rgbw:")):
-            return f"{device_name} {channel.upper()} light {channel_id}"
-        if key.startswith("em1"):
-            return f"{device_name} EM{channel_id}"
+        if key.startswith(("cover:", "light:", "switch:")):
+            return f"{channel.title()} {channel_id}"
+        if key.startswith(("cct:", "rgb:", "rgbw:")):
+            return f"{channel.upper()} light {channel_id}"
+        if key.startswith("em1:"):
+            return f"Energy Meter {channel_id}"
         if key.startswith(("boolean:", "enum:", "number:", "text:")):
             return f"{channel.title()} {channel_id}"
         return device_name
@@ -406,13 +410,18 @@ def get_device_entry_gen(entry: ConfigEntry) -> int:
     return entry.data.get(CONF_GEN, 1)
 
 
-def get_rpc_key_instances(keys_dict: dict[str, Any], key: str) -> list[str]:
+def get_rpc_key_instances(
+    keys_dict: dict[str, Any], key: str, all_lights: bool = False
+) -> list[str]:
     """Return list of key instances for RPC device from a dict."""
     if key in keys_dict:
         return [key]
 
     if key == "switch" and "cover:0" in keys_dict:
         key = "cover"
+
+    if key in All_LIGHT_TYPES and all_lights:
+        return [k for k in keys_dict if k.startswith(All_LIGHT_TYPES)]
 
     return [k for k in keys_dict if k.startswith(f"{key}:")]
 
@@ -691,3 +700,54 @@ async def get_rpc_scripts_event_types(
         script_events[script_id] = await get_rpc_script_event_types(device, script_id)
 
     return script_events
+
+
+def get_rpc_device_info(
+    device: RpcDevice,
+    mac: str,
+    key: str | None = None,
+) -> DeviceInfo:
+    """Return device info for RPC device."""
+    if key is None:
+        return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
+
+    # workaround for Pro EM50
+    key = key.replace("em1data", "em1")
+
+    key_parts = key.split(":")
+    component = key_parts[0]
+    idx = key_parts[1] if len(key_parts) > 1 else None
+
+    if (
+        component not in (*All_LIGHT_TYPES, "cover", "em1", "switch")
+        or idx is None
+        or len(get_rpc_key_instances(device.status, component, all_lights=True)) < 2
+    ):
+        return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
+
+    return DeviceInfo(
+        identifiers={(DOMAIN, f"{mac}-{key}")},
+        name=get_rpc_channel_name(device, key),
+        manufacturer="Shelly",
+        via_device=(DOMAIN, mac),
+    )
+
+
+def get_block_device_info(
+    device: BlockDevice, mac: str, block: Block | None = None
+) -> DeviceInfo:
+    """Return device info for Block device."""
+    if (
+        block is None
+        or block.type not in ("light", "relay")
+        or device.settings.get("mode") == "roller"
+        or get_number_of_channels(device, block) < 2
+    ):
+        return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
+
+    return DeviceInfo(
+        identifiers={(DOMAIN, f"{mac}-{block.description}")},
+        name=get_block_channel_name(device, block),
+        manufacturer="Shelly",
+        via_device=(DOMAIN, mac),
+    )
