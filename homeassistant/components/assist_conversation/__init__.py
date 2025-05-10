@@ -1,8 +1,8 @@
 """Built-in Home Assistant conversation agent."""
 
-from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, discovery_flow
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONVERSATION_DOMAIN, DOMAIN
@@ -12,8 +12,10 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up assist conversation."""
-    discovery_flow.async_create_flow(
-        hass, DOMAIN, context={"source": SOURCE_SYSTEM}, data={}
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data={}
+        )
     )
     return True
 
