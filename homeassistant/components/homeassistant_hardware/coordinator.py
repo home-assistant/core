@@ -31,7 +31,6 @@ class FirmwareUpdateCoordinator(DataUpdateCoordinator[FirmwareManifest]):
             _LOGGER,
             name="firmware update coordinator",
             update_interval=FIRMWARE_REFRESH_INTERVAL,
-            always_update=False,
         )
         self.hass = hass
         self.session = session

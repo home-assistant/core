@@ -5,7 +5,7 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "country": "Country"
+          "country": "[%key:common::config_flow::data::country%]"
         }
       },
       "choose_contract": {

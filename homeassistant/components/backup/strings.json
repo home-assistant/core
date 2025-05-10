@@ -26,9 +26,9 @@
   "entity": {
     "sensor": {
       "backup_manager_state": {
-        "name": "Backup Manager State",
+        "name": "Backup Manager state",
         "state": {
-          "idle": "Idle",
+          "idle": "[%key:common::state::idle%]",
           "create_backup": "Creating a backup",
           "receive_backup": "Receiving a backup",
           "restore_backup": "Restoring a backup"
@@ -36,6 +36,9 @@
       },
       "next_scheduled_automatic_backup": {
         "name": "Next scheduled automatic backup"
+      },
+      "last_attempted_automatic_backup": {
+        "name": "Last attempted automatic backup"
       },
       "last_successful_automatic_backup": {
         "name": "Last successful automatic backup"

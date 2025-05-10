@@ -7,13 +7,17 @@ from typing import Any
 
 from aiohomeconnect.client import Client as HomeConnectClient
 import aiohttp
+import jwt
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    config_validation as cv,
+    issue_registry as ir,
+)
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
-from homeassistant.helpers.issue_registry import async_delete_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .api import AsyncConfigEntryAuth
@@ -86,8 +90,18 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: HomeConnectConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    async_delete_issue(hass, DOMAIN, "deprecated_set_program_and_option_actions")
-    async_delete_issue(hass, DOMAIN, "deprecated_command_actions")
+    issue_registry = ir.async_get(hass)
+    issues_to_delete = [
+        "deprecated_set_program_and_option_actions",
+        "deprecated_command_actions",
+    ] + [
+        issue_id
+        for (issue_domain, issue_id) in issue_registry.issues
+        if issue_domain == DOMAIN
+        and issue_id.startswith("home_connect_too_many_connected_paired_events")
+    ]
+    for issue_id in issues_to_delete:
+        issue_registry.async_delete(DOMAIN, issue_id)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
@@ -97,25 +111,39 @@ async def async_migrate_entry(
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", entry.version)
 
-    if entry.version == 1 and entry.minor_version == 1:
+    if entry.version == 1:
+        match entry.minor_version:
+            case 1:
 
-        @callback
-        def update_unique_id(
-            entity_entry: RegistryEntry,
-        ) -> dict[str, Any] | None:
-            """Update unique ID of entity entry."""
-            for old_id_suffix, new_id_suffix in OLD_NEW_UNIQUE_ID_SUFFIX_MAP.items():
-                if entity_entry.unique_id.endswith(f"-{old_id_suffix}"):
-                    return {
-                        "new_unique_id": entity_entry.unique_id.replace(
-                            old_id_suffix, new_id_suffix
-                        )
-                    }
-            return None
+                @callback
+                def update_unique_id(
+                    entity_entry: RegistryEntry,
+                ) -> dict[str, Any] | None:
+                    """Update unique ID of entity entry."""
+                    for (
+                        old_id_suffix,
+                        new_id_suffix,
+                    ) in OLD_NEW_UNIQUE_ID_SUFFIX_MAP.items():
+                        if entity_entry.unique_id.endswith(f"-{old_id_suffix}"):
+                            return {
+                                "new_unique_id": entity_entry.unique_id.replace(
+                                    old_id_suffix, new_id_suffix
+                                )
+                            }
+                    return None
 
-        await async_migrate_entries(hass, entry.entry_id, update_unique_id)
+                await async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
-        hass.config_entries.async_update_entry(entry, minor_version=2)
+                hass.config_entries.async_update_entry(entry, minor_version=2)
+            case 2:
+                hass.config_entries.async_update_entry(
+                    entry,
+                    minor_version=3,
+                    unique_id=jwt.decode(
+                        entry.data["token"]["access_token"],
+                        options={"verify_signature": False},
+                    )["sub"],
+                )
 
     _LOGGER.debug("Migration to version %s successful", entry.version)
     return True

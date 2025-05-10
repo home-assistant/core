@@ -160,7 +160,7 @@ def _time_weighted_arithmetic_mean(
 
 def _time_weighted_circular_mean(
     fstates: list[tuple[float, State]], start: datetime.datetime, end: datetime.datetime
-) -> float:
+) -> tuple[float, float]:
     """Calculate a time weighted circular mean.
 
     The circular mean is calculated by weighting the states by duration in seconds between
@@ -623,7 +623,7 @@ def compile_statistics(  # noqa: C901
                     valid_float_states, start, end
                 )
             case StatisticMeanType.CIRCULAR:
-                stat["mean"] = _time_weighted_circular_mean(
+                stat["mean"], stat["mean_weight"] = _time_weighted_circular_mean(
                     valid_float_states, start, end
                 )
 

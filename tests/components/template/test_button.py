@@ -93,6 +93,45 @@ async def test_missing_optional_config(hass: HomeAssistant) -> None:
     _verify(hass, STATE_UNKNOWN)
 
 
+async def test_missing_emtpy_press_action_config(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test: missing optional template is ok."""
+    with assert_setup_component(1, "template"):
+        assert await setup.async_setup_component(
+            hass,
+            "template",
+            {
+                "template": {
+                    "button": {
+                        "press": [],
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    _verify(hass, STATE_UNKNOWN)
+
+    now = dt.datetime.now(dt.UTC)
+    freezer.move_to(now)
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {CONF_ENTITY_ID: _TEST_BUTTON},
+        blocking=True,
+    )
+
+    _verify(
+        hass,
+        now.isoformat(),
+    )
+
+
 async def test_missing_required_keys(hass: HomeAssistant) -> None:
     """Test: missing required fields will fail."""
     with assert_setup_component(0, "template"):

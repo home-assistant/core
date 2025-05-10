@@ -263,6 +263,17 @@ HOST_SELECT_ENTITIES = (
         value=lambda api: api.baichuan.active_scene,
         method=lambda api, name: api.baichuan.set_scene(scene_name=name),
     ),
+    ReolinkHostSelectEntityDescription(
+        key="packing_time",
+        cmd_key="GetRec",
+        translation_key="packing_time",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        get_options=lambda api: api.recording_packing_time_list,
+        supported=lambda api: api.supported(None, "pak_time"),
+        value=lambda api: api.recording_packing_time,
+        method=lambda api, value: api.set_recording_packing_time(value),
+    ),
 )
 
 CHIME_SELECT_ENTITIES = (

@@ -5,10 +5,10 @@
       "name": "[%key:component::valve::title%]",
       "state": {
         "open": "[%key:common::state::open%]",
-        "opening": "Opening",
+        "opening": "[%key:common::state::opening%]",
         "closed": "[%key:common::state::closed%]",
-        "closing": "Closing",
-        "stopped": "Stopped"
+        "closing": "[%key:common::state::closing%]",
+        "stopped": "[%key:common::state::stopped%]"
       },
       "state_attributes": {
         "current_position": {
