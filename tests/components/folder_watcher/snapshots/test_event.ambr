@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Folder Watcher test_event_entity0',
     'capabilities': dict({
       'event_types': list([
         'closed',
