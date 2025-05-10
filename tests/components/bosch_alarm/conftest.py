@@ -131,6 +131,8 @@ def door() -> Generator[Door]:
     mock.name = "Main Door"
     mock.status_observer = AsyncMock(spec=Observable)
     mock.is_open.return_value = False
+    mock.is_cycling.return_value = False
+    mock.is_secured.return_value = False
     mock.is_locked.return_value = True
     return mock
 

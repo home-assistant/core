@@ -244,11 +244,14 @@ async def test_sensor_unknown(hass: HomeAssistant) -> None:
     """Test if our integration can properly certain sensors as unknown when it becomes so."""
     await async_init_integration(hass, status=MOCK_MINIMAL_STATUS)
 
-    assert hass.states.get("sensor.mode").state == MOCK_MINIMAL_STATUS["UPSMODE"]
+    ups_mode_id = "sensor.apc_ups_mode"
+    last_self_test_id = "sensor.apc_ups_last_self_test"
+
+    assert hass.states.get(ups_mode_id).state == MOCK_MINIMAL_STATUS["UPSMODE"]
     # Last self test sensor should be added even if our status does not report it initially (it is
     # a sensor that appears only after a periodical or manual self test is performed).
-    assert hass.states.get("sensor.last_self_test") is not None
-    assert hass.states.get("sensor.last_self_test").state == STATE_UNKNOWN
+    assert hass.states.get(last_self_test_id) is not None
+    assert hass.states.get(last_self_test_id).state == STATE_UNKNOWN
 
     # Simulate an event (a self test) such that "LASTSTEST" field is being reported, the state of
     # the sensor should be properly updated with the corresponding value.
@@ -259,7 +262,7 @@ async def test_sensor_unknown(hass: HomeAssistant) -> None:
         future = utcnow() + timedelta(minutes=2)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
-    assert hass.states.get("sensor.last_self_test").state == "1970-01-01 00:00:00 0000"
+    assert hass.states.get(last_self_test_id).state == "1970-01-01 00:00:00 0000"
 
     # Simulate another event (e.g., daemon restart) such that "LASTSTEST" is no longer reported.
     with patch("aioapcaccess.request_status") as mock_request_status:
@@ -268,4 +271,4 @@ async def test_sensor_unknown(hass: HomeAssistant) -> None:
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
     # The state should become unknown again.
-    assert hass.states.get("sensor.last_self_test").state == STATE_UNKNOWN
+    assert hass.states.get(last_self_test_id).state == STATE_UNKNOWN

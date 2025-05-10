@@ -6,7 +6,6 @@ from asyncio import timeout
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-import re
 from typing import TYPE_CHECKING, Any
 
 from pysqueezebox import Player, Server
@@ -14,7 +13,6 @@ from pysqueezebox import Player, Server
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
     from . import SqueezeboxConfigEntry
@@ -24,9 +22,6 @@ from .const import (
     SENSOR_UPDATE_INTERVAL,
     SIGNAL_PLAYER_REDISCOVERED,
     STATUS_API_TIMEOUT,
-    STATUS_SENSOR_LASTSCAN,
-    STATUS_SENSOR_NEEDSRESTART,
-    STATUS_SENSOR_RESCAN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +45,16 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
             always_update=False,
         )
         self.lms = lms
-        self.newversion_regex = re.compile("<.*$")
+        self.can_server_restart = False
+
+    async def _async_setup(self) -> None:
+        """Query LMS capabilities."""
+        result = await self.lms.async_query("can", "restartserver", "?")
+        if result and "_can" in result and result["_can"] == 1:
+            _LOGGER.debug("Can restart %s", self.lms.name)
+            self.can_server_restart = True
+        else:
+            _LOGGER.warning("Can't query server capabilities %s", self.lms.name)
 
     async def _async_update_data(self) -> dict:
         """Fetch data from LMS status call.
@@ -58,32 +62,12 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
         Then we process only a subset to make then nice for HA
         """
         async with timeout(STATUS_API_TIMEOUT):
-            data = await self.lms.async_status()
+            data: dict | None = await self.lms.async_prepared_status()
 
         if not data:
             raise UpdateFailed("No data from status poll")
         _LOGGER.debug("Raw serverstatus %s=%s", self.lms.name, data)
 
-        return self._prepare_status_data(data)
-
-    def _prepare_status_data(self, data: dict) -> dict:
-        """Sensors that need the data changing for HA presentation."""
-
-        # Binary sensors
-        # rescan bool are we rescanning alter poll not present if false
-        data[STATUS_SENSOR_RESCAN] = STATUS_SENSOR_RESCAN in data
-        # needsrestart bool pending lms plugin updates not present if false
-        data[STATUS_SENSOR_NEEDSRESTART] = STATUS_SENSOR_NEEDSRESTART in data
-
-        # Sensors that need special handling
-        # 'lastscan': '1718431678', epoc -> ISO 8601 not always present
-        data[STATUS_SENSOR_LASTSCAN] = (
-            dt_util.utc_from_timestamp(int(data[STATUS_SENSOR_LASTSCAN]))
-            if STATUS_SENSOR_LASTSCAN in data
-            else None
-        )
-
-        _LOGGER.debug("Processed serverstatus %s=%s", self.lms.name, data)
         return data
 
 
