@@ -6421,7 +6421,7 @@
         },
         "synology_srm": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "local_polling",
           "name": "Synology SRM"
         }
