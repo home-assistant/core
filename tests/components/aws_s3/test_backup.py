@@ -419,7 +419,7 @@ async def test_cache_expiration(
     # Mock the entry
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"bucket": "test-bucket"},
+        data={"bucket": "test-bucket", "prefix": "test/"},
         unique_id="test-unique-id",
         title="Test S3",
     )

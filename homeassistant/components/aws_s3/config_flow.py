@@ -22,6 +22,7 @@ from .const import (
     CONF_ACCESS_KEY_ID,
     CONF_BUCKET,
     CONF_ENDPOINT_URL,
+    CONF_PREFIX,
     CONF_SECRET_ACCESS_KEY,
     DEFAULT_ENDPOINT_URL,
     DESCRIPTION_AWS_S3_DOCS_URL,
@@ -36,6 +37,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
         vol.Required(CONF_BUCKET): cv.string,
+        vol.Optional(CONF_PREFIX, default=""): cv.string,
         vol.Required(CONF_ENDPOINT_URL, default=DEFAULT_ENDPOINT_URL): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.URL)
         ),
@@ -45,6 +47,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
+
+    VERSION = 1
+    MINOR_VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -57,6 +62,7 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     CONF_BUCKET: user_input[CONF_BUCKET],
                     CONF_ENDPOINT_URL: user_input[CONF_ENDPOINT_URL],
+                    CONF_PREFIX: user_input[CONF_PREFIX],
                 }
             )
 
@@ -85,7 +91,8 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors[CONF_ENDPOINT_URL] = "cannot_connect"
                 else:
                     return self.async_create_entry(
-                        title=user_input[CONF_BUCKET], data=user_input
+                        title=f"{user_input[CONF_BUCKET]} {user_input[CONF_PREFIX]}",
+                        data=user_input,
                     )
 
         return self.async_show_form(
