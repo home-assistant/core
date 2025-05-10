@@ -58,11 +58,6 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            prefix = user_input.get(CONF_PREFIX, "")
-            if prefix and not prefix.endswith("/"):
-                prefix += "/"
-                user_input[CONF_PREFIX] = prefix
-
             self._async_abort_entries_match(
                 {
                     CONF_BUCKET: user_input[CONF_BUCKET],
