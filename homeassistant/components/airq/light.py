@@ -22,7 +22,8 @@ from homeassistant.util.color import brightness_to_value, value_to_brightness
 
 from . import AirQConfigEntry, AirQCoordinator
 
-LED_VALUE_SCALE = (1, 10)  # must not include 0 as 0 == off, thus must not be included
+LED_VALUE_SCALE = (1.0, 10.0)  # must not include 0 as 0 == off
+LED_VALUE_DEFAULT = 6.0
 BRIGHTNESS_DEFAULT = 153  # ~60%
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,13 +33,13 @@ _LOGGER = logging.getLogger(__name__)
 class AirQLightEntityDescription(LightEntityDescription):
     """Describes AirQ LED entity."""
 
-    value: Callable[[dict], float | int | None]
+    value: Callable[[dict], float]
 
 
 AIRQ_LIGHT_DESCRIPTION = AirQLightEntityDescription(
     key="airq_leds",
     translation_key="airq_leds",
-    value=lambda device: device.get("brightness"),
+    value=lambda device: device.get("brightness", LED_VALUE_DEFAULT),
 )
 
 
