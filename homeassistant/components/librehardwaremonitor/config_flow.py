@@ -49,7 +49,8 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 _ = (await api.get_data()).main_device_names
-            except LibreHardwareMonitorConnectionError:
+            except LibreHardwareMonitorConnectionError as exception:
+                _LOGGER.error(exception)
                 errors["base"] = "cannot_connect"
             except LibreHardwareMonitorNoDevicesError:
                 errors["base"] = "no_devices"
