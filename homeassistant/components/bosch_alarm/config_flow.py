@@ -26,7 +26,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
 )
-from homeassistant.data_entry_flow import AbortFlow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -164,17 +163,6 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
                 if result:
                     self.hass.config_entries.async_schedule_reload(entry.entry_id)
                 return self.async_abort(reason="already_configured")
-            if entry.data[CONF_HOST] == discovery_info.ip:
-                result = self.hass.config_entries.async_update_entry(
-                    entry,
-                    data={
-                        **entry.data,
-                        CONF_MAC: self.mac,
-                    },
-                )
-                if result:
-                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
-                return self.async_abort(reason="already_configured")
         try:
             # Use load_selector = 0 to fetch the panel model without authentication.
             (model, _) = await try_connect(
@@ -187,8 +175,9 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             asyncio.exceptions.TimeoutError,
         ):
             return self.async_abort(reason="cannot_connect")
-        except Exception as err:
-            raise AbortFlow("unknown") from err
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
         self.context["title_placeholders"] = {
             "model": model,
             "host": discovery_info.ip,

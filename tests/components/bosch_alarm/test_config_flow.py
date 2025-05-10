@@ -6,9 +6,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.bosch_alarm.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -78,7 +77,7 @@ async def test_form_exceptions(
     """Test we handle exceptions correctly."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -220,14 +219,13 @@ async def test_dhcp_can_finish(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_DHCP},
+        context={"source": SOURCE_DHCP},
         data=DhcpServiceInfo(
             hostname="test",
             ip="1.1.1.1",
             macaddress="34ea34b43b5a",
         ),
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert result["errors"] == {}
@@ -270,7 +268,7 @@ async def test_dhcp_exceptions(
     mock_panel.connect.side_effect = exception
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_DHCP},
+        context={"source": SOURCE_DHCP},
         data=DhcpServiceInfo(
             hostname="test",
             ip="1.1.1.1",
@@ -296,7 +294,7 @@ async def test_dhcp_updates_mac(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_DHCP},
+        context={"source": SOURCE_DHCP},
         data=DhcpServiceInfo(
             hostname="test",
             ip="0.0.0.0",
@@ -325,7 +323,7 @@ async def test_dhcp_updates_host(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_DHCP},
+        context={"source": SOURCE_DHCP},
         data=DhcpServiceInfo(
             hostname="test",
             ip="4.5.6.7",
@@ -358,7 +356,7 @@ async def test_dhcp_abort_ongoing_flow(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_DHCP},
+        context={"source": SOURCE_DHCP},
         data=DhcpServiceInfo(
             hostname="test",
             ip="0.0.0.0",
@@ -457,7 +455,7 @@ async def test_reconfig_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
-            "source": config_entries.SOURCE_RECONFIGURE,
+            "source": SOURCE_RECONFIGURE,
             "entry_id": mock_config_entry.entry_id,
         },
     )
@@ -503,7 +501,7 @@ async def test_reconfig_flow_incorrect_model(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
-            "source": config_entries.SOURCE_RECONFIGURE,
+            "source": SOURCE_RECONFIGURE,
             "entry_id": mock_config_entry.entry_id,
         },
     )
