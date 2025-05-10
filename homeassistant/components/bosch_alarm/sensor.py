@@ -54,22 +54,22 @@ def priority_value_fn(priority_info: dict[int, str]) -> Callable[[Area], str]:
 
 
 SENSOR_TYPES: list[BoschAlarmSensorEntityDescription] = [
-    BoschAlarmSensorEntityDescription(
-        key=f"alarms_{key}",
-        translation_key=f"alarms_{key}",
-        value_fn=priority_value_fn(priority_type),
-        observe_alarms=True,
-    )
-    for key, priority_type in ALARM_TYPES.items()
-]
-SENSOR_TYPES.append(
+    *[
+        BoschAlarmSensorEntityDescription(
+            key=f"alarms_{key}",
+            translation_key=f"alarms_{key}",
+            value_fn=priority_value_fn(priority_type),
+            observe_alarms=True,
+        )
+        for key, priority_type in ALARM_TYPES.items()
+    ],
     BoschAlarmSensorEntityDescription(
         key="faulting_points",
         translation_key="faulting_points",
         value_fn=lambda area: area.faults,
         observe_ready=True,
     ),
-)
+]
 
 
 async def async_setup_entry(
