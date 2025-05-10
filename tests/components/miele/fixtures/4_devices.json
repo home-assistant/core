@@ -466,5 +466,253 @@
       "ecoFeedback": null,
       "batteryLevel": null
     }
+  },
+  "DummyAppliance_12": {
+    "ident": {
+      "type": {
+        "key_localized": "Device type",
+        "value_raw": 12,
+        "value_localized": "Oven"
+      },
+      "deviceName": "",
+      "protocolVersion": 4,
+      "deviceIdentLabel": {
+        "fabNumber": "**REDACTED**",
+        "fabIndex": "16",
+        "techType": "H7660BP",
+        "matNumber": "11120960",
+        "swids": []
+      },
+      "xkmIdentLabel": {
+        "techType": "EK057",
+        "releaseVersion": "08.32"
+      }
+    },
+    "state": {
+      "ProgramID": {
+        "value_raw": 0,
+        "value_localized": "",
+        "key_localized": "Program name"
+      },
+      "status": {
+        "value_raw": 1,
+        "value_localized": "Off",
+        "key_localized": "status"
+      },
+      "programType": {
+        "value_raw": 0,
+        "value_localized": "",
+        "key_localized": "Program type"
+      },
+      "programPhase": {
+        "value_raw": 0,
+        "value_localized": "",
+        "key_localized": "Program phase"
+      },
+      "remainingTime": [0, 0],
+      "startTime": [0, 0],
+      "targetTemperature": [
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        },
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        },
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        }
+      ],
+      "coreTargetTemperature": [
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        }
+      ],
+      "temperature": [
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        },
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        },
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        }
+      ],
+      "coreTemperature": [
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        }
+      ],
+      "signalInfo": false,
+      "signalFailure": false,
+      "signalDoor": false,
+      "remoteEnable": {
+        "fullRemoteControl": true,
+        "smartGrid": false,
+        "mobileStart": false
+      },
+      "ambientLight": null,
+      "light": 2,
+      "elapsedTime": [0, 0],
+      "spinningSpeed": {
+        "unit": "rpm",
+        "value_raw": null,
+        "value_localized": null,
+        "key_localized": "Spin speed"
+      },
+      "dryingStep": {
+        "value_raw": null,
+        "value_localized": "",
+        "key_localized": "Drying level"
+      },
+      "ventilationStep": {
+        "value_raw": null,
+        "value_localized": "",
+        "key_localized": "Fan level"
+      },
+      "plateStep": [],
+      "ecoFeedback": null,
+      "batteryLevel": null
+    }
+  },
+  "DummyAppliance_45": {
+    "ident": {
+      "type": {
+        "key_localized": "Device type",
+        "value_raw": 45,
+        "value_localized": "Steam oven with microwave"
+      },
+      "deviceName": "",
+      "protocolVersion": 4,
+      "deviceIdentLabel": {
+        "fabNumber": "**REDACTED**",
+        "fabIndex": "00",
+        "techType": "DGM7640",
+        "matNumber": "10937120",
+        "swids": []
+      },
+      "xkmIdentLabel": {
+        "techType": "EK057",
+        "releaseVersion": "08.32"
+      }
+    },
+    "state": {
+      "ProgramID": {
+        "value_raw": 0,
+        "value_localized": "",
+        "key_localized": "Program name"
+      },
+      "status": {
+        "value_raw": 1,
+        "value_localized": "Off",
+        "key_localized": "status"
+      },
+      "programType": {
+        "value_raw": 0,
+        "value_localized": "",
+        "key_localized": "Program type"
+      },
+      "programPhase": {
+        "value_raw": 0,
+        "value_localized": "",
+        "key_localized": "Program phase"
+      },
+      "remainingTime": [0, 0],
+      "startTime": [0, 0],
+      "targetTemperature": [
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        },
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        },
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        }
+      ],
+      "coreTargetTemperature": [
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        }
+      ],
+      "temperature": [
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        },
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        },
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        }
+      ],
+      "coreTemperature": [
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        }
+      ],
+      "signalInfo": false,
+      "signalFailure": false,
+      "signalDoor": false,
+      "remoteEnable": {
+        "fullRemoteControl": true,
+        "smartGrid": false,
+        "mobileStart": false
+      },
+      "ambientLight": null,
+      "light": 2,
+      "elapsedTime": [0, 0],
+      "spinningSpeed": {
+        "unit": "rpm",
+        "value_raw": null,
+        "value_localized": null,
+        "key_localized": "Spin speed"
+      },
+      "dryingStep": {
+        "value_raw": null,
+        "value_localized": "",
+        "key_localized": "Drying level"
+      },
+      "ventilationStep": {
+        "value_raw": null,
+        "value_localized": "",
+        "key_localized": "Fan level"
+      },
+      "plateStep": [],
+      "ecoFeedback": null,
+      "batteryLevel": null
+    }
   }
 }

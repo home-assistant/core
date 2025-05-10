@@ -109,7 +109,7 @@ async def test_devices_multiple_created_count(
     """Test that multiple devices are created."""
     await setup_integration(hass, mock_config_entry)
 
-    assert len(device_registry.devices) == 4
+    assert len(device_registry.devices) == 6
 
 
 async def test_device_info(
@@ -200,11 +200,13 @@ async def test_setup_all_platforms(
         "5_devices.json", DOMAIN
     )
 
+    prev_devices = len(device_registry.devices)
+
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert len(device_registry.devices) == 6
+    assert len(device_registry.devices) == prev_devices + 2
 
     # Check a sample sensor for each new device
     assert hass.states.get("sensor.dishwasher").state == "in_use"
-    assert hass.states.get("sensor.oven_temperature").state == "175.0"
+    assert hass.states.get("sensor.oven_temperature_2").state == "175.0"
