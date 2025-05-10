@@ -19,7 +19,7 @@ from homeassistant.components.backup import (
 from homeassistant.core import HomeAssistant, callback
 
 from . import S3ConfigEntry
-from .const import CONF_BUCKET, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .const import CONF_BUCKET, CONF_PREFIX, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 CACHE_TTL = 300
@@ -95,6 +95,7 @@ class S3BackupAgent(BackupAgent):
         super().__init__()
         self._client = entry.runtime_data
         self._bucket: str = entry.data[CONF_BUCKET]
+        self._prefix: str = entry.data[CONF_PREFIX]
         self.name = entry.title
         self.unique_id = entry.entry_id
         self._backup_cache: dict[str, AgentBackup] = {}
@@ -114,7 +115,11 @@ class S3BackupAgent(BackupAgent):
         backup = await self._find_backup_by_id(backup_id)
         tar_filename, _ = suggested_filenames(backup)
 
-        response = await self._client.get_object(Bucket=self._bucket, Key=tar_filename)
+        response = await self._client.get_object(
+            Bucket=self._bucket,
+            Key=self._add_prefix(tar_filename),
+        )
+
         return response["Body"].iter_chunks()
 
     async def async_upload_backup(
@@ -141,7 +146,7 @@ class S3BackupAgent(BackupAgent):
             metadata_content = json.dumps(backup.as_dict())
             await self._client.put_object(
                 Bucket=self._bucket,
-                Key=metadata_filename,
+                Key=self._add_prefix(metadata_filename),
                 Body=metadata_content,
             )
         except BotoCoreError as err:
@@ -168,7 +173,7 @@ class S3BackupAgent(BackupAgent):
 
         await self._client.put_object(
             Bucket=self._bucket,
-            Key=tar_filename,
+            Key=self._add_prefix(tar_filename),
             Body=bytes(file_data),
         )
 
@@ -185,7 +190,7 @@ class S3BackupAgent(BackupAgent):
         _LOGGER.debug("Starting multipart upload for %s", tar_filename)
         multipart_upload = await self._client.create_multipart_upload(
             Bucket=self._bucket,
-            Key=tar_filename,
+            Key=self._add_prefix(tar_filename),
         )
         upload_id = multipart_upload["UploadId"]
         try:
@@ -206,7 +211,7 @@ class S3BackupAgent(BackupAgent):
                     )
                     part = await self._client.upload_part(
                         Bucket=self._bucket,
-                        Key=tar_filename,
+                        Key=self._add_prefix(tar_filename),
                         PartNumber=part_number,
                         UploadId=upload_id,
                         Body=b"".join(buffer),
@@ -223,7 +228,7 @@ class S3BackupAgent(BackupAgent):
                 )
                 part = await self._client.upload_part(
                     Bucket=self._bucket,
-                    Key=tar_filename,
+                    Key=self._add_prefix(tar_filename),
                     PartNumber=part_number,
                     UploadId=upload_id,
                     Body=b"".join(buffer),
@@ -232,7 +237,7 @@ class S3BackupAgent(BackupAgent):
 
             await self._client.complete_multipart_upload(
                 Bucket=self._bucket,
-                Key=tar_filename,
+                Key=self._add_prefix(tar_filename),
                 UploadId=upload_id,
                 MultipartUpload={"Parts": parts},
             )
@@ -241,7 +246,7 @@ class S3BackupAgent(BackupAgent):
             try:
                 await self._client.abort_multipart_upload(
                     Bucket=self._bucket,
-                    Key=tar_filename,
+                    Key=self._add_prefix(tar_filename),
                     UploadId=upload_id,
                 )
             except BotoCoreError:
@@ -262,8 +267,12 @@ class S3BackupAgent(BackupAgent):
         tar_filename, metadata_filename = suggested_filenames(backup)
 
         # Delete both the backup file and its metadata file
-        await self._client.delete_object(Bucket=self._bucket, Key=tar_filename)
-        await self._client.delete_object(Bucket=self._bucket, Key=metadata_filename)
+        await self._client.delete_object(
+            Bucket=self._bucket, Key=self._add_prefix(tar_filename)
+        )
+        await self._client.delete_object(
+            Bucket=self._bucket, Key=self._add_prefix(metadata_filename)
+        )
 
         # Reset cache after successful deletion
         self._cache_expiration = time()
@@ -297,7 +306,11 @@ class S3BackupAgent(BackupAgent):
             return self._backup_cache
 
         backups = {}
-        response = await self._client.list_objects_v2(Bucket=self._bucket)
+        response = await self._client.list_objects_v2(
+            Bucket=self._bucket,
+            Prefix=self._prefix,
+            Delimiter="/",
+        )
 
         # Filter for metadata files only
         metadata_files = [
@@ -328,3 +341,6 @@ class S3BackupAgent(BackupAgent):
         self._cache_expiration = time() + CACHE_TTL
 
         return self._backup_cache
+
+    def _add_prefix(self, key: str) -> str:
+        return f"{self._prefix}{key}" if self._prefix else key

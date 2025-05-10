@@ -6,12 +6,14 @@
           "access_key_id": "Access key ID",
           "secret_access_key": "Secret access key",
           "bucket": "Bucket name",
+          "prefix": "Prefix",
           "endpoint_url": "Endpoint URL"
         },
         "data_description": {
           "access_key_id": "Access key ID to connect to AWS S3 API",
           "secret_access_key": "Secret access key to connect to AWS S3 API",
           "bucket": "Bucket must already exist and be writable by the provided credentials.",
+          "prefix": "Prefix to use for the backup keys in the bucket. This is optional.",
           "endpoint_url": "Endpoint URL provided to [Boto3 Session]({boto3_docs_url}). Region-specific [AWS S3 endpoints]({aws_s3_docs_url}) are available in their docs."
         },
         "title": "Add AWS S3 bucket"
