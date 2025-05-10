@@ -1821,7 +1821,7 @@ pyownet==0.10.0.post1
 pypalazzetti==0.1.19
 
 # homeassistant.components.lcn
-pypck==0.8.5
+pypck==0.8.6
 
 # homeassistant.components.pglab
 pypglab==0.0.5
