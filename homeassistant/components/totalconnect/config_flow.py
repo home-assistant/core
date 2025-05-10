@@ -105,11 +105,7 @@ class TotalConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
         else:
-            # Force the loading of locations using I/O
-            number_locations = await self.hass.async_add_executor_job(
-                self.client.get_number_locations,
-            )
-            if number_locations < 1:
+            if self.client.get_number_locations() < 1:
                 return self.async_abort(reason="no_locations")
             for location_id in self.client.locations:
                 self.usercodes[location_id] = None
