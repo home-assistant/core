@@ -148,6 +148,21 @@ async def mock_session_post() -> AsyncMock:
         yield mock_post
 
 
+@pytest.fixture(name="mock_zone")
+def mock_zone(hass: HomeAssistant) -> None:
+    """Mock a zone entity."""
+    hass.states.async_set(
+        "zone.home",
+        "zoning",
+        {
+            "latitude": 37.7749,
+            "longitude": -122.4194,
+            "radius": 100,
+            "friendly_name": "Home",
+        },
+    )
+
+
 @pytest.fixture(name="todoist_api_status")
 def mock_api_status() -> HTTPStatus | None:
     """Fixture to inject an http status error."""

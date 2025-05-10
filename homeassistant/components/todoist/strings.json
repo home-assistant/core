@@ -89,6 +89,30 @@
           "name": "Reminder date",
           "description": "When the user should be reminded of this task, in format YYYY-MM-DDTHH:MM:SS, in UTC timezone."
         },
+        "reminder_zone": {
+          "name": "Reminder Zone",
+          "description": "The zone that should trigger the reminder. Note that location data will be shared with Todoist."
+        },
+        "reminder_location_name": {
+          "name": "Reminder Location Name",
+          "description": "An alias name for the location that should trigger the reminder."
+        },
+        "reminder_latitude": {
+          "name": "Reminder Latitude",
+          "description": "The latitude of the location that should trigger the reminder. Note that location data will be shared with Todoist."
+        },
+        "reminder_longitude": {
+          "name": "Reminder Longitude",
+          "description": "The longitude of the location that should trigger the reminder. Note that location data will be shared with Todoist."
+        },
+        "reminder_radius": {
+          "name": "Reminder Radius",
+          "description": "The radius of the location that should trigger the reminder."
+        },
+        "reminder_location_direction": {
+          "name": "Reminder Location Direction",
+          "description": "Should the reminder be triggered when entering or leaving the zone?"
+        },
         "reminder_users": {
           "name": "Reminder users",
           "description": "The username(s) of a shared project's member(s) to receive the reminder."

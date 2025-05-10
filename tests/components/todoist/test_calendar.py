@@ -10,6 +10,7 @@ import zoneinfo
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from todoist_api_python.models import Due
+import voluptuous as vol
 
 from homeassistant import setup
 from homeassistant.components.todoist.const import (
@@ -20,7 +21,13 @@ from homeassistant.components.todoist.const import (
     LABELS,
     PROJECT_NAME,
     REMINDER_DATE_STRING,
+    REMINDER_LATITUDE,
+    REMINDER_LOCATION_DIRECTION,
+    REMINDER_LOCATION_NAME,
+    REMINDER_LONGITUDE,
+    REMINDER_RADIUS,
     REMINDER_USERS,
+    REMINDER_ZONE,
     SECTION_NAME,
     SERVICE_NEW_TASK,
 )
@@ -574,8 +581,204 @@ async def test_create_task_service_call_with_reminder_users_but_no_reminder_data
 
     # Verify error is logged for missing reminder date
     assert (
-        f"`{REMINDER_USERS}` provided but no supporting reminder parameters were provided."
+        f"`{REMINDER_USERS}` provided but no supporting reminder parameters were provided"
         in caplog.text
+    )
+
+
+async def test_create_task_service_call_with_reminder_zone(
+    hass: HomeAssistant, api: AsyncMock, mock_post: AsyncMock, mock_zone: None
+) -> None:
+    """Test creating a task with a zone-based location reminder."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_NEW_TASK,
+        {
+            CONTENT: "task",
+            PROJECT_NAME: "Name",
+            REMINDER_ZONE: "zone.home",
+            REMINDER_LOCATION_DIRECTION: "on_enter",
+        },
+    )
+    await hass.async_block_till_done()
+
+    api.add_task.assert_called_once_with("task", project_id=PROJECT_ID)
+
+    # Verify the reminder is created with zone-based data
+    mock_post.assert_called_once_with(
+        "https://api.todoist.com/sync/v9/sync",
+        headers={
+            "Authorization": "Bearer token",
+            "Content-Type": "application/json; charset=utf-8",
+        },
+        json={
+            "commands": [
+                {
+                    "type": "reminder_add",
+                    "temp_id": ANY,
+                    "uuid": ANY,
+                    "args": {
+                        "item_id": ANY,
+                        "type": "location",
+                        "loc_lat": "37.7749",
+                        "loc_long": "-122.4194",
+                        "radius": 100,
+                        "loc_trigger": "on_enter",
+                        "name": "Home",
+                    },
+                }
+            ]
+        },
+    )
+
+
+async def test_create_task_service_call_with_reminder_coordinates(
+    hass: HomeAssistant, api: AsyncMock, mock_post: AsyncMock
+) -> None:
+    """Test creating a task with a coordinate-based location reminder."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_NEW_TASK,
+        {
+            CONTENT: "task",
+            PROJECT_NAME: "Name",
+            REMINDER_LATITUDE: 37.7749,
+            REMINDER_LONGITUDE: -122.4194,
+            REMINDER_RADIUS: 100,
+            REMINDER_LOCATION_NAME: "Custom Location",
+            REMINDER_LOCATION_DIRECTION: "on_leave",
+        },
+    )
+    await hass.async_block_till_done()
+
+    api.add_task.assert_called_once_with("task", project_id=PROJECT_ID)
+
+    # Verify the reminder is created with coordinate-based data
+    mock_post.assert_called_once_with(
+        "https://api.todoist.com/sync/v9/sync",
+        headers={
+            "Authorization": "Bearer token",
+            "Content-Type": "application/json; charset=utf-8",
+        },
+        json={
+            "commands": [
+                {
+                    "type": "reminder_add",
+                    "temp_id": ANY,
+                    "uuid": ANY,
+                    "args": {
+                        "item_id": ANY,
+                        "type": "location",
+                        "loc_lat": "37.7749",
+                        "loc_long": "-122.4194",
+                        "radius": 100,
+                        "loc_trigger": "on_leave",
+                        "name": "Custom Location",
+                    },
+                }
+            ]
+        },
+    )
+
+
+async def test_create_task_service_call_with_missing_name_for_coordinates(
+    hass: HomeAssistant, api: AsyncMock
+) -> None:
+    """Test creating a task with coordinates but missing name raises an error."""
+    with pytest.raises(
+        vol.Invalid,
+        match=(
+            f"If using coordinate-based fields, all of {REMINDER_LOCATION_NAME}, "
+            f"{REMINDER_LATITUDE}, {REMINDER_LONGITUDE}, and {REMINDER_RADIUS} must be provided"
+        ),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_NEW_TASK,
+            {
+                CONTENT: "task",
+                PROJECT_NAME: "Name",
+                REMINDER_LATITUDE: 37.7749,
+                REMINDER_LONGITUDE: -122.4194,
+                REMINDER_RADIUS: 100,
+            },
+            blocking=True,
+        )
+
+
+async def test_create_task_service_call_with_reminder_users_and_location(
+    hass: HomeAssistant, api: AsyncMock, mock_post: AsyncMock, mock_zone: None
+) -> None:
+    """Test creating a task with reminder users and a location reminder."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_NEW_TASK,
+        {
+            CONTENT: "task",
+            PROJECT_NAME: "Name",
+            REMINDER_ZONE: "zone.home",
+            REMINDER_LOCATION_DIRECTION: "on_enter",
+            REMINDER_USERS: ["user1", "user2"],
+        },
+    )
+    await hass.async_block_till_done()
+
+    api.get_collaborators.assert_called_once_with(PROJECT_ID)
+    api.add_task.assert_called_once_with("task", project_id=PROJECT_ID)
+
+    # Verify reminders are created for both users
+    assert mock_post.call_count == 2
+    mock_post.assert_any_call(
+        "https://api.todoist.com/sync/v9/sync",
+        headers={
+            "Authorization": "Bearer token",
+            "Content-Type": "application/json; charset=utf-8",
+        },
+        json={
+            "commands": [
+                {
+                    "type": "reminder_add",
+                    "temp_id": ANY,
+                    "uuid": ANY,
+                    "args": {
+                        "item_id": ANY,
+                        "type": "location",
+                        "loc_lat": "37.7749",
+                        "loc_long": "-122.4194",
+                        "radius": 100,
+                        "loc_trigger": "on_enter",
+                        "name": "Home",
+                        "notify_uid": "1",
+                    },
+                }
+            ]
+        },
+    )
+    mock_post.assert_any_call(
+        "https://api.todoist.com/sync/v9/sync",
+        headers={
+            "Authorization": "Bearer token",
+            "Content-Type": "application/json; charset=utf-8",
+        },
+        json={
+            "commands": [
+                {
+                    "type": "reminder_add",
+                    "temp_id": ANY,
+                    "uuid": ANY,
+                    "args": {
+                        "item_id": ANY,
+                        "type": "location",
+                        "loc_lat": "37.7749",
+                        "loc_long": "-122.4194",
+                        "radius": 100,
+                        "loc_trigger": "on_enter",
+                        "name": "Home",
+                        "notify_uid": "2",
+                    },
+                }
+            ]
+        },
     )
 
 
