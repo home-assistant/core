@@ -74,15 +74,19 @@ class AirQLight(CoordinatorEntity, LightEntity):
 
         self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
+        self._update_attr()
+
+    def _update_attr(self) -> None:
+        led_value = self.entity_description.value(self.coordinator.data)
+        self._attr_is_on = bool(led_value)
+        if self._attr_is_on:
+            # do not update if off, to be able to restore the brightness once toggled on
+            self._attr_brightness = value_to_brightness(LED_VALUE_SCALE, led_value)
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle the LED value received from the coordinator."""
-        led_value = self.entity_description.value(self.coordinator.data)
-        assert led_value is not None
-        if is_on := (led_value > 0):
-            self._attr_brightness = value_to_brightness(LED_VALUE_SCALE, led_value)
-        self._attr_is_on = is_on
+        self._update_attr()
         super()._handle_coordinator_update()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
