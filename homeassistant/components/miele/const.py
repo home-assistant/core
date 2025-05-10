@@ -280,9 +280,9 @@ class ProgramPhaseCoffeeSystem(MieleEnum):
     dispensing = 4361, 4404
     pre_brewing = 4369
     grinding = 4377
-    z_2nd_espresso = 4385
-    z_2nd_pre_brewing = 4393
-    z_2nd_grinding = 4401
+    second_espresso = 4385
+    second_pre_brewing = 4393
+    second_grinding = 4401
     rinse = 4405
 
 

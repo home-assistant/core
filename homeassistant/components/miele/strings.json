@@ -194,9 +194,9 @@
       "program_phase": {
         "name": "Program phase",
         "state": {
-          "z_2nd_espresso": "2nd espresso coffee",
-          "z_2nd_grinding": "2nd grinding",
-          "z_2nd_pre_brewing": "2nd pre-brewing",
+          "second_espresso": "2nd espresso coffee",
+          "second_grinding": "2nd grinding",
+          "second_pre_brewing": "2nd pre-brewing",
           "anti_crease": "Anti-crease",
           "blocked_brushes": "Brushes blocked",
           "blocked_drive_wheels": "Drive wheels blocked",
