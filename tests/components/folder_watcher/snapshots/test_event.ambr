@@ -4,7 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Folder Watcher /tmp/pytest-of-erik/pytest-64/popen-gw0/test_event_entity0',
+    'calculated_object_id': 'Folder Watcher test_event_entity0',
     'capabilities': dict({
       'event_types': list([
         'closed',
