@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'mock_file_test_filesize.txt Created',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,6 +28,7 @@
     'original_name': 'Created',
     'platform': 'filesize',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'created',
     'unique_id': '01JD5CTQMH9FKEFQKZJ8MMBQ3X-created',
@@ -52,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'mock_file_test_filesize.txt Last updated',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -75,6 +78,7 @@
     'original_name': 'Last updated',
     'platform': 'filesize',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_updated',
     'unique_id': '01JD5CTQMH9FKEFQKZJ8MMBQ3X-last_updated',
@@ -100,6 +104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'mock_file_test_filesize.txt Size',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -125,6 +130,7 @@
     'original_name': 'Size',
     'platform': 'filesize',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'size',
     'unique_id': '01JD5CTQMH9FKEFQKZJ8MMBQ3X',
@@ -152,6 +158,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'mock_file_test_filesize.txt Size in bytes',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -177,6 +184,7 @@
     'original_name': 'Size in bytes',
     'platform': 'filesize',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'size_bytes',
     'unique_id': '01JD5CTQMH9FKEFQKZJ8MMBQ3X-bytes',

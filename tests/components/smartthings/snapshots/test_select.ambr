@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dishwasher',
     'capabilities': dict({
       'options': list([
         'stop',
@@ -33,6 +34,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operating_state',
     'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_dishwasherOperatingState_machineState_machineState',
@@ -62,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AirDresser',
     'capabilities': dict({
       'options': list([
         'stop',
@@ -91,6 +94,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operating_state',
     'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_dryerOperatingState_machineState_machineState',
@@ -120,6 +124,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dryer',
     'capabilities': dict({
       'options': list([
         'stop',
@@ -149,6 +154,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operating_state',
     'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_dryerOperatingState_machineState_machineState',
@@ -178,6 +184,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Seca-Roupa',
     'capabilities': dict({
       'options': list([
         'stop',
@@ -207,6 +214,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operating_state',
     'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_dryerOperatingState_machineState_machineState',
@@ -236,6 +244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washer',
     'capabilities': dict({
       'options': list([
         'stop',
@@ -265,6 +274,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operating_state',
     'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_washerOperatingState_machineState_machineState',
@@ -294,6 +304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washing Machine',
     'capabilities': dict({
       'options': list([
         'stop',
@@ -323,6 +334,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operating_state',
     'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_washerOperatingState_machineState_machineState',
@@ -352,6 +364,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Machine à Laver',
     'capabilities': dict({
       'options': list([
         'stop',
@@ -381,6 +394,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operating_state',
     'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_washerOperatingState_machineState_machineState',
@@ -410,6 +424,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Machine à Laver Detergent dispense amount',
     'capabilities': dict({
       'options': list([
         'none',
@@ -440,6 +455,7 @@
     'original_name': 'Detergent dispense amount',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'detergent_amount',
     'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_samsungce.autoDispenseDetergent_amount_amount',
@@ -470,6 +486,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Machine à Laver Flexible compartment dispense amount',
     'capabilities': dict({
       'options': list([
         'none',
@@ -500,6 +517,7 @@
     'original_name': 'Flexible compartment dispense amount',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flexible_detergent_amount',
     'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_samsungce.flexibleAutoDispenseDetergent_amount_amount',
@@ -530,6 +548,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washer',
     'capabilities': dict({
       'options': list([
         'run',
@@ -559,6 +578,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operating_state',
     'unique_id': 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee_main_washerOperatingState_machineState_machineState',

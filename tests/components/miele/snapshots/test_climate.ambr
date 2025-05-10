@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Freezer',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.COOL: 'cool'>,
@@ -34,6 +35,7 @@
     'original_name': None,
     'platform': 'miele',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 1>,
     'translation_key': 'freezer',
     'unique_id': 'Dummy_Appliance_1-thermostat-1',
@@ -67,6 +69,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Refrigerator',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.COOL: 'cool'>,
@@ -97,6 +100,7 @@
     'original_name': None,
     'platform': 'miele',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 1>,
     'translation_key': 'refrigerator',
     'unique_id': 'Dummy_Appliance_2-thermostat-1',

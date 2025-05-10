@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Battery charged',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -35,6 +36,7 @@
     'original_name': 'Battery charged',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_battery_charge',
     'unique_id': '123456-total_battery_charge',
@@ -78,6 +80,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Battery discharged',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -109,6 +112,7 @@
     'original_name': 'Battery discharged',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_battery_discharge',
     'unique_id': '123456-total_battery_discharge',
@@ -152,6 +156,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Battery exported',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -183,6 +188,7 @@
     'original_name': 'Battery exported',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_energy_exported',
     'unique_id': '123456-battery_energy_exported',
@@ -226,6 +232,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Battery imported from generator',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -257,6 +264,7 @@
     'original_name': 'Battery imported from generator',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_energy_imported_from_generator',
     'unique_id': '123456-battery_energy_imported_from_generator',
@@ -300,6 +308,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Battery imported from grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -331,6 +340,7 @@
     'original_name': 'Battery imported from grid',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_energy_imported_from_grid',
     'unique_id': '123456-battery_energy_imported_from_grid',
@@ -374,6 +384,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Battery imported from solar',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -405,6 +416,7 @@
     'original_name': 'Battery imported from solar',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_energy_imported_from_solar',
     'unique_id': '123456-battery_energy_imported_from_solar',
@@ -448,6 +460,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Battery power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -479,6 +492,7 @@
     'original_name': 'Battery power',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_power',
     'unique_id': '123456-battery_power',
@@ -522,6 +536,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Consumer imported from battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -553,6 +568,7 @@
     'original_name': 'Consumer imported from battery',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'consumer_energy_imported_from_battery',
     'unique_id': '123456-consumer_energy_imported_from_battery',
@@ -596,6 +612,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Consumer imported from generator',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -627,6 +644,7 @@
     'original_name': 'Consumer imported from generator',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'consumer_energy_imported_from_generator',
     'unique_id': '123456-consumer_energy_imported_from_generator',
@@ -670,6 +688,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Consumer imported from grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -701,6 +720,7 @@
     'original_name': 'Consumer imported from grid',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'consumer_energy_imported_from_grid',
     'unique_id': '123456-consumer_energy_imported_from_grid',
@@ -744,6 +764,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Consumer imported from solar',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -775,6 +796,7 @@
     'original_name': 'Consumer imported from solar',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'consumer_energy_imported_from_solar',
     'unique_id': '123456-consumer_energy_imported_from_solar',
@@ -818,6 +840,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Energy left',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -849,6 +872,7 @@
     'original_name': 'Energy left',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_left',
     'unique_id': '123456-energy_left',
@@ -892,6 +916,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Generator exported',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -923,6 +948,7 @@
     'original_name': 'Generator exported',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'generator_energy_exported',
     'unique_id': '123456-generator_energy_exported',
@@ -966,6 +992,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Generator power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -997,6 +1024,7 @@
     'original_name': 'Generator power',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'generator_power',
     'unique_id': '123456-generator_power',
@@ -1040,6 +1068,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Grid exported',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1071,6 +1100,7 @@
     'original_name': 'Grid exported',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_grid_energy_exported',
     'unique_id': '123456-total_grid_energy_exported',
@@ -1114,6 +1144,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Grid exported from battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1145,6 +1176,7 @@
     'original_name': 'Grid exported from battery',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grid_energy_exported_from_battery',
     'unique_id': '123456-grid_energy_exported_from_battery',
@@ -1188,6 +1220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Grid exported from generator',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1219,6 +1252,7 @@
     'original_name': 'Grid exported from generator',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grid_energy_exported_from_generator',
     'unique_id': '123456-grid_energy_exported_from_generator',
@@ -1262,6 +1296,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Grid exported from solar',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1293,6 +1328,7 @@
     'original_name': 'Grid exported from solar',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grid_energy_exported_from_solar',
     'unique_id': '123456-grid_energy_exported_from_solar',
@@ -1336,6 +1372,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Grid imported',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1367,6 +1404,7 @@
     'original_name': 'Grid imported',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grid_energy_imported',
     'unique_id': '123456-grid_energy_imported',
@@ -1410,6 +1448,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Grid power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1441,6 +1480,7 @@
     'original_name': 'Grid power',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grid_power',
     'unique_id': '123456-grid_power',
@@ -1484,6 +1524,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Grid services exported',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1515,6 +1556,7 @@
     'original_name': 'Grid services exported',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grid_services_energy_exported',
     'unique_id': '123456-grid_services_energy_exported',
@@ -1558,6 +1600,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Grid services imported',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1589,6 +1632,7 @@
     'original_name': 'Grid services imported',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grid_services_energy_imported',
     'unique_id': '123456-grid_services_energy_imported',
@@ -1632,6 +1676,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Grid services power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1663,6 +1708,7 @@
     'original_name': 'Grid services power',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grid_services_power',
     'unique_id': '123456-grid_services_power',
@@ -1706,6 +1752,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Grid Status',
     'capabilities': dict({
       'options': list([
         'island_status_unknown',
@@ -1737,6 +1784,7 @@
     'original_name': 'Grid Status',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'island_status',
     'unique_id': '123456-island_status',
@@ -1790,6 +1838,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Home usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1821,6 +1870,7 @@
     'original_name': 'Home usage',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_home_usage',
     'unique_id': '123456-total_home_usage',
@@ -1864,6 +1914,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Load power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1895,6 +1946,7 @@
     'original_name': 'Load power',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'load_power',
     'unique_id': '123456-load_power',
@@ -1938,6 +1990,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Percentage charged',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1966,6 +2019,7 @@
     'original_name': 'Percentage charged',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'percentage_charged',
     'unique_id': '123456-percentage_charged',
@@ -2009,6 +2063,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Solar exported',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2040,6 +2095,7 @@
     'original_name': 'Solar exported',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'solar_energy_exported',
     'unique_id': '123456-solar_energy_exported',
@@ -2083,6 +2139,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Solar generated',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2114,6 +2171,7 @@
     'original_name': 'Solar generated',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_solar_generation',
     'unique_id': '123456-total_solar_generation',
@@ -2157,6 +2215,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Solar power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2188,6 +2247,7 @@
     'original_name': 'Solar power',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'solar_power',
     'unique_id': '123456-solar_power',
@@ -2231,6 +2291,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Total pack energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2262,6 +2323,7 @@
     'original_name': 'Total pack energy',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_pack_energy',
     'unique_id': '123456-total_pack_energy',
@@ -2305,6 +2367,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site version',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2328,6 +2391,7 @@
     'original_name': 'version',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'version',
     'unique_id': '123456-version',
@@ -2365,6 +2429,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site VPP backup reserve',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2388,6 +2453,7 @@
     'original_name': 'VPP backup reserve',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vpp_backup_reserve_percent',
     'unique_id': '123456-vpp_backup_reserve_percent',
@@ -2429,6 +2495,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Battery level',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2454,6 +2521,7 @@
     'original_name': 'Battery level',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_battery_level',
     'unique_id': 'LRWXF7EK4KC700000-charge_state_battery_level',
@@ -2497,6 +2565,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Battery range',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2528,6 +2597,7 @@
     'original_name': 'Battery range',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_battery_range',
     'unique_id': 'LRWXF7EK4KC700000-charge_state_battery_range',
@@ -2571,6 +2641,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Charge cable',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2594,6 +2665,7 @@
     'original_name': 'Charge cable',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_conn_charge_cable',
     'unique_id': 'LRWXF7EK4KC700000-charge_state_conn_charge_cable',
@@ -2631,6 +2703,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Charge energy added',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2659,6 +2732,7 @@
     'original_name': 'Charge energy added',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_energy_added',
     'unique_id': 'LRWXF7EK4KC700000-charge_state_charge_energy_added',
@@ -2702,6 +2776,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Charge rate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2730,6 +2805,7 @@
     'original_name': 'Charge rate',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_rate',
     'unique_id': 'LRWXF7EK4KC700000-charge_state_charge_rate',
@@ -2773,6 +2849,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Charger current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2798,6 +2875,7 @@
     'original_name': 'Charger current',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charger_actual_current',
     'unique_id': 'LRWXF7EK4KC700000-charge_state_charger_actual_current',
@@ -2841,6 +2919,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Charger power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2866,6 +2945,7 @@
     'original_name': 'Charger power',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charger_power',
     'unique_id': 'LRWXF7EK4KC700000-charge_state_charger_power',
@@ -2909,6 +2989,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Charger voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2934,6 +3015,7 @@
     'original_name': 'Charger voltage',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charger_voltage',
     'unique_id': 'LRWXF7EK4KC700000-charge_state_charger_voltage',
@@ -2977,6 +3059,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Charging',
     'capabilities': dict({
       'options': list([
         'starting',
@@ -3009,6 +3092,7 @@
     'original_name': 'Charging',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charging_state',
     'unique_id': 'LRWXF7EK4KC700000-charge_state_charging_state',
@@ -3064,6 +3148,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Distance to arrival',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3092,6 +3177,7 @@
     'original_name': 'Distance to arrival',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_miles_to_arrival',
     'unique_id': 'LRWXF7EK4KC700000-drive_state_active_route_miles_to_arrival',
@@ -3135,6 +3221,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Driver temperature setting',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3163,6 +3250,7 @@
     'original_name': 'Driver temperature setting',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_driver_temp_setting',
     'unique_id': 'LRWXF7EK4KC700000-climate_state_driver_temp_setting',
@@ -3206,6 +3294,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Estimate battery range',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3237,6 +3326,7 @@
     'original_name': 'Estimate battery range',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_est_battery_range',
     'unique_id': 'LRWXF7EK4KC700000-charge_state_est_battery_range',
@@ -3280,6 +3370,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Fast charger type',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3303,6 +3394,7 @@
     'original_name': 'Fast charger type',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_fast_charger_type',
     'unique_id': 'LRWXF7EK4KC700000-charge_state_fast_charger_type',
@@ -3340,6 +3432,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Ideal battery range',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3371,6 +3464,7 @@
     'original_name': 'Ideal battery range',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_ideal_battery_range',
     'unique_id': 'LRWXF7EK4KC700000-charge_state_ideal_battery_range',
@@ -3414,6 +3508,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Inside temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3442,6 +3537,7 @@
     'original_name': 'Inside temperature',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_inside_temp',
     'unique_id': 'LRWXF7EK4KC700000-climate_state_inside_temp',
@@ -3485,6 +3581,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Odometer',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3516,6 +3613,7 @@
     'original_name': 'Odometer',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_odometer',
     'unique_id': 'LRWXF7EK4KC700000-vehicle_state_odometer',
@@ -3559,6 +3657,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Outside temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3587,6 +3686,7 @@
     'original_name': 'Outside temperature',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_outside_temp',
     'unique_id': 'LRWXF7EK4KC700000-climate_state_outside_temp',
@@ -3630,6 +3730,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Passenger temperature setting',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3658,6 +3759,7 @@
     'original_name': 'Passenger temperature setting',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_passenger_temp_setting',
     'unique_id': 'LRWXF7EK4KC700000-climate_state_passenger_temp_setting',
@@ -3701,6 +3803,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3726,6 +3829,7 @@
     'original_name': 'Power',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_power',
     'unique_id': 'LRWXF7EK4KC700000-drive_state_power',
@@ -3769,6 +3873,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Shift state',
     'capabilities': dict({
       'options': list([
         'p',
@@ -3799,6 +3904,7 @@
     'original_name': 'Shift state',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_shift_state',
     'unique_id': 'LRWXF7EK4KC700000-drive_state_shift_state',
@@ -3850,6 +3956,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3878,6 +3985,7 @@
     'original_name': 'Speed',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_speed',
     'unique_id': 'LRWXF7EK4KC700000-drive_state_speed',
@@ -3921,6 +4029,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test State of charge at arrival',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3946,6 +4055,7 @@
     'original_name': 'State of charge at arrival',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_energy_at_arrival',
     'unique_id': 'LRWXF7EK4KC700000-drive_state_active_route_energy_at_arrival',
@@ -3989,6 +4099,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Time to arrival',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4012,6 +4123,7 @@
     'original_name': 'Time to arrival',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_minutes_to_arrival',
     'unique_id': 'LRWXF7EK4KC700000-drive_state_active_route_minutes_to_arrival',
@@ -4051,6 +4163,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Time to full charge',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4074,6 +4187,7 @@
     'original_name': 'Time to full charge',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_minutes_to_full_charge',
     'unique_id': 'LRWXF7EK4KC700000-charge_state_minutes_to_full_charge',
@@ -4113,6 +4227,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Tire pressure front left',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4144,6 +4259,7 @@
     'original_name': 'Tire pressure front left',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_fl',
     'unique_id': 'LRWXF7EK4KC700000-vehicle_state_tpms_pressure_fl',
@@ -4187,6 +4303,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Tire pressure front right',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4218,6 +4335,7 @@
     'original_name': 'Tire pressure front right',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_fr',
     'unique_id': 'LRWXF7EK4KC700000-vehicle_state_tpms_pressure_fr',
@@ -4261,6 +4379,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Tire pressure rear left',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4292,6 +4411,7 @@
     'original_name': 'Tire pressure rear left',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_rl',
     'unique_id': 'LRWXF7EK4KC700000-vehicle_state_tpms_pressure_rl',
@@ -4335,6 +4455,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Tire pressure rear right',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4366,6 +4487,7 @@
     'original_name': 'Tire pressure rear right',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_rr',
     'unique_id': 'LRWXF7EK4KC700000-vehicle_state_tpms_pressure_rr',
@@ -4409,6 +4531,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Traffic delay',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4434,6 +4557,7 @@
     'original_name': 'Traffic delay',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_traffic_minutes_delay',
     'unique_id': 'LRWXF7EK4KC700000-drive_state_active_route_traffic_minutes_delay',
@@ -4477,6 +4601,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Usable battery level',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4502,6 +4627,7 @@
     'original_name': 'Usable battery level',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_usable_battery_level',
     'unique_id': 'LRWXF7EK4KC700000-charge_state_usable_battery_level',
@@ -4545,6 +4671,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wall Connector Fault state code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4568,6 +4695,7 @@
     'original_name': 'Fault state code',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wall_connector_fault_state',
     'unique_id': '123456-abd-123-wall_connector_fault_state',
@@ -4605,6 +4733,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wall Connector Fault state code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4628,6 +4757,7 @@
     'original_name': 'Fault state code',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wall_connector_fault_state',
     'unique_id': '123456-bcd-234-wall_connector_fault_state',
@@ -4665,6 +4795,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wall Connector Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4696,6 +4827,7 @@
     'original_name': 'Power',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wall_connector_power',
     'unique_id': '123456-abd-123-wall_connector_power',
@@ -4739,6 +4871,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wall Connector Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4770,6 +4903,7 @@
     'original_name': 'Power',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wall_connector_power',
     'unique_id': '123456-bcd-234-wall_connector_power',
@@ -4813,6 +4947,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wall Connector State code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4836,6 +4971,7 @@
     'original_name': 'State code',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wall_connector_state',
     'unique_id': '123456-abd-123-wall_connector_state',
@@ -4873,6 +5009,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wall Connector State code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4896,6 +5033,7 @@
     'original_name': 'State code',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wall_connector_state',
     'unique_id': '123456-bcd-234-wall_connector_state',
@@ -4933,6 +5071,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wall Connector Vehicle',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4956,6 +5095,7 @@
     'original_name': 'Vehicle',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vin',
     'unique_id': '123456-abd-123-vin',
@@ -4993,6 +5133,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wall Connector Vehicle',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5016,6 +5157,7 @@
     'original_name': 'Vehicle',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vin',
     'unique_id': '123456-bcd-234-vin',

@@ -40,6 +40,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'SFR Box Restart',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -63,6 +64,7 @@
       'original_name': 'Restart',
       'platform': 'sfr_box',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': 'e4:5d:51:00:11:22_system_reboot',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test PoE Switch CPU usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,6 +30,7 @@
     'original_name': 'CPU usage',
     'platform': 'tplink_omada',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_usage',
     'unique_id': '54-AF-97-00-00-01_cpu_usage',
@@ -55,6 +57,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test PoE Switch Device status',
     'capabilities': dict({
       'options': list([
         'disconnected',
@@ -88,6 +91,7 @@
     'original_name': 'Device status',
     'platform': 'tplink_omada',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_status',
     'unique_id': '54-AF-97-00-00-01_device_status',
@@ -122,6 +126,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test PoE Switch Memory usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -147,6 +152,7 @@
     'original_name': 'Memory usage',
     'platform': 'tplink_omada',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mem_usage',
     'unique_id': '54-AF-97-00-00-01_mem_usage',
@@ -173,6 +179,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Router CPU usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -198,6 +205,7 @@
     'original_name': 'CPU usage',
     'platform': 'tplink_omada',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_usage',
     'unique_id': 'AA-BB-CC-DD-EE-FF_cpu_usage',
@@ -224,6 +232,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Router Device status',
     'capabilities': dict({
       'options': list([
         'disconnected',
@@ -257,6 +266,7 @@
     'original_name': 'Device status',
     'platform': 'tplink_omada',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_status',
     'unique_id': 'AA-BB-CC-DD-EE-FF_device_status',
@@ -291,6 +301,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Router Memory usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -316,6 +327,7 @@
     'original_name': 'Memory usage',
     'platform': 'tplink_omada',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mem_usage',
     'unique_id': 'AA-BB-CC-DD-EE-FF_mem_usage',

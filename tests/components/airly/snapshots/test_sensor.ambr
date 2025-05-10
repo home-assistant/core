@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Carbon monoxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -32,6 +33,7 @@
     'original_name': 'Carbon monoxide',
     'platform': 'airly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'co',
     'unique_id': '123-456-co',
@@ -61,6 +63,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Common air quality index',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -87,6 +90,7 @@
     'original_name': 'Common air quality index',
     'platform': 'airly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'caqi',
     'unique_id': '123-456-caqi',
@@ -116,6 +120,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -144,6 +149,7 @@
     'original_name': 'Humidity',
     'platform': 'airly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-456-humidity',
@@ -172,6 +178,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Nitrogen dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -200,6 +207,7 @@
     'original_name': 'Nitrogen dioxide',
     'platform': 'airly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-456-no2',
@@ -230,6 +238,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Ozone',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -258,6 +267,7 @@
     'original_name': 'Ozone',
     'platform': 'airly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-456-o3',
@@ -288,6 +298,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home PM1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -316,6 +327,7 @@
     'original_name': 'PM1',
     'platform': 'airly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-456-pm1',
@@ -344,6 +356,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home PM10',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -372,6 +385,7 @@
     'original_name': 'PM10',
     'platform': 'airly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-456-pm10',
@@ -402,6 +416,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -430,6 +445,7 @@
     'original_name': 'PM2.5',
     'platform': 'airly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-456-pm25',
@@ -460,6 +476,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -488,6 +505,7 @@
     'original_name': 'Pressure',
     'platform': 'airly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-456-pressure',
@@ -516,6 +534,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Sulphur dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -544,6 +563,7 @@
     'original_name': 'Sulphur dioxide',
     'platform': 'airly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-456-so2',
@@ -574,6 +594,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -602,6 +623,7 @@
     'original_name': 'Temperature',
     'platform': 'airly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-456-temperature',

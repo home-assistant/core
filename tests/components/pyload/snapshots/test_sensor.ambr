@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pyLoad Active downloads',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,6 +30,7 @@
     'original_name': 'Active downloads',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.ACTIVE: 'active'>,
     'unique_id': 'XXXXXXXXXXXXXX_active',
@@ -55,6 +57,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pyLoad Downloads in queue',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -80,6 +83,7 @@
     'original_name': 'Downloads in queue',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.QUEUE: 'queue'>,
     'unique_id': 'XXXXXXXXXXXXXX_queue',
@@ -106,6 +110,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pyLoad Free space',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -135,6 +140,7 @@
     'original_name': 'Free space',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.FREE_SPACE: 'free_space'>,
     'unique_id': 'XXXXXXXXXXXXXX_free_space',
@@ -161,6 +167,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pyLoad Speed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -190,6 +197,7 @@
     'original_name': 'Speed',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.SPEED: 'speed'>,
     'unique_id': 'XXXXXXXXXXXXXX_speed',
@@ -216,6 +224,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pyLoad Total downloads',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -241,6 +250,7 @@
     'original_name': 'Total downloads',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.TOTAL: 'total'>,
     'unique_id': 'XXXXXXXXXXXXXX_total',
@@ -267,6 +277,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pyLoad Active downloads',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -292,6 +303,7 @@
     'original_name': 'Active downloads',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.ACTIVE: 'active'>,
     'unique_id': 'XXXXXXXXXXXXXX_active',
@@ -318,6 +330,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pyLoad Downloads in queue',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -343,6 +356,7 @@
     'original_name': 'Downloads in queue',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.QUEUE: 'queue'>,
     'unique_id': 'XXXXXXXXXXXXXX_queue',
@@ -369,6 +383,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pyLoad Free space',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -398,6 +413,7 @@
     'original_name': 'Free space',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.FREE_SPACE: 'free_space'>,
     'unique_id': 'XXXXXXXXXXXXXX_free_space',
@@ -424,6 +440,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pyLoad Speed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -453,6 +470,7 @@
     'original_name': 'Speed',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.SPEED: 'speed'>,
     'unique_id': 'XXXXXXXXXXXXXX_speed',
@@ -479,6 +497,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pyLoad Total downloads',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -504,6 +523,7 @@
     'original_name': 'Total downloads',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.TOTAL: 'total'>,
     'unique_id': 'XXXXXXXXXXXXXX_total',
@@ -530,6 +550,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pyLoad Active downloads',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -555,6 +576,7 @@
     'original_name': 'Active downloads',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.ACTIVE: 'active'>,
     'unique_id': 'XXXXXXXXXXXXXX_active',
@@ -581,6 +603,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pyLoad Downloads in queue',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -606,6 +629,7 @@
     'original_name': 'Downloads in queue',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.QUEUE: 'queue'>,
     'unique_id': 'XXXXXXXXXXXXXX_queue',
@@ -632,6 +656,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pyLoad Free space',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -661,6 +686,7 @@
     'original_name': 'Free space',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.FREE_SPACE: 'free_space'>,
     'unique_id': 'XXXXXXXXXXXXXX_free_space',
@@ -687,6 +713,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pyLoad Speed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -716,6 +743,7 @@
     'original_name': 'Speed',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.SPEED: 'speed'>,
     'unique_id': 'XXXXXXXXXXXXXX_speed',
@@ -742,6 +770,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pyLoad Total downloads',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -767,6 +796,7 @@
     'original_name': 'Total downloads',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.TOTAL: 'total'>,
     'unique_id': 'XXXXXXXXXXXXXX_total',
@@ -793,6 +823,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pyLoad Active downloads',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -818,6 +849,7 @@
     'original_name': 'Active downloads',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.ACTIVE: 'active'>,
     'unique_id': 'XXXXXXXXXXXXXX_active',
@@ -844,6 +876,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pyLoad Downloads in queue',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -869,6 +902,7 @@
     'original_name': 'Downloads in queue',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.QUEUE: 'queue'>,
     'unique_id': 'XXXXXXXXXXXXXX_queue',
@@ -895,6 +929,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pyLoad Free space',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -924,6 +959,7 @@
     'original_name': 'Free space',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.FREE_SPACE: 'free_space'>,
     'unique_id': 'XXXXXXXXXXXXXX_free_space',
@@ -950,6 +986,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pyLoad Speed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -979,6 +1016,7 @@
     'original_name': 'Speed',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.SPEED: 'speed'>,
     'unique_id': 'XXXXXXXXXXXXXX_speed',
@@ -1005,6 +1043,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pyLoad Total downloads',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1030,6 +1069,7 @@
     'original_name': 'Total downloads',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.TOTAL: 'total'>,
     'unique_id': 'XXXXXXXXXXXXXX_total',

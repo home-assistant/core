@@ -17,6 +17,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'home-assistant.io Admin',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -40,6 +41,7 @@
     'original_name': 'Admin',
     'platform': 'whois',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'admin',
     'unique_id': 'home-assistant.io_admin',
@@ -98,6 +100,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'home-assistant.io Created',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -121,6 +124,7 @@
     'original_name': 'Created',
     'platform': 'whois',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'creation_date',
     'unique_id': 'home-assistant.io_creation_date',
@@ -183,6 +187,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'home-assistant.io Days until expiration',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -206,6 +211,7 @@
     'original_name': 'Days until expiration',
     'platform': 'whois',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'days_until_expiration',
     'unique_id': 'home-assistant.io_days_until_expiration',
@@ -264,6 +270,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'home-assistant.io Expires',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -287,6 +294,7 @@
     'original_name': 'Expires',
     'platform': 'whois',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'expiration_date',
     'unique_id': 'home-assistant.io_expiration_date',
@@ -345,6 +353,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'home-assistant.io Last updated',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -368,6 +377,7 @@
     'original_name': 'Last updated',
     'platform': 'whois',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_updated',
     'unique_id': 'home-assistant.io_last_updated',
@@ -425,6 +435,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'home-assistant.io Owner',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -448,6 +459,7 @@
     'original_name': 'Owner',
     'platform': 'whois',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'owner',
     'unique_id': 'home-assistant.io_owner',
@@ -505,6 +517,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'home-assistant.io Registrant',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -528,6 +541,7 @@
     'original_name': 'Registrant',
     'platform': 'whois',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'registrant',
     'unique_id': 'home-assistant.io_registrant',
@@ -585,6 +599,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'home-assistant.io Registrar',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -608,6 +623,7 @@
     'original_name': 'Registrar',
     'platform': 'whois',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'registrar',
     'unique_id': 'home-assistant.io_registrar',
@@ -665,6 +681,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'home-assistant.io Reseller',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -688,6 +705,7 @@
     'original_name': 'Reseller',
     'platform': 'whois',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reseller',
     'unique_id': 'home-assistant.io_reseller',
@@ -771,6 +789,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'home-assistant.io Status',
     'capabilities': dict({
       'options': list([
         'add_period',
@@ -820,6 +839,7 @@
     'original_name': 'Status',
     'platform': 'whois',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
     'unique_id': 'home-assistant.io_status',
@@ -878,6 +898,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'home-assistant.io Last updated',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -901,6 +922,7 @@
     'original_name': 'Last updated',
     'platform': 'whois',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_updated',
     'unique_id': 'home-assistant.io_last_updated',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Comfort temperature',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -32,6 +33,7 @@
     'original_name': 'Comfort temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'comfort_temperature',
     'unique_id': 'gateway0_deviceSerialVitodens300W-comfort_temperature-0',
@@ -62,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Comfort temperature',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -90,6 +93,7 @@
     'original_name': 'Comfort temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'comfort_temperature',
     'unique_id': 'gateway0_deviceSerialVitodens300W-comfort_temperature-1',
@@ -120,6 +124,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 DHW temperature',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -148,6 +153,7 @@
     'original_name': 'DHW temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dhw_temperature',
     'unique_id': 'gateway0_deviceSerialVitodens300W-dhw_temperature',
@@ -178,6 +184,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Heating curve shift',
     'capabilities': dict({
       'max': 40,
       'min': -13,
@@ -206,6 +213,7 @@
     'original_name': 'Heating curve shift',
     'platform': 'vicare',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heating_curve_shift',
     'unique_id': 'gateway0_deviceSerialVitodens300W-heating curve shift-0',
@@ -236,6 +244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Heating curve shift',
     'capabilities': dict({
       'max': 40,
       'min': -13,
@@ -264,6 +273,7 @@
     'original_name': 'Heating curve shift',
     'platform': 'vicare',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heating_curve_shift',
     'unique_id': 'gateway0_deviceSerialVitodens300W-heating curve shift-1',
@@ -294,6 +304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Heating curve slope',
     'capabilities': dict({
       'max': 3.5,
       'min': 0.2,
@@ -322,6 +333,7 @@
     'original_name': 'Heating curve slope',
     'platform': 'vicare',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heating_curve_slope',
     'unique_id': 'gateway0_deviceSerialVitodens300W-heating curve slope-0',
@@ -350,6 +362,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Heating curve slope',
     'capabilities': dict({
       'max': 3.5,
       'min': 0.2,
@@ -378,6 +391,7 @@
     'original_name': 'Heating curve slope',
     'platform': 'vicare',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heating_curve_slope',
     'unique_id': 'gateway0_deviceSerialVitodens300W-heating curve slope-1',
@@ -406,6 +420,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Normal temperature',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -434,6 +449,7 @@
     'original_name': 'Normal temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'normal_temperature',
     'unique_id': 'gateway0_deviceSerialVitodens300W-normal_temperature-0',
@@ -464,6 +480,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Normal temperature',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -492,6 +509,7 @@
     'original_name': 'Normal temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'normal_temperature',
     'unique_id': 'gateway0_deviceSerialVitodens300W-normal_temperature-1',
@@ -522,6 +540,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Reduced temperature',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -550,6 +569,7 @@
     'original_name': 'Reduced temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reduced_temperature',
     'unique_id': 'gateway0_deviceSerialVitodens300W-reduced_temperature-0',
@@ -580,6 +600,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Reduced temperature',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -608,6 +629,7 @@
     'original_name': 'Reduced temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reduced_temperature',
     'unique_id': 'gateway0_deviceSerialVitodens300W-reduced_temperature-1',

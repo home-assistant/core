@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test HA-1000 Series',
     'capabilities': dict({
       'options': list([
         'idle',
@@ -33,6 +34,7 @@
     'original_name': None,
     'platform': 'ipp',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'printer',
     'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_printer',
@@ -70,6 +72,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test HA-1000 Series Black ink',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -95,6 +98,7 @@
     'original_name': 'Black ink',
     'platform': 'ipp',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'marker',
     'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_marker_0',
@@ -124,6 +128,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test HA-1000 Series Cyan ink',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -149,6 +154,7 @@
     'original_name': 'Cyan ink',
     'platform': 'ipp',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'marker',
     'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_marker_1',
@@ -178,6 +184,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test HA-1000 Series Magenta ink',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -203,6 +210,7 @@
     'original_name': 'Magenta ink',
     'platform': 'ipp',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'marker',
     'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_marker_2',
@@ -232,6 +240,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test HA-1000 Series Photo black ink',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -257,6 +266,7 @@
     'original_name': 'Photo black ink',
     'platform': 'ipp',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'marker',
     'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_marker_3',
@@ -286,6 +296,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test HA-1000 Series Uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -309,6 +320,7 @@
     'original_name': 'Uptime',
     'platform': 'ipp',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_uptime',
@@ -334,6 +346,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test HA-1000 Series Yellow ink',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -359,6 +372,7 @@
     'original_name': 'Yellow ink',
     'platform': 'ipp',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'marker',
     'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_marker_4',

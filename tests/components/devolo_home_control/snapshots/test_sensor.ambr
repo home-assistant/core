@@ -20,6 +20,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -45,6 +46,7 @@
     'original_name': 'Battery',
     'platform': 'devolo_home_control',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'devolo.BatterySensor:Test',
@@ -71,6 +73,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Brightness',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -96,6 +99,7 @@
     'original_name': 'Brightness',
     'platform': 'devolo_home_control',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'brightness',
     'unique_id': 'devolo.MultiLevelSensor:Test',
@@ -123,6 +127,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -148,6 +153,7 @@
     'original_name': 'Power',
     'platform': 'devolo_home_control',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'devolo.Meter:Test_current',
@@ -175,6 +181,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -200,6 +207,7 @@
     'original_name': 'Energy',
     'platform': 'devolo_home_control',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'devolo.Meter:Test_total',
@@ -227,6 +235,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -252,6 +261,7 @@
     'original_name': 'Temperature',
     'platform': 'devolo_home_control',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'devolo.MultiLevelSensor:Test',

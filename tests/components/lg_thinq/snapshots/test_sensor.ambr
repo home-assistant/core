@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test air conditioner Filter remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,6 +28,7 @@
     'original_name': 'Filter remaining',
     'platform': 'lg_thinq',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <Property.FILTER_LIFETIME: 'filter_lifetime'>,
     'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_filter_lifetime',
@@ -52,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test air conditioner Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -77,6 +80,7 @@
     'original_name': 'Humidity',
     'platform': 'lg_thinq',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_humidity',
@@ -104,6 +108,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test air conditioner PM1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -129,6 +134,7 @@
     'original_name': 'PM1',
     'platform': 'lg_thinq',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_pm1',
@@ -156,6 +162,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test air conditioner PM10',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -181,6 +188,7 @@
     'original_name': 'PM10',
     'platform': 'lg_thinq',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_pm10',
@@ -208,6 +216,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test air conditioner PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -233,6 +242,7 @@
     'original_name': 'PM2.5',
     'platform': 'lg_thinq',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_pm2',
@@ -260,6 +270,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test air conditioner Schedule turn-off',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -283,6 +294,7 @@
     'original_name': 'Schedule turn-off',
     'platform': 'lg_thinq',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <TimerProperty.RELATIVE_TO_STOP: 'relative_to_stop'>,
     'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_relative_to_stop',
@@ -309,6 +321,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test air conditioner Schedule turn-on',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -332,6 +345,7 @@
     'original_name': 'Schedule turn-on',
     'platform': 'lg_thinq',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <TimerProperty.RELATIVE_TO_START: 'relative_to_start'>,
     'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_relative_to_start',
@@ -358,6 +372,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test air conditioner Schedule turn-on',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -381,6 +396,7 @@
     'original_name': 'Schedule turn-on',
     'platform': 'lg_thinq',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <TimerProperty.ABSOLUTE_TO_START: 'absolute_to_start'>,
     'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_absolute_to_start',

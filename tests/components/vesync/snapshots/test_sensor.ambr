@@ -40,6 +40,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Air Purifier 131s Filter lifetime',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -65,6 +66,7 @@
       'original_name': 'Filter lifetime',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'filter_life',
       'unique_id': 'air-purifier-filter-life',
@@ -74,6 +76,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Air Purifier 131s Air quality',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -97,6 +100,7 @@
       'original_name': 'Air quality',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'air_quality',
       'unique_id': 'air-purifier-air-quality',
@@ -173,6 +177,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Air Purifier 200s Filter lifetime',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -198,6 +203,7 @@
       'original_name': 'Filter lifetime',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'filter_life',
       'unique_id': 'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55-filter-life',
@@ -261,6 +267,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Air Purifier 400s Filter lifetime',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -286,6 +293,7 @@
       'original_name': 'Filter lifetime',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'filter_life',
       'unique_id': '400s-purifier-filter-life',
@@ -295,6 +303,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Air Purifier 400s Air quality',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -318,6 +327,7 @@
       'original_name': 'Air quality',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'air_quality',
       'unique_id': '400s-purifier-air-quality',
@@ -327,6 +337,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Air Purifier 400s PM2.5',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -352,6 +363,7 @@
       'original_name': 'PM2.5',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '400s-purifier-pm25',
@@ -444,6 +456,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Air Purifier 600s Filter lifetime',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -469,6 +482,7 @@
       'original_name': 'Filter lifetime',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'filter_life',
       'unique_id': '600s-purifier-filter-life',
@@ -478,6 +492,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Air Purifier 600s Air quality',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -501,6 +516,7 @@
       'original_name': 'Air quality',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'air_quality',
       'unique_id': '600s-purifier-air-quality',
@@ -510,6 +526,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Air Purifier 600s PM2.5',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -535,6 +552,7 @@
       'original_name': 'PM2.5',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '600s-purifier-pm25',
@@ -705,6 +723,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Humidifier 200s Humidity',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -730,6 +749,7 @@
       'original_name': 'Humidity',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '200s-humidifier4321-humidity',
@@ -794,6 +814,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Humidifier 600S Humidity',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -819,6 +840,7 @@
       'original_name': 'Humidity',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '600s-humidifier-humidity',
@@ -883,6 +905,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Outlet Current power',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -908,6 +931,7 @@
       'original_name': 'Current power',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'current_power',
       'unique_id': 'outlet-power',
@@ -917,6 +941,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Outlet Energy use today',
       'capabilities': dict({
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       }),
@@ -942,6 +967,7 @@
       'original_name': 'Energy use today',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'energy_today',
       'unique_id': 'outlet-energy',
@@ -951,6 +977,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Outlet Energy use weekly',
       'capabilities': dict({
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       }),
@@ -976,6 +1003,7 @@
       'original_name': 'Energy use weekly',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'energy_week',
       'unique_id': 'outlet-energy-weekly',
@@ -985,6 +1013,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Outlet Energy use monthly',
       'capabilities': dict({
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       }),
@@ -1010,6 +1039,7 @@
       'original_name': 'Energy use monthly',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'energy_month',
       'unique_id': 'outlet-energy-monthly',
@@ -1019,6 +1049,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Outlet Energy use yearly',
       'capabilities': dict({
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       }),
@@ -1044,6 +1075,7 @@
       'original_name': 'Energy use yearly',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'energy_year',
       'unique_id': 'outlet-energy-yearly',
@@ -1053,6 +1085,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Outlet Current voltage',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -1078,6 +1111,7 @@
       'original_name': 'Current voltage',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'current_voltage',
       'unique_id': 'outlet-voltage',

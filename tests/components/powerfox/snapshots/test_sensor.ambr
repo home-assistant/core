@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Heatopti Delta energy',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,6 +28,7 @@
     'original_name': 'Delta energy',
     'platform': 'powerfox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heat_delta_energy',
     'unique_id': '9x9x1f12xx5x_heat_delta_energy',
@@ -53,6 +55,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Heatopti Delta volume',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -79,6 +82,7 @@
     'original_name': 'Delta volume',
     'platform': 'powerfox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heat_delta_volume',
     'unique_id': '9x9x1f12xx5x_heat_delta_volume',
@@ -105,6 +109,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Heatopti Total energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -130,6 +135,7 @@
     'original_name': 'Total energy',
     'platform': 'powerfox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heat_total_energy',
     'unique_id': '9x9x1f12xx5x_heat_total_energy',
@@ -157,6 +163,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Heatopti Total volume',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -182,6 +189,7 @@
     'original_name': 'Total volume',
     'platform': 'powerfox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heat_total_volume',
     'unique_id': '9x9x1f12xx5x_heat_total_volume',
@@ -209,6 +217,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Poweropti Energy return',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -234,6 +243,7 @@
     'original_name': 'Energy return',
     'platform': 'powerfox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_return',
     'unique_id': '9x9x1f12xx3x_energy_return',
@@ -261,6 +271,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Poweropti Energy usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -286,6 +297,7 @@
     'original_name': 'Energy usage',
     'platform': 'powerfox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_usage',
     'unique_id': '9x9x1f12xx3x_energy_usage',
@@ -313,6 +325,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Poweropti Energy usage high tariff',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -338,6 +351,7 @@
     'original_name': 'Energy usage high tariff',
     'platform': 'powerfox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_usage_high_tariff',
     'unique_id': '9x9x1f12xx3x_energy_usage_high_tariff',
@@ -365,6 +379,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Poweropti Energy usage low tariff',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -390,6 +405,7 @@
     'original_name': 'Energy usage low tariff',
     'platform': 'powerfox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_usage_low_tariff',
     'unique_id': '9x9x1f12xx3x_energy_usage_low_tariff',
@@ -417,6 +433,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Poweropti Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -442,6 +459,7 @@
     'original_name': 'Power',
     'platform': 'powerfox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '9x9x1f12xx3x_power',
@@ -469,6 +487,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wateropti Cold water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -494,6 +513,7 @@
     'original_name': 'Cold water',
     'platform': 'powerfox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cold_water',
     'unique_id': '9x9x1f12xx4x_cold_water',
@@ -521,6 +541,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wateropti Warm water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -546,6 +567,7 @@
     'original_name': 'Warm water',
     'platform': 'powerfox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'warm_water',
     'unique_id': '9x9x1f12xx4x_warm_water',

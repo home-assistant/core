@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My Home Station Air density',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -32,6 +33,7 @@
     'original_name': 'Air density',
     'platform': 'weatherflow_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_density',
     'unique_id': '24432_air_density',
@@ -59,6 +61,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My Home Station Dew point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -87,6 +90,7 @@
     'original_name': 'Dew point',
     'platform': 'weatherflow_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dew_point',
     'unique_id': '24432_dew_point',
@@ -115,6 +119,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My Home Station Feels like',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -143,6 +148,7 @@
     'original_name': 'Feels like',
     'platform': 'weatherflow_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'feels_like',
     'unique_id': '24432_feels_like',
@@ -171,6 +177,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My Home Station Heat index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -199,6 +206,7 @@
     'original_name': 'Heat index',
     'platform': 'weatherflow_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heat_index',
     'unique_id': '24432_heat_index',
@@ -227,6 +235,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My Home Station Lightning count',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -252,6 +261,7 @@
     'original_name': 'Lightning count',
     'platform': 'weatherflow_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lightning_strike_count',
     'unique_id': '24432_lightning_strike_count',
@@ -278,6 +288,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My Home Station Lightning count last 1 hr',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -303,6 +314,7 @@
     'original_name': 'Lightning count last 1 hr',
     'platform': 'weatherflow_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lightning_strike_count_last_1hr',
     'unique_id': '24432_lightning_strike_count_last_1hr',
@@ -329,6 +341,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My Home Station Lightning count last 3 hr',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -354,6 +367,7 @@
     'original_name': 'Lightning count last 3 hr',
     'platform': 'weatherflow_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lightning_strike_count_last_3hr',
     'unique_id': '24432_lightning_strike_count_last_3hr',
@@ -380,6 +394,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My Home Station Lightning last distance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -405,6 +420,7 @@
     'original_name': 'Lightning last distance',
     'platform': 'weatherflow_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lightning_strike_last_distance',
     'unique_id': '24432_lightning_strike_last_distance',
@@ -433,6 +449,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My Home Station Lightning last strike',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -456,6 +473,7 @@
     'original_name': 'Lightning last strike',
     'platform': 'weatherflow_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lightning_strike_last_epoch',
     'unique_id': '24432_lightning_strike_last_epoch',
@@ -482,6 +500,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My Home Station Pressure barometric',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -513,6 +532,7 @@
     'original_name': 'Pressure barometric',
     'platform': 'weatherflow_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'barometric_pressure',
     'unique_id': '24432_barometric_pressure',
@@ -541,6 +561,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My Home Station Pressure sea level',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -572,6 +593,7 @@
     'original_name': 'Pressure sea level',
     'platform': 'weatherflow_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sea_level_pressure',
     'unique_id': '24432_sea_level_pressure',
@@ -600,6 +622,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My Home Station Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -628,6 +651,7 @@
     'original_name': 'Temperature',
     'platform': 'weatherflow_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_temperature',
     'unique_id': '24432_air_temperature',
@@ -656,6 +680,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My Home Station Wet bulb globe temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -684,6 +709,7 @@
     'original_name': 'Wet bulb globe temperature',
     'platform': 'weatherflow_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wet_bulb_globe_temperature',
     'unique_id': '24432_wet_bulb_globe_temperature',
@@ -712,6 +738,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My Home Station Wet bulb temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -740,6 +767,7 @@
     'original_name': 'Wet bulb temperature',
     'platform': 'weatherflow_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wet_bulb_temperature',
     'unique_id': '24432_wet_bulb_temperature',
@@ -768,6 +796,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My Home Station Wind chill',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -796,6 +825,7 @@
     'original_name': 'Wind chill',
     'platform': 'weatherflow_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_chill',
     'unique_id': '24432_wind_chill',

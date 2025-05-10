@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Air quality day 0',
     'capabilities': dict({
       'options': list([
         'good',
@@ -35,6 +36,7 @@
     'original_name': 'Air quality day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_quality',
     'unique_id': '0123456-airquality-0',
@@ -68,6 +70,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Air quality day 1',
     'capabilities': dict({
       'options': list([
         'good',
@@ -99,6 +102,7 @@
     'original_name': 'Air quality day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_quality',
     'unique_id': '0123456-airquality-1',
@@ -132,6 +136,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Air quality day 2',
     'capabilities': dict({
       'options': list([
         'good',
@@ -163,6 +168,7 @@
     'original_name': 'Air quality day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_quality',
     'unique_id': '0123456-airquality-2',
@@ -196,6 +202,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Air quality day 3',
     'capabilities': dict({
       'options': list([
         'good',
@@ -227,6 +234,7 @@
     'original_name': 'Air quality day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_quality',
     'unique_id': '0123456-airquality-3',
@@ -260,6 +268,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Air quality day 4',
     'capabilities': dict({
       'options': list([
         'good',
@@ -291,6 +300,7 @@
     'original_name': 'Air quality day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_quality',
     'unique_id': '0123456-airquality-4',
@@ -324,6 +334,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Apparent temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -349,6 +360,7 @@
     'original_name': 'Apparent temperature',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'apparent_temperature',
     'unique_id': '0123456-apparenttemperature',
@@ -377,6 +389,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Cloud ceiling',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -405,6 +418,7 @@
     'original_name': 'Cloud ceiling',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_ceiling',
     'unique_id': '0123456-ceiling',
@@ -433,6 +447,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Cloud cover',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -458,6 +473,7 @@
     'original_name': 'Cloud cover',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_cover',
     'unique_id': '0123456-cloudcover',
@@ -485,6 +501,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Cloud cover day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -508,6 +525,7 @@
     'original_name': 'Cloud cover day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_cover_day',
     'unique_id': '0123456-cloudcoverday-0',
@@ -534,6 +552,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Cloud cover day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -557,6 +576,7 @@
     'original_name': 'Cloud cover day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_cover_day',
     'unique_id': '0123456-cloudcoverday-1',
@@ -583,6 +603,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Cloud cover day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -606,6 +627,7 @@
     'original_name': 'Cloud cover day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_cover_day',
     'unique_id': '0123456-cloudcoverday-2',
@@ -632,6 +654,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Cloud cover day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -655,6 +678,7 @@
     'original_name': 'Cloud cover day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_cover_day',
     'unique_id': '0123456-cloudcoverday-3',
@@ -681,6 +705,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Cloud cover day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -704,6 +729,7 @@
     'original_name': 'Cloud cover day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_cover_day',
     'unique_id': '0123456-cloudcoverday-4',
@@ -730,6 +756,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Cloud cover night 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -753,6 +780,7 @@
     'original_name': 'Cloud cover night 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_cover_night',
     'unique_id': '0123456-cloudcovernight-0',
@@ -779,6 +807,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Cloud cover night 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -802,6 +831,7 @@
     'original_name': 'Cloud cover night 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_cover_night',
     'unique_id': '0123456-cloudcovernight-1',
@@ -828,6 +858,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Cloud cover night 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -851,6 +882,7 @@
     'original_name': 'Cloud cover night 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_cover_night',
     'unique_id': '0123456-cloudcovernight-2',
@@ -877,6 +909,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Cloud cover night 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -900,6 +933,7 @@
     'original_name': 'Cloud cover night 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_cover_night',
     'unique_id': '0123456-cloudcovernight-3',
@@ -926,6 +960,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Cloud cover night 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -949,6 +984,7 @@
     'original_name': 'Cloud cover night 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_cover_night',
     'unique_id': '0123456-cloudcovernight-4',
@@ -975,6 +1011,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Condition day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -998,6 +1035,7 @@
     'original_name': 'Condition day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'condition_day',
     'unique_id': '0123456-longphraseday-0',
@@ -1023,6 +1061,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Condition day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1046,6 +1085,7 @@
     'original_name': 'Condition day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'condition_day',
     'unique_id': '0123456-longphraseday-1',
@@ -1071,6 +1111,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Condition day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1094,6 +1135,7 @@
     'original_name': 'Condition day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'condition_day',
     'unique_id': '0123456-longphraseday-2',
@@ -1119,6 +1161,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Condition day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1142,6 +1185,7 @@
     'original_name': 'Condition day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'condition_day',
     'unique_id': '0123456-longphraseday-3',
@@ -1167,6 +1211,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Condition day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1190,6 +1235,7 @@
     'original_name': 'Condition day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'condition_day',
     'unique_id': '0123456-longphraseday-4',
@@ -1215,6 +1261,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Condition night 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1238,6 +1285,7 @@
     'original_name': 'Condition night 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'condition_night',
     'unique_id': '0123456-longphrasenight-0',
@@ -1263,6 +1311,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Condition night 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1286,6 +1335,7 @@
     'original_name': 'Condition night 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'condition_night',
     'unique_id': '0123456-longphrasenight-1',
@@ -1311,6 +1361,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Condition night 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1334,6 +1385,7 @@
     'original_name': 'Condition night 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'condition_night',
     'unique_id': '0123456-longphrasenight-2',
@@ -1359,6 +1411,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Condition night 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1382,6 +1435,7 @@
     'original_name': 'Condition night 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'condition_night',
     'unique_id': '0123456-longphrasenight-3',
@@ -1407,6 +1461,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Condition night 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1430,6 +1485,7 @@
     'original_name': 'Condition night 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'condition_night',
     'unique_id': '0123456-longphrasenight-4',
@@ -1455,6 +1511,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Dew point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1480,6 +1537,7 @@
     'original_name': 'Dew point',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dew_point',
     'unique_id': '0123456-dewpoint',
@@ -1508,6 +1566,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Grass pollen day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1531,6 +1590,7 @@
     'original_name': 'Grass pollen day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grass_pollen',
     'unique_id': '0123456-grass-0',
@@ -1558,6 +1618,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Grass pollen day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1581,6 +1642,7 @@
     'original_name': 'Grass pollen day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grass_pollen',
     'unique_id': '0123456-grass-1',
@@ -1608,6 +1670,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Grass pollen day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1631,6 +1694,7 @@
     'original_name': 'Grass pollen day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grass_pollen',
     'unique_id': '0123456-grass-2',
@@ -1658,6 +1722,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Grass pollen day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1681,6 +1746,7 @@
     'original_name': 'Grass pollen day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grass_pollen',
     'unique_id': '0123456-grass-3',
@@ -1708,6 +1774,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Grass pollen day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1731,6 +1798,7 @@
     'original_name': 'Grass pollen day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grass_pollen',
     'unique_id': '0123456-grass-4',
@@ -1758,6 +1826,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Hours of sun day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1781,6 +1850,7 @@
     'original_name': 'Hours of sun day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hours_of_sun',
     'unique_id': '0123456-hoursofsun-0',
@@ -1807,6 +1877,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Hours of sun day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1830,6 +1901,7 @@
     'original_name': 'Hours of sun day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hours_of_sun',
     'unique_id': '0123456-hoursofsun-1',
@@ -1856,6 +1928,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Hours of sun day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1879,6 +1952,7 @@
     'original_name': 'Hours of sun day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hours_of_sun',
     'unique_id': '0123456-hoursofsun-2',
@@ -1905,6 +1979,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Hours of sun day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1928,6 +2003,7 @@
     'original_name': 'Hours of sun day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hours_of_sun',
     'unique_id': '0123456-hoursofsun-3',
@@ -1954,6 +2030,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Hours of sun day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1977,6 +2054,7 @@
     'original_name': 'Hours of sun day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hours_of_sun',
     'unique_id': '0123456-hoursofsun-4',
@@ -2003,6 +2081,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2028,6 +2107,7 @@
     'original_name': 'Humidity',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': '0123456-relativehumidity',
@@ -2056,6 +2136,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Mold pollen day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2079,6 +2160,7 @@
     'original_name': 'Mold pollen day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mold_pollen',
     'unique_id': '0123456-mold-0',
@@ -2106,6 +2188,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Mold pollen day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2129,6 +2212,7 @@
     'original_name': 'Mold pollen day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mold_pollen',
     'unique_id': '0123456-mold-1',
@@ -2156,6 +2240,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Mold pollen day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2179,6 +2264,7 @@
     'original_name': 'Mold pollen day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mold_pollen',
     'unique_id': '0123456-mold-2',
@@ -2206,6 +2292,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Mold pollen day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2229,6 +2316,7 @@
     'original_name': 'Mold pollen day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mold_pollen',
     'unique_id': '0123456-mold-3',
@@ -2256,6 +2344,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Mold pollen day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2279,6 +2368,7 @@
     'original_name': 'Mold pollen day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mold_pollen',
     'unique_id': '0123456-mold-4',
@@ -2306,6 +2396,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Precipitation',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2331,6 +2422,7 @@
     'original_name': 'Precipitation',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'precipitation',
     'unique_id': '0123456-precipitation',
@@ -2360,6 +2452,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2388,6 +2481,7 @@
     'original_name': 'Pressure',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pressure',
     'unique_id': '0123456-pressure',
@@ -2416,6 +2510,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Pressure tendency',
     'capabilities': dict({
       'options': list([
         'falling',
@@ -2445,6 +2540,7 @@
     'original_name': 'Pressure tendency',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pressure_tendency',
     'unique_id': '0123456-pressuretendency',
@@ -2476,6 +2572,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Ragweed pollen day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2499,6 +2596,7 @@
     'original_name': 'Ragweed pollen day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ragweed_pollen',
     'unique_id': '0123456-ragweed-0',
@@ -2526,6 +2624,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Ragweed pollen day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2549,6 +2648,7 @@
     'original_name': 'Ragweed pollen day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ragweed_pollen',
     'unique_id': '0123456-ragweed-1',
@@ -2576,6 +2676,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Ragweed pollen day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2599,6 +2700,7 @@
     'original_name': 'Ragweed pollen day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ragweed_pollen',
     'unique_id': '0123456-ragweed-2',
@@ -2626,6 +2728,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Ragweed pollen day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2649,6 +2752,7 @@
     'original_name': 'Ragweed pollen day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ragweed_pollen',
     'unique_id': '0123456-ragweed-3',
@@ -2676,6 +2780,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Ragweed pollen day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2699,6 +2804,7 @@
     'original_name': 'Ragweed pollen day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ragweed_pollen',
     'unique_id': '0123456-ragweed-4',
@@ -2726,6 +2832,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home RealFeel temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2751,6 +2858,7 @@
     'original_name': 'RealFeel temperature',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature',
     'unique_id': '0123456-realfeeltemperature',
@@ -2779,6 +2887,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home RealFeel temperature max day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2802,6 +2911,7 @@
     'original_name': 'RealFeel temperature max day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_max',
     'unique_id': '0123456-realfeeltemperaturemax-0',
@@ -2829,6 +2939,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home RealFeel temperature max day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2852,6 +2963,7 @@
     'original_name': 'RealFeel temperature max day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_max',
     'unique_id': '0123456-realfeeltemperaturemax-1',
@@ -2879,6 +2991,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home RealFeel temperature max day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2902,6 +3015,7 @@
     'original_name': 'RealFeel temperature max day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_max',
     'unique_id': '0123456-realfeeltemperaturemax-2',
@@ -2929,6 +3043,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home RealFeel temperature max day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2952,6 +3067,7 @@
     'original_name': 'RealFeel temperature max day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_max',
     'unique_id': '0123456-realfeeltemperaturemax-3',
@@ -2979,6 +3095,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home RealFeel temperature max day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3002,6 +3119,7 @@
     'original_name': 'RealFeel temperature max day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_max',
     'unique_id': '0123456-realfeeltemperaturemax-4',
@@ -3029,6 +3147,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home RealFeel temperature min day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3052,6 +3171,7 @@
     'original_name': 'RealFeel temperature min day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_min',
     'unique_id': '0123456-realfeeltemperaturemin-0',
@@ -3079,6 +3199,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home RealFeel temperature min day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3102,6 +3223,7 @@
     'original_name': 'RealFeel temperature min day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_min',
     'unique_id': '0123456-realfeeltemperaturemin-1',
@@ -3129,6 +3251,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home RealFeel temperature min day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3152,6 +3275,7 @@
     'original_name': 'RealFeel temperature min day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_min',
     'unique_id': '0123456-realfeeltemperaturemin-2',
@@ -3179,6 +3303,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home RealFeel temperature min day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3202,6 +3327,7 @@
     'original_name': 'RealFeel temperature min day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_min',
     'unique_id': '0123456-realfeeltemperaturemin-3',
@@ -3229,6 +3355,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home RealFeel temperature min day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3252,6 +3379,7 @@
     'original_name': 'RealFeel temperature min day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_min',
     'unique_id': '0123456-realfeeltemperaturemin-4',
@@ -3279,6 +3407,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home RealFeel temperature shade',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3304,6 +3433,7 @@
     'original_name': 'RealFeel temperature shade',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_shade',
     'unique_id': '0123456-realfeeltemperatureshade',
@@ -3332,6 +3462,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home RealFeel temperature shade max day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3355,6 +3486,7 @@
     'original_name': 'RealFeel temperature shade max day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_shade_max',
     'unique_id': '0123456-realfeeltemperatureshademax-0',
@@ -3382,6 +3514,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home RealFeel temperature shade max day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3405,6 +3538,7 @@
     'original_name': 'RealFeel temperature shade max day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_shade_max',
     'unique_id': '0123456-realfeeltemperatureshademax-1',
@@ -3432,6 +3566,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home RealFeel temperature shade max day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3455,6 +3590,7 @@
     'original_name': 'RealFeel temperature shade max day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_shade_max',
     'unique_id': '0123456-realfeeltemperatureshademax-2',
@@ -3482,6 +3618,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home RealFeel temperature shade max day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3505,6 +3642,7 @@
     'original_name': 'RealFeel temperature shade max day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_shade_max',
     'unique_id': '0123456-realfeeltemperatureshademax-3',
@@ -3532,6 +3670,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home RealFeel temperature shade max day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3555,6 +3694,7 @@
     'original_name': 'RealFeel temperature shade max day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_shade_max',
     'unique_id': '0123456-realfeeltemperatureshademax-4',
@@ -3582,6 +3722,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home RealFeel temperature shade min day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3605,6 +3746,7 @@
     'original_name': 'RealFeel temperature shade min day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_shade_min',
     'unique_id': '0123456-realfeeltemperatureshademin-0',
@@ -3632,6 +3774,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home RealFeel temperature shade min day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3655,6 +3798,7 @@
     'original_name': 'RealFeel temperature shade min day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_shade_min',
     'unique_id': '0123456-realfeeltemperatureshademin-1',
@@ -3682,6 +3826,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home RealFeel temperature shade min day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3705,6 +3850,7 @@
     'original_name': 'RealFeel temperature shade min day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_shade_min',
     'unique_id': '0123456-realfeeltemperatureshademin-2',
@@ -3732,6 +3878,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home RealFeel temperature shade min day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3755,6 +3902,7 @@
     'original_name': 'RealFeel temperature shade min day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_shade_min',
     'unique_id': '0123456-realfeeltemperatureshademin-3',
@@ -3782,6 +3930,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home RealFeel temperature shade min day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3805,6 +3954,7 @@
     'original_name': 'RealFeel temperature shade min day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_shade_min',
     'unique_id': '0123456-realfeeltemperatureshademin-4',
@@ -3832,6 +3982,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Solar irradiance day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3855,6 +4006,7 @@
     'original_name': 'Solar irradiance day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'solar_irradiance_day',
     'unique_id': '0123456-solarirradianceday-0',
@@ -3882,6 +4034,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Solar irradiance day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3905,6 +4058,7 @@
     'original_name': 'Solar irradiance day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'solar_irradiance_day',
     'unique_id': '0123456-solarirradianceday-1',
@@ -3932,6 +4086,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Solar irradiance day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3955,6 +4110,7 @@
     'original_name': 'Solar irradiance day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'solar_irradiance_day',
     'unique_id': '0123456-solarirradianceday-2',
@@ -3982,6 +4138,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Solar irradiance day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4005,6 +4162,7 @@
     'original_name': 'Solar irradiance day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'solar_irradiance_day',
     'unique_id': '0123456-solarirradianceday-3',
@@ -4032,6 +4190,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Solar irradiance day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4055,6 +4214,7 @@
     'original_name': 'Solar irradiance day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'solar_irradiance_day',
     'unique_id': '0123456-solarirradianceday-4',
@@ -4082,6 +4242,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Solar irradiance night 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4105,6 +4266,7 @@
     'original_name': 'Solar irradiance night 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'solar_irradiance_night',
     'unique_id': '0123456-solarirradiancenight-0',
@@ -4132,6 +4294,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Solar irradiance night 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4155,6 +4318,7 @@
     'original_name': 'Solar irradiance night 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'solar_irradiance_night',
     'unique_id': '0123456-solarirradiancenight-1',
@@ -4182,6 +4346,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Solar irradiance night 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4205,6 +4370,7 @@
     'original_name': 'Solar irradiance night 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'solar_irradiance_night',
     'unique_id': '0123456-solarirradiancenight-2',
@@ -4232,6 +4398,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Solar irradiance night 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4255,6 +4422,7 @@
     'original_name': 'Solar irradiance night 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'solar_irradiance_night',
     'unique_id': '0123456-solarirradiancenight-3',
@@ -4282,6 +4450,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Solar irradiance night 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4305,6 +4474,7 @@
     'original_name': 'Solar irradiance night 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'solar_irradiance_night',
     'unique_id': '0123456-solarirradiancenight-4',
@@ -4332,6 +4502,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4357,6 +4528,7 @@
     'original_name': 'Temperature',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': '0123456-temperature',
@@ -4385,6 +4557,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Thunderstorm probability day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4408,6 +4581,7 @@
     'original_name': 'Thunderstorm probability day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thunderstorm_probability_day',
     'unique_id': '0123456-thunderstormprobabilityday-0',
@@ -4434,6 +4608,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Thunderstorm probability day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4457,6 +4632,7 @@
     'original_name': 'Thunderstorm probability day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thunderstorm_probability_day',
     'unique_id': '0123456-thunderstormprobabilityday-1',
@@ -4483,6 +4659,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Thunderstorm probability day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4506,6 +4683,7 @@
     'original_name': 'Thunderstorm probability day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thunderstorm_probability_day',
     'unique_id': '0123456-thunderstormprobabilityday-2',
@@ -4532,6 +4710,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Thunderstorm probability day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4555,6 +4734,7 @@
     'original_name': 'Thunderstorm probability day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thunderstorm_probability_day',
     'unique_id': '0123456-thunderstormprobabilityday-3',
@@ -4581,6 +4761,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Thunderstorm probability day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4604,6 +4785,7 @@
     'original_name': 'Thunderstorm probability day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thunderstorm_probability_day',
     'unique_id': '0123456-thunderstormprobabilityday-4',
@@ -4630,6 +4812,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Thunderstorm probability night 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4653,6 +4836,7 @@
     'original_name': 'Thunderstorm probability night 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thunderstorm_probability_night',
     'unique_id': '0123456-thunderstormprobabilitynight-0',
@@ -4679,6 +4863,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Thunderstorm probability night 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4702,6 +4887,7 @@
     'original_name': 'Thunderstorm probability night 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thunderstorm_probability_night',
     'unique_id': '0123456-thunderstormprobabilitynight-1',
@@ -4728,6 +4914,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Thunderstorm probability night 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4751,6 +4938,7 @@
     'original_name': 'Thunderstorm probability night 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thunderstorm_probability_night',
     'unique_id': '0123456-thunderstormprobabilitynight-2',
@@ -4777,6 +4965,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Thunderstorm probability night 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4800,6 +4989,7 @@
     'original_name': 'Thunderstorm probability night 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thunderstorm_probability_night',
     'unique_id': '0123456-thunderstormprobabilitynight-3',
@@ -4826,6 +5016,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Thunderstorm probability night 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4849,6 +5040,7 @@
     'original_name': 'Thunderstorm probability night 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thunderstorm_probability_night',
     'unique_id': '0123456-thunderstormprobabilitynight-4',
@@ -4875,6 +5067,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Tree pollen day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4898,6 +5091,7 @@
     'original_name': 'Tree pollen day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tree_pollen',
     'unique_id': '0123456-tree-0',
@@ -4925,6 +5119,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Tree pollen day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4948,6 +5143,7 @@
     'original_name': 'Tree pollen day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tree_pollen',
     'unique_id': '0123456-tree-1',
@@ -4975,6 +5171,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Tree pollen day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4998,6 +5195,7 @@
     'original_name': 'Tree pollen day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tree_pollen',
     'unique_id': '0123456-tree-2',
@@ -5025,6 +5223,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Tree pollen day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5048,6 +5247,7 @@
     'original_name': 'Tree pollen day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tree_pollen',
     'unique_id': '0123456-tree-3',
@@ -5075,6 +5275,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Tree pollen day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5098,6 +5299,7 @@
     'original_name': 'Tree pollen day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tree_pollen',
     'unique_id': '0123456-tree-4',
@@ -5125,6 +5327,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home UV index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5150,6 +5353,7 @@
     'original_name': 'UV index',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_index',
     'unique_id': '0123456-uvindex',
@@ -5178,6 +5382,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home UV index day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5201,6 +5406,7 @@
     'original_name': 'UV index day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_index_forecast',
     'unique_id': '0123456-uvindex-0',
@@ -5228,6 +5434,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home UV index day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5251,6 +5458,7 @@
     'original_name': 'UV index day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_index_forecast',
     'unique_id': '0123456-uvindex-1',
@@ -5278,6 +5486,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home UV index day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5301,6 +5510,7 @@
     'original_name': 'UV index day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_index_forecast',
     'unique_id': '0123456-uvindex-2',
@@ -5328,6 +5538,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home UV index day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5351,6 +5562,7 @@
     'original_name': 'UV index day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_index_forecast',
     'unique_id': '0123456-uvindex-3',
@@ -5378,6 +5590,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home UV index day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5401,6 +5614,7 @@
     'original_name': 'UV index day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_index_forecast',
     'unique_id': '0123456-uvindex-4',
@@ -5428,6 +5642,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Wet bulb temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5453,6 +5668,7 @@
     'original_name': 'Wet bulb temperature',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wet_bulb_temperature',
     'unique_id': '0123456-wetbulbtemperature',
@@ -5481,6 +5697,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Wind chill temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5506,6 +5723,7 @@
     'original_name': 'Wind chill temperature',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_chill_temperature',
     'unique_id': '0123456-windchilltemperature',
@@ -5534,6 +5752,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Wind gust speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5559,6 +5778,7 @@
     'original_name': 'Wind gust speed',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust_speed',
     'unique_id': '0123456-windgust',
@@ -5587,6 +5807,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Wind gust speed day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5610,6 +5831,7 @@
     'original_name': 'Wind gust speed day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust_speed_day',
     'unique_id': '0123456-windgustday-0',
@@ -5638,6 +5860,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Wind gust speed day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5661,6 +5884,7 @@
     'original_name': 'Wind gust speed day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust_speed_day',
     'unique_id': '0123456-windgustday-1',
@@ -5689,6 +5913,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Wind gust speed day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5712,6 +5937,7 @@
     'original_name': 'Wind gust speed day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust_speed_day',
     'unique_id': '0123456-windgustday-2',
@@ -5740,6 +5966,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Wind gust speed day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5763,6 +5990,7 @@
     'original_name': 'Wind gust speed day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust_speed_day',
     'unique_id': '0123456-windgustday-3',
@@ -5791,6 +6019,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Wind gust speed day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5814,6 +6043,7 @@
     'original_name': 'Wind gust speed day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust_speed_day',
     'unique_id': '0123456-windgustday-4',
@@ -5842,6 +6072,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Wind gust speed night 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5865,6 +6096,7 @@
     'original_name': 'Wind gust speed night 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust_speed_night',
     'unique_id': '0123456-windgustnight-0',
@@ -5893,6 +6125,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Wind gust speed night 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5916,6 +6149,7 @@
     'original_name': 'Wind gust speed night 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust_speed_night',
     'unique_id': '0123456-windgustnight-1',
@@ -5944,6 +6178,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Wind gust speed night 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5967,6 +6202,7 @@
     'original_name': 'Wind gust speed night 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust_speed_night',
     'unique_id': '0123456-windgustnight-2',
@@ -5995,6 +6231,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Wind gust speed night 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6018,6 +6255,7 @@
     'original_name': 'Wind gust speed night 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust_speed_night',
     'unique_id': '0123456-windgustnight-3',
@@ -6046,6 +6284,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Wind gust speed night 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6069,6 +6308,7 @@
     'original_name': 'Wind gust speed night 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust_speed_night',
     'unique_id': '0123456-windgustnight-4',
@@ -6097,6 +6337,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6122,6 +6363,7 @@
     'original_name': 'Wind speed',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_speed',
     'unique_id': '0123456-wind',
@@ -6150,6 +6392,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Wind speed day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6173,6 +6416,7 @@
     'original_name': 'Wind speed day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_speed_day',
     'unique_id': '0123456-windday-0',
@@ -6201,6 +6445,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Wind speed day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6224,6 +6469,7 @@
     'original_name': 'Wind speed day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_speed_day',
     'unique_id': '0123456-windday-1',
@@ -6252,6 +6498,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Wind speed day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6275,6 +6522,7 @@
     'original_name': 'Wind speed day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_speed_day',
     'unique_id': '0123456-windday-2',
@@ -6303,6 +6551,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Wind speed day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6326,6 +6575,7 @@
     'original_name': 'Wind speed day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_speed_day',
     'unique_id': '0123456-windday-3',
@@ -6354,6 +6604,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Wind speed day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6377,6 +6628,7 @@
     'original_name': 'Wind speed day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_speed_day',
     'unique_id': '0123456-windday-4',
@@ -6405,6 +6657,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Wind speed night 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6428,6 +6681,7 @@
     'original_name': 'Wind speed night 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_speed_night',
     'unique_id': '0123456-windnight-0',
@@ -6456,6 +6710,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Wind speed night 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6479,6 +6734,7 @@
     'original_name': 'Wind speed night 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_speed_night',
     'unique_id': '0123456-windnight-1',
@@ -6507,6 +6763,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Wind speed night 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6530,6 +6787,7 @@
     'original_name': 'Wind speed night 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_speed_night',
     'unique_id': '0123456-windnight-2',
@@ -6558,6 +6816,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Wind speed night 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6581,6 +6840,7 @@
     'original_name': 'Wind speed night 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_speed_night',
     'unique_id': '0123456-windnight-3',
@@ -6609,6 +6869,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Wind speed night 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6632,6 +6893,7 @@
     'original_name': 'Wind speed night 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_speed_night',
     'unique_id': '0123456-windnight-4',

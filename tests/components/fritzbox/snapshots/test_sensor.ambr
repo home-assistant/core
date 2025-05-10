@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'fake_name Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,6 +30,7 @@
     'original_name': 'Battery',
     'platform': 'fritzbox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345 1234567_battery',
@@ -56,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'fake_name Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -81,6 +84,7 @@
     'original_name': 'Battery',
     'platform': 'fritzbox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345 1234567_battery',
@@ -108,6 +112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'fake_name Comfort temperature',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -131,6 +136,7 @@
     'original_name': 'Comfort temperature',
     'platform': 'fritzbox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'comfort_temperature',
     'unique_id': '12345 1234567_comfort_temperature',
@@ -157,6 +163,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'fake_name Current scheduled preset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -180,6 +187,7 @@
     'original_name': 'Current scheduled preset',
     'platform': 'fritzbox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'scheduled_preset',
     'unique_id': '12345 1234567_scheduled_preset',
@@ -204,6 +212,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'fake_name Eco temperature',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -227,6 +236,7 @@
     'original_name': 'Eco temperature',
     'platform': 'fritzbox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'eco_temperature',
     'unique_id': '12345 1234567_eco_temperature',
@@ -253,6 +263,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'fake_name Next scheduled change time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -276,6 +287,7 @@
     'original_name': 'Next scheduled change time',
     'platform': 'fritzbox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextchange_time',
     'unique_id': '12345 1234567_nextchange_time',
@@ -301,6 +313,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'fake_name Next scheduled preset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -324,6 +337,7 @@
     'original_name': 'Next scheduled preset',
     'platform': 'fritzbox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextchange_preset',
     'unique_id': '12345 1234567_nextchange_preset',
@@ -348,6 +362,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'fake_name Next scheduled temperature',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -371,6 +386,7 @@
     'original_name': 'Next scheduled temperature',
     'platform': 'fritzbox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextchange_temperature',
     'unique_id': '12345 1234567_nextchange_temperature',
@@ -397,6 +413,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'fake_name Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -422,6 +439,7 @@
     'original_name': 'Battery',
     'platform': 'fritzbox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345 1234567_battery',
@@ -449,6 +467,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'fake_name Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -474,6 +493,7 @@
     'original_name': 'Humidity',
     'platform': 'fritzbox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345 1234567_humidity',
@@ -501,6 +521,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'fake_name Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -526,6 +547,7 @@
     'original_name': 'Temperature',
     'platform': 'fritzbox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345 1234567_temperature',
@@ -553,6 +575,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'fake_name Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -578,6 +601,7 @@
     'original_name': 'Current',
     'platform': 'fritzbox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345 1234567_electric_current',
@@ -605,6 +629,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'fake_name Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -630,6 +655,7 @@
     'original_name': 'Energy',
     'platform': 'fritzbox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345 1234567_total_energy',
@@ -657,6 +683,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'fake_name Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -682,6 +709,7 @@
     'original_name': 'Power',
     'platform': 'fritzbox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345 1234567_power_consumption',
@@ -709,6 +737,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'fake_name Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -734,6 +763,7 @@
     'original_name': 'Temperature',
     'platform': 'fritzbox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345 1234567_temperature',
@@ -761,6 +791,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'fake_name Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -786,6 +817,7 @@
     'original_name': 'Voltage',
     'platform': 'fritzbox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345 1234567_voltage',

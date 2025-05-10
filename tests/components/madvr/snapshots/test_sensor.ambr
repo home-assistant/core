@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy Aspect decimal',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,6 +28,7 @@
     'original_name': 'Aspect decimal',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'aspect_dec',
     'unique_id': '00:11:22:33:44:55_aspect_dec',
@@ -51,6 +53,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy Aspect integer',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -74,6 +77,7 @@
     'original_name': 'Aspect integer',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'aspect_int',
     'unique_id': '00:11:22:33:44:55_aspect_int',
@@ -98,6 +102,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy Aspect name',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -121,6 +126,7 @@
     'original_name': 'Aspect name',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'aspect_name',
     'unique_id': '00:11:22:33:44:55_aspect_name',
@@ -145,6 +151,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy Aspect resolution',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -168,6 +175,7 @@
     'original_name': 'Aspect resolution',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'aspect_res',
     'unique_id': '00:11:22:33:44:55_aspect_res',
@@ -192,6 +200,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy CPU temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -217,6 +226,7 @@
     'original_name': 'CPU temperature',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temp_cpu',
     'unique_id': '00:11:22:33:44:55_temp_cpu',
@@ -244,6 +254,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy GPU temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -269,6 +280,7 @@
     'original_name': 'GPU temperature',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temp_gpu',
     'unique_id': '00:11:22:33:44:55_temp_gpu',
@@ -296,6 +308,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy HDMI temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -321,6 +334,7 @@
     'original_name': 'HDMI temperature',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temp_hdmi',
     'unique_id': '00:11:22:33:44:55_temp_hdmi',
@@ -348,6 +362,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy Incoming aspect ratio',
     'capabilities': dict({
       'options': list([
         '16:9',
@@ -376,6 +391,7 @@
     'original_name': 'Incoming aspect ratio',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'incoming_aspect_ratio',
     'unique_id': '00:11:22:33:44:55_incoming_aspect_ratio',
@@ -405,6 +421,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy Incoming bit depth',
     'capabilities': dict({
       'options': list([
         '8bit',
@@ -434,6 +451,7 @@
     'original_name': 'Incoming bit depth',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'incoming_bit_depth',
     'unique_id': '00:11:22:33:44:55_incoming_bit_depth',
@@ -464,6 +482,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy Incoming black levels',
     'capabilities': dict({
       'options': list([
         'TV',
@@ -492,6 +511,7 @@
     'original_name': 'Incoming black levels',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'incoming_black_levels',
     'unique_id': '00:11:22:33:44:55_incoming_black_levels',
@@ -521,6 +541,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy Incoming color space',
     'capabilities': dict({
       'options': list([
         'RGB',
@@ -551,6 +572,7 @@
     'original_name': 'Incoming color space',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'incoming_color_space',
     'unique_id': '00:11:22:33:44:55_incoming_color_space',
@@ -582,6 +604,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy Incoming colorimetry',
     'capabilities': dict({
       'options': list([
         'SDR',
@@ -615,6 +638,7 @@
     'original_name': 'Incoming colorimetry',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'incoming_colorimetry',
     'unique_id': '00:11:22:33:44:55_incoming_colorimetry',
@@ -649,6 +673,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy Incoming frame rate',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -672,6 +697,7 @@
     'original_name': 'Incoming frame rate',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'incoming_frame_rate',
     'unique_id': '00:11:22:33:44:55_incoming_frame_rate',
@@ -696,6 +722,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy Incoming resolution',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -719,6 +746,7 @@
     'original_name': 'Incoming resolution',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'incoming_res',
     'unique_id': '00:11:22:33:44:55_incoming_res',
@@ -743,6 +771,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy Incoming signal type',
     'capabilities': dict({
       'options': list([
         '2D',
@@ -771,6 +800,7 @@
     'original_name': 'Incoming signal type',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'incoming_signal_type',
     'unique_id': '00:11:22:33:44:55_incoming_signal_type',
@@ -800,6 +830,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy Mainboard temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -825,6 +856,7 @@
     'original_name': 'Mainboard temperature',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temp_mainboard',
     'unique_id': '00:11:22:33:44:55_temp_mainboard',
@@ -852,6 +884,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy Masking decimal',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -875,6 +908,7 @@
     'original_name': 'Masking decimal',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'masking_dec',
     'unique_id': '00:11:22:33:44:55_masking_dec',
@@ -899,6 +933,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy Masking integer',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -922,6 +957,7 @@
     'original_name': 'Masking integer',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'masking_int',
     'unique_id': '00:11:22:33:44:55_masking_int',
@@ -946,6 +982,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy Masking resolution',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -969,6 +1006,7 @@
     'original_name': 'Masking resolution',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'masking_res',
     'unique_id': '00:11:22:33:44:55_masking_res',
@@ -993,6 +1031,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy Outgoing bit depth',
     'capabilities': dict({
       'options': list([
         '8bit',
@@ -1022,6 +1061,7 @@
     'original_name': 'Outgoing bit depth',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outgoing_bit_depth',
     'unique_id': '00:11:22:33:44:55_outgoing_bit_depth',
@@ -1052,6 +1092,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy Outgoing black levels',
     'capabilities': dict({
       'options': list([
         'TV',
@@ -1080,6 +1121,7 @@
     'original_name': 'Outgoing black levels',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outgoing_black_levels',
     'unique_id': '00:11:22:33:44:55_outgoing_black_levels',
@@ -1109,6 +1151,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy Outgoing color space',
     'capabilities': dict({
       'options': list([
         'RGB',
@@ -1139,6 +1182,7 @@
     'original_name': 'Outgoing color space',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outgoing_color_space',
     'unique_id': '00:11:22:33:44:55_outgoing_color_space',
@@ -1170,6 +1214,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy Outgoing colorimetry',
     'capabilities': dict({
       'options': list([
         'SDR',
@@ -1203,6 +1248,7 @@
     'original_name': 'Outgoing colorimetry',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outgoing_colorimetry',
     'unique_id': '00:11:22:33:44:55_outgoing_colorimetry',
@@ -1237,6 +1283,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy Outgoing frame rate',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1260,6 +1307,7 @@
     'original_name': 'Outgoing frame rate',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outgoing_frame_rate',
     'unique_id': '00:11:22:33:44:55_outgoing_frame_rate',
@@ -1284,6 +1332,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy Outgoing resolution',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1307,6 +1356,7 @@
     'original_name': 'Outgoing resolution',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outgoing_res',
     'unique_id': '00:11:22:33:44:55_outgoing_res',
@@ -1331,6 +1381,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'madVR Envy Outgoing signal type',
     'capabilities': dict({
       'options': list([
         '2D',
@@ -1359,6 +1410,7 @@
     'original_name': 'Outgoing signal type',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outgoing_signal_type',
     'unique_id': '00:11:22:33:44:55_outgoing_signal_type',

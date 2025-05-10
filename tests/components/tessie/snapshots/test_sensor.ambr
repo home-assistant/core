@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Battery power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -35,6 +36,7 @@
     'original_name': 'Battery power',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_power',
     'unique_id': '123456-battery_power',
@@ -62,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Energy left',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -93,6 +96,7 @@
     'original_name': 'Energy left',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_left',
     'unique_id': '123456-energy_left',
@@ -120,6 +124,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Generator power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -151,6 +156,7 @@
     'original_name': 'Generator power',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'generator_power',
     'unique_id': '123456-generator_power',
@@ -178,6 +184,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Grid power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -209,6 +216,7 @@
     'original_name': 'Grid power',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grid_power',
     'unique_id': '123456-grid_power',
@@ -236,6 +244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Grid services power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -267,6 +276,7 @@
     'original_name': 'Grid services power',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grid_services_power',
     'unique_id': '123456-grid_services_power',
@@ -294,6 +304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Load power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -325,6 +336,7 @@
     'original_name': 'Load power',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'load_power',
     'unique_id': '123456-load_power',
@@ -352,6 +364,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Percentage charged',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -380,6 +393,7 @@
     'original_name': 'Percentage charged',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'percentage_charged',
     'unique_id': '123456-percentage_charged',
@@ -407,6 +421,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Solar power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -438,6 +453,7 @@
     'original_name': 'Solar power',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'solar_power',
     'unique_id': '123456-solar_power',
@@ -465,6 +481,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Total pack energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -496,6 +513,7 @@
     'original_name': 'Total pack energy',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_pack_energy',
     'unique_id': '123456-total_pack_energy',
@@ -523,6 +541,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site VPP backup reserve',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -546,6 +565,7 @@
     'original_name': 'VPP backup reserve',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vpp_backup_reserve_percent',
     'unique_id': '123456-vpp_backup_reserve_percent',
@@ -572,6 +592,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Battery level',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -597,6 +618,7 @@
     'original_name': 'Battery level',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_usable_battery_level',
     'unique_id': 'VINVINVIN-charge_state_usable_battery_level',
@@ -624,6 +646,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Battery range',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -655,6 +678,7 @@
     'original_name': 'Battery range',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_battery_range',
     'unique_id': 'VINVINVIN-charge_state_battery_range',
@@ -682,6 +706,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Battery range estimate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -713,6 +738,7 @@
     'original_name': 'Battery range estimate',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_est_battery_range',
     'unique_id': 'VINVINVIN-charge_state_est_battery_range',
@@ -740,6 +766,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Battery range ideal',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -771,6 +798,7 @@
     'original_name': 'Battery range ideal',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_ideal_battery_range',
     'unique_id': 'VINVINVIN-charge_state_ideal_battery_range',
@@ -798,6 +826,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Charge energy added',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -826,6 +855,7 @@
     'original_name': 'Charge energy added',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_energy_added',
     'unique_id': 'VINVINVIN-charge_state_charge_energy_added',
@@ -853,6 +883,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Charge rate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -881,6 +912,7 @@
     'original_name': 'Charge rate',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_rate',
     'unique_id': 'VINVINVIN-charge_state_charge_rate',
@@ -908,6 +940,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Charger current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -933,6 +966,7 @@
     'original_name': 'Charger current',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charger_actual_current',
     'unique_id': 'VINVINVIN-charge_state_charger_actual_current',
@@ -960,6 +994,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Charger power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -985,6 +1020,7 @@
     'original_name': 'Charger power',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charger_power',
     'unique_id': 'VINVINVIN-charge_state_charger_power',
@@ -1012,6 +1048,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Charger voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1037,6 +1074,7 @@
     'original_name': 'Charger voltage',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charger_voltage',
     'unique_id': 'VINVINVIN-charge_state_charger_voltage',
@@ -1064,6 +1102,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Charging',
     'capabilities': dict({
       'options': list([
         'starting',
@@ -1096,6 +1135,7 @@
     'original_name': 'Charging',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charging_state',
     'unique_id': 'VINVINVIN-charge_state_charging_state',
@@ -1129,6 +1169,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Destination',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1152,6 +1193,7 @@
     'original_name': 'Destination',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_destination',
     'unique_id': 'VINVINVIN-drive_state_active_route_destination',
@@ -1176,6 +1218,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Distance to arrival',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1204,6 +1247,7 @@
     'original_name': 'Distance to arrival',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_miles_to_arrival',
     'unique_id': 'VINVINVIN-drive_state_active_route_miles_to_arrival',
@@ -1231,6 +1275,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Driver temperature setting',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1259,6 +1304,7 @@
     'original_name': 'Driver temperature setting',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_driver_temp_setting',
     'unique_id': 'VINVINVIN-climate_state_driver_temp_setting',
@@ -1286,6 +1332,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Inside temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1314,6 +1361,7 @@
     'original_name': 'Inside temperature',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_inside_temp',
     'unique_id': 'VINVINVIN-climate_state_inside_temp',
@@ -1341,6 +1389,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Odometer',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1372,6 +1421,7 @@
     'original_name': 'Odometer',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_odometer',
     'unique_id': 'VINVINVIN-vehicle_state_odometer',
@@ -1399,6 +1449,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Outside temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1427,6 +1478,7 @@
     'original_name': 'Outside temperature',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_outside_temp',
     'unique_id': 'VINVINVIN-climate_state_outside_temp',
@@ -1454,6 +1506,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Passenger temperature setting',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1482,6 +1535,7 @@
     'original_name': 'Passenger temperature setting',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_passenger_temp_setting',
     'unique_id': 'VINVINVIN-climate_state_passenger_temp_setting',
@@ -1509,6 +1563,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1534,6 +1589,7 @@
     'original_name': 'Power',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_power',
     'unique_id': 'VINVINVIN-drive_state_power',
@@ -1561,6 +1617,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Shift state',
     'capabilities': dict({
       'options': list([
         'p',
@@ -1591,6 +1648,7 @@
     'original_name': 'Shift state',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_shift_state',
     'unique_id': 'VINVINVIN-drive_state_shift_state',
@@ -1622,6 +1680,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1650,6 +1709,7 @@
     'original_name': 'Speed',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_speed',
     'unique_id': 'VINVINVIN-drive_state_speed',
@@ -1677,6 +1737,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test State of charge at arrival',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1702,6 +1763,7 @@
     'original_name': 'State of charge at arrival',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_energy_at_arrival',
     'unique_id': 'VINVINVIN-drive_state_active_route_energy_at_arrival',
@@ -1729,6 +1791,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Time to arrival',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1752,6 +1815,7 @@
     'original_name': 'Time to arrival',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_minutes_to_arrival',
     'unique_id': 'VINVINVIN-drive_state_active_route_minutes_to_arrival',
@@ -1777,6 +1841,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Time to full charge',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1800,6 +1865,7 @@
     'original_name': 'Time to full charge',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_minutes_to_full_charge',
     'unique_id': 'VINVINVIN-charge_state_minutes_to_full_charge',
@@ -1825,6 +1891,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Tire pressure front left',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1856,6 +1923,7 @@
     'original_name': 'Tire pressure front left',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_fl',
     'unique_id': 'VINVINVIN-vehicle_state_tpms_pressure_fl',
@@ -1883,6 +1951,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Tire pressure front right',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1914,6 +1983,7 @@
     'original_name': 'Tire pressure front right',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_fr',
     'unique_id': 'VINVINVIN-vehicle_state_tpms_pressure_fr',
@@ -1941,6 +2011,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Tire pressure rear left',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1972,6 +2043,7 @@
     'original_name': 'Tire pressure rear left',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_rl',
     'unique_id': 'VINVINVIN-vehicle_state_tpms_pressure_rl',
@@ -1999,6 +2071,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Tire pressure rear right',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2030,6 +2103,7 @@
     'original_name': 'Tire pressure rear right',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_rr',
     'unique_id': 'VINVINVIN-vehicle_state_tpms_pressure_rr',
@@ -2057,6 +2131,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Traffic delay',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2082,6 +2157,7 @@
     'original_name': 'Traffic delay',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_traffic_minutes_delay',
     'unique_id': 'VINVINVIN-drive_state_active_route_traffic_minutes_delay',
@@ -2109,6 +2185,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wall Connector Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2140,6 +2217,7 @@
     'original_name': 'Power',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wall_connector_power',
     'unique_id': '123456-abd-123-wall_connector_power',
@@ -2167,6 +2245,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wall Connector Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2198,6 +2277,7 @@
     'original_name': 'Power',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wall_connector_power',
     'unique_id': '123456-bcd-234-wall_connector_power',
@@ -2225,6 +2305,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wall Connector State',
     'capabilities': dict({
       'options': list([
         'booting',
@@ -2261,6 +2342,7 @@
     'original_name': 'State',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wall_connector_state',
     'unique_id': '123456-abd-123-wall_connector_state',
@@ -2298,6 +2380,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wall Connector State',
     'capabilities': dict({
       'options': list([
         'booting',
@@ -2334,6 +2417,7 @@
     'original_name': 'State',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wall_connector_state',
     'unique_id': '123456-bcd-234-wall_connector_state',
@@ -2371,6 +2455,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wall Connector Vehicle',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2394,6 +2479,7 @@
     'original_name': 'Vehicle',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vin',
     'unique_id': '123456-abd-123-vin',
@@ -2418,6 +2504,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wall Connector Vehicle',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2441,6 +2528,7 @@
     'original_name': 'Vehicle',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vin',
     'unique_id': '123456-bcd-234-vin',

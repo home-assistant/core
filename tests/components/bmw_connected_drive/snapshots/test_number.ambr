@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i4 eDrive40 Target SoC',
     'capabilities': dict({
       'max': 100.0,
       'min': 20.0,
@@ -32,6 +33,7 @@
     'original_name': 'Target SoC',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'target_soc',
     'unique_id': 'WBA00000000DEMO02-target_soc',
@@ -61,6 +63,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'iX xDrive50 Target SoC',
     'capabilities': dict({
       'max': 100.0,
       'min': 20.0,
@@ -89,6 +92,7 @@
     'original_name': 'Target SoC',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'target_soc',
     'unique_id': 'WBA00000000DEMO01-target_soc',

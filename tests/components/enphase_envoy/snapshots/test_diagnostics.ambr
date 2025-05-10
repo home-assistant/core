@@ -69,6 +69,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Envoy <<envoyserial>> Current power production',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -100,6 +101,7 @@
               'original_name': 'Current power production',
               'platform': 'enphase_envoy',
               'previous_unique_id': None,
+              'suggested_object_id': None,
               'supported_features': 0,
               'translation_key': 'current_power_production',
               'unique_id': '<<envoyserial>>_production',
@@ -121,6 +123,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Envoy <<envoyserial>> Energy production today',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -152,6 +155,7 @@
               'original_name': 'Energy production today',
               'platform': 'enphase_envoy',
               'previous_unique_id': None,
+              'suggested_object_id': None,
               'supported_features': 0,
               'translation_key': 'daily_production',
               'unique_id': '<<envoyserial>>_daily_production',
@@ -173,6 +177,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Envoy <<envoyserial>> Energy production last seven days',
               'capabilities': None,
               'categories': dict({
               }),
@@ -202,6 +207,7 @@
               'original_name': 'Energy production last seven days',
               'platform': 'enphase_envoy',
               'previous_unique_id': None,
+              'suggested_object_id': None,
               'supported_features': 0,
               'translation_key': 'seven_days_production',
               'unique_id': '<<envoyserial>>_seven_days_production',
@@ -222,6 +228,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Envoy <<envoyserial>> Lifetime energy production',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -253,6 +260,7 @@
               'original_name': 'Lifetime energy production',
               'platform': 'enphase_envoy',
               'previous_unique_id': None,
+              'suggested_object_id': None,
               'supported_features': 0,
               'translation_key': 'lifetime_production',
               'unique_id': '<<envoyserial>>_lifetime_production',
@@ -313,6 +321,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Inverter 1',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -338,6 +347,7 @@
               'original_name': None,
               'platform': 'enphase_envoy',
               'previous_unique_id': None,
+              'suggested_object_id': None,
               'supported_features': 0,
               'translation_key': None,
               'unique_id': '1',
@@ -359,6 +369,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Inverter 1 Last reported',
               'capabilities': None,
               'categories': dict({
               }),
@@ -382,6 +393,7 @@
               'original_name': 'Last reported',
               'platform': 'enphase_envoy',
               'previous_unique_id': None,
+              'suggested_object_id': None,
               'supported_features': 0,
               'translation_key': 'last_reported',
               'unique_id': '1_last_reported',
@@ -518,6 +530,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Envoy <<envoyserial>> Current power production',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -549,6 +562,7 @@
               'original_name': 'Current power production',
               'platform': 'enphase_envoy',
               'previous_unique_id': None,
+              'suggested_object_id': None,
               'supported_features': 0,
               'translation_key': 'current_power_production',
               'unique_id': '<<envoyserial>>_production',
@@ -570,6 +584,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Envoy <<envoyserial>> Energy production today',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -601,6 +616,7 @@
               'original_name': 'Energy production today',
               'platform': 'enphase_envoy',
               'previous_unique_id': None,
+              'suggested_object_id': None,
               'supported_features': 0,
               'translation_key': 'daily_production',
               'unique_id': '<<envoyserial>>_daily_production',
@@ -622,6 +638,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Envoy <<envoyserial>> Energy production last seven days',
               'capabilities': None,
               'categories': dict({
               }),
@@ -651,6 +668,7 @@
               'original_name': 'Energy production last seven days',
               'platform': 'enphase_envoy',
               'previous_unique_id': None,
+              'suggested_object_id': None,
               'supported_features': 0,
               'translation_key': 'seven_days_production',
               'unique_id': '<<envoyserial>>_seven_days_production',
@@ -671,6 +689,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Envoy <<envoyserial>> Lifetime energy production',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -702,6 +721,7 @@
               'original_name': 'Lifetime energy production',
               'platform': 'enphase_envoy',
               'previous_unique_id': None,
+              'suggested_object_id': None,
               'supported_features': 0,
               'translation_key': 'lifetime_production',
               'unique_id': '<<envoyserial>>_lifetime_production',
@@ -762,6 +782,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Inverter 1',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -787,6 +808,7 @@
               'original_name': None,
               'platform': 'enphase_envoy',
               'previous_unique_id': None,
+              'suggested_object_id': None,
               'supported_features': 0,
               'translation_key': None,
               'unique_id': '1',
@@ -808,6 +830,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Inverter 1 Last reported',
               'capabilities': None,
               'categories': dict({
               }),
@@ -831,6 +854,7 @@
               'original_name': 'Last reported',
               'platform': 'enphase_envoy',
               'previous_unique_id': None,
+              'suggested_object_id': None,
               'supported_features': 0,
               'translation_key': 'last_reported',
               'unique_id': '1_last_reported',
@@ -1009,6 +1033,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Envoy <<envoyserial>> Current power production',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -1040,6 +1065,7 @@
               'original_name': 'Current power production',
               'platform': 'enphase_envoy',
               'previous_unique_id': None,
+              'suggested_object_id': None,
               'supported_features': 0,
               'translation_key': 'current_power_production',
               'unique_id': '<<envoyserial>>_production',
@@ -1061,6 +1087,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Envoy <<envoyserial>> Energy production today',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -1092,6 +1119,7 @@
               'original_name': 'Energy production today',
               'platform': 'enphase_envoy',
               'previous_unique_id': None,
+              'suggested_object_id': None,
               'supported_features': 0,
               'translation_key': 'daily_production',
               'unique_id': '<<envoyserial>>_daily_production',
@@ -1113,6 +1141,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Envoy <<envoyserial>> Energy production last seven days',
               'capabilities': None,
               'categories': dict({
               }),
@@ -1142,6 +1171,7 @@
               'original_name': 'Energy production last seven days',
               'platform': 'enphase_envoy',
               'previous_unique_id': None,
+              'suggested_object_id': None,
               'supported_features': 0,
               'translation_key': 'seven_days_production',
               'unique_id': '<<envoyserial>>_seven_days_production',
@@ -1162,6 +1192,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Envoy <<envoyserial>> Lifetime energy production',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -1193,6 +1224,7 @@
               'original_name': 'Lifetime energy production',
               'platform': 'enphase_envoy',
               'previous_unique_id': None,
+              'suggested_object_id': None,
               'supported_features': 0,
               'translation_key': 'lifetime_production',
               'unique_id': '<<envoyserial>>_lifetime_production',
@@ -1253,6 +1285,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Inverter 1',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -1278,6 +1311,7 @@
               'original_name': None,
               'platform': 'enphase_envoy',
               'previous_unique_id': None,
+              'suggested_object_id': None,
               'supported_features': 0,
               'translation_key': None,
               'unique_id': '1',
@@ -1299,6 +1333,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Inverter 1 Last reported',
               'capabilities': None,
               'categories': dict({
               }),
@@ -1322,6 +1357,7 @@
               'original_name': 'Last reported',
               'platform': 'enphase_envoy',
               'previous_unique_id': None,
+              'suggested_object_id': None,
               'supported_features': 0,
               'translation_key': 'last_reported',
               'unique_id': '1_last_reported',
@@ -1520,6 +1556,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Inverter 1',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -1545,6 +1582,7 @@
               'original_name': None,
               'platform': 'enphase_envoy',
               'previous_unique_id': None,
+              'suggested_object_id': None,
               'supported_features': 0,
               'translation_key': None,
               'unique_id': '1',
@@ -1566,6 +1604,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Inverter 1 Last reported',
               'capabilities': None,
               'categories': dict({
               }),
@@ -1589,6 +1628,7 @@
               'original_name': 'Last reported',
               'platform': 'enphase_envoy',
               'previous_unique_id': None,
+              'suggested_object_id': None,
               'supported_features': 0,
               'translation_key': 'last_reported',
               'unique_id': '1_last_reported',
@@ -1644,6 +1684,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Envoy <<envoyserial>> Current power production',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -1675,6 +1716,7 @@
               'original_name': 'Current power production',
               'platform': 'enphase_envoy',
               'previous_unique_id': None,
+              'suggested_object_id': None,
               'supported_features': 0,
               'translation_key': 'current_power_production',
               'unique_id': '<<envoyserial>>_production',
@@ -1696,6 +1738,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Envoy <<envoyserial>> Energy production today',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -1727,6 +1770,7 @@
               'original_name': 'Energy production today',
               'platform': 'enphase_envoy',
               'previous_unique_id': None,
+              'suggested_object_id': None,
               'supported_features': 0,
               'translation_key': 'daily_production',
               'unique_id': '<<envoyserial>>_daily_production',
@@ -1748,6 +1792,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Envoy <<envoyserial>> Energy production last seven days',
               'capabilities': None,
               'categories': dict({
               }),
@@ -1777,6 +1822,7 @@
               'original_name': 'Energy production last seven days',
               'platform': 'enphase_envoy',
               'previous_unique_id': None,
+              'suggested_object_id': None,
               'supported_features': 0,
               'translation_key': 'seven_days_production',
               'unique_id': '<<envoyserial>>_seven_days_production',
@@ -1797,6 +1843,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Envoy <<envoyserial>> Lifetime energy production',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -1828,6 +1875,7 @@
               'original_name': 'Lifetime energy production',
               'platform': 'enphase_envoy',
               'previous_unique_id': None,
+              'suggested_object_id': None,
               'supported_features': 0,
               'translation_key': 'lifetime_production',
               'unique_id': '<<envoyserial>>_lifetime_production',

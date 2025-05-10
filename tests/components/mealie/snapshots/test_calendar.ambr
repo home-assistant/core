@@ -168,6 +168,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mealie Breakfast',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -191,6 +192,7 @@
     'original_name': 'Breakfast',
     'platform': 'mealie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'breakfast',
     'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_breakfast',
@@ -221,6 +223,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mealie Dinner',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -244,6 +247,7 @@
     'original_name': 'Dinner',
     'platform': 'mealie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dinner',
     'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_dinner',
@@ -274,6 +278,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mealie Lunch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -297,6 +302,7 @@
     'original_name': 'Lunch',
     'platform': 'mealie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lunch',
     'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_lunch',
@@ -327,6 +333,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mealie Side',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -350,6 +357,7 @@
     'original_name': 'Side',
     'platform': 'mealie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'side',
     'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_side',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dryer End time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,6 +28,7 @@
     'original_name': 'End time',
     'platform': 'whirlpool',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'end_time',
     'unique_id': 'said_dryer-timeremaining',
@@ -53,6 +55,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dryer State',
     'capabilities': dict({
       'options': list([
         'standby',
@@ -105,6 +108,7 @@
     'original_name': 'State',
     'platform': 'whirlpool',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dryer_state',
     'unique_id': 'said_dryer-state',
@@ -158,6 +162,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washer Detergent level',
     'capabilities': dict({
       'options': list([
         'empty',
@@ -189,6 +194,7 @@
     'original_name': 'Detergent level',
     'platform': 'whirlpool',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'whirlpool_tank',
     'unique_id': 'said_washer-DispenseLevel',
@@ -221,6 +227,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washer End time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -244,6 +251,7 @@
     'original_name': 'End time',
     'platform': 'whirlpool',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'end_time',
     'unique_id': 'said_washer-timeremaining',
@@ -270,6 +278,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washer State',
     'capabilities': dict({
       'options': list([
         'standby',
@@ -322,6 +331,7 @@
     'original_name': 'State',
     'platform': 'whirlpool',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'washer_state',
     'unique_id': 'said_washer-state',

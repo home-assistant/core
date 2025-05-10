@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Lifetime production of P1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -29,6 +30,7 @@
     'original_name': 'Lifetime production of P1',
     'platform': 'apsystems',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifetime_production_p1',
     'unique_id': 'MY_SERIAL_NUMBER_lifetime_production_p1',
@@ -56,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Lifetime production of P2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -81,6 +84,7 @@
     'original_name': 'Lifetime production of P2',
     'platform': 'apsystems',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifetime_production_p2',
     'unique_id': 'MY_SERIAL_NUMBER_lifetime_production_p2',
@@ -108,6 +112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Power of P1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -133,6 +138,7 @@
     'original_name': 'Power of P1',
     'platform': 'apsystems',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_power_p1',
     'unique_id': 'MY_SERIAL_NUMBER_total_power_p1',
@@ -160,6 +166,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Power of P2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -185,6 +192,7 @@
     'original_name': 'Power of P2',
     'platform': 'apsystems',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_power_p2',
     'unique_id': 'MY_SERIAL_NUMBER_total_power_p2',
@@ -212,6 +220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Production of today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -237,6 +246,7 @@
     'original_name': 'Production of today',
     'platform': 'apsystems',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'today_production',
     'unique_id': 'MY_SERIAL_NUMBER_today_production',
@@ -264,6 +274,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Production of today from P1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -289,6 +300,7 @@
     'original_name': 'Production of today from P1',
     'platform': 'apsystems',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'today_production_p1',
     'unique_id': 'MY_SERIAL_NUMBER_today_production_p1',
@@ -316,6 +328,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Production of today from P2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -341,6 +354,7 @@
     'original_name': 'Production of today from P2',
     'platform': 'apsystems',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'today_production_p2',
     'unique_id': 'MY_SERIAL_NUMBER_today_production_p2',
@@ -368,6 +382,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Total lifetime production',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -393,6 +408,7 @@
     'original_name': 'Total lifetime production',
     'platform': 'apsystems',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifetime_production',
     'unique_id': 'MY_SERIAL_NUMBER_lifetime_production',
@@ -420,6 +436,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Total power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -445,6 +462,7 @@
     'original_name': 'Total power',
     'platform': 'apsystems',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_power',
     'unique_id': 'MY_SERIAL_NUMBER_total_power',

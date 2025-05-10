@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Connections Current streak',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -29,6 +30,7 @@
     'original_name': 'Current streak',
     'platform': 'nyt_games',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'streak',
     'unique_id': '218886794-connections-connections_streak',
@@ -56,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Connections Highest streak',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -81,6 +84,7 @@
     'original_name': 'Highest streak',
     'platform': 'nyt_games',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'max_streak',
     'unique_id': '218886794-connections-connections_max_streak',
@@ -108,6 +112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Connections Last played',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -131,6 +136,7 @@
     'original_name': 'Last played',
     'platform': 'nyt_games',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_played',
     'unique_id': '218886794-connections-connections_last_played',
@@ -156,6 +162,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Connections Played',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -181,6 +188,7 @@
     'original_name': 'Played',
     'platform': 'nyt_games',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'connections_played',
     'unique_id': '218886794-connections-connections_played',
@@ -207,6 +215,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Connections Won',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -232,6 +241,7 @@
     'original_name': 'Won',
     'platform': 'nyt_games',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'won',
     'unique_id': '218886794-connections-connections_won',
@@ -258,6 +268,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Spelling Bee Played',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -283,6 +294,7 @@
     'original_name': 'Played',
     'platform': 'nyt_games',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'spelling_bees_played',
     'unique_id': '218886794-spelling_bee-spelling_bees_played',
@@ -309,6 +321,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Spelling Bee Total pangrams found',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -334,6 +347,7 @@
     'original_name': 'Total pangrams found',
     'platform': 'nyt_games',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_pangrams',
     'unique_id': '218886794-spelling_bee-spelling_bees_total_pangrams',
@@ -360,6 +374,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Spelling Bee Total words found',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -385,6 +400,7 @@
     'original_name': 'Total words found',
     'platform': 'nyt_games',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_words',
     'unique_id': '218886794-spelling_bee-spelling_bees_total_words',
@@ -411,6 +427,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wordle Current streak',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -436,6 +453,7 @@
     'original_name': 'Current streak',
     'platform': 'nyt_games',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'streak',
     'unique_id': '218886794-wordle-wordles_streak',
@@ -463,6 +481,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wordle Highest streak',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -488,6 +507,7 @@
     'original_name': 'Highest streak',
     'platform': 'nyt_games',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'max_streak',
     'unique_id': '218886794-wordle-wordles_max_streak',
@@ -515,6 +535,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wordle Played',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -540,6 +561,7 @@
     'original_name': 'Played',
     'platform': 'nyt_games',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wordles_played',
     'unique_id': '218886794-wordle-wordles_played',
@@ -566,6 +588,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wordle Won',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -591,6 +614,7 @@
     'original_name': 'Won',
     'platform': 'nyt_games',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'won',
     'unique_id': '218886794-wordle-wordles_won',

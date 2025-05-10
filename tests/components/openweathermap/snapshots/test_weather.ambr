@@ -28,6 +28,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -51,6 +52,7 @@
     'original_name': None,
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78',
@@ -89,6 +91,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -112,6 +115,7 @@
     'original_name': None,
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <WeatherEntityFeature: 2>,
     'translation_key': None,
     'unique_id': '12.34-56.78',
@@ -151,6 +155,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -174,6 +179,7 @@
     'original_name': None,
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <WeatherEntityFeature: 3>,
     'translation_key': None,
     'unique_id': '12.34-56.78',

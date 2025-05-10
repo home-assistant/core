@@ -49,6 +49,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Twente Milieu',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -72,6 +73,7 @@
     'original_name': None,
     'platform': 'twentemilieu',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'calendar',
     'unique_id': '12345',

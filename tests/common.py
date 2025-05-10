@@ -651,6 +651,7 @@ class RegistryEntryWithDefaults(er.RegistryEntry):
     """Helper to create a registry entry with defaults."""
 
     capabilities: Mapping[str, Any] | None = attr.ib(default=None)
+    calculated_object_id: str | None = attr.ib(default=None)
     config_entry_id: str | None = attr.ib(default=None)
     config_subentry_id: str | None = attr.ib(default=None)
     created_at: datetime = attr.ib(factory=dt_util.utcnow)
@@ -669,6 +670,7 @@ class RegistryEntryWithDefaults(er.RegistryEntry):
     original_device_class: str | None = attr.ib(default=None)
     original_icon: str | None = attr.ib(default=None)
     original_name: str | None = attr.ib(default=None)
+    suggested_object_id: str | None = attr.ib(default=None)
     supported_features: int = attr.ib(default=0)
     translation_key: str | None = attr.ib(default=None)
     unit_of_measurement: str | None = attr.ib(default=None)

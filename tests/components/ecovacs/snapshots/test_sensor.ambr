@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'E1234567890000000003 Filter lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,6 +28,7 @@
     'original_name': 'Filter lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_filter',
     'unique_id': 'E1234567890000000003_lifespan_filter',
@@ -52,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'E1234567890000000003 Main brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -75,6 +78,7 @@
     'original_name': 'Main brush lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_main_brush',
     'unique_id': 'E1234567890000000003_lifespan_main_brush',
@@ -100,6 +104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'E1234567890000000003 Side brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -123,6 +128,7 @@
     'original_name': 'Side brush lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_side_brush',
     'unique_id': 'E1234567890000000003_lifespan_side_brush',
@@ -155,6 +161,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Goat G1 Area cleaned',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -178,6 +185,7 @@
     'original_name': 'Area cleaned',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stats_area',
     'unique_id': '8516fbb1-17f1-4194-0000000_stats_area',
@@ -203,6 +211,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Goat G1 Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -226,6 +235,7 @@
     'original_name': 'Battery',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '8516fbb1-17f1-4194-0000000_battery_level',
@@ -252,6 +262,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Goat G1 Blade lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -275,6 +286,7 @@
     'original_name': 'Blade lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_blade',
     'unique_id': '8516fbb1-17f1-4194-0000000_lifespan_blade',
@@ -300,6 +312,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Goat G1 Cleaning duration',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -326,6 +339,7 @@
     'original_name': 'Cleaning duration',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stats_time',
     'unique_id': '8516fbb1-17f1-4194-0000000_stats_time',
@@ -352,6 +366,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Goat G1 Error',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -375,6 +390,7 @@
     'original_name': 'Error',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error',
     'unique_id': '8516fbb1-17f1-4194-0000000_error',
@@ -400,6 +416,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Goat G1 IP address',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -423,6 +440,7 @@
     'original_name': 'IP address',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'network_ip',
     'unique_id': '8516fbb1-17f1-4194-0000000_network_ip',
@@ -447,6 +465,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Goat G1 Lens brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -470,6 +489,7 @@
     'original_name': 'Lens brush lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_lens_brush',
     'unique_id': '8516fbb1-17f1-4194-0000000_lifespan_lens_brush',
@@ -495,6 +515,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Goat G1 Total area cleaned',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -520,6 +541,7 @@
     'original_name': 'Total area cleaned',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_stats_area',
     'unique_id': '8516fbb1-17f1-4194-0000000_total_stats_area',
@@ -546,6 +568,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Goat G1 Total cleaning duration',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -574,6 +597,7 @@
     'original_name': 'Total cleaning duration',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_stats_time',
     'unique_id': '8516fbb1-17f1-4194-0000000_total_stats_time',
@@ -601,6 +625,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Goat G1 Total cleanings',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -626,6 +651,7 @@
     'original_name': 'Total cleanings',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_stats_cleanings',
     'unique_id': '8516fbb1-17f1-4194-0000000_total_stats_cleanings',
@@ -651,6 +677,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Goat G1 Wi-Fi RSSI',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -674,6 +701,7 @@
     'original_name': 'Wi-Fi RSSI',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'network_rssi',
     'unique_id': '8516fbb1-17f1-4194-0000000_network_rssi',
@@ -698,6 +726,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Goat G1 Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -721,6 +750,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'network_ssid',
     'unique_id': '8516fbb1-17f1-4194-0000000_network_ssid',
@@ -745,6 +775,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dusty Area cleaned',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -768,6 +799,7 @@
     'original_name': 'Area cleaned',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stats_area',
     'unique_id': '8516fbb1-17f1-4194-0000001_stats_area',
@@ -793,6 +825,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dusty Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -816,6 +849,7 @@
     'original_name': 'Battery',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '8516fbb1-17f1-4194-0000001_battery_level',
@@ -842,6 +876,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dusty Cleaning duration',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -868,6 +903,7 @@
     'original_name': 'Cleaning duration',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stats_time',
     'unique_id': '8516fbb1-17f1-4194-0000001_stats_time',
@@ -894,6 +930,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dusty Error',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -917,6 +954,7 @@
     'original_name': 'Error',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error',
     'unique_id': '8516fbb1-17f1-4194-0000001_error',
@@ -942,6 +980,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dusty Filter lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -965,6 +1004,7 @@
     'original_name': 'Filter lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_filter',
     'unique_id': '8516fbb1-17f1-4194-0000001_lifespan_filter',
@@ -990,6 +1030,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dusty IP address',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1013,6 +1054,7 @@
     'original_name': 'IP address',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'network_ip',
     'unique_id': '8516fbb1-17f1-4194-0000001_network_ip',
@@ -1037,6 +1079,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dusty Main brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1060,6 +1103,7 @@
     'original_name': 'Main brush lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_brush',
     'unique_id': '8516fbb1-17f1-4194-0000001_lifespan_brush',
@@ -1085,6 +1129,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dusty Round mop lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1108,6 +1153,7 @@
     'original_name': 'Round mop lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_round_mop',
     'unique_id': '8516fbb1-17f1-4194-0000001_lifespan_round_mop',
@@ -1133,6 +1179,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dusty Side brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1156,6 +1203,7 @@
     'original_name': 'Side brush lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_side_brush',
     'unique_id': '8516fbb1-17f1-4194-0000001_lifespan_side_brush',
@@ -1181,6 +1229,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dusty Station state',
     'capabilities': dict({
       'options': list([
         'idle',
@@ -1209,6 +1258,7 @@
     'original_name': 'Station state',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'station_state',
     'unique_id': '8516fbb1-17f1-4194-0000001_station_state',
@@ -1238,6 +1288,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dusty Total area cleaned',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1263,6 +1314,7 @@
     'original_name': 'Total area cleaned',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_stats_area',
     'unique_id': '8516fbb1-17f1-4194-0000001_total_stats_area',
@@ -1289,6 +1341,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dusty Total cleaning duration',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1317,6 +1370,7 @@
     'original_name': 'Total cleaning duration',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_stats_time',
     'unique_id': '8516fbb1-17f1-4194-0000001_total_stats_time',
@@ -1344,6 +1398,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dusty Total cleanings',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1369,6 +1424,7 @@
     'original_name': 'Total cleanings',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_stats_cleanings',
     'unique_id': '8516fbb1-17f1-4194-0000001_total_stats_cleanings',
@@ -1394,6 +1450,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dusty Unit care lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1417,6 +1474,7 @@
     'original_name': 'Unit care lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_unit_care',
     'unique_id': '8516fbb1-17f1-4194-0000001_lifespan_unit_care',
@@ -1442,6 +1500,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dusty Wi-Fi RSSI',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1465,6 +1524,7 @@
     'original_name': 'Wi-Fi RSSI',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'network_rssi',
     'unique_id': '8516fbb1-17f1-4194-0000001_network_rssi',
@@ -1489,6 +1549,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dusty Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1512,6 +1573,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'network_ssid',
     'unique_id': '8516fbb1-17f1-4194-0000001_network_ssid',
@@ -1536,6 +1598,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ozmo 950 Area cleaned',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1559,6 +1622,7 @@
     'original_name': 'Area cleaned',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stats_area',
     'unique_id': 'E1234567890000000001_stats_area',
@@ -1584,6 +1648,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ozmo 950 Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1607,6 +1672,7 @@
     'original_name': 'Battery',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'E1234567890000000001_battery_level',
@@ -1633,6 +1699,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ozmo 950 Cleaning duration',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1659,6 +1726,7 @@
     'original_name': 'Cleaning duration',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stats_time',
     'unique_id': 'E1234567890000000001_stats_time',
@@ -1685,6 +1753,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ozmo 950 Error',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1708,6 +1777,7 @@
     'original_name': 'Error',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error',
     'unique_id': 'E1234567890000000001_error',
@@ -1733,6 +1803,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ozmo 950 Filter lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1756,6 +1827,7 @@
     'original_name': 'Filter lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_filter',
     'unique_id': 'E1234567890000000001_lifespan_filter',
@@ -1781,6 +1853,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ozmo 950 IP address',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1804,6 +1877,7 @@
     'original_name': 'IP address',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'network_ip',
     'unique_id': 'E1234567890000000001_network_ip',
@@ -1828,6 +1902,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ozmo 950 Main brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1851,6 +1926,7 @@
     'original_name': 'Main brush lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_brush',
     'unique_id': 'E1234567890000000001_lifespan_brush',
@@ -1876,6 +1952,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ozmo 950 Side brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1899,6 +1976,7 @@
     'original_name': 'Side brush lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_side_brush',
     'unique_id': 'E1234567890000000001_lifespan_side_brush',
@@ -1924,6 +2002,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ozmo 950 Total area cleaned',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1949,6 +2028,7 @@
     'original_name': 'Total area cleaned',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_stats_area',
     'unique_id': 'E1234567890000000001_total_stats_area',
@@ -1975,6 +2055,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ozmo 950 Total cleaning duration',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2003,6 +2084,7 @@
     'original_name': 'Total cleaning duration',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_stats_time',
     'unique_id': 'E1234567890000000001_total_stats_time',
@@ -2030,6 +2112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ozmo 950 Total cleanings',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2055,6 +2138,7 @@
     'original_name': 'Total cleanings',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_stats_cleanings',
     'unique_id': 'E1234567890000000001_total_stats_cleanings',
@@ -2080,6 +2164,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ozmo 950 Wi-Fi RSSI',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2103,6 +2188,7 @@
     'original_name': 'Wi-Fi RSSI',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'network_rssi',
     'unique_id': 'E1234567890000000001_network_rssi',
@@ -2127,6 +2213,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ozmo 950 Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2150,6 +2237,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'network_ssid',
     'unique_id': 'E1234567890000000001_network_ssid',

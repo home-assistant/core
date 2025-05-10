@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient Display brightness',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -32,6 +33,7 @@
     'original_name': 'Display brightness',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'display_brightness',
     'unique_id': '84fce612f5b8-display_brightness',
@@ -61,6 +63,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient LED bar brightness',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -89,6 +92,7 @@
     'original_name': 'LED bar brightness',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'led_bar_brightness',
     'unique_id': '84fce612f5b8-led_bar_brightness',

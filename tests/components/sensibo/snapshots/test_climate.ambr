@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bedroom',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -34,6 +35,7 @@
     'original_name': None,
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 384>,
     'translation_key': 'climate_device',
     'unique_id': 'BBZZBBZZ',
@@ -66,6 +68,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hallway',
     'capabilities': dict({
       'fan_modes': list([
         'quiet',
@@ -116,6 +119,7 @@
     'original_name': None,
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 937>,
     'translation_key': 'climate_device',
     'unique_id': 'ABC999111',
@@ -173,6 +177,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kitchen',
     'capabilities': dict({
       'fan_modes': list([
         'low',
@@ -208,6 +213,7 @@
     'original_name': None,
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 392>,
     'translation_key': 'climate_device',
     'unique_id': 'AAZZAAZZ',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overseerr Available requests',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -29,6 +30,7 @@
     'original_name': 'Available requests',
     'platform': 'overseerr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'available_requests',
     'unique_id': '01JG00V55WEVTJ0CJHM0GAD7PC-available_requests',
@@ -55,6 +57,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overseerr Declined requests',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -80,6 +83,7 @@
     'original_name': 'Declined requests',
     'platform': 'overseerr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'declined_requests',
     'unique_id': '01JG00V55WEVTJ0CJHM0GAD7PC-declined_requests',
@@ -106,6 +110,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overseerr Movie requests',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -131,6 +136,7 @@
     'original_name': 'Movie requests',
     'platform': 'overseerr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'movie_requests',
     'unique_id': '01JG00V55WEVTJ0CJHM0GAD7PC-movie_requests',
@@ -157,6 +163,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overseerr Pending requests',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -182,6 +189,7 @@
     'original_name': 'Pending requests',
     'platform': 'overseerr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pending_requests',
     'unique_id': '01JG00V55WEVTJ0CJHM0GAD7PC-pending_requests',
@@ -208,6 +216,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overseerr Processing requests',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -233,6 +242,7 @@
     'original_name': 'Processing requests',
     'platform': 'overseerr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'processing_requests',
     'unique_id': '01JG00V55WEVTJ0CJHM0GAD7PC-processing_requests',
@@ -259,6 +269,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overseerr Total requests',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -284,6 +295,7 @@
     'original_name': 'Total requests',
     'platform': 'overseerr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_requests',
     'unique_id': '01JG00V55WEVTJ0CJHM0GAD7PC-total_requests',
@@ -310,6 +322,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overseerr TV requests',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -335,6 +348,7 @@
     'original_name': 'TV requests',
     'platform': 'overseerr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tv_requests',
     'unique_id': '01JG00V55WEVTJ0CJHM0GAD7PC-tv_requests',

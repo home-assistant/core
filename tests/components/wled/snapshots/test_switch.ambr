@@ -19,6 +19,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'WLED RGB Light Nightlight',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -42,6 +43,7 @@
     'original_name': 'Nightlight',
     'platform': 'wled',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nightlight',
     'unique_id': 'aabbccddeeff_nightlight',
@@ -103,6 +105,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'WLED RGB Light Reverse',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -126,6 +129,7 @@
     'original_name': 'Reverse',
     'platform': 'wled',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reverse',
     'unique_id': 'aabbccddeeff_reverse_0',
@@ -188,6 +192,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'WLED RGB Light Sync receive',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -211,6 +216,7 @@
     'original_name': 'Sync receive',
     'platform': 'wled',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sync_receive',
     'unique_id': 'aabbccddeeff_sync_receive',
@@ -273,6 +279,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'WLED RGB Light Sync send',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -296,6 +303,7 @@
     'original_name': 'Sync send',
     'platform': 'wled',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sync_send',
     'unique_id': 'aabbccddeeff_sync_send',
