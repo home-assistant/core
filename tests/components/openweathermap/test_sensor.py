@@ -6,6 +6,7 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.openweathermap.const import (
+    OWM_MODE_AIRPOLLUTION,
     OWM_MODE_FREE_CURRENT,
     OWM_MODE_FREE_FORECAST,
     OWM_MODE_V30,
@@ -19,7 +20,9 @@ from . import setup_platform
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.parametrize("mode", [OWM_MODE_V30, OWM_MODE_FREE_CURRENT], indirect=True)
+@pytest.mark.parametrize(
+    "mode", [OWM_MODE_V30, OWM_MODE_FREE_CURRENT, OWM_MODE_AIRPOLLUTION], indirect=True
+)
 async def test_sensor_states(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
