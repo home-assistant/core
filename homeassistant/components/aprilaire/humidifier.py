@@ -104,8 +104,8 @@ class AprilaireHumidifierDescription(HumidifierEntityDescription):
     target_humidity_key: str
     min_humidity: int
     max_humidity: int
-    auto_status_key: str
-    auto_status_value: int
+    auto_status_key: str | None
+    auto_status_value: int | None
     default_humidity: int
     set_humidity_fn: Callable[[int], Awaitable]
 
