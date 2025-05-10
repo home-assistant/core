@@ -21,7 +21,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 
-from .conftest import DEFAULT_CAPABILITIES, SCENE_CAPABILITIES
+from .conftest import DEFAULT_CAPABILITIES, SCENE_CAPABILITIES, set_mocked_devices
 
 from tests.common import MockConfigEntry
 
@@ -31,15 +31,18 @@ async def test_light_known_device(
 ) -> None:
     """Test adding a known device."""
 
-    mock_govee_api.devices = [
-        GoveeDevice(
-            controller=mock_govee_api,
-            ip="192.168.1.100",
-            fingerprint="asdawdqwdqwd",
-            sku="H615A",
-            capabilities=DEFAULT_CAPABILITIES,
-        )
-    ]
+    set_mocked_devices(
+        mock_govee_api,
+        [
+            GoveeDevice(
+                controller=mock_govee_api,
+                ip="192.168.1.100",
+                fingerprint="asdawdqwdqwd",
+                sku="H615A",
+                capabilities=DEFAULT_CAPABILITIES,
+            )
+        ],
+    )
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -66,15 +69,18 @@ async def test_light_unknown_device(
 ) -> None:
     """Test adding an unknown device."""
 
-    mock_govee_api.devices = [
-        GoveeDevice(
-            controller=mock_govee_api,
-            ip="192.168.1.101",
-            fingerprint="unkown_device",
-            sku="XYZK",
-            capabilities=None,
-        )
-    ]
+    set_mocked_devices(
+        mock_govee_api,
+        [
+            GoveeDevice(
+                controller=mock_govee_api,
+                ip="192.168.1.101",
+                fingerprint="unkown_device",
+                sku="XYZK",
+                capabilities=None,
+            )
+        ],
+    )
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -93,15 +99,18 @@ async def test_light_unknown_device(
 async def test_light_remove(hass: HomeAssistant, mock_govee_api: AsyncMock) -> None:
     """Test remove device."""
 
-    mock_govee_api.devices = [
-        GoveeDevice(
-            controller=mock_govee_api,
-            ip="192.168.1.100",
-            fingerprint="asdawdqwdqwd1",
-            sku="H615A",
-            capabilities=DEFAULT_CAPABILITIES,
-        )
-    ]
+    set_mocked_devices(
+        mock_govee_api,
+        [
+            GoveeDevice(
+                controller=mock_govee_api,
+                ip="192.168.1.100",
+                fingerprint="asdawdqwdqwd1",
+                sku="H615A",
+                capabilities=DEFAULT_CAPABILITIES,
+            )
+        ],
+    )
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -121,7 +130,7 @@ async def test_light_setup_retry(
 ) -> None:
     """Test setup retry."""
 
-    mock_govee_api.devices = []
+    set_mocked_devices(mock_govee_api, [])
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -141,15 +150,18 @@ async def test_light_setup_retry_eaddrinuse(
 
     mock_govee_api.start.side_effect = OSError()
     mock_govee_api.start.side_effect.errno = EADDRINUSE
-    mock_govee_api.devices = [
-        GoveeDevice(
-            controller=mock_govee_api,
-            ip="192.168.1.100",
-            fingerprint="asdawdqwdqwd",
-            sku="H615A",
-            capabilities=DEFAULT_CAPABILITIES,
-        )
-    ]
+    set_mocked_devices(
+        mock_govee_api,
+        [
+            GoveeDevice(
+                controller=mock_govee_api,
+                ip="192.168.1.100",
+                fingerprint="asdawdqwdqwd",
+                sku="H615A",
+                capabilities=DEFAULT_CAPABILITIES,
+            )
+        ],
+    )
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -165,15 +177,18 @@ async def test_light_setup_error(
 
     mock_govee_api.start.side_effect = OSError()
     mock_govee_api.start.side_effect.errno = ENETDOWN
-    mock_govee_api.devices = [
-        GoveeDevice(
-            controller=mock_govee_api,
-            ip="192.168.1.100",
-            fingerprint="asdawdqwdqwd",
-            sku="H615A",
-            capabilities=DEFAULT_CAPABILITIES,
-        )
-    ]
+    set_mocked_devices(
+        mock_govee_api,
+        [
+            GoveeDevice(
+                controller=mock_govee_api,
+                ip="192.168.1.100",
+                fingerprint="asdawdqwdqwd",
+                sku="H615A",
+                capabilities=DEFAULT_CAPABILITIES,
+            )
+        ],
+    )
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -185,15 +200,18 @@ async def test_light_setup_error(
 async def test_light_on_off(hass: HomeAssistant, mock_govee_api: MagicMock) -> None:
     """Test light on and then off."""
 
-    mock_govee_api.devices = [
-        GoveeDevice(
-            controller=mock_govee_api,
-            ip="192.168.1.100",
-            fingerprint="asdawdqwdqwd",
-            sku="H615A",
-            capabilities=DEFAULT_CAPABILITIES,
-        )
-    ]
+    set_mocked_devices(
+        mock_govee_api,
+        [
+            GoveeDevice(
+                controller=mock_govee_api,
+                ip="192.168.1.100",
+                fingerprint="asdawdqwdqwd",
+                sku="H615A",
+                capabilities=DEFAULT_CAPABILITIES,
+            )
+        ],
+    )
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -265,15 +283,18 @@ async def test_turn_on_call_order(
     mock_call_kwargs: dict[str, any],
 ) -> None:
     """Test that turn_on is called after set_brightness/set_color/set_preset."""
-    mock_govee_api.devices = [
-        GoveeDevice(
-            controller=mock_govee_api,
-            ip="192.168.1.100",
-            fingerprint="asdawdqwdqwd",
-            sku="H615A",
-            capabilities=SCENE_CAPABILITIES,
-        )
-    ]
+    set_mocked_devices(
+        mock_govee_api,
+        [
+            GoveeDevice(
+                controller=mock_govee_api,
+                ip="192.168.1.100",
+                fingerprint="asdawdqwdqwd",
+                sku="H615A",
+                capabilities=SCENE_CAPABILITIES,
+            )
+        ],
+    )
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -308,15 +329,18 @@ async def test_turn_on_call_order(
 
 async def test_light_brightness(hass: HomeAssistant, mock_govee_api: MagicMock) -> None:
     """Test changing brightness."""
-    mock_govee_api.devices = [
-        GoveeDevice(
-            controller=mock_govee_api,
-            ip="192.168.1.100",
-            fingerprint="asdawdqwdqwd",
-            sku="H615A",
-            capabilities=DEFAULT_CAPABILITIES,
-        )
-    ]
+    set_mocked_devices(
+        mock_govee_api,
+        [
+            GoveeDevice(
+                controller=mock_govee_api,
+                ip="192.168.1.100",
+                fingerprint="asdawdqwdqwd",
+                sku="H615A",
+                capabilities=DEFAULT_CAPABILITIES,
+            )
+        ],
+    )
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -375,15 +399,18 @@ async def test_light_brightness(hass: HomeAssistant, mock_govee_api: MagicMock) 
 
 async def test_light_color(hass: HomeAssistant, mock_govee_api: MagicMock) -> None:
     """Test changing brightness."""
-    mock_govee_api.devices = [
-        GoveeDevice(
-            controller=mock_govee_api,
-            ip="192.168.1.100",
-            fingerprint="asdawdqwdqwd",
-            sku="H615A",
-            capabilities=DEFAULT_CAPABILITIES,
-        )
-    ]
+    set_mocked_devices(
+        mock_govee_api,
+        [
+            GoveeDevice(
+                controller=mock_govee_api,
+                ip="192.168.1.100",
+                fingerprint="asdawdqwdqwd",
+                sku="H615A",
+                capabilities=DEFAULT_CAPABILITIES,
+            )
+        ],
+    )
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -412,7 +439,9 @@ async def test_light_color(hass: HomeAssistant, mock_govee_api: MagicMock) -> No
     assert light.attributes["color_mode"] == ColorMode.RGB
 
     mock_govee_api.set_color.assert_awaited_with(
-        mock_govee_api.devices[0], rgb=(100, 255, 50), temperature=None
+        mock_govee_api.devices[0],
+        rgb=(100, 255, 50),
+        temperature=None,
     )
 
     await hass.services.async_call(
@@ -437,15 +466,18 @@ async def test_light_color(hass: HomeAssistant, mock_govee_api: MagicMock) -> No
 async def test_scene_on(hass: HomeAssistant, mock_govee_api: MagicMock) -> None:
     """Test turning on scene."""
 
-    mock_govee_api.devices = [
-        GoveeDevice(
-            controller=mock_govee_api,
-            ip="192.168.1.100",
-            fingerprint="asdawdqwdqwd",
-            sku="H615A",
-            capabilities=SCENE_CAPABILITIES,
-        )
-    ]
+    set_mocked_devices(
+        mock_govee_api,
+        [
+            GoveeDevice(
+                controller=mock_govee_api,
+                ip="192.168.1.100",
+                fingerprint="asdawdqwdqwd",
+                sku="H615A",
+                capabilities=SCENE_CAPABILITIES,
+            )
+        ],
+    )
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -479,15 +511,18 @@ async def test_scene_restore_rgb(
 ) -> None:
     """Test restore rgb color."""
 
-    mock_govee_api.devices = [
-        GoveeDevice(
-            controller=mock_govee_api,
-            ip="192.168.1.100",
-            fingerprint="asdawdqwdqwd",
-            sku="H615A",
-            capabilities=SCENE_CAPABILITIES,
-        )
-    ]
+    set_mocked_devices(
+        mock_govee_api,
+        [
+            GoveeDevice(
+                controller=mock_govee_api,
+                ip="192.168.1.100",
+                fingerprint="asdawdqwdqwd",
+                sku="H615A",
+                capabilities=SCENE_CAPABILITIES,
+            )
+        ],
+    )
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -562,15 +597,18 @@ async def test_scene_restore_temperature(
 ) -> None:
     """Test restore color temperature."""
 
-    mock_govee_api.devices = [
-        GoveeDevice(
-            controller=mock_govee_api,
-            ip="192.168.1.100",
-            fingerprint="asdawdqwdqwd",
-            sku="H615A",
-            capabilities=SCENE_CAPABILITIES,
-        )
-    ]
+    set_mocked_devices(
+        mock_govee_api,
+        [
+            GoveeDevice(
+                controller=mock_govee_api,
+                ip="192.168.1.100",
+                fingerprint="asdawdqwdqwd",
+                sku="H615A",
+                capabilities=SCENE_CAPABILITIES,
+            )
+        ],
+    )
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -634,15 +672,18 @@ async def test_scene_restore_temperature(
 async def test_scene_none(hass: HomeAssistant, mock_govee_api: MagicMock) -> None:
     """Test turn on 'none' scene."""
 
-    mock_govee_api.devices = [
-        GoveeDevice(
-            controller=mock_govee_api,
-            ip="192.168.1.100",
-            fingerprint="asdawdqwdqwd",
-            sku="H615A",
-            capabilities=SCENE_CAPABILITIES,
-        )
-    ]
+    set_mocked_devices(
+        mock_govee_api,
+        [
+            GoveeDevice(
+                controller=mock_govee_api,
+                ip="192.168.1.100",
+                fingerprint="asdawdqwdqwd",
+                sku="H615A",
+                capabilities=SCENE_CAPABILITIES,
+            )
+        ],
+    )
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
