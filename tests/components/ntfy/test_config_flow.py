@@ -500,9 +500,27 @@ async def test_flow_reauth_account_mismatch(
     assert result["reason"] == "account_mismatch"
 
 
+@pytest.mark.parametrize(
+    ("entry_data", "user_input", "step_id"),
+    [
+        (
+            {CONF_USERNAME: None, CONF_TOKEN: None},
+            {CONF_USERNAME: "username", CONF_PASSWORD: "password"},
+            "reconfigure",
+        ),
+        (
+            {CONF_USERNAME: "username", CONF_TOKEN: "oldtoken"},
+            {CONF_TOKEN: "newtoken"},
+            "reconfigure_user",
+        ),
+    ],
+)
 async def test_flow_reconfigure(
     hass: HomeAssistant,
     mock_aiontfy: AsyncMock,
+    entry_data: dict[str, str | None],
+    user_input: dict[str, str],
+    step_id: str,
 ) -> None:
     """Test reconfigure flow."""
     config_entry = MockConfigEntry(
@@ -510,8 +528,7 @@ async def test_flow_reconfigure(
         title="ntfy.sh",
         data={
             CONF_URL: "https://ntfy.sh/",
-            CONF_USERNAME: None,
-            CONF_TOKEN: None,
+            **entry_data,
         },
     )
     mock_aiontfy.generate_token.return_value = AccountTokenResponse(
@@ -520,11 +537,11 @@ async def test_flow_reconfigure(
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == step_id
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_USERNAME: "username", CONF_PASSWORD: "password"},
+        user_input,
     )
 
     await hass.async_block_till_done()
@@ -537,9 +554,18 @@ async def test_flow_reconfigure(
     assert len(hass.config_entries.async_entries()) == 1
 
 
+@pytest.mark.parametrize(
+    ("entry_data", "step_id"),
+    [
+        ({CONF_USERNAME: None, CONF_TOKEN: None}, "reconfigure"),
+        ({CONF_USERNAME: "username", CONF_TOKEN: "oldtoken"}, "reconfigure_user"),
+    ],
+)
+@pytest.mark.usefixtures("mock_aiontfy")
 async def test_flow_reconfigure_token(
     hass: HomeAssistant,
-    mock_aiontfy: AsyncMock,
+    entry_data: dict[str, Any],
+    step_id: str,
 ) -> None:
     """Test reconfigure flow with access token."""
     config_entry = MockConfigEntry(
@@ -547,15 +573,14 @@ async def test_flow_reconfigure_token(
         title="ntfy.sh",
         data={
             CONF_URL: "https://ntfy.sh/",
-            CONF_USERNAME: None,
-            CONF_TOKEN: None,
+            **entry_data,
         },
     )
 
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == step_id
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -679,24 +704,30 @@ async def test_flow_reconfigure_already_configured(
 
 
 @pytest.mark.usefixtures("mock_aiontfy")
-async def test_flow_reconfigure_nothing_to_reconfigure(
+async def test_flow_reconfigure_account_mismatch(
     hass: HomeAssistant,
 ) -> None:
-    """Test reconfigure flow abort if nothing to reconfigure."""
+    """Test reconfigure flow account mismatch."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="ntfy.sh",
         data={
             CONF_URL: "https://ntfy.sh/",
-            CONF_USERNAME: "username",
+            CONF_USERNAME: "wrong_username",
+            CONF_TOKEN: "oldtoken",
         },
     )
-
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_TOKEN: "newtoken"},
+    )
+
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "nothing_to_reconfigure"
-
-    assert len(hass.config_entries.async_entries()) == 1
+    assert result["reason"] == "account_mismatch"

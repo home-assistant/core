@@ -108,6 +108,12 @@ STEP_RECONFIGURE_DATA_SCHEMA = vol.Schema(
     }
 )
 
+STEP_RECONFIGURE_TOKEN_ONLY_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_TOKEN): str,
+    }
+)
+
 STEP_USER_TOPIC_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TOPIC): str,
@@ -270,9 +276,6 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         entry = self._get_reconfigure_entry()
 
-        if entry.data[CONF_USERNAME]:
-            return self.async_abort(reason="nothing_to_reconfigure")
-
         if user_input is not None:
             session = async_get_clientsession(self.hass)
             if token := user_input.get(CONF_TOKEN):
@@ -285,7 +288,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                 ntfy = Ntfy(
                     entry.data[CONF_URL],
                     session,
-                    username=user_input[CONF_USERNAME],
+                    username=user_input.get(CONF_USERNAME, entry.data[CONF_USERNAME]),
                     password=user_input[CONF_PASSWORD],
                 )
 
@@ -304,6 +307,20 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                if entry.data[CONF_USERNAME]:
+                    if entry.data[CONF_USERNAME] != account.username:
+                        return self.async_abort(
+                            reason="account_mismatch",
+                            description_placeholders={
+                                CONF_USERNAME: entry.data[CONF_USERNAME],
+                                "wrong_username": account.username,
+                            },
+                        )
+
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        data_updates={CONF_TOKEN: token},
+                    )
                 self._async_abort_entries_match(
                     {
                         CONF_URL: entry.data[CONF_URL],
@@ -317,14 +334,36 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_TOKEN: token,
                     },
                 )
+        if entry.data[CONF_USERNAME]:
+            return self.async_show_form(
+                step_id="reconfigure_user",
+                data_schema=self.add_suggested_values_to_schema(
+                    data_schema=STEP_REAUTH_DATA_SCHEMA,
+                    suggested_values=user_input,
+                ),
+                errors=errors,
+                description_placeholders={
+                    CONF_NAME: entry.title,
+                    CONF_USERNAME: entry.data[CONF_USERNAME],
+                },
+            )
+
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=STEP_RECONFIGURE_DATA_SCHEMA, suggested_values=user_input
+                data_schema=STEP_RECONFIGURE_DATA_SCHEMA,
+                suggested_values=user_input,
             ),
             errors=errors,
             description_placeholders={CONF_NAME: entry.title},
         )
+
+    async def async_step_reconfigure_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfigure flow for authenticated ntfy entry."""
+
+        return await self.async_step_reconfigure(user_input)
 
 
 class TopicSubentryFlowHandler(ConfigSubentryFlow):
