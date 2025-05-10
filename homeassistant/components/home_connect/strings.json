@@ -156,28 +156,6 @@
         }
       }
     },
-    "deprecated_program_switch_in_automations_scripts": {
-      "title": "Deprecated program switch detected in some automations or scripts",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::home_connect::issues::deprecated_program_switch_in_automations_scripts::title%]",
-            "description": "Program switches are deprecated and {entity_id} is used in the following automations or scripts:\n{items}\n\nYou can use the active program select entity to run the program without any additional options and get the current running program on the above automations or scripts to fix this issue."
-          }
-        }
-      }
-    },
-    "deprecated_program_switch": {
-      "title": "Deprecated program switch entities",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::home_connect::issues::deprecated_program_switch::title%]",
-            "description": "The switch entity `{entity_id}` and all the other program switches are deprecated.\n\nPlease use the active program select entity instead."
-          }
-        }
-      }
-    },
     "deprecated_set_program_and_option_actions": {
       "title": "The executed action is deprecated",
       "fix_flow": {
