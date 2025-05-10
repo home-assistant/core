@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -26,7 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as TELEGRAM_DOMAIN, PLATFORMS
+from .const import DOMAIN as TELEGRAM_DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,19 +49,23 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
 def get_service(
     hass: HomeAssistant,
     config: ConfigType,
-    discovery_info: DiscoveryInfoType | None = None,
+    discovery_info: DiscoveryInfoType | None,
 ) -> TelegramNotificationService:
     """Get the Telegram notification service."""
-
     setup_reload_service(hass, TELEGRAM_DOMAIN, PLATFORMS)
-    chat_id = config.get(CONF_CHAT_ID)
-    return TelegramNotificationService(hass, chat_id)
+
+    # chat_id can either come from configuration.yaml or from discovery (config flow)
+    chat_id: Any = (
+        discovery_info[CONF_CHAT_ID] if discovery_info else config.get(CONF_CHAT_ID)
+    )
+
+    return TelegramNotificationService(hass, int(chat_id))
 
 
 class TelegramNotificationService(BaseNotificationService):
     """Implement the notification service for Telegram."""
 
-    def __init__(self, hass, chat_id):
+    def __init__(self, hass: HomeAssistant, chat_id: int) -> None:
         """Initialize the service."""
         self._chat_id = chat_id
         self.hass = hass

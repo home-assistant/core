@@ -4,5 +4,24 @@
       "name": "[%key:common::action::reload%]",
       "description": "Reloads telegram notify services."
     }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "name": "Notifier name",
+          "chat_id": "Chat ID"
+        },
+        "data_description": {
+          "name": "The name of the notifier.",
+          "chat_id": "The Telegram chat ID."
+        },
+        "description": "Please enter the notifier information",
+        "title": "Notifier setup"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
   }
 }
