@@ -274,6 +274,28 @@
         }
       }
     },
+    "search_media": {
+      "name": "Search media",
+      "description": "Searches the available media.",
+      "fields": {
+        "media_content_id": {
+          "name": "[%key:component::media_player::services::browse_media::fields::media_content_id::name%]",
+          "description": "[%key:component::media_player::services::browse_media::fields::media_content_id::description%]"
+        },
+        "media_content_type": {
+          "name": "[%key:component::media_player::services::browse_media::fields::media_content_type::name%]",
+          "description": "[%key:component::media_player::services::browse_media::fields::media_content_type::description%]"
+        },
+        "search_query": {
+          "name": "Search query",
+          "description": "The term to search for."
+        },
+        "media_filter_classes": {
+          "name": "Media class filter",
+          "description": "List of media classes to filter the search results by."
+        }
+      }
+    },
     "select_source": {
       "name": "Select source",
       "description": "Sends the media player the command to change input source.",

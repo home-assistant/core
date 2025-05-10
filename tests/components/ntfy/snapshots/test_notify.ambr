@@ -1,0 +1,49 @@
+# serializer version: 1
+# name: test_notify_platform[notify.mytopic-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'notify',
+    'entity_category': None,
+    'entity_id': 'notify.mytopic',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'ntfy',
+    'previous_unique_id': None,
+    'supported_features': <NotifyEntityFeature: 1>,
+    'translation_key': 'publish',
+    'unique_id': '123456789_ABCDEF_publish',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_notify_platform[notify.mytopic-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'mytopic',
+      'supported_features': <NotifyEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'notify.mytopic',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

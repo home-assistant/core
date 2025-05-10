@@ -8,7 +8,13 @@ from pyhap.const import CATEGORY_AIR_PURIFIER
 from pyhap.service import Service
 from pyhap.util import callback as pyhap_callback
 
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    UnitOfTemperature,
+)
 from homeassistant.core import (
     Event,
     EventStateChangedData,
@@ -43,7 +49,12 @@ from .const import (
     THRESHOLD_FILTER_CHANGE_NEEDED,
 )
 from .type_fans import ATTR_PRESET_MODE, CHAR_ROTATION_SPEED, Fan
-from .util import cleanup_name_for_homekit, convert_to_float, density_to_air_quality
+from .util import (
+    cleanup_name_for_homekit,
+    convert_to_float,
+    density_to_air_quality,
+    temperature_to_homekit,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -345,8 +356,13 @@ class AirPurifier(Fan):
         ):
             return
 
+        unit = new_state.attributes.get(
+            ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature.CELSIUS
+        )
+        current_temperature = temperature_to_homekit(current_temperature, unit)
+
         _LOGGER.debug(
-            "%s: Linked temperature sensor %s changed to %d",
+            "%s: Linked temperature sensor %s changed to %d °C",
             self.entity_id,
             self.linked_temperature_sensor,
             current_temperature,
