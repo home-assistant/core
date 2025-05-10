@@ -309,7 +309,6 @@ class S3BackupAgent(BackupAgent):
         response = await self._client.list_objects_v2(
             Bucket=self._bucket,
             Prefix=self._prefix,
-            Delimiter="/",
         )
 
         # Filter for metadata files only
