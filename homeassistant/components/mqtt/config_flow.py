@@ -744,6 +744,18 @@ PLATFORM_MQTT_FIELDS = {
             validator=cv.template,
             error="invalid_template",
         ),
+        CONF_PAYLOAD_OFF: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=str,
+            default=DEFAULT_PAYLOAD_OFF,
+        ),
+        CONF_PAYLOAD_ON: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=str,
+            default=DEFAULT_PAYLOAD_ON,
+        ),
         CONF_RETAIN: PlatformField(
             selector=BOOLEAN_SELECTOR, required=False, validator=bool
         ),
