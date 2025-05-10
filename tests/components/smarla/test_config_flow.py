@@ -1,84 +1,71 @@
 """Test config flow for Swing2Sleep Smarla integration."""
 
-from unittest.mock import AsyncMock, patch
+import pytest
 
-from homeassistant import config_entries
-from homeassistant.components.smarla.config_flow import Connection
 from homeassistant.components.smarla.const import DOMAIN
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import MOCK_SERIAL_NUMBER, MOCK_USER_INPUT
+
 from tests.common import MockConfigEntry
 
-MOCK_ACCESS_TOKEN = "eyJyZWZyZXNoVG9rZW4iOiJ0ZXN0IiwiYXBwSWRlbnRpZmllciI6IkhBLXRlc3QiLCJzZXJpYWxOdW1iZXIiOiJBQkNEIn0="
-MOCK_SERIAL_NUMBER = "ABCD"
 
-
-async def test_show_form(hass: HomeAssistant) -> None:
-    """Test that the form is shown initially."""
+async def test_config_flow(hass: HomeAssistant, mock_refresh_token_success) -> None:
+    """Test creating a config entry."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-
-async def test_create_entry(hass: HomeAssistant) -> None:
-    """Test creating a config entry."""
-    with patch.object(Connection, "refresh_token", new=AsyncMock(return_value=True)):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN},
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_INPUT
+    )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_SERIAL_NUMBER
-    assert result["data"] == {CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN}
+    assert result["data"] == MOCK_USER_INPUT
+    assert result["result"].unique_id == MOCK_SERIAL_NUMBER
 
 
-async def test_invalid_auth(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("error", ["malformed_token", "invalid_auth"])
+async def test_form_error(
+    hass: HomeAssistant, request: pytest.FixtureRequest, error: str
+) -> None:
     """Test we show user form on invalid auth."""
-    with patch.object(Connection, "refresh_token", new=AsyncMock(return_value=None)):
+    error_patch = request.getfixturevalue(f"{error}_patch")
+    with error_patch:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN},
+            context={"source": SOURCE_USER},
+            data=MOCK_USER_INPUT,
         )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    request.getfixturevalue("mock_refresh_token_success")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_INPUT
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
-async def test_invalid_token(hass: HomeAssistant) -> None:
-    """Test we handle invalid/malformed tokens."""
+async def test_device_exists_abort(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_refresh_token_success
+) -> None:
+    """Test we abort config flow if Smarla device already configured."""
+    mock_config_entry.add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={CONF_ACCESS_TOKEN: "invalid_token"},
+        context={"source": SOURCE_USER},
+        data=MOCK_USER_INPUT,
     )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_token"}
-
-
-async def test_device_exists_abort(hass: HomeAssistant) -> None:
-    """Test we abort config flow if Smarla device already configured."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=MOCK_SERIAL_NUMBER,
-        source=config_entries.SOURCE_USER,
-    )
-    config_entry.add_to_hass(hass)
-
-    with patch.object(Connection, "refresh_token", new=AsyncMock(return_value=True)):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN},
-        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
