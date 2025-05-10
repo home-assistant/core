@@ -42,7 +42,7 @@ async def test_flow(hass: HomeAssistant) -> None:
     """Test config flow."""
     result = await _async_start_flow(hass)
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test"
+    assert result["title"] == "test test/"
     assert result["data"] == USER_INPUT
 
 
@@ -82,7 +82,7 @@ async def test_flow_create_client_errors(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test"
+    assert result["title"] == "test test/"
     assert result["data"] == USER_INPUT
 
 
@@ -107,7 +107,7 @@ async def test_flow_head_bucket_error(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test"
+    assert result["title"] == "test test/"
     assert result["data"] == USER_INPUT
 
 
@@ -139,5 +139,5 @@ async def test_flow_create_not_aws_endpoint(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test"
+    assert result["title"] == "test test/"
     assert result["data"] == USER_INPUT
