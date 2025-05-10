@@ -56,7 +56,7 @@
       "message": "Incorrect credentials for panel."
     },
     "incorrect_door_state": {
-      "message": "Door cannot be manipulated while it is momentarily unlatched.."
+      "message": "Door cannot be manipulated while it is momentarily unlatched."
     }
   },
   "entity": {
