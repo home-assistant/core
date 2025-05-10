@@ -7,6 +7,6 @@ set_date_time:
           integration: bosch_alarm
     datetime:
       required: false
-      example: "2022/11/01 22:15"
+      example: "2025-05-10 00:00:00"
       selector:
         datetime:

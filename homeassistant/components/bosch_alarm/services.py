@@ -62,12 +62,6 @@ def setup_services(hass: HomeAssistant) -> None:
                     translation_key="connection_error",
                     translation_placeholders={"target": config_entry.title},
                 ) from err
-            except Exception as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="unknown_error",
-                    translation_placeholders={"target": config_entry.title},
-                ) from err
 
     hass.services.async_register(
         DOMAIN,

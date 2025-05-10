@@ -84,7 +84,7 @@
           "description": "The date and time to set. The time zone of the Home Assistant instance is assumed. Defaults to current date and time if unset."
         },
         "config_entry_id": {
-          "name": "Integration ID",
+          "name": "Bosch Alarm config entry",
           "description": "The Bosch Alarm integration ID."
         }
       }
