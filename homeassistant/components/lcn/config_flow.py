@@ -137,16 +137,12 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             user_input[CONF_HOST] = reconfigure_entry.data[CONF_HOST]
 
-            if not (
-                {(key, user_input[key]) for key in (CONF_IP_ADDRESS, CONF_PORT)}
-                <= reconfigure_entry.data.items()
-            ):
-                self._async_abort_entries_match(
-                    {
-                        CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
-                        CONF_PORT: user_input[CONF_PORT],
-                    }
-                )
+            self._async_abort_entries_match(
+                {
+                    CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
+                    CONF_PORT: user_input[CONF_PORT],
+                }
+            )
 
             await self.hass.config_entries.async_unload(reconfigure_entry.entry_id)
 
