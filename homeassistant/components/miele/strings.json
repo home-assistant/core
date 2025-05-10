@@ -91,10 +91,10 @@
     "freezer": {
       "name": "Freezer"
     },
-    "robot_vacuum_cleander": {
+    "robot_vacuum_cleaner": {
       "name": "Robot vacuum cleaner"
     },
-    "steam_oven_microwave": {
+    "steam_oven_micro": {
       "name": "Steam oven micro"
     },
     "dialog_oven": {
