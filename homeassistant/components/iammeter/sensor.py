@@ -78,7 +78,7 @@ def _migrate_to_new_unique_id(
     ]
     phase_list = ["A", "B", "C", "NET"]
     id_phase_range = 1 if model == DEVICE_3080 else 4
-    id_name_range = 5 if model == DEVICE_3080 else 7
+    id_name_range = 7 if model == DEVICE_3080 else 7
     for row in range(id_phase_range):
         for idx in range(id_name_range):
             old_unique_id = f"{serial_number}-{row}-{idx}"
