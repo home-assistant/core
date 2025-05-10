@@ -168,16 +168,14 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         """Set up the coordinator."""
         self._pending_platforms = pending_platforms
         dev_reg = dr.async_get(self.hass)
-        if self.device.gen == GEN1:
-            connections = {(CONNECTION_NETWORK_MAC, self.mac)}
-        else:
-            connections = {
-                (CONNECTION_NETWORK_MAC, self.mac),
+        connections = {(CONNECTION_NETWORK_MAC, self.mac)}
+        if self.device.gen != GEN1:
+            connections.add(
                 (
                     CONNECTION_BLUETOOTH,
                     format_mac(bluetooth_mac_from_primary_mac(self.mac)),
-                ),
-            }
+                )
+            )
         device_entry = dev_reg.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             name=self.name,
