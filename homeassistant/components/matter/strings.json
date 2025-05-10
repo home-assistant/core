@@ -364,7 +364,7 @@
         "name": "Max PIN code length"
       },
       "window_covering_target_position": {
-        "name": "Target open position"
+        "name": "Target opening position"
       }
     },
     "switch": {
