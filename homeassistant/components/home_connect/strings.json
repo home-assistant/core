@@ -1585,9 +1585,6 @@
         "name": "Ristretto espresso cups",
         "unit_of_measurement": "[%key:component::home_connect::entity::sensor::hot_water_cups_counter::unit_of_measurement%]"
       },
-      "battery_level": {
-        "name": "Battery level"
-      },
       "camera_state": {
         "name": "Camera state",
         "state": {

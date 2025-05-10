@@ -53,7 +53,6 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
     CONF_HOST,
-    CONF_IP_ADDRESS,
     CONF_MAC,
     CONF_METHOD,
     CONF_MODEL,
@@ -77,7 +76,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceNotSupported
+from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.setup import async_setup_component
 
 from . import setup_samsungtv_entry
@@ -85,14 +84,16 @@ from .const import (
     MOCK_CONFIG,
     MOCK_ENTRY_WS_WITH_MAC,
     MOCK_ENTRYDATA_ENCRYPTED_WS,
-    SAMPLE_DEVICE_INFO_FRAME,
     SAMPLE_DEVICE_INFO_WIFI,
-    SAMPLE_EVENT_ED_INSTALLED_APP,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_object_fixture,
+)
 
-ENTITY_ID = f"{MP_DOMAIN}.fake"
+ENTITY_ID = f"{MP_DOMAIN}.mock_title"
 MOCK_CONFIGWS = {
     CONF_HOST: "fake_host",
     CONF_NAME: "fake",
@@ -109,7 +110,6 @@ MOCK_CALLS_WS = {
 }
 
 MOCK_ENTRY_WS = {
-    CONF_IP_ADDRESS: "test",
     CONF_HOST: "fake_host",
     CONF_METHOD: "websocket",
     CONF_NAME: "fake",
@@ -156,12 +156,9 @@ async def test_setup_websocket_2(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test setup of platform from config entry."""
-    entity_id = f"{MP_DOMAIN}.fake"
-
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_ENTRY_WS,
-        unique_id=entity_id,
     )
     entry.add_to_hass(hass)
 
@@ -186,7 +183,7 @@ async def test_setup_websocket_2(
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(entity_id)
+    state = hass.states.get(ENTITY_ID)
     assert state
     remote_class.assert_called_once_with(**MOCK_CALLS_WS)
 
@@ -561,9 +558,11 @@ async def test_send_key_unhandled_response(hass: HomeAssistant, remote: Mock) ->
     """Testing unhandled response exception."""
     await setup_samsungtv_entry(hass, MOCK_CONFIG)
     remote.control = Mock(side_effect=exceptions.UnhandledResponse("Boom"))
-    await hass.services.async_call(
-        MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
-    )
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+    assert err.value.translation_key == "error_sending_command"
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
 
@@ -636,7 +635,7 @@ async def test_name(hass: HomeAssistant) -> None:
     """Test for name property."""
     await setup_samsungtv_entry(hass, MOCK_CONFIG)
     state = hass.states.get(ENTITY_ID)
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "fake"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Mock Title"
 
 
 @pytest.mark.usefixtures("remote")
@@ -689,7 +688,9 @@ async def test_turn_off_websocket(
     hass: HomeAssistant, remotews: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for turn_off."""
-    remotews.app_list_data = SAMPLE_EVENT_ED_INSTALLED_APP
+    remotews.app_list_data = load_json_object_fixture(
+        "ws_installed_app_event.json", DOMAIN
+    )
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=[OSError("Boom"), DEFAULT_MOCK],
@@ -728,7 +729,9 @@ async def test_turn_off_websocket_frame(
     hass: HomeAssistant, remotews: Mock, rest_api: Mock
 ) -> None:
     """Test for turn_off."""
-    rest_api.rest_device_info.return_value = SAMPLE_DEVICE_INFO_FRAME
+    rest_api.rest_device_info.return_value = load_json_object_fixture(
+        "device_info_UE43LS003.json", DOMAIN
+    )
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=[OSError("Boom"), DEFAULT_MOCK],
@@ -1097,17 +1100,27 @@ async def test_select_source(hass: HomeAssistant, remote: Mock) -> None:
 
 async def test_select_source_invalid_source(hass: HomeAssistant) -> None:
     """Test for select_source with invalid source."""
+
+    source = "INVALID"
+
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         await setup_samsungtv_entry(hass, MOCK_CONFIG)
         remote.reset_mock()
-        await hass.services.async_call(
-            MP_DOMAIN,
-            SERVICE_SELECT_SOURCE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "INVALID"},
-            True,
-        )
+        with pytest.raises(HomeAssistantError) as exc_info:
+            await hass.services.async_call(
+                MP_DOMAIN,
+                SERVICE_SELECT_SOURCE,
+                {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: source},
+                True,
+            )
         # control not called
         assert remote.control.call_count == 0
+        assert exc_info.value.translation_domain == DOMAIN
+        assert exc_info.value.translation_key == "source_unsupported"
+        assert exc_info.value.translation_placeholders == {
+            "entity": ENTITY_ID,
+            "source": source,
+        }
 
 
 @pytest.mark.usefixtures("rest_api")
@@ -1136,7 +1149,9 @@ async def test_play_media_app(hass: HomeAssistant, remotews: Mock) -> None:
 @pytest.mark.usefixtures("rest_api")
 async def test_select_source_app(hass: HomeAssistant, remotews: Mock) -> None:
     """Test for select_source."""
-    remotews.app_list_data = SAMPLE_EVENT_ED_INSTALLED_APP
+    remotews.app_list_data = load_json_object_fixture(
+        "ws_installed_app_event.json", DOMAIN
+    )
     await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
     remotews.send_commands.reset_mock()
 
@@ -1211,9 +1226,7 @@ async def test_websocket_unsupported_remote_control(
 
 
 @pytest.mark.usefixtures("remotews", "rest_api", "upnp_notify_server")
-async def test_volume_control_upnp(
-    hass: HomeAssistant, dmr_device: Mock, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_volume_control_upnp(hass: HomeAssistant, dmr_device: Mock) -> None:
     """Test for Upnp volume control."""
     await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
 
@@ -1229,21 +1242,21 @@ async def test_volume_control_upnp(
         True,
     )
     dmr_device.async_set_volume_level.assert_called_once_with(0.5)
-    assert "Unable to set volume level on" not in caplog.text
 
     # Upnp action failed
     dmr_device.async_set_volume_level.reset_mock()
     dmr_device.async_set_volume_level.side_effect = UpnpActionResponseError(
         status=500, error_code=501, error_desc="Action Failed"
     )
-    await hass.services.async_call(
-        MP_DOMAIN,
-        SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.6},
-        True,
-    )
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_VOLUME_SET,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.6},
+            True,
+        )
+    assert err.value.translation_key == "error_set_volume"
     dmr_device.async_set_volume_level.assert_called_once_with(0.6)
-    assert "Unable to set volume level on" in caplog.text
 
 
 @pytest.mark.usefixtures("remotews", "rest_api")

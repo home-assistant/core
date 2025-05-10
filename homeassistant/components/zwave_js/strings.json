@@ -37,8 +37,10 @@
       "restore_nvm": "Please wait while the network restore completes."
     },
     "step": {
-      "configure_addon": {
+      "configure_addon_user": {
         "data": {
+          "lr_s2_access_control_key": "Long Range S2 Access Control Key",
+          "lr_s2_authenticated_key": "Long Range S2 Authenticated Key",
           "s0_legacy_key": "S0 Key (Legacy)",
           "s2_access_control_key": "S2 Access Control Key",
           "s2_authenticated_key": "S2 Authenticated Key",
@@ -52,14 +54,16 @@
         "data": {
           "emulate_hardware": "Emulate Hardware",
           "log_level": "Log level",
-          "s0_legacy_key": "[%key:component::zwave_js::config::step::configure_addon::data::s0_legacy_key%]",
-          "s2_access_control_key": "[%key:component::zwave_js::config::step::configure_addon::data::s2_access_control_key%]",
-          "s2_authenticated_key": "[%key:component::zwave_js::config::step::configure_addon::data::s2_authenticated_key%]",
-          "s2_unauthenticated_key": "[%key:component::zwave_js::config::step::configure_addon::data::s2_unauthenticated_key%]",
+          "lr_s2_access_control_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::lr_s2_access_control_key%]",
+          "lr_s2_authenticated_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::lr_s2_authenticated_key%]",
+          "s0_legacy_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::s0_legacy_key%]",
+          "s2_access_control_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::s2_access_control_key%]",
+          "s2_authenticated_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::s2_authenticated_key%]",
+          "s2_unauthenticated_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::s2_unauthenticated_key%]",
           "usb_path": "[%key:common::config_flow::data::usb_path%]"
         },
-        "description": "[%key:component::zwave_js::config::step::configure_addon::description%]",
-        "title": "[%key:component::zwave_js::config::step::configure_addon::title%]"
+        "description": "[%key:component::zwave_js::config::step::configure_addon_user::description%]",
+        "title": "[%key:component::zwave_js::config::step::configure_addon_user::title%]"
       },
       "hassio_confirm": {
         "description": "Do you want to set up the Z-Wave integration with the Z-Wave add-on?"
