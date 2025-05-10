@@ -10,7 +10,7 @@ from typing import Any, cast
 
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice, BlockUpdateType
-from aioshelly.const import GEN1, MODEL_VALVE
+from aioshelly.const import MODEL_VALVE
 from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
@@ -169,13 +169,8 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         self._pending_platforms = pending_platforms
         dev_reg = dr.async_get(self.hass)
         connections = {(CONNECTION_NETWORK_MAC, self.mac)}
-        if self.device.gen != GEN1:
-            connections.add(
-                (
-                    CONNECTION_BLUETOOTH,
-                    format_mac(bluetooth_mac_from_primary_mac(self.mac)),
-                )
-            )
+        if not self.sleep_period and hasattr(self, "bluetooth_source"):
+            connections.add((CONNECTION_BLUETOOTH, self.bluetooth_source))
         device_entry = dev_reg.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             name=self.name,
