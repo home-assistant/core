@@ -140,7 +140,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_fault_ac_failure-entry]
+# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_ac_failure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -153,7 +153,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_amax_3000_fault_ac_failure',
+    'entity_id': 'binary_sensor.bosch_amax_3000_ac_failure',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -163,9 +163,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Fault: AC Failure',
+    'original_name': 'AC Failure',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -174,21 +174,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_fault_ac_failure-state]
+# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_ac_failure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'plug',
-      'friendly_name': 'Bosch AMAX 3000 Fault: AC Failure',
+      'device_class': 'problem',
+      'friendly_name': 'Bosch AMAX 3000 AC Failure',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_amax_3000_fault_ac_failure',
+    'entity_id': 'binary_sensor.bosch_amax_3000_ac_failure',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_fault_battery_low-entry]
+# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -201,7 +201,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_amax_3000_fault_battery_low',
+    'entity_id': 'binary_sensor.bosch_amax_3000_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -213,30 +213,30 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Fault: Battery Low',
+    'original_name': 'Battery',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'panel_fault_battery_low',
+    'translation_key': None,
     'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_battery_low',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_fault_battery_low-state]
+# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Bosch AMAX 3000 Fault: Battery Low',
+      'friendly_name': 'Bosch AMAX 3000 Battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_amax_3000_fault_battery_low',
+    'entity_id': 'binary_sensor.bosch_amax_3000_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_fault_battery_missing-entry]
+# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_battery_missing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -249,7 +249,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_amax_3000_fault_battery_missing',
+    'entity_id': 'binary_sensor.bosch_amax_3000_battery_missing',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -259,9 +259,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Fault: Battery missing',
+    'original_name': 'Battery missing',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -270,21 +270,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_fault_battery_missing-state]
+# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_battery_missing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Bosch AMAX 3000 Fault: Battery missing',
+      'device_class': 'problem',
+      'friendly_name': 'Bosch AMAX 3000 Battery missing',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_amax_3000_fault_battery_missing',
+    'entity_id': 'binary_sensor.bosch_amax_3000_battery_missing',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_fault_crc_failure_in_panel_configuration-entry]
+# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_crc_failure_in_panel_configuration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -297,7 +297,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_amax_3000_fault_crc_failure_in_panel_configuration',
+    'entity_id': 'binary_sensor.bosch_amax_3000_crc_failure_in_panel_configuration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -307,9 +307,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Fault: CRC failure in panel configuration',
+    'original_name': 'CRC failure in panel configuration',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -318,20 +318,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_fault_crc_failure_in_panel_configuration-state]
+# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_crc_failure_in_panel_configuration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch AMAX 3000 Fault: CRC failure in panel configuration',
+      'device_class': 'problem',
+      'friendly_name': 'Bosch AMAX 3000 CRC failure in panel configuration',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_amax_3000_fault_crc_failure_in_panel_configuration',
+    'entity_id': 'binary_sensor.bosch_amax_3000_crc_failure_in_panel_configuration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_fault_failure_to_call_rps_since_rps_hang_up-entry]
+# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_failure_to_call_rps_since_rps_hang_up-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -344,7 +345,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_amax_3000_fault_failure_to_call_rps_since_rps_hang_up',
+    'entity_id': 'binary_sensor.bosch_amax_3000_failure_to_call_rps_since_rps_hang_up',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -356,7 +357,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Fault: Failure to call RPS since RPS hang up',
+    'original_name': 'Failure to call RPS since RPS hang up',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -365,20 +366,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_fault_failure_to_call_rps_since_rps_hang_up-state]
+# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_failure_to_call_rps_since_rps_hang_up-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch AMAX 3000 Fault: Failure to call RPS since RPS hang up',
+      'friendly_name': 'Bosch AMAX 3000 Failure to call RPS since RPS hang up',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_amax_3000_fault_failure_to_call_rps_since_rps_hang_up',
+    'entity_id': 'binary_sensor.bosch_amax_3000_failure_to_call_rps_since_rps_hang_up',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_fault_log_overflow-entry]
+# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_log_overflow-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -391,7 +392,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_amax_3000_fault_log_overflow',
+    'entity_id': 'binary_sensor.bosch_amax_3000_log_overflow',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -401,9 +402,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Fault: Log overflow',
+    'original_name': 'Log overflow',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -412,20 +413,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_fault_log_overflow-state]
+# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_log_overflow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch AMAX 3000 Fault: Log overflow',
+      'device_class': 'problem',
+      'friendly_name': 'Bosch AMAX 3000 Log overflow',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_amax_3000_fault_log_overflow',
+    'entity_id': 'binary_sensor.bosch_amax_3000_log_overflow',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_fault_log_threshold_reached-entry]
+# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_log_threshold_reached-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -438,7 +440,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_amax_3000_fault_log_threshold_reached',
+    'entity_id': 'binary_sensor.bosch_amax_3000_log_threshold_reached',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -448,9 +450,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Fault: Log threshold reached',
+    'original_name': 'Log threshold reached',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -459,20 +461,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_fault_log_threshold_reached-state]
+# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_log_threshold_reached-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch AMAX 3000 Fault: Log threshold reached',
+      'device_class': 'problem',
+      'friendly_name': 'Bosch AMAX 3000 Log threshold reached',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_amax_3000_fault_log_threshold_reached',
+    'entity_id': 'binary_sensor.bosch_amax_3000_log_threshold_reached',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_fault_phone_line_failure-entry]
+# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_phone_line_failure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -485,7 +488,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_amax_3000_fault_phone_line_failure',
+    'entity_id': 'binary_sensor.bosch_amax_3000_phone_line_failure',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -497,7 +500,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
-    'original_name': 'Fault: Phone line failure',
+    'original_name': 'Phone line failure',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -506,21 +509,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_fault_phone_line_failure-state]
+# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_phone_line_failure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
-      'friendly_name': 'Bosch AMAX 3000 Fault: Phone line failure',
+      'friendly_name': 'Bosch AMAX 3000 Phone line failure',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_amax_3000_fault_phone_line_failure',
+    'entity_id': 'binary_sensor.bosch_amax_3000_phone_line_failure',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_fault_point_bus_failure_since_rps_hang_up-entry]
+# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_point_bus_failure_since_rps_hang_up-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -533,7 +536,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_amax_3000_fault_point_bus_failure_since_rps_hang_up',
+    'entity_id': 'binary_sensor.bosch_amax_3000_point_bus_failure_since_rps_hang_up',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -543,9 +546,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Fault: Point bus failure since RPS hang up',
+    'original_name': 'Point bus failure since RPS hang up',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -554,20 +557,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_fault_point_bus_failure_since_rps_hang_up-state]
+# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_point_bus_failure_since_rps_hang_up-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch AMAX 3000 Fault: Point bus failure since RPS hang up',
+      'device_class': 'problem',
+      'friendly_name': 'Bosch AMAX 3000 Point bus failure since RPS hang up',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_amax_3000_fault_point_bus_failure_since_rps_hang_up',
+    'entity_id': 'binary_sensor.bosch_amax_3000_point_bus_failure_since_rps_hang_up',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_fault_sdi_failure_since_rps_hang_up-entry]
+# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_problem-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -580,7 +584,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_amax_3000_fault_sdi_failure_since_rps_hang_up',
+    'entity_id': 'binary_sensor.bosch_amax_3000_problem',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -590,103 +594,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Fault: SDI failure since RPS hang up',
-    'platform': 'bosch_alarm',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'panel_fault_sdi_fail_since_rps_hang_up',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_sdi_fail_since_rps_hang_up',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_fault_sdi_failure_since_rps_hang_up-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch AMAX 3000 Fault: SDI failure since RPS hang up',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_amax_3000_fault_sdi_failure_since_rps_hang_up',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_fault_user_code_tamper_since_rps_hang_up-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_amax_3000_fault_user_code_tamper_since_rps_hang_up',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Fault: User code tamper since RPS hang up',
-    'platform': 'bosch_alarm',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'panel_fault_user_code_tamper_since_rps_hang_up',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_user_code_tamper_since_rps_hang_up',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_fault_user_code_tamper_since_rps_hang_up-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch AMAX 3000 Fault: User code tamper since RPS hang up',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_amax_3000_fault_user_code_tamper_since_rps_hang_up',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_none-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_amax_3000_none',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
+    'original_name': 'Problem',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -695,13 +605,110 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_none-state]
+# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch AMAX 3000 None',
+      'device_class': 'problem',
+      'friendly_name': 'Bosch AMAX 3000 Problem',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_amax_3000_none',
+    'entity_id': 'binary_sensor.bosch_amax_3000_problem',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_sdi_failure_since_rps_hang_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.bosch_amax_3000_sdi_failure_since_rps_hang_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'SDI failure since RPS hang up',
+    'platform': 'bosch_alarm',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'panel_fault_sdi_fail_since_rps_hang_up',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_sdi_fail_since_rps_hang_up',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_sdi_failure_since_rps_hang_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Bosch AMAX 3000 SDI failure since RPS hang up',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.bosch_amax_3000_sdi_failure_since_rps_hang_up',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_user_code_tamper_since_rps_hang_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.bosch_amax_3000_user_code_tamper_since_rps_hang_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'User code tamper since RPS hang up',
+    'platform': 'bosch_alarm',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'panel_fault_user_code_tamper_since_rps_hang_up',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_user_code_tamper_since_rps_hang_up',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[amax_3000][binary_sensor.bosch_amax_3000_user_code_tamper_since_rps_hang_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Bosch AMAX 3000 User code tamper since RPS hang up',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.bosch_amax_3000_user_code_tamper_since_rps_hang_up',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1131,7 +1138,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_fault_ac_failure-entry]
+# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_ac_failure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1144,7 +1151,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_b5512_us1b_fault_ac_failure',
+    'entity_id': 'binary_sensor.bosch_b5512_us1b_ac_failure',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1154,9 +1161,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Fault: AC Failure',
+    'original_name': 'AC Failure',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1165,21 +1172,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_fault_ac_failure-state]
+# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_ac_failure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'plug',
-      'friendly_name': 'Bosch B5512 (US1B) Fault: AC Failure',
+      'device_class': 'problem',
+      'friendly_name': 'Bosch B5512 (US1B) AC Failure',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_b5512_us1b_fault_ac_failure',
+    'entity_id': 'binary_sensor.bosch_b5512_us1b_ac_failure',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_fault_battery_low-entry]
+# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1192,7 +1199,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_b5512_us1b_fault_battery_low',
+    'entity_id': 'binary_sensor.bosch_b5512_us1b_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1204,30 +1211,30 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Fault: Battery Low',
+    'original_name': 'Battery',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'panel_fault_battery_low',
+    'translation_key': None,
     'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_battery_low',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_fault_battery_low-state]
+# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Bosch B5512 (US1B) Fault: Battery Low',
+      'friendly_name': 'Bosch B5512 (US1B) Battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_b5512_us1b_fault_battery_low',
+    'entity_id': 'binary_sensor.bosch_b5512_us1b_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_fault_battery_missing-entry]
+# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_battery_missing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1240,7 +1247,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_b5512_us1b_fault_battery_missing',
+    'entity_id': 'binary_sensor.bosch_b5512_us1b_battery_missing',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1250,9 +1257,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Fault: Battery missing',
+    'original_name': 'Battery missing',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1261,21 +1268,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_fault_battery_missing-state]
+# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_battery_missing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Bosch B5512 (US1B) Fault: Battery missing',
+      'device_class': 'problem',
+      'friendly_name': 'Bosch B5512 (US1B) Battery missing',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_b5512_us1b_fault_battery_missing',
+    'entity_id': 'binary_sensor.bosch_b5512_us1b_battery_missing',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_fault_crc_failure_in_panel_configuration-entry]
+# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_crc_failure_in_panel_configuration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1288,7 +1295,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_b5512_us1b_fault_crc_failure_in_panel_configuration',
+    'entity_id': 'binary_sensor.bosch_b5512_us1b_crc_failure_in_panel_configuration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1298,9 +1305,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Fault: CRC failure in panel configuration',
+    'original_name': 'CRC failure in panel configuration',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1309,20 +1316,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_fault_crc_failure_in_panel_configuration-state]
+# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_crc_failure_in_panel_configuration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch B5512 (US1B) Fault: CRC failure in panel configuration',
+      'device_class': 'problem',
+      'friendly_name': 'Bosch B5512 (US1B) CRC failure in panel configuration',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_b5512_us1b_fault_crc_failure_in_panel_configuration',
+    'entity_id': 'binary_sensor.bosch_b5512_us1b_crc_failure_in_panel_configuration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_fault_failure_to_call_rps_since_rps_hang_up-entry]
+# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_failure_to_call_rps_since_rps_hang_up-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1335,7 +1343,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_b5512_us1b_fault_failure_to_call_rps_since_rps_hang_up',
+    'entity_id': 'binary_sensor.bosch_b5512_us1b_failure_to_call_rps_since_rps_hang_up',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1347,7 +1355,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Fault: Failure to call RPS since RPS hang up',
+    'original_name': 'Failure to call RPS since RPS hang up',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1356,20 +1364,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_fault_failure_to_call_rps_since_rps_hang_up-state]
+# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_failure_to_call_rps_since_rps_hang_up-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch B5512 (US1B) Fault: Failure to call RPS since RPS hang up',
+      'friendly_name': 'Bosch B5512 (US1B) Failure to call RPS since RPS hang up',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_b5512_us1b_fault_failure_to_call_rps_since_rps_hang_up',
+    'entity_id': 'binary_sensor.bosch_b5512_us1b_failure_to_call_rps_since_rps_hang_up',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_fault_log_overflow-entry]
+# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_log_overflow-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1382,7 +1390,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_b5512_us1b_fault_log_overflow',
+    'entity_id': 'binary_sensor.bosch_b5512_us1b_log_overflow',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1392,9 +1400,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Fault: Log overflow',
+    'original_name': 'Log overflow',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1403,20 +1411,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_fault_log_overflow-state]
+# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_log_overflow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch B5512 (US1B) Fault: Log overflow',
+      'device_class': 'problem',
+      'friendly_name': 'Bosch B5512 (US1B) Log overflow',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_b5512_us1b_fault_log_overflow',
+    'entity_id': 'binary_sensor.bosch_b5512_us1b_log_overflow',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_fault_log_threshold_reached-entry]
+# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_log_threshold_reached-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1429,7 +1438,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_b5512_us1b_fault_log_threshold_reached',
+    'entity_id': 'binary_sensor.bosch_b5512_us1b_log_threshold_reached',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1439,9 +1448,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Fault: Log threshold reached',
+    'original_name': 'Log threshold reached',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1450,20 +1459,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_fault_log_threshold_reached-state]
+# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_log_threshold_reached-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch B5512 (US1B) Fault: Log threshold reached',
+      'device_class': 'problem',
+      'friendly_name': 'Bosch B5512 (US1B) Log threshold reached',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_b5512_us1b_fault_log_threshold_reached',
+    'entity_id': 'binary_sensor.bosch_b5512_us1b_log_threshold_reached',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_fault_phone_line_failure-entry]
+# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_phone_line_failure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1476,7 +1486,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_b5512_us1b_fault_phone_line_failure',
+    'entity_id': 'binary_sensor.bosch_b5512_us1b_phone_line_failure',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1488,7 +1498,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
-    'original_name': 'Fault: Phone line failure',
+    'original_name': 'Phone line failure',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1497,21 +1507,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_fault_phone_line_failure-state]
+# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_phone_line_failure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
-      'friendly_name': 'Bosch B5512 (US1B) Fault: Phone line failure',
+      'friendly_name': 'Bosch B5512 (US1B) Phone line failure',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_b5512_us1b_fault_phone_line_failure',
+    'entity_id': 'binary_sensor.bosch_b5512_us1b_phone_line_failure',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_fault_point_bus_failure_since_rps_hang_up-entry]
+# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_point_bus_failure_since_rps_hang_up-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1524,7 +1534,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_b5512_us1b_fault_point_bus_failure_since_rps_hang_up',
+    'entity_id': 'binary_sensor.bosch_b5512_us1b_point_bus_failure_since_rps_hang_up',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1534,9 +1544,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Fault: Point bus failure since RPS hang up',
+    'original_name': 'Point bus failure since RPS hang up',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1545,20 +1555,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_fault_point_bus_failure_since_rps_hang_up-state]
+# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_point_bus_failure_since_rps_hang_up-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch B5512 (US1B) Fault: Point bus failure since RPS hang up',
+      'device_class': 'problem',
+      'friendly_name': 'Bosch B5512 (US1B) Point bus failure since RPS hang up',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_b5512_us1b_fault_point_bus_failure_since_rps_hang_up',
+    'entity_id': 'binary_sensor.bosch_b5512_us1b_point_bus_failure_since_rps_hang_up',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_fault_sdi_failure_since_rps_hang_up-entry]
+# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_problem-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1571,7 +1582,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_b5512_us1b_fault_sdi_failure_since_rps_hang_up',
+    'entity_id': 'binary_sensor.bosch_b5512_us1b_problem',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1581,103 +1592,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Fault: SDI failure since RPS hang up',
-    'platform': 'bosch_alarm',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'panel_fault_sdi_fail_since_rps_hang_up',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_sdi_fail_since_rps_hang_up',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_fault_sdi_failure_since_rps_hang_up-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch B5512 (US1B) Fault: SDI failure since RPS hang up',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_b5512_us1b_fault_sdi_failure_since_rps_hang_up',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_fault_user_code_tamper_since_rps_hang_up-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_b5512_us1b_fault_user_code_tamper_since_rps_hang_up',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Fault: User code tamper since RPS hang up',
-    'platform': 'bosch_alarm',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'panel_fault_user_code_tamper_since_rps_hang_up',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_user_code_tamper_since_rps_hang_up',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_fault_user_code_tamper_since_rps_hang_up-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch B5512 (US1B) Fault: User code tamper since RPS hang up',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_b5512_us1b_fault_user_code_tamper_since_rps_hang_up',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_none-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_b5512_us1b_none',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
+    'original_name': 'Problem',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1686,13 +1603,110 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_none-state]
+# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch B5512 (US1B) None',
+      'device_class': 'problem',
+      'friendly_name': 'Bosch B5512 (US1B) Problem',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_b5512_us1b_none',
+    'entity_id': 'binary_sensor.bosch_b5512_us1b_problem',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_sdi_failure_since_rps_hang_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.bosch_b5512_us1b_sdi_failure_since_rps_hang_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'SDI failure since RPS hang up',
+    'platform': 'bosch_alarm',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'panel_fault_sdi_fail_since_rps_hang_up',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_sdi_fail_since_rps_hang_up',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_sdi_failure_since_rps_hang_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Bosch B5512 (US1B) SDI failure since RPS hang up',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.bosch_b5512_us1b_sdi_failure_since_rps_hang_up',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_user_code_tamper_since_rps_hang_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.bosch_b5512_us1b_user_code_tamper_since_rps_hang_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'User code tamper since RPS hang up',
+    'platform': 'bosch_alarm',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'panel_fault_user_code_tamper_since_rps_hang_up',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_user_code_tamper_since_rps_hang_up',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[b5512][binary_sensor.bosch_b5512_us1b_user_code_tamper_since_rps_hang_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Bosch B5512 (US1B) User code tamper since RPS hang up',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.bosch_b5512_us1b_user_code_tamper_since_rps_hang_up',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2122,7 +2136,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_fault_ac_failure-entry]
+# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_ac_failure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2135,7 +2149,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_solution_3000_fault_ac_failure',
+    'entity_id': 'binary_sensor.bosch_solution_3000_ac_failure',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2145,9 +2159,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Fault: AC Failure',
+    'original_name': 'AC Failure',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2156,21 +2170,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_fault_ac_failure-state]
+# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_ac_failure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'plug',
-      'friendly_name': 'Bosch Solution 3000 Fault: AC Failure',
+      'device_class': 'problem',
+      'friendly_name': 'Bosch Solution 3000 AC Failure',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_solution_3000_fault_ac_failure',
+    'entity_id': 'binary_sensor.bosch_solution_3000_ac_failure',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_fault_battery_low-entry]
+# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2183,7 +2197,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_solution_3000_fault_battery_low',
+    'entity_id': 'binary_sensor.bosch_solution_3000_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2195,30 +2209,30 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Fault: Battery Low',
+    'original_name': 'Battery',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'panel_fault_battery_low',
+    'translation_key': None,
     'unique_id': '1234567890_fault_panel_fault_battery_low',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_fault_battery_low-state]
+# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Bosch Solution 3000 Fault: Battery Low',
+      'friendly_name': 'Bosch Solution 3000 Battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_solution_3000_fault_battery_low',
+    'entity_id': 'binary_sensor.bosch_solution_3000_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_fault_battery_missing-entry]
+# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_battery_missing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2231,7 +2245,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_solution_3000_fault_battery_missing',
+    'entity_id': 'binary_sensor.bosch_solution_3000_battery_missing',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2241,9 +2255,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Fault: Battery missing',
+    'original_name': 'Battery missing',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2252,21 +2266,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_fault_battery_missing-state]
+# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_battery_missing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Bosch Solution 3000 Fault: Battery missing',
+      'device_class': 'problem',
+      'friendly_name': 'Bosch Solution 3000 Battery missing',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_solution_3000_fault_battery_missing',
+    'entity_id': 'binary_sensor.bosch_solution_3000_battery_missing',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_fault_crc_failure_in_panel_configuration-entry]
+# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_crc_failure_in_panel_configuration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2279,7 +2293,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_solution_3000_fault_crc_failure_in_panel_configuration',
+    'entity_id': 'binary_sensor.bosch_solution_3000_crc_failure_in_panel_configuration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2289,9 +2303,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Fault: CRC failure in panel configuration',
+    'original_name': 'CRC failure in panel configuration',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2300,20 +2314,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_fault_crc_failure_in_panel_configuration-state]
+# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_crc_failure_in_panel_configuration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch Solution 3000 Fault: CRC failure in panel configuration',
+      'device_class': 'problem',
+      'friendly_name': 'Bosch Solution 3000 CRC failure in panel configuration',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_solution_3000_fault_crc_failure_in_panel_configuration',
+    'entity_id': 'binary_sensor.bosch_solution_3000_crc_failure_in_panel_configuration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_fault_failure_to_call_rps_since_rps_hang_up-entry]
+# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_failure_to_call_rps_since_rps_hang_up-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2326,7 +2341,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_solution_3000_fault_failure_to_call_rps_since_rps_hang_up',
+    'entity_id': 'binary_sensor.bosch_solution_3000_failure_to_call_rps_since_rps_hang_up',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2338,7 +2353,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Fault: Failure to call RPS since RPS hang up',
+    'original_name': 'Failure to call RPS since RPS hang up',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2347,20 +2362,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_fault_failure_to_call_rps_since_rps_hang_up-state]
+# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_failure_to_call_rps_since_rps_hang_up-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch Solution 3000 Fault: Failure to call RPS since RPS hang up',
+      'friendly_name': 'Bosch Solution 3000 Failure to call RPS since RPS hang up',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_solution_3000_fault_failure_to_call_rps_since_rps_hang_up',
+    'entity_id': 'binary_sensor.bosch_solution_3000_failure_to_call_rps_since_rps_hang_up',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_fault_log_overflow-entry]
+# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_log_overflow-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2373,7 +2388,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_solution_3000_fault_log_overflow',
+    'entity_id': 'binary_sensor.bosch_solution_3000_log_overflow',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2383,9 +2398,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Fault: Log overflow',
+    'original_name': 'Log overflow',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2394,20 +2409,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_fault_log_overflow-state]
+# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_log_overflow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch Solution 3000 Fault: Log overflow',
+      'device_class': 'problem',
+      'friendly_name': 'Bosch Solution 3000 Log overflow',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_solution_3000_fault_log_overflow',
+    'entity_id': 'binary_sensor.bosch_solution_3000_log_overflow',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_fault_log_threshold_reached-entry]
+# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_log_threshold_reached-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2420,7 +2436,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_solution_3000_fault_log_threshold_reached',
+    'entity_id': 'binary_sensor.bosch_solution_3000_log_threshold_reached',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2430,9 +2446,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Fault: Log threshold reached',
+    'original_name': 'Log threshold reached',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2441,20 +2457,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_fault_log_threshold_reached-state]
+# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_log_threshold_reached-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch Solution 3000 Fault: Log threshold reached',
+      'device_class': 'problem',
+      'friendly_name': 'Bosch Solution 3000 Log threshold reached',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_solution_3000_fault_log_threshold_reached',
+    'entity_id': 'binary_sensor.bosch_solution_3000_log_threshold_reached',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_fault_phone_line_failure-entry]
+# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_phone_line_failure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2467,7 +2484,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_solution_3000_fault_phone_line_failure',
+    'entity_id': 'binary_sensor.bosch_solution_3000_phone_line_failure',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2479,7 +2496,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
-    'original_name': 'Fault: Phone line failure',
+    'original_name': 'Phone line failure',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2488,21 +2505,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_fault_phone_line_failure-state]
+# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_phone_line_failure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
-      'friendly_name': 'Bosch Solution 3000 Fault: Phone line failure',
+      'friendly_name': 'Bosch Solution 3000 Phone line failure',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_solution_3000_fault_phone_line_failure',
+    'entity_id': 'binary_sensor.bosch_solution_3000_phone_line_failure',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_fault_point_bus_failure_since_rps_hang_up-entry]
+# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_point_bus_failure_since_rps_hang_up-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2515,7 +2532,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_solution_3000_fault_point_bus_failure_since_rps_hang_up',
+    'entity_id': 'binary_sensor.bosch_solution_3000_point_bus_failure_since_rps_hang_up',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2525,9 +2542,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Fault: Point bus failure since RPS hang up',
+    'original_name': 'Point bus failure since RPS hang up',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2536,20 +2553,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_fault_point_bus_failure_since_rps_hang_up-state]
+# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_point_bus_failure_since_rps_hang_up-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch Solution 3000 Fault: Point bus failure since RPS hang up',
+      'device_class': 'problem',
+      'friendly_name': 'Bosch Solution 3000 Point bus failure since RPS hang up',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_solution_3000_fault_point_bus_failure_since_rps_hang_up',
+    'entity_id': 'binary_sensor.bosch_solution_3000_point_bus_failure_since_rps_hang_up',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_fault_sdi_failure_since_rps_hang_up-entry]
+# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_problem-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2562,7 +2580,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_solution_3000_fault_sdi_failure_since_rps_hang_up',
+    'entity_id': 'binary_sensor.bosch_solution_3000_problem',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2572,103 +2590,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Fault: SDI failure since RPS hang up',
-    'platform': 'bosch_alarm',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'panel_fault_sdi_fail_since_rps_hang_up',
-    'unique_id': '1234567890_fault_panel_fault_sdi_fail_since_rps_hang_up',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_fault_sdi_failure_since_rps_hang_up-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch Solution 3000 Fault: SDI failure since RPS hang up',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_solution_3000_fault_sdi_failure_since_rps_hang_up',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_fault_user_code_tamper_since_rps_hang_up-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_solution_3000_fault_user_code_tamper_since_rps_hang_up',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Fault: User code tamper since RPS hang up',
-    'platform': 'bosch_alarm',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'panel_fault_user_code_tamper_since_rps_hang_up',
-    'unique_id': '1234567890_fault_panel_fault_user_code_tamper_since_rps_hang_up',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_fault_user_code_tamper_since_rps_hang_up-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch Solution 3000 Fault: User code tamper since RPS hang up',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_solution_3000_fault_user_code_tamper_since_rps_hang_up',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_none-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bosch_solution_3000_none',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
+    'original_name': 'Problem',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2677,13 +2601,110 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_none-state]
+# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch Solution 3000 None',
+      'device_class': 'problem',
+      'friendly_name': 'Bosch Solution 3000 Problem',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bosch_solution_3000_none',
+    'entity_id': 'binary_sensor.bosch_solution_3000_problem',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_sdi_failure_since_rps_hang_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.bosch_solution_3000_sdi_failure_since_rps_hang_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'SDI failure since RPS hang up',
+    'platform': 'bosch_alarm',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'panel_fault_sdi_fail_since_rps_hang_up',
+    'unique_id': '1234567890_fault_panel_fault_sdi_fail_since_rps_hang_up',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_sdi_failure_since_rps_hang_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Bosch Solution 3000 SDI failure since RPS hang up',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.bosch_solution_3000_sdi_failure_since_rps_hang_up',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_user_code_tamper_since_rps_hang_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.bosch_solution_3000_user_code_tamper_since_rps_hang_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'User code tamper since RPS hang up',
+    'platform': 'bosch_alarm',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'panel_fault_user_code_tamper_since_rps_hang_up',
+    'unique_id': '1234567890_fault_panel_fault_user_code_tamper_since_rps_hang_up',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[solution_3000][binary_sensor.bosch_solution_3000_user_code_tamper_since_rps_hang_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Bosch Solution 3000 User code tamper since RPS hang up',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.bosch_solution_3000_user_code_tamper_since_rps_hang_up',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

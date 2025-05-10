@@ -48,7 +48,7 @@ async def test_panel_faults(
 ) -> None:
     """Test that fault sensor state changes after inducing a fault."""
     await setup_integration(hass, mock_config_entry)
-    entity_id = "binary_sensor.bosch_b5512_us1b_fault_battery_low"
+    entity_id = "binary_sensor.bosch_b5512_us1b_battery"
     assert hass.states.get(entity_id).state == STATE_OFF
     mock_panel.panel_faults_ids = [ALARM_PANEL_FAULTS.BATTERY_LOW]
     await call_observable(hass, mock_panel.faults_observer)
