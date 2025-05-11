@@ -3,6 +3,7 @@
 from asyncio import timeout
 from dataclasses import dataclass
 from datetime import datetime
+from http import HTTPStatus
 import logging
 
 from pysqueezebox import Player, Server
@@ -16,7 +17,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import (
@@ -93,14 +98,45 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
             status = await lms.async_query(
                 "serverstatus", "-", "-", "prefs:libraryname"
             )
-    except Exception as err:
-        raise ConfigEntryNotReady(
-            f"Error communicating config not read for {host}"
-        ) from err
+    except TimeoutError as err:  # Specifically catch timeout
+        _LOGGER.warning("Timeout connecting to LMS %s: %s", host, err)
+        raise ConfigEntryNotReady(f"Timeout connecting to LMS {host}") from err
+    except Exception as err:  # Catch other unexpected errors during the query attempt
+        _LOGGER.warning(
+            "Error communicating with LMS %s during initial query: %s",
+            host,
+            err,
+            exc_info=True,
+        )
+        raise ConfigEntryNotReady(f"Error communicating with LMS {host}") from err
 
     if not status:
-        raise ConfigEntryNotReady(f"Error Config Not read for {host}")
+        # pysqueezebox's async_query returns None on various issues,
+        # including HTTP errors where it sets lms.http_status.
+        if hasattr(lms, "http_status") and lms.http_status == HTTPStatus.UNAUTHORIZED:
+            _LOGGER.warning("Authentication failed for Squeezebox server %s", host)
+            raise ConfigEntryAuthFailed(f"Authentication failed for {host}")
+
+        # For other errors where status is None (e.g., server error, connection refused by server)
+        _LOGGER.warning(
+            "LMS %s returned no status or an error (HTTP status: %s). Retrying setup",
+            host,
+            getattr(lms, "http_status", "N/A"),
+        )
+        raise ConfigEntryNotReady(
+            f"Failed to get status from LMS {host} (HTTP status: {getattr(lms, 'http_status', 'N/A')}). Will retry."
+        )
+
+    # If we are here, status is a valid dictionary
     _LOGGER.debug("LMS Status for setup  = %s", status)
+
+    # Check for essential keys in status before using them
+    if STATUS_QUERY_UUID not in status:
+        _LOGGER.error("LMS %s status response missing UUID", host)
+        # This is a non-recoverable error with the current server response
+        raise ConfigEntryError(
+            f"LMS {host} status response missing essential data (UUID)."
+        )
 
     lms.uuid = status[STATUS_QUERY_UUID]
     _LOGGER.debug("LMS %s = '%s' with uuid = %s ", lms.name, host, lms.uuid)
