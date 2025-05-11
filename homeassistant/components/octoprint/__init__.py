@@ -186,7 +186,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session.detach()
 
     entry.async_on_unload(_async_close_websession)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close_websession)
+    entry.async_on_unload(
+        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, _async_close_websession)
+    )
 
     client = OctoprintClient(
         host=entry.data[CONF_HOST],
