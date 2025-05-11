@@ -339,7 +339,7 @@ class StateProgramType(MieleEnum):
     automatic_program = 2
     cleaning_care_program = 3
     maintenance_program = 4
-    unknown = -9999
+    unknown_code = -9999
 
 
 class StateDryingStep(MieleEnum):
@@ -353,7 +353,7 @@ class StateDryingStep(MieleEnum):
     hand_iron_2 = 5
     machine_iron = 6
     smoothing = 7
-    unknown = -9999
+    unknown_code = -9999
 
 
 WASHING_MACHINE_PROGRAM_ID: dict[int, str] = {
