@@ -47,7 +47,6 @@ class HueBLELight(LightEntity):
         """Initialize the light object. Does not connect."""
 
         self._light = api
-        self._name = self._light.name
         self._address = self._light.address
         self._attr_unique_id = self._light.address
         self._attr_min_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
@@ -57,6 +56,7 @@ class HueBLELight(LightEntity):
             self._light.minimum_mireds
         )
         self._attr_device_info = DeviceInfo(
+            name=self._light.name,
             connections={(CONNECTION_BLUETOOTH, self._light.address)},
             manufacturer=self._light.manufacturer,
             model=self._light.model,
@@ -100,7 +100,7 @@ class HueBLELight(LightEntity):
 
     def _state_change_callback(self) -> None:
         """Run when light informs of state update. Updates local properties."""
-        _LOGGER.debug("Received state notification from light %s", self._name)
+        _LOGGER.debug("Received state notification from light %s", self.name)
         self._update_updatable_attributes()
         self.async_write_ha_state()
 
