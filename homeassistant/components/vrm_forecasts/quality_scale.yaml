@@ -4,17 +4,17 @@ rules:
     status: exempt
     comment: "This integration does not use actions."
   appropriate-polling: done
-  brands: done # TODO: Add brands
+  brands: done
   common-modules: done
-  config-flow-test-coverage: done # TODO: Add config flow test coverage
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
     status: exempt
     comment: "This integration does not use actions."
-  docs-high-level-description: done # TODO: Add high-level description
-  docs-installation-instructions: done # TODO: Add installation instructions
-  docs-removal-instructions: done # TODO: Add removal instructions
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
