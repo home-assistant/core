@@ -89,6 +89,8 @@ KEY_ASSIST_PIPELINE: HassKey[PipelineData] = HassKey(DOMAIN)
 KEY_PIPELINE_CONVERSATION_DATA: HassKey[dict[str, PipelineConversationData]] = HassKey(
     "pipeline_conversation_data"
 )
+# Number of response chunks to handle before considering to stream the response
+STREAM_RESPONSE_CHUNKS = 15
 
 
 def validate_language(data: dict[str, Any]) -> Any:
@@ -587,6 +589,9 @@ class PipelineRun:
 
     _intent_agent_only = False
     """If request should only be handled by agent, ignoring sentence triggers and local processing."""
+
+    _streamed_response_text = False
+    """If the conversation agent streamed response text to TTS result."""
 
     def __post_init__(self) -> None:
         """Set language for pipeline."""
@@ -1140,6 +1145,12 @@ class PipelineRun:
                     agent_id = conversation.HOME_ASSISTANT_AGENT
                     processed_locally = True
 
+            if self.tts_stream and self.tts_stream.supports_streaming_input:
+                tts_input_stream: asyncio.Queue[str | None] | None = asyncio.Queue()
+            else:
+                tts_input_stream = None
+            chat_log_role = None
+
             @callback
             def chat_log_delta_listener(
                 chat_log: conversation.ChatLog, delta: dict
@@ -1153,6 +1164,39 @@ class PipelineRun:
                         },
                     )
                 )
+                if tts_input_stream is None:
+                    return
+
+                nonlocal chat_log_role
+
+                if role := delta.get("role"):
+                    chat_log_role = role
+
+                # We are only interested in assistant deltas with content
+                if chat_log_role != "assistant" or not (
+                    content := delta.get("content")
+                ):
+                    return
+
+                tts_input_stream.put_nowait(content)
+
+                if (
+                    self._streamed_response_text
+                    or tts_input_stream.qsize() < STREAM_RESPONSE_CHUNKS
+                ):
+                    return
+
+                # Streamed responses are not cached. We only start streaming text after
+                # we have received a couple of words that indicates it will be a long response.
+                self._streamed_response_text = True
+
+                async def tts_input_stream_generator() -> AsyncGenerator[str]:
+                    """Yield TTS input stream."""
+                    while (tts_input := await tts_input_stream.get()) is not None:
+                        yield tts_input
+
+                assert self.tts_stream is not None
+                self.tts_stream.async_set_message_stream(tts_input_stream_generator())
 
             with (
                 chat_session.async_get_chat_session(
@@ -1196,6 +1240,8 @@ class PipelineRun:
                     speech = conversation_result.response.speech.get("plain", {}).get(
                         "speech", ""
                     )
+                    if tts_input_stream and self._streamed_response_text:
+                        tts_input_stream.put_nowait(None)
 
         except Exception as src_error:
             _LOGGER.exception("Unexpected error during intent recognition")
@@ -1273,7 +1319,8 @@ class PipelineRun:
             )
         )
 
-        self.tts_stream.async_set_message(tts_input)
+        if not self._streamed_response_text:
+            self.tts_stream.async_set_message(tts_input)
 
         tts_output = {
             "media_id": self.tts_stream.media_source_id,
