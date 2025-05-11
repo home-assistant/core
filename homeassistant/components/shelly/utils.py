@@ -383,41 +383,57 @@ def get_shelly_model_name(
     return cast(str, MODEL_NAMES.get(model))
 
 
-def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
+def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     """Get name based on device and channel name."""
+    if key in device.config:
+        if entity_name := device.config[key].get("name"):
+            return cast(str, entity_name)
+
+    if len(get_rpc_key_instances(device.status, key, all_lights=True)) == 1:
+        return None
+
     key = key.replace("emdata", "em")
     key = key.replace("em1data", "em1")
-    device_name = device.name
-    entity_name: str | None = None
+
+    channel = key.split(":")[0]
+    channel_id = key.split(":")[-1]
+
+    if key.startswith(("cct:", "rgb:", "rgbw:")):
+        return f"{channel.upper()} light {channel_id}"
+    if key.startswith("em1:"):
+        return f"Energy Meter {channel_id}"
+
+    return f"{channel.title()} {channel_id}"
+
+
+def get_rpc_sub_device_name(device: RpcDevice, key: str) -> str:
+    """Get name based on device and channel name."""
     if key in device.config:
-        entity_name = device.config[key].get("name")
+        if entity_name := device.config[key].get("name"):
+            return cast(str, entity_name)
 
-    if entity_name is None:
-        channel = key.split(":")[0]
-        channel_id = key.split(":")[-1]
-        if key.startswith(("input:", "thermostat:")):
-            return f"{device_name} {channel.title()} {channel_id}"
-        if key.startswith(("cover:", "light:", "switch:")):
-            return f"{channel.title()} {channel_id}"
-        if key.startswith(("cct:", "rgb:", "rgbw:")):
-            return f"{channel.upper()} light {channel_id}"
-        if key.startswith("em1:"):
-            return f"Energy Meter {channel_id}"
-        if key.startswith(("boolean:", "enum:", "number:", "text:")):
-            return f"{channel.title()} {channel_id}"
-        return device_name
+    key = key.replace("emdata", "em")
+    key = key.replace("em1data", "em1")
 
-    return entity_name
+    channel = key.split(":")[0]
+    channel_id = key.split(":")[-1]
+
+    if key.startswith(("cct:", "rgb:", "rgbw:")):
+        return f"{channel.upper()} light {channel_id}"
+    if key.startswith("em1:"):
+        return f"Energy Meter {channel_id}"
+
+    return f"{channel.title()} {channel_id}"
 
 
 def get_rpc_entity_name(
     device: RpcDevice, key: str, description: str | None = None
-) -> str:
+) -> str | None:
     """Naming for RPC based switch and sensors."""
     channel_name = get_rpc_channel_name(device, key)
 
     if description:
-        return f"{channel_name} {description.lower()}"
+        return f"{channel_name} {description.lower()}" if channel_name else description
 
     return channel_name
 
@@ -744,7 +760,7 @@ def get_rpc_device_info(
 
     return DeviceInfo(
         identifiers={(DOMAIN, f"{mac}-{key}")},
-        name=get_rpc_channel_name(device, key),
+        name=get_rpc_sub_device_name(device, key),
         manufacturer="Shelly",
         via_device=(DOMAIN, mac),
     )
