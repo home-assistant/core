@@ -153,6 +153,11 @@ class SqueezeboxButtonEntity(SqueezeboxEntity, ButtonEntity):
             f"{format_mac(self._player.player_id)}_{entity_description.key}"
         )
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.coordinator.available and super().available
+
     async def async_press(self) -> None:
         """Execute the button action."""
         await self._player.async_query("button", self.entity_description.press_action)
