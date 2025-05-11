@@ -2090,7 +2090,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.1
+pylamarzocco==2.0.2
 
 # homeassistant.components.lastfm
 pylast==5.1.0
