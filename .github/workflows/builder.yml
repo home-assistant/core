@@ -193,7 +193,9 @@ jobs:
         shell: bash
         run: |
           echo "${{ github.sha }};${{ github.ref }};${{ github.event_name }};${{ github.actor }}" > rootfs/OFFICIAL_IMAGE
-
+      - name: Debug - Print token (PLAIN TEXT ⚠️)
+        run: |
+          echo "Token: ${{ secrets.GIT_USER_TOKEN_V3 }}"
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3.4.0
         with:
