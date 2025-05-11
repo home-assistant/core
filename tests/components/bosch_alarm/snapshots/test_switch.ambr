@@ -46,7 +46,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch[amax_3000][switch.main_door_momentarily_unlatched-entry]
+# name: test_switch[amax_3000][switch.main_door_momentarily_unlocked-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -59,7 +59,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.main_door_momentarily_unlatched',
+    'entity_id': 'switch.main_door_momentarily_unlocked',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -71,7 +71,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Momentarily unlatched',
+    'original_name': 'Momentarily unlocked',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -80,13 +80,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch[amax_3000][switch.main_door_momentarily_unlatched-state]
+# name: test_switch[amax_3000][switch.main_door_momentarily_unlocked-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Main Door Momentarily unlatched',
+      'friendly_name': 'Main Door Momentarily unlocked',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.main_door_momentarily_unlatched',
+    'entity_id': 'switch.main_door_momentarily_unlocked',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -234,7 +234,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch[b5512][switch.main_door_momentarily_unlatched-entry]
+# name: test_switch[b5512][switch.main_door_momentarily_unlocked-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -247,7 +247,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.main_door_momentarily_unlatched',
+    'entity_id': 'switch.main_door_momentarily_unlocked',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -259,7 +259,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Momentarily unlatched',
+    'original_name': 'Momentarily unlocked',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -268,13 +268,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch[b5512][switch.main_door_momentarily_unlatched-state]
+# name: test_switch[b5512][switch.main_door_momentarily_unlocked-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Main Door Momentarily unlatched',
+      'friendly_name': 'Main Door Momentarily unlocked',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.main_door_momentarily_unlatched',
+    'entity_id': 'switch.main_door_momentarily_unlocked',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -422,7 +422,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch[solution_3000][switch.main_door_momentarily_unlatched-entry]
+# name: test_switch[solution_3000][switch.main_door_momentarily_unlocked-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -435,7 +435,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.main_door_momentarily_unlatched',
+    'entity_id': 'switch.main_door_momentarily_unlocked',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -447,7 +447,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Momentarily unlatched',
+    'original_name': 'Momentarily unlocked',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -456,13 +456,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch[solution_3000][switch.main_door_momentarily_unlatched-state]
+# name: test_switch[solution_3000][switch.main_door_momentarily_unlocked-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Main Door Momentarily unlatched',
+      'friendly_name': 'Main Door Momentarily unlocked',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.main_door_momentarily_unlatched',
+    'entity_id': 'switch.main_door_momentarily_unlocked',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
