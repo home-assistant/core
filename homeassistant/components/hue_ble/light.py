@@ -34,10 +34,10 @@ async def async_setup_entry(
     """Add light for passed config_entry in HA."""
 
     light = config_entry.runtime_data
-    async_add_entities([HaHueBLE(light)])
+    async_add_entities([HueBLELight(light)])
 
 
-class HaHueBLE(LightEntity):
+class HueBLELight(LightEntity):
     """Representation of a light."""
 
     _attr_has_entity_name = True
