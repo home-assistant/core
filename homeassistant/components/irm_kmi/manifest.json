@@ -7,6 +7,6 @@
   "documentation": "https://www.home-assistant.io/integrations/irm_kmi",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "quality_scale": "no_score",
+  "quality_scale": "bronze",
   "requirements": ["irm-kmi-api==1.0.2"]
 }
