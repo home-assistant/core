@@ -4,50 +4,59 @@ from __future__ import annotations
 
 from typing import Generic, TypeVar
 
-from pylitterbot import Robot
+from pylitterbot import Pet, Robot
 from pylitterbot.robot import EVENT_UPDATE
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .hub import LitterRobotHub
+from .coordinator import LitterRobotDataUpdateCoordinator
 
-_RobotT = TypeVar("_RobotT", bound=Robot)
+_WhiskerEntityT = TypeVar("_WhiskerEntityT", bound=Robot | Pet)
+
+
+def get_device_info(whisker_entity: Robot | Pet) -> DeviceInfo:
+    """Get device info for a robot or pet."""
+    if isinstance(whisker_entity, Robot):
+        return DeviceInfo(
+            identifiers={(DOMAIN, whisker_entity.serial)},
+            manufacturer="Whisker",
+            model=whisker_entity.model,
+            name=whisker_entity.name,
+            serial_number=whisker_entity.serial,
+            sw_version=getattr(whisker_entity, "firmware", None),
+        )
+    breed = ", ".join(breed for breed in whisker_entity.breeds or [])
+    return DeviceInfo(
+        identifiers={(DOMAIN, whisker_entity.id)},
+        manufacturer="Whisker",
+        model=f"{breed} {whisker_entity.pet_type}".strip().capitalize(),
+        name=whisker_entity.name,
+    )
 
 
 class LitterRobotEntity(
-    CoordinatorEntity[DataUpdateCoordinator[bool]], Generic[_RobotT]
+    CoordinatorEntity[LitterRobotDataUpdateCoordinator], Generic[_WhiskerEntityT]
 ):
     """Generic Litter-Robot entity representing common data and methods."""
 
     _attr_has_entity_name = True
 
     def __init__(
-        self, robot: _RobotT, hub: LitterRobotHub, description: EntityDescription
+        self,
+        robot: _WhiskerEntityT,
+        coordinator: LitterRobotDataUpdateCoordinator,
+        description: EntityDescription,
     ) -> None:
         """Pass coordinator to CoordinatorEntity."""
-        super().__init__(hub.coordinator)
+        super().__init__(coordinator)
         self.robot = robot
-        self.hub = hub
         self.entity_description = description
-        self._attr_unique_id = f"{self.robot.serial}-{description.key}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information for a Litter-Robot."""
-        assert self.robot.serial
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.robot.serial)},
-            manufacturer="Litter-Robot",
-            model=self.robot.model,
-            name=self.robot.name,
-            sw_version=getattr(self.robot, "firmware", None),
-        )
+        _id = robot.serial if isinstance(robot, Robot) else robot.id
+        self._attr_unique_id = f"{_id}-{description.key}"
+        self._attr_device_info = get_device_info(robot)
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener for the entity."""

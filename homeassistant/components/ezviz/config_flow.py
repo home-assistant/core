@@ -6,23 +6,18 @@ from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any
 
-from pyezviz.client import EzvizClient
-from pyezviz.exceptions import (
+from pyezvizapi.client import EzvizClient
+from pyezvizapi.exceptions import (
     AuthTestResultFailed,
     EzvizAuthVerificationCode,
     InvalidHost,
     InvalidURL,
     PyEzvizError,
 )
-from pyezviz.test_cam_rtsp import TestRTSPAuth
+from pyezvizapi.test_cam_rtsp import TestRTSPAuth
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_CUSTOMIZE,
     CONF_IP_ADDRESS,
@@ -48,6 +43,7 @@ from .const import (
     EU_URL,
     RUSSIA_URL,
 )
+from .coordinator import EzvizConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_OPTIONS = {
@@ -148,7 +144,9 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> EzvizOptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: EzvizConfigEntry,
+    ) -> EzvizOptionsFlowHandler:
         """Get the options flow for this handler."""
         return EzvizOptionsFlowHandler()
 

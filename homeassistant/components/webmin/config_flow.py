@@ -45,7 +45,7 @@ async def validate_user_input(
             raise SchemaFlowError("invalid_auth") from err
         raise SchemaFlowError("cannot_connect") from err
     except Fault as fault:
-        LOGGER.exception(f"Fault {fault.faultCode}: {fault.faultString}")
+        LOGGER.exception("Fault %s: %s", fault.faultCode, fault.faultString)
         raise SchemaFlowError("unknown") from fault
     except ClientConnectionError as err:
         raise SchemaFlowError("cannot_connect") from err

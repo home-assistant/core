@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
-from types import MappingProxyType
 from typing import Any
 
 from pyotgw import vars as gw_vars
@@ -22,7 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, CONF_ID, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OpenThermGatewayHub
 from .const import (
@@ -50,7 +50,7 @@ class OpenThermClimateEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up an OpenTherm Gateway climate entity."""
     ents = []
@@ -94,7 +94,7 @@ class OpenThermClimate(OpenThermStatusEntity, ClimateEntity):
         self,
         gw_hub: OpenThermGatewayHub,
         description: OpenThermClimateEntityDescription,
-        options: MappingProxyType[str, Any],
+        options: Mapping[str, Any],
     ) -> None:
         """Initialize the entity."""
         super().__init__(gw_hub, description)

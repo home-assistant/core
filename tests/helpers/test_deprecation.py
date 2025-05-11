@@ -295,7 +295,7 @@ def _get_value(
         return obj.value
 
     if isinstance(obj, DeprecatedConstantEnum):
-        return obj.enum.value
+        return obj.enum
 
     if isinstance(obj, DeprecatedAlias):
         return obj.value

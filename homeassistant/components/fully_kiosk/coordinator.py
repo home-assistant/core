@@ -14,11 +14,15 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DEFAULT_PORT, LOGGER, UPDATE_INTERVAL
 
+type FullyKioskConfigEntry = ConfigEntry[FullyKioskDataUpdateCoordinator]
+
 
 class FullyKioskDataUpdateCoordinator(DataUpdateCoordinator):
     """Define an object to hold Fully Kiosk Browser data."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    config_entry: FullyKioskConfigEntry
+
+    def __init__(self, hass: HomeAssistant, entry: FullyKioskConfigEntry) -> None:
         """Initialize."""
         self.use_ssl = entry.data.get(CONF_SSL, False)
         self.fully = FullyKiosk(
@@ -32,6 +36,7 @@ class FullyKioskDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             LOGGER,
+            config_entry=entry,
             name=entry.data[CONF_HOST],
             update_interval=UPDATE_INTERVAL,
         )

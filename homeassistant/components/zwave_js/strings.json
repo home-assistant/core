@@ -1,32 +1,46 @@
 {
   "config": {
     "abort": {
-      "addon_get_discovery_info_failed": "Failed to get Z-Wave JS add-on discovery info.",
-      "addon_info_failed": "Failed to get Z-Wave JS add-on info.",
-      "addon_install_failed": "Failed to install the Z-Wave JS add-on.",
-      "addon_set_config_failed": "Failed to set Z-Wave JS configuration.",
-      "addon_start_failed": "Failed to start the Z-Wave JS add-on.",
+      "addon_get_discovery_info_failed": "Failed to get Z-Wave add-on discovery info.",
+      "addon_info_failed": "Failed to get Z-Wave add-on info.",
+      "addon_install_failed": "Failed to install the Z-Wave add-on.",
+      "addon_required": "The Z-Wave migration flow requires the integration to be configured using the Z-Wave Supervisor add-on. You can still use the Backup and Restore buttons to migrate your network manually.",
+      "addon_set_config_failed": "Failed to set Z-Wave configuration.",
+      "addon_start_failed": "Failed to start the Z-Wave add-on.",
+      "addon_stop_failed": "Failed to stop the Z-Wave add-on.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "backup_failed": "Failed to back up network.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "config_entry_not_loaded": "The Z-Wave configuration entry is not loaded. Please try again when the configuration entry is loaded.",
+      "different_device": "The connected USB device is not the same as previously configured for this config entry. Please instead create a new config entry for the new device.",
       "discovery_requires_supervisor": "Discovery requires the supervisor.",
+      "migration_low_sdk_version": "The SDK version of the old controller is lower than {ok_sdk_version}. This means it's not possible to migrate the Non Volatile Memory (NVM) of the old controller to another controller.\n\nCheck the documentation on the manufacturer support pages of the old controller, if it's possible to upgrade the firmware of the old controller to a version that is build with SDK version {ok_sdk_version} or higher.",
+      "migration_successful": "Migration successful.",
       "not_zwave_device": "Discovered device is not a Z-Wave device.",
-      "not_zwave_js_addon": "Discovered add-on is not the official Z-Wave JS add-on."
+      "not_zwave_js_addon": "Discovered add-on is not the official Z-Wave add-on.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "reset_failed": "Failed to reset controller.",
+      "usb_ports_failed": "Failed to get USB devices."
     },
     "error": {
-      "addon_start_failed": "Failed to start the Z-Wave JS add-on. Check the configuration.",
+      "addon_start_failed": "Failed to start the Z-Wave add-on. Check the configuration.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_ws_url": "Invalid websocket URL",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "flow_title": "{name}",
     "progress": {
-      "install_addon": "Please wait while the Z-Wave JS add-on installation finishes. This can take several minutes.",
-      "start_addon": "Please wait while the Z-Wave JS add-on start completes. This may take some seconds."
+      "install_addon": "Please wait while the Z-Wave add-on installation finishes. This can take several minutes.",
+      "start_addon": "Please wait while the Z-Wave add-on start completes. This may take some seconds.",
+      "backup_nvm": "Please wait while the network backup completes.",
+      "restore_nvm": "Please wait while the network restore completes."
     },
     "step": {
-      "configure_addon": {
+      "configure_addon_user": {
         "data": {
+          "lr_s2_access_control_key": "Long Range S2 Access Control Key",
+          "lr_s2_authenticated_key": "Long Range S2 Authenticated Key",
           "s0_legacy_key": "S0 Key (Legacy)",
           "s2_access_control_key": "S2 Access Control Key",
           "s2_authenticated_key": "S2 Authenticated Key",
@@ -34,35 +48,89 @@
           "usb_path": "[%key:common::config_flow::data::usb_path%]"
         },
         "description": "The add-on will generate security keys if those fields are left empty.",
-        "title": "Enter the Z-Wave JS add-on configuration"
+        "title": "Enter the Z-Wave add-on configuration"
+      },
+      "configure_addon_reconfigure": {
+        "data": {
+          "emulate_hardware": "Emulate Hardware",
+          "log_level": "Log level",
+          "lr_s2_access_control_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::lr_s2_access_control_key%]",
+          "lr_s2_authenticated_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::lr_s2_authenticated_key%]",
+          "s0_legacy_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::s0_legacy_key%]",
+          "s2_access_control_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::s2_access_control_key%]",
+          "s2_authenticated_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::s2_authenticated_key%]",
+          "s2_unauthenticated_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::s2_unauthenticated_key%]",
+          "usb_path": "[%key:common::config_flow::data::usb_path%]"
+        },
+        "description": "[%key:component::zwave_js::config::step::configure_addon_user::description%]",
+        "title": "[%key:component::zwave_js::config::step::configure_addon_user::title%]"
       },
       "hassio_confirm": {
-        "title": "Set up Z-Wave JS integration with the Z-Wave JS add-on"
+        "description": "Do you want to set up the Z-Wave integration with the Z-Wave add-on?"
       },
       "install_addon": {
-        "title": "The Z-Wave JS add-on installation has started"
+        "title": "The Z-Wave add-on installation has started"
       },
       "manual": {
         "data": {
           "url": "[%key:common::config_flow::data::url%]"
         }
       },
+      "manual_reconfigure": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        }
+      },
       "on_supervisor": {
         "data": {
-          "use_addon": "Use the Z-Wave JS Supervisor add-on"
+          "use_addon": "Use the Z-Wave Supervisor add-on"
         },
-        "description": "Do you want to use the Z-Wave JS Supervisor add-on?",
+        "description": "Do you want to use the Z-Wave Supervisor add-on?",
         "title": "Select connection method"
       },
+      "on_supervisor_reconfigure": {
+        "data": {
+          "use_addon": "[%key:component::zwave_js::config::step::on_supervisor::data::use_addon%]"
+        },
+        "description": "[%key:component::zwave_js::config::step::on_supervisor::description%]",
+        "title": "[%key:component::zwave_js::config::step::on_supervisor::title%]"
+      },
       "start_addon": {
-        "title": "The Z-Wave JS add-on is starting."
+        "title": "The Z-Wave add-on is starting."
       },
       "usb_confirm": {
-        "description": "Do you want to set up {name} with the Z-Wave JS add-on?"
+        "description": "Do you want to set up {name} with the Z-Wave add-on?"
       },
       "zeroconf_confirm": {
-        "description": "Do you want to add the Z-Wave JS Server with home ID {home_id} found at {url} to Home Assistant?",
-        "title": "Discovered Z-Wave JS Server"
+        "description": "Do you want to add the Z-Wave Server with home ID {home_id} found at {url} to Home Assistant?",
+        "title": "Discovered Z-Wave Server"
+      },
+      "reconfigure": {
+        "title": "Migrate or re-configure",
+        "description": "Are you migrating to a new controller or re-configuring the current controller?",
+        "menu_options": {
+          "intent_migrate": "Migrate to a new controller",
+          "intent_reconfigure": "Re-configure the current controller"
+        }
+      },
+      "intent_migrate": {
+        "title": "[%key:component::zwave_js::config::step::reconfigure::menu_options::intent_migrate%]",
+        "description": "Before setting up your new controller, your old controller needs to be reset. A backup will be performed first.\n\nDo you wish to continue?"
+      },
+      "instruct_unplug": {
+        "title": "Unplug your old controller",
+        "description": "Backup saved to \"{file_path}\"\n\nYour old controller has been reset. If the hardware is no longer needed, you can now unplug it.\n\nPlease make sure your new controller is plugged in before continuing."
+      },
+      "restore_failed": {
+        "title": "Restoring unsuccessful",
+        "description": "Your Z-Wave network could not be restored to the new controller. This means that your Z-Wave devices are not connected to Home Assistant.\n\nThe backup is saved to ”{file_path}”",
+        "submit": "Try again"
+      },
+      "choose_serial_port": {
+        "data": {
+          "usb_path": "[%key:common::config_flow::data::usb_path%]"
+        },
+        "title": "Select your Z-Wave device"
       }
     }
   },
@@ -89,7 +157,7 @@
       "event.value_notification.scene_activation": "Scene Activation on {subtype}",
       "state.node_status": "Node status changed",
       "zwave_js.value_updated.config_parameter": "Value change on config parameter {subtype}",
-      "zwave_js.value_updated.value": "Value change on a Z-Wave JS Value"
+      "zwave_js.value_updated.value": "Value change on a Z-Wave Value"
     },
     "extra_fields": {
       "code_slot": "Code slot",
@@ -191,7 +259,7 @@
         },
         "step": {
           "init": {
-            "description": "The device configuration file for {device_name} has changed.\n\nZ-Wave JS discovers a lot of device metadata by interviewing the device. However, some of the information has to be loaded from a configuration file. Some of this information is only evaluated once, during the device interview.\n\nWhen a device config file is updated, this information may be stale and and the device must be re-interviewed to pick up the changes.\n\n This is not a required operation and device functionality will be impacted during the re-interview process, but you may see improvements for your device once it is complete.\n\nIf you decide to proceed with the re-interview, it will take place in the background.",
+            "description": "The device configuration file for {device_name} has changed.\n\nZ-Wave discovers a lot of device metadata by interviewing the device. However, some of the information has to be loaded from a configuration file. Some of this information is only evaluated once, during the device interview.\n\nWhen a device config file is updated, this information may be stale and and the device must be re-interviewed to pick up the changes.\n\n This is not a required operation and device functionality will be impacted during the re-interview process, but you may see improvements for your device once it is complete.\n\nIf you decide to proceed with the re-interview, it will take place in the background.",
             "menu_options": {
               "confirm": "Re-interview device",
               "ignore": "Ignore device config update"
@@ -203,62 +271,8 @@
       "title": "Device configuration file changed: {device_name}"
     },
     "invalid_server_version": {
-      "description": "The version of Z-Wave JS Server you are currently running is too old for this version of Home Assistant. Please update the Z-Wave JS Server to the latest version to fix this issue.",
-      "title": "Newer version of Z-Wave JS Server needed"
-    }
-  },
-  "options": {
-    "abort": {
-      "addon_get_discovery_info_failed": "[%key:component::zwave_js::config::abort::addon_get_discovery_info_failed%]",
-      "addon_info_failed": "[%key:component::zwave_js::config::abort::addon_info_failed%]",
-      "addon_install_failed": "[%key:component::zwave_js::config::abort::addon_install_failed%]",
-      "addon_set_config_failed": "[%key:component::zwave_js::config::abort::addon_set_config_failed%]",
-      "addon_start_failed": "[%key:component::zwave_js::config::abort::addon_start_failed%]",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "different_device": "The connected USB device is not the same as previously configured for this config entry. Please instead create a new config entry for the new device."
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_ws_url": "[%key:component::zwave_js::config::error::invalid_ws_url%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "progress": {
-      "install_addon": "[%key:component::zwave_js::config::progress::install_addon%]",
-      "start_addon": "[%key:component::zwave_js::config::progress::start_addon%]"
-    },
-    "step": {
-      "configure_addon": {
-        "data": {
-          "emulate_hardware": "Emulate Hardware",
-          "log_level": "Log level",
-          "s0_legacy_key": "[%key:component::zwave_js::config::step::configure_addon::data::s0_legacy_key%]",
-          "s2_access_control_key": "[%key:component::zwave_js::config::step::configure_addon::data::s2_access_control_key%]",
-          "s2_authenticated_key": "[%key:component::zwave_js::config::step::configure_addon::data::s2_authenticated_key%]",
-          "s2_unauthenticated_key": "[%key:component::zwave_js::config::step::configure_addon::data::s2_unauthenticated_key%]",
-          "usb_path": "[%key:common::config_flow::data::usb_path%]"
-        },
-        "description": "[%key:component::zwave_js::config::step::configure_addon::description%]",
-        "title": "[%key:component::zwave_js::config::step::configure_addon::title%]"
-      },
-      "install_addon": {
-        "title": "[%key:component::zwave_js::config::step::install_addon::title%]"
-      },
-      "manual": {
-        "data": {
-          "url": "[%key:common::config_flow::data::url%]"
-        }
-      },
-      "on_supervisor": {
-        "data": {
-          "use_addon": "[%key:component::zwave_js::config::step::on_supervisor::data::use_addon%]"
-        },
-        "description": "[%key:component::zwave_js::config::step::on_supervisor::description%]",
-        "title": "[%key:component::zwave_js::config::step::on_supervisor::title%]"
-      },
-      "start_addon": {
-        "title": "[%key:component::zwave_js::config::step::start_addon::title%]"
-      }
+      "description": "The version of Z-Wave Server you are currently running is too old for this version of Home Assistant. Please update the Z-Wave Server to the latest version to fix this issue.",
+      "title": "Newer version of Z-Wave Server needed"
     }
   },
   "services": {
@@ -306,7 +320,7 @@
       "description": "Calls a Command Class API on a node. Some Command Classes can't be fully controlled via the `set_value` action and require direct calls to the Command Class API.",
       "fields": {
         "area_id": {
-          "description": "The area(s) to target for this action. If an area is specified, all zwave_js devices and entities in that area will be targeted for this action.",
+          "description": "The area(s) to target for this action. If an area is specified, all Z-Wave devices and entities in that area will be targeted for this action.",
           "name": "Area ID(s)"
         },
         "command_class": {
@@ -326,26 +340,26 @@
           "name": "Entity ID(s)"
         },
         "method_name": {
-          "description": "The name of the API method to call. Refer to the Z-Wave JS Command Class API documentation (https://zwave-js.github.io/node-zwave-js/#/api/CCs/index) for available methods.",
+          "description": "The name of the API method to call. Refer to the Z-Wave Command Class API documentation (https://zwave-js.github.io/node-zwave-js/#/api/CCs/index) for available methods.",
           "name": "Method name"
         },
         "parameters": {
-          "description": "A list of parameters to pass to the API method. Refer to the Z-Wave JS Command Class API documentation (https://zwave-js.github.io/node-zwave-js/#/api/CCs/index) for parameters.",
+          "description": "A list of parameters to pass to the API method. Refer to the Z-Wave Command Class API documentation (https://zwave-js.github.io/node-zwave-js/#/api/CCs/index) for parameters.",
           "name": "Parameters"
         }
       },
       "name": "Invoke a Command Class API on a node (advanced)"
     },
     "multicast_set_value": {
-      "description": "Changes any value that Z-Wave JS recognizes on multiple Z-Wave devices using multicast, so all devices receive the message simultaneously. This action has minimal validation so only use this action if you know what you are doing.",
+      "description": "Changes any value that Z-Wave recognizes on multiple Z-Wave devices using multicast, so all devices receive the message simultaneously. This action has minimal validation so only use this action if you know what you are doing.",
       "fields": {
         "area_id": {
           "description": "[%key:component::zwave_js::services::set_value::fields::area_id::description%]",
           "name": "[%key:component::zwave_js::services::set_value::fields::area_id::name%]"
         },
         "broadcast": {
-          "description": "Whether command should be broadcast to all devices on the network.",
-          "name": "Broadcast?"
+          "description": "Whether the command should be broadcast to all devices on the network.",
+          "name": "Broadcast"
         },
         "command_class": {
           "description": "[%key:component::zwave_js::services::set_value::fields::command_class::description%]",
@@ -383,7 +397,7 @@
       "name": "Set a value on multiple devices via multicast (advanced)"
     },
     "ping": {
-      "description": "Forces Z-Wave JS to try to reach a node. This can be used to update the status of the node in Z-Wave JS when you think it doesn't accurately reflect reality, e.g. reviving a failed/dead node or marking the node as asleep.",
+      "description": "Forces Z-Wave to try to reach a node. This can be used to update the status of the node in Z-Wave when you think it doesn't accurately reflect reality, e.g. reviving a failed/dead node or marking the node as asleep.",
       "fields": {
         "area_id": {
           "description": "[%key:component::zwave_js::services::set_value::fields::area_id::description%]",
@@ -434,8 +448,8 @@
           "name": "Entities"
         },
         "refresh_all_values": {
-          "description": "Whether to refresh all values (true) or just the primary value (false).",
-          "name": "Refresh all values?"
+          "description": "Whether to refresh all values or just the primary value.",
+          "name": "Refresh all values"
         }
       },
       "name": "Refresh values"
@@ -474,7 +488,7 @@
           "name": "[%key:component::zwave_js::services::set_value::fields::area_id::name%]"
         },
         "bitmask": {
-          "description": "Target a specific bitmask (see the documentation for more information). Cannot be combined with value_size or value_format.",
+          "description": "Target a specific bitmask (see the documentation for more information). Cannot be combined with 'Value size' or 'Value format'.",
           "name": "Bitmask"
         },
         "device_id": {
@@ -498,11 +512,11 @@
           "name": "Value"
         },
         "value_format": {
-          "description": "Format of the value, 0 for signed integer, 1 for unsigned integer, 2 for enumerated, 3 for bitfield. Used in combination with value_size when a config parameter is not defined in your device's configuration file. Cannot be combined with bitmask.",
+          "description": "Format of the value, 0 for signed integer, 1 for unsigned integer, 2 for enumerated, 3 for bitfield. Used in combination with 'Value size' when a config parameter is not defined in your device's configuration file. Cannot be combined with 'Bitmask'.",
           "name": "Value format"
         },
         "value_size": {
-          "description": "Size of the value, either 1, 2, or 4. Used in combination with value_format when a config parameter is not defined in your device's configuration file. Cannot be combined with bitmask.",
+          "description": "Size of the value, either 1, 2, or 4. Used in combination with 'Value format' when a config parameter is not defined in your device's configuration file. Cannot be combined with 'Bitmask'.",
           "name": "Value size"
         }
       },
@@ -516,8 +530,8 @@
           "name": "Auto relock time"
         },
         "block_to_block": {
-          "description": "Enable block-to-block functionality.",
-          "name": "Block to block"
+          "description": "Whether the lock should run the motor until it hits resistance.",
+          "name": "Block to Block"
         },
         "hold_and_release_time": {
           "description": "Duration in seconds the latch stays retracted.",
@@ -529,11 +543,11 @@
         },
         "operation_type": {
           "description": "The operation type of the lock.",
-          "name": "Operation Type"
+          "name": "Operation type"
         },
         "twist_assist": {
-          "description": "Enable Twist Assist.",
-          "name": "Twist assist"
+          "description": "Whether the motor should help in locking and unlocking.",
+          "name": "Twist Assist"
         }
       },
       "name": "Set lock configuration"
@@ -553,10 +567,10 @@
       "name": "Set lock user code"
     },
     "set_value": {
-      "description": "Changes any value that Z-Wave JS recognizes on a Z-Wave device. This action has minimal validation so only use this action if you know what you are doing.",
+      "description": "Changes any value that Z-Wave recognizes on a Z-Wave device. This action has minimal validation so only use this action if you know what you are doing.",
       "fields": {
         "area_id": {
-          "description": "The area(s) to target for this action. If an area is specified, all zwave_js devices and entities in that area will be targeted for this action.",
+          "description": "The area(s) to target for this action. If an area is specified, all Z-Wave devices and entities in that area will be targeted for this action.",
           "name": "Area ID(s)"
         },
         "command_class": {
@@ -576,7 +590,7 @@
           "name": "Entity ID(s)"
         },
         "options": {
-          "description": "Set value options map. Refer to the Z-Wave JS documentation for more information on what options can be set.",
+          "description": "Set value options map. Refer to the Z-Wave documentation for more information on what options can be set.",
           "name": "Options"
         },
         "property": {
@@ -592,8 +606,8 @@
           "name": "[%key:component::zwave_js::services::set_config_parameter::fields::value::name%]"
         },
         "wait_for_result": {
-          "description": "Whether or not to wait for a response from the node. If not included in the payload, the integration will decide whether to wait or not. If set to `true`, note that the action can take a while if setting a value on an asleep battery device.",
-          "name": "Wait for result?"
+          "description": "Whether to wait for a response from the node. If not included in the payload, the integration will decide whether to wait or not. If enabled, the action can take a while if setting a value on an asleep battery device.",
+          "name": "Wait for result"
         }
       },
       "name": "Set a value (advanced)"

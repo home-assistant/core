@@ -27,12 +27,17 @@ from homeassistant.components.camera import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import RingConfigEntry
+from .const import DOMAIN
 from .coordinator import RingDataCoordinator
 from .entity import RingDeviceT, RingEntity, exception_wrap
+
+# Coordinator is used to centralize the data updates
+# Actions restricted to 1 at a time
+PARALLEL_UPDATES = 1
 
 FORCE_REFRESH_INTERVAL = timedelta(minutes=3)
 MOTION_DETECTION_CAPABILITY = "motion_detection"
@@ -71,7 +76,7 @@ CAMERA_DESCRIPTIONS: tuple[RingCameraEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: RingConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Ring Door Bell and StickUp Camera."""
     ring_data = entry.runtime_data
@@ -214,8 +219,13 @@ class RingCam(RingEntity[RingDoorBell], Camera):
     ) -> None:
         """Handle a WebRTC candidate."""
         if candidate.sdp_m_line_index is None:
-            msg = "The sdp_m_line_index is required for ring webrtc streaming"
-            raise HomeAssistantError(msg)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="sdp_m_line_index_required",
+                translation_placeholders={
+                    "device": self._device.name,
+                },
+            )
         await self._device.on_webrtc_candidate(
             session_id, candidate.candidate, candidate.sdp_m_line_index
         )

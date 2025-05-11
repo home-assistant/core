@@ -13,7 +13,9 @@ from zwave_js_server.model.node import Node
 from zwave_js_server.model.node.data_model import NodeDataType
 from zwave_js_server.version import VersionInfo
 
+from homeassistant.components.zwave_js import PLATFORMS
 from homeassistant.components.zwave_js.const import DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util.json import JsonArrayType
 
@@ -133,9 +135,9 @@ def climate_radio_thermostat_ct100_plus_state_fixture() -> dict[str, Any]:
     name="climate_radio_thermostat_ct100_plus_different_endpoints_state",
     scope="package",
 )
-def climate_radio_thermostat_ct100_plus_different_endpoints_state_fixture() -> (
-    dict[str, Any]
-):
+def climate_radio_thermostat_ct100_plus_different_endpoints_state_fixture() -> dict[
+    str, Any
+]:
     """Load the thermostat fixture state with values on different endpoints.
 
     This device is a radio thermostat ct100.
@@ -336,9 +338,9 @@ def lock_id_lock_as_id150_state_fixture() -> dict[str, Any]:
 @pytest.fixture(
     name="climate_radio_thermostat_ct101_multiple_temp_units_state", scope="package"
 )
-def climate_radio_thermostat_ct101_multiple_temp_units_state_fixture() -> (
-    dict[str, Any]
-):
+def climate_radio_thermostat_ct101_multiple_temp_units_state_fixture() -> dict[
+    str, Any
+]:
     """Load the climate multiple temp units node state fixture data."""
     return load_json_object_fixture(
         "climate_radio_thermostat_ct101_multiple_temp_units_state.json", DOMAIN
@@ -507,22 +509,38 @@ def aeotec_smart_switch_7_state_fixture() -> NodeDataType:
     )
 
 
+@pytest.fixture(name="zcombo_smoke_co_alarm_state")
+def zcombo_smoke_co_alarm_state_fixture() -> NodeDataType:
+    """Load node with fixture data for ZCombo-G Smoke/CO Alarm."""
+    return cast(
+        NodeDataType,
+        load_json_object_fixture("zcombo_smoke_co_alarm_state.json", DOMAIN),
+    )
+
+
 # model fixtures
 
 
 @pytest.fixture(name="listen_block")
-def mock_listen_block_fixture():
+def mock_listen_block_fixture() -> asyncio.Event:
     """Mock a listen block."""
     return asyncio.Event()
 
 
+@pytest.fixture(name="listen_result")
+def listen_result_fixture() -> asyncio.Future[None]:
+    """Mock a listen result."""
+    return asyncio.Future()
+
+
 @pytest.fixture(name="client")
 def mock_client_fixture(
-    controller_state,
-    controller_node_state,
-    version_state,
-    log_config_state,
-    listen_block,
+    controller_state: dict[str, Any],
+    controller_node_state: dict[str, Any],
+    version_state: dict[str, Any],
+    log_config_state: dict[str, Any],
+    listen_block: asyncio.Event,
+    listen_result: asyncio.Future[None],
 ):
     """Mock a client."""
     with patch(
@@ -537,6 +555,7 @@ def mock_client_fixture(
         async def listen(driver_ready: asyncio.Event) -> None:
             driver_ready.set()
             await listen_block.wait()
+            await listen_result
 
         async def disconnect():
             client.connected = False
@@ -544,6 +563,7 @@ def mock_client_fixture(
         client.connect = AsyncMock(side_effect=connect)
         client.listen = AsyncMock(side_effect=listen)
         client.disconnect = AsyncMock(side_effect=disconnect)
+        client.disable_server_logging = MagicMock()
         client.driver = Driver(
             client, copy.deepcopy(controller_state), copy.deepcopy(log_config_state)
         )
@@ -817,16 +837,27 @@ def nortek_thermostat_removed_event_fixture(client) -> Node:
 
 
 @pytest.fixture(name="integration")
-async def integration_fixture(hass: HomeAssistant, client) -> MockConfigEntry:
+async def integration_fixture(
+    hass: HomeAssistant,
+    client: MagicMock,
+    platforms: list[Platform],
+) -> MockConfigEntry:
     """Set up the zwave_js integration."""
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.zwave_js.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     client.async_send_command.reset_mock()
 
     return entry
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    return PLATFORMS
 
 
 @pytest.fixture(name="chain_actuator_zws12")
@@ -1229,5 +1260,15 @@ def aeotec_smart_switch_7_fixture(
 ) -> Node:
     """Load node for Aeotec Smart Switch 7."""
     node = Node(client, aeotec_smart_switch_7_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="zcombo_smoke_co_alarm")
+def zcombo_smoke_co_alarm_fixture(
+    client: MagicMock, zcombo_smoke_co_alarm_state: NodeDataType
+) -> Node:
+    """Load node for ZCombo-G Smoke/CO Alarm."""
+    node = Node(client, zcombo_smoke_co_alarm_state)
     client.driver.controller.nodes[node.node_id] = node
     return node

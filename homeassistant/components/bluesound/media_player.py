@@ -22,7 +22,11 @@ from homeassistant.components.media_player import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_platform,
+    issue_registry as ir,
+)
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -32,9 +36,9 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 
 from .const import ATTR_BLUESOUND_GROUP, ATTR_MASTER, DOMAIN
 from .coordinator import BluesoundCoordinator
@@ -61,7 +65,7 @@ POLL_TIMEOUT = 120
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BluesoundConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Bluesound entry."""
     bluesound_player = BluesoundPlayer(
@@ -330,7 +334,12 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
 
         if self._status.input_id is not None:
             for input_ in self._inputs:
-                if input_.id == self._status.input_id:
+                # the input might not have an id => also try to match on the stream_url/url
+                # we have to use both because neither matches all the time
+                if (
+                    input_.id == self._status.input_id
+                    or input_.url == self._status.stream_url
+                ):
                     return input_.text
 
         for preset in self._presets:
@@ -483,10 +492,36 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
 
     async def async_increase_timer(self) -> int:
         """Increase sleep time on player."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_service_{SERVICE_SET_TIMER}",
+            is_fixable=False,
+            breaks_in_ha_version="2025.12.0",
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_service_set_sleep_timer",
+            translation_placeholders={
+                "name": slugify(self.sync_status.name),
+            },
+        )
         return await self._player.sleep_timer()
 
     async def async_clear_timer(self) -> None:
         """Clear sleep timer on player."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_service_{SERVICE_CLEAR_TIMER}",
+            is_fixable=False,
+            breaks_in_ha_version="2025.12.0",
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_service_clear_sleep_timer",
+            translation_placeholders={
+                "name": slugify(self.sync_status.name),
+            },
+        )
         sleep = 1
         while sleep > 0:
             sleep = await self._player.sleep_timer()
@@ -501,18 +536,16 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
             return
 
         # presets and inputs might have the same name; presets have priority
-        url: str | None = None
         for input_ in self._inputs:
             if input_.text == source:
-                url = input_.url
+                await self._player.play_url(input_.url)
+                return
         for preset in self._presets:
             if preset.name == source:
-                url = preset.url
+                await self._player.load_preset(preset.id)
+                return
 
-        if url is None:
-            raise ServiceValidationError(f"Source {source} not found")
-
-        await self._player.play_url(url)
+        raise ServiceValidationError(f"Source {source} not found")
 
     async def async_clear_playlist(self) -> None:
         """Clear players playlist."""

@@ -14,7 +14,6 @@ from gcal_sync.model import DateOrDatetime, Event
 import voluptuous as vol
 import yaml
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_ENTITIES,
@@ -28,15 +27,12 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
 
 from .api import ApiAuthImpl, get_feature_access
 from .const import (
-    DATA_SERVICE,
-    DATA_STORE,
     DOMAIN,
     EVENT_DESCRIPTION,
     EVENT_END_DATE,
@@ -51,7 +47,7 @@ from .const import (
     EVENT_TYPES_CONF,
     FeatureAccess,
 )
-from .store import LocalCalendarStore
+from .store import GoogleConfigEntry, GoogleRuntimeData, LocalCalendarStore
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,11 +136,8 @@ ADD_EVENT_SERVICE_SCHEMA = vol.All(
 )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bool:
     """Set up Google from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-
     # Validate google_calendars.yaml (if present) as soon as possible to return
     # helpful error messages.
     try:
@@ -182,9 +175,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     calendar_service = GoogleCalendarService(
         ApiAuthImpl(async_get_clientsession(hass), session)
     )
-    hass.data[DOMAIN][entry.entry_id][DATA_SERVICE] = calendar_service
-    hass.data[DOMAIN][entry.entry_id][DATA_STORE] = LocalCalendarStore(
-        hass, entry.entry_id
+    entry.runtime_data = GoogleRuntimeData(
+        service=calendar_service,
+        store=LocalCalendarStore(hass, entry.entry_id),
     )
 
     if entry.unique_id is None:
@@ -208,27 +201,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def async_entry_has_scopes(entry: ConfigEntry) -> bool:
+def async_entry_has_scopes(entry: GoogleConfigEntry) -> bool:
     """Verify that the config entry desired scope is present in the oauth token."""
     access = get_feature_access(entry)
     token_scopes = entry.data.get("token", {}).get("scope", [])
     return access.scope in token_scopes
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_reload_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> None:
     """Reload config entry if the access options change."""
     if not async_entry_has_scopes(entry):
         await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_remove_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> None:
     """Handle removal of a local storage."""
     store = LocalCalendarStore(hass, entry.entry_id)
     await store.async_remove()

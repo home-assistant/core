@@ -4,12 +4,12 @@ from unittest.mock import AsyncMock, patch
 
 import aiohttp
 
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.wmspro.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import setup_config_entry
 
@@ -367,13 +367,15 @@ async def test_config_flow_multiple_entries(
     mock_hub_ping: AsyncMock,
     mock_dest_refresh: AsyncMock,
     mock_hub_configuration_test: AsyncMock,
-    mock_hub_configuration_prod: AsyncMock,
+    mock_hub_configuration_prod_awning_dimmer: AsyncMock,
 ) -> None:
     """Test we allow creation of different config entries."""
     await setup_config_entry(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    mock_hub_configuration_prod.return_value = mock_hub_configuration_test.return_value
+    mock_hub_configuration_prod_awning_dimmer.return_value = (
+        mock_hub_configuration_test.return_value
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

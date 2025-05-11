@@ -34,6 +34,15 @@ class SupportedModels(StrEnum):
     RELAY_SWITCH_1PM = "relay_switch_1pm"
     RELAY_SWITCH_1 = "relay_switch_1"
     LEAK = "leak"
+    REMOTE = "remote"
+    ROLLER_SHADE = "roller_shade"
+    HUBMINI_MATTER = "hubmini_matter"
+    CIRCULATOR_FAN = "circulator_fan"
+    K20_VACUUM = "k20_vacuum"
+    S10_VACUUM = "s10_vacuum"
+    K10_VACUUM = "k10_vacuum"
+    K10_PRO_VACUUM = "k10_pro_vacuum"
+    K10_PRO_COMBO_VACUUM = "k10_pro_combo_vacumm"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -50,6 +59,13 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.HUB2: SupportedModels.HUB2,
     SwitchbotModel.RELAY_SWITCH_1PM: SupportedModels.RELAY_SWITCH_1PM,
     SwitchbotModel.RELAY_SWITCH_1: SupportedModels.RELAY_SWITCH_1,
+    SwitchbotModel.ROLLER_SHADE: SupportedModels.ROLLER_SHADE,
+    SwitchbotModel.CIRCULATOR_FAN: SupportedModels.CIRCULATOR_FAN,
+    SwitchbotModel.K20_VACUUM: SupportedModels.K20_VACUUM,
+    SwitchbotModel.S10_VACUUM: SupportedModels.S10_VACUUM,
+    SwitchbotModel.K10_VACUUM: SupportedModels.K10_VACUUM,
+    SwitchbotModel.K10_PRO_VACUUM: SupportedModels.K10_PRO_VACUUM,
+    SwitchbotModel.K10_PRO_COMBO_VACUUM: SupportedModels.K10_PRO_COMBO_VACUUM,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -60,6 +76,8 @@ NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.CONTACT_SENSOR: SupportedModels.CONTACT,
     SwitchbotModel.MOTION_SENSOR: SupportedModels.MOTION,
     SwitchbotModel.LEAK: SupportedModels.LEAK,
+    SwitchbotModel.REMOTE: SupportedModels.REMOTE,
+    SwitchbotModel.HUBMINI_MATTER: SupportedModels.HUBMINI_MATTER,
 }
 
 SUPPORTED_MODEL_TYPES = (

@@ -21,6 +21,16 @@
         "data_description": {
           "password": "Enter the password for your Ohme account"
         }
+      },
+      "reconfigure": {
+        "description": "Update your password for {email}",
+        "title": "Reconfigure Ohme Account",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Enter the password for your Ohme account"
+        }
       }
     },
     "error": {
@@ -29,7 +39,8 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "services": {
@@ -42,6 +53,20 @@
           "description": "The Ohme config entry for which to return charge slots."
         }
       }
+    },
+    "set_price_cap": {
+      "name": "Set price cap",
+      "description": "Prevents charging when the electricity price exceeds a defined threshold.",
+      "fields": {
+        "config_entry": {
+          "name": "Ohme account",
+          "description": "The Ohme config entry for which to return charge slots."
+        },
+        "price_cap": {
+          "name": "Price cap",
+          "description": "Threshold in 1/100ths of your local currency."
+        }
+      }
     }
   },
   "entity": {
@@ -50,15 +75,37 @@
         "name": "Approve charge"
       }
     },
+    "number": {
+      "preconditioning_duration": {
+        "name": "Preconditioning duration"
+      },
+      "target_percentage": {
+        "name": "Target percentage"
+      }
+    },
+    "select": {
+      "charge_mode": {
+        "name": "Charge mode",
+        "state": {
+          "smart_charge": "Smart charge",
+          "max_charge": "Max charge",
+          "paused": "[%key:common::state::paused%]"
+        }
+      },
+      "vehicle": {
+        "name": "Vehicle"
+      }
+    },
     "sensor": {
       "status": {
         "name": "Status",
         "state": {
-          "unplugged": "Unplugged",
-          "plugged_in": "Plugged in",
-          "charging": "Charging",
+          "unplugged": "[%key:component::binary_sensor::entity_component::plug::state::off%]",
+          "plugged_in": "[%key:component::binary_sensor::entity_component::plug::state::on%]",
+          "charging": "[%key:common::state::charging%]",
           "paused": "[%key:common::state::paused%]",
-          "pending_approval": "Pending approval"
+          "pending_approval": "Pending approval",
+          "finished": "Finished charging"
         }
       },
       "ct_current": {
@@ -66,6 +113,9 @@
       },
       "vehicle_battery": {
         "name": "Vehicle battery"
+      },
+      "slot_list": {
+        "name": "Charge slots"
       }
     },
     "switch": {
@@ -77,12 +127,20 @@
       },
       "sleep_when_inactive": {
         "name": "Sleep when inactive"
+      },
+      "price_cap": {
+        "name": "Price cap"
+      }
+    },
+    "time": {
+      "target_time": {
+        "name": "Target time"
       }
     }
   },
   "exceptions": {
     "auth_failed": {
-      "message": "Unable to login to Ohme"
+      "message": "Unable to log in to Ohme"
     },
     "device_info_failed": {
       "message": "Unable to get Ohme device information"

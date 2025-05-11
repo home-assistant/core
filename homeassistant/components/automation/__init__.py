@@ -9,7 +9,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Protocol, cast
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -18,6 +18,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
     ATTR_NAME,
+    CONF_ACTIONS,
     CONF_ALIAS,
     CONF_CONDITIONS,
     CONF_DEVICE_ID,
@@ -27,6 +28,7 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_PATH,
     CONF_PLATFORM,
+    CONF_TRIGGERS,
     CONF_VARIABLES,
     CONF_ZONE,
     EVENT_HOMEASSISTANT_STARTED,
@@ -48,8 +50,7 @@ from homeassistant.core import (
     valid_entity_id,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, TemplateError
-from homeassistant.helpers import condition
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.issue_registry import (
@@ -87,11 +88,9 @@ from homeassistant.util.hass_dict import HassKey
 
 from .config import AutomationConfig, ValidationStatus
 from .const import (
-    CONF_ACTIONS,
     CONF_INITIAL_STATE,
     CONF_TRACE,
     CONF_TRIGGER_VARIABLES,
-    CONF_TRIGGERS,
     DEFAULT_INITIAL_STATE,
     DOMAIN,
     LOGGER,

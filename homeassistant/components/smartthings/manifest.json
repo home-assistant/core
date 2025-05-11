@@ -1,10 +1,9 @@
 {
   "domain": "smartthings",
   "name": "SmartThings",
-  "after_dependencies": ["cloud"],
-  "codeowners": [],
+  "codeowners": ["@joostlek"],
   "config_flow": true,
-  "dependencies": ["webhook"],
+  "dependencies": ["application_credentials"],
   "dhcp": [
     {
       "hostname": "st*",
@@ -29,6 +28,7 @@
   ],
   "documentation": "https://www.home-assistant.io/integrations/smartthings",
   "iot_class": "cloud_push",
-  "loggers": ["httpsig", "pysmartapp", "pysmartthings"],
-  "requirements": ["pysmartapp==0.3.5", "pysmartthings==0.7.8"]
+  "loggers": ["pysmartthings"],
+  "quality_scale": "bronze",
+  "requirements": ["pysmartthings==3.2.1"]
 }

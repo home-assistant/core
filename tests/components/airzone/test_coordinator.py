@@ -25,6 +25,7 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
     """Test ClientConnectorError on coordinator update."""
 
     config_entry = MockConfigEntry(
+        minor_version=2,
         data=CONFIG,
         domain=DOMAIN,
         unique_id="airzone_unique_id",
@@ -74,6 +75,7 @@ async def test_coordinator_new_devices(
     """Test new devices on coordinator update."""
 
     config_entry = MockConfigEntry(
+        minor_version=2,
         data=CONFIG,
         domain=DOMAIN,
         unique_id="airzone_unique_id",

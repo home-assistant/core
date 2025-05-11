@@ -34,7 +34,7 @@ from homeassistant.helpers.recorder import (  # noqa: F401
     get_instance,
     session_scope,
 )
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_MAX_BIND_VARS, DOMAIN, SQLITE_URL_PREFIX, SupportedDialect
 from .db_schema import (
@@ -464,6 +464,7 @@ def setup_connection_for_dialect(
     """Execute statements needed for dialect connection."""
     version: AwesomeVersion | None = None
     slow_range_in_select = False
+    slow_dependent_subquery = False
     if dialect_name == SupportedDialect.SQLITE:
         if first_connection:
             old_isolation = dbapi_connection.isolation_level  # type: ignore[attr-defined]
@@ -505,9 +506,8 @@ def setup_connection_for_dialect(
             result = query_on_connection(dbapi_connection, "SELECT VERSION()")
             version_string = result[0][0]
             version = _extract_version_from_server_response(version_string)
-            is_maria_db = "mariadb" in version_string.lower()
 
-            if is_maria_db:
+            if "mariadb" in version_string.lower():
                 if not version or version < MIN_VERSION_MARIA_DB:
                     _raise_if_version_unsupported(
                         version or version_string, "MariaDB", MIN_VERSION_MARIA_DB
@@ -523,19 +523,21 @@ def setup_connection_for_dialect(
                         instance.hass,
                         version,
                     )
-
+                slow_range_in_select = bool(
+                    not version
+                    or version < MARIADB_WITH_FIXED_IN_QUERIES_105
+                    or MARIA_DB_106 <= version < MARIADB_WITH_FIXED_IN_QUERIES_106
+                    or MARIA_DB_107 <= version < MARIADB_WITH_FIXED_IN_QUERIES_107
+                    or MARIA_DB_108 <= version < MARIADB_WITH_FIXED_IN_QUERIES_108
+                )
             elif not version or version < MIN_VERSION_MYSQL:
                 _raise_if_version_unsupported(
                     version or version_string, "MySQL", MIN_VERSION_MYSQL
                 )
-
-            slow_range_in_select = bool(
-                not version
-                or version < MARIADB_WITH_FIXED_IN_QUERIES_105
-                or MARIA_DB_106 <= version < MARIADB_WITH_FIXED_IN_QUERIES_106
-                or MARIA_DB_107 <= version < MARIADB_WITH_FIXED_IN_QUERIES_107
-                or MARIA_DB_108 <= version < MARIADB_WITH_FIXED_IN_QUERIES_108
-            )
+            else:
+                # MySQL
+                # https://github.com/home-assistant/core/issues/137178
+                slow_dependent_subquery = True
 
         # Ensure all times are using UTC to avoid issues with daylight savings
         execute_on_connection(dbapi_connection, "SET time_zone = '+00:00'")
@@ -565,7 +567,10 @@ def setup_connection_for_dialect(
     return DatabaseEngine(
         dialect=SupportedDialect(dialect_name),
         version=version,
-        optimizer=DatabaseOptimizer(slow_range_in_select=slow_range_in_select),
+        optimizer=DatabaseOptimizer(
+            slow_range_in_select=slow_range_in_select,
+            slow_dependent_subquery=slow_dependent_subquery,
+        ),
         max_bind_vars=DEFAULT_MAX_BIND_VARS,
     )
 
@@ -645,7 +650,7 @@ def _wrap_retryable_database_job_func_or_meth[**_P](
                 # Failed with retryable error
                 return False
 
-            _LOGGER.warning("Error executing %s: %s", description, err)
+            _LOGGER.error("Error executing %s: %s", description, err)
 
         # Failed with permanent error
         return True

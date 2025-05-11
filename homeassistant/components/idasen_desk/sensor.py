@@ -13,9 +13,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import IdasenDeskConfigEntry, IdasenDeskCoordinator
+from .coordinator import IdasenDeskConfigEntry, IdasenDeskCoordinator
 from .entity import IdasenDeskEntity
 
 
@@ -43,7 +43,7 @@ SENSORS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: IdasenDeskConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Idasen Desk sensors."""
     coordinator = entry.runtime_data

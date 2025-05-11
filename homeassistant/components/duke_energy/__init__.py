@@ -10,7 +10,7 @@ from .coordinator import DukeEnergyConfigEntry, DukeEnergyCoordinator
 async def async_setup_entry(hass: HomeAssistant, entry: DukeEnergyConfigEntry) -> bool:
     """Set up Duke Energy from a config entry."""
 
-    coordinator = DukeEnergyCoordinator(hass, entry.data)
+    coordinator = DukeEnergyCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 

@@ -5,38 +5,38 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from homematicip.aio.device import (
-    AsyncBrandSwitchMeasuring,
-    AsyncEnergySensorsInterface,
-    AsyncFloorTerminalBlock6,
-    AsyncFloorTerminalBlock10,
-    AsyncFloorTerminalBlock12,
-    AsyncFullFlushSwitchMeasuring,
-    AsyncHeatingThermostat,
-    AsyncHeatingThermostatCompact,
-    AsyncHeatingThermostatEvo,
-    AsyncHomeControlAccessPoint,
-    AsyncLightSensor,
-    AsyncMotionDetectorIndoor,
-    AsyncMotionDetectorOutdoor,
-    AsyncMotionDetectorPushButton,
-    AsyncPassageDetector,
-    AsyncPlugableSwitchMeasuring,
-    AsyncPresenceDetectorIndoor,
-    AsyncRoomControlDeviceAnalog,
-    AsyncTemperatureDifferenceSensor2,
-    AsyncTemperatureHumiditySensorDisplay,
-    AsyncTemperatureHumiditySensorOutdoor,
-    AsyncTemperatureHumiditySensorWithoutDisplay,
-    AsyncWeatherSensor,
-    AsyncWeatherSensorPlus,
-    AsyncWeatherSensorPro,
-    AsyncWiredFloorTerminalBlock12,
-)
 from homematicip.base.enums import FunctionalChannelType, ValveState
 from homematicip.base.functionalChannels import (
     FloorTerminalBlockMechanicChannel,
     FunctionalChannel,
+)
+from homematicip.device import (
+    BrandSwitchMeasuring,
+    EnergySensorsInterface,
+    FloorTerminalBlock6,
+    FloorTerminalBlock10,
+    FloorTerminalBlock12,
+    FullFlushSwitchMeasuring,
+    HeatingThermostat,
+    HeatingThermostatCompact,
+    HeatingThermostatEvo,
+    HomeControlAccessPoint,
+    LightSensor,
+    MotionDetectorIndoor,
+    MotionDetectorOutdoor,
+    MotionDetectorPushButton,
+    PassageDetector,
+    PlugableSwitchMeasuring,
+    PresenceDetectorIndoor,
+    RoomControlDeviceAnalog,
+    TemperatureDifferenceSensor2,
+    TemperatureHumiditySensorDisplay,
+    TemperatureHumiditySensorOutdoor,
+    TemperatureHumiditySensorWithoutDisplay,
+    WeatherSensor,
+    WeatherSensorPlus,
+    WeatherSensorPro,
+    WiredFloorTerminalBlock12,
 )
 
 from homeassistant.components.sensor import (
@@ -46,6 +46,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     LIGHT_LUX,
     PERCENTAGE,
     UnitOfEnergy,
@@ -57,7 +58,7 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
@@ -93,23 +94,23 @@ ILLUMINATION_DEVICE_ATTRIBUTES = {
 }
 
 
-async def async_setup_entry(  # noqa: C901
+async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP Cloud sensors from a config entry."""
     hap = hass.data[DOMAIN][config_entry.unique_id]
     entities: list[HomematicipGenericEntity] = []
     for device in hap.home.devices:
-        if isinstance(device, AsyncHomeControlAccessPoint):
+        if isinstance(device, HomeControlAccessPoint):
             entities.append(HomematicipAccesspointDutyCycle(hap, device))
         if isinstance(
             device,
             (
-                AsyncHeatingThermostat,
-                AsyncHeatingThermostatCompact,
-                AsyncHeatingThermostatEvo,
+                HeatingThermostat,
+                HeatingThermostatCompact,
+                HeatingThermostatEvo,
             ),
         ):
             entities.append(HomematicipHeatingThermostat(hap, device))
@@ -117,55 +118,54 @@ async def async_setup_entry(  # noqa: C901
         if isinstance(
             device,
             (
-                AsyncTemperatureHumiditySensorDisplay,
-                AsyncTemperatureHumiditySensorWithoutDisplay,
-                AsyncTemperatureHumiditySensorOutdoor,
-                AsyncWeatherSensor,
-                AsyncWeatherSensorPlus,
-                AsyncWeatherSensorPro,
+                TemperatureHumiditySensorDisplay,
+                TemperatureHumiditySensorWithoutDisplay,
+                TemperatureHumiditySensorOutdoor,
+                WeatherSensor,
+                WeatherSensorPlus,
+                WeatherSensorPro,
             ),
         ):
             entities.append(HomematicipTemperatureSensor(hap, device))
             entities.append(HomematicipHumiditySensor(hap, device))
-        elif isinstance(device, (AsyncRoomControlDeviceAnalog,)):
+            entities.append(HomematicipAbsoluteHumiditySensor(hap, device))
+        elif isinstance(device, (RoomControlDeviceAnalog,)):
             entities.append(HomematicipTemperatureSensor(hap, device))
         if isinstance(
             device,
             (
-                AsyncLightSensor,
-                AsyncMotionDetectorIndoor,
-                AsyncMotionDetectorOutdoor,
-                AsyncMotionDetectorPushButton,
-                AsyncPresenceDetectorIndoor,
-                AsyncWeatherSensor,
-                AsyncWeatherSensorPlus,
-                AsyncWeatherSensorPro,
+                LightSensor,
+                MotionDetectorIndoor,
+                MotionDetectorOutdoor,
+                MotionDetectorPushButton,
+                PresenceDetectorIndoor,
+                WeatherSensor,
+                WeatherSensorPlus,
+                WeatherSensorPro,
             ),
         ):
             entities.append(HomematicipIlluminanceSensor(hap, device))
         if isinstance(
             device,
             (
-                AsyncPlugableSwitchMeasuring,
-                AsyncBrandSwitchMeasuring,
-                AsyncFullFlushSwitchMeasuring,
+                PlugableSwitchMeasuring,
+                BrandSwitchMeasuring,
+                FullFlushSwitchMeasuring,
             ),
         ):
             entities.append(HomematicipPowerSensor(hap, device))
             entities.append(HomematicipEnergySensor(hap, device))
-        if isinstance(
-            device, (AsyncWeatherSensor, AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
-        ):
+        if isinstance(device, (WeatherSensor, WeatherSensorPlus, WeatherSensorPro)):
             entities.append(HomematicipWindspeedSensor(hap, device))
-        if isinstance(device, (AsyncWeatherSensorPlus, AsyncWeatherSensorPro)):
+        if isinstance(device, (WeatherSensorPlus, WeatherSensorPro)):
             entities.append(HomematicipTodayRainSensor(hap, device))
-        if isinstance(device, AsyncPassageDetector):
+        if isinstance(device, PassageDetector):
             entities.append(HomematicipPassageDetectorDeltaCounter(hap, device))
-        if isinstance(device, AsyncTemperatureDifferenceSensor2):
+        if isinstance(device, TemperatureDifferenceSensor2):
             entities.append(HomematicpTemperatureExternalSensorCh1(hap, device))
             entities.append(HomematicpTemperatureExternalSensorCh2(hap, device))
             entities.append(HomematicpTemperatureExternalSensorDelta(hap, device))
-        if isinstance(device, AsyncEnergySensorsInterface):
+        if isinstance(device, EnergySensorsInterface):
             for ch in get_channels_from_device(
                 device, FunctionalChannelType.ENERGY_SENSORS_INTERFACE_CHANNEL
             ):
@@ -194,10 +194,10 @@ async def async_setup_entry(  # noqa: C901
         if isinstance(
             device,
             (
-                AsyncFloorTerminalBlock6,
-                AsyncFloorTerminalBlock10,
-                AsyncFloorTerminalBlock12,
-                AsyncWiredFloorTerminalBlock12,
+                FloorTerminalBlock6,
+                FloorTerminalBlock10,
+                FloorTerminalBlock12,
+                WiredFloorTerminalBlock12,
             ),
         ):
             entities.extend(
@@ -348,6 +348,35 @@ class HomematicipTemperatureSensor(HomematicipGenericEntity, SensorEntity):
             state_attr[ATTR_TEMPERATURE_OFFSET] = temperature_offset
 
         return state_attr
+
+
+class HomematicipAbsoluteHumiditySensor(HomematicipGenericEntity, SensorEntity):
+    """Representation of the HomematicIP absolute humidity sensor."""
+
+    _attr_native_unit_of_measurement = CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the thermometer device."""
+        super().__init__(hap, device, post="Absolute Humidity")
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the state."""
+        if self.functional_channel is None:
+            return None
+
+        value = self.functional_channel.vaporAmount
+
+        # Handle case where value might be None
+        if (
+            self.functional_channel.vaporAmount is None
+            or self.functional_channel.vaporAmount == ""
+        ):
+            return None
+
+        # Convert from g/m³ to mg/m³
+        return int(float(value) * 1000)
 
 
 class HomematicipIlluminanceSensor(HomematicipGenericEntity, SensorEntity):

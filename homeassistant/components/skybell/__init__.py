@@ -45,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Unable to connect to Skybell service: {ex}") from ex
 
     device_coordinators: list[SkybellDataUpdateCoordinator] = [
-        SkybellDataUpdateCoordinator(hass, device) for device in devices
+        SkybellDataUpdateCoordinator(hass, entry, device) for device in devices
     ]
     await asyncio.gather(
         *[

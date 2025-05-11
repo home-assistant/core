@@ -9,7 +9,7 @@ from dataclasses import dataclass, replace as dataclass_replace
 from datetime import timedelta
 import logging
 from time import time
-from typing import TYPE_CHECKING, Any, cast, final
+from typing import TYPE_CHECKING, Any, TypedDict, cast, final
 from uuid import UUID
 
 import sqlalchemy
@@ -52,6 +52,7 @@ from .auto_repairs.statistics.schema import (
 from .const import (
     CONTEXT_ID_AS_BINARY_SCHEMA_VERSION,
     EVENT_TYPE_IDS_SCHEMA_VERSION,
+    LEGACY_STATES_EVENT_FOREIGN_KEYS_FIXED_SCHEMA_VERSION,
     LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION,
     STATES_META_SCHEMA_VERSION,
     SupportedDialect,
@@ -80,7 +81,7 @@ from .db_schema import (
     StatisticsRuns,
     StatisticsShortTerm,
 )
-from .models import process_timestamp
+from .models import StatisticMeanType, process_timestamp
 from .models.time import datetime_to_timestamp_or_none
 from .queries import (
     batch_cleanup_entity_ids,
@@ -143,24 +144,32 @@ class _ColumnTypesForDialect:
     big_int_type: str
     timestamp_type: str
     context_bin_type: str
+    small_int_type: str
+    double_type: str
 
 
 _MYSQL_COLUMN_TYPES = _ColumnTypesForDialect(
     big_int_type="INTEGER(20)",
     timestamp_type=DOUBLE_PRECISION_TYPE_SQL,
     context_bin_type=f"BLOB({CONTEXT_ID_BIN_MAX_LENGTH})",
+    small_int_type="SMALLINT",
+    double_type=DOUBLE_PRECISION_TYPE_SQL,
 )
 
 _POSTGRESQL_COLUMN_TYPES = _ColumnTypesForDialect(
     big_int_type="INTEGER",
     timestamp_type=DOUBLE_PRECISION_TYPE_SQL,
     context_bin_type="BYTEA",
+    small_int_type="SMALLINT",
+    double_type=DOUBLE_PRECISION_TYPE_SQL,
 )
 
 _SQLITE_COLUMN_TYPES = _ColumnTypesForDialect(
     big_int_type="INTEGER",
     timestamp_type="FLOAT",
     context_bin_type="BLOB",
+    small_int_type="INTEGER",
+    double_type="FLOAT",
 )
 
 _COLUMN_TYPES_FOR_DIALECT: dict[SupportedDialect | None, _ColumnTypesForDialect] = {
@@ -711,6 +720,11 @@ def _modify_columns(
                 raise
 
 
+class _FKAlterDict(TypedDict):
+    old_fk: ForeignKeyConstraint
+    columns: list[str]
+
+
 def _update_states_table_with_foreign_key_options(
     session_maker: Callable[[], Session], engine: Engine
 ) -> None:
@@ -728,7 +742,7 @@ def _update_states_table_with_foreign_key_options(
 
     inspector = sqlalchemy.inspect(engine)
     tmp_states_table = Table(TABLE_STATES, MetaData())
-    alters = [
+    alters: list[_FKAlterDict] = [
         {
             "old_fk": ForeignKeyConstraint(
                 (), (), name=foreign_key["name"], table=tmp_states_table
@@ -754,14 +768,14 @@ def _update_states_table_with_foreign_key_options(
         with session_scope(session=session_maker()) as session:
             try:
                 connection = session.connection()
-                connection.execute(DropConstraint(alter["old_fk"]))  # type: ignore[no-untyped-call]
+                connection.execute(DropConstraint(alter["old_fk"]))
                 for fkc in states_key_constraints:
                     if fkc.column_keys == alter["columns"]:
                         # AddConstraint mutates the constraint passed to it, we need to
                         # undo that to avoid changing the behavior of the table schema.
                         # https://github.com/sqlalchemy/sqlalchemy/blob/96f1172812f858fead45cdc7874abac76f45b339/lib/sqlalchemy/sql/ddl.py#L746-L748
                         create_rule = fkc._create_rule  # noqa: SLF001
-                        add_constraint = AddConstraint(fkc)  # type: ignore[no-untyped-call]
+                        add_constraint = AddConstraint(fkc)
                         fkc._create_rule = create_rule  # noqa: SLF001
                         connection.execute(add_constraint)
             except (InternalError, OperationalError):
@@ -799,7 +813,7 @@ def _drop_foreign_key_constraints(
         with session_scope(session=session_maker()) as session:
             try:
                 connection = session.connection()
-                connection.execute(DropConstraint(drop))  # type: ignore[no-untyped-call]
+                connection.execute(DropConstraint(drop))
             except (InternalError, OperationalError):
                 _LOGGER.exception(
                     "Could not drop foreign constraints in %s table on %s",
@@ -844,7 +858,7 @@ def _restore_foreign_key_constraints(
         # undo that to avoid changing the behavior of the table schema.
         # https://github.com/sqlalchemy/sqlalchemy/blob/96f1172812f858fead45cdc7874abac76f45b339/lib/sqlalchemy/sql/ddl.py#L746-L748
         create_rule = constraint._create_rule  # noqa: SLF001
-        add_constraint = AddConstraint(constraint)  # type: ignore[no-untyped-call]
+        add_constraint = AddConstraint(constraint)
         constraint._create_rule = create_rule  # noqa: SLF001
         try:
             _add_constraint(session_maker, add_constraint, table, column)
@@ -1987,6 +2001,42 @@ class _SchemaVersion48Migrator(_SchemaVersionMigrator, target_version=48):
         _migrate_columns_to_timestamp(self.instance, self.session_maker, self.engine)
 
 
+class _SchemaVersion49Migrator(_SchemaVersionMigrator, target_version=49):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        _add_columns(
+            self.session_maker,
+            "statistics_meta",
+            [
+                f"mean_type {self.column_types.small_int_type} NOT NULL DEFAULT {StatisticMeanType.NONE.value}"
+            ],
+        )
+
+        for table in ("statistics", "statistics_short_term"):
+            _add_columns(
+                self.session_maker,
+                table,
+                [f"mean_weight {self.column_types.double_type}"],
+            )
+
+        with session_scope(session=self.session_maker()) as session:
+            connection = session.connection()
+            connection.execute(
+                text(
+                    "UPDATE statistics_meta SET mean_type=:mean_type WHERE has_mean=true"
+                ),
+                {"mean_type": StatisticMeanType.ARITHMETIC.value},
+            )
+
+
+class _SchemaVersion50Migrator(_SchemaVersionMigrator, target_version=50):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        with session_scope(session=self.session_maker()) as session:
+            connection = session.connection()
+            connection.execute(text("UPDATE statistics_meta SET has_mean=NULL"))
+
+
 def _migrate_statistics_columns_to_timestamp_removing_duplicates(
     hass: HomeAssistant,
     instance: Recorder,
@@ -2147,7 +2197,7 @@ def _migrate_columns_to_timestamp(
                     )
                 )
         result = None
-        while result is None or result.rowcount > 0:  # type: ignore[unreachable]
+        while result is None or result.rowcount > 0:
             with session_scope(session=session_maker()) as session:
                 result = session.connection().execute(
                     text(
@@ -2178,7 +2228,7 @@ def _migrate_columns_to_timestamp(
                     )
                 )
         result = None
-        while result is None or result.rowcount > 0:  # type: ignore[unreachable]
+        while result is None or result.rowcount > 0:
             with session_scope(session=session_maker()) as session:
                 result = session.connection().execute(
                     text(
@@ -2277,7 +2327,7 @@ def _migrate_statistics_columns_to_timestamp(
         # updated all rows in the table until the rowcount is 0
         for table in STATISTICS_TABLES:
             result = None
-            while result is None or result.rowcount > 0:  # type: ignore[unreachable]
+            while result is None or result.rowcount > 0:
                 with session_scope(session=session_maker()) as session:
                     result = session.connection().execute(
                         text(
@@ -2299,7 +2349,7 @@ def _migrate_statistics_columns_to_timestamp(
         # updated all rows in the table until the rowcount is 0
         for table in STATISTICS_TABLES:
             result = None
-            while result is None or result.rowcount > 0:  # type: ignore[unreachable]
+            while result is None or result.rowcount > 0:
                 with session_scope(session=session_maker()) as session:
                     result = session.connection().execute(
                         text(
@@ -2490,9 +2540,10 @@ class BaseMigration(ABC):
         if self.initial_schema_version > self.max_initial_schema_version:
             _LOGGER.debug(
                 "Data migration '%s' not needed, database created with version %s "
-                "after migrator was added",
+                "after migrator was added in version %s",
                 self.migration_id,
                 self.initial_schema_version,
+                self.max_initial_schema_version,
             )
             return False
         if self.start_schema_version < self.required_schema_version:
@@ -2752,9 +2803,9 @@ class EventTypeIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
                     for db_event_type in missing_db_event_types:
                         # We cannot add the assigned ids to the event_type_manager
                         # because the commit could get rolled back
-                        assert (
-                            db_event_type.event_type is not None
-                        ), "event_type should never be None"
+                        assert db_event_type.event_type is not None, (
+                            "event_type should never be None"
+                        )
                         event_type_to_id[db_event_type.event_type] = (
                             db_event_type.event_type_id
                         )
@@ -2830,9 +2881,9 @@ class EntityIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
                     for db_states_metadata in missing_states_metadata:
                         # We cannot add the assigned ids to the event_type_manager
                         # because the commit could get rolled back
-                        assert (
-                            db_states_metadata.entity_id is not None
-                        ), "entity_id should never be None"
+                        assert db_states_metadata.entity_id is not None, (
+                            "entity_id should never be None"
+                        )
                         entity_id_to_metadata_id[db_states_metadata.entity_id] = (
                             db_states_metadata.metadata_id
                         )
@@ -2868,7 +2919,14 @@ class EventIDPostMigration(BaseRunTimeMigration):
     """Migration to remove old event_id index from states."""
 
     migration_id = "event_id_post_migration"
-    max_initial_schema_version = LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION - 1
+    # Note we don't subtract 1 from the max_initial_schema_version
+    # in this case because we need to run this migration on databases
+    # version >= 43 because the schema was not bumped when the table
+    # rebuild was added in
+    # https://github.com/home-assistant/core/pull/120779
+    # which means its only safe to assume version 44 and later
+    # do not need the table rebuild
+    max_initial_schema_version = LEGACY_STATES_EVENT_FOREIGN_KEYS_FIXED_SCHEMA_VERSION
     task = MigrationTask
     migration_version = 2
 

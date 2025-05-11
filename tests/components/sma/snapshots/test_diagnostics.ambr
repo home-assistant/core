@@ -1,0 +1,31 @@
+# serializer version: 1
+# name: test_get_config_entry_diagnostics
+  dict({
+    'entities': dict({
+    }),
+    'entry': dict({
+      'data': dict({
+        'group': 'user',
+        'host': '1.1.1.1',
+        'password': '**REDACTED**',
+        'ssl': True,
+        'verify_ssl': False,
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'sma',
+      'minor_version': 2,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'SMA Device Name',
+      'unique_id': '123456789',
+      'version': 1,
+    }),
+  })
+# ---

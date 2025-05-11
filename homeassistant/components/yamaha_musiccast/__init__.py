@@ -55,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_get_clientsession(hass),
         entry.data[CONF_UPNP_DESC],
     )
-    coordinator = MusicCastDataUpdateCoordinator(hass, client=client)
+    coordinator = MusicCastDataUpdateCoordinator(hass, entry, client=client)
     await coordinator.async_config_entry_first_refresh()
     coordinator.musiccast.build_capabilities()
 

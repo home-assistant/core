@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     ENTITY_MATCH_ALL,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CONF_CAT,

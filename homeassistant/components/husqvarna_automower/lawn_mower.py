@@ -15,7 +15,7 @@ from homeassistant.components.lawn_mower import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AutomowerConfigEntry
 from .const import DOMAIN
@@ -49,14 +49,19 @@ OVERRIDE_MODES = [MOW, PARK]
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AutomowerConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up lawn mower platform."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        AutomowerLawnMowerEntity(mower_id, coordinator) for mower_id in coordinator.data
-    )
 
+    def _async_add_new_devices(mower_ids: set[str]) -> None:
+        async_add_entities(
+            [AutomowerLawnMowerEntity(mower_id, coordinator) for mower_id in mower_ids]
+        )
+
+    _async_add_new_devices(set(coordinator.data))
+
+    coordinator.new_devices_callbacks.append(_async_add_new_devices)
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         "override_schedule",
@@ -105,10 +110,10 @@ class AutomowerLawnMowerEntity(AutomowerAvailableEntity, LawnMowerEntity):
         mower_attributes = self.mower_attributes
         if mower_attributes.mower.state in PAUSED_STATES:
             return LawnMowerActivity.PAUSED
-        if mower_attributes.mower.activity in MOWING_ACTIVITIES:
+        if mower_attributes.mower.state in MowerStates.IN_OPERATION:
+            if mower_attributes.mower.activity == MowerActivities.GOING_HOME:
+                return LawnMowerActivity.RETURNING
             return LawnMowerActivity.MOWING
-        if mower_attributes.mower.activity == MowerActivities.GOING_HOME:
-            return LawnMowerActivity.RETURNING
         if (mower_attributes.mower.state == "RESTRICTED") or (
             mower_attributes.mower.activity in DOCKED_ACTIVITIES
         ):

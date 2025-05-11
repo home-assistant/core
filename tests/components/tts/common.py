@@ -14,9 +14,11 @@ import voluptuous as vol
 from homeassistant.components import media_source
 from homeassistant.components.tts import (
     CONF_LANG,
+    DATA_TTS_MANAGER,
     DOMAIN as TTS_DOMAIN,
     PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
     Provider,
+    ResultStream,
     TextToSpeechEntity,
     TtsAudioType,
     Voice,
@@ -24,7 +26,7 @@ from homeassistant.components.tts import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 
@@ -40,6 +42,7 @@ from tests.typing import ClientSessionGenerator
 DEFAULT_LANG = "en_US"
 SUPPORT_LANGUAGES = ["de_CH", "de_DE", "en_GB", "en_US"]
 TEST_DOMAIN = "test"
+MOCK_DATA = b"123"
 
 
 def mock_tts_get_cache_files_fixture_helper() -> Generator[MagicMock]:
@@ -162,7 +165,7 @@ class BaseProvider:
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load TTS dat."""
-        return ("mp3", b"")
+        return ("mp3", MOCK_DATA)
 
 
 class MockTTSProvider(BaseProvider, Provider):
@@ -249,7 +252,7 @@ async def mock_config_entry_setup(
     async def async_setup_entry_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test tts platform via config entry."""
         async_add_entities([tts_entity])
@@ -263,3 +266,33 @@ async def mock_config_entry_setup(
     await hass.async_block_till_done()
 
     return config_entry
+
+
+class MockResultStream(ResultStream):
+    """Mock result stream."""
+
+    test_set_message: str | None = None
+
+    def __init__(self, hass: HomeAssistant, extension: str, data: bytes) -> None:
+        """Initialize the result stream."""
+        super().__init__(
+            token="test-token",
+            extension=extension,
+            content_type=f"audio/mock-{extension}",
+            engine="test-engine",
+            use_file_cache=True,
+            language="en",
+            options={},
+            _manager=hass.data[DATA_TTS_MANAGER],
+        )
+        hass.data[DATA_TTS_MANAGER].token_to_stream[self.token] = self
+        self._mock_data = data
+
+    @callback
+    def async_set_message(self, message: str) -> None:
+        """Set message to be generated."""
+        self.test_set_message = message
+
+    async def async_stream_result(self):
+        """Stream the result."""
+        yield self._mock_data

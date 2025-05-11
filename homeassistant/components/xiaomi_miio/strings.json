@@ -14,7 +14,7 @@
       "unknown_device": "The device model is not known, not able to set up the device using config flow.",
       "cloud_no_devices": "No devices found in this Xiaomi Miio cloud account.",
       "cloud_credentials_incomplete": "Cloud credentials incomplete, please fill in username, password and country",
-      "cloud_login_error": "Could not login to Xiaomi Miio Cloud, check the credentials."
+      "cloud_login_error": "Could not log in to Xiaomi Miio Cloud, check the credentials."
     },
     "flow_title": "{name}",
     "step": {
@@ -82,15 +82,15 @@
       "airpurifier_mode": {
         "state": {
           "silent": "Silent",
-          "auto": "Auto",
+          "auto": "[%key:common::state::auto%]",
           "favorite": "Favorite"
         }
       },
       "ptc_level": {
         "state": {
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
       }
     },
@@ -100,7 +100,7 @@
           "preset_mode": {
             "state": {
               "nature": "Nature",
-              "normal": "Normal"
+              "normal": "[%key:common::state::normal%]"
             }
           }
         }
@@ -331,7 +331,7 @@
       "fields": {
         "entity_id": {
           "name": "Entity ID",
-          "description": "Name of the xiaomi miio entity."
+          "description": "Name of the Xiaomi Miio entity."
         }
       }
     },
@@ -365,7 +365,7 @@
     },
     "light_set_delayed_turn_off": {
       "name": "Light set delayed turn off",
-      "description": "Delayed turn off.",
+      "description": "Sets the delayed turning off of a light.",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -373,7 +373,7 @@
         },
         "time_period": {
           "name": "Time period",
-          "description": "Time period for the delayed turn off."
+          "description": "Time period for the delayed turning off."
         }
       }
     },
@@ -398,8 +398,8 @@
       }
     },
     "light_night_light_mode_on": {
-      "name": "Night light mode on",
-      "description": "Turns the eyecare mode on (EYECARE SMART LAMP 2 ONLY).",
+      "name": "Light night light mode on",
+      "description": "Turns on the night light mode of a light (EYECARE SMART LAMP 2 ONLY).",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -408,8 +408,8 @@
       }
     },
     "light_night_light_mode_off": {
-      "name": "Night light mode off",
-      "description": "Turns the eyecare mode fan_set_dry_off (EYECARE SMART LAMP 2 ONLY).",
+      "name": "Light night light mode off",
+      "description": "Turns off the night light mode of a light (EYECARE SMART LAMP 2 ONLY).",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -419,7 +419,7 @@
     },
     "light_eyecare_mode_on": {
       "name": "Light eyecare mode on",
-      "description": "[%key:component::xiaomi_miio::services::light_reminder_on::description%]",
+      "description": "Turns on the eyecare mode of a light (EYECARE SMART LAMP 2 ONLY).",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -429,7 +429,7 @@
     },
     "light_eyecare_mode_off": {
       "name": "Light eyecare mode off",
-      "description": "[%key:component::xiaomi_miio::services::light_reminder_off::description%]",
+      "description": "Turns off the eyecare mode of a light (EYECARE SMART LAMP 2 ONLY).",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -439,7 +439,7 @@
     },
     "remote_learn_command": {
       "name": "Remote learn command",
-      "description": "Learns an IR command, select **Perform action**, point the remote at the IR device, and the learned command will be shown as a notification in Overview.",
+      "description": "Learns an IR command. Select **Perform action**, point the remote at the IR device, and the learned command will be shown as a notification in Overview.",
       "fields": {
         "slot": {
           "name": "Slot",
@@ -447,21 +447,21 @@
         },
         "timeout": {
           "name": "Timeout",
-          "description": "Define the timeout, before which the command must be learned."
+          "description": "Define the timeout before which the command must be learned."
         }
       }
     },
     "remote_set_led_on": {
       "name": "Remote set LED on",
-      "description": "Turns on blue LED."
+      "description": "Turns on the remote’s blue LED."
     },
     "remote_set_led_off": {
       "name": "Remote set LED off",
-      "description": "Turns off blue LED."
+      "description": "Turns off the remote’s blue LED."
     },
     "switch_set_wifi_led_on": {
       "name": "Switch set Wi-Fi LED on",
-      "description": "Turns the wifi led on.",
+      "description": "Turns on the Wi-Fi LED of a switch.",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -471,7 +471,7 @@
     },
     "switch_set_wifi_led_off": {
       "name": "Switch set Wi-Fi LED off",
-      "description": "Turn the Wi-Fi led off.",
+      "description": "Turns off the Wi-Fi LED of a switch.",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -509,7 +509,7 @@
     },
     "vacuum_remote_control_start": {
       "name": "Vacuum remote control start",
-      "description": "Starts remote control of the vacuum cleaner. You can then move it with `remote_control_move`, when done call `remote_control_stop`."
+      "description": "Starts remote control of the vacuum cleaner. You can then move it with the 'Vacuum remote control move' action, when done use 'Vacuum remote control stop'."
     },
     "vacuum_remote_control_stop": {
       "name": "Vacuum remote control stop",
@@ -517,7 +517,7 @@
     },
     "vacuum_remote_control_move": {
       "name": "Vacuum remote control move",
-      "description": "Remote controls the vacuum cleaner, make sure you first set it in remote control mode with `remote_control_start`.",
+      "description": "Remote controls the vacuum cleaner, make sure you first set it in remote control mode with the 'Vacuum remote control start' action.",
       "fields": {
         "velocity": {
           "name": "Velocity",
@@ -567,7 +567,7 @@
     },
     "vacuum_goto": {
       "name": "Vacuum go to",
-      "description": "Go to the specified coordinates.",
+      "description": "Sends the robot to the specified coordinates.",
       "fields": {
         "x_coord": {
           "name": "X coordinate",

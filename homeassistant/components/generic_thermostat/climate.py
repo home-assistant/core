@@ -49,7 +49,10 @@ from homeassistant.core import (
 from homeassistant.exceptions import ConditionError
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.device import async_device_info_to_link_from_entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_time_interval,
@@ -123,7 +126,7 @@ PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_COMMON.schema)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
     await _async_setup_config(
@@ -152,7 +155,7 @@ async def _async_setup_config(
     hass: HomeAssistant,
     config: Mapping[str, Any],
     unique_id: str | None,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback | AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the generic thermostat platform."""
 
@@ -268,6 +271,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         else:
             self._attr_preset_modes = [PRESET_NONE]
         self._presets = presets
+        self._presets_inv = {v: k for k, v in presets.items()}
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
@@ -421,6 +425,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
+        self._attr_preset_mode = self._presets_inv.get(temperature, PRESET_NONE)
         self._target_temp = temperature
         await self._async_control_heating(force=True)
         self.async_write_ha_state()
@@ -534,10 +539,14 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     return
 
             assert self._cur_temp is not None and self._target_temp is not None
-            too_cold = self._target_temp >= self._cur_temp + self._cold_tolerance
-            too_hot = self._cur_temp >= self._target_temp + self._hot_tolerance
+
+            min_temp = self._target_temp - self._cold_tolerance
+            max_temp = self._target_temp + self._hot_tolerance
+
             if self._is_device_active:
-                if (self.ac_mode and too_cold) or (not self.ac_mode and too_hot):
+                if (self.ac_mode and self._cur_temp <= min_temp) or (
+                    not self.ac_mode and self._cur_temp >= max_temp
+                ):
                     _LOGGER.debug("Turning off heater %s", self.heater_entity_id)
                     await self._async_heater_turn_off()
                 elif time is not None:
@@ -547,7 +556,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                         self.heater_entity_id,
                     )
                     await self._async_heater_turn_on()
-            elif (self.ac_mode and too_hot) or (not self.ac_mode and too_cold):
+            elif (self.ac_mode and self._cur_temp > max_temp) or (
+                not self.ac_mode and self._cur_temp < min_temp
+            ):
                 _LOGGER.debug("Turning on heater %s", self.heater_entity_id)
                 await self._async_heater_turn_on()
             elif time is not None:

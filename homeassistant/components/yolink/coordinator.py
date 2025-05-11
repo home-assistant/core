@@ -9,6 +9,7 @@ import logging
 from yolink.device import YoLinkDevice
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -21,9 +22,12 @@ _LOGGER = logging.getLogger(__name__)
 class YoLinkCoordinator(DataUpdateCoordinator[dict]):
     """YoLink DataUpdateCoordinator."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         device: YoLinkDevice,
         paired_device: YoLinkDevice | None = None,
     ) -> None:
@@ -34,7 +38,11 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         data at first update
         """
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=30)
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=timedelta(minutes=30),
         )
         self.device = device
         self.paired_device = paired_device
@@ -68,6 +76,11 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         except YoLinkAuthFailError as yl_auth_err:
             raise ConfigEntryAuthFailed from yl_auth_err
         except YoLinkClientError as yl_client_err:
+            _LOGGER.error(
+                "Failed to obtain device status, device: %s, error: %s ",
+                self.device.device_id,
+                yl_client_err,
+            )
             raise UpdateFailed from yl_client_err
         if device_state is not None:
             return device_state

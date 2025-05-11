@@ -7,5 +7,6 @@
   "documentation": "https://www.home-assistant.io/integrations/electric_kiwi",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "requirements": ["electrickiwi-api==0.8.5"]
+  "quality_scale": "bronze",
+  "requirements": ["electrickiwi-api==0.9.14"]
 }

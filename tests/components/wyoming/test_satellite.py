@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 import io
+import tempfile
 from typing import Any
 from unittest.mock import patch
 import wave
@@ -17,22 +18,24 @@ from wyoming.info import Info
 from wyoming.ping import Ping, Pong
 from wyoming.pipeline import PipelineStage, RunPipeline
 from wyoming.satellite import RunSatellite
+from wyoming.snd import Played
 from wyoming.timer import TimerCancelled, TimerFinished, TimerStarted, TimerUpdated
 from wyoming.tts import Synthesize
 from wyoming.vad import VoiceStarted, VoiceStopped
 from wyoming.wake import Detect, Detection
 
-from homeassistant.components import assist_pipeline, wyoming
+from homeassistant.components import assist_pipeline, assist_satellite, wyoming
 from homeassistant.components.wyoming.assist_satellite import WyomingAssistSatellite
 from homeassistant.components.wyoming.devices import SatelliteDevice
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import intent as intent_helper
+from homeassistant.helpers import entity_registry as er, intent as intent_helper
 from homeassistant.setup import async_setup_component
 
 from . import SATELLITE_INFO, WAKE_WORD_INFO, MockAsyncTcpClient
 
 from tests.common import MockConfigEntry
+from tests.components.tts.common import MockResultStream
 
 
 async def setup_config_entry(hass: HomeAssistant) -> MockConfigEntry:
@@ -65,7 +68,7 @@ def get_test_wav() -> bytes:
             wav_file.setnchannels(1)
 
             # Single frame
-            wav_file.writeframes(b"123")
+            wav_file.writeframes(b"1234")
 
         return wav_io.getvalue()
 
@@ -73,9 +76,14 @@ def get_test_wav() -> bytes:
 class SatelliteAsyncTcpClient(MockAsyncTcpClient):
     """Satellite AsyncTcpClient."""
 
-    def __init__(self, responses: list[Event]) -> None:
+    def __init__(
+        self, responses: list[Event], block_until_inject: bool = False
+    ) -> None:
         """Initialize client."""
         super().__init__(responses)
+
+        self.block_until_inject = block_until_inject
+        self._responses_ready = asyncio.Event()
 
         self.connect_event = asyncio.Event()
         self.run_satellite_event = asyncio.Event()
@@ -188,6 +196,9 @@ class SatelliteAsyncTcpClient(MockAsyncTcpClient):
 
     async def read_event(self) -> Event | None:
         """Receive."""
+        if self.block_until_inject and (not self.responses):
+            await self._responses_ready.wait()
+
         event = await super().read_event()
 
         # Keep sending audio chunks instead of None
@@ -196,6 +207,7 @@ class SatelliteAsyncTcpClient(MockAsyncTcpClient):
     def inject_event(self, event: Event) -> None:
         """Put an event in as the next response."""
         self.responses = [event, *self.responses]
+        self._responses_ready.set()
 
 
 async def test_satellite_pipeline(hass: HomeAssistant) -> None:
@@ -247,10 +259,6 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
             async_pipeline_from_audio_stream,
-        ),
-        patch(
-            "homeassistant.components.wyoming.assist_satellite.tts.async_get_media_source_audio",
-            return_value=("wav", get_test_wav()),
         ),
         patch("homeassistant.components.wyoming.assist_satellite._PING_SEND_DELAY", 0),
     ):
@@ -400,10 +408,11 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
         assert mock_client.synthesize.voice.name == "test voice"
 
         # Text-to-speech media
+        mock_tts_result_stream = MockResultStream(hass, "wav", get_test_wav())
         pipeline_event_callback(
             assist_pipeline.PipelineEvent(
                 assist_pipeline.PipelineEventType.TTS_END,
-                {"tts_output": {"media_id": "test media id"}},
+                {"tts_output": {"token": mock_tts_result_stream.token}},
             )
         )
         async with asyncio.timeout(1):
@@ -416,19 +425,13 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
         assert mock_client.tts_audio_chunk.rate == 22050
         assert mock_client.tts_audio_chunk.width == 2
         assert mock_client.tts_audio_chunk.channels == 1
-        assert mock_client.tts_audio_chunk.audio == b"123"
+        assert mock_client.tts_audio_chunk.audio == b"1234"
 
         # Pipeline finished
         pipeline_event_callback(
             assist_pipeline.PipelineEvent(assist_pipeline.PipelineEventType.RUN_END)
         )
         assert not device.is_active
-
-        # The client should have received another ping by now
-        async with asyncio.timeout(1):
-            await mock_client.ping_event.wait()
-
-        assert mock_client.ping is not None
 
         # Pipeline should automatically restart
         async with asyncio.timeout(1):
@@ -736,10 +739,6 @@ async def test_tts_not_wav(hass: HomeAssistant) -> None:
             wraps=_async_pipeline_from_audio_stream,
         ) as mock_run_pipeline,
         patch(
-            "homeassistant.components.wyoming.assist_satellite.tts.async_get_media_source_audio",
-            return_value=("mp3", bytes(1)),
-        ),
-        patch(
             "homeassistant.components.wyoming.assist_satellite.WyomingAssistSatellite._stream_tts",
             _stream_tts,
         ),
@@ -768,10 +767,11 @@ async def test_tts_not_wav(hass: HomeAssistant) -> None:
             await mock_client.synthesize_event.wait()
 
         # Text-to-speech media
+        mock_tts_result_stream = MockResultStream(hass, "mp3", bytes(1))
         event_callback(
             assist_pipeline.PipelineEvent(
                 assist_pipeline.PipelineEventType.TTS_END,
-                {"tts_output": {"media_id": "test media id"}},
+                {"tts_output": {"token": mock_tts_result_stream.token}},
             )
         )
 
@@ -1283,3 +1283,85 @@ async def test_timers(hass: HomeAssistant) -> None:
             timer_finished = mock_client.timer_finished
             assert timer_finished is not None
             assert timer_finished.id == timer_started.id
+
+
+async def test_announce(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test announce on satellite."""
+    assert await async_setup_component(hass, assist_pipeline.DOMAIN, {})
+
+    def async_process_play_media_url(hass: HomeAssistant, media_id: str) -> str:
+        # Don't create a URL
+        return media_id
+
+    with (
+        tempfile.NamedTemporaryFile(mode="wb+", suffix=".wav") as temp_wav_file,
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=SATELLITE_INFO,
+        ),
+        patch(
+            "homeassistant.components.wyoming.assist_satellite.AsyncTcpClient",
+            SatelliteAsyncTcpClient(responses=[], block_until_inject=True),
+        ) as mock_client,
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_process_play_media_url",
+            new=async_process_play_media_url,
+        ),
+    ):
+        # Use test WAV data for media
+        with wave.open(temp_wav_file.name, "wb") as wav_file:
+            wav_file.setframerate(22050)
+            wav_file.setsampwidth(2)
+            wav_file.setnchannels(1)
+            wav_file.writeframes(bytes(22050 * 2))  # 1 sec
+
+        temp_wav_file.seek(0)
+
+        entry = await setup_config_entry(hass)
+        device: SatelliteDevice = hass.data[wyoming.DOMAIN][entry.entry_id].device
+        assert device is not None
+
+        satellite_entry = next(
+            (
+                maybe_entry
+                for maybe_entry in er.async_entries_for_device(
+                    entity_registry, device.device_id
+                )
+                if maybe_entry.domain == assist_satellite.DOMAIN
+            ),
+            None,
+        )
+        assert satellite_entry is not None
+
+        async with asyncio.timeout(1):
+            await mock_client.connect_event.wait()
+            await mock_client.run_satellite_event.wait()
+
+        announce_task = hass.async_create_background_task(
+            hass.services.async_call(
+                assist_satellite.DOMAIN,
+                "announce",
+                {
+                    "entity_id": satellite_entry.entity_id,
+                    "media_id": temp_wav_file.name,
+                },
+                blocking=True,
+            ),
+            "wyoming_satellite_announce",
+        )
+
+        # Wait for audio to come from ffmpeg
+        async with asyncio.timeout(1):
+            await mock_client.tts_audio_start_event.wait()
+            await mock_client.tts_audio_chunk_event.wait()
+            await mock_client.tts_audio_stop_event.wait()
+
+            # Stop announcement from blocking
+            mock_client.inject_event(Played().event())
+            await announce_task
+
+        # Stop the satellite
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()

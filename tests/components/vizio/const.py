@@ -2,7 +2,6 @@
 
 from ipaddress import ip_address
 
-from homeassistant.components import zeroconf
 from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
     MediaPlayerDeviceClass,
@@ -27,6 +26,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PIN,
 )
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util import slugify
 
 NAME = "Vizio"
@@ -173,7 +173,7 @@ VIZIO_ZEROCONF_SERVICE_TYPE = "_viziocast._tcp.local."
 ZEROCONF_NAME = f"{NAME}.{VIZIO_ZEROCONF_SERVICE_TYPE}"
 ZEROCONF_HOST, ZEROCONF_PORT = HOST.split(":", maxsplit=2)
 
-MOCK_ZEROCONF_SERVICE_INFO = zeroconf.ZeroconfServiceInfo(
+MOCK_ZEROCONF_SERVICE_INFO = ZeroconfServiceInfo(
     ip_address=ip_address(ZEROCONF_HOST),
     ip_addresses=[ip_address(ZEROCONF_HOST)],
     hostname="mock_hostname",

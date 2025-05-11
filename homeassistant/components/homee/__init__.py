@@ -14,7 +14,20 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.COVER]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.VALVE,
+]
 
 type HomeeConfigEntry = ConfigEntry[Homee]
 
@@ -51,14 +64,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> boo
     entry.runtime_data = homee
     entry.async_on_unload(homee.disconnect)
 
-    async def _connection_update_callback(connected: bool) -> None:
+    def _connection_update_callback(connected: bool) -> None:
         """Call when the device is notified of changes."""
         if connected:
             _LOGGER.warning("Reconnected to Homee at %s", entry.data[CONF_HOST])
         else:
             _LOGGER.warning("Disconnected from Homee at %s", entry.data[CONF_HOST])
 
-    await homee.add_connection_listener(_connection_update_callback)
+    homee.add_connection_listener(_connection_update_callback)
 
     # create device register entry
     device_registry = dr.async_get(hass)

@@ -27,7 +27,6 @@ from homeassistant.components.camera.helper import get_camera_from_entity_id
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_PLATFORM,
     EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
 )
@@ -41,6 +40,7 @@ from homeassistant.util import dt as dt_util
 from .common import EMPTY_8_6_JPEG, STREAM_SOURCE, mock_turbo_jpeg
 
 from tests.common import (
+    MockEntityPlatform,
     async_fire_time_changed,
     help_test_all,
     import_and_test_deprecated_constant_enum,
@@ -300,13 +300,24 @@ async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_camera")
-async def test_snapshot_service_os_error(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+@pytest.mark.parametrize(
+    ("target", "side_effect"),
+    [
+        ("homeassistant.components.camera.os.makedirs", OSError),
+        (
+            "homeassistant.components.demo.camera.DemoCamera.async_camera_image",
+            TimeoutError,
+        ),
+    ],
+)
+async def test_snapshot_service_error(
+    hass: HomeAssistant, target: str, side_effect: Exception
 ) -> None:
-    """Test snapshot service with os error."""
+    """Test snapshot service with error."""
     with (
         patch.object(hass.config, "is_allowed_path", return_value=True),
-        patch("homeassistant.components.camera.os.makedirs", side_effect=OSError),
+        patch(target, side_effect=side_effect),
+        pytest.raises(HomeAssistantError),
     ):
         await hass.services.async_call(
             camera.DOMAIN,
@@ -317,8 +328,6 @@ async def test_snapshot_service_os_error(
             },
             blocking=True,
         )
-
-    assert "Can't write image to file:" in caplog.text
 
 
 @pytest.mark.usefixtures("mock_camera", "mock_stream")
@@ -826,7 +835,9 @@ def test_deprecated_state_constants(
     import_and_test_deprecated_constant_enum(caplog, module, enum, "STATE_", "2025.10")
 
 
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+def test_deprecated_supported_features_ints(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test deprecated supported features ints."""
 
     class MockCamera(camera.Camera):
@@ -836,6 +847,8 @@ def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) ->
             return 1
 
     entity = MockCamera()
+    entity.hass = hass
+    entity.platform = MockEntityPlatform(hass)
     assert entity.supported_features_compat is camera.CameraEntityFeature(1)
     assert "MockCamera" in caplog.text
     assert "is using deprecated supported features values" in caplog.text
@@ -1022,27 +1035,3 @@ async def test_camera_capabilities_changing_native_support(
     await hass.async_block_till_done()
 
     await _test_capabilities(hass, hass_ws_client, cam.entity_id, set(), set())
-
-
-@pytest.mark.usefixtures("enable_custom_integrations")
-async def test_deprecated_frontend_stream_type_logs(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test using (_attr_)frontend_stream_type will log."""
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
-
-    for entity_id in (
-        "camera.property_frontend_stream_type",
-        "camera.attr_frontend_stream_type",
-    ):
-        camera_obj = get_camera_from_entity_id(hass, entity_id)
-        assert camera_obj.frontend_stream_type == StreamType.WEB_RTC
-
-    assert (
-        "Detected that custom integration 'test' is overwriting the 'frontend_stream_type' property in the PropertyFrontendStreamTypeCamera class, which is deprecated and will be removed in Home Assistant 2025.6,"
-    ) in caplog.text
-    assert (
-        "Detected that custom integration 'test' is setting the '_attr_frontend_stream_type' attribute in the AttrFrontendStreamTypeCamera class, which is deprecated and will be removed in Home Assistant 2025.6,"
-    ) in caplog.text

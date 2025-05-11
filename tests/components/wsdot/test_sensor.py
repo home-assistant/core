@@ -5,7 +5,7 @@ import re
 
 import requests_mock
 
-import homeassistant.components.wsdot.sensor as wsdot
+from homeassistant.components.wsdot import sensor as wsdot
 from homeassistant.components.wsdot.sensor import (
     ATTR_DESCRIPTION,
     ATTR_TIME_UPDATED,

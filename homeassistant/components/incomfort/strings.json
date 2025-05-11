@@ -2,55 +2,82 @@
   "config": {
     "step": {
       "user": {
-        "description": "Set up new Intergas InComfort Lan2RF Gateway, some older systems might not need credentials to be set up. For newer devices authentication is required.",
+        "description": "Set up new Intergas gateway. Note that some older systems might not accept credentials to be set up. For newer devices authentication is required.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "host": "Hostname or IP-address of the Intergas InComfort Lan2RF Gateway.",
-          "username": "The username to log into the gateway. This is `admin` in most cases.",
-          "password": "The password to log into the gateway, is printed at the bottom of the Lan2RF Gateway or is `intergas` for some older devices."
+          "host": "Hostname or IP-address of the Intergas gateway.",
+          "username": "The username to log in to the gateway. This is `admin` in most cases.",
+          "password": "The password to log in to the gateway, is printed at the bottom of the gateway or is `intergas` for some older devices."
         }
+      },
+      "dhcp_auth": {
+        "title": "Set up Intergas gateway",
+        "description": "Please enter authentication details for gateway {host}",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::incomfort::config::step::user::data_description::username%]",
+          "password": "[%key:component::incomfort::config::step::user::data_description::password%]"
+        }
+      },
+      "dhcp_confirm": {
+        "title": "Set up Intergas gateway",
+        "description": "Do you want to set up the discovered Intergas gateway ({host})?"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Correct the gateway password."
+        },
+        "description": "Re-authenticate to the gateway."
       }
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "auth_error": "Invalid credentials.",
-      "no_heaters": "No heaters found.",
-      "not_found": "No Lan2RF gateway found.",
-      "timeout_error": "Time out when connection to Lan2RF gateway.",
-      "unknown": "Unknown error when connection to Lan2RF gateway."
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
-      "auth_error": "[%key:component::incomfort::config::abort::auth_error%]",
-      "no_heaters": "[%key:component::incomfort::config::abort::no_heaters%]",
-      "not_found": "[%key:component::incomfort::config::abort::not_found%]",
-      "timeout_error": "[%key:component::incomfort::config::abort::timeout_error%]",
-      "unknown": "[%key:component::incomfort::config::abort::unknown%]"
+      "auth_error": "Invalid credentials.",
+      "no_heaters": "No heaters found.",
+      "not_found": "No gateway found.",
+      "timeout_error": "Time out when connecting to the gateway.",
+      "unknown": "Unknown error when connecting to the gateway."
     }
   },
-  "issues": {
-    "deprecated_yaml_import_issue_unknown": {
-      "title": "YAML import failed with unknown error",
-      "description": "Configuring {integration_title} using YAML is being removed but there was an unknown error while importing your existing configuration.\nSetup will not proceed.\n\nVerify that your {integration_title} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually."
+  "exceptions": {
+    "no_heaters": {
+      "message": "[%key:component::incomfort::config::error::no_heaters%]"
     },
-    "deprecated_yaml_import_issue_auth_error": {
-      "title": "YAML import failed due to an authentication error",
-      "description": "Configuring {integration_title} using YAML is being removed but there was an authentication error while importing your existing configuration.\nSetup will not proceed.\n\nVerify that your {integration_title} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually."
+    "not_found": {
+      "message": "[%key:component::incomfort::config::error::not_found%]"
     },
-    "deprecated_yaml_import_issue_no_heaters": {
-      "title": "YAML import failed because no heaters were found",
-      "description": "Configuring {integration_title} using YAML is being removed but no heaters were found while importing your existing configuration.\nSetup will not proceed.\n\nVerify that your {integration_title} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually."
+    "timeout_error": {
+      "message": "[%key:component::incomfort::config::error::timeout_error%]"
     },
-    "deprecated_yaml_import_issue_not_found": {
-      "title": "YAML import failed because no gateway was found",
-      "description": "Configuring {integration_title} using YAML is being removed but no Lan2RF gateway was found while importing your existing configuration.\nSetup will not proceed.\n\nVerify that your {integration_title} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually."
-    },
-    "deprecated_yaml_import_issue_timeout_error": {
-      "title": "YAML import failed because of timeout issues",
-      "description": "Configuring {integration_title} using YAML is being removed but there was a timeout while connecting to your {integration_title} while importing your existing configuration.\nSetup will not proceed.\n\nVerify that your {integration_title} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually."
+    "unknown": {
+      "message": "[%key:component::incomfort::config::error::unknown%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Intergas gateway options",
+        "data": {
+          "legacy_setpoint_status": "Legacy setpoint handling"
+        },
+        "data_description": {
+          "legacy_setpoint_status": "Some older gateway models with an older firmware versions might not update the thermostat setpoint and override settings correctly. Enable this option if you experience issues in updating the setpoint for your thermostat. It will use the actual setpoint of the thermostat instead of the override. As side effect is that it might take a few minutes before the setpoint is updated."
+        }
+      }
     }
   },
   "entity": {
@@ -91,14 +118,15 @@
           "tapwater_int": "Tap water internal",
           "sensor_test": "Sensor test",
           "central_heating": "Central heating",
-          "standby": "Stand-by",
+          "standby": "[%key:common::state::standby%]",
+          "off": "[%key:common::state::off%]",
           "postrun_boyler": "Post run boiler",
           "service": "Service",
           "tapwater": "Tap water",
           "postrun_ch": "Post run central heating",
           "boiler_int": "Boiler internal",
           "buffer": "Buffer",
-          "sensor_fault_after_self_check_e0": "Sensor fault after self check",
+          "sensor_fault_after_self_check_e0": "Sensor fault after self-check",
           "cv_temperature_too_high_e1": "Temperature too high",
           "s1_and_s2_interchanged_e2": "S1 and S2 interchanged",
           "no_flame_signal_e4": "No flame signal",

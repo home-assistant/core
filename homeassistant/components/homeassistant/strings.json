@@ -12,7 +12,7 @@
     },
     "imperial_unit_system": {
       "title": "The imperial unit system is deprecated",
-      "description": "The imperial unit system is deprecated and your system is currently using us customary. Please update your configuration to use the us customary unit system and reload the core configuration to fix this issue."
+      "description": "The imperial unit system is deprecated and your system is currently using US customary. Please update your configuration to use the US customary unit system and reload the Core configuration to fix this issue."
     },
     "deprecated_yaml": {
       "title": "The {integration_title} YAML configuration is being removed",
@@ -44,7 +44,7 @@
     },
     "no_platform_setup": {
       "title": "Unused YAML configuration for the {platform} integration",
-      "description": "It's not possible to configure {platform} {domain} by adding `{platform_key}` to the {domain} configuration. Please check the documentation for more information on how to set up this integration.\n\nTo resolve this:\n1. Remove `{platform_key}` occurences from the `{domain}:` configuration in your YAML configuration file.\n2. Restart Home Assistant.\n\nExample that should be removed:\n{yaml_example}"
+      "description": "It's not possible to configure {platform} {domain} by adding `{platform_key}` to the {domain} configuration. Please check the documentation for more information on how to set up this integration.\n\nTo resolve this:\n1. Remove `{platform_key}` occurrences from the `{domain}:` configuration in your YAML configuration file.\n2. Restart Home Assistant.\n\nExample that should be removed:\n{yaml_example}"
     },
     "storage_corruption": {
       "title": "Storage corruption detected for {storage_key}",
@@ -111,8 +111,8 @@
       "description": "Checks the Home Assistant YAML-configuration files for errors. Errors will be shown in the Home Assistant logs."
     },
     "reload_core_config": {
-      "name": "Reload core configuration",
-      "description": "Reloads the core configuration from the YAML-configuration."
+      "name": "Reload Core configuration",
+      "description": "Reloads the Core configuration from the YAML-configuration."
     },
     "restart": {
       "name": "[%key:common::action::restart%]",
@@ -160,7 +160,7 @@
     },
     "update_entity": {
       "name": "Update entity",
-      "description": "Forces one or more entities to update its data.",
+      "description": "Forces one or more entities to update their data.",
       "fields": {
         "entity_id": {
           "name": "Entities to update",
@@ -188,7 +188,7 @@
     },
     "reload_all": {
       "name": "Reload all",
-      "description": "Reload all YAML configuration that can be reloaded without restarting Home Assistant."
+      "description": "Reloads all YAML configuration that can be reloaded without restarting Home Assistant."
     }
   },
   "exceptions": {

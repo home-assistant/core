@@ -370,7 +370,109 @@
     "animalSetAchievements": {},
     "stableAchievements": {},
     "petSetCompleteAchievs": [],
-    "quests": {},
+    "quests": {
+      "atom1": {
+        "text": "Angriff des Banalen, Teil 1: Abwasch-Katastrophe!",
+        "notes": "Du erreichst die Ufer des Waschbeckensees für eine wohlverdiente Auszeit ... Aber der See ist verschmutzt mit nicht abgespültem Geschirr! Wie ist das passiert? Wie auch immer, Du kannst den See jedenfalls nicht in diesem Zustand lassen. Es gibt nur eine Sache die Du tun kannst: Abspülen und den Ferienort retten! Dazu musst Du aber Seife für den Abwasch finden. Viel Seife ...",
+        "completion": "Nach gründlichem Schrubben ist das Geschirr sicher am Ufer gestapelt! Du trittst zurück und begutachtest stolz Deiner Hände Arbeit.",
+        "group": "questGroupAtom",
+        "prerequisite": {
+          "lvl": 15
+        },
+        "value": 4,
+        "lvl": 15,
+        "category": "unlockable",
+        "collect": {
+          "soapBars": {
+            "text": "Seifenstücke",
+            "count": 20
+          }
+        },
+        "drop": {
+          "items": [
+            {
+              "type": "quests",
+              "key": "atom2",
+              "text": "Das Monster vom KochLess (Schriftrolle)",
+              "onlyOwner": true
+            }
+          ],
+          "gp": 7,
+          "exp": 50
+        },
+        "key": "atom1"
+      },
+      "goldenknight1": {
+        "text": "Die goldene Ritterin, Teil 1: Ein ernstes Gespräch",
+        "notes": "Die goldene Ritterin ist Habiticanern mit ihrer Kritik ganz schön auf die Nerven gegangen. Nicht alle Tagesaufgaben erledigt? Eine negative Gewohnheit angeklickt? Sie nimmt dies zum Anlass Dich zu bedrängen, dass Du doch ihrem Beispiel folgen sollst. Sie ist das leuchtende Beispiel eines perfekten Habiticaners und Du bist nichts als ein Versager. Das ist ja mal gar nicht nett! Jeder macht Fehler. Man sollte deshalb nicht mit solcher Kritik drangsaliert werden. Vielleicht solltest Du einige Zeugenaussagen von verletzten Habiticanern zusammentragen und die Goldene Ritterin mal ordentlich zurechtweisen!",
+        "completion": "Schau Dir nur all diese Zeugenaussagen an! Bestimmt wird das reichen, um die Goldene Ritterin zu überzeugen. Nun musst Du sie nur noch finden.",
+        "group": "questGroupGoldenknight",
+        "value": 4,
+        "lvl": 40,
+        "category": "unlockable",
+        "collect": {
+          "testimony": {
+            "text": "Zeugenaussagen",
+            "count": 60
+          }
+        },
+        "drop": {
+          "items": [
+            {
+              "type": "quests",
+              "key": "goldenknight2",
+              "text": "Die goldene Ritterin Teil 2: Die goldene Ritterin (Schriftrolle)",
+              "onlyOwner": true
+            }
+          ],
+          "gp": 15,
+          "exp": 120
+        },
+        "key": "goldenknight1"
+      },
+      "dustbunnies": {
+        "text": "Die ungezähmten Staubmäuse",
+        "notes": "Es ist schon etwas her, seit Du hier drinnen das letzte Mal Staub gewischt hast, aber Du sorgst dich nicht allzusehr - ein Wenig Staub hat noch nie jemandem geschadet, oder? Erst, als Du Deine Hand in eine der staubigsten Ecken steckst und einen Biss spürst, erinnerst du dich an @InspectorCaracals Warnung: Harmlosen Staub zu lange in Ruhe zu lassen, verwandelt ihn in boshafte Staubmäuse! Du solltest sie besser besiegen, bevor sie ganz Habitica mit feinen Schmutzpartikeln bedecken!",
+        "group": "questGroupEarnable",
+        "completion": "Die Staubmäuse verschwinden in einer Rauch-, äh… Staubwolke. Als sich der Staub legt, siehst du dich um. Du hast vergessen, wie hübsch es hier doch aussieht, wenn es sauber ist. Du erkennst einen kleinen Haufen Gold, wo der Staub vorher war. Huch, du hattest dich schon gefragt, wo er abgeblieben war!",
+        "value": 1,
+        "category": "unlockable",
+        "boss": {
+          "name": "Ungezähmte Staubmäuse",
+          "hp": 100,
+          "str": 0.5,
+          "def": 1
+        },
+        "drop": {
+          "gp": 8,
+          "exp": 42
+        },
+        "key": "dustbunnies"
+      },
+      "basilist": {
+        "text": "Der Basi-List",
+        "notes": "Da ist ein Aufruhr auf dem Marktplatz – es sieht ganz so aus, als ob man lieber in die andere Richtung rennen sollte. Da Du aber ein mutiger Abenteurer bist, rennst Du stattdessen darauf zu und entdeckst einen Basi-List, der sich aus einem Haufen unerledigter Aufgaben geformt hat! Alle umstehenden Habiticaner sind aus Angst vor der Länge des Basi-Lists gelähmt und können nicht anfangen zu arbeiten. Von irgendwo in der Nähe hörst Du @Arcosine schreien: \"Schnell! Erledige Deine To-Dos und Tagesaufgaben, um dem Monster die Zähne zu entfernen, bevor sich jemand am Papier schneidet!\" Greife schnell an, Abenteurer, und hake etwas ab - aber Vorsicht! Wenn Du irgendwelche Tagesaufgaben nicht erledigst, wird der Basi-List Dich und Deine Party angreifen!",
+        "group": "questGroupEarnable",
+        "completion": "Der Basi-List ist in Papierschnitzel zerfallen, die sanft in Regenbogenfarben schimmern. \"Puh!\" sagt @Arcosine. \"Gut, dass ihr gerade hier wart!\" Du fühlst Dich erfahrener als vorher und sammelst ein paar verstreute Goldstücke zwischen den Papierstücken auf.",
+        "goldValue": 100,
+        "category": "unlockable",
+        "unlockCondition": {
+          "condition": "party invite",
+          "text": "Lade Freunde ein"
+        },
+        "boss": {
+          "name": "Der Basi-List",
+          "hp": 100,
+          "str": 0.5,
+          "def": 1
+        },
+        "drop": {
+          "gp": 8,
+          "exp": 42
+        },
+        "key": "basilist"
+      }
+    },
     "questsByLevel": {},
     "userCanOwnQuestCategories": [],
     "itemList": {
@@ -450,11 +552,61 @@
     "special": {},
     "dropEggs": {},
     "questEggs": {},
-    "eggs": {},
+    "eggs": {
+      "Wolf": {
+        "text": "Wolfsjunges",
+        "mountText": "Wolfs-Reittier",
+        "adjective": "ein treues",
+        "value": 3,
+        "key": "Wolf",
+        "notes": "Finde ein Schlüpfelixier, das Du über dieses Ei gießen kannst, damit ein ein treues Wolfsjunges schlüpfen kann."
+      },
+      "TigerCub": {
+        "text": "Tigerjunges",
+        "mountText": "Tiger-Reittier",
+        "adjective": "ein wildes",
+        "value": 3,
+        "key": "TigerCub",
+        "notes": "Finde ein Schlüpfelixier, das Du über dieses Ei gießen kannst, damit ein ein wildes Tigerjunges schlüpfen kann."
+      },
+      "PandaCub": {
+        "text": "Pandajunges",
+        "mountText": "Panda-Reittier",
+        "adjective": "ein sanftes",
+        "value": 3,
+        "key": "PandaCub",
+        "notes": "Finde ein Schlüpfelixier, das Du über dieses Ei gießen kannst, damit ein ein sanftes Pandajunges schlüpfen kann."
+      }
+    },
     "dropHatchingPotions": {},
     "premiumHatchingPotions": {},
     "wackyHatchingPotions": {},
-    "hatchingPotions": {},
+    "hatchingPotions": {
+      "Base": {
+        "value": 2,
+        "key": "Base",
+        "text": "Normales",
+        "notes": "Gieße dies über ein Ei und es wird ein Normales Haustier daraus schlüpfen.",
+        "premium": false,
+        "limited": false
+      },
+      "White": {
+        "value": 2,
+        "key": "White",
+        "text": "Weißes",
+        "notes": "Gieße dies über ein Ei und es wird ein Weißes Haustier daraus schlüpfen.",
+        "premium": false,
+        "limited": false
+      },
+      "Desert": {
+        "value": 2,
+        "key": "Desert",
+        "text": "Wüstenfarbenes",
+        "notes": "Gieße dies über ein Ei und es wird ein Wüstenfarbenes Haustier daraus schlüpfen.",
+        "premium": false,
+        "limited": false
+      }
+    },
     "pets": {},
     "premiumPets": {},
     "questPets": {},
@@ -466,7 +618,46 @@
     "questMounts": {},
     "specialMounts": {},
     "mountInfo": {},
-    "food": {}
+    "food": {
+      "Meat": {
+        "text": "Fleisch",
+        "textA": "Fleisch",
+        "textThe": "das Fleisch",
+        "target": "Base",
+        "value": 1,
+        "key": "Meat",
+        "notes": "Verfüttere dies an ein Haustier und es wächst bald zu einem kräftigen Reittier heran.",
+        "canDrop": true
+      },
+      "Milk": {
+        "text": "Milch",
+        "textA": "Milch",
+        "textThe": "die Milch",
+        "target": "White",
+        "value": 1,
+        "key": "Milk",
+        "notes": "Verfüttere dies an ein Haustier und es wächst bald zu einem kräftigen Reittier heran.",
+        "canDrop": true
+      },
+      "Potatoe": {
+        "text": "Kartoffel",
+        "textA": "eine Kartoffel",
+        "textThe": "die Kartoffel",
+        "target": "Desert",
+        "value": 1,
+        "key": "Potatoe",
+        "notes": "Verfüttere dies an ein Haustier und es wächst bald zu einem kräftigen Reittier heran.",
+        "canDrop": true
+      },
+      "Saddle": {
+        "sellWarningNote": "Hey! Das ist ein sehr nützlicher Gegenstand! Weißt Du, wie Du den Sattel mit Deinen Haustieren nutzt?",
+        "text": "Magischer Sattel",
+        "value": 5,
+        "notes": "Lässt eines Deiner Haustiere augenblicklich zum Reittier heranwachsen.",
+        "canDrop": false,
+        "key": "Saddle"
+      }
+    }
   },
   "appVersion": "5.29.2"
 }

@@ -42,11 +42,11 @@ async def test_entities(
 @pytest.mark.parametrize(
     ("light_id", "data", "set_brightness"),
     [
-        (0, {ATTR_ENTITY_ID: "light.light"}, 100.0),
+        (0, {ATTR_ENTITY_ID: "light.light"}, 100),
         (
             1,
             {ATTR_ENTITY_ID: "light.dimmable_light", ATTR_BRIGHTNESS: 50},
-            19.607843137254903,
+            20,
         ),
     ],
 )

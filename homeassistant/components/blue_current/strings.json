@@ -5,7 +5,7 @@
         "data": {
           "api_token": "[%key:common::config_flow::data::api_token%]"
         },
-        "description": "Enter your Blue Current api token",
+        "description": "Enter your Blue Current API token",
         "title": "Authentication"
       }
     },
@@ -19,7 +19,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "wrong_account": "Wrong account: Please authenticate with the api key for {email}."
+      "wrong_account": "Wrong account: Please authenticate with the API token for {email}."
     }
   },
   "entity": {
@@ -28,20 +28,20 @@
         "name": "Activity",
         "state": {
           "available": "Available",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "unavailable": "Unavailable",
-          "error": "Error",
+          "error": "[%key:common::state::error%]",
           "offline": "Offline"
         }
       },
       "vehicle_status": {
         "name": "Vehicle status",
         "state": {
-          "standby": "Standby",
+          "standby": "[%key:common::state::standby%]",
           "vehicle_detected": "Detected",
           "ready": "Ready",
           "no_power": "No power",
-          "vehicle_error": "Error"
+          "vehicle_error": "[%key:common::state::error%]"
         }
       },
       "actual_v1": {

@@ -29,7 +29,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
+  action-exceptions: done
   config-entry-unloading:
     status: done
     comment: |
@@ -43,8 +43,8 @@ rules:
   integration-owner: done
   log-when-unavailable: todo
   parallel-updates: done
-  reauthentication-flow: todo
-  test-coverage: todo
+  reauthentication-flow: done
+  test-coverage: done
 
   # Gold
   devices: done
@@ -59,12 +59,12 @@ rules:
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices: todo
-  entity-category: todo
-  entity-device-class: todo
-  entity-disabled-by-default: todo
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
-  icon-translations: todo
+  exception-translations: done
+  icon-translations: done
   reconfiguration-flow: todo
   repair-issues: todo
   stale-devices: todo

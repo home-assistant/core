@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pyezviz import HTTPError, PyEzvizError
+from pyezvizapi import HTTPError, PyEzvizError
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -12,13 +12,11 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_COORDINATOR, DOMAIN
-from .coordinator import EzvizDataUpdateCoordinator
+from .coordinator import EzvizConfigEntry, EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
 
 PARALLEL_UPDATES = 1
@@ -30,12 +28,12 @@ UPDATE_ENTITY_TYPES = UpdateEntityDescription(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: EzvizConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up EZVIZ sensors based on a config entry."""
-    coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         EzvizUpdateEntity(coordinator, camera, sensor, UPDATE_ENTITY_TYPES)

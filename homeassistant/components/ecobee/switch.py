@@ -8,14 +8,13 @@ from typing import Any
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import EcobeeData
+from . import EcobeeConfigEntry, EcobeeData
 from .climate import HASS_TO_ECOBEE_HVAC
-from .const import DOMAIN, ECOBEE_AUX_HEAT_ONLY
+from .const import ECOBEE_AUX_HEAT_ONLY
 from .entity import EcobeeBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,11 +24,11 @@ DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: EcobeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ecobee thermostat switch entity."""
-    data: EcobeeData = hass.data[DOMAIN]
+    data = config_entry.runtime_data
 
     entities: list[SwitchEntity] = [
         EcobeeVentilator20MinSwitch(

@@ -5,6 +5,22 @@
         "default": "mdi:check-decagram"
       }
     },
+    "number": {
+      "preconditioning_duration": {
+        "default": "mdi:fan-clock"
+      },
+      "target_percentage": {
+        "default": "mdi:battery-heart"
+      }
+    },
+    "select": {
+      "charge_mode": {
+        "default": "mdi:play-box"
+      },
+      "vehicle": {
+        "default": "mdi:car"
+      }
+    },
     "sensor": {
       "status": {
         "default": "mdi:car",
@@ -18,6 +34,9 @@
       },
       "ct_current": {
         "default": "mdi:gauge"
+      },
+      "slot_list": {
+        "default": "mdi:calendar-clock"
       }
     },
     "switch": {
@@ -35,12 +54,23 @@
         "state": {
           "off": "mdi:sleep-off"
         }
+      },
+      "price_cap": {
+        "default": "mdi:car-speed-limiter"
+      }
+    },
+    "time": {
+      "target_time": {
+        "default": "mdi:clock-end"
       }
     }
   },
   "services": {
     "list_charge_slots": {
       "service": "mdi:clock-start"
+    },
+    "set_price_cap": {
+      "service": "mdi:car-speed-limiter"
     }
   }
 }

@@ -20,9 +20,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN as KONNECTED_DOMAIN, SIGNAL_DS18B20_NEW
+from .const import DOMAIN, SIGNAL_DS18B20_NEW
 
 SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "temperature": SensorEntityDescription(
@@ -43,10 +43,10 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors attached to a Konnected device from a config entry."""
-    data = hass.data[KONNECTED_DOMAIN]
+    data = hass.data[DOMAIN]
     device_id = config_entry.data["id"]
 
     # Initialize all DHT sensors.
@@ -121,7 +121,7 @@ class KonnectedSensor(SensorEntity):
             name += f" {description.name}"
         self._attr_name = name
 
-        self._attr_device_info = DeviceInfo(identifiers={(KONNECTED_DOMAIN, device_id)})
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_id)})
 
     async def async_added_to_hass(self) -> None:
         """Store entity_id and register state change callback."""

@@ -267,7 +267,7 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
         if discovery := self._discovery_info:
             self._discovered_devices[discovery.address] = discovery
         else:
-            current_addresses = self._async_current_ids()
+            current_addresses = self._async_current_ids(include_ignore=False)
             current_unique_names = {
                 entry.data.get(CONF_LOCAL_NAME)
                 for entry in self._async_current_entries()

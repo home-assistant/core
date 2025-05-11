@@ -50,8 +50,12 @@ async def test_adam_change_select_entity(
     )
 
 
+@pytest.mark.parametrize("chosen_env", ["m_adam_cooling"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
 async def test_adam_select_regulation_mode(
-    hass: HomeAssistant, mock_smile_adam_3: MagicMock, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    mock_smile_adam_heat_cool: MagicMock,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test a regulation_mode select.
 
@@ -73,8 +77,8 @@ async def test_adam_select_regulation_mode(
         },
         blocking=True,
     )
-    assert mock_smile_adam_3.set_select.call_count == 1
-    mock_smile_adam_3.set_select.assert_called_with(
+    assert mock_smile_adam_heat_cool.set_select.call_count == 1
+    mock_smile_adam_heat_cool.set_select.assert_called_with(
         "select_regulation_mode",
         "bc93488efab249e5bc54fd7e175a6f91",
         "heating",
@@ -91,6 +95,8 @@ async def test_legacy_anna_select_entities(
     assert not hass.states.get("select.anna_thermostat_schedule")
 
 
+@pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
 async def test_adam_select_unavailable_regulation_mode(
     hass: HomeAssistant, mock_smile_anna: MagicMock, init_integration: MockConfigEntry
 ) -> None:

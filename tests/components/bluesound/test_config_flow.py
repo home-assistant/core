@@ -1,15 +1,16 @@
 """Test the Bluesound config flow."""
 
+from ipaddress import IPv4Address, IPv6Address
 from unittest.mock import AsyncMock
 
 from pyblu.errors import PlayerUnreachableError
 
 from homeassistant.components.bluesound.const import DOMAIN
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import PlayerMocks
 
@@ -121,8 +122,8 @@ async def test_zeroconf_flow_success(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=ZeroconfServiceInfo(
-            ip_address="1.1.1.1",
-            ip_addresses=["1.1.1.1"],
+            ip_address=IPv4Address("1.1.1.1"),
+            ip_addresses=[IPv4Address("1.1.1.1")],
             port=11000,
             hostname="player-name1111",
             type="_musc._tcp.local.",
@@ -160,8 +161,8 @@ async def test_zeroconf_flow_cannot_connect(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=ZeroconfServiceInfo(
-            ip_address="1.1.1.1",
-            ip_addresses=["1.1.1.1"],
+            ip_address=IPv4Address("1.1.1.1"),
+            ip_addresses=[IPv4Address("1.1.1.1")],
             port=11000,
             hostname="player-name1111",
             type="_musc._tcp.local.",
@@ -187,8 +188,8 @@ async def test_zeroconf_flow_already_configured(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=ZeroconfServiceInfo(
-            ip_address="1.1.1.2",
-            ip_addresses=["1.1.1.2"],
+            ip_address=IPv4Address("1.1.1.2"),
+            ip_addresses=[IPv4Address("1.1.1.2")],
             port=11000,
             hostname="player-name1112",
             type="_musc._tcp.local.",
@@ -203,3 +204,23 @@ async def test_zeroconf_flow_already_configured(
     assert config_entry.data[CONF_HOST] == "1.1.1.2"
 
     player_mocks.player_data_for_already_configured.player.sync_status.assert_called_once()
+
+
+async def test_zeroconf_flow_no_ipv4_address(hass: HomeAssistant) -> None:
+    """Test abort flow when no ipv4 address is found in zeroconf data."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=IPv6Address("2001:db8::1"),
+            ip_addresses=[IPv6Address("2001:db8::1")],
+            port=11000,
+            hostname="player-name1112",
+            type="_musc._tcp.local.",
+            name="player-name._musc._tcp.local.",
+            properties={},
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_ipv4_address"

@@ -6,6 +6,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 import html
 import re
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 import yarl
@@ -13,7 +14,7 @@ import yarl
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.util import yaml
+from homeassistant.util import yaml as yaml_util
 
 from .models import Blueprint
 from .schemas import BLUEPRINT_SCHEMA, is_blueprint_config
@@ -115,7 +116,7 @@ def _extract_blueprint_from_community_topic(
         block_content = html.unescape(block_content.strip())
 
         try:
-            data = yaml.parse_yaml(block_content)
+            data = yaml_util.parse_yaml(block_content)
         except HomeAssistantError:
             if block_syntax == "yaml":
                 raise
@@ -167,7 +168,7 @@ async def fetch_blueprint_from_github_url(
 
     resp = await session.get(import_url, raise_for_status=True)
     raw_yaml = await resp.text()
-    data = yaml.parse_yaml(raw_yaml)
+    data = yaml_util.parse_yaml(raw_yaml)
     assert isinstance(data, dict)
     blueprint = Blueprint(data, schema=BLUEPRINT_SCHEMA)
 
@@ -195,8 +196,8 @@ async def fetch_blueprint_from_github_gist_url(
     )
     gist = await resp.json()
 
-    blueprint = None
-    filename = None
+    blueprint: Blueprint | None = None
+    filename: str | None = None
     content: str
 
     for filename, info in gist["files"].items():
@@ -204,7 +205,7 @@ async def fetch_blueprint_from_github_gist_url(
             continue
 
         content = info["content"]
-        data = yaml.parse_yaml(content)
+        data = yaml_util.parse_yaml(content)
 
         if not is_blueprint_config(data):
             continue
@@ -218,6 +219,8 @@ async def fetch_blueprint_from_github_gist_url(
             "No valid blueprint found in the gist. The blueprint file needs to end with"
             " '.yaml'"
         )
+    if TYPE_CHECKING:
+        assert isinstance(filename, str)
 
     return ImportedBlueprint(
         f"{gist['owner']['login']}/{filename[:-5]}", content, blueprint
@@ -235,7 +238,7 @@ async def fetch_blueprint_from_website_url(
 
     resp = await session.get(url, raise_for_status=True)
     raw_yaml = await resp.text()
-    data = yaml.parse_yaml(raw_yaml)
+    data = yaml_util.parse_yaml(raw_yaml)
     assert isinstance(data, dict)
     blueprint = Blueprint(data, schema=BLUEPRINT_SCHEMA)
 
@@ -252,7 +255,7 @@ async def fetch_blueprint_from_generic_url(
 
     resp = await session.get(url, raise_for_status=True)
     raw_yaml = await resp.text()
-    data = yaml.parse_yaml(raw_yaml)
+    data = yaml_util.parse_yaml(raw_yaml)
 
     assert isinstance(data, dict)
     blueprint = Blueprint(data, schema=BLUEPRINT_SCHEMA)

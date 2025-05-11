@@ -8,7 +8,7 @@
     "step": {
       "user": {
         "description": "In order to access the Flume Personal API, you will need to request a 'Client ID' and 'Client Secret' at https://portal.flumetech.com/settings#token",
-        "title": "Connect to your Flume Account",
+        "title": "Connect to your Flume account",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "client_secret": "Client Secret",
@@ -18,7 +18,7 @@
       },
       "reauth_confirm": {
         "description": "The password for {username} is no longer valid.",
-        "title": "Reauthenticate your Flume Account",
+        "title": "Reauthenticate your Flume account",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         }
@@ -65,11 +65,11 @@
   "services": {
     "list_notifications": {
       "name": "List notifications",
-      "description": "Return user notifications.",
+      "description": "Returns a list of fetched user notifications.",
       "fields": {
         "config_entry": {
           "name": "Flume",
-          "description": "The flume config entry for which to return notifications."
+          "description": "The Flume config entry for which to return notifications."
         }
       }
     }

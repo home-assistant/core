@@ -66,7 +66,10 @@ class SonosAlarms(SonosHouseholdCoordinator):
         event_id = event.variables["alarm_list_version"].split(":")[-1]
         event_id = int(event_id)
         async with self.cache_update_lock:
-            if event_id <= self.last_processed_event_id:
+            if (
+                self.last_processed_event_id
+                and event_id <= self.last_processed_event_id
+            ):
                 # Skip updates if this event_id has already been seen
                 return
             speaker.event_stats.process(event)

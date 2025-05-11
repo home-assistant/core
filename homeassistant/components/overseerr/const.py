@@ -27,7 +27,7 @@ REGISTERED_NOTIFICATIONS = (
 JSON_PAYLOAD = (
     '"{\\"notification_type\\":\\"{{notification_type}}\\",\\"subject\\":\\"{{subject}'
     '}\\",\\"message\\":\\"{{message}}\\",\\"image\\":\\"{{image}}\\",\\"{{media}}\\":'
-    '{\\"media_type\\":\\"{{media_type}}\\",\\"tmdb_idd\\":\\"{{media_tmdbid}}\\",\\"t'
+    '{\\"media_type\\":\\"{{media_type}}\\",\\"tmdb_id\\":\\"{{media_tmdbid}}\\",\\"t'
     'vdb_id\\":\\"{{media_tvdbid}}\\",\\"status\\":\\"{{media_status}}\\",\\"status4k'
     '\\":\\"{{media_status4k}}\\"},\\"{{request}}\\":{\\"request_id\\":\\"{{request_id'
     '}}\\",\\"requested_by_email\\":\\"{{requestedBy_email}}\\",\\"requested_by_userna'

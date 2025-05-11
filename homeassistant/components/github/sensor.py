@@ -14,13 +14,12 @@ from homeassistant.components.sensor import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import GithubConfigEntry
 from .const import DOMAIN
-from .coordinator import GitHubDataUpdateCoordinator
+from .coordinator import GithubConfigEntry, GitHubDataUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -140,7 +139,7 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GithubConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up GitHub sensor based on a config entry."""
     repositories = entry.runtime_data
