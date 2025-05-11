@@ -8,13 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    CONFIG_FLOW_VERSION,
-    DOMAIN,
-    IRM_KMI_TO_HA_CONDITION_MAP,
-    PLATFORMS,
-    USER_AGENT,
-)
+from .const import DOMAIN, IRM_KMI_TO_HA_CONDITION_MAP, PLATFORMS, USER_AGENT
 from .coordinator import IrmKmiCoordinator
 from .data import IrmKmiConfigEntry
 
@@ -63,21 +57,8 @@ async def async_reload_entry(hass: HomeAssistant, entry: IrmKmiConfigEntry) -> N
 
 
 async def async_migrate_entry(
-    _hass: HomeAssistant, config_entry: IrmKmiConfigEntry
+    _hass: HomeAssistant, _config_entry: IrmKmiConfigEntry
 ) -> bool:
     """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %d", config_entry.version)
-
-    if config_entry.version > CONFIG_FLOW_VERSION - 1:
-        # This means the user has downgraded from a future version.
-        _LOGGER.error(
-            "Downgrading configuration is not supported: your config version is %d, "
-            "the current version used by the integration is %d",
-            config_entry.version,
-            CONFIG_FLOW_VERSION,
-        )
-        return False
-
-    _LOGGER.debug("Migration to version %d successful", config_entry.version)
-
+    # There are no previous versions of the config entry at this time.
     return True

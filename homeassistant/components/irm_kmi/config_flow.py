@@ -99,7 +99,7 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_ZONE): EntitySelector(
                         EntitySelectorConfig(domain=ZONE_DOMAIN)
                     ),
-                    vol.Optional(
+                    vol.Required(
                         CONF_LANGUAGE_OVERRIDE, default="none"
                     ): SelectSelector(
                         SelectSelectorConfig(
