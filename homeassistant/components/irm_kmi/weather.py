@@ -7,7 +7,6 @@ from homeassistant.components.weather import (
     WeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -20,13 +19,14 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import IrmKmiCoordinator
+from .data import IrmKmiConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: IrmKmiConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the weather entry."""
@@ -41,7 +41,9 @@ class IrmKmiWeather(CoordinatorEntity, WeatherEntity):
         "Weather data from the Royal Meteorological Institute of Belgium meteo.be"
     )
 
-    def __init__(self, coordinator: IrmKmiCoordinator, entry: ConfigEntry) -> None:
+    def __init__(
+        self, coordinator: IrmKmiCoordinator, entry: IrmKmiConfigEntry
+    ) -> None:
         """Create a new instance of the weather entity from a configuration entry."""
         super().__init__(coordinator)
         WeatherEntity.__init__(self)

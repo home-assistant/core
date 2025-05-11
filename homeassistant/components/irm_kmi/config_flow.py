@@ -7,12 +7,7 @@ from irm_kmi_api import IrmKmiApiClient
 import voluptuous as vol
 
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_ZONE
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -32,6 +27,7 @@ from .const import (
     OUT_OF_BENELUX,
     USER_AGENT,
 )
+from .data import IrmKmiConfigEntry
 from .utils import get_config_value
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,7 +40,7 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: IrmKmiConfigEntry) -> OptionsFlow:
         """Create the options flow."""
         return IrmKmiOptionFlow(config_entry)
 
@@ -120,7 +116,7 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
 class IrmKmiOptionFlow(OptionsFlow):
     """Option flow for the IRM KMI integration, help change the options once the integration was configured."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: IrmKmiConfigEntry) -> None:
         """Initialize options flow."""
         self.current_config_entry = config_entry
 

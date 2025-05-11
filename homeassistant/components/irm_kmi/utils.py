@@ -3,22 +3,22 @@
 import logging
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .const import CONF_LANGUAGE_OVERRIDE, LANGS
+from .data import IrmKmiConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def disable_from_config(hass: HomeAssistant, config_entry: ConfigEntry):
+def disable_from_config(hass: HomeAssistant, config_entry: IrmKmiConfigEntry):
     """Disable the given configuration entry."""
 
     modify_from_config(hass, config_entry.entry_id, False)
 
 
-def enable_from_config(hass: HomeAssistant, config_entry: ConfigEntry):
+def enable_from_config(hass: HomeAssistant, config_entry: IrmKmiConfigEntry):
     """Enable the given configuration entry."""
 
     modify_from_config(hass, config_entry.entry_id, True)
@@ -42,7 +42,7 @@ def modify_from_config(hass: HomeAssistant, config_entry_id: str, enable: bool):
         )
 
 
-def get_config_value(config_entry: ConfigEntry, key: str) -> Any:
+def get_config_value(config_entry: IrmKmiConfigEntry, key: str) -> Any:
     """Get the value of key in the configuration.  If options were modified, they take priority."""
 
     if config_entry.options and key in config_entry.options:
@@ -50,7 +50,9 @@ def get_config_value(config_entry: ConfigEntry, key: str) -> Any:
     return config_entry.data[key]
 
 
-def preferred_language(hass: HomeAssistant, config_entry: ConfigEntry | None) -> str:
+def preferred_language(
+    hass: HomeAssistant, config_entry: IrmKmiConfigEntry | None
+) -> str:
     """Get the preferred language for the integration if it was overridden by the configuration."""
 
     if (
