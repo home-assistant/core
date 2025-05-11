@@ -68,8 +68,6 @@ from .entity import SqueezeboxEntity
 if TYPE_CHECKING:
     from . import SqueezeboxConfigEntry
 
-PARALLEL_UPDATES = 1
-
 SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
 

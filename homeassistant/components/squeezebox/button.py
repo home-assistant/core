@@ -18,8 +18,6 @@ from .entity import SqueezeboxEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-PARALLEL_UPDATES = 1
-
 HARDWARE_MODELS_WITH_SCREEN = [
     "Squeezebox Boom",
     "Squeezebox Radio",

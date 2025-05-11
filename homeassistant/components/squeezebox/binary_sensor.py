@@ -45,10 +45,6 @@ async def async_setup_entry(
     )
 
 
-# Coordinator is used to centralize the data updates
-PARALLEL_UPDATES = 0
-
-
 class ServerStatusBinarySensor(LMSStatusEntity, BinarySensorEntity):
     """LMS Status based sensor from LMS via cooridnatior."""
 
