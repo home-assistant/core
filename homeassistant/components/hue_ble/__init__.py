@@ -42,9 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HueBLEConfigEntry) -> bo
 
     entry.runtime_data = light
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setups(entry, ["light"])
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, ["light"])
+
     return True
 
 
