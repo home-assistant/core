@@ -9,6 +9,7 @@ from homeassistant.components.bluetooth import (
     async_scanner_count,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -42,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HueBLEConfigEntry) -> bo
 
     entry.runtime_data = light
 
-    await hass.config_entries.async_forward_entry_setups(entry, ["light"])
+    await hass.config_entries.async_forward_entry_setups(entry, [Platform.LIGHT])
 
     return True
 
@@ -50,4 +51,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: HueBLEConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: HueBLEConfigEntry) -> bool:
     """Unload a config entry."""
 
-    return await hass.config_entries.async_forward_entry_unload(entry, "light")
+    return await hass.config_entries.async_forward_entry_unload(entry, Platform.LIGHT)
