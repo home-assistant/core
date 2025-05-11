@@ -18,6 +18,7 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import RPC_COVER_UPDATE_TIME_SEC
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import ShellyBlockEntity, ShellyRpcEntity
 from .utils import get_device_entry_gen, get_rpc_key_ids
@@ -214,11 +215,11 @@ class RpcShellyCover(ShellyRpcEntity, CoverEntity):
         """Update the cover position every second."""
         await self.coordinator.device.update_status()
         self.async_write_ha_state()
-        await asyncio.sleep(1)
+        await asyncio.sleep(RPC_COVER_UPDATE_TIME_SEC)
         while self.is_closing or self.is_opening:
             await self.coordinator.device.update_status()
             self.async_write_ha_state()
-            await asyncio.sleep(1)
+            await asyncio.sleep(RPC_COVER_UPDATE_TIME_SEC)
         self._update_task = None
 
     async def async_close_cover(self, **kwargs: Any) -> None:
