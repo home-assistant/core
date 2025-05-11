@@ -38,7 +38,10 @@ def suppress_insecure_request_warning():
     https://github.com/colinodell/python-qnapstats/issues/96
     """
     with urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning):
-        yield
+        try:
+            yield
+        finally:
+            pass
 
 
 class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
