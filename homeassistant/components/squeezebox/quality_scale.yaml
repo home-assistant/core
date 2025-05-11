@@ -22,18 +22,18 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: done
-  config-entry-unloading: done
+  action-exceptions: todo
+  config-entry-unloading: todo
   docs-configuration-parameters: done
   docs-installation-parameters: done
-  entity-unavailable: done
+  entity-unavailable: todo
   integration-owner: done
-  log-when-unavailable: done
+  log-when-unavailable: todo
   parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: Integration doesn't have an auth flow.
-  test-coverage: done
+  test-coverage: todo
 
   # Gold
   devices: done
