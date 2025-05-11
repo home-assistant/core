@@ -182,23 +182,29 @@ async def _render_image(call: ServiceCall) -> ServiceResponse:
     if not response.data or not response.data[0].b64_json:
         raise HomeAssistantError("No image data returned")
 
-    if DOMAIN in call.hass.config.media_dirs:
-        source_dir_id = DOMAIN
-    else:
-        source_dir_id = list(call.hass.config.media_dirs)[0]
-    base_path = call.hass.config.media_dirs[source_dir_id]
-    directory = Path(base_path, DOMAIN)
-    directory.mkdir(parents=True, exist_ok=True)
     if len(call.data[CONF_PROMPT]) <= 32:
-        filename = f"{call.data[CONF_PROMPT].replace(' ', '_')}_{response.created}.png"
+        filename = f"{call.data[CONF_PROMPT].replace(' ', '_').replace('/', '_')}_{response.created}.png"
     else:
         filename = f"{hashlib.md5(call.data[CONF_PROMPT].encode('utf-8')).hexdigest()}_{response.created}.png"
-    file_path = directory / filename
+
+    if DOMAIN in call.hass.config.media_dirs:
+        source_dir_id = DOMAIN
+        base_path = call.hass.config.media_dirs[source_dir_id]
+        directory = Path(base_path)
+        media_path = f"/media/{DOMAIN}/{filename}"
+        file_path = directory / filename
+    else:
+        source_dir_id = list(call.hass.config.media_dirs)[0]
+        base_path = call.hass.config.media_dirs[source_dir_id]
+        directory = Path(base_path, DOMAIN)
+        file_path = directory / filename
+        media_path = f"/media/{source_dir_id}/{DOMAIN}/{filename}"
 
     raise_if_invalid_path(str(file_path))
 
     def save_image(b64_json: str, path: Path) -> None:
         """Save image to file."""
+        path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "wb") as image_file:
             image_file.write(base64.b64decode(b64_json))
 
@@ -210,9 +216,12 @@ async def _render_image(call: ServiceCall) -> ServiceResponse:
 
     response.data[0].url = get_url(call.hass) + async_sign_path(
         call.hass,
-        f"/media/{source_dir_id}/{DOMAIN}/{filename}",
+        media_path,
         timedelta(seconds=IMAGE_AUTH_EXPIRY_TIME),
     )
+
+    if not response.data[0].revised_prompt:
+        response.data[0].revised_prompt = call.data[CONF_PROMPT]
 
     return response.data[0].model_dump(exclude={"b64_json"})
 

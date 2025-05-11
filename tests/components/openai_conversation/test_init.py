@@ -187,7 +187,7 @@ async def test_generate_image_service(
 
     assert response == {
         "url": f"http://10.10.10.10:8123/media/local/openai_conversation/{filename}?authSig=bla",
-        "revised_prompt": "",
+        "revised_prompt": expected_args["prompt"],
     }
     assert len(mock_create.mock_calls) == 1
     assert mock_create.mock_calls[0][2] == expected_args
