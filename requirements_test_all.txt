@@ -1018,7 +1018,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==9.2.0
+ical==9.2.1
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -1597,7 +1597,7 @@ pyeiscp==0.0.7
 pyemoncms==0.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.26.0
+pyenphase==1.26.1
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1980,7 +1980,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.10.2
 
 # homeassistant.components.linkplay
-python-linkplay==0.2.4
+python-linkplay==0.2.5
 
 # homeassistant.components.matter
 python-matter-server==7.0.0
