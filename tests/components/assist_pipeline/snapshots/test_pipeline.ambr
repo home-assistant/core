@@ -1,0 +1,202 @@
+# serializer version: 1
+# name: test_pipeline_language_used_instead_of_conversation_language
+  list([
+    dict({
+      'data': dict({
+        'conversation_id': 'mock-ulid',
+        'language': 'en',
+        'pipeline': <ANY>,
+      }),
+      'type': <PipelineEventType.RUN_START: 'run-start'>,
+    }),
+    dict({
+      'data': dict({
+        'conversation_id': 'mock-ulid',
+        'device_id': None,
+        'engine': 'conversation.home_assistant',
+        'intent_input': 'test input',
+        'language': 'en',
+        'prefer_local_intents': False,
+      }),
+      'type': <PipelineEventType.INTENT_START: 'intent-start'>,
+    }),
+    dict({
+      'data': dict({
+        'intent_output': dict({
+          'continue_conversation': False,
+          'conversation_id': <ANY>,
+          'response': dict({
+            'card': dict({
+            }),
+            'data': dict({
+              'failed': list([
+              ]),
+              'success': list([
+              ]),
+              'targets': list([
+              ]),
+            }),
+            'language': 'en',
+            'response_type': 'action_done',
+            'speech': dict({
+            }),
+          }),
+        }),
+        'processed_locally': True,
+      }),
+      'type': <PipelineEventType.INTENT_END: 'intent-end'>,
+    }),
+    dict({
+      'data': None,
+      'type': <PipelineEventType.RUN_END: 'run-end'>,
+    }),
+  ])
+# ---
+# name: test_stt_language_used_instead_of_conversation_language
+  list([
+    dict({
+      'data': dict({
+        'conversation_id': 'mock-ulid',
+        'language': 'en',
+        'pipeline': <ANY>,
+      }),
+      'type': <PipelineEventType.RUN_START: 'run-start'>,
+    }),
+    dict({
+      'data': dict({
+        'conversation_id': 'mock-ulid',
+        'device_id': None,
+        'engine': 'conversation.home_assistant',
+        'intent_input': 'test input',
+        'language': 'en-US',
+        'prefer_local_intents': False,
+      }),
+      'type': <PipelineEventType.INTENT_START: 'intent-start'>,
+    }),
+    dict({
+      'data': dict({
+        'intent_output': dict({
+          'continue_conversation': False,
+          'conversation_id': <ANY>,
+          'response': dict({
+            'card': dict({
+            }),
+            'data': dict({
+              'failed': list([
+              ]),
+              'success': list([
+              ]),
+              'targets': list([
+              ]),
+            }),
+            'language': 'en',
+            'response_type': 'action_done',
+            'speech': dict({
+            }),
+          }),
+        }),
+        'processed_locally': True,
+      }),
+      'type': <PipelineEventType.INTENT_END: 'intent-end'>,
+    }),
+    dict({
+      'data': None,
+      'type': <PipelineEventType.RUN_END: 'run-end'>,
+    }),
+  ])
+# ---
+# name: test_tts_language_used_instead_of_conversation_language
+  list([
+    dict({
+      'data': dict({
+        'conversation_id': 'mock-ulid',
+        'language': 'en',
+        'pipeline': <ANY>,
+      }),
+      'type': <PipelineEventType.RUN_START: 'run-start'>,
+    }),
+    dict({
+      'data': dict({
+        'conversation_id': 'mock-ulid',
+        'device_id': None,
+        'engine': 'conversation.home_assistant',
+        'intent_input': 'test input',
+        'language': 'en-us',
+        'prefer_local_intents': False,
+      }),
+      'type': <PipelineEventType.INTENT_START: 'intent-start'>,
+    }),
+    dict({
+      'data': dict({
+        'intent_output': dict({
+          'continue_conversation': False,
+          'conversation_id': <ANY>,
+          'response': dict({
+            'card': dict({
+            }),
+            'data': dict({
+              'failed': list([
+              ]),
+              'success': list([
+              ]),
+              'targets': list([
+              ]),
+            }),
+            'language': 'en',
+            'response_type': 'action_done',
+            'speech': dict({
+            }),
+          }),
+        }),
+        'processed_locally': True,
+      }),
+      'type': <PipelineEventType.INTENT_END: 'intent-end'>,
+    }),
+    dict({
+      'data': None,
+      'type': <PipelineEventType.RUN_END: 'run-end'>,
+    }),
+  ])
+# ---
+# name: test_wake_word_detection_aborted
+  list([
+    dict({
+      'data': dict({
+        'conversation_id': 'mock-ulid',
+        'language': 'en',
+        'pipeline': <ANY>,
+        'tts_output': dict({
+          'mime_type': 'audio/mpeg',
+          'token': '8QUfxVjkbQ7fh-9Wd2k58A.mp3',
+          'url': '/api/tts_proxy/8QUfxVjkbQ7fh-9Wd2k58A.mp3',
+        }),
+      }),
+      'type': <PipelineEventType.RUN_START: 'run-start'>,
+    }),
+    dict({
+      'data': dict({
+        'entity_id': 'wake_word.test',
+        'metadata': dict({
+          'bit_rate': <AudioBitRates.BITRATE_16: 16>,
+          'channel': <AudioChannels.CHANNEL_MONO: 1>,
+          'codec': <AudioCodecs.PCM: 'pcm'>,
+          'format': <AudioFormats.WAV: 'wav'>,
+          'sample_rate': <AudioSampleRates.SAMPLERATE_16000: 16000>,
+        }),
+        'timeout': 0,
+      }),
+      'type': <PipelineEventType.WAKE_WORD_START: 'wake_word-start'>,
+    }),
+    dict({
+      'data': dict({
+        'code': 'wake_word_detection_aborted',
+        'message': '',
+      }),
+      'type': <PipelineEventType.ERROR: 'error'>,
+    }),
+    dict({
+      'data': None,
+      'type': <PipelineEventType.RUN_END: 'run-end'>,
+    }),
+  ])
+# ---
