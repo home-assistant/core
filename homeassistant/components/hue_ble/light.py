@@ -62,6 +62,20 @@ class HaHueBLE(LightEntity):
             model=self._light.model,
             sw_version=self._light.firmware,
         )
+        self._attr_supported_color_modes: set[ColorMode] = set()
+        if self._light.supports_colour_xy:
+            self._attr_supported_color_modes.add(ColorMode.XY)
+        if self._light.supports_colour_temp:
+            self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
+        if (
+            self._light.supports_brightness
+            and len(self._attr_supported_color_modes) == 0
+        ):
+            self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
+        if self._light.supports_on_off and len(self._attr_supported_color_modes) == 0:
+            self._attr_supported_color_modes.add(ColorMode.ONOFF)
+        if len(self._attr_supported_color_modes) == 0:
+            self._attr_supported_color_modes.add(ColorMode.UNKNOWN)
         self._update_updatable_attributes()
 
     async def async_added_to_hass(self) -> None:
@@ -139,29 +153,6 @@ class HaHueBLE(LightEntity):
             xy_color = kwargs[ATTR_XY_COLOR]
             _LOGGER.debug("Setting XY color of %s to %s", self.name, xy_color)
             await self._light.set_colour_xy(xy_color[0], xy_color[1])
-
-    @property
-    def supported_color_modes(self) -> set[ColorMode] | None:
-        """Flag supported color modes."""
-
-        supported_modes = set()
-
-        if self._light.supports_colour_xy:
-            supported_modes.add(ColorMode.XY)
-
-        if self._light.supports_colour_temp:
-            supported_modes.add(ColorMode.COLOR_TEMP)
-
-        if self._light.supports_brightness and len(supported_modes) == 0:
-            supported_modes.add(ColorMode.BRIGHTNESS)
-
-        if self._light.supports_on_off and len(supported_modes) == 0:
-            supported_modes.add(ColorMode.ONOFF)
-
-        if len(supported_modes) == 0:
-            supported_modes.add(ColorMode.UNKNOWN)
-
-        return supported_modes
 
     @property
     def color_mode(self) -> ColorMode | None:
