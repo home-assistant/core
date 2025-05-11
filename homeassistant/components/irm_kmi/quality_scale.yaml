@@ -1,20 +1,29 @@
 rules:
   # Bronze
-  action-setup: todo
-  appropriate-polling: todo
-  brands: todo
-  common-modules: todo
-  config-flow-test-coverage: todo
-  config-flow: todo
-  dependency-transparency: todo
-  docs-actions: todo
+  action-setup:
+    status: exempt
+    comment: >
+      No service action implemented in this integration at the moment.
+  appropriate-polling:
+    status: done
+    comment: >
+      Polling interval is set to 7 minutes.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: >
+      No service action implemented in this integration at the moment.
   docs-high-level-description: todo
   docs-installation-instructions: todo
   docs-removal-instructions: todo
-  entity-event-setup: todo
-  entity-unique-id: todo
-  has-entity-name: todo
-  runtime-data: todo
-  test-before-configure: todo
-  test-before-setup: todo
-  unique-config-entry: todo
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
