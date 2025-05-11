@@ -68,6 +68,9 @@
     "service_unsupported": {
       "message": "Entity {entity} does not support this action."
     },
+    "source_unsupported": {
+      "message": "Entity {entity} does not support source {source}."
+    },
     "error_set_volume": {
       "message": "Unable to set volume level on {host}: {error}"
     },

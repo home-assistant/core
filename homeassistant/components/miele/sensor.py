@@ -32,6 +32,7 @@ from .const import (
     STATE_PROGRAM_ID,
     STATE_STATUS_TAGS,
     MieleAppliance,
+    StateDryingStep,
     StateProgramType,
     StateStatus,
 )
@@ -144,7 +145,6 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             MieleAppliance.STEAM_OVEN,
             MieleAppliance.MICROWAVE,
             MieleAppliance.COFFEE_SYSTEM,
-            MieleAppliance.ROBOT_VACUUM_CLEANER,
             MieleAppliance.WASHER_DRYER,
             MieleAppliance.STEAM_OVEN_COMBI,
             MieleAppliance.STEAM_OVEN_MICRO,
@@ -417,6 +417,23 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             ),
         ),
     ),
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.WASHER_DRYER,
+            MieleAppliance.TUMBLE_DRYER,
+            MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL,
+        ),
+        description=MieleSensorDescription(
+            key="state_drying_step",
+            translation_key="drying_step",
+            value_fn=lambda value: StateDryingStep(
+                cast(int, value.state_drying_step)
+            ).name,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_class=SensorDeviceClass.ENUM,
+            options=sorted(StateDryingStep.keys()),
+        ),
+    ),
 )
 
 
@@ -427,33 +444,45 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     coordinator = config_entry.runtime_data
+    added_devices: set[str] = set()
 
-    entities: list = []
-    entity_class: type[MieleSensor]
-    for device_id, device in coordinator.data.devices.items():
-        for definition in SENSOR_TYPES:
-            if device.device_type in definition.types:
-                match definition.description.key:
-                    case "state_status":
-                        entity_class = MieleStatusSensor
-                    case "state_program_id":
-                        entity_class = MieleProgramIdSensor
-                    case "state_program_phase":
-                        entity_class = MielePhaseSensor
-                    case _:
-                        entity_class = MieleSensor
+    def _async_add_new_devices() -> None:
+        nonlocal added_devices
+        entities: list = []
+        entity_class: type[MieleSensor]
+        new_devices_set, current_devices = coordinator.async_add_devices(added_devices)
+        added_devices = current_devices
+
+        for device_id, device in coordinator.data.devices.items():
+            for definition in SENSOR_TYPES:
                 if (
-                    definition.description.device_class == SensorDeviceClass.TEMPERATURE
-                    and definition.description.value_fn(device)
-                    == DISABLED_TEMPERATURE / 100
+                    device_id in new_devices_set
+                    and device.device_type in definition.types
                 ):
-                    # Don't create entity if API signals that datapoint is disabled
-                    continue
-                entities.append(
-                    entity_class(coordinator, device_id, definition.description)
-                )
+                    match definition.description.key:
+                        case "state_status":
+                            entity_class = MieleStatusSensor
+                        case "state_program_id":
+                            entity_class = MieleProgramIdSensor
+                        case "state_program_phase":
+                            entity_class = MielePhaseSensor
+                        case _:
+                            entity_class = MieleSensor
+                    if (
+                        definition.description.device_class
+                        == SensorDeviceClass.TEMPERATURE
+                        and definition.description.value_fn(device)
+                        == DISABLED_TEMPERATURE / 100
+                    ):
+                        # Don't create entity if API signals that datapoint is disabled
+                        continue
+                    entities.append(
+                        entity_class(coordinator, device_id, definition.description)
+                    )
+        async_add_entities(entities)
 
-    async_add_entities(entities)
+    config_entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
+    _async_add_new_devices()
 
 
 APPLIANCE_ICONS = {

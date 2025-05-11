@@ -14,6 +14,8 @@ from . import async_init_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
+pytestmark = pytest.mark.usefixtures("mock_websocket_terminated")
+
 
 async def test_sensors(
     hass: HomeAssistant,

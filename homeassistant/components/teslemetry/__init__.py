@@ -23,7 +23,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, LOGGER, MODELS
+from .const import DOMAIN, LOGGER
 from .coordinator import (
     TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
@@ -119,7 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 manufacturer="Tesla",
                 configuration_url="https://teslemetry.com/console",
                 name=product["display_name"],
-                model=MODELS.get(vin[3]),
+                model=api.model,
                 serial_number=vin,
             )
 
