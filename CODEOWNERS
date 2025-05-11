@@ -770,6 +770,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/iqvia/ @bachya
 /tests/components/iqvia/ @bachya
 /homeassistant/components/irish_rail_transport/ @ttroy50
+/homeassistant/components/irm_kmi/ @jdejaegh
 /homeassistant/components/iron_os/ @tr4nt0r
 /tests/components/iron_os/ @tr4nt0r
 /homeassistant/components/isal/ @bdraco
