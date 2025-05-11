@@ -54,7 +54,6 @@ class ShellyButtonDescription[
 BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
     ShellyButtonDescription[ShellyBlockCoordinator | ShellyRpcCoordinator](
         key="reboot",
-        name="Reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_action="trigger_reboot",
