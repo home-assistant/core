@@ -3113,7 +3113,6 @@
       "iot_class": "cloud_polling"
     },
     "irm_kmi": {
-      "name": "IRM KMI Weather Belgium",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -7969,6 +7968,7 @@
     "input_select",
     "input_text",
     "integration",
+    "irm_kmi",
     "islamic_prayer_times",
     "local_calendar",
     "local_ip",
