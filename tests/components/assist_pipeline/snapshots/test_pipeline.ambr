@@ -167,8 +167,8 @@
         'pipeline': <ANY>,
         'tts_output': dict({
           'mime_type': 'audio/mpeg',
-          'token': '8QUfxVjkbQ7fh-9Wd2k58A.mp3',
-          'url': '/api/tts_proxy/8QUfxVjkbQ7fh-9Wd2k58A.mp3',
+          'token': 'mocked-token.mp3',
+          'url': '/api/tts_proxy/mocked-token.mp3',
         }),
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,

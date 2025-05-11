@@ -1,8 +1,8 @@
 """Websocket tests for Voice Assistant integration."""
 
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Generator
 from typing import Any
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, Mock, patch
 
 from hassil.recognize import Intent, IntentData, RecognizeResult
 import pytest
@@ -132,6 +132,22 @@ async def test_load_pipelines(hass: HomeAssistant) -> None:
     assert store1.data is not store2.data
     assert store1.data == store2.data
     assert store1.async_get_preferred_item() == store2.async_get_preferred_item()
+
+
+@pytest.fixture(autouse=True)
+def mock_chat_session_id() -> Generator[Mock]:
+    """Mock the conversation ID of chat sessions."""
+    with patch(
+        "homeassistant.helpers.chat_session.ulid_now", return_value="mock-ulid"
+    ) as mock_ulid_now:
+        yield mock_ulid_now
+
+
+@pytest.fixture(autouse=True)
+def mock_tts_token() -> Generator[None]:
+    """Mock the TTS token for URLs."""
+    with patch("secrets.token_urlsafe", return_value="mocked-token"):
+        yield
 
 
 async def test_loading_pipelines_from_storage(
