@@ -43,36 +43,33 @@ class HueBLELight(LightEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, api: HueBleLight) -> None:
+    def __init__(self, light: HueBleLight) -> None:
         """Initialize the light object. Does not connect."""
 
-        self._light = api
-        self._address = self._light.address
-        self._attr_unique_id = self._light.address
+        self._light = light
+        self._address = light.address
+        self._attr_unique_id = light.address
         self._attr_min_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
-            self._light.maximum_mireds
+            light.maximum_mireds
         )
         self._attr_max_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
-            self._light.minimum_mireds
+            light.minimum_mireds
         )
         self._attr_device_info = DeviceInfo(
-            name=self._light.name,
-            connections={(CONNECTION_BLUETOOTH, self._light.address)},
-            manufacturer=self._light.manufacturer,
-            model=self._light.model,
-            sw_version=self._light.firmware,
+            name=light.name,
+            connections={(CONNECTION_BLUETOOTH, light.address)},
+            manufacturer=light.manufacturer,
+            model=light.model,
+            sw_version=light.firmware,
         )
         self._attr_supported_color_modes: set[ColorMode] = set()
-        if self._light.supports_colour_xy:
+        if light.supports_colour_xy:
             self._attr_supported_color_modes.add(ColorMode.XY)
-        if self._light.supports_colour_temp:
+        if light.supports_colour_temp:
             self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
-        if (
-            self._light.supports_brightness
-            and len(self._attr_supported_color_modes) == 0
-        ):
+        if light.supports_brightness and len(self._attr_supported_color_modes) == 0:
             self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
-        if self._light.supports_on_off and len(self._attr_supported_color_modes) == 0:
+        if light.supports_on_off and len(self._attr_supported_color_modes) == 0:
             self._attr_supported_color_modes.add(ColorMode.ONOFF)
         if len(self._attr_supported_color_modes) == 0:
             self._attr_supported_color_modes.add(ColorMode.UNKNOWN)
