@@ -11,7 +11,7 @@ rules:
   docs-high-level-description: done
   docs-installation-instructions: todo
   docs-removal-instructions: todo
-  entity-event-setup:    
+  entity-event-setup:
     status: exempt
     comment: |
       The integration's entities primarily use a polling mechanism for state updates and do not subscribe to events from the `python-linkplay` library in the manner described by this rule.
