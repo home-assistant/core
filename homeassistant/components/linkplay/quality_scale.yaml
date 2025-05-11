@@ -15,7 +15,7 @@ rules:
     status: exempt
     comment: |
       The integration's entities primarily use a polling mechanism for state updates and do not subscribe to events from the `python-linkplay` library in the manner described by this rule.
- 
+
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
