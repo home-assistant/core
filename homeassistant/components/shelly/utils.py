@@ -150,6 +150,34 @@ def get_block_channel_name(device: BlockDevice, block: Block | None) -> str:
     return f"Channel {chr(int(block.channel) + base)}"
 
 
+def get_block_sub_device_name(device: BlockDevice, block: Block | None) -> str | None:
+    """Get name of block sub-device."""
+    if (
+        not block
+        or block.type == "device"
+        or get_number_of_channels(device, block) == 1
+    ):
+        return None
+
+    assert block.channel
+
+    channel_name: str | None = None
+    mode = cast(str, block.type) + "s"
+    if mode in device.settings:
+        channel_name = device.settings[mode][int(block.channel)].get("name")
+
+    if channel_name:
+        return channel_name
+
+    if device.settings["device"]["type"] == MODEL_EM3:
+        base = ord("A")
+        return f"Channel {chr(int(block.channel) + base)}"
+
+    base = ord("1")
+
+    return f"Channel {chr(int(block.channel) + base)}"
+
+
 def is_block_momentary_input(
     settings: dict[str, Any], block: Block, include_detached: bool = False
 ) -> bool:
@@ -747,7 +775,7 @@ def get_block_device_info(
 
     return DeviceInfo(
         identifiers={(DOMAIN, f"{mac}-{block.description}")},
-        name=get_block_channel_name(device, block),
+        name=get_block_sub_device_name(device, block),
         manufacturer="Shelly",
         via_device=(DOMAIN, mac),
     )
