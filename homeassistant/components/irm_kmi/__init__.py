@@ -4,7 +4,6 @@ import logging
 
 from irm_kmi_api import IrmKmiApiClientHa
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -17,21 +16,23 @@ from .const import (
     USER_AGENT,
 )
 from .coordinator import IrmKmiCoordinator
+from .data import IrmKmiConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IrmKmiConfigEntry) -> bool:
     """Set up this integration using UI."""
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = irm_kmi_coordinator = IrmKmiCoordinator(
-        hass, entry
-    )
 
     entry.runtime_data = IrmKmiApiClientHa(
         session=async_get_clientsession(hass),
         user_agent=USER_AGENT,
         cdt_map=IRM_KMI_TO_HA_CONDITION_MAP,
+    )
+
+    hass.data[DOMAIN][entry.entry_id] = irm_kmi_coordinator = IrmKmiCoordinator(
+        hass, entry
     )
 
     # When integration is set up, set the logging level of the irm_kmi_api package to the same level to help debugging.
@@ -49,19 +50,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IrmKmiConfigEntry) -> bool:
     """Handle removal of an entry."""
     if unloaded := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unloaded
 
 
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_reload_entry(hass: HomeAssistant, entry: IrmKmiConfigEntry) -> None:
     """Reload config entry."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_migrate_entry(_hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    _hass: HomeAssistant, config_entry: IrmKmiConfigEntry
+) -> bool:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %d", config_entry.version)
 
