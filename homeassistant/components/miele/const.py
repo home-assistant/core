@@ -282,7 +282,7 @@ class ProgramPhaseDishwasher(MieleEnum):
     final_rinse = 1798
     drying = 1799
     finished = 1800
-    unknown = -9999
+    unknown_code = -9999
 
 
 class ProgramPhaseOven(MieleEnum):
@@ -293,7 +293,7 @@ class ProgramPhaseOven(MieleEnum):
     process_running = 3074
     process_finished = 3078
     energy_save = 3084
-    unknown = -9999
+    unknown_code = -9999
 
 
 class ProgramPhaseWarmingDrawer(MieleEnum):
@@ -314,7 +314,7 @@ class ProgramPhaseMicrowave(MieleEnum):
     process_running = 3330
     process_finished = 3334
     energy_save = 3340
-    unknown = -9999
+    unknown_code = -9999
 
 
 class ProgramPhaseCoffeeSystem(MieleEnum):
@@ -394,7 +394,7 @@ class StateProgramType(MieleEnum):
     automatic_program = 2
     cleaning_care_program = 3
     maintenance_program = 4
-    unknown = -9999
+    unknown_code = -9999
 
 
 class StateDryingStep(MieleEnum):
@@ -408,7 +408,7 @@ class StateDryingStep(MieleEnum):
     hand_iron_2 = 5
     machine_iron = 6
     smoothing = 7
-    unknown = -9999
+    unknown_code = -9999
 
 
 WASHING_MACHINE_PROGRAM_ID: dict[int, str] = {

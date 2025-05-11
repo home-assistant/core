@@ -80,7 +80,7 @@ class MieleVacuumStateCode(MieleEnum):
     blocked_front_wheel = 5900
     docked = 5903, 5904
     remote_controlled = 5910
-    unknown = -9999
+    unknown_code = -9999
 
 
 SUPPORTED_FEATURES = (
