@@ -21,10 +21,10 @@
         },
         "data_description": {
           "host": "[%key:component::squeezebox::config::step::user::data_description::host%]",
-          "port": "The web interface port on the LMS.  The default is 9000.",
-          "username": "The username from LMS Advanced Security if defined,",
-          "password": "The password from LMS Advanced Security if defined,",
-          "https": "Connect to the LMS over HTTPS (requires reverse proxy)"
+          "port": "The web interface port on the LMS. The default is 9000.",
+          "username": "The username from LMS Advanced Security (if defined).",
+          "password": "The password from LMS Advanced Security (if defined).",
+          "https": "Connect to the LMS over HTTPS (requires reverse proxy)."
         }
       }
     },
