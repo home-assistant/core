@@ -469,6 +469,7 @@ class ResultStream:
     use_file_cache: bool
     language: str
     options: dict
+    supports_streaming_input: bool
 
     _manager: SpeechManager
 
@@ -484,7 +485,10 @@ class ResultStream:
 
     @callback
     def async_set_message(self, message: str) -> None:
-        """Set message to be generated."""
+        """Set message to be generated.
+
+        This method will leverage a disk cache to speed up generation.
+        """
         self._result_cache.set_result(
             self._manager.async_cache_message_in_memory(
                 engine=self.engine,
@@ -497,7 +501,10 @@ class ResultStream:
 
     @callback
     def async_set_message_stream(self, message_stream: AsyncGenerator[str]) -> None:
-        """Set a stream that will generate the message."""
+        """Set a stream that will generate the message.
+
+        This method can result in faster first byte when generating long responses.
+        """
         self._result_cache.set_result(
             self._manager.async_cache_message_stream_in_memory(
                 engine=self.engine,
@@ -726,6 +733,10 @@ class SpeechManager:
         if (engine_instance := get_engine_instance(self.hass, engine)) is None:
             raise HomeAssistantError(f"Provider {engine} not found")
 
+        supports_streaming_input = (
+            isinstance(engine_instance, TextToSpeechEntity)
+            and engine_instance.supports_streaming_input
+        )
         language, options = self.process_options(engine_instance, language, options)
         if use_file_cache is None:
             use_file_cache = self.use_file_cache
@@ -741,6 +752,7 @@ class SpeechManager:
             engine=engine,
             language=language,
             options=options,
+            supports_streaming_input=supports_streaming_input,
             _manager=self,
         )
         self.token_to_stream[token] = result_stream

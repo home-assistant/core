@@ -89,6 +89,14 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
         """Return a mapping with the default options."""
         return self._attr_default_options
 
+    @cached_property
+    def supports_streaming_input(self) -> bool:
+        """Return if the TTS engine supports streaming input."""
+        return (
+            TextToSpeechEntity.async_stream_tts_audio.__code__
+            != self.async_stream_tts_audio.__code__
+        )
+
     @callback
     def async_get_supported_voices(self, language: str) -> list[Voice] | None:
         """Return a list of supported voices for a language."""
