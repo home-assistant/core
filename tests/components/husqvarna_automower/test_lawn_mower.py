@@ -40,7 +40,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
         (
             MowerActivities.PARKED_IN_CS,
             MowerStates.IN_OPERATION,
-            LawnMowerActivity.DOCKED
+            LawnMowerActivity.DOCKED,
         ),
     ],
 )
