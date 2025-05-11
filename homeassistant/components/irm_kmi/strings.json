@@ -1,0 +1,69 @@
+{
+  "title": "Royal Meteorological Institute of Belgium",
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "title": "Configuration",
+        "data": {
+          "zone": "[%key:common::device_automation::extra_fields::zone%]",
+          "language_override": "[%key:common::config_flow::data::language%]"
+        }
+      }
+    },
+    "error": {
+      "out_of_benelux": "{zone} is out of Benelux.  Pick a zone in Benelux.",
+      "api_error": "[%key:common::config_flow::error::cannot_connect%]",
+      "zone_not_exist": "{zone} does not exist"
+    }
+  },
+  "selector": {
+    "repair_solution": {
+      "options": {
+        "repair_option_move": "I moved the zone in Benelux",
+        "repair_option_delete": "Delete that config entry"
+      }
+    },
+    "language_override": {
+      "options": {
+        "none": "Follow Home Assistant server language",
+        "fr": "French",
+        "nl": "Dutch",
+        "de": "German",
+        "en": "English"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options",
+        "data": {
+          "language_override": "[%key:common::config_flow::data::language%]"
+        }
+      }
+    }
+  },
+  "issues": {
+    "zone_moved": {
+      "title": "{zone} is outside of Benelux",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Repair: {zone} is outside of Benelux",
+            "description": "This integration can only get data for location in the Benelux. Move the zone or delete this configuration entry."
+          }
+        },
+        "error": {
+          "out_of_benelux": "{zone} is out of Benelux.  Move it inside Benelux first.",
+          "api_error": "[%key:common::config_flow::error::cannot_connect%]",
+          "zone_not_exist": "{zone} does not exist",
+          "invalid_choice": "The choice is not valid"
+        }
+      }
+    }
+  }
+}
