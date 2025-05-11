@@ -5,13 +5,12 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from irm_kmi_api import IrmKmiApiClientHa, IrmKmiApiError
+from irm_kmi_api import IrmKmiApiError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     TimestampDataUpdateCoordinator,
@@ -20,13 +19,7 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import utcnow
 
-from .const import (
-    DOMAIN,
-    IRM_KMI_NAME,
-    IRM_KMI_TO_HA_CONDITION_MAP as CDT_MAP,
-    OUT_OF_BENELUX,
-    USER_AGENT,
-)
+from .const import DOMAIN, IRM_KMI_NAME, OUT_OF_BENELUX
 from .data import ProcessedCoordinatorData
 from .utils import disable_from_config, get_config_value, preferred_language
 
@@ -48,11 +41,7 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator):
             update_interval=timedelta(minutes=7),
         )
         self.config_entry: ConfigEntry = entry
-        self._api = IrmKmiApiClientHa(
-            session=async_get_clientsession(hass),
-            user_agent=USER_AGENT,
-            cdt_map=CDT_MAP,
-        )
+        self._api = entry.runtime_data
         self._zone = get_config_value(entry, CONF_ZONE)
         self.shared_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
