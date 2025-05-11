@@ -2,11 +2,20 @@
 
 import logging
 
+from irm_kmi_api import IrmKmiApiClientHa
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONFIG_FLOW_VERSION, DOMAIN, PLATFORMS
+from .const import (
+    CONFIG_FLOW_VERSION,
+    DOMAIN,
+    IRM_KMI_TO_HA_CONDITION_MAP,
+    PLATFORMS,
+    USER_AGENT,
+)
 from .coordinator import IrmKmiCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -17,6 +26,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = irm_kmi_coordinator = IrmKmiCoordinator(
         hass, entry
+    )
+
+    entry.runtime_data = IrmKmiApiClientHa(
+        session=async_get_clientsession(hass),
+        user_agent=USER_AGENT,
+        cdt_map=IRM_KMI_TO_HA_CONDITION_MAP,
     )
 
     # When integration is set up, set the logging level of the irm_kmi_api package to the same level to help debugging.
