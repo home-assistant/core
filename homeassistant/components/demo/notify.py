@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.notify import (
     DOMAIN as NOTIFY_DOMAIN,
     NotifyEntity,
@@ -43,7 +45,12 @@ class DemoNotifyEntity(NotifyEntity):
             name=device_name,
         )
 
-    async def async_send_message(self, message: str, title: str | None = None) -> None:
+    async def async_send_message(
+        self,
+        message: str,
+        title: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> None:
         """Send a message to a user."""
         event_notification = {"message": message}
         if title is not None:

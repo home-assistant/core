@@ -30,6 +30,10 @@ from tests.common import (
 
 TEST_KWARGS = {notify.ATTR_MESSAGE: "Test message"}
 TEST_KWARGS_TITLE = {notify.ATTR_MESSAGE: "Test message", notify.ATTR_TITLE: "My title"}
+TEST_KWARGS_METADATA = {
+    notify.ATTR_MESSAGE: "Test message",
+    notify.ATTR_METADATA: {notify.ATTR_PRIORITY: 5},
+}
 
 
 class MockNotifyEntity(MockEntity, NotifyEntity):
@@ -37,9 +41,11 @@ class MockNotifyEntity(MockEntity, NotifyEntity):
 
     send_message_mock_calls = MagicMock()
 
-    async def async_send_message(self, message: str, title: str | None = None) -> None:
+    async def async_send_message(
+        self, message: str, title: str | None = None, metadata: dict | None = None
+    ) -> None:
         """Send a notification message."""
-        self.send_message_mock_calls(message, title=title)
+        self.send_message_mock_calls(message, title=title, metadata=metadata)
 
 
 class MockNotifyEntityNonAsync(MockEntity, NotifyEntity):
@@ -47,9 +53,11 @@ class MockNotifyEntityNonAsync(MockEntity, NotifyEntity):
 
     send_message_mock_calls = MagicMock()
 
-    def send_message(self, message: str, title: str | None = None) -> None:
+    def send_message(
+        self, message: str, title: str | None = None, metadata: dict | None = None
+    ) -> None:
         """Send a notification message."""
-        self.send_message_mock_calls(message, title=title)
+        self.send_message_mock_calls(message, title=title, metadata=metadata)
 
 
 async def help_async_setup_entry_init(
@@ -129,6 +137,7 @@ async def test_send_message_service(
         )
     assert str(exc.value) == "required key not provided @ data['message']"
     entity.send_message_mock_calls.assert_not_called()
+    entity.send_message_mock_calls.reset_mock()
 
     # Test unloading the entry succeeds
     assert await hass.config_entries.async_unload(config_entry.entry_id)
@@ -183,7 +192,63 @@ async def test_send_message_service_with_title(
     entity.send_message_mock_calls.assert_called_once_with(
         TEST_KWARGS_TITLE[notify.ATTR_MESSAGE],
         title=TEST_KWARGS_TITLE[notify.ATTR_TITLE],
+        metadata=None,
     )
+    entity.send_message_mock_calls.reset_mock()
+
+
+@pytest.mark.parametrize(
+    "entity",
+    [
+        MockNotifyEntityNonAsync(
+            name="test",
+            entity_id="notify.test",
+            supported_features=NotifyEntityFeature.METADATA,
+        ),
+        MockNotifyEntity(
+            name="test",
+            entity_id="notify.test",
+            supported_features=NotifyEntityFeature.METADATA,
+        ),
+    ],
+    ids=["non_async", "async"],
+)
+async def test_send_message_service_with_metadata(
+    hass: HomeAssistant, config_flow_fixture: None, entity: NotifyEntity
+) -> None:
+    """Test send_message service."""
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    state = hass.states.get("notify.test")
+    assert state.state is STATE_UNKNOWN
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        copy.deepcopy(TEST_KWARGS_METADATA) | {"entity_id": "notify.test"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    entity.send_message_mock_calls.assert_called_once_with(
+        TEST_KWARGS_METADATA[notify.ATTR_MESSAGE],
+        metadata=TEST_KWARGS_METADATA[notify.ATTR_METADATA],
+        title=None,
+    )
+    entity.send_message_mock_calls.reset_mock()
 
 
 @pytest.mark.parametrize(

@@ -26,6 +26,8 @@ from homeassistant.util.hass_dict import HassKey
 from .const import (  # noqa: F401
     ATTR_DATA,
     ATTR_MESSAGE,
+    ATTR_METADATA,
+    ATTR_PRIORITY,
     ATTR_RECIPIENTS,
     ATTR_TARGET,
     ATTR_TITLE,
@@ -65,6 +67,7 @@ class NotifyEntityFeature(IntFlag):
     """Supported features of a notify entity."""
 
     TITLE = 1
+    METADATA = 2
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -87,6 +90,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         {
             vol.Required(ATTR_MESSAGE): cv.string,
             vol.Optional(ATTR_TITLE): cv.string,
+            vol.Optional(ATTR_METADATA): {
+                vol.Optional(ATTR_PRIORITY): vol.All(
+                    vol.Coerce(int), vol.Range(min=1, max=5)
+                ),
+            },
         },
         "_async_send_message",
     )
@@ -165,11 +173,21 @@ class NotifyEntity(RestoreEntity):
         self.async_write_ha_state()
         await self.async_send_message(**kwargs)
 
-    def send_message(self, message: str, title: str | None = None) -> None:
+    def send_message(
+        self,
+        message: str,
+        title: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> None:
         """Send a message."""
         raise NotImplementedError
 
-    async def async_send_message(self, message: str, title: str | None = None) -> None:
+    async def async_send_message(
+        self,
+        message: str,
+        title: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> None:
         """Send a message."""
         kwargs: dict[str, Any] = {}
         if (
@@ -178,6 +196,14 @@ class NotifyEntity(RestoreEntity):
             and self.supported_features & NotifyEntityFeature.TITLE
         ):
             kwargs[ATTR_TITLE] = title
+
+        if (
+            metadata is not None
+            and self.supported_features
+            and self.supported_features & NotifyEntityFeature.METADATA
+        ):
+            kwargs[ATTR_METADATA] = metadata
+
         await self.hass.async_add_executor_job(
             partial(self.send_message, message, **kwargs)
         )

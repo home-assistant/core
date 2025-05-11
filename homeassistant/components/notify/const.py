@@ -20,6 +20,12 @@ ATTR_RECIPIENTS = "recipients"
 # Title of notification
 ATTR_TITLE = "title"
 
+# Metadata of a notification
+ATTR_METADATA = "metadata"
+
+# Priority of a notification. An integer between 1 (lowest) and 5 (highest).
+ATTR_PRIORITY = "priority"
+
 DOMAIN = "notify"
 
 LOGGER = logging.getLogger(__package__)

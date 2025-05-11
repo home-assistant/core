@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from xknx import XKNX
 from xknx.devices import Notification as XknxNotification
 
@@ -53,6 +55,11 @@ class KNXNotify(KnxYamlEntity, NotifyEntity):
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_unique_id = str(self._device.remote_value.group_address)
 
-    async def async_send_message(self, message: str, title: str | None = None) -> None:
+    async def async_send_message(
+        self,
+        message: str,
+        title: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> None:
         """Send a notification to knx bus."""
         await self._device.set(message)

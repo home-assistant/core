@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from fullykiosk import FullyKioskError
 
@@ -65,7 +66,12 @@ class FullyNotifyEntity(FullyKioskEntity, NotifyEntity):
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.data['deviceID']}-{description.key}"
 
-    async def async_send_message(self, message: str, title: str | None = None) -> None:
+    async def async_send_message(
+        self,
+        message: str,
+        title: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> None:
         """Send a message."""
         try:
             await self.coordinator.fully.sendCommand(

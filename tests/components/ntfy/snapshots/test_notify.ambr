@@ -27,7 +27,7 @@
     'original_name': None,
     'platform': 'ntfy',
     'previous_unique_id': None,
-    'supported_features': <NotifyEntityFeature: 1>,
+    'supported_features': <NotifyEntityFeature: 3>,
     'translation_key': 'publish',
     'unique_id': '123456789_ABCDEF_publish',
     'unit_of_measurement': None,
@@ -37,7 +37,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'mytopic',
-      'supported_features': <NotifyEntityFeature: 1>,
+      'supported_features': <NotifyEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'notify.mytopic',

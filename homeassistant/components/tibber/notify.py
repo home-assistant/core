@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from tibber import Tibber
 
 from homeassistant.components.notify import (
@@ -37,7 +39,12 @@ class TibberNotificationEntity(NotifyEntity):
         """Initialize Tibber notify entity."""
         self._attr_unique_id = unique_id
 
-    async def async_send_message(self, message: str, title: str | None = None) -> None:
+    async def async_send_message(
+        self,
+        message: str,
+        title: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> None:
         """Send a message to Tibber devices."""
         tibber_connection: Tibber = self.hass.data[DOMAIN]
         try:

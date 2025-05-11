@@ -39,6 +39,10 @@
         "title": {
           "name": "Title",
           "description": "Title for your notification message."
+        },
+        "metadata": {
+          "name": "Metadata",
+          "description": "Attributes of the notification other than the content (title and message)."
         }
       }
     },

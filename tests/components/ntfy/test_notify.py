@@ -15,6 +15,8 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
+    ATTR_METADATA,
+    ATTR_PRIORITY,
     ATTR_TITLE,
     DOMAIN as NOTIFY_DOMAIN,
     SERVICE_SEND_MESSAGE,
@@ -91,7 +93,48 @@ async def test_send_message(
     assert state.state == "2025-01-09T12:00:00+00:00"
 
     mock_aiontfy.publish.assert_called_once_with(
-        Message(topic="mytopic", message="triggered", title="test")
+        Message(topic="mytopic", message="triggered", title="test", priority=3)
+    )
+
+
+@freeze_time("2025-01-09T12:00:00+00:00")
+async def test_send_message_with_priority(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_aiontfy: AsyncMock,
+) -> None:
+    """Test publishing ntfy message."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("notify.mytopic")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {
+            ATTR_ENTITY_ID: "notify.mytopic",
+            ATTR_MESSAGE: "triggered",
+            ATTR_TITLE: "test",
+            ATTR_METADATA: {
+                ATTR_PRIORITY: 5,
+            },
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get("notify.mytopic")
+    assert state
+    assert state.state == "2025-01-09T12:00:00+00:00"
+
+    mock_aiontfy.publish.assert_called_once_with(
+        Message(topic="mytopic", message="triggered", title="test", priority=5)
     )
 
 
@@ -142,7 +185,7 @@ async def test_send_message_exception(
         )
 
     mock_aiontfy.publish.assert_called_once_with(
-        Message(topic="mytopic", message="triggered", title="test")
+        Message(topic="mytopic", message="triggered", title="test", priority=3)
     )
 
 

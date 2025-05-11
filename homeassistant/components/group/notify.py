@@ -171,7 +171,12 @@ class NotifyGroup(GroupEntity, NotifyEntity):
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
 
-    async def async_send_message(self, message: str, title: str | None = None) -> None:
+    async def async_send_message(
+        self,
+        message: str,
+        title: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> None:
         """Send a message to all members of the group."""
         await self.hass.services.async_call(
             NOTIFY_DOMAIN,

@@ -11,6 +11,7 @@ from aiontfy.exceptions import (
 from yarl import URL
 
 from homeassistant.components.notify import (
+    ATTR_PRIORITY,
     NotifyEntity,
     NotifyEntityDescription,
     NotifyEntityFeature,
@@ -50,7 +51,7 @@ class NtfyNotifyEntity(NotifyEntity):
         name=None,
         has_entity_name=True,
     )
-    _attr_supported_features = NotifyEntityFeature.TITLE
+    _attr_supported_features = NotifyEntityFeature.TITLE | NotifyEntityFeature.METADATA
 
     def __init__(
         self,
@@ -73,9 +74,16 @@ class NtfyNotifyEntity(NotifyEntity):
         self.config_entry = config_entry
         self.ntfy = config_entry.runtime_data
 
-    async def async_send_message(self, message: str, title: str | None = None) -> None:
+    async def async_send_message(
+        self, message: str, title: str | None = None, metadata: dict | None = None
+    ) -> None:
         """Publish a message to a topic."""
-        msg = Message(topic=self.topic, message=message, title=title)
+        priority: int = (
+            metadata[ATTR_PRIORITY]
+            if metadata is not None and metadata[ATTR_PRIORITY] is not None
+            else 3
+        )
+        msg = Message(topic=self.topic, message=message, title=title, priority=priority)
         try:
             await self.ntfy.publish(msg)
         except NtfyUnauthorizedAuthenticationError as e:

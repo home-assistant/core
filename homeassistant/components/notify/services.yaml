@@ -36,6 +36,13 @@ send_message:
       filter:
         supported_features:
           - notify.NotifyEntityFeature.TITLE
+    metadata:
+      required: false
+      selector:
+        object:
+      filter:
+        supported_features:
+          - notify.NotifyEntityFeature.METADATA
 
 persistent_notification:
   fields:

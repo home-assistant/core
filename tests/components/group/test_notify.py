@@ -302,7 +302,12 @@ class MockNotifyEntity(MockEntity, NotifyEntity):
         super().__init__(**values)
         self.send_message_mock_calls = MagicMock()
 
-    async def async_send_message(self, message: str, title: str | None = None) -> None:
+    async def async_send_message(
+        self,
+        message: str,
+        title: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> None:
         """Send a notification message."""
         self.send_message_mock_calls(message, title=title)
 
