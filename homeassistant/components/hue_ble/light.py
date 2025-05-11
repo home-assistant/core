@@ -90,8 +90,10 @@ class HueBLELight(LightEntity):
         self._attr_available = self._light.available
         self._attr_is_on = self._light.power_state
         self._attr_brightness = self._light.brightness
-        self._attr_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
-            self._light.colour_temp
+        self._attr_color_temp_kelvin = (
+            color_util.color_temperature_mired_to_kelvin(self._light.colour_temp)
+            if self._light.colour_temp != 0
+            else -1
         )
         self._attr_xy_color = self._light.colour_xy
 
