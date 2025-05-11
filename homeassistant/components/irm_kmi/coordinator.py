@@ -20,7 +20,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN, IRM_KMI_NAME, OUT_OF_BENELUX
-from .data import ProcessedCoordinatorData
+from .data import IrmKmiConfigEntry, ProcessedCoordinatorData
 from .utils import disable_from_config, get_config_value, preferred_language
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,7 +40,7 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator):
             # Polling interval. Will only be polled if there are subscribers.
             update_interval=timedelta(minutes=7),
         )
-        self.config_entry: ConfigEntry = entry
+        self.config_entry: IrmKmiConfigEntry = entry
         self._api = entry.runtime_data
         self._zone = get_config_value(entry, CONF_ZONE)
         self.shared_device_info = DeviceInfo(
