@@ -53,7 +53,6 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
     CONF_HOST,
-    CONF_IP_ADDRESS,
     CONF_MAC,
     CONF_METHOD,
     CONF_MODEL,
@@ -94,7 +93,7 @@ from tests.common import (
     load_json_object_fixture,
 )
 
-ENTITY_ID = f"{MP_DOMAIN}.fake"
+ENTITY_ID = f"{MP_DOMAIN}.mock_title"
 MOCK_CONFIGWS = {
     CONF_HOST: "fake_host",
     CONF_NAME: "fake",
@@ -111,7 +110,6 @@ MOCK_CALLS_WS = {
 }
 
 MOCK_ENTRY_WS = {
-    CONF_IP_ADDRESS: "test",
     CONF_HOST: "fake_host",
     CONF_METHOD: "websocket",
     CONF_NAME: "fake",
@@ -158,12 +156,9 @@ async def test_setup_websocket_2(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test setup of platform from config entry."""
-    entity_id = f"{MP_DOMAIN}.fake"
-
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_ENTRY_WS,
-        unique_id=entity_id,
     )
     entry.add_to_hass(hass)
 
@@ -188,7 +183,7 @@ async def test_setup_websocket_2(
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(entity_id)
+    state = hass.states.get(ENTITY_ID)
     assert state
     remote_class.assert_called_once_with(**MOCK_CALLS_WS)
 
@@ -640,7 +635,7 @@ async def test_name(hass: HomeAssistant) -> None:
     """Test for name property."""
     await setup_samsungtv_entry(hass, MOCK_CONFIG)
     state = hass.states.get(ENTITY_ID)
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "fake"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Mock Title"
 
 
 @pytest.mark.usefixtures("remote")

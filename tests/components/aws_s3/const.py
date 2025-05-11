@@ -10,6 +10,6 @@ from homeassistant.components.aws_s3.const import (
 USER_INPUT = {
     CONF_ACCESS_KEY_ID: "TestTestTestTestTest",
     CONF_SECRET_ACCESS_KEY: "TestTestTestTestTestTestTestTestTestTest",
-    CONF_ENDPOINT_URL: "http://127.0.0.1:9000",
+    CONF_ENDPOINT_URL: "https://s3.eu-south-1.amazonaws.com",
     CONF_BUCKET: "test",
 }
