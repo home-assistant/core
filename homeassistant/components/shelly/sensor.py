@@ -1308,12 +1308,10 @@ RPC_SENSORS: Final = {
     "text": RpcSensorDescription(
         key="text",
         sub_key="value",
-        has_entity_name=True,
     ),
     "number": RpcSensorDescription(
         key="number",
         sub_key="value",
-        has_entity_name=True,
         unit=lambda config: config["meta"]["ui"]["unit"]
         if config["meta"]["ui"]["unit"]
         else None,
@@ -1324,7 +1322,6 @@ RPC_SENSORS: Final = {
     "enum": RpcSensorDescription(
         key="enum",
         sub_key="value",
-        has_entity_name=True,
         options_fn=lambda config: config["options"],
         device_class=SensorDeviceClass.ENUM,
     ),

@@ -183,7 +183,6 @@ RPC_NUMBERS: Final = {
     "number": RpcNumberDescription(
         key="number",
         sub_key="value",
-        has_entity_name=True,
         max_fn=lambda config: config["max"],
         min_fn=lambda config: config["min"],
         mode_fn=lambda config: VIRTUAL_NUMBER_MODE_MAP.get(

@@ -550,7 +550,6 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
     _attr_hvac_mode = HVACMode.HEAT
     _attr_target_temperature_step = BLU_TRV_TEMPERATURE_SETTINGS["step"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_has_entity_name = True
 
     def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
         """Initialize."""

@@ -77,7 +77,6 @@ SCRIPT_EVENT: Final = ShellyRpcEventDescription(
     translation_key="script",
     device_class=None,
     entity_registry_enabled_default=False,
-    has_entity_name=True,
 )
 
 
@@ -195,6 +194,7 @@ class ShellyBlockEvent(ShellyBlockEntity, EventEntity):
 class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
     """Represent RPC event entity."""
 
+    _attr_has_entity_name = True
     entity_description: ShellyRpcEventDescription
 
     def __init__(

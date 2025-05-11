@@ -264,7 +264,6 @@ RPC_SENSORS: Final = {
     "boolean": RpcBinarySensorDescription(
         key="boolean",
         sub_key="value",
-        has_entity_name=True,
     ),
     "calibration": RpcBinarySensorDescription(
         key="blutrv",
