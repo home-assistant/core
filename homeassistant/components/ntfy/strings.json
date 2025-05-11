@@ -44,7 +44,7 @@
       },
       "reconfigure": {
         "title": "Configuration for {name}",
-        "description": "Log in with your **ntfy** username and password. Home Assistant will automatically generate an access token to authenticate with **ntfy**. You can also enter an existing token manually",
+        "description": "You can either log in with your **ntfy** username and password, and Home Assistant will automatically create an access token to authenticate with **ntfy**, or you can provide an access token directly",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",

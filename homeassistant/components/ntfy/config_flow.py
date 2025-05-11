@@ -108,12 +108,6 @@ STEP_RECONFIGURE_DATA_SCHEMA = vol.Schema(
     }
 )
 
-STEP_RECONFIGURE_TOKEN_ONLY_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_TOKEN): str,
-    }
-)
-
 STEP_USER_TOPIC_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TOPIC): str,
