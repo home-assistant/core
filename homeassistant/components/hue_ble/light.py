@@ -53,7 +53,16 @@ class HaHueBLE(LightEntity):
         self._attr_available = self._light.available
         self._attr_is_on = self._light.power_state
         self._attr_brightness = self._light.brightness
+        self._attr_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
+            self._light.colour_temp
+        )
         self._attr_xy_color = self._light.colour_xy
+        self._attr_min_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
+            self._light.maximum_mireds
+        )
+        self._attr_max_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
+            self._light.minimum_mireds
+        )
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, self._light.address)},
             manufacturer=self._light.manufacturer,
@@ -73,8 +82,14 @@ class HaHueBLE(LightEntity):
 
     def _state_change_callback(self) -> None:
         """Run when light informs of state update. Updates local properties."""
-
         _LOGGER.debug("Received state notification from light %s", self._name)
+        self._attr_available = self._light.available
+        self._attr_is_on = self._light.power_state
+        self._attr_brightness = self._light.brightness
+        self._attr_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
+            self._light.colour_temp
+        )
+        self._attr_xy_color = self._light.colour_xy
         self.async_write_ha_state()
 
     async def async_update(self) -> None:
@@ -126,21 +141,6 @@ class HaHueBLE(LightEntity):
             xy_color = kwargs[ATTR_XY_COLOR]
             _LOGGER.debug("Setting XY color of %s to %s", self.name, xy_color)
             await self._light.set_colour_xy(xy_color[0], xy_color[1])
-
-    @property
-    def color_temp_kelvin(self) -> int:
-        """Return the current color_temp that this light is set to."""
-        return color_util.color_temperature_mired_to_kelvin(self._light.colour_temp)
-
-    @property
-    def min_color_temp_kelvin(self) -> int:
-        """Return the warmest color_temp that this light supports."""
-        return color_util.color_temperature_mired_to_kelvin(self._light.maximum_mireds)
-
-    @property
-    def max_color_temp_kelvin(self) -> int:
-        """Return the coldest color_temp that this light supports."""
-        return color_util.color_temperature_mired_to_kelvin(self._light.minimum_mireds)
 
     @property
     def supported_color_modes(self) -> set[ColorMode] | None:
