@@ -173,6 +173,7 @@ class ShellyBaseButton(
 ):
     """Defines a Shelly base button."""
 
+    _attr_has_entity_name = True
     entity_description: ShellyButtonDescription[
         ShellyRpcCoordinator | ShellyBlockCoordinator
     ]
