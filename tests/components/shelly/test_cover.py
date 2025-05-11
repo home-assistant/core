@@ -294,15 +294,15 @@ async def test_update_position_closing(
     mutate_rpc_device_status(
         monkeypatch, mock_rpc_device, "cover:0", "state", "closing"
     )
-    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "current_pos", 50)
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "current_pos", 40)
     mock_rpc_device.mock_update()
 
     assert (state := hass.states.get(entity_id))
     assert state.state == CoverState.CLOSING
-    assert state.attributes[ATTR_CURRENT_POSITION] == 50
+    assert state.attributes[ATTR_CURRENT_POSITION] == 40
 
     # Simulate position updates during closing
-    for position in range(50, -1, -10):
+    for position in range(40, -1, -10):
         mutate_rpc_device_status(
             monkeypatch, mock_rpc_device, "cover:0", "current_pos", position
         )
@@ -333,15 +333,15 @@ async def test_update_position_opening(
     mutate_rpc_device_status(
         monkeypatch, mock_rpc_device, "cover:0", "state", "opening"
     )
-    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "current_pos", 0)
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "current_pos", 60)
     mock_rpc_device.mock_update()
 
     assert (state := hass.states.get(entity_id))
     assert state.state == CoverState.OPENING
-    assert state.attributes[ATTR_CURRENT_POSITION] == 0
+    assert state.attributes[ATTR_CURRENT_POSITION] == 60
 
     # Simulate position updates during opening
-    for position in range(0, 101, 10):
+    for position in range(60, 101, 10):
         mutate_rpc_device_status(
             monkeypatch, mock_rpc_device, "cover:0", "current_pos", position
         )
