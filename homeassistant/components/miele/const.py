@@ -190,7 +190,7 @@ class ProgramPhaseWashingMachine(MieleEnum):
     hygiene = 279
     drying = 280
     disinfecting = 285
-    unknown = -9999
+    unknown_code = -9999
 
 
 class ProgramPhaseTumbleDryer(MieleEnum):
@@ -220,7 +220,54 @@ class ProgramPhaseTumbleDryer(MieleEnum):
     smoothing = 534
     slightly_dry = 538
     safety_cooling = 539
-    unknown = -9999
+    unknown_code = -9999
+
+
+class ProgramPhaseWasherDryer(MieleEnum):
+    """Program phase codes for washer/dryer machines."""
+
+    not_running = 0, 256, 512, 535, 536, 537, 65535
+    pre_wash = 257, 259
+    soak = 258
+    main_wash = 260
+    rinse = 261
+    rinse_hold = 262
+    cleaning = 263
+    cooling_down = 264, 519
+    drain = 265
+    spin = 266
+    anti_crease = 267, 521
+    finished = (
+        268,
+        522,
+    )
+    venting = 269
+    starch_stop = 270
+    freshen_up_and_moisten = 271
+    steam_smoothing = 272, 295, 530
+    hygiene = 279
+    drying = 280, 514
+    disinfecting = 285
+
+    program_running = 513
+    machine_iron = 515
+    hand_iron_2 = 516
+    normal = 517
+    normal_plus = 518
+    hand_iron_1 = 520
+    extra_dry = 523
+    hand_iron = 524
+    moisten = 526
+    thermo_spin = 527
+    timed_drying = 528
+    warm_air = 529
+    comfort_cooling = 531
+    rinse_out_lint = 532
+    rinses = 533
+    smoothing = 534
+    slightly_dry = 538
+    safety_cooling = 539
+    unknown_code = -9999
 
 
 class ProgramPhaseDishwasher(MieleEnum):
@@ -325,6 +372,7 @@ PROGRAM_PHASE: dict[int, type[MieleEnum]] = {
     MieleAppliance.TUMBLE_DRYER: ProgramPhaseTumbleDryer,
     MieleAppliance.DRYER_PROFESSIONAL: ProgramPhaseTumbleDryer,
     MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL: ProgramPhaseTumbleDryer,
+    MieleAppliance.WASHER_DRYER: ProgramPhaseWasherDryer,
     MieleAppliance.DISHWASHER: ProgramPhaseDishwasher,
     MieleAppliance.DISHWASHER_SEMI_PROFESSIONAL: ProgramPhaseDishwasher,
     MieleAppliance.DISHWASHER_PROFESSIONAL: ProgramPhaseDishwasher,
@@ -335,8 +383,6 @@ PROGRAM_PHASE: dict[int, type[MieleEnum]] = {
     MieleAppliance.MICROWAVE: ProgramPhaseMicrowave,
     MieleAppliance.COFFEE_SYSTEM: ProgramPhaseCoffeeSystem,
     MieleAppliance.ROBOT_VACUUM_CLEANER: ProgramPhaseRobotVacuumCleaner,
-    # MieleAppliance.WASHER_DRYER: STATE_PROGRAM_PHASE_WASHING_MACHINE
-    # | STATE_PROGRAM_PHASE_TUMBLE_DRYER,
 }
 
 
