@@ -110,48 +110,18 @@ def get_block_entity_name(
     device: BlockDevice,
     block: Block | None,
     description: str | None = None,
-) -> str:
+) -> str | None:
     """Naming for block based switch and sensors."""
     channel_name = get_block_channel_name(device, block)
 
     if description:
-        return f"{channel_name} {description.lower()}"
+        return f"{channel_name} {description.lower()}" if channel_name else description
 
     return channel_name
 
 
-def get_block_channel_name(device: BlockDevice, block: Block | None) -> str:
+def get_block_channel_name(device: BlockDevice, block: Block | None) -> str | None:
     """Get name based on device and channel name."""
-    entity_name = device.name
-
-    if (
-        not block
-        or block.type == "device"
-        or get_number_of_channels(device, block) == 1
-    ):
-        return entity_name
-
-    assert block.channel
-
-    channel_name: str | None = None
-    mode = cast(str, block.type) + "s"
-    if mode in device.settings:
-        channel_name = device.settings[mode][int(block.channel)].get("name")
-
-    if channel_name:
-        return channel_name
-
-    if device.settings["device"]["type"] == MODEL_EM3:
-        base = ord("A")
-        return f"{entity_name} channel {chr(int(block.channel) + base)}"
-
-    base = ord("1")
-
-    return f"Channel {chr(int(block.channel) + base)}"
-
-
-def get_block_sub_device_name(device: BlockDevice, block: Block | None) -> str | None:
-    """Get name of block sub-device."""
     if (
         not block
         or block.type == "device"
@@ -168,6 +138,25 @@ def get_block_sub_device_name(device: BlockDevice, block: Block | None) -> str |
 
     if channel_name:
         return channel_name
+
+    if device.settings["device"]["type"] == MODEL_EM3:
+        base = ord("A")
+        return f"Channel {chr(int(block.channel) + base)}"
+
+    base = ord("1")
+
+    return f"Channel {chr(int(block.channel) + base)}"
+
+
+def get_block_sub_device_name(device: BlockDevice, block: Block) -> str:
+    """Get name of block sub-device."""
+    if TYPE_CHECKING:
+        assert block.channel
+
+    mode = cast(str, block.type) + "s"
+    if mode in device.settings:
+        if channel_name := device.settings[mode][int(block.channel)].get("name"):
+            return cast(str, channel_name)
 
     if device.settings["device"]["type"] == MODEL_EM3:
         base = ord("A")
