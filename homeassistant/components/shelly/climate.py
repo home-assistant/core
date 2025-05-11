@@ -196,7 +196,6 @@ class BlockSleepingClimate(
         self.last_state_attributes: Mapping[str, Any]
         self._preset_modes: list[str] = []
         self._last_target_temp = SHTRV_01_TEMPERATURE_SETTINGS["default"]
-        self._attr_name = coordinator.name
 
         if self.block is not None and self.device_block is not None:
             self._unique_id = f"{self.coordinator.mac}-{self.block.description}"
@@ -570,8 +569,6 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
             model_id=model_id,
             name=name,
         )
-        # Added intentionally to the constructor to avoid double name from base class
-        self._attr_name = None
 
     @property
     def target_temperature(self) -> float | None:

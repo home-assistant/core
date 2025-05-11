@@ -234,7 +234,6 @@ class ShellyButton(ShellyBaseButton):
         """Initialize Shelly button."""
         super().__init__(coordinator, description)
 
-        self._attr_name = f"{coordinator.device.name} {description.name}"
         self._attr_unique_id = f"{coordinator.mac}_{description.key}"
         if isinstance(coordinator, ShellyBlockCoordinator):
             self._attr_device_info = get_block_device_info(
@@ -271,11 +270,6 @@ class ShellyBluTrvButton(ShellyBaseButton):
         super().__init__(coordinator, description)
 
         ble_addr: str = coordinator.device.config[f"{BLU_TRV_IDENTIFIER}:{id_}"]["addr"]
-        device_name = (
-            coordinator.device.config[f"{BLU_TRV_IDENTIFIER}:{id_}"]["name"]
-            or f"shellyblutrv-{ble_addr.replace(':', '')}"
-        )
-        self._attr_name = f"{device_name} {description.name}"
         self._attr_unique_id = f"{ble_addr}_{description.key}"
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, ble_addr)}
