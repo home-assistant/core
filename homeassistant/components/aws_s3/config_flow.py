@@ -37,7 +37,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
         vol.Required(CONF_BUCKET): cv.string,
-        vol.Optional(CONF_PREFIX, default=""): cv.string,
+        vol.Optional(CONF_PREFIX, default=""): vol.All(str, vol.Length(max=512)),
         vol.Required(CONF_ENDPOINT_URL, default=DEFAULT_ENDPOINT_URL): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.URL)
         ),
