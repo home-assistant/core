@@ -50,13 +50,6 @@ class HaHueBLE(LightEntity):
         self._name = self._light.name
         self._address = self._light.address
         self._attr_unique_id = self._light.address
-        self._attr_available = self._light.available
-        self._attr_is_on = self._light.power_state
-        self._attr_brightness = self._light.brightness
-        self._attr_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
-            self._light.colour_temp
-        )
-        self._attr_xy_color = self._light.colour_xy
         self._attr_min_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
             self._light.maximum_mireds
         )
@@ -69,6 +62,7 @@ class HaHueBLE(LightEntity):
             model=self._light.model,
             sw_version=self._light.firmware,
         )
+        self._update_updatable_attributes()
 
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
@@ -80,9 +74,8 @@ class HaHueBLE(LightEntity):
 
         self._light.remove_callback(self._state_change_callback)
 
-    def _state_change_callback(self) -> None:
-        """Run when light informs of state update. Updates local properties."""
-        _LOGGER.debug("Received state notification from light %s", self._name)
+    def _update_updatable_attributes(self) -> None:
+        """Update this entities updatable attrs from the lights state."""
         self._attr_available = self._light.available
         self._attr_is_on = self._light.power_state
         self._attr_brightness = self._light.brightness
@@ -90,6 +83,11 @@ class HaHueBLE(LightEntity):
             self._light.colour_temp
         )
         self._attr_xy_color = self._light.colour_xy
+
+    def _state_change_callback(self) -> None:
+        """Run when light informs of state update. Updates local properties."""
+        _LOGGER.debug("Received state notification from light %s", self._name)
+        self._update_updatable_attributes()
         self.async_write_ha_state()
 
     async def async_update(self) -> None:
