@@ -389,7 +389,11 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
         if entity_name := device.config[key].get("name"):
             return cast(str, entity_name)
 
-    if len(get_rpc_key_instances(device.status, key, all_lights=True)) == 1:
+    # main function of the device
+    if (
+        key.startswith(("switch:", "light:cct:", "rgb:", "rgbw:", "em1", "thermostat:"))
+        and len(get_rpc_key_instances(device.status, key, all_lights=True)) == 1
+    ):
         return None
 
     key = key.replace("emdata", "em")
@@ -398,12 +402,26 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     channel = key.split(":")[0]
     channel_id = key.split(":")[-1]
 
+    if key.startswith(
+        (
+            "cover:",
+            "input:",
+            "light:",
+            "switch:",
+            "thermostat:",
+            "boolean:",
+            "enum:",
+            "number:",
+            "text:",
+        )
+    ):
+        return f"{channel.title()} {channel_id}"
     if key.startswith(("cct:", "rgb:", "rgbw:")):
         return f"{channel.upper()} light {channel_id}"
     if key.startswith("em1:"):
         return f"Energy Meter {channel_id}"
 
-    return f"{channel.title()} {channel_id}"
+    return None
 
 
 def get_rpc_sub_device_name(device: RpcDevice, key: str) -> str:
