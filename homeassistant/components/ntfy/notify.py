@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+from typing import Any
+
 from aiontfy import Message
 from aiontfy.exceptions import (
     NtfyException,
@@ -78,6 +81,37 @@ class NtfyNotifyEntity(NotifyEntity):
         """Publish a message to a topic."""
 
         msg = Message(topic=self.topic, message=message, title=title)
+        try:
+            await self.ntfy.publish(msg)
+        except NtfyUnauthorizedAuthenticationError as e:
+            self.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="authentication_error",
+            ) from e
+        except NtfyHTTPError as e:
+            raise HomeAssistantError(
+                translation_key="publish_failed_request_error",
+                translation_domain=DOMAIN,
+                translation_placeholders={"error_msg": e.error},
+            ) from e
+        except NtfyException as e:
+            raise HomeAssistantError(
+                translation_key="publish_failed_exception",
+                translation_domain=DOMAIN,
+            ) from e
+
+    async def publish(self, **kwargs: Any) -> None:
+        """Publish a message to a topic."""
+
+        params: dict[str, Any] = kwargs
+        delay: timedelta | None = params.get("delay")
+        if delay:
+            params["delay"] = (
+                f"{delay.days}d {delay.seconds}s" if delay.days else f"{delay.seconds}s"
+            )
+
+        msg = Message(topic=self.topic, **params)
         try:
             await self.ntfy.publish(msg)
         except NtfyUnauthorizedAuthenticationError as e:
