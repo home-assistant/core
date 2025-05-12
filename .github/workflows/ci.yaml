@@ -482,6 +482,10 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
+      - name: Create config_core_secrets.py
+        shell: bash
+        run: |
+          echo "${{ secrets.CONFIG_CORE_SECRETS_BASE64 }}" | base64 -d > homeassistant/config_core_secrets.py
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.4.0
