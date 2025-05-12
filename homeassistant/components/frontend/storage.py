@@ -39,8 +39,6 @@ class UserStore:
 
     def __init__(self, hass: HomeAssistant, user_id: str) -> None:
         """Initialize the user store."""
-        self.hass = hass
-        self.user_id = user_id
         self._store = _UserStore(hass, user_id)
         self.data: dict[str, Any] = {}
 
