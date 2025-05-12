@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Callable
-from contextlib import AsyncExitStack, asynccontextmanager
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 from typing import Any, cast
 
 from ha_silabs_firmware_client import FirmwareManifest, FirmwareMetadata
-from universal_silabs_flasher.firmware import parse_firmware_image
-from universal_silabs_flasher.flasher import Flasher
 from yarl import URL
 
 from homeassistant.components.update import (
@@ -20,18 +17,12 @@ from homeassistant.components.update import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.restore_state import ExtraStoredData
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import FirmwareUpdateCoordinator
-from .helpers import async_register_firmware_info_callback
-from .util import (
-    ApplicationType,
-    FirmwareInfo,
-    guess_firmware_info,
-    probe_silabs_firmware_info,
-)
+from .helpers import async_flash_silabs_firmware, async_register_firmware_info_callback
+from .util import ApplicationType, FirmwareInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -249,19 +240,11 @@ class BaseFirmwareUpdateEntity(
         self._attr_update_percentage = round((offset * 100) / total_size)
         self.async_write_ha_state()
 
-    @asynccontextmanager
-    async def _temporarily_stop_hardware_owners(
-        self, device: str
-    ) -> AsyncIterator[None]:
-        """Temporarily stop addons and integrations communicating with the device."""
-        firmware_info = await guess_firmware_info(self.hass, device)
-        _LOGGER.debug("Identified firmware info: %s", firmware_info)
-
-        async with AsyncExitStack() as stack:
-            for owner in firmware_info.owners:
-                await stack.enter_async_context(owner.temporarily_stop(self.hass))
-
-            yield
+        # Switch to an indeterminate progress bar after installation is complete, since
+        # we probe the firmware after flashing
+        if offset == total_size:
+            self._attr_update_percentage = None
+            self.async_write_ha_state()
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
@@ -278,49 +261,18 @@ class BaseFirmwareUpdateEntity(
         fw_data = await self.coordinator.client.async_fetch_firmware(
             self._latest_firmware
         )
-        fw_image = await self.hass.async_add_executor_job(parse_firmware_image, fw_data)
 
-        device = self._current_device
+        try:
+            firmware_info = await async_flash_silabs_firmware(
+                hass=self.hass,
+                device=self._current_device,
+                fw_data=fw_data,
+                expected_installed_firmware_type=self.entity_description.expected_firmware_type,
+                bootloader_reset_type=self.bootloader_reset_type,
+                progress_callback=self._update_progress,
+            )
+        finally:
+            self._attr_in_progress = False
+            self.async_write_ha_state()
 
-        flasher = Flasher(
-            device=device,
-            probe_methods=(
-                ApplicationType.GECKO_BOOTLOADER.as_flasher_application_type(),
-                ApplicationType.EZSP.as_flasher_application_type(),
-                ApplicationType.SPINEL.as_flasher_application_type(),
-                ApplicationType.CPC.as_flasher_application_type(),
-            ),
-            bootloader_reset=self.bootloader_reset_type,
-        )
-
-        async with self._temporarily_stop_hardware_owners(device):
-            try:
-                try:
-                    # Enter the bootloader with indeterminate progress
-                    await flasher.enter_bootloader()
-
-                    # Flash the firmware, with progress
-                    await flasher.flash_firmware(
-                        fw_image, progress_callback=self._update_progress
-                    )
-                except Exception as err:
-                    raise HomeAssistantError("Failed to flash firmware") from err
-
-                # Probe the running application type with indeterminate progress
-                self._attr_update_percentage = None
-                self.async_write_ha_state()
-
-                firmware_info = await probe_silabs_firmware_info(
-                    device,
-                    probe_methods=(self.entity_description.expected_firmware_type,),
-                )
-
-                if firmware_info is None:
-                    raise HomeAssistantError(
-                        "Failed to probe the firmware after flashing"
-                    )
-
-                self._firmware_info_callback(firmware_info)
-            finally:
-                self._attr_in_progress = False
-                self.async_write_ha_state()
+        self._firmware_info_callback(firmware_info)
