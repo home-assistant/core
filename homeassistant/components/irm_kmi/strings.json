@@ -22,7 +22,7 @@
       }
     },
     "error": {
-      "out_of_benelux": "{zone} is out of Benelux.  Pick a zone in Benelux.",
+      "out_of_benelux": "{zone} is outside of Benelux. Pick a zone in Benelux.",
       "api_error": "[%key:common::config_flow::error::cannot_connect%]",
       "zone_not_exist": "{zone} does not exist",
       "config_entry_none": "Unknown configuration entry"
@@ -65,11 +65,11 @@
         "step": {
           "confirm": {
             "title": "Repair: {zone} is outside of Benelux",
-            "description": "This integration can only get data for location in the Benelux. Move the zone or delete this configuration entry."
+            "description": "This integration can only get data for locations in Benelux. Move the zone or delete this configuration entry."
           }
         },
         "error": {
-          "out_of_benelux": "{zone} is out of Benelux.  Move it inside Benelux first.",
+          "out_of_benelux": "{zone} is outside of Benelux. Move it inside Benelux first.",
           "api_error": "[%key:common::config_flow::error::cannot_connect%]",
           "zone_not_exist": "{zone} does not exist",
           "invalid_choice": "The choice is not valid"
