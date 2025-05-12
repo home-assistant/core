@@ -61,11 +61,13 @@ CONTROLLER_BINARY_SENSOR_TYPES: tuple[RachioControllerBinarySensorDescription, .
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         signal_string=SIGNAL_RACHIO_CONTROLLER_UPDATE,
         is_on=lambda controller: controller.init_data[KEY_STATUS] == STATUS_ONLINE,
-        update_received=lambda state: True
-        if state in (SUBTYPE_ONLINE, SUBTYPE_COLD_REBOOT)
-        else False
-        if state == SUBTYPE_OFFLINE
-        else None,
+        update_received=lambda state: (
+            True
+            if state in (SUBTYPE_ONLINE, SUBTYPE_COLD_REBOOT)
+            else False
+            if state == SUBTYPE_OFFLINE
+            else None
+        ),
     ),
     RachioControllerBinarySensorDescription(
         key=KEY_RAIN_SENSOR,
@@ -73,11 +75,13 @@ CONTROLLER_BINARY_SENSOR_TYPES: tuple[RachioControllerBinarySensorDescription, .
         device_class=BinarySensorDeviceClass.MOISTURE,
         signal_string=SIGNAL_RACHIO_RAIN_SENSOR_UPDATE,
         is_on=lambda controller: controller.init_data[KEY_RAIN_SENSOR_TRIPPED],
-        update_received=lambda state: True
-        if state == SUBTYPE_RAIN_SENSOR_DETECTION_ON
-        else False
-        if state == SUBTYPE_RAIN_SENSOR_DETECTION_OFF
-        else None,
+        update_received=lambda state: (
+            True
+            if state == SUBTYPE_RAIN_SENSOR_DETECTION_ON
+            else False
+            if state == SUBTYPE_RAIN_SENSOR_DETECTION_OFF
+            else None
+        ),
     ),
 )
 
@@ -126,15 +130,13 @@ def _create_entities(hass: HomeAssistant, config_entry: ConfigEntry) -> list[Ent
         for controller in person.controllers
         for description in CONTROLLER_BINARY_SENSOR_TYPES
     )
-    for base_station in person.base_stations:
-        entities.extend(
-            RachioHoseTimerBinarySensor(
-                valve, base_station.status_coordinator, description
-            )
-            for valve in base_station.status_coordinator.data.values()
-            for description in HOSE_TIMER_BINARY_SENSOR_TYPES
-            if description.exists_fn(valve)
-        )
+    entities.extend(
+        RachioHoseTimerBinarySensor(valve, base_station.status_coordinator, description)
+        for base_station in person.base_stations
+        for valve in base_station.status_coordinator.data.values()
+        for description in HOSE_TIMER_BINARY_SENSOR_TYPES
+        if description.exists_fn(valve)
+    )
     return entities
 
 
@@ -152,9 +154,7 @@ class RachioControllerBinarySensor(RachioDevice, BinarySensorEntity):
         """Initialize a controller binary sensor."""
         super().__init__(controller)
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{self._controller.controller_id}-{self.entity_description.key}"
-        )
+        self._attr_unique_id = f"{controller.controller_id}-{description.key}"
 
     @callback
     def _async_handle_any_update(self, *args, **kwargs) -> None:
@@ -202,7 +202,7 @@ class RachioHoseTimerBinarySensor(RachioHoseTimerEntity, BinarySensorEntity):
         """Initialize a smart hose timer binary sensor."""
         super().__init__(data, coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{self.id}-{self.entity_description.key}"
+        self._attr_unique_id = f"{self.id}-{description.key}"
         self._update_attr()
 
     @callback
