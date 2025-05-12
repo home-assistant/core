@@ -7,7 +7,8 @@ from unittest.mock import MagicMock
 from freezegun import freeze_time
 from irm_kmi_api import IrmKmiApiClientHa
 
-from homeassistant.components.irm_kmi.weather import IrmKmiCoordinator, IrmKmiWeather
+from homeassistant.components.irm_kmi.coordinator import IrmKmiCoordinator
+from homeassistant.components.irm_kmi.weather import IrmKmiWeather
 from homeassistant.components.weather import Forecast
 from homeassistant.core import HomeAssistant
 
@@ -19,14 +20,17 @@ async def test_weather_nl(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test weather with forecast from the Netherland."""
-    mock_config_entry.runtime_data = IrmKmiApiClientHa(MagicMock(), "test")
+    mock_config_entry.runtime_data = MagicMock()
+    mock_config_entry.runtime_data.api_client = IrmKmiApiClientHa(MagicMock(), "test")
     forecast = json.loads(load_fixture("forecast_nl.json", "irm_kmi"))
-    mock_config_entry.runtime_data._api_data = forecast
+    mock_config_entry.runtime_data.api_client._api_data = forecast
 
-    coordinator = IrmKmiCoordinator(hass, mock_config_entry)
-
+    mock_config_entry.runtime_data.coordinator = coordinator = IrmKmiCoordinator(
+        hass, mock_config_entry, mock_config_entry.runtime_data.api_client
+    )
     coordinator.data = await coordinator.process_api_data()
-    weather = IrmKmiWeather(coordinator, mock_config_entry)
+
+    weather = IrmKmiWeather(mock_config_entry)
     result = await weather.async_forecast_daily()
 
     assert isinstance(result, list)
@@ -43,14 +47,17 @@ async def test_weather_higher_temp_at_night(
 ) -> None:
     """Test that the templow is always lower than temperature, even when API returns the opposite."""
     # Test case for https://github.com/jdejaegh/irm-kmi-ha/issues/8
-    mock_config_entry.runtime_data = IrmKmiApiClientHa(MagicMock(), "test")
+    mock_config_entry.runtime_data = MagicMock()
+    mock_config_entry.runtime_data.api_client = IrmKmiApiClientHa(MagicMock(), "test")
     forecast = json.loads(load_fixture("high_low_temp.json", "irm_kmi"))
-    mock_config_entry.runtime_data._api_data = forecast
+    mock_config_entry.runtime_data.api_client._api_data = forecast
 
-    coordinator = IrmKmiCoordinator(hass, mock_config_entry)
+    mock_config_entry.runtime_data.coordinator = coordinator = IrmKmiCoordinator(
+        hass, mock_config_entry, mock_config_entry.runtime_data.api_client
+    )
     coordinator.data = await coordinator.process_api_data()
 
-    weather = IrmKmiWeather(coordinator, mock_config_entry)
+    weather = IrmKmiWeather(mock_config_entry)
     result: list[Forecast] = await weather.async_forecast_daily()
 
     for f in result:

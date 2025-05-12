@@ -3,12 +3,13 @@
 import logging
 from unittest.mock import AsyncMock, MagicMock
 
-from homeassistant.components.irm_kmi import DOMAIN, IrmKmiCoordinator
 from homeassistant.components.irm_kmi.const import (
+    DOMAIN,
     REPAIR_OPT_DELETE,
     REPAIR_OPT_MOVE,
     REPAIR_SOLUTION,
 )
+from homeassistant.components.irm_kmi.coordinator import IrmKmiCoordinator
 from homeassistant.components.irm_kmi.repairs import (
     OutOfBeneluxRepairFlow,
     async_create_fix_flow,
@@ -35,12 +36,14 @@ async def get_repair_flow(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_config_entry.runtime_data = AsyncMock()
-    mock_config_entry.runtime_data.get_city = MagicMock(
+    mock_config_entry.runtime_data.api_client = AsyncMock()
+    mock_config_entry.runtime_data.api_client.get_city = MagicMock(
         return_value="Outside the Benelux (Brussels)"
     )
 
-    coordinator = IrmKmiCoordinator(hass, mock_config_entry)
+    coordinator = IrmKmiCoordinator(
+        hass, mock_config_entry, mock_config_entry.runtime_data.api_client
+    )
 
     await coordinator.async_refresh()
     registry = ir.async_get(hass)
@@ -61,12 +64,14 @@ async def test_repair_triggers_when_out_of_benelux(
     )
 
     mock_config_entry.add_to_hass(hass)
-    mock_config_entry.runtime_data = AsyncMock()
-    mock_config_entry.runtime_data.get_city = MagicMock(
+    mock_config_entry.runtime_data.api_client = AsyncMock()
+    mock_config_entry.runtime_data.api_client.get_city = MagicMock(
         return_value="Outside the Benelux (Brussels)"
     )
 
-    coordinator = IrmKmiCoordinator(hass, mock_config_entry)
+    coordinator = IrmKmiCoordinator(
+        hass, mock_config_entry, mock_config_entry.runtime_data.api_client
+    )
 
     await coordinator.async_refresh()
 
