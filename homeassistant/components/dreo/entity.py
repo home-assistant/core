@@ -22,7 +22,6 @@ class DreoEntity(CoordinatorEntity[DreoDataUpdateCoordinator]):
     """Representation of a base Dreo Entity."""
 
     _attr_has_entity_name = True
-    _attr_available = True
 
     def __init__(
         self,

@@ -8,7 +8,7 @@ from typing import Any
 
 from hscloud.const import DEVICE_TYPE
 from hscloud.hscloud import HsCloud
-from hscloud.hscloudexception import HsCloudException
+from hscloud.hscloudexception import HsCloudBusinessException, HsCloudException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -42,8 +42,10 @@ async def async_login(hass: HomeAssistant, username: str, password: str) -> Dreo
 
     try:
         devices = await hass.async_add_executor_job(setup_client)
-    except HsCloudException as ex:
+    except HsCloudBusinessException as ex:
         raise ConfigEntryNotReady("invalid username or password") from ex
+    except HsCloudException as ex:
+        raise ConfigEntryNotReady(f"Error communicating with Dreo API: {ex}") from ex
 
     return DreoData(client, devices, {})
 
