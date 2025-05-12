@@ -59,7 +59,7 @@ def test_ssl_context_caching() -> None:
     )
 
 
-def test_cteate_client_context(mock_sslcontext) -> None:
+def test_create_client_context(mock_sslcontext) -> None:
     """Test create client context."""
     with patch("homeassistant.util.ssl.ssl.SSLContext", return_value=mock_sslcontext):
         client_context()

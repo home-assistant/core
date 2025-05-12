@@ -92,3 +92,24 @@ IBBQ_SERVICE_INFO = _make_bluetooth_service_info(
     service_data={},
     source="local",
 )
+
+
+IAM_T1_SERVICE_INFO = _make_bluetooth_service_info(
+    name="Ink@IAM-T1",
+    manufacturer_data={12628: b"AC-6200a13cae\x00\x00"},
+    service_uuids=["0000fff0-0000-1000-8000-00805f9b34fb"],
+    address="62:00:A1:3C:AE:7B",
+    rssi=-44,
+    service_data={},
+    source="local",
+)
+
+IBS_P02B_SERVICE_INFO = _make_bluetooth_service_info(
+    name="IBS-P02B",
+    manufacturer_data={9289: bytes.fromhex("111800656e0100005f00000100000000")},
+    service_uuids=["0000fff0-0000-1000-8000-00805f9b34fb"],
+    address="49:24:11:18:00:65",
+    rssi=-60,
+    service_data={},
+    source="local",
+)

@@ -43,4 +43,4 @@ class UptimeRobotBinarySensor(UptimeRobotEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return True if the entity is on."""
-        return self.monitor_available
+        return bool(self.monitor.status == 2)

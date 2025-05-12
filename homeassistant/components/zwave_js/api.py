@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Coroutine
+from contextlib import suppress
 import dataclasses
 from functools import partial, wraps
 from typing import Any, Concatenate, Literal, cast
@@ -86,11 +88,13 @@ from .const import (
     DATA_CLIENT,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
+    RESTORE_NVM_DRIVER_READY_TIMEOUT,
     USER_AGENT,
 )
 from .helpers import (
     async_enable_statistics,
     async_get_node_from_device_id,
+    async_get_provisioning_entry_from_device_id,
     get_device_id,
 )
 
@@ -171,11 +175,17 @@ ADDITIONAL_PROPERTIES = "additional_properties"
 STATUS = "status"
 REQUESTED_SECURITY_CLASSES = "requestedSecurityClasses"
 
+PROTOCOL = "protocol"
+DEVICE_NAME = "device_name"
+AREA_ID = "area_id"
+
 FEATURE = "feature"
 STRATEGY = "strategy"
 
 # https://github.com/zwave-js/node-zwave-js/blob/master/packages/core/src/security/QR.ts#L41
 MINIMUM_QR_STRING_LENGTH = 52
+
+HARD_RESET_CONTROLLER_DRIVER_READY_TIMEOUT = 60
 
 
 # Helper schemas
@@ -398,6 +408,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_subscribe_s2_inclusion)
     websocket_api.async_register_command(hass, websocket_grant_security_classes)
     websocket_api.async_register_command(hass, websocket_validate_dsk_and_enter_pin)
+    websocket_api.async_register_command(hass, websocket_subscribe_new_devices)
     websocket_api.async_register_command(hass, websocket_provision_smart_start_node)
     websocket_api.async_register_command(hass, websocket_unprovision_smart_start_node)
     websocket_api.async_register_command(hass, websocket_get_provisioning_entries)
@@ -631,18 +642,50 @@ async def websocket_node_metadata(
     }
 )
 @websocket_api.async_response
-@async_get_node
 async def websocket_node_alerts(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    node: Node,
 ) -> None:
     """Get the alerts for a Z-Wave JS node."""
+    try:
+        node = async_get_node_from_device_id(hass, msg[DEVICE_ID])
+    except ValueError as err:
+        if "can't be found" in err.args[0]:
+            provisioning_entry = await async_get_provisioning_entry_from_device_id(
+                hass, msg[DEVICE_ID]
+            )
+            if provisioning_entry:
+                connection.send_result(
+                    msg[ID],
+                    {
+                        "comments": [
+                            {
+                                "level": "info",
+                                "text": "This device has been provisioned but is not yet included in the "
+                                "network.",
+                            }
+                        ],
+                    },
+                )
+            else:
+                connection.send_error(msg[ID], ERR_NOT_FOUND, str(err))
+        else:
+            connection.send_error(msg[ID], ERR_NOT_LOADED, str(err))
+        return
+
+    comments = node.device_config.metadata.comments
+    if node.in_interview:
+        comments.append(
+            {
+                "level": "warning",
+                "text": "This device is currently being interviewed and may not be fully operational.",
+            }
+        )
     connection.send_result(
         msg[ID],
         {
-            "comments": node.device_config.metadata.comments,
+            "comments": comments,
             "is_embedded": node.device_config.is_embedded,
         },
     )
@@ -974,9 +1017,55 @@ async def websocket_validate_dsk_and_enter_pin(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
+        vol.Required(TYPE): "zwave_js/subscribe_new_devices",
+        vol.Required(ENTRY_ID): str,
+    }
+)
+@websocket_api.async_response
+async def websocket_subscribe_new_devices(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Subscribe to new devices."""
+
+    @callback
+    def async_cleanup() -> None:
+        for unsub in unsubs:
+            unsub()
+
+    @callback
+    def device_registered(device: dr.DeviceEntry) -> None:
+        device_details = {
+            "name": device.name,
+            "id": device.id,
+            "manufacturer": device.manufacturer,
+            "model": device.model,
+        }
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID], {"event": "device registered", "device": device_details}
+            )
+        )
+
+    connection.subscriptions[msg["id"]] = async_cleanup
+    msg[DATA_UNSUBSCRIBE] = unsubs = [
+        async_dispatcher_connect(
+            hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device_registered
+        ),
+    ]
+    connection.send_result(msg[ID])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
         vol.Required(TYPE): "zwave_js/provision_smart_start_node",
         vol.Required(ENTRY_ID): str,
         vol.Required(QR_PROVISIONING_INFORMATION): QR_PROVISIONING_INFORMATION_SCHEMA,
+        vol.Optional(PROTOCOL): vol.Coerce(Protocols),
+        vol.Optional(DEVICE_NAME): str,
+        vol.Optional(AREA_ID): str,
     }
 )
 @websocket_api.async_response
@@ -991,18 +1080,68 @@ async def websocket_provision_smart_start_node(
     driver: Driver,
 ) -> None:
     """Pre-provision a smart start node."""
+    qr_info = msg[QR_PROVISIONING_INFORMATION]
 
-    provisioning_info = msg[QR_PROVISIONING_INFORMATION]
-
-    if provisioning_info.version == QRCodeVersion.S2:
+    if qr_info.version == QRCodeVersion.S2:
         connection.send_error(
             msg[ID],
             ERR_INVALID_FORMAT,
             "QR code version S2 is not supported for this command",
         )
         return
+
+    provisioning_info = ProvisioningEntry(
+        dsk=qr_info.dsk,
+        security_classes=qr_info.security_classes,
+        requested_security_classes=qr_info.requested_security_classes,
+        protocol=msg.get(PROTOCOL),
+        additional_properties=qr_info.additional_properties,
+    )
+
+    device = None
+    # Create an empty device if device_name is provided
+    if device_name := msg.get(DEVICE_NAME):
+        dev_reg = dr.async_get(hass)
+
+        # Create a unique device identifier using the DSK
+        device_identifier = (DOMAIN, f"provision_{qr_info.dsk}")
+
+        manufacturer = None
+        model = None
+
+        device_info = await driver.config_manager.lookup_device(
+            qr_info.manufacturer_id,
+            qr_info.product_type,
+            qr_info.product_id,
+        )
+        if device_info:
+            manufacturer = device_info.manufacturer
+            model = device_info.label
+
+        # Create an empty device
+        device = dev_reg.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={device_identifier},
+            name=device_name,
+            manufacturer=manufacturer,
+            model=model,
+            via_device=get_device_id(driver, driver.controller.own_node)
+            if driver.controller.own_node
+            else None,
+        )
+        dev_reg.async_update_device(
+            device.id, area_id=msg.get(AREA_ID), name_by_user=device_name
+        )
+
+        if provisioning_info.additional_properties is None:
+            provisioning_info.additional_properties = {}
+        provisioning_info.additional_properties["device_id"] = device.id
+
     await driver.controller.async_provision_smart_start_node(provisioning_info)
-    connection.send_result(msg[ID])
+    if device:
+        connection.send_result(msg[ID], device.id)
+    else:
+        connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin
@@ -1036,7 +1175,24 @@ async def websocket_unprovision_smart_start_node(
         )
         return
     dsk_or_node_id = msg.get(DSK) or msg[NODE_ID]
+    provisioning_entry = await driver.controller.async_get_provisioning_entry(
+        dsk_or_node_id
+    )
+    if (
+        provisioning_entry
+        and provisioning_entry.additional_properties
+        and "device_id" in provisioning_entry.additional_properties
+    ):
+        device_identifier = (DOMAIN, f"provision_{provisioning_entry.dsk}")
+        device_id = provisioning_entry.additional_properties["device_id"]
+        dev_reg = dr.async_get(hass)
+        device = dev_reg.async_get(device_id)
+        if device and device.identifiers == {device_identifier}:
+            # Only remove the device if nothing else has claimed it
+            dev_reg.async_remove_device(device_id)
+
     await driver.controller.async_unprovision_smart_start_node(dsk_or_node_id)
+
     connection.send_result(msg[ID])
 
 
@@ -2673,6 +2829,7 @@ async def websocket_hard_reset_controller(
     driver: Driver,
 ) -> None:
     """Hard reset controller."""
+    unsubs: list[Callable[[], None]]
 
     @callback
     def async_cleanup() -> None:
@@ -2688,12 +2845,27 @@ async def websocket_hard_reset_controller(
             connection.send_result(msg[ID], device.id)
             async_cleanup()
 
+    @callback
+    def set_driver_ready(event: dict) -> None:
+        "Set the driver ready event."
+        wait_driver_ready.set()
+
+    wait_driver_ready = asyncio.Event()
+
     msg[DATA_UNSUBSCRIBE] = unsubs = [
         async_dispatcher_connect(
             hass, EVENT_DEVICE_ADDED_TO_REGISTRY, _handle_device_added
-        )
+        ),
+        driver.once("driver ready", set_driver_ready),
     ]
+
     await driver.async_hard_reset()
+
+    with suppress(TimeoutError):
+        async with asyncio.timeout(HARD_RESET_CONTROLLER_DRIVER_READY_TIMEOUT):
+            await wait_driver_ready.wait()
+
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 @websocket_api.websocket_command(
@@ -2900,14 +3072,28 @@ async def websocket_restore_nvm(
             )
         )
 
+    @callback
+    def set_driver_ready(event: dict) -> None:
+        "Set the driver ready event."
+        wait_driver_ready.set()
+
+    wait_driver_ready = asyncio.Event()
+
     # Set up subscription for progress events
     connection.subscriptions[msg["id"]] = async_cleanup
     msg[DATA_UNSUBSCRIBE] = unsubs = [
         controller.on("nvm convert progress", forward_progress),
         controller.on("nvm restore progress", forward_progress),
+        driver.once("driver ready", set_driver_ready),
     ]
 
     await controller.async_restore_nvm_base64(msg["data"])
+
+    with suppress(TimeoutError):
+        async with asyncio.timeout(RESTORE_NVM_DRIVER_READY_TIMEOUT):
+            await wait_driver_ready.wait()
+    await hass.config_entries.async_reload(entry.entry_id)
+
     connection.send_message(
         websocket_api.event_message(
             msg[ID],

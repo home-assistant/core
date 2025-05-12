@@ -1,5 +1,6 @@
 """Tests for the Samsung TV Integration."""
 
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -11,7 +12,6 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
 )
 from homeassistant.components.samsungtv.const import (
-    CONF_MANUFACTURER,
     CONF_SESSION_ID,
     CONF_SSDP_MAIN_TV_AGENT_LOCATION,
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
@@ -45,12 +45,11 @@ from .const import (
     MOCK_ENTRYDATA_WS,
     MOCK_SSDP_DATA_MAIN_TV_AGENT_ST,
     MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
-    SAMPLE_DEVICE_INFO_UE48JU6400,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
-ENTITY_ID = f"{MP_DOMAIN}.fake_name"
+ENTITY_ID = f"{MP_DOMAIN}.mock_title"
 MOCK_CONFIG = {
     CONF_HOST: "fake_host",
     CONF_NAME: "fake_name",
@@ -66,13 +65,13 @@ async def test_setup(hass: HomeAssistant) -> None:
 
     # test name and turn_on
     assert state
-    assert state.name == "fake_name"
+    assert state.name == "Mock Title"
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
         == SUPPORT_SAMSUNGTV | MediaPlayerEntityFeature.TURN_ON
     )
 
-    # test host and port
+    # Ensure service is registered
     await hass.services.async_call(
         MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
@@ -117,7 +116,9 @@ async def test_setup_h_j_model(
     hass: HomeAssistant, rest_api: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test Samsung TV integration is setup."""
-    rest_api.rest_device_info.return_value = SAMPLE_DEVICE_INFO_UE48JU6400
+    rest_api.rest_device_info.return_value = load_json_object_fixture(
+        "device_info_UE48JU6400.json", DOMAIN
+    )
     await setup_samsungtv_entry(hass, MOCK_CONFIG)
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
@@ -150,15 +151,14 @@ async def test_setup_updates_from_ssdp(
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 
-    assert hass.states.get("media_player.any") == snapshot
-    assert entity_registry.async_get("media_player.any") == snapshot
+    assert hass.states.get("media_player.mock_title") == snapshot
+    assert entity_registry.async_get("media_player.mock_title") == snapshot
     assert (
-        entry.data[CONF_SSDP_MAIN_TV_AGENT_LOCATION]
-        == "https://fake_host:12345/tv_agent"
+        entry.data[CONF_SSDP_MAIN_TV_AGENT_LOCATION] == "http://10.10.12.34:7676/smp_2_"
     )
     assert (
         entry.data[CONF_SSDP_RENDERING_CONTROL_LOCATION]
-        == "https://fake_host:12345/test"
+        == "http://10.10.12.34:7676/smp_15_"
     )
 
 
@@ -179,12 +179,20 @@ async def test_reauth_triggered_encrypted(hass: HomeAssistant) -> None:
     assert len(flows_in_progress) == 1
 
 
-@pytest.mark.usefixtures("remote", "remotews", "rest_api_failing")
-async def test_update_imported_legacy_without_method(hass: HomeAssistant) -> None:
-    """Test updating an imported legacy entry without a method."""
-    await setup_samsungtv_entry(
-        hass, {CONF_HOST: "fake_host", CONF_MANUFACTURER: "Samsung"}
-    )
+@pytest.mark.usefixtures("remote_legacy", "remoteencws_failing", "rest_api_failing")
+@pytest.mark.parametrize(
+    "entry_data",
+    [
+        {CONF_HOST: "1.2.3.4"},  # Missing port/method
+        {CONF_HOST: "1.2.3.4", CONF_PORT: LEGACY_PORT},  # Missing method
+        {CONF_HOST: "1.2.3.4", CONF_METHOD: METHOD_LEGACY},  # Missing port
+    ],
+)
+async def test_update_imported_legacy(
+    hass: HomeAssistant, entry_data: dict[str, Any]
+) -> None:
+    """Test updating an imported legacy entry."""
+    await setup_samsungtv_entry(hass, entry_data)
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
@@ -235,7 +243,7 @@ async def test_cleanup_mac(
         domain=DOMAIN,
         data=MOCK_ENTRY_WS_WITH_MAC,
         entry_id="123456",
-        unique_id="any",
+        unique_id="be9554b9-c9fb-41f4-8920-22da015376a4",
         version=2,
         minor_version=1,
     )
@@ -248,7 +256,7 @@ async def test_cleanup_mac(
             (dr.CONNECTION_NETWORK_MAC, "none"),
             (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"),
         },
-        identifiers={("samsungtv", "any")},
+        identifiers={("samsungtv", "be9554b9-c9fb-41f4-8920-22da015376a4")},
         model="82GXARRS",
         name="fake",
     )
