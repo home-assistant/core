@@ -190,7 +190,6 @@ RPC_SENSORS: Final = {
     "input": RpcBinarySensorDescription(
         key="input",
         sub_key="state",
-        name="Input",
         device_class=BinarySensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         removal_condition=is_rpc_momentary_input,
