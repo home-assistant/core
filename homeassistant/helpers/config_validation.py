@@ -1801,8 +1801,8 @@ CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
             CONF_CONDITION,
             BUILT_IN_CONDITIONS,
             vol.Any(
-                _base_condition_validator,
                 dynamic_template_condition_action,
+                _base_condition_validator,
             ),
             "a list of conditions or a valid template",
         ),
