@@ -87,6 +87,9 @@ def _async_remove_empty_devices(
     device_reg = dr.async_get(hass)
     device_list = dr.async_entries_for_config_entry(device_reg, config_entry.entry_id)
     for device_entry in device_list:
+        # Skip main hub device
+        if not device_entry.via_device_id:
+            continue
         if not er.async_entries_for_device(
             entity_reg,
             device_entry.id,
