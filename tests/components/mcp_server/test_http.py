@@ -436,4 +436,8 @@ async def test_list_resources(
 
     async with mcp_session(mcp_sse_url, hass_supervisor_access_token) as session:
         result = await session.list_resources()
-        print(result)
+        assert len(result.resources) == 1
+        kitchen_light = result.resources[0]
+        assert str(kitchen_light.uri) == "homeassistant://entities/test-light-unique-id"
+        assert kitchen_light.name == "test-light-unique-id"
+        assert kitchen_light.description == "light.kitchen is in area kitchen."
