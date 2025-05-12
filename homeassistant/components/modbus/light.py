@@ -177,8 +177,10 @@ class ModbusLight(BaseSwitch, LightEntity):
                 and color_result.registers
                 and color_result.registers[0] != LIGHT_MODBUS_INVALID_VALUE
             ):
-                self._attr_color_temp_kelvin = self._convert_modbus_percent_to_temperature(
-                    color_result.registers[0]
+                self._attr_color_temp_kelvin = (
+                    self._convert_modbus_percent_to_temperature(
+                        color_result.registers[0]
+                    )
                 )
 
     @staticmethod
