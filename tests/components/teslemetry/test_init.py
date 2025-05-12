@@ -203,7 +203,7 @@ async def test_stale_device_removal(
     entry = await setup_platform(hass)
 
     # Create a device that should be removed (with the valid entry_id)
-    stale_device = device_registry.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "stale-vin")},
         manufacturer="Tesla",
@@ -218,32 +218,30 @@ async def test_stale_device_removal(
     assert (DOMAIN, "stale-vin") in stale_identifiers
 
     # Update products with an empty response (no devices) and reload entry
-    with (
-        patch(
-            "tesla_fleet_api.teslemetry.Teslemetry.products",
-            return_value=empty_products,
-        ),
-        patch(
-            "homeassistant.helpers.device_registry.DeviceRegistry.async_update_device"
-        ) as mock_update_device,
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.products",
+        return_value=empty_products,
     ):
         await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
 
-        # Verify that async_update_device was called to remove all devices
-        remove_calls = [
-            call
-            for call in mock_update_device.call_args_list
-            if call.kwargs.get("remove_config_entry_id") == entry.entry_id
-        ]
-        # At minimum our stale device should be removed
-        assert len(remove_calls) >= 1
-
-        # Specifically verify our stale device was targeted
-        assert any(
-            call.kwargs.get("device_id") == stale_device.id
-            and call.kwargs.get("remove_config_entry_id") == entry.entry_id
-            for call in mock_update_device.call_args_list
+        # Get updated devices after reload
+        post_devices = dr.async_entries_for_config_entry(
+            device_registry, entry.entry_id
         )
+        post_identifiers = {
+            identifier for device in post_devices for identifier in device.identifiers
+        }
+
+        # Verify the stale device has been removed
+        assert (DOMAIN, "stale-vin") not in post_identifiers
+
+        # Verify the device itself is no longer associated with this config entry
+        updated_device = device_registry.async_get_device(
+            identifiers={(DOMAIN, "stale-vin")}
+        )
+        if updated_device:
+            assert entry.entry_id not in updated_device.config_entries
 
 
 async def test_device_retention_during_reload(
@@ -269,13 +267,9 @@ async def test_device_retention_during_reload(
     original_identifiers = pre_identifiers.copy()
 
     # Reload the config entry with the same products data
-    # We need to ensure the exact same devices are returned by mocking
-    # the device registry's async_update_device to prevent removals
-    with patch(
-        "homeassistant.helpers.device_registry.DeviceRegistry.async_update_device",
-        return_value=None,  # Mock to prevent any device removals
-    ):
-        await hass.config_entries.async_reload(entry.entry_id)
+    # The mock_products fixture will return the same data as during setup
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
 
     # Verify device count and identifiers after reload match pre-reload
     post_devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
@@ -284,6 +278,6 @@ async def test_device_retention_during_reload(
         identifier for device in post_devices for identifier in device.identifiers
     }
 
-    # Since our mock prevents removal, we should have the same devices
+    # Since the products data didn't change, we should have the same devices
     assert post_count == pre_count
     assert post_identifiers == original_identifiers
