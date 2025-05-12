@@ -1,4 +1,4 @@
-"""The GARNI Electronics integration."""
+"""The GARNI technology integration."""
 
 from __future__ import annotations
 
