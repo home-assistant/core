@@ -162,7 +162,7 @@ async def test_setup_updates_from_ssdp(
     )
 
 
-@pytest.mark.usefixtures("remoteencws", "rest_api")
+@pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api")
 async def test_reauth_triggered_encrypted(hass: HomeAssistant) -> None:
     """Test reauth flow is triggered for encrypted TVs."""
     encrypted_entry_data = {**ENTRYDATA_ENCRYPTED_WEBSOCKET}

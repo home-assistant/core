@@ -32,7 +32,7 @@ async def test_entry_diagnostics(
     ) == snapshot(exclude=props("created_at", "modified_at"))
 
 
-@pytest.mark.usefixtures("remoteencws")
+@pytest.mark.usefixtures("remote_encrypted_websocket")
 async def test_entry_diagnostics_encrypted(
     hass: HomeAssistant,
     rest_api: Mock,
@@ -50,7 +50,7 @@ async def test_entry_diagnostics_encrypted(
     ) == snapshot(exclude=props("created_at", "modified_at"))
 
 
-@pytest.mark.usefixtures("remoteencws")
+@pytest.mark.usefixtures("remote_encrypted_websocket")
 async def test_entry_diagnostics_encrypte_offline(
     hass: HomeAssistant,
     rest_api: Mock,

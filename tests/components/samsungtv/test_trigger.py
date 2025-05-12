@@ -17,7 +17,7 @@ from .const import ENTRYDATA_ENCRYPTED_WEBSOCKET
 from tests.common import MockEntity, MockEntityPlatform
 
 
-@pytest.mark.usefixtures("remoteencws", "rest_api")
+@pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api")
 @pytest.mark.parametrize("entity_domain", ["media_player", "remote"])
 async def test_turn_on_trigger_device_id(
     hass: HomeAssistant,
@@ -84,7 +84,7 @@ async def test_turn_on_trigger_device_id(
     mock_send_magic_packet.assert_called()
 
 
-@pytest.mark.usefixtures("remoteencws", "rest_api")
+@pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api")
 @pytest.mark.parametrize("entity_domain", ["media_player", "remote"])
 async def test_turn_on_trigger_entity_id(
     hass: HomeAssistant, service_calls: list[ServiceCall], entity_domain: str
@@ -126,7 +126,7 @@ async def test_turn_on_trigger_entity_id(
     assert service_calls[1].data["id"] == 0
 
 
-@pytest.mark.usefixtures("remoteencws", "rest_api")
+@pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api")
 @pytest.mark.parametrize("entity_domain", ["media_player", "remote"])
 async def test_wrong_trigger_platform_type(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, entity_domain: str
@@ -163,7 +163,7 @@ async def test_wrong_trigger_platform_type(
     )
 
 
-@pytest.mark.usefixtures("remoteencws", "rest_api")
+@pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api")
 @pytest.mark.parametrize("entity_domain", ["media_player", "remote"])
 async def test_trigger_invalid_entity_id(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, entity_domain: str

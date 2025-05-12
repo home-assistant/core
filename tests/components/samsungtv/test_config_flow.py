@@ -220,7 +220,7 @@ async def test_user_websocket(hass: HomeAssistant) -> None:
         assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remoteencws", "rest_api_non_ssl_only")
+@pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api_non_ssl_only")
 async def test_user_encrypted_websocket(
     hass: HomeAssistant,
 ) -> None:
@@ -626,7 +626,7 @@ async def test_ssdp_websocket_success_populates_mac_address_and_main_tv_ssdp_loc
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remoteencws", "rest_api_non_ssl_only")
+@pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api_non_ssl_only")
 async def test_ssdp_encrypted_websocket_success_populates_mac_address_and_ssdp_location(
     hass: HomeAssistant,
 ) -> None:
@@ -1032,7 +1032,10 @@ async def test_zeroconf_ignores_soundbar(hass: HomeAssistant, rest_api: Mock) ->
 
 
 @pytest.mark.usefixtures(
-    "remote_legacy", "remote_websocket", "remoteencws", "rest_api_failing"
+    "remote_legacy",
+    "remote_websocket",
+    "remote_encrypted_websocket",
+    "rest_api_failing",
 )
 async def test_zeroconf_no_device_info(hass: HomeAssistant) -> None:
     """Test starting a flow from zeroconf where device_info returns None."""
@@ -1833,7 +1836,7 @@ async def test_form_reauth_websocket_not_supported(hass: HomeAssistant) -> None:
     assert result2["reason"] == RESULT_NOT_SUPPORTED
 
 
-@pytest.mark.usefixtures("remoteencws", "rest_api")
+@pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api")
 async def test_form_reauth_encrypted(hass: HomeAssistant) -> None:
     """Test reauth flow for encrypted TVs."""
     encrypted_entry_data = deepcopy(ENTRYDATA_ENCRYPTED_WEBSOCKET)

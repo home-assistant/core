@@ -21,7 +21,7 @@ from .const import ENTRYDATA_ENCRYPTED_WEBSOCKET
 from tests.common import MockConfigEntry, async_get_device_automations
 
 
-@pytest.mark.usefixtures("remoteencws", "rest_api")
+@pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api")
 async def test_get_triggers(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -46,7 +46,7 @@ async def test_get_triggers(
     assert turn_on_trigger in triggers
 
 
-@pytest.mark.usefixtures("remoteencws", "rest_api")
+@pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api")
 async def test_if_fires_on_turn_on_request(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -109,7 +109,7 @@ async def test_if_fires_on_turn_on_request(
     assert service_calls[2].data["id"] == 0
 
 
-@pytest.mark.usefixtures("remoteencws", "rest_api")
+@pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api")
 async def test_failure_scenarios(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
