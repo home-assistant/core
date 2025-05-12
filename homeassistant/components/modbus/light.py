@@ -166,22 +166,20 @@ class ModbusLight(BaseSwitch, LightEntity):
                 )
 
         if not self._color_temp_address:
-            return
-
-        color_result = await self._hub.async_pb_call(
-            unit=self._slave,
-            value=1,
-            address=self._color_temp_address,
-            use_call=CALL_TYPE_REGISTER_HOLDING,
-        )
-        if (
-            color_result
-            and color_result.registers
-            and color_result.registers[0] != LIGHT_MODBUS_INVALID_VALUE
-        ):
-            self._attr_color_temp_kelvin = self._convert_modbus_percent_to_temperature(
-                color_result.registers[0]
+            color_result = await self._hub.async_pb_call(
+                unit=self._slave,
+                value=1,
+                address=self._color_temp_address,
+                use_call=CALL_TYPE_REGISTER_HOLDING,
             )
+            if (
+                color_result
+                and color_result.registers
+                and color_result.registers[0] != LIGHT_MODBUS_INVALID_VALUE
+            ):
+                self._attr_color_temp_kelvin = self._convert_modbus_percent_to_temperature(
+                    color_result.registers[0]
+                )
 
     @staticmethod
     def _convert_modbus_percent_to_brightness(percent: int) -> int:
