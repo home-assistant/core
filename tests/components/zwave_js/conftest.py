@@ -843,7 +843,11 @@ async def integration_fixture(
     platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up the zwave_js integration."""
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(
+        domain="zwave_js",
+        data={"url": "ws://test.org"},
+        unique_id=str(client.driver.controller.home_id),
+    )
     entry.add_to_hass(hass)
     with patch("homeassistant.components.zwave_js.PLATFORMS", platforms):
         await hass.config_entries.async_setup(entry.entry_id)
