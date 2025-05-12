@@ -39,6 +39,8 @@ from .const import (
 from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
 from .entity import MieleEntity
 
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 
 DISABLED_TEMPERATURE = -32768
