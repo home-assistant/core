@@ -468,7 +468,10 @@ async def test_async_create_repair_issue_known(
     await cloud.client.async_create_repair_issue(
         identifier=identifier,
         translation_key=translation_key,
-        placeholders={"custom_domains": "example.com"},
+        placeholders={
+            "account_url": "http://example.org",
+            "custom_domains": "example.com",
+        },
         severity="warning",
     )
     issue = issue_registry.async_get_issue(domain=DOMAIN, issue_id=identifier)

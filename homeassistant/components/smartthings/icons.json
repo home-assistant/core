@@ -48,6 +48,35 @@
         "default": "mdi:car-coolant-level"
       }
     },
+    "sensor": {
+      "cooktop_operating_state": {
+        "default": "mdi:stove",
+        "state": {
+          "ready": "mdi:play-speed",
+          "run": "mdi:play",
+          "paused": "mdi:pause",
+          "finished": "mdi:food-turkey"
+        }
+      },
+      "manual_level": {
+        "default": "mdi:radiator",
+        "state": {
+          "0": "mdi:radiator-off"
+        }
+      },
+      "heating_mode": {
+        "state": {
+          "off": "mdi:power",
+          "manual": "mdi:cog",
+          "boost": "mdi:flash",
+          "keep_warm": "mdi:fire",
+          "quick_preheat": "mdi:heat-wave",
+          "defrost": "mdi:car-defrost-rear",
+          "melt": "mdi:snowflake-melt",
+          "simmer": "mdi:fire"
+        }
+      }
+    },
     "switch": {
       "bubble_soak": {
         "default": "mdi:water-off",
