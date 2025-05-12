@@ -15,17 +15,15 @@ from fyta_cli.fyta_exceptions import (
 from fyta_cli.fyta_models import Credentials
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
 
-from .const import CONF_EXPIRATION, CONF_USER_IMAGE, DOMAIN
-from .coordinator import FytaConfigEntry
+from .const import CONF_EXPIRATION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,14 +52,6 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
     credentials: Credentials
     VERSION = 1
     MINOR_VERSION = 3
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: FytaConfigEntry,
-    ) -> FytaOptionsFlowHandler:
-        """Get the options flow for this handler."""
-        return FytaOptionsFlowHandler()
 
     async def async_auth(self, user_input: Mapping[str, Any]) -> dict[str, str]:
         """Reusable Auth Helper."""
@@ -135,27 +125,4 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=data_schema,
             errors=errors,
-        )
-
-
-class FytaOptionsFlowHandler(OptionsFlow):
-    """Handle a options flow for fyta."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_USER_IMAGE,
-                        default=self.config_entry.options[CONF_USER_IMAGE],
-                    ): bool,
-                }
-            ),
         )

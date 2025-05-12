@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[image.gummibaum-entry]
+# name: test_all_entities[image.gummibaum_plant_image-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'image',
     'entity_category': None,
-    'entity_id': 'image.gummibaum',
+    'entity_id': 'image.gummibaum_plant_image',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,31 +24,31 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Plant Image',
     'platform': 'fyta',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'plant_image',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-plant_image',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[image.gummibaum-state]
+# name: test_all_entities[image.gummibaum_plant_image-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'access_token': '1',
-      'entity_picture': '/api/image_proxy/image.gummibaum?token=1',
-      'friendly_name': 'Gummibaum',
+      'entity_picture': '/api/image_proxy/image.gummibaum_plant_image?token=1',
+      'friendly_name': 'Gummibaum Plant Image',
     }),
     'context': <ANY>,
-    'entity_id': 'image.gummibaum',
+    'entity_id': 'image.gummibaum_plant_image',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[image.kakaobaum-entry]
+# name: test_all_entities[image.gummibaum_user_image-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -61,7 +61,7 @@
     'disabled_by': None,
     'domain': 'image',
     'entity_category': None,
-    'entity_id': 'image.kakaobaum',
+    'entity_id': 'image.gummibaum_user_image',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -73,24 +73,122 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'User Image',
     'platform': 'fyta',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'plant_image_user',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-plant_image_user',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[image.gummibaum_user_image-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1',
+      'entity_picture': '/api/image_proxy/image.gummibaum_user_image?token=1',
+      'friendly_name': 'Gummibaum User Image',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.gummibaum_user_image',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[image.kakaobaum_plant_image-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.kakaobaum_plant_image',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Plant Image',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'plant_image',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-plant_image',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[image.kakaobaum-state]
+# name: test_all_entities[image.kakaobaum_plant_image-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'access_token': '1',
-      'entity_picture': '/api/image_proxy/image.kakaobaum?token=1',
-      'friendly_name': 'Kakaobaum',
+      'entity_picture': '/api/image_proxy/image.kakaobaum_plant_image?token=1',
+      'friendly_name': 'Kakaobaum Plant Image',
     }),
     'context': <ANY>,
-    'entity_id': 'image.kakaobaum',
+    'entity_id': 'image.kakaobaum_plant_image',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[image.kakaobaum_user_image-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.kakaobaum_user_image',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'User Image',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'plant_image_user',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-plant_image_user',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[image.kakaobaum_user_image-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1',
+      'entity_picture': '/api/image_proxy/image.kakaobaum_user_image?token=1',
+      'friendly_name': 'Kakaobaum User Image',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.kakaobaum_user_image',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

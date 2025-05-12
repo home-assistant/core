@@ -37,20 +37,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Configure FYTA",
-        "description": "Configure the FYTA integration",
-        "data": {
-          "user_image": "User image"
-        },
-        "data_description": {
-          "user_image": "Use the user image insteas of the generic plant image."
-        }
-      }
-    }
-  },
   "entity": {
     "binary_sensor": {
       "notification_light": {
@@ -73,6 +59,14 @@
       },
       "sensor_update_available": {
         "name": "Sensor update available"
+      }
+    },
+    "image": {
+      "plant_image": {
+        "name": "Plant Image"
+      },
+      "plant_image_user": {
+        "name": "User Image"
       }
     },
     "sensor": {

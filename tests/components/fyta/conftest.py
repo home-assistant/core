@@ -7,11 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from fyta_cli.fyta_models import Credentials, Plant
 import pytest
 
-from homeassistant.components.fyta.const import (
-    CONF_EXPIRATION,
-    CONF_USER_IMAGE,
-    DOMAIN as FYTA_DOMAIN,
-)
+from homeassistant.components.fyta.const import CONF_EXPIRATION, DOMAIN as FYTA_DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
 
 from .const import ACCESS_TOKEN, EXPIRATION, PASSWORD, USERNAME
@@ -31,7 +27,6 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_ACCESS_TOKEN: ACCESS_TOKEN,
             CONF_EXPIRATION: EXPIRATION,
         },
-        options={CONF_USER_IMAGE: False},
         minor_version=3,
         entry_id="ce5f5431554d101905d31797e1232da8",
     )

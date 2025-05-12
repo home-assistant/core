@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.dt import async_get_time_zone
 
-from .const import CONF_EXPIRATION, CONF_USER_IMAGE
+from .const import CONF_EXPIRATION
 from .coordinator import FytaConfigEntry, FytaCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,14 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FytaConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    entry.async_on_unload(entry.add_update_listener(update_listener))
-
     return True
-
-
-async def update_listener(hass: HomeAssistant, entry: FytaConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: FytaConfigEntry) -> bool:
@@ -79,13 +72,6 @@ async def async_migrate_entry(
         return False
 
     if config_entry.version == 1:
-        if config_entry.minor_version == 2:
-            hass.config_entries.async_update_entry(
-                config_entry,
-                options={CONF_USER_IMAGE: False},
-                minor_version=3,
-                version=1,
-            )
         if config_entry.minor_version < 2:
             new = {**config_entry.data}
             fyta = FytaConnector(
@@ -100,8 +86,7 @@ async def async_migrate_entry(
             hass.config_entries.async_update_entry(
                 config_entry,
                 data=new,
-                options={CONF_USER_IMAGE: False},
-                minor_version=3,
+                minor_version=2,
                 version=1,
             )
 

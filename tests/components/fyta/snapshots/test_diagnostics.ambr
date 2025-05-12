@@ -15,7 +15,6 @@
       'entry_id': 'ce5f5431554d101905d31797e1232da8',
       'minor_version': 3,
       'options': dict({
-        'user_image': False,
       }),
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,

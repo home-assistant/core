@@ -10,18 +10,12 @@ from fyta_cli.fyta_exceptions import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.fyta.const import CONF_EXPIRATION, CONF_USER_IMAGE, DOMAIN
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    Platform,
-)
+from homeassistant.components.fyta.const import CONF_EXPIRATION, DOMAIN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from . import setup_platform
 from .const import ACCESS_TOKEN, EXPIRATION, PASSWORD, USERNAME
 
 from tests.common import MockConfigEntry
@@ -228,29 +222,3 @@ async def test_dhcp_discovery(
     assert result["errors"] == {}
 
     await user_step(hass, result["flow_id"], mock_setup_entry)
-
-
-async def test_options_flow(
-    hass: HomeAssistant,
-    mock_fyta_connector: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test options flow works correctly."""
-    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
-
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_USER_IMAGE: True,
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert mock_config_entry.options == {
-        CONF_USER_IMAGE: True,
-    }

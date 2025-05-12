@@ -10,7 +10,6 @@ from fyta_cli.fyta_exceptions import (
 )
 import pytest
 
-from homeassistant.components.fyta import CONF_USER_IMAGE
 from homeassistant.components.fyta.const import CONF_EXPIRATION, DOMAIN as FYTA_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -146,12 +145,11 @@ async def test_migrate_config_entry_1(
     await hass.async_block_till_done()
 
     assert entry.version == 1
-    assert entry.minor_version == 3
+    assert entry.minor_version == 2
     assert entry.data[CONF_USERNAME] == USERNAME
     assert entry.data[CONF_PASSWORD] == PASSWORD
     assert entry.data[CONF_ACCESS_TOKEN] == ACCESS_TOKEN
     assert entry.data[CONF_EXPIRATION] == EXPIRATION
-    assert not entry.options[CONF_USER_IMAGE]
 
 
 async def test_migrate_config_entry_2(
@@ -180,5 +178,4 @@ async def test_migrate_config_entry_2(
     await hass.async_block_till_done()
 
     assert entry.version == 1
-    assert entry.minor_version == 3
-    assert not entry.options[CONF_USER_IMAGE]
+    assert entry.minor_version == 2
