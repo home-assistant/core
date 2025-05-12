@@ -3,7 +3,7 @@
 from homeassistant.config_entries import ConfigFlow
 import voluptuous as vol
 import logging
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from .const import DOMAIN
 from typing import Any
 from homeassistant.data_entry_flow import FlowResult
@@ -24,7 +24,7 @@ class RedgtechConfigFlow(ConfigFlow, domain=DOMAIN):
             password = user_input[CONF_PASSWORD]
             api = RedgtechAPI()
             try:
-                access_token = await api.login(email, password)
+                await api.login(email, password)
             except RedgtechAuthError:
                 errors["base"] = "invalid_auth"
             except RedgtechConnectionError:
@@ -33,15 +33,13 @@ class RedgtechConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected error during login")
                 errors["base"] = "unknown"
             else:
-                if access_token:
-                    _LOGGER.debug("Login successful, token received.")
-                    self._async_abort_entries_match({CONF_EMAIL: email})
-                    return self.async_create_entry(
+                _LOGGER.debug("Login successful, token received.")
+                self._async_abort_entries_match({CONF_EMAIL: email})
+                return self.async_create_entry(
                         title=email,
                         data={
                             CONF_EMAIL: email,
                             CONF_PASSWORD: password,
-                            CONF_ACCESS_TOKEN: access_token
                         }
                     )
                 errors["base"] = "invalid_auth"

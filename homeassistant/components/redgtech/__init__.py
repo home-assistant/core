@@ -3,13 +3,12 @@
 import logging
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform, CONF_ACCESS_TOKEN
+from homeassistant.const import Platform
 from .const import DOMAIN
-from .coordinator import RedgtechDataUpdateCoordinator
+from .coordinator import RedgtechDataUpdateCoordinator, RedgtechConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-type RedgtechConfigEntry = ConfigEntry[RedgtechDataUpdateCoordinator]
 
 PLATFORMS: list[Platform] = [Platform.SWITCH]
 

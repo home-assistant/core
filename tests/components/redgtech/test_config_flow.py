@@ -1,98 +1,85 @@
-"""Define tests for the Redgtech Waste config flow."""
+"""Test the Redgtech config flow."""
 
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
-from homeassistant import data_entry_flow
+from unittest.mock import AsyncMock, patch
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.components.redgtech.config_flow import RedgtechConfigFlow
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_ACCESS_TOKEN
-from homeassistant.data_entry_flow import FlowResultType, AbortFlow
 from redgtech_api.api import RedgtechAuthError, RedgtechConnectionError
 
+TEST_EMAIL = "test@test.com"
+TEST_PASSWORD = "123456"
+FAKE_TOKEN = "fake_token"
 
-@pytest.mark.asyncio
-async def test_user_step_creates_entry():
-    """Test if the configuration flow creates an entry correctly."""
-    mock_hass = MagicMock()
-    mock_hass.config_entries.async_entries = MagicMock(return_value=[])
 
+@pytest.fixture
+def mock_redgtech_login():
+    """Mock the RedgtechAPI login method."""
+    with patch("homeassistant.components.redgtech.config_flow.RedgtechAPI.login", return_value=FAKE_TOKEN) as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_redgtech_invalid_auth():
+    """Mock the RedgtechAPI login method to raise an authentication error."""
+    with patch("homeassistant.components.redgtech.config_flow.RedgtechAPI.login", side_effect=RedgtechAuthError) as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_redgtech_cannot_connect():
+    """Mock the RedgtechAPI login method to raise a connection error."""
+    with patch("homeassistant.components.redgtech.config_flow.RedgtechAPI.login", side_effect=RedgtechConnectionError) as mock:
+        yield mock
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (RedgtechAuthError, "invalid_auth"),
+        (RedgtechConnectionError, "cannot_connect"),
+        (Exception("generic error"), "unknown"),
+    ],
+)
+async def test_user_step_errors(
+    hass: HomeAssistant, side_effect, expected_error
+) -> None:
+    """Test handling errors during user step."""
     mock_flow = RedgtechConfigFlow()
-    mock_flow.hass = mock_hass
+    mock_flow.hass = hass
 
     user_input = {
-        CONF_EMAIL: "test@test.com",
-        CONF_PASSWORD: "123456"
+        CONF_EMAIL: TEST_EMAIL,
+        CONF_PASSWORD: TEST_PASSWORD,
     }
 
-    with patch("homeassistant.components.redgtech.config_flow.RedgtechAPI.login", return_value="fake_token"):
+    with patch(
+        "homeassistant.components.redgtech.config_flow.RedgtechAPI.login",
+        side_effect=side_effect,
+    ):
         result = await mock_flow.async_step_user(user_input)
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"]["base"] == expected_error
+
+
+async def test_user_step_creates_entry(hass: HomeAssistant, mock_redgtech_login):
+    """Test if the configuration flow creates an entry correctly."""
+    mock_flow = RedgtechConfigFlow()
+    mock_flow.hass = hass
+
+    user_input = {
+        CONF_EMAIL: TEST_EMAIL,
+        CONF_PASSWORD: TEST_PASSWORD,
+    }
+
+    result = await mock_flow.async_step_user(user_input)
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == user_input[CONF_EMAIL]
     assert result["data"] == {
-        CONF_EMAIL: "test@test.com",
-        CONF_PASSWORD: "123456",
-        CONF_ACCESS_TOKEN: "fake_token"
+        CONF_EMAIL: TEST_EMAIL,
+        CONF_PASSWORD: TEST_PASSWORD,
     }
 
-
-@pytest.mark.asyncio
-async def test_user_step_invalid_auth():
-    """Test authentication failure with invalid credentials."""
-    mock_hass = MagicMock()
-    mock_hass.config_entries.async_entries = MagicMock(return_value=[])
-
-    mock_flow = RedgtechConfigFlow()
-    mock_flow.hass = mock_hass
-
-    user_input = {
-        CONF_EMAIL: "test@test.com",
-        CONF_PASSWORD: "wrongpassword"
-    }
-
-    with patch("homeassistant.components.redgtech.config_flow.RedgtechAPI.login", side_effect=RedgtechAuthError):
-        result = await mock_flow.async_step_user(user_input)
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"]["base"] == "invalid_auth"
-
-
-@pytest.mark.asyncio
-async def test_user_step_cannot_connect():
-    """Test connection failure to the API."""
-    mock_hass = MagicMock()
-    mock_hass.config_entries.async_entries = MagicMock(return_value=[])
-
-    mock_flow = RedgtechConfigFlow()
-    mock_flow.hass = mock_hass
-
-    user_input = {
-        CONF_EMAIL: "test@test.com",
-        CONF_PASSWORD: "123456"
-    }
-
-    with patch("homeassistant.components.redgtech.config_flow.RedgtechAPI.login", side_effect=RedgtechConnectionError):
-        result = await mock_flow.async_step_user(user_input)
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"]["base"] == "cannot_connect"
-
-
-@pytest.mark.asyncio
-async def test_user_step_unknown_error():
-    """Test unknown error during login."""
-    mock_hass = MagicMock()
-    mock_hass.config_entries.async_entries = MagicMock(return_value=[])
-
-    mock_flow = RedgtechConfigFlow()
-    mock_flow.hass = mock_hass
-
-    user_input = {
-        CONF_EMAIL: "test@test.com",
-        CONF_PASSWORD: "123456"
-    }
-
-    with patch("homeassistant.components.redgtech.config_flow.RedgtechAPI.login", side_effect=Exception("generic error")):
-        result = await mock_flow.async_step_user(user_input)
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"]["base"] == "unknown"
