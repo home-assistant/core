@@ -93,6 +93,7 @@ def mock_config_entry(
     encrypted_data: dict[str, Any],
     bluetooth_service_info: BluetoothServiceInfoBleak,
     setup_service: None,
+    switchbot_device: None,
 ) -> MockConfigEntry:
     """Fixture to create a MockConfigEntry for a Switchbot device."""
     return MockConfigEntry(

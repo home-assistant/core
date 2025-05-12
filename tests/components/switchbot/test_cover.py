@@ -62,11 +62,18 @@ async def test_entities(
     snapshot_switchbot_entities(hass, entity_registry, snapshot, Platform.COVER)
 
 
-@pytest.mark.parametrize("switchbot_model", [SwitchbotModel.CURTAIN])
-async def test_curtain3_setup(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+@pytest.mark.parametrize(
+    ("switchbot_model", "attribute"),
+    [
+        (SwitchbotModel.CURTAIN, ATTR_CURRENT_POSITION),
+        (SwitchbotModel.BLIND_TILT, ATTR_CURRENT_TILT_POSITION),
+        (SwitchbotModel.ROLLER_SHADE, ATTR_CURRENT_POSITION),
+    ],
+)
+async def test_cover_setup(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, attribute: str
 ) -> None:
-    """Test setting up the Curtain3."""
+    """Test setting up cover entities."""
 
     entity_id = "cover.test_name"
     mock_restore_cache(
@@ -75,7 +82,7 @@ async def test_curtain3_setup(
             State(
                 entity_id,
                 CoverState.OPEN,
-                {ATTR_CURRENT_POSITION: 50},
+                {attribute: 50},
             )
         ],
     )
@@ -84,7 +91,7 @@ async def test_curtain3_setup(
 
     state = hass.states.get(entity_id)
     assert state.state == CoverState.OPEN
-    assert state.attributes[ATTR_CURRENT_POSITION] == 50
+    assert state.attributes[attribute] == 50
 
 
 @pytest.mark.parametrize("switchbot_model", [SwitchbotModel.CURTAIN])
@@ -178,38 +185,6 @@ async def test_curtain3_controlling(
         blocking=True,
     )
     mock_switchbot_curtain[method].assert_awaited_once_with(*args)
-
-
-async def test_blindtilt_setup(
-    hass: HomeAssistant, mock_entry_factory: Callable[[str], MockConfigEntry]
-) -> None:
-    """Test setting up the blindtilt."""
-    inject_bluetooth_service_info(hass, WOBLINDTILT_SERVICE_INFO)
-
-    entry = mock_entry_factory(sensor_type="blind_tilt")
-    entity_id = "cover.test_name"
-    mock_restore_cache(
-        hass,
-        [
-            State(
-                entity_id,
-                CoverState.OPEN,
-                {ATTR_CURRENT_TILT_POSITION: 40},
-            )
-        ],
-    )
-
-    entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt.update",
-        new=AsyncMock(return_value=True),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        state = hass.states.get(entity_id)
-        assert state.state == CoverState.OPEN
-        assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 40
 
 
 async def test_blindtilt_controlling(
@@ -345,39 +320,6 @@ async def test_blindtilt_controlling(
             state = hass.states.get(entity_id)
             assert state.state == CoverState.OPEN
             assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 50
-
-
-async def test_roller_shade_setup(
-    hass: HomeAssistant, mock_entry_factory: Callable[[str], MockConfigEntry]
-) -> None:
-    """Test setting up the RollerShade."""
-    inject_bluetooth_service_info(hass, WOCURTAIN3_SERVICE_INFO)
-
-    entry = mock_entry_factory(sensor_type="roller_shade")
-
-    entity_id = "cover.test_name"
-    mock_restore_cache(
-        hass,
-        [
-            State(
-                entity_id,
-                CoverState.OPEN,
-                {ATTR_CURRENT_POSITION: 60},
-            )
-        ],
-    )
-
-    entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.switchbot.cover.switchbot.SwitchbotRollerShade.update",
-        new=AsyncMock(return_value=True),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        state = hass.states.get(entity_id)
-        assert state.state == CoverState.OPEN
-        assert state.attributes[ATTR_CURRENT_POSITION] == 60
 
 
 async def test_roller_shade_controlling(
