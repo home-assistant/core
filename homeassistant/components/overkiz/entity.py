@@ -35,7 +35,6 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         self.executor = OverkizExecutor(device_url, coordinator)
 
         self._attr_assumed_state = not self.device.states
-        self._attr_available = self.device.available
         self._attr_unique_id = self.device.device_url
 
         if self.is_sub_device:
@@ -43,6 +42,11 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
             self._attr_name = self.device.label
 
         self._attr_device_info = self.generate_device_info()
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.device.available and super().available
 
     @property
     def is_sub_device(self) -> bool:

@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Choose AlarmDecoder Protocol",
+        "title": "Choose AlarmDecoder protocol",
         "data": {
           "protocol": "Protocol"
         }
@@ -12,8 +12,8 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "device_baudrate": "Device Baud Rate",
-          "device_path": "Device Path"
+          "device_baudrate": "Device baud rate",
+          "device_path": "Device path"
         },
         "data_description": {
           "host": "The hostname or IP address of the AlarmDecoder device that is connected to your alarm panel.",
@@ -44,36 +44,36 @@
       "arm_settings": {
         "title": "[%key:component::alarmdecoder::options::step::init::title%]",
         "data": {
-          "auto_bypass": "Auto Bypass on Arm",
-          "code_arm_required": "Code Required for Arming",
-          "alt_night_mode": "Alternative Night Mode"
+          "auto_bypass": "Auto-bypass on arm",
+          "code_arm_required": "Code required for arming",
+          "alt_night_mode": "Alternative night mode"
         }
       },
       "zone_select": {
         "title": "[%key:component::alarmdecoder::options::step::init::title%]",
         "description": "Enter the zone number you'd like to to add, edit, or remove.",
         "data": {
-          "zone_number": "Zone Number"
+          "zone_number": "Zone number"
         }
       },
       "zone_details": {
         "title": "[%key:component::alarmdecoder::options::step::init::title%]",
-        "description": "Enter details for zone {zone_number}. To delete zone {zone_number}, leave Zone Name blank.",
+        "description": "Enter details for zone {zone_number}. To delete zone {zone_number}, leave 'Zone name' blank.",
         "data": {
-          "zone_name": "Zone Name",
-          "zone_type": "Zone Type",
-          "zone_rfid": "RF Serial",
-          "zone_loop": "RF Loop",
-          "zone_relayaddr": "Relay Address",
-          "zone_relaychan": "Relay Channel"
+          "zone_name": "Zone name",
+          "zone_type": "Zone type",
+          "zone_rfid": "RF serial",
+          "zone_loop": "RF loop",
+          "zone_relayaddr": "Relay address",
+          "zone_relaychan": "Relay channel"
         }
       }
     },
     "error": {
-      "relay_inclusive": "Relay Address and Relay Channel are codependent and must be included together.",
+      "relay_inclusive": "'Relay address' and 'Relay channel' are codependent and must be included together.",
       "int": "The field below must be an integer.",
-      "loop_rfid": "RF Loop cannot be used without RF Serial.",
-      "loop_range": "RF Loop must be an integer between 1 and 4."
+      "loop_rfid": "'RF loop' cannot be used without 'RF serial'.",
+      "loop_range": "'RF loop' must be an integer between 1 and 4."
     }
   },
   "services": {

@@ -21,7 +21,7 @@ from .const import MOCK_CONFIG, MOCK_ENTRY_WS_WITH_MAC, MOCK_ENTRYDATA_ENCRYPTED
 
 from tests.common import MockConfigEntry
 
-ENTITY_ID = f"{REMOTE_DOMAIN}.fake"
+ENTITY_ID = f"{REMOTE_DOMAIN}.mock_title"
 
 
 @pytest.mark.usefixtures("remoteencws", "rest_api")
@@ -39,7 +39,7 @@ async def test_unique_id(
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
 
     main = entity_registry.async_get(ENTITY_ID)
-    assert main.unique_id == "any"
+    assert main.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
 @pytest.mark.usefixtures("remoteencws", "rest_api")
@@ -104,7 +104,7 @@ async def test_turn_on_wol(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_ENTRY_WS_WITH_MAC,
-        unique_id="any",
+        unique_id="be9554b9-c9fb-41f4-8920-22da015376a4",
     )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
