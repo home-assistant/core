@@ -16,6 +16,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PlaystationNetworkConfigEntry, PlaystationNetworkCoordinator
 from .const import DOMAIN, PlatformType
+from .helpers import SessionData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +37,7 @@ async def async_setup_entry(
     """Media Player Entity Setup."""
     coordinator = config_entry.runtime_data
     devices_added: set[PlatformType] = set()
-    supported_devices = {PlatformType.PS4, PlatformType.PS5}
+    supported_devices = {PlatformType.PS5, PlatformType.PS4, PlatformType.PS3}
     device_reg = dr.async_get(hass)
     entities = []
 
@@ -47,11 +48,12 @@ async def async_setup_entry(
         if not supported_devices - devices_added:
             remove_listener()
 
-        if (platform := coordinator.data.platform["platform"]) and (
-            platform_type := PlatformType(platform)
-        ) not in devices_added:
-            async_add_entities([PsnMediaPlayerEntity(coordinator, platform_type)])
-            devices_added.add(platform_type)
+        for console in coordinator.data.active_sessions:
+            if (platform := console.platform) and (
+                platform_type := PlatformType(platform)
+            ) not in devices_added:
+                async_add_entities([PsnMediaPlayerEntity(coordinator, platform_type)])
+                devices_added.add(platform_type)
 
     for platform in supported_devices:
         if device_reg.async_get_device(
@@ -96,15 +98,16 @@ class PsnMediaPlayerEntity(
     @property
     def state(self) -> MediaPlayerState:
         """Media Player state getter."""
-        if (
-            self.key == self.coordinator.data.platform.get("platform", "")
-            and self.coordinator.data.platform["onlineStatus"] == "online"
-        ):
-            if (
-                self.coordinator.data.available
-                and self.coordinator.data.title_metadata.get("npTitleId", None)
-                is not None
-            ):
+        session = next(
+            (
+                session
+                for session in self.coordinator.data.active_sessions
+                if session.platform == self.key
+            ),
+            SessionData(),
+        )
+        if session.status == "online":
+            if self.coordinator.data.available and session.title_id is not None:
                 return MediaPlayerState.PLAYING
             return MediaPlayerState.ON
         return MediaPlayerState.OFF
@@ -112,27 +115,38 @@ class PsnMediaPlayerEntity(
     @property
     def media_title(self) -> str | None:
         """Media title getter."""
-        if self.coordinator.data.title_metadata.get(
-            "npTitleId", None
-        ) and self.key == self.coordinator.data.platform.get("platform", ""):
-            return self.coordinator.data.title_metadata["titleName"]
-        return None
+        session = next(
+            (
+                session
+                for session in self.coordinator.data.active_sessions
+                if session.platform == self.key
+            ),
+            SessionData(),
+        )
+        return session.title_name
 
     @property
     def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
-        return self.coordinator.data.title_metadata.get("npTitleId", None)
+        session = next(
+            (
+                session
+                for session in self.coordinator.data.active_sessions
+                if session.platform == self.key
+            ),
+            SessionData(),
+        )
+        return session.title_id
 
     @property
     def media_image_url(self) -> str | None:
         """Media image url getter."""
-        if self.coordinator.data.title_metadata.get(
-            "npTitleId", None
-        ) and self.key == self.coordinator.data.platform.get("platform", ""):
-            title = self.coordinator.data.title_metadata
-            if title["format"] == PlatformType.PS5:
-                return title["conceptIconUrl"]
-
-            if title["format"] in [PlatformType.PS4, PlatformType.PS3]:
-                return title["npTitleIconUrl"]
-        return None
+        session = next(
+            (
+                session
+                for session in self.coordinator.data.active_sessions
+                if session.platform == self.key
+            ),
+            SessionData(),
+        )
+        return session.media_image_url

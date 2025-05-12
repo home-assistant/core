@@ -6,10 +6,26 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from psnawp_api import PSNAWP
+from psnawp_api.core.psnawp_exceptions import PSNAWPNotFoundError
 from psnawp_api.models.trophies import PlatformType as PSNAWPPlatformType
 from psnawp_api.models.user import User
 
 from .const import PlatformType
+
+LEGACY_PLATFORMS = {PlatformType.PS3, PlatformType.PS4}
+SUPPORTED_PLATFORMS = {PlatformType.PS3, PlatformType.PS4, PlatformType.PS5}
+
+
+@dataclass
+class SessionData:
+    """Dataclass representing console session data."""
+
+    platform: str | None = None
+    title_id: str | None = None
+    title_name: str | None = None
+    format: PlatformType | None = None
+    media_image_url: str | None = None
+    status: str = ""
 
 
 @dataclass
@@ -20,8 +36,7 @@ class PlaystationNetworkData:
     username: str = ""
     account_id: str = ""
     available: bool = False
-    title_metadata: dict[str, Any] = field(default_factory=dict)
-    platform: dict[str, Any] = field(default_factory=dict)
+    active_sessions: list[SessionData] = field(default_factory=list)
     registered_platforms: set[str] = field(default_factory=set)
 
 
@@ -63,34 +78,60 @@ class PlaystationNetwork:
             data.presence.get("basicPresence", {}).get("availability")
             == "availableToPlay"
         )
-        data.platform = data.presence.get("basicPresence", {}).get(
-            "primaryPlatformInfo"
-        )
 
-        game_title_info_list = data.presence.get("basicPresence", {}).get(
-            "gameTitleInfoList"
-        )
+        session = SessionData()
+        session.platform = data.presence["basicPresence"]["primaryPlatformInfo"][
+            "platform"
+        ]
 
-        if game_title_info_list:
-            data.title_metadata = game_title_info_list[0]
-            data.title_metadata["format"] = data.title_metadata["format"].upper()
+        if session.platform in SUPPORTED_PLATFORMS:
+            session.status = data.presence.get("basicPresence", {}).get(
+                "primaryPlatformInfo"
+            )["onlineStatus"]
 
-        if (
-            not data.available
-        ):  # if user isn't showing as available, check legacy platforms if owned
-            if PlatformType.PS3 in data.registered_platforms:
-                self.legacy_profile = self.client.get_profile_legacy()
-                presence = self.legacy_profile["profile"].get("presences", [])
-                data.platform = presence[0] if presence else {}
-                data.available = data.platform["onlineStatus"] == "online"
-                if "npTitleId" in data.platform:
-                    data.title_metadata = {
-                        "npTitleId": data.platform["npTitleId"],
-                        "titleName": data.platform["titleName"],
-                        "format": data.platform["platform"],
-                        "npTitleIconUrl": self.user.trophy_groups_summary(
-                            np_communication_id=data.platform["npTitleId"],
-                            platform=PSNAWPPlatformType.PS3,
-                        ).trophy_title_icon_url,
-                    }
+            game_title_info = data.presence.get("basicPresence", {}).get(
+                "gameTitleInfoList"
+            )
+
+            if game_title_info:
+                session.title_id = game_title_info[0]["npTitleId"]
+                session.title_name = game_title_info[0]["titleName"]
+                session.format = game_title_info[0]["format"]
+                if session.format == PlatformType.PS5:
+                    session.media_image_url = game_title_info[0]["conceptIconUrl"]
+                else:
+                    session.media_image_url = game_title_info[0]["npTitleIconUrl"]
+
+            data.active_sessions.append(session)
+
+        # check legacy platforms if owned
+        if set(LEGACY_PLATFORMS).issubset(data.registered_platforms):
+            self.legacy_profile = self.client.get_profile_legacy()
+            presence = self.legacy_profile["profile"].get("presences", [])
+            game_title_info = presence[0] if presence else {}
+            session = SessionData()
+
+            # If primary console isn't online, check legacy platforms for status
+            if not data.available:
+                data.available = game_title_info["onlineStatus"] == "online"
+
+            if "npTitleId" in game_title_info:
+                session.title_id = game_title_info["npTitleId"]
+                session.title_name = game_title_info["titleName"]
+                session.format = game_title_info["platform"]
+                session.platform = game_title_info["platform"]
+                session.status = game_title_info["onlineStatus"]
+                if session.format == PlatformType.PS4:
+                    session.media_image_url = game_title_info["npTitleIconUrl"]
+                elif session.format == PlatformType.PS3:
+                    try:
+                        title = self.psn.game_title(session.title_id, "me")
+                        session.media_image_url = title.get_title_icon_url(
+                            PSNAWPPlatformType.PS3
+                        )
+                    except PSNAWPNotFoundError:
+                        session.media_image_url = None
+
+            if game_title_info["onlineStatus"] == "online":
+                data.active_sessions.append(session)
         return data
