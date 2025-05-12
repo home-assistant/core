@@ -1015,14 +1015,12 @@ async def test_camera_capabilities_changing_non_native_support(
 
 
 @pytest.mark.usefixtures("mock_test_webrtc_cameras")
-@pytest.mark.parametrize(("entity_id"), ["camera.async"])
 async def test_camera_capabilities_changing_native_support(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    entity_id: str,
 ) -> None:
     """Test WebRTC camera capabilities."""
-    cam = get_camera_from_entity_id(hass, entity_id)
+    cam = get_camera_from_entity_id(hass, "camera.async")
     assert cam.supported_features == camera.CameraEntityFeature.STREAM
 
     await _test_capabilities(
