@@ -98,7 +98,7 @@ async def test_send_command_service(hass: HomeAssistant, remoteencws: Mock) -> N
     assert command.body["param3"] == "dash"
 
 
-@pytest.mark.usefixtures("remotews", "rest_api")
+@pytest.mark.usefixtures("remote_websocket", "rest_api")
 async def test_turn_on_wol(hass: HomeAssistant) -> None:
     """Test turn on."""
     entry = MockConfigEntry(

@@ -219,45 +219,47 @@ def remoteencws_failing_fixture() -> Generator[None]:
         yield
 
 
-@pytest.fixture(name="remotews")
-def remotews_fixture() -> Generator[Mock]:
+@pytest.fixture(name="remote_websocket")
+def remote_websocket_fixture() -> Generator[Mock]:
     """Patch the samsungtvws SamsungTVWS."""
-    remotews = Mock(SamsungTVWSAsyncRemote)
-    remotews.__aenter__ = AsyncMock(return_value=remotews)
-    remotews.__aexit__ = AsyncMock()
-    remotews.token = "FAKE_TOKEN"
-    remotews.app_list_data = None
+    remote_websocket = Mock(SamsungTVWSAsyncRemote)
+    remote_websocket.__aenter__ = AsyncMock(return_value=remote_websocket)
+    remote_websocket.__aexit__ = AsyncMock()
+    remote_websocket.token = "FAKE_TOKEN"
+    remote_websocket.app_list_data = None
 
     async def _start_listening(
         ws_event_callback: Callable[[str, Any], Awaitable[None] | None] | None = None,
     ):
-        remotews.ws_event_callback = ws_event_callback
+        remote_websocket.ws_event_callback = ws_event_callback
 
     async def _send_commands(commands: list[SamsungTVCommand]):
         if (
             len(commands) == 1
             and isinstance(commands[0], ChannelEmitCommand)
             and commands[0].params["event"] == "ed.installedApp.get"
-            and remotews.app_list_data is not None
+            and remote_websocket.app_list_data is not None
         ):
-            remotews.raise_mock_ws_event_callback(
+            remote_websocket.raise_mock_ws_event_callback(
                 ED_INSTALLED_APP_EVENT,
-                remotews.app_list_data,
+                remote_websocket.app_list_data,
             )
 
     def _mock_ws_event_callback(event: str, response: Any):
-        if remotews.ws_event_callback:
-            remotews.ws_event_callback(event, response)
+        if remote_websocket.ws_event_callback:
+            remote_websocket.ws_event_callback(event, response)
 
-    remotews.start_listening.side_effect = _start_listening
-    remotews.send_commands.side_effect = _send_commands
-    remotews.raise_mock_ws_event_callback = Mock(side_effect=_mock_ws_event_callback)
+    remote_websocket.start_listening.side_effect = _start_listening
+    remote_websocket.send_commands.side_effect = _send_commands
+    remote_websocket.raise_mock_ws_event_callback = Mock(
+        side_effect=_mock_ws_event_callback
+    )
 
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote",
-    ) as remotews_class:
-        remotews_class.return_value = remotews
-        yield remotews
+        return_value=remote_websocket,
+    ):
+        yield remote_websocket
 
 
 @pytest.fixture(name="remoteencws")
