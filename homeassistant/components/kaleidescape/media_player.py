@@ -14,7 +14,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN as KALEIDESCAPE_DOMAIN
+from .const import DOMAIN
 from .entity import KaleidescapeEntity
 
 if TYPE_CHECKING:
@@ -43,7 +43,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the platform from a config entry."""
-    entities = [KaleidescapeMediaPlayer(hass.data[KALEIDESCAPE_DOMAIN][entry.entry_id])]
+    entities = [KaleidescapeMediaPlayer(hass.data[DOMAIN][entry.entry_id])]
     async_add_entities(entities)
 
 

@@ -26,27 +26,26 @@ pytestmark = [
     ),
 ]
 
-ENTITY_ID = "climate.freezer_freezer"
+ENTITY_ID = "climate.freezer"
 SERVICE_SET_TEMPERATURE = "set_temperature"
 
 
 async def test_climate_states(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    setup_platform: None,
+    setup_platform: MockConfigEntry,
 ) -> None:
     """Test climate entity state."""
 
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
 
 async def test_set_target(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
-    setup_platform: None,
+    setup_platform: MockConfigEntry,
 ) -> None:
     """Test the climate can be turned on/off."""
 
@@ -64,7 +63,7 @@ async def test_set_target(
 async def test_api_failure(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
-    setup_platform: None,
+    setup_platform: MockConfigEntry,
 ) -> None:
     """Test handling of exception from API."""
     mock_miele_client.set_target_temperature.side_effect = ClientError

@@ -42,11 +42,14 @@ import respx
 from syrupy.assertion import SnapshotAssertion
 from syrupy.session import SnapshotSession
 
+# Setup patching of JSON functions before any other Home Assistant imports
+from . import patch_json  # isort:skip
+
 from homeassistant import block_async_io
 from homeassistant.exceptions import ServiceNotFound
 
 # Setup patching of recorder functions before any other Home Assistant imports
-from . import patch_recorder
+from . import patch_recorder  # isort:skip
 
 # Setup patching of dt_util time functions before any other Home Assistant imports
 from . import patch_time  # noqa: F401, isort:skip
@@ -448,6 +451,12 @@ def reset_globals() -> Generator[None]:
     # Reset the frame helper globals
     frame.async_setup(None)
     frame._REPORTED_INTEGRATIONS.clear()
+
+    # Reset patch_json
+    if patch_json.mock_objects:
+        obj = patch_json.mock_objects.pop()
+        patch_json.mock_objects.clear()
+        pytest.fail(f"Test attempted to serialize mock object {obj}")
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -1319,9 +1328,11 @@ def disable_translations_once(
 @pytest_asyncio.fixture(autouse=True, scope="session", loop_scope="session")
 async def mock_zeroconf_resolver() -> AsyncGenerator[_patch]:
     """Mock out the zeroconf resolver."""
+    resolver = AsyncResolver()
+    resolver.real_close = resolver.close
     patcher = patch(
         "homeassistant.helpers.aiohttp_client._async_make_resolver",
-        return_value=AsyncResolver(),
+        return_value=resolver,
     )
     patcher.start()
     try:

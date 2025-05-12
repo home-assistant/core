@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS
+from . import ACTUATORS, DOMAIN, SENSORS
 from .entity import XS1DeviceEntity
 
 MIN_TEMP = 8
@@ -30,8 +30,8 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the XS1 thermostat platform."""
-    actuators = hass.data[COMPONENT_DOMAIN][ACTUATORS]
-    sensors = hass.data[COMPONENT_DOMAIN][SENSORS]
+    actuators = hass.data[DOMAIN][ACTUATORS]
+    sensors = hass.data[DOMAIN][SENSORS]
 
     thermostat_entities = []
     for actuator in actuators:

@@ -52,7 +52,7 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
             ).status
             is MachineState.BREWING
         ),
-        available_fn=lambda device: device.websocket.connected,
+        available_fn=lambda coordinator: not coordinator.websocket_terminated,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     LaMarzoccoBinarySensorEntityDescription(

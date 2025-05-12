@@ -1,5 +1,6 @@
 """Mocks for tests."""
 
+from datetime import UTC
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -28,6 +29,7 @@ class BinarySensorPropertyMock(BinarySensorProperty):
     def __init__(self, **kwargs: Any) -> None:  # pylint: disable=super-init-not-called
         """Initialize the mock."""
         self._logger = MagicMock()
+        self._timezone = UTC
         self.element_uid = "Test"
         self.key_count = 1
         self.sensor_type = "door"
@@ -41,6 +43,7 @@ class BinarySwitchPropertyMock(BinarySwitchProperty):
     def __init__(self, **kwargs: Any) -> None:  # pylint: disable=super-init-not-called
         """Initialize the mock."""
         self._logger = MagicMock()
+        self._timezone = UTC
         self.element_uid = "Test"
         self.state = False
 
@@ -51,6 +54,7 @@ class ConsumptionPropertyMock(ConsumptionProperty):
     def __init__(self, **kwargs: Any) -> None:  # pylint: disable=super-init-not-called
         """Initialize the mock."""
         self._logger = MagicMock()
+        self._timezone = UTC
         self.element_uid = "devolo.Meter:Test"
         self.current_unit = "W"
         self.total_unit = "kWh"
@@ -68,6 +72,7 @@ class MultiLevelSensorPropertyMock(MultiLevelSensorProperty):
         self._unit = "°C"
         self._value = 20
         self._logger = MagicMock()
+        self._timezone = UTC
 
 
 class BrightnessSensorPropertyMock(MultiLevelSensorProperty):
@@ -80,6 +85,7 @@ class BrightnessSensorPropertyMock(MultiLevelSensorProperty):
         self._unit = "%"
         self._value = 20
         self._logger = MagicMock()
+        self._timezone = UTC
 
 
 class MultiLevelSwitchPropertyMock(MultiLevelSwitchProperty):
@@ -92,6 +98,7 @@ class MultiLevelSwitchPropertyMock(MultiLevelSwitchProperty):
         self.max = 24
         self._value = 20
         self._logger = MagicMock()
+        self._timezone = UTC
 
 
 class SirenPropertyMock(MultiLevelSwitchProperty):
@@ -105,6 +112,7 @@ class SirenPropertyMock(MultiLevelSwitchProperty):
         self.switch_type = "tone"
         self._value = 0
         self._logger = MagicMock()
+        self._timezone = UTC
 
 
 class SettingsMock(SettingsProperty):
@@ -113,6 +121,7 @@ class SettingsMock(SettingsProperty):
     def __init__(self, **kwargs: Any) -> None:  # pylint: disable=super-init-not-called
         """Initialize the mock."""
         self._logger = MagicMock()
+        self._timezone = UTC
         self.name = "Test"
         self.zone = "Test"
         self.tone = 1

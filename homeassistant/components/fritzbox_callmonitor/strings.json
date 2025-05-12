@@ -39,9 +39,9 @@
   "options": {
     "step": {
       "init": {
-        "title": "Configure Prefixes",
+        "title": "Configure prefixes",
         "data": {
-          "prefixes": "Prefixes (comma separated list)"
+          "prefixes": "Prefixes (comma-separated list)"
         }
       }
     },

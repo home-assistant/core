@@ -3,8 +3,8 @@
 from unittest.mock import Mock, patch
 
 from homematicip.auth import Auth
-from homematicip.base.base_connection import HmipConnectionError
 from homematicip.connection.connection_context import ConnectionContext
+from homematicip.exceptions.connection_exceptions import HmipConnectionError
 import pytest
 
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN

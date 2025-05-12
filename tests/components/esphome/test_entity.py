@@ -10,8 +10,11 @@ from aioesphomeapi import (
     BinarySensorState,
     SensorInfo,
     SensorState,
+    build_unique_id,
 )
+import pytest
 
+from homeassistant.components.esphome import DOMAIN
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_RESTORED,
@@ -19,6 +22,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -513,3 +517,151 @@ async def test_entity_without_name_device_with_friendly_name(
     # Make sure we have set the name to `None` as otherwise
     # the friendly_name will be "The Best Mixer "
     assert state.attributes[ATTR_FRIENDLY_NAME] == "The Best Mixer"
+
+
+@pytest.mark.usefixtures("hass_storage")
+async def test_entity_id_preserved_on_upgrade(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity_id is preserved on upgrade."""
+    entity_info = [
+        BinarySensorInfo(
+            object_id="my",
+            key=1,
+            name="my",
+            unique_id="binary_sensor_my",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+    ]
+    user_service = []
+    assert (
+        build_unique_id("11:22:33:44:55:AA", entity_info[0])
+        == "11:22:33:44:55:AA-binary_sensor-my"
+    )
+
+    entry = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        "11:22:33:44:55:AA-binary_sensor-my",
+        suggested_object_id="should_not_change",
+    )
+    assert entry.entity_id == "binary_sensor.should_not_change"
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+        device_info={"friendly_name": "The Best Mixer", "name": "mixer"},
+    )
+    state = hass.states.get("binary_sensor.should_not_change")
+    assert state is not None
+
+
+@pytest.mark.usefixtures("hass_storage")
+async def test_entity_id_preserved_on_upgrade_old_format_entity_id(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity_id is preserved on upgrade from old format."""
+    entity_info = [
+        BinarySensorInfo(
+            object_id="my",
+            key=1,
+            name="my",
+            unique_id="binary_sensor_my",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+    ]
+    user_service = []
+    assert (
+        build_unique_id("11:22:33:44:55:AA", entity_info[0])
+        == "11:22:33:44:55:AA-binary_sensor-my"
+    )
+
+    entry = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        "11:22:33:44:55:AA-binary_sensor-my",
+        suggested_object_id="my",
+    )
+    assert entry.entity_id == "binary_sensor.my"
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+        device_info={"name": "mixer"},
+    )
+    state = hass.states.get("binary_sensor.my")
+    assert state is not None
+
+
+async def test_entity_id_preserved_on_upgrade_when_in_storage(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+    mock_esphome_device: MockESPHomeDeviceType,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity_id is preserved on upgrade with user defined entity_id."""
+    entity_info = [
+        BinarySensorInfo(
+            object_id="my",
+            key=1,
+            name="my",
+            unique_id="binary_sensor_my",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+    ]
+    user_service = []
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+        device_info={"friendly_name": "The Best Mixer", "name": "mixer"},
+    )
+    state = hass.states.get("binary_sensor.mixer_my")
+    assert state is not None
+    # now rename the entity
+    ent_reg_entry = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        "11:22:33:44:55:AA-binary_sensor-my",
+    )
+    entity_registry.async_update_entity(
+        ent_reg_entry.entity_id,
+        new_entity_id="binary_sensor.user_named",
+    )
+    await hass.config_entries.async_unload(device.entry.entry_id)
+    await hass.async_block_till_done()
+    entry = device.entry
+    entry_id = entry.entry_id
+    storage_key = f"esphome.{entry_id}"
+    assert len(hass_storage[storage_key]["data"]["binary_sensor"]) == 1
+    binary_sensor_data: dict[str, Any] = hass_storage[storage_key]["data"][
+        "binary_sensor"
+    ][0]
+    assert binary_sensor_data["name"] == "my"
+    assert binary_sensor_data["object_id"] == "my"
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+        entry=entry,
+        device_info={"friendly_name": "The Best Mixer", "name": "mixer"},
+    )
+    state = hass.states.get("binary_sensor.user_named")
+    assert state is not None

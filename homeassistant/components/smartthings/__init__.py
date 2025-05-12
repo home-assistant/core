@@ -493,6 +493,11 @@ def process_status(status: dict[str, ComponentStatus]) -> dict[str, ComponentSta
         )
         if disabled_components is not None:
             for component in disabled_components:
+                # Burner components are named burner-06
+                # but disabledComponents contain burner-6
+                if "burner" in component:
+                    burner_id = int(component.split("-")[-1])
+                    component = f"burner-0{burner_id}"
                 if component in status:
                     del status[component]
     for component_status in status.values():

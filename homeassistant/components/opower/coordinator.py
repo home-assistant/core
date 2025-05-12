@@ -113,14 +113,16 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             _LOGGER.error("Error getting accounts: %s", err)
             raise
         for account in accounts:
-            id_prefix = "_".join(
+            id_prefix = (
                 (
-                    self.api.utility.subdomain(),
-                    account.meter_type.name.lower(),
-                    # Some utilities like AEP have "-" in their account id.
-                    # Replace it with "_" to avoid "Invalid statistic_id"
-                    account.utility_account_id.replace("-", "_").lower(),
+                    f"{self.api.utility.subdomain()}_{account.meter_type.name}_"
+                    f"{account.utility_account_id}"
                 )
+                # Some utilities like AEP have "-" in their account id.
+                # Other utilities like ngny-gas have "-" in their subdomain.
+                # Replace it with "_" to avoid "Invalid statistic_id"
+                .replace("-", "_")
+                .lower()
             )
             cost_statistic_id = f"{DOMAIN}:{id_prefix}_energy_cost"
             compensation_statistic_id = f"{DOMAIN}:{id_prefix}_energy_compensation"
@@ -190,7 +192,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 return_sum = 0.0
                 last_stats_time = None
             else:
-                await self._async_maybe_migrate_statistics(
+                migrated = await self._async_maybe_migrate_statistics(
                     account.utility_account_id,
                     {
                         cost_statistic_id: compensation_statistic_id,
@@ -203,6 +205,13 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                         return_statistic_id: return_metadata,
                     },
                 )
+                if migrated:
+                    # Skip update to avoid working on old data since the migration is done
+                    # asynchronously. Update the statistics in the next refresh in 12h.
+                    _LOGGER.debug(
+                        "Statistics migration completed. Skipping update for now"
+                    )
+                    continue
                 cost_reads = await self._async_get_cost_reads(
                     account,
                     self.api.utility.timezone(),
@@ -326,7 +335,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         utility_account_id: str,
         migration_map: dict[str, str],
         metadata_map: dict[str, StatisticMetaData],
-    ) -> None:
+    ) -> bool:
         """Perform one-time statistics migration based on the provided map.
 
         Splits negative values from source IDs into target IDs.
@@ -339,7 +348,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
 
         """
         if not migration_map:
-            return
+            return False
 
         need_migration_source_ids = set()
         for source_id, target_id in migration_map.items():
@@ -349,12 +358,12 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 1,
                 target_id,
                 True,
-                {},
+                set(),
             )
             if not last_target_stat:
                 need_migration_source_ids.add(source_id)
         if not need_migration_source_ids:
-            return
+            return False
 
         _LOGGER.info("Starting one-time migration for: %s", need_migration_source_ids)
 
@@ -416,7 +425,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
 
         if not need_migration_source_ids:
             _LOGGER.debug("No migration needed")
-            return
+            return False
 
         for stat_id, stats in processed_stats.items():
             _LOGGER.debug("Applying %d migrated stats for %s", len(stats), stat_id)
@@ -434,13 +443,15 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 "energy_settings": "/config/energy",
                 "target_ids": "\n".join(
                     {
-                        v
+                        str(metadata_map[v]["name"])
                         for k, v in migration_map.items()
                         if k in need_migration_source_ids
                     }
                 ),
             },
         )
+
+        return True
 
     async def _async_get_cost_reads(
         self, account: Account, time_zone_str: str, start_time: float | None = None

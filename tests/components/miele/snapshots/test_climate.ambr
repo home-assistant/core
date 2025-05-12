@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_climate_states[platforms0-freezer][climate.freezer_freezer-entry]
+# name: test_climate_states[platforms0-freezer][climate.freezer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -19,7 +19,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.freezer_freezer',
+    'entity_id': 'climate.freezer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -31,7 +31,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Freezer',
+    'original_name': None,
     'platform': 'miele',
     'previous_unique_id': None,
     'supported_features': <ClimateEntityFeature: 1>,
@@ -40,11 +40,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate_states[platforms0-freezer][climate.freezer_freezer-state]
+# name: test_climate_states[platforms0-freezer][climate.freezer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': -18,
-      'friendly_name': 'Freezer Freezer',
+      'friendly_name': 'Freezer',
       'hvac_modes': list([
         <HVACMode.COOL: 'cool'>,
       ]),
@@ -55,14 +55,14 @@
       'temperature': -18,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.freezer_freezer',
+    'entity_id': 'climate.freezer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'cool',
   })
 # ---
-# name: test_climate_states[platforms0-freezer][climate.refrigerator_refrigerator-entry]
+# name: test_climate_states[platforms0-freezer][climate.refrigerator-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -82,7 +82,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.refrigerator_refrigerator',
+    'entity_id': 'climate.refrigerator',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -94,7 +94,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Refrigerator',
+    'original_name': None,
     'platform': 'miele',
     'previous_unique_id': None,
     'supported_features': <ClimateEntityFeature: 1>,
@@ -103,11 +103,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate_states[platforms0-freezer][climate.refrigerator_refrigerator-state]
+# name: test_climate_states[platforms0-freezer][climate.refrigerator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 4,
-      'friendly_name': 'Refrigerator Refrigerator',
+      'friendly_name': 'Refrigerator',
       'hvac_modes': list([
         <HVACMode.COOL: 'cool'>,
       ]),
@@ -118,7 +118,7 @@
       'temperature': 4,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.refrigerator_refrigerator',
+    'entity_id': 'climate.refrigerator',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

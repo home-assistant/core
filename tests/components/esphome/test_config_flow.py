@@ -27,7 +27,7 @@ from homeassistant.components.esphome.const import (
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -748,6 +748,35 @@ async def test_discovery_already_configured(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_client", "mock_setup_entry", "mock_zeroconf")
+async def test_discovery_ignored(hass: HomeAssistant) -> None:
+    """Test discovery does not probe and ignored entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "test8266.local", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        unique_id="11:22:33:44:55:aa",
+        source=SOURCE_IGNORE,
+    )
+
+    entry.add_to_hass(hass)
+
+    service_info = ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.43.183"),
+        ip_addresses=[ip_address("192.168.43.183")],
+        hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
+        properties={"mac": "1122334455aa"},
+        type="mock_type",
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_client", "mock_setup_entry", "mock_zeroconf")
 async def test_discovery_duplicate_data(hass: HomeAssistant) -> None:
     """Test discovery aborts if same mDNS packet arrives."""
     service_info = ZeroconfServiceInfo(
@@ -786,8 +815,8 @@ async def test_discovery_updates_unique_id(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     service_info = ZeroconfServiceInfo(
-        ip_address=ip_address("192.168.43.183"),
-        ip_addresses=[ip_address("192.168.43.183")],
+        ip_address=ip_address("192.168.43.184"),
+        ip_addresses=[ip_address("192.168.43.184")],
         hostname="test8266.local.",
         name="mock_name",
         port=6053,
@@ -806,7 +835,38 @@ async def test_discovery_updates_unique_id(hass: HomeAssistant) -> None:
         "mac": "11:22:33:44:55:aa",
     }
 
+    assert entry.data[CONF_HOST] == "192.168.43.184"
     assert entry.unique_id == "11:22:33:44:55:aa"
+
+
+@pytest.mark.usefixtures("mock_client", "mock_setup_entry", "mock_zeroconf")
+async def test_discovery_abort_without_update_same_host_port(
+    hass: HomeAssistant,
+) -> None:
+    """Test discovery aborts without update when hsot and port are the same."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        unique_id="11:22:33:44:55:aa",
+    )
+
+    entry.add_to_hass(hass)
+
+    service_info = ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.43.183"),
+        ip_addresses=[ip_address("192.168.43.183")],
+        hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
+        properties={"address": "test8266.local", "mac": "1122334455aa"},
+        type="mock_type",
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")

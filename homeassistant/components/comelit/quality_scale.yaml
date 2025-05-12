@@ -65,8 +65,8 @@ rules:
     status: todo
     comment: missing implementation
   entity-category:
-    status: todo
-    comment: PR in progress
+    status: exempt
+    comment: no config or diagnostic entities
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done

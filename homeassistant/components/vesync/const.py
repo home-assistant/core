@@ -97,6 +97,7 @@ SKU_TO_BASE_DEVICE = {
     "LAP-V102S-AASR": "Vital100S",  # Alt ID Model Vital100S
     "LAP-V102S-WEU": "Vital100S",  # Alt ID Model Vital100S
     "LAP-V102S-WUK": "Vital100S",  # Alt ID Model Vital100S
+    "LAP-V102S-AUSR": "Vital100S",  # Alt ID Model Vital100S
     "EverestAir": "EverestAir",
     "LAP-EL551S-AUS": "EverestAir",  # Alt ID Model EverestAir
     "LAP-EL551S-AEUR": "EverestAir",  # Alt ID Model EverestAir

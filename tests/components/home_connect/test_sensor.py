@@ -100,9 +100,8 @@ async def test_paired_depaired_devices_flow(
     appliance: HomeAppliance,
 ) -> None:
     """Test that removed devices are correctly removed from and added to hass on API events."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     assert device
@@ -200,9 +199,8 @@ async def test_connected_devices(
         return get_status_original_mock.return_value
 
     client.get_status = AsyncMock(side_effect=get_status_side_effect)
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     client.get_status = get_status_original_mock
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
@@ -246,9 +244,8 @@ async def test_sensor_entity_availability(
         "sensor.dishwasher_operation_state",
         "sensor.dishwasher_salt_nearly_empty",
     ]
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     await client.add_events(
         [
@@ -370,7 +367,7 @@ async def test_program_sensors(
     time_to_freeze = "2021-01-09 12:00:00+00:00"
     freezer.move_to(time_to_freeze)
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
     client.get_status.return_value.status.extend(
         Status(
             key=StatusKey(event_key.value),
@@ -380,7 +377,7 @@ async def test_program_sensors(
         for event_key, value in EVENT_PROG_DELAYED_START[EventType.STATUS].items()
     )
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     await client.add_events(
         [
@@ -452,9 +449,8 @@ async def test_program_sensor_edge_case(
         )
     )
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     assert hass.states.is_state(entity_id, initial_state)
 
@@ -515,9 +511,8 @@ async def test_remaining_prog_time_edge_cases(
     time_to_freeze = "2021-01-09 12:00:00+00:00"
     freezer.move_to(time_to_freeze)
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     for (
         event,
@@ -591,9 +586,8 @@ async def test_sensors_states(
     appliance: HomeAppliance,
 ) -> None:
     """Tests for appliance sensors."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     for value, expected_state in value_expected_state:
         await client.add_events(
@@ -653,9 +647,8 @@ async def test_event_sensors_states(
 ) -> None:
     """Tests for appliance event sensors."""
     caplog.set_level(logging.ERROR)
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     assert not hass.states.get(entity_id)
 
@@ -763,9 +756,8 @@ async def test_sensor_unit_fetching(
         )
     )
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     entity_state = hass.states.get(entity_id)
     assert entity_state
@@ -819,9 +811,8 @@ async def test_sensor_unit_fetching_error(
     client.get_status = AsyncMock(side_effect=get_status_mock)
     client.get_status_value = AsyncMock(side_effect=HomeConnectError())
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     assert hass.states.get(entity_id)
 
@@ -881,11 +872,10 @@ async def test_sensor_unit_fetching_after_rate_limit_error(
         ]
     )
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     assert client.get_status_value.call_count == 2
 

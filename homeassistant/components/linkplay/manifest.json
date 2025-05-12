@@ -7,6 +7,6 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["linkplay"],
-  "requirements": ["python-linkplay==0.2.4"],
+  "requirements": ["python-linkplay==0.2.5"],
   "zeroconf": ["_linkplay._tcp.local."]
 }

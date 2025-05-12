@@ -104,19 +104,6 @@ async def test_unpause_media_player_intent(hass: HomeAssistant) -> None:
     assert call.service == SERVICE_MEDIA_PLAY
     assert call.data == {"entity_id": entity_id}
 
-    # Test if not paused
-    hass.states.async_set(
-        entity_id,
-        STATE_PLAYING,
-    )
-
-    with pytest.raises(intent.MatchFailedError):
-        response = await intent.async_handle(
-            hass,
-            "test",
-            media_player_intent.INTENT_MEDIA_UNPAUSE,
-        )
-
 
 async def test_next_media_player_intent(hass: HomeAssistant) -> None:
     """Test HassMediaNext intent for media players."""
@@ -244,17 +231,6 @@ async def test_volume_media_player_intent(hass: HomeAssistant) -> None:
     assert call.domain == DOMAIN
     assert call.service == SERVICE_VOLUME_SET
     assert call.data == {"entity_id": entity_id, "volume_level": 0.5}
-
-    # Test if not playing
-    hass.states.async_set(entity_id, STATE_IDLE, attributes=attributes)
-
-    with pytest.raises(intent.MatchFailedError):
-        response = await intent.async_handle(
-            hass,
-            "test",
-            media_player_intent.INTENT_SET_VOLUME,
-            {"volume_level": {"value": 50}},
-        )
 
     # Test feature not supported
     hass.states.async_set(

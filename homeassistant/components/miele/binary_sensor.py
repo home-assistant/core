@@ -263,13 +263,23 @@ async def async_setup_entry(
 ) -> None:
     """Set up the binary sensor platform."""
     coordinator = config_entry.runtime_data
+    added_devices: set[str] = set()
 
-    async_add_entities(
-        MieleBinarySensor(coordinator, device_id, definition.description)
-        for device_id, device in coordinator.data.devices.items()
-        for definition in BINARY_SENSOR_TYPES
-        if device.device_type in definition.types
-    )
+    def _async_add_new_devices() -> None:
+        nonlocal added_devices
+
+        new_devices_set, current_devices = coordinator.async_add_devices(added_devices)
+        added_devices = current_devices
+
+        async_add_entities(
+            MieleBinarySensor(coordinator, device_id, definition.description)
+            for device_id, device in coordinator.data.devices.items()
+            for definition in BINARY_SENSOR_TYPES
+            if device_id in new_devices_set and device.device_type in definition.types
+        )
+
+    config_entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
+    _async_add_new_devices()
 
 
 class MieleBinarySensor(MieleEntity, BinarySensorEntity):

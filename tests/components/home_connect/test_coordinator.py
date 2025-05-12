@@ -99,7 +99,7 @@ async def test_coordinator_failure_refresh_and_stream(
     entity_id_2 = "binary_sensor.washer_remote_start"
     await async_setup_component(hass, HA_DOMAIN, {})
     await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     state = hass.states.get(entity_id_1)
     assert state
     assert state.state != STATE_UNAVAILABLE
@@ -218,9 +218,8 @@ async def test_coordinator_not_fetching_on_disconnected_appliance(
     """Test that the coordinator does not fetch anything on disconnected appliance."""
     appliance.connected = False
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     for method in INITIAL_FETCH_CLIENT_METHODS:
         assert getattr(client, method).call_count == 0
@@ -242,9 +241,8 @@ async def test_coordinator_update_failing(
     """
     setattr(client, mock_method, AsyncMock(side_effect=HomeConnectError()))
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     getattr(client, mock_method).assert_called()
 
@@ -286,9 +284,8 @@ async def test_event_listener(
     entity_id: str,
 ) -> None:
     """Test that the event listener works."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     state = hass.states.get(entity_id)
 
@@ -353,9 +350,8 @@ async def tests_receive_setting_and_status_for_first_time_at_events(
     client.get_setting = AsyncMock(return_value=ArrayOfSettings([]))
     client.get_status = AsyncMock(return_value=ArrayOfStatus([]))
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     await client.add_events(
         [
@@ -395,7 +391,7 @@ async def tests_receive_setting_and_status_for_first_time_at_events(
     )
     await hass.async_block_till_done()
     assert len(config_entry._background_tasks) == 1
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_event_listener_error(
@@ -468,11 +464,10 @@ async def test_event_listener_resilience(
         side_effect=[stream_exception(), client.stream_all_events()]
     )
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     await integration_setup(client)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert len(config_entry._background_tasks) == 1
 
     state = hass.states.get(entity_id)
@@ -531,9 +526,8 @@ async def test_devices_updated_on_refresh(
     )
 
     await async_setup_component(hass, HA_DOMAIN, {})
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     for appliance in appliances[:2]:
         assert device_registry.async_get_device({(DOMAIN, appliance.ha_id)})
@@ -564,9 +558,8 @@ async def test_paired_disconnected_devices_not_fetching(
 ) -> None:
     """Test that Home Connect API is not fetched after pairing a disconnected device."""
     client.get_home_appliances = AsyncMock(return_value=ArrayOfHomeAppliances([]))
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     appliance.connected = False
     await client.add_events(
@@ -601,9 +594,8 @@ async def test_coordinator_disabling_updates_for_appliance(
     appliance_ha_id = "SIEMENS-HCS02DWH1-6BE58C26DCC1"
     issue_id = f"home_connect_too_many_connected_paired_events_{appliance_ha_id}"
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     assert hass.states.is_state("switch.dishwasher_power", STATE_ON)
 
@@ -692,9 +684,8 @@ async def test_coordinator_disabling_updates_for_appliance_is_gone_after_entry_r
     appliance_ha_id = "SIEMENS-HCS02DWH1-6BE58C26DCC1"
     issue_id = f"home_connect_too_many_connected_paired_events_{appliance_ha_id}"
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     assert hass.states.is_state("switch.dishwasher_power", STATE_ON)
 
@@ -718,9 +709,8 @@ async def test_coordinator_disabling_updates_for_appliance_is_gone_after_entry_r
 
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     get_settings_original_side_effect = client.get_settings.side_effect
 

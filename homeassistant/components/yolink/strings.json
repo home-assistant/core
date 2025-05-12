@@ -44,6 +44,9 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "water_running": { "name": "Water is flowing" }
+    },
     "switch": {
       "usb_ports": { "name": "USB ports" },
       "plug_1": { "name": "Plug 1" },

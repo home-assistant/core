@@ -93,7 +93,6 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             DOMAIN,
             SERVICE_VOLUME_SET,
             required_domains={DOMAIN},
-            required_states={MediaPlayerState.PLAYING},
             required_features=MediaPlayerEntityFeature.VOLUME_SET,
             required_slots={
                 ATTR_MEDIA_VOLUME_LEVEL: intent.IntentSlotInfo(
@@ -159,7 +158,6 @@ class MediaUnpauseHandler(intent.ServiceIntentHandler):
             DOMAIN,
             SERVICE_MEDIA_PLAY,
             required_domains={DOMAIN},
-            required_states={MediaPlayerState.PAUSED},
             description="Resumes a media player",
             platforms={DOMAIN},
             device_classes={MediaPlayerDeviceClass},

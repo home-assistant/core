@@ -32,6 +32,8 @@ from .const import DOMAIN, LOGGER, SHELLY_GAS_MODELS
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .utils import get_device_entry_gen, get_rpc_key_ids
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class ShellyButtonDescription[

@@ -34,9 +34,11 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
+    ATTR_UNIT_OF_MEASUREMENT,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    UnitOfTemperature,
 )
 from homeassistant.core import Event, HomeAssistant
 
@@ -436,6 +438,22 @@ async def test_expose_linked_sensors(
     assert acc.char_pm25_density.value == 5
     assert acc.char_air_quality.value == 1
     assert len(broker.mock_calls) == 0
+
+    # Updated temperature with different unit should reflect in HomeKit
+    broker = MagicMock()
+    acc.char_current_temperature.broker = broker
+    hass.states.async_set(
+        temperature_entity_id,
+        60,
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_current_temperature.value == 15.6
+    assert len(broker.mock_calls) == 2
+    broker.reset_mock()
 
     # Updated temperature should reflect in HomeKit
     broker = MagicMock()

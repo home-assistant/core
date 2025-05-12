@@ -41,7 +41,7 @@ from .entity import (
     TeslemetryEnergyHistoryEntity,
     TeslemetryEnergyInfoEntity,
     TeslemetryEnergyLiveEntity,
-    TeslemetryVehicleEntity,
+    TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
     TeslemetryWallConnectorEntity,
 )
@@ -470,6 +470,28 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="climate_state_passenger_temp_setting",
         polling=True,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryVehicleSensorEntityDescription(
+        key="hvac_left_temperature_request",
+        streaming_listener=lambda vehicle,
+        callback: vehicle.listen_HvacLeftTemperatureRequest(callback),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryVehicleSensorEntityDescription(
+        key="hvac_right_temperature_request",
+        streaming_listener=lambda vehicle,
+        callback: vehicle.listen_HvacRightTemperatureRequest(callback),
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -1633,7 +1655,7 @@ class TeslemetryStreamSensorEntity(TeslemetryVehicleStreamEntity, RestoreSensor)
         self.async_write_ha_state()
 
 
-class TeslemetryVehicleSensorEntity(TeslemetryVehicleEntity, SensorEntity):
+class TeslemetryVehicleSensorEntity(TeslemetryVehiclePollingEntity, SensorEntity):
     """Base class for Teslemetry vehicle metric sensors."""
 
     entity_description: TeslemetryVehicleSensorEntityDescription
@@ -1696,7 +1718,7 @@ class TeslemetryStreamTimeSensorEntity(TeslemetryVehicleStreamEntity, SensorEnti
         self.async_write_ha_state()
 
 
-class TeslemetryVehicleTimeSensorEntity(TeslemetryVehicleEntity, SensorEntity):
+class TeslemetryVehicleTimeSensorEntity(TeslemetryVehiclePollingEntity, SensorEntity):
     """Base class for Teslemetry vehicle time sensors."""
 
     entity_description: TeslemetryTimeEntityDescription

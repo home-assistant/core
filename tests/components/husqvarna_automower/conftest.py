@@ -3,10 +3,10 @@
 import asyncio
 from collections.abc import Generator
 import time
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, create_autospec, patch
 
+from aioautomower.commands import MowerCommands, WorkAreaSettings
 from aioautomower.model import MowerAttributes
-from aioautomower.session import AutomowerSession, MowerCommands
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from aiohttp import ClientWebSocketResponse
 import pytest
@@ -108,7 +108,9 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-def mock_automower_client(values) -> Generator[AsyncMock]:
+def mock_automower_client(
+    values: dict[str, MowerAttributes],
+) -> Generator[AsyncMock]:
     """Mock a Husqvarna Automower client."""
 
     async def listen() -> None:
@@ -117,37 +119,21 @@ def mock_automower_client(values) -> Generator[AsyncMock]:
         await listen_block.wait()
         pytest.fail("Listen was not cancelled!")
 
-    mock = AsyncMock(spec=AutomowerSession)
-    mock.auth = AsyncMock(side_effect=ClientWebSocketResponse)
-    mock.commands = AsyncMock(spec_set=MowerCommands)
-    mock.get_status.return_value = values
-    mock.start_listening = AsyncMock(side_effect=listen)
-
     with patch(
         "homeassistant.components.husqvarna_automower.AutomowerSession",
-        return_value=mock,
-    ):
-        yield mock
-
-
-@pytest.fixture
-def mock_automower_client_one_mower(values) -> Generator[AsyncMock]:
-    """Mock a Husqvarna Automower client."""
-
-    async def listen() -> None:
-        """Mock listen."""
-        listen_block = asyncio.Event()
-        await listen_block.wait()
-        pytest.fail("Listen was not cancelled!")
-
-    mock = AsyncMock(spec=AutomowerSession)
-    mock.auth = AsyncMock(side_effect=ClientWebSocketResponse)
-    mock.commands = AsyncMock(spec_set=MowerCommands)
-    mock.get_status.return_value = values
-    mock.start_listening = AsyncMock(side_effect=listen)
-
-    with patch(
-        "homeassistant.components.husqvarna_automower.AutomowerSession",
-        return_value=mock,
-    ):
-        yield mock
+        autospec=True,
+        spec_set=True,
+    ) as mock:
+        mock_instance = mock.return_value
+        mock_instance.auth = AsyncMock(side_effect=ClientWebSocketResponse)
+        mock_instance.get_status = AsyncMock(return_value=values)
+        mock_instance.start_listening = AsyncMock(side_effect=listen)
+        mock_instance.commands = create_autospec(
+            MowerCommands, instance=True, spec_set=True
+        )
+        mock_instance.commands.workarea_settings.return_value = create_autospec(
+            WorkAreaSettings,
+            instance=True,
+            spec_set=True,
+        )
+        yield mock_instance

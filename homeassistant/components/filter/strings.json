@@ -183,7 +183,7 @@
         "outlier": "Outlier",
         "throttle": "Throttle",
         "time_throttle": "Time throttle",
-        "time_simple_moving_average": "Moving Average (Time based)"
+        "time_simple_moving_average": "Moving average (time-based)"
       }
     },
     "type": {
