@@ -2,9 +2,9 @@
 
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 import logging
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
-from mozart_api.exceptions import NotFoundException
+from mozart_api.exceptions import ApiException, NotFoundException
 from mozart_api.models import (
     BeolinkLeader,
     BeolinkSelf,
@@ -81,7 +81,6 @@ from .const import (
     TEST_ACTIVE_SOUND_MODE_NAME_2,
     TEST_AUDIO_SOURCES,
     TEST_DEEZER_FLOW,
-    TEST_DEEZER_INVALID_FLOW,
     TEST_DEEZER_PLAYLIST,
     TEST_DEEZER_TRACK,
     TEST_FALLBACK_SOURCES,
@@ -1249,7 +1248,16 @@ async def test_async_play_media_invalid_deezer(
 ) -> None:
     """Test async_play_media with an invalid/no Deezer login."""
 
-    mock_mozart_client.start_deezer_flow.side_effect = TEST_DEEZER_INVALID_FLOW
+    # codespell can't see the escaped ', so it thinks the word is misspelled
+    mock_mozart_client.start_deezer_flow.side_effect = ApiException(
+        status=400,
+        reason="Bad Request",
+        http_resp=Mock(
+            status=400,
+            reason="Bad Request",
+            data='{"message": "Couldn\'t start user flow for me"}',  # codespell:ignore
+        ),
+    )
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
