@@ -72,7 +72,7 @@ from .const import (
     DOMAIN,
     SYNOLOGY_CONNECTION_EXCEPTIONS,
 )
-from .models import SynologyDSMData
+from .coordinator import SynologyDSMConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -131,7 +131,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: SynologyDSMConfigEntry,
     ) -> SynologyDSMOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SynologyDSMOptionsFlowHandler()
@@ -444,6 +444,8 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
 class SynologyDSMOptionsFlowHandler(OptionsFlow):
     """Handle a option flow."""
 
+    config_entry: SynologyDSMConfigEntry
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -451,7 +453,7 @@ class SynologyDSMOptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        syno_data: SynologyDSMData = self.hass.data[DOMAIN][self.config_entry.unique_id]
+        syno_data = self.config_entry.runtime_data
 
         data_schema = vol.Schema(
             {

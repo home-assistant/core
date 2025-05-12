@@ -79,6 +79,8 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordina
 
     _attr_attribution = ATTRIBUTION
     _attr_should_poll = False
+    _attr_has_entity_name = True
+    _attr_name = None
 
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
     _attr_native_pressure_unit = UnitOfPressure.HPA
@@ -95,13 +97,12 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordina
     ) -> None:
         """Initialize the sensor."""
         super().__init__(weather_coordinator)
-        self._attr_name = name
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, unique_id)},
             manufacturer=MANUFACTURER,
-            name=DEFAULT_NAME,
+            name=name,
         )
         self.mode = mode
 

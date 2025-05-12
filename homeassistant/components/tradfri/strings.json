@@ -6,7 +6,7 @@
         "description": "You can find the security code on the back of your gateway.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "security_code": "Security Code"
+          "security_code": "Security code"
         },
         "data_description": {
           "host": "Hostname or IP address of your Trådfri gateway."
@@ -14,10 +14,10 @@
       }
     },
     "error": {
-      "invalid_security_code": "Failed to register with provided key. If this keeps happening, try restarting the gateway.",
+      "invalid_security_code": "Failed to register with provided code. If this keeps happening, try restarting the gateway.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "timeout": "Timeout validating the code.",
-      "cannot_authenticate": "Cannot authenticate, is Gateway paired with another server like e.g. Homekit?"
+      "cannot_authenticate": "Cannot authenticate, is your gateway paired with another server like e.g. HomeKit?"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",

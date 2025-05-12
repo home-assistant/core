@@ -21,20 +21,25 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
+    CONF_NAME,
     CONF_OPTIMISTIC,
+    CONF_STATE,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
+from .const import CONF_OBJECT_ID, CONF_PICTURE, DOMAIN
 from .template_entity import (
+    LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
+    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
     TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_ICON_SCHEMA,
     TemplateEntity,
     rewrite_common_legacy_to_modern_conf,
 )
@@ -56,7 +61,9 @@ _VALID_STATES = [
     "none",
 ]
 
+CONF_POSITION = "position"
 CONF_POSITION_TEMPLATE = "position_template"
+CONF_TILT = "tilt"
 CONF_TILT_TEMPLATE = "tilt_template"
 OPEN_ACTION = "open_cover"
 CLOSE_ACTION = "close_cover"
@@ -74,7 +81,39 @@ TILT_FEATURES = (
     | CoverEntityFeature.SET_TILT_POSITION
 )
 
+LEGACY_FIELDS = TEMPLATE_ENTITY_LEGACY_FIELDS | {
+    CONF_VALUE_TEMPLATE: CONF_STATE,
+    CONF_POSITION_TEMPLATE: CONF_POSITION,
+    CONF_TILT_TEMPLATE: CONF_TILT,
+}
+
+DEFAULT_NAME = "Template Cover"
+
 COVER_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Inclusive(CLOSE_ACTION, CONF_OPEN_AND_CLOSE): cv.SCRIPT_SCHEMA,
+            vol.Inclusive(OPEN_ACTION, CONF_OPEN_AND_CLOSE): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
+            vol.Optional(CONF_OPTIMISTIC): cv.boolean,
+            vol.Optional(CONF_PICTURE): cv.template,
+            vol.Optional(CONF_POSITION): cv.template,
+            vol.Optional(CONF_STATE): cv.template,
+            vol.Optional(CONF_TILT_OPTIMISTIC): cv.boolean,
+            vol.Optional(CONF_TILT): cv.template,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+            vol.Optional(POSITION_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(STOP_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(TILT_ACTION): cv.SCRIPT_SCHEMA,
+        }
+    )
+    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
+    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema),
+    cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
+)
+
+LEGACY_COVER_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
     vol.Schema(
         {
@@ -98,29 +137,56 @@ COVER_SCHEMA = vol.All(
 )
 
 PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_COVERS): cv.schema_with_slug_keys(COVER_SCHEMA)}
+    {vol.Required(CONF_COVERS): cv.schema_with_slug_keys(LEGACY_COVER_SCHEMA)}
 )
 
 
-async def _async_create_entities(hass: HomeAssistant, config):
-    """Create the Template cover."""
+def rewrite_legacy_to_modern_conf(
+    hass: HomeAssistant, config: dict[str, dict]
+) -> list[dict]:
+    """Rewrite legacy switch configuration definitions to modern ones."""
     covers = []
 
-    for object_id, entity_config in config[CONF_COVERS].items():
-        entity_config = rewrite_common_legacy_to_modern_conf(hass, entity_config)
+    for object_id, entity_conf in config.items():
+        entity_conf = {**entity_conf, CONF_OBJECT_ID: object_id}
 
-        unique_id = entity_config.get(CONF_UNIQUE_ID)
+        entity_conf = rewrite_common_legacy_to_modern_conf(
+            hass, entity_conf, LEGACY_FIELDS
+        )
+
+        if CONF_NAME not in entity_conf:
+            entity_conf[CONF_NAME] = template.Template(object_id, hass)
+
+        covers.append(entity_conf)
+
+    return covers
+
+
+@callback
+def _async_create_template_tracking_entities(
+    async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant,
+    definitions: list[dict],
+    unique_id_prefix: str | None,
+) -> None:
+    """Create the template switches."""
+    covers = []
+
+    for entity_conf in definitions:
+        unique_id = entity_conf.get(CONF_UNIQUE_ID)
+
+        if unique_id and unique_id_prefix:
+            unique_id = f"{unique_id_prefix}-{unique_id}"
 
         covers.append(
             CoverTemplate(
                 hass,
-                object_id,
-                entity_config,
+                entity_conf,
                 unique_id,
             )
         )
 
-    return covers
+    async_add_entities(covers)
 
 
 async def async_setup_platform(
@@ -130,7 +196,21 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Template cover."""
-    async_add_entities(await _async_create_entities(hass, config))
+    if discovery_info is None:
+        _async_create_template_tracking_entities(
+            async_add_entities,
+            hass,
+            rewrite_legacy_to_modern_conf(hass, config[CONF_COVERS]),
+            None,
+        )
+        return
+
+    _async_create_template_tracking_entities(
+        async_add_entities,
+        hass,
+        discovery_info["entities"],
+        discovery_info["unique_id"],
+    )
 
 
 class CoverTemplate(TemplateEntity, CoverEntity):
@@ -141,23 +221,22 @@ class CoverTemplate(TemplateEntity, CoverEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        object_id,
         config: dict[str, Any],
         unique_id,
     ) -> None:
         """Initialize the Template cover."""
-        super().__init__(
-            hass, config=config, fallback_name=object_id, unique_id=unique_id
-        )
-        self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, object_id, hass=hass
-        )
+        super().__init__(hass, config=config, fallback_name=None, unique_id=unique_id)
+        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
+            self.entity_id = async_generate_entity_id(
+                ENTITY_ID_FORMAT, object_id, hass=hass
+            )
         name = self._attr_name
         if TYPE_CHECKING:
             assert name is not None
-        self._template = config.get(CONF_VALUE_TEMPLATE)
-        self._position_template = config.get(CONF_POSITION_TEMPLATE)
-        self._tilt_template = config.get(CONF_TILT_TEMPLATE)
+        self._template = config.get(CONF_STATE)
+
+        self._position_template = config.get(CONF_POSITION)
+        self._tilt_template = config.get(CONF_TILT)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
         # The config requires (open and close scripts) or a set position script,
@@ -172,7 +251,8 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             (POSITION_ACTION, CoverEntityFeature.SET_POSITION),
             (TILT_ACTION, TILT_FEATURES),
         ):
-            if action_config := config.get(action_id):
+            # Scripts can be an empty list, therefore we need to check for None
+            if (action_config := config.get(action_id)) is not None:
                 self.add_script(action_id, action_config, name, DOMAIN)
                 self._attr_supported_features |= supported_feature
 

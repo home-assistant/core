@@ -7,7 +7,7 @@ from typing import Any
 
 from meteofrance_api.helpers import (
     get_warning_text_status_from_indice_color,
-    readeable_phenomenoms_dict,
+    readable_phenomenons_dict,
 )
 from meteofrance_api.model.forecast import Forecast
 from meteofrance_api.model.rain import Rain
@@ -336,7 +336,7 @@ class MeteoFranceAlertSensor(MeteoFranceSensor[CurrentPhenomenons]):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {
-            **readeable_phenomenoms_dict(self.coordinator.data.phenomenons_max_colors),
+            **readable_phenomenons_dict(self.coordinator.data.phenomenons_max_colors),
         }
 
 

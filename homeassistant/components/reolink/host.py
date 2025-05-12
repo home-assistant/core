@@ -41,7 +41,7 @@ from .exceptions import (
     ReolinkWebhookException,
     UserNotAdmin,
 )
-from .util import get_store
+from .util import ReolinkConfigEntry, get_store
 
 DEFAULT_TIMEOUT = 30
 FIRST_TCP_PUSH_TIMEOUT = 10
@@ -67,11 +67,11 @@ class ReolinkHost:
         hass: HomeAssistant,
         config: Mapping[str, Any],
         options: Mapping[str, Any],
-        config_entry_id: str | None = None,
+        config_entry: ReolinkConfigEntry | None = None,
     ) -> None:
         """Initialize Reolink Host. Could be either NVR, or Camera."""
         self._hass: HomeAssistant = hass
-        self._config_entry_id = config_entry_id
+        self._config_entry = config_entry
         self._config = config
         self._unique_id: str = ""
 
@@ -151,15 +151,33 @@ class ReolinkHost:
     async def async_init(self) -> None:
         """Connect to Reolink host."""
         if not self._api.valid_password():
+            if (
+                len(self._config[CONF_PASSWORD]) >= 32
+                and self._config_entry is not None
+            ):
+                ir.async_create_issue(
+                    self._hass,
+                    DOMAIN,
+                    f"password_too_long_{self._config_entry.entry_id}",
+                    is_fixable=True,
+                    severity=ir.IssueSeverity.ERROR,
+                    translation_key="password_too_long",
+                    translation_placeholders={"name": self._config_entry.title},
+                )
+
             raise PasswordIncompatible(
-                "Reolink password contains incompatible special character, "
-                "please change the password to only contain characters: "
-                f"a-z, A-Z, 0-9 or {ALLOWED_SPECIAL_CHARS}"
+                "Reolink password contains incompatible special character or "
+                "is too long, please change the password to only contain characters: "
+                f"a-z, A-Z, 0-9 or {ALLOWED_SPECIAL_CHARS} "
+                "and not be longer than 31 characters"
             )
 
         store: Store[str] | None = None
-        if self._config_entry_id is not None:
-            store = get_store(self._hass, self._config_entry_id)
+        if self._config_entry is not None:
+            ir.async_delete_issue(
+                self._hass, DOMAIN, f"password_too_long_{self._config_entry.entry_id}"
+            )
+            store = get_store(self._hass, self._config_entry.entry_id)
             if self._config.get(CONF_SUPPORTS_PRIVACY_MODE) and (
                 data := await store.async_load()
             ):
@@ -447,10 +465,11 @@ class ReolinkHost:
             wake = True
             self.last_wake = time()
 
+        for channel in self._api.channels:
+            if self._api.baichuan.privacy_mode(channel):
+                await self._api.baichuan.get_privacy_mode(channel)
         if self._api.baichuan.privacy_mode():
-            await self._api.baichuan.get_privacy_mode()
-            if self._api.baichuan.privacy_mode():
-                return  # API is shutdown, no need to check states
+            return  # API is shutdown, no need to check states
 
         await self._api.get_states(cmd_list=self.update_cmd, wake=wake)
 
