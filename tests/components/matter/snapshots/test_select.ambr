@@ -1780,6 +1780,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Oven Mode',
     'capabilities': dict({
       'options': list([
         'Bake',
@@ -1815,6 +1816,7 @@
     'original_name': 'Mode',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode',
     'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-MatterOvenMode-73-1',
@@ -1850,6 +1852,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Oven Temperature level',
     'capabilities': dict({
       'options': list([
         'Low',
@@ -1879,6 +1882,7 @@
     'original_name': 'Temperature level',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_level',
     'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-4-TemperatureControlSelectedTemperatureLevel-86-4',

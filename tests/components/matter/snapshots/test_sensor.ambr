@@ -2742,6 +2742,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Oven Current phase',
     'capabilities': dict({
       'options': list([
         'pre-heating',
@@ -2771,6 +2772,7 @@
     'original_name': 'Current phase',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_phase',
     'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-OvenCavityOperationalStateCurrentPhase-72-1',
@@ -2801,6 +2803,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Oven Operational state',
     'capabilities': dict({
       'options': list([
         'stopped',
@@ -2830,6 +2833,7 @@
     'original_name': 'Operational state',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operational_state',
     'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-OvenCavityOperationalState-72-4',
@@ -2860,6 +2864,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Oven Temperature (2)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2885,6 +2890,7 @@
     'original_name': 'Temperature (2)',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-TemperatureSensor-1026-0',
@@ -2912,6 +2918,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Oven Temperature (4)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2937,6 +2944,7 @@
     'original_name': 'Temperature (4)',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-4-TemperatureSensor-1026-0',
@@ -3018,6 +3026,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Pump Flow',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3043,6 +3052,7 @@
     'original_name': 'Flow',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flow',
     'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-FlowSensor-1028-0',
@@ -3069,6 +3079,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Pump Pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3094,6 +3105,7 @@
     'original_name': 'Pressure',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-PressureSensor-1027-0',
@@ -3121,6 +3133,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Pump Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3146,6 +3159,7 @@
     'original_name': 'Temperature',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-TemperatureSensor-1026-0',
