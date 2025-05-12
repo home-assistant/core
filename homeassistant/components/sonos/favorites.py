@@ -143,12 +143,7 @@ class SonosFavorites(SonosHouseholdCoordinator):
                 desc=playlist.desc,
             )
             playlist_reference.reference = playlist
-            try:
-                self._favorites.append(playlist_reference)
-            except SoCoException as ex:
-                _LOGGER.error(
-                    "Unhandled favorite: '%s': %s", playlist_reference.title, ex
-                )
+            self._favorites.append(playlist_reference)
 
         _LOGGER.debug(
             "Cached %s favorites for household %s using %s",

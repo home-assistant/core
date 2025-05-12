@@ -458,13 +458,12 @@ def favorites_folder_payload(
     content_type = SONOS_TYPES_MAPPING[media_content_id]
 
     for favorite in favorites:
-        item_class = favorite.reference.item_class
-        if item_class != media_content_id:
+        if favorite.reference.item_class != media_content_id:
             continue
         children.append(
             BrowseMedia(
                 title=favorite.title,
-                media_class=SONOS_TO_MEDIA_CLASSES[item_class],
+                media_class=SONOS_TO_MEDIA_CLASSES[favorite.reference.item_class],
                 media_content_id=favorite.item_id,
                 media_content_type="favorite_item_id",
                 can_play=True,
