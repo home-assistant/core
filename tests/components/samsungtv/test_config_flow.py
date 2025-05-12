@@ -55,9 +55,9 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
 
 from .const import (
+    ENTRYDATA_ENCRYPTED_WEBSOCKET,
     ENTRYDATA_LEGACY,
     ENTRYDATA_WEBSOCKET,
-    MOCK_ENTRYDATA_ENCRYPTED_WS,
     MOCK_SSDP_DATA,
     MOCK_SSDP_DATA_MAIN_TV_AGENT_ST,
     MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
@@ -193,7 +193,9 @@ async def test_user_legacy_does_not_ok_first_time(hass: HomeAssistant) -> None:
     assert result3["result"].unique_id is None
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
+)
 async def test_user_websocket(hass: HomeAssistant) -> None:
     """Test starting a flow by user."""
     with patch(
@@ -220,7 +222,7 @@ async def test_user_websocket(hass: HomeAssistant) -> None:
         assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remoteencws", "rest_api_non_ssl_only")
+@pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api_non_ssl_only")
 async def test_user_encrypted_websocket(
     hass: HomeAssistant,
 ) -> None:
@@ -313,7 +315,7 @@ async def test_user_legacy_not_supported(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
-@pytest.mark.usefixtures("rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures("rest_api", "remote_encrypted_websocket_failing")
 async def test_user_websocket_not_supported(hass: HomeAssistant) -> None:
     """Test starting a flow by user for not supported device."""
     with (
@@ -334,7 +336,7 @@ async def test_user_websocket_not_supported(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
-@pytest.mark.usefixtures("rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures("rest_api", "remote_encrypted_websocket_failing")
 async def test_user_websocket_access_denied(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -358,7 +360,7 @@ async def test_user_websocket_access_denied(
     assert "Please check the Device Connection Manager on your TV" in caplog.text
 
 
-@pytest.mark.usefixtures("rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures("rest_api", "remote_encrypted_websocket_failing")
 async def test_user_websocket_auth_retry(hass: HomeAssistant) -> None:
     """Test starting a flow by user for not supported device."""
     with (
@@ -568,7 +570,9 @@ async def test_ssdp_legacy_not_supported(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
+)
 async def test_ssdp_websocket_success_populates_mac_address_and_ssdp_location(
     hass: HomeAssistant,
 ) -> None:
@@ -597,7 +601,9 @@ async def test_ssdp_websocket_success_populates_mac_address_and_ssdp_location(
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
+)
 async def test_ssdp_websocket_success_populates_mac_address_and_main_tv_ssdp_location(
     hass: HomeAssistant,
 ) -> None:
@@ -626,7 +632,7 @@ async def test_ssdp_websocket_success_populates_mac_address_and_main_tv_ssdp_loc
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remoteencws", "rest_api_non_ssl_only")
+@pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api_non_ssl_only")
 async def test_ssdp_encrypted_websocket_success_populates_mac_address_and_ssdp_location(
     hass: HomeAssistant,
 ) -> None:
@@ -737,7 +743,7 @@ async def test_ssdp_wrong_manufacturer(hass: HomeAssistant) -> None:
     assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
-@pytest.mark.usefixtures("remoteencws_failing")
+@pytest.mark.usefixtures("remote_encrypted_websocket_failing")
 async def test_ssdp_not_successful(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery but no device found."""
     with (
@@ -769,7 +775,7 @@ async def test_ssdp_not_successful(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_CANNOT_CONNECT
 
 
-@pytest.mark.usefixtures("remoteencws_failing")
+@pytest.mark.usefixtures("remote_encrypted_websocket_failing")
 async def test_ssdp_not_successful_2(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery but no device found."""
     with (
@@ -801,7 +807,7 @@ async def test_ssdp_not_successful_2(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_CANNOT_CONNECT
 
 
-@pytest.mark.usefixtures("remote_legacy", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_legacy", "remote_encrypted_websocket_failing")
 async def test_ssdp_already_in_progress(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery twice."""
     with patch(
@@ -823,7 +829,7 @@ async def test_ssdp_already_in_progress(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_ALREADY_IN_PROGRESS
 
 
-@pytest.mark.usefixtures("remote_websocket", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "remote_encrypted_websocket_failing")
 async def test_ssdp_already_configured(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery when already configured."""
     with patch(
@@ -852,7 +858,7 @@ async def test_ssdp_already_configured(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures(
-    "remote_websocket", "rest_api_non_ssl_only", "remoteencws_failing"
+    "remote_websocket", "rest_api_non_ssl_only", "remote_encrypted_websocket_failing"
 )
 async def test_dhcp_wireless(hass: HomeAssistant) -> None:
     """Test starting a flow from dhcp."""
@@ -879,7 +885,9 @@ async def test_dhcp_wireless(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "223da676-497a-4e06-9507-5e27ec4f0fb3"
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
+)
 async def test_dhcp_wired(hass: HomeAssistant, rest_api: Mock) -> None:
     """Test starting a flow from dhcp."""
     # Even though it is named "wifiMac", it matches the mac of the wired connection
@@ -910,7 +918,7 @@ async def test_dhcp_wired(hass: HomeAssistant, rest_api: Mock) -> None:
 
 
 @pytest.mark.usefixtures(
-    "remote_websocket", "rest_api_non_ssl_only", "remoteencws_failing"
+    "remote_websocket", "rest_api_non_ssl_only", "remote_encrypted_websocket_failing"
 )
 @pytest.mark.parametrize(
     ("source1", "data1", "source2", "data2", "is_matching_result"),
@@ -983,7 +991,9 @@ async def test_dhcp_zeroconf_already_in_progress(
     assert return_values == [is_matching_result]
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
+)
 async def test_zeroconf(hass: HomeAssistant) -> None:
     """Test starting a flow from zeroconf."""
     result = await hass.config_entries.flow.async_init(
@@ -1008,7 +1018,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remote_websocket", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "remote_encrypted_websocket_failing")
 async def test_zeroconf_ignores_soundbar(hass: HomeAssistant, rest_api: Mock) -> None:
     """Test starting a flow from zeroconf where the device is actually a soundbar."""
     rest_api.rest_device_info.return_value = {
@@ -1032,7 +1042,10 @@ async def test_zeroconf_ignores_soundbar(hass: HomeAssistant, rest_api: Mock) ->
 
 
 @pytest.mark.usefixtures(
-    "remote_legacy", "remote_websocket", "remoteencws", "rest_api_failing"
+    "remote_legacy",
+    "remote_websocket",
+    "remote_encrypted_websocket",
+    "rest_api_failing",
 )
 async def test_zeroconf_no_device_info(hass: HomeAssistant) -> None:
     """Test starting a flow from zeroconf where device_info returns None."""
@@ -1046,7 +1059,9 @@ async def test_zeroconf_no_device_info(hass: HomeAssistant) -> None:
     assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
+)
 async def test_zeroconf_and_dhcp_same_time(hass: HomeAssistant) -> None:
     """Test starting a flow from zeroconf and dhcp."""
     result = await hass.config_entries.flow.async_init(
@@ -1068,7 +1083,7 @@ async def test_zeroconf_and_dhcp_same_time(hass: HomeAssistant) -> None:
     assert result2["reason"] == "already_in_progress"
 
 
-@pytest.mark.usefixtures("remoteencws_failing")
+@pytest.mark.usefixtures("remote_encrypted_websocket_failing")
 async def test_autodetect_websocket(hass: HomeAssistant) -> None:
     """Test for send key with autodetection of protocol."""
     with (
@@ -1118,7 +1133,7 @@ async def test_autodetect_websocket(hass: HomeAssistant) -> None:
     assert entries[0].data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
 
 
-@pytest.mark.usefixtures("remoteencws_failing")
+@pytest.mark.usefixtures("remote_encrypted_websocket_failing")
 async def test_websocket_no_mac(hass: HomeAssistant, mac_address: Mock) -> None:
     """Test for send key with autodetection of protocol."""
     mac_address.return_value = "gg:ee:tt:mm:aa:cc"
@@ -1250,7 +1265,9 @@ async def test_autodetect_none(hass: HomeAssistant) -> None:
         assert rest_device_info.call_count == 2
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
+)
 async def test_update_old_entry(hass: HomeAssistant) -> None:
     """Test update of old entry sets unique id."""
     entry = MockConfigEntry(domain=DOMAIN, data=ENTRYDATA_LEGACY)
@@ -1279,7 +1296,9 @@ async def test_update_old_entry(hass: HomeAssistant) -> None:
     assert entry2.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
+)
 async def test_update_missing_mac_unique_id_added_from_dhcp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -1301,7 +1320,9 @@ async def test_update_missing_mac_unique_id_added_from_dhcp(
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
+)
 async def test_update_incorrectly_formatted_mac_unique_id_added_from_dhcp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -1325,7 +1346,9 @@ async def test_update_incorrectly_formatted_mac_unique_id_added_from_dhcp(
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
+)
 async def test_update_missing_mac_unique_id_added_from_zeroconf(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -1376,7 +1399,9 @@ async def test_update_missing_model_added_from_ssdp(
     assert entry.data[CONF_MODEL] == "UE55H6400"
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
+)
 async def test_update_missing_mac_unique_id_ssdp_location_added_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -1401,7 +1426,10 @@ async def test_update_missing_mac_unique_id_ssdp_location_added_from_ssdp(
 
 
 @pytest.mark.usefixtures(
-    "remote_legacy", "remote_websocket", "remoteencws_failing", "rest_api_failing"
+    "remote_legacy",
+    "remote_websocket",
+    "remote_encrypted_websocket_failing",
+    "rest_api_failing",
 )
 async def test_update_zeroconf_discovery_preserved_unique_id(
     hass: HomeAssistant,
@@ -1425,7 +1453,9 @@ async def test_update_zeroconf_discovery_preserved_unique_id(
     assert entry.unique_id == "original"
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
+)
 async def test_update_missing_mac_unique_id_added_ssdp_location_updated_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -1458,7 +1488,9 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_updated_from_ssd
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
+)
 async def test_update_missing_mac_unique_id_added_ssdp_location_rendering_st_updated_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -1492,7 +1524,9 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_rendering_st_upd
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
+)
 async def test_update_missing_mac_unique_id_added_ssdp_location_main_tv_agent_st_updated_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -1530,7 +1564,9 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_main_tv_agent_st
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
+)
 async def test_update_ssdp_location_rendering_st_updated_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -1561,7 +1597,9 @@ async def test_update_ssdp_location_rendering_st_updated_from_ssdp(
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
+)
 async def test_update_main_tv_ssdp_location_rendering_st_updated_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -1682,7 +1720,9 @@ async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(
     assert entry.unique_id is None
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
+)
 async def test_update_ssdp_location_unique_id_added_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -1710,7 +1750,9 @@ async def test_update_ssdp_location_unique_id_added_from_ssdp(
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
+)
 async def test_update_ssdp_location_unique_id_added_from_ssdp_with_rendering_control_st(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -1833,10 +1875,10 @@ async def test_form_reauth_websocket_not_supported(hass: HomeAssistant) -> None:
     assert result2["reason"] == RESULT_NOT_SUPPORTED
 
 
-@pytest.mark.usefixtures("remoteencws", "rest_api")
+@pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api")
 async def test_form_reauth_encrypted(hass: HomeAssistant) -> None:
     """Test reauth flow for encrypted TVs."""
-    encrypted_entry_data = {**MOCK_ENTRYDATA_ENCRYPTED_WS}
+    encrypted_entry_data = deepcopy(ENTRYDATA_ENCRYPTED_WEBSOCKET)
     del encrypted_entry_data[CONF_TOKEN]
     del encrypted_entry_data[CONF_SESSION_ID]
 
@@ -1889,7 +1931,7 @@ async def test_form_reauth_encrypted(hass: HomeAssistant) -> None:
         assert entry.state is ConfigEntryState.LOADED
 
     authenticator_mock.assert_called_once()
-    assert authenticator_mock.call_args[0] == ("fake_host",)
+    assert authenticator_mock.call_args[0] == ("10.10.12.34",)
 
     authenticator_mock.return_value.start_pairing.assert_called_once()
     assert authenticator_mock.return_value.try_pin.call_count == 2
@@ -1903,7 +1945,9 @@ async def test_form_reauth_encrypted(hass: HomeAssistant) -> None:
     assert entry.data[CONF_SESSION_ID] == "1"
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
+)
 async def test_update_incorrect_udn_matching_upnp_udn_unique_id_added_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -1929,7 +1973,9 @@ async def test_update_incorrect_udn_matching_upnp_udn_unique_id_added_from_ssdp(
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
+)
 async def test_update_incorrect_udn_matching_mac_unique_id_added_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -1955,7 +2001,9 @@ async def test_update_incorrect_udn_matching_mac_unique_id_added_from_ssdp(
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
+)
 async def test_update_incorrect_udn_matching_mac_from_dhcp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -1982,7 +2030,9 @@ async def test_update_incorrect_udn_matching_mac_from_dhcp(
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
+)
 async def test_no_update_incorrect_udn_not_matching_mac_from_dhcp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -2009,7 +2059,7 @@ async def test_no_update_incorrect_udn_not_matching_mac_from_dhcp(
     assert entry.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
-@pytest.mark.usefixtures("remote_websocket", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "remote_encrypted_websocket_failing")
 async def test_ssdp_update_mac(hass: HomeAssistant) -> None:
     """Ensure that MAC address is correctly updated from SSDP."""
     with patch(

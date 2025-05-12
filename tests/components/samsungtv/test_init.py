@@ -40,9 +40,9 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_samsungtv_entry
 from .const import (
+    ENTRYDATA_ENCRYPTED_WEBSOCKET,
     ENTRYDATA_WEBSOCKET,
     MOCK_ENTRY_WS_WITH_MAC,
-    MOCK_ENTRYDATA_ENCRYPTED_WS,
     MOCK_SSDP_DATA_MAIN_TV_AGENT_ST,
     MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
 )
@@ -57,7 +57,9 @@ MOCK_CONFIG = {
 }
 
 
-@pytest.mark.usefixtures("remote_websocket", "remoteencws_failing", "rest_api")
+@pytest.mark.usefixtures(
+    "remote_websocket", "remote_encrypted_websocket_failing", "rest_api"
+)
 async def test_setup(hass: HomeAssistant) -> None:
     """Test Samsung TV integration is setup."""
     await setup_samsungtv_entry(hass, MOCK_CONFIG)
@@ -101,7 +103,9 @@ async def test_setup_without_port_device_offline(hass: HomeAssistant) -> None:
     assert config_entries_domain[0].state is ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.usefixtures("remote_websocket", "remoteencws_failing", "rest_api")
+@pytest.mark.usefixtures(
+    "remote_websocket", "remote_encrypted_websocket_failing", "rest_api"
+)
 async def test_setup_without_port_device_online(hass: HomeAssistant) -> None:
     """Test import from yaml when the device is online."""
     await setup_samsungtv_entry(hass, MOCK_CONFIG)
@@ -111,7 +115,7 @@ async def test_setup_without_port_device_online(hass: HomeAssistant) -> None:
     assert config_entries_domain[0].data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
 
 
-@pytest.mark.usefixtures("remote_websocket", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "remote_encrypted_websocket_failing")
 async def test_setup_h_j_model(
     hass: HomeAssistant, rest_api: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -162,10 +166,10 @@ async def test_setup_updates_from_ssdp(
     )
 
 
-@pytest.mark.usefixtures("remoteencws", "rest_api")
+@pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api")
 async def test_reauth_triggered_encrypted(hass: HomeAssistant) -> None:
     """Test reauth flow is triggered for encrypted TVs."""
-    encrypted_entry_data = {**MOCK_ENTRYDATA_ENCRYPTED_WS}
+    encrypted_entry_data = {**ENTRYDATA_ENCRYPTED_WEBSOCKET}
     del encrypted_entry_data[CONF_TOKEN]
     del encrypted_entry_data[CONF_SESSION_ID]
 
@@ -179,7 +183,9 @@ async def test_reauth_triggered_encrypted(hass: HomeAssistant) -> None:
     assert len(flows_in_progress) == 1
 
 
-@pytest.mark.usefixtures("remote_legacy", "remoteencws_failing", "rest_api_failing")
+@pytest.mark.usefixtures(
+    "remote_legacy", "remote_encrypted_websocket_failing", "rest_api_failing"
+)
 @pytest.mark.parametrize(
     "entry_data",
     [
