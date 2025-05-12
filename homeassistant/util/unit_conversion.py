@@ -24,6 +24,8 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfReactiveEnergy,
+    UnitOfReactivePower,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
@@ -427,6 +429,28 @@ class PressureConverter(BaseUnitConverter):
         UnitOfPressure.PSI,
         UnitOfPressure.MMHG,
     }
+
+
+class ReactiveEnergyConverter(BaseUnitConverter):
+    """Utility to convert reactive energy values."""
+
+    UNIT_CLASS = "energy"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR: 1,
+        UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR: 1 / 1e3,
+    }
+    VALID_UNITS = set(UnitOfReactiveEnergy)
+
+
+class ReactivePowerConverter(BaseUnitConverter):
+    """Utility to convert reactive power values."""
+
+    UNIT_CLASS = "power"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 1,
+        UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 1 / 1e3,
+    }
+    VALID_UNITS = set(UnitOfReactivePower)
 
 
 class SpeedConverter(BaseUnitConverter):
