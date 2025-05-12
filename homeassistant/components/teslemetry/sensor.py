@@ -1840,6 +1840,7 @@ class TeslemetryCreditBalanceSensor(RestoreSensor):
     stream: TeslemetryStream
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_suggested_display_precision = 0
+    _attr_native_unit_of_measurement = "credits"
 
     def __init__(self, uid: str, data: TeslemetryData) -> None:
         """Initialize common aspects of a Teslemetry entity."""
