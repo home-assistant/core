@@ -2,13 +2,19 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, Protocol
+
+from ha_silabs_firmware_client import FirmwareUpdateClient
 
 from homeassistant.components import usb
 from homeassistant.components.homeassistant_hardware import (
     firmware_config_flow,
     silabs_multiprotocol_addon,
+)
+from homeassistant.components.homeassistant_hardware.helpers import (
+    async_flash_silabs_firmware,
 )
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
@@ -22,6 +28,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from .const import (
@@ -32,6 +39,7 @@ from .const import (
     FIRMWARE,
     FIRMWARE_VERSION,
     MANUFACTURER,
+    NABU_CASA_FIRMWARE_RELEASES_URL,
     PID,
     PRODUCT,
     SERIAL_NUMBER,
@@ -89,6 +97,7 @@ class HomeAssistantSkyConnectConfigFlow(
 
         self._usb_info: UsbServiceInfo | None = None
         self._hw_variant: HardwareVariant | None = None
+        self._firmware_install_task: asyncio.Task | None = None
 
     @staticmethod
     @callback
@@ -130,6 +139,78 @@ class HomeAssistantSkyConnectConfigFlow(
         self._hardware_name = self._hw_variant.full_name
 
         return await self.async_step_confirm()
+
+    async def _install_firmware_step(
+        self,
+        fw_type: str,
+        firmware_name: str,
+        expected_installed_firmware_type: ApplicationType,
+        next_step_id: str,
+    ) -> ConfigFlowResult:
+        assert self._device is not None
+
+        if not self._firmware_install_task:
+            session = async_get_clientsession(self.hass)
+            client = FirmwareUpdateClient(NABU_CASA_FIRMWARE_RELEASES_URL, session)
+            manifest = await client.async_update_data()
+
+            zigbee_fw_meta = next(
+                fw
+                for fw in manifest.firmwares
+                if (
+                    fw.metadata["fw_type"] == fw_type
+                    and fw.filename.startswith(("skyconnect_", "zbt1_"))
+                )
+            )
+
+            zigbee_fw_data = await client.async_fetch_firmware(zigbee_fw_meta)
+            self._firmware_install_task = self.hass.async_create_task(
+                async_flash_silabs_firmware(
+                    hass=self.hass,
+                    device=self._device,
+                    fw_data=zigbee_fw_data,
+                    expected_installed_firmware_type=expected_installed_firmware_type,
+                    bootloader_reset_type=None,
+                    progress_callback=lambda offset, total: self.async_update_progress(
+                        offset / total
+                    ),
+                ),
+                f"Flash {firmware_name} firmware",
+            )
+
+        if not self._firmware_install_task.done():
+            return self.async_show_progress(
+                progress_action="install_firmware",
+                description_placeholders={
+                    **self._get_translation_placeholders(),
+                    "firmware_name": firmware_name,
+                },
+                progress_task=self._firmware_install_task,
+            )
+
+        return self.async_show_progress_done(next_step_id=next_step_id)
+
+    async def async_step_install_zigbee_firmware(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Install Zigbee firmware."""
+        return await self._install_firmware_step(
+            fw_type="zigbee_ncp",
+            firmware_name="Zigbee",
+            expected_installed_firmware_type=ApplicationType.EZSP,
+            next_step_id="confirm_zigbee",
+        )
+
+    async def async_step_install_thread_firmware(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Install Thread firmware."""
+        return await self._install_firmware_step(
+            fw_type="openthread_rcp",
+            firmware_name="OpenThread",
+            expected_installed_firmware_type=ApplicationType.SPINEL,
+            next_step_id="start_otbr_addon",
+        )
 
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""

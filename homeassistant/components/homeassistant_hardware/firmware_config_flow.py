@@ -32,7 +32,6 @@ from .util import (
     OwningAddon,
     OwningIntegration,
     get_otbr_addon_manager,
-    get_zigbee_flasher_addon_manager,
     guess_firmware_info,
     guess_hardware_owners,
     probe_silabs_firmware_info,
@@ -167,40 +166,13 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         ):
             return await self.async_step_confirm_zigbee()
 
-        if not is_hassio(self.hass):
-            return self.async_abort(
-                reason="not_hassio",
-                description_placeholders=self._get_translation_placeholders(),
-            )
+        return await self.async_step_install_zigbee_firmware()
 
-        # Only flash new firmware if we need to
-        fw_flasher_manager = get_zigbee_flasher_addon_manager(self.hass)
-        addon_info = await self._async_get_addon_info(fw_flasher_manager)
-
-        if addon_info.state == AddonState.NOT_INSTALLED:
-            return await self.async_step_install_zigbee_flasher_addon()
-
-        if addon_info.state == AddonState.NOT_RUNNING:
-            return await self.async_step_run_zigbee_flasher_addon()
-
-        # If the addon is already installed and running, fail
-        return self.async_abort(
-            reason="addon_already_running",
-            description_placeholders={
-                **self._get_translation_placeholders(),
-                "addon_name": fw_flasher_manager.addon_name,
-            },
-        )
-
-    async def async_step_install_zigbee_flasher_addon(
+    async def async_step_install_zigbee_firmware(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Show progress dialog for installing the Zigbee flasher addon."""
-        return await self._install_addon(
-            get_zigbee_flasher_addon_manager(self.hass),
-            "install_zigbee_flasher_addon",
-            "run_zigbee_flasher_addon",
-        )
+        """Install Zigbee firmware."""
+        raise NotImplementedError
 
     async def _install_addon(
         self,
@@ -253,96 +225,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 "addon_name": self._failed_addon_name,
             },
         )
-
-    async def async_step_run_zigbee_flasher_addon(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Configure the flasher addon to point to the SkyConnect and run it."""
-        fw_flasher_manager = get_zigbee_flasher_addon_manager(self.hass)
-        addon_info = await self._async_get_addon_info(fw_flasher_manager)
-
-        assert self._device is not None
-        new_addon_config = {
-            **addon_info.options,
-            "device": self._device,
-            "baudrate": 115200,
-            "bootloader_baudrate": 115200,
-            "flow_control": True,
-        }
-
-        _LOGGER.debug("Reconfiguring flasher addon with %s", new_addon_config)
-        await self._async_set_addon_config(new_addon_config, fw_flasher_manager)
-
-        if not self.addon_start_task:
-
-            async def start_and_wait_until_done() -> None:
-                await fw_flasher_manager.async_start_addon_waiting()
-                # Now that the addon is running, wait for it to finish
-                await fw_flasher_manager.async_wait_until_addon_state(
-                    AddonState.NOT_RUNNING
-                )
-
-            self.addon_start_task = self.hass.async_create_task(
-                start_and_wait_until_done()
-            )
-
-        if not self.addon_start_task.done():
-            return self.async_show_progress(
-                step_id="run_zigbee_flasher_addon",
-                progress_action="run_zigbee_flasher_addon",
-                description_placeholders={
-                    **self._get_translation_placeholders(),
-                    "addon_name": fw_flasher_manager.addon_name,
-                },
-                progress_task=self.addon_start_task,
-            )
-
-        try:
-            await self.addon_start_task
-        except (AddonError, AbortFlow) as err:
-            _LOGGER.error(err)
-            self._failed_addon_name = fw_flasher_manager.addon_name
-            self._failed_addon_reason = "addon_start_failed"
-            return self.async_show_progress_done(next_step_id="addon_operation_failed")
-        finally:
-            self.addon_start_task = None
-
-        return self.async_show_progress_done(
-            next_step_id="uninstall_zigbee_flasher_addon"
-        )
-
-    async def async_step_uninstall_zigbee_flasher_addon(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Uninstall the flasher addon."""
-        fw_flasher_manager = get_zigbee_flasher_addon_manager(self.hass)
-
-        if not self.addon_uninstall_task:
-            _LOGGER.debug("Uninstalling flasher addon")
-            self.addon_uninstall_task = self.hass.async_create_task(
-                fw_flasher_manager.async_uninstall_addon_waiting()
-            )
-
-        if not self.addon_uninstall_task.done():
-            return self.async_show_progress(
-                step_id="uninstall_zigbee_flasher_addon",
-                progress_action="uninstall_zigbee_flasher_addon",
-                description_placeholders={
-                    **self._get_translation_placeholders(),
-                    "addon_name": fw_flasher_manager.addon_name,
-                },
-                progress_task=self.addon_uninstall_task,
-            )
-
-        try:
-            await self.addon_uninstall_task
-        except (AddonError, AbortFlow) as err:
-            _LOGGER.error(err)
-            # The uninstall failing isn't critical so we can just continue
-        finally:
-            self.addon_uninstall_task = None
-
-        return self.async_show_progress_done(next_step_id="confirm_zigbee")
 
     async def async_step_confirm_zigbee(
         self, user_input: dict[str, Any] | None = None
@@ -402,24 +284,37 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         if addon_info.state == AddonState.NOT_INSTALLED:
             return await self.async_step_install_otbr_addon()
 
-        if addon_info.state == AddonState.NOT_RUNNING:
-            return await self.async_step_start_otbr_addon()
+        if addon_info.state == AddonState.RUNNING:
+            # We only fail setup if we have an instance of OTBR running *and* it's
+            # pointing to different hardware
+            if addon_info.options["device"] != self._device:
+                return self.async_abort(
+                    reason="otbr_addon_already_running",
+                    description_placeholders={
+                        **self._get_translation_placeholders(),
+                        "addon_name": otbr_manager.addon_name,
+                    },
+                )
 
-        # If the addon is already installed and running, fail
-        return self.async_abort(
-            reason="otbr_addon_already_running",
-            description_placeholders={
-                **self._get_translation_placeholders(),
-                "addon_name": otbr_manager.addon_name,
-            },
-        )
+            # Otherwise, stop the addon before continuing to flash firmware
+            await otbr_manager.async_stop_addon()
+
+        return await self.async_step_install_thread_firmware()
+
+    async def async_step_install_thread_firmware(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Install Thread firmware."""
+        raise NotImplementedError
 
     async def async_step_install_otbr_addon(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Show progress dialog for installing the OTBR addon."""
         return await self._install_addon(
-            get_otbr_addon_manager(self.hass), "install_otbr_addon", "start_otbr_addon"
+            addon_manager=get_otbr_addon_manager(self.hass),
+            step_id="install_otbr_addon",
+            next_step_id="pick_firmware_thread",
         )
 
     async def async_step_start_otbr_addon(
@@ -435,7 +330,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             "device": self._device,
             "baudrate": 460800,
             "flow_control": True,
-            "autoflash_firmware": True,
+            "autoflash_firmware": False,
         }
 
         _LOGGER.debug("Reconfiguring OTBR addon with %s", new_addon_config)
