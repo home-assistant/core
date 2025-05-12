@@ -3,6 +3,7 @@
 from homeassistant.components.samsungtv.const import (
     CONF_SESSION_ID,
     DOMAIN,
+    LEGACY_PORT,
     METHOD_LEGACY,
     METHOD_WEBSOCKET,
 )
@@ -19,10 +20,9 @@ from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from tests.common import load_json_object_fixture
 
-MOCK_CONFIG = {
-    CONF_HOST: "fake_host",
-    CONF_NAME: "fake",
-    CONF_PORT: 55000,
+ENTRYDATA_LEGACY = {
+    CONF_HOST: "10.10.12.34",
+    CONF_PORT: LEGACY_PORT,
     CONF_METHOD: METHOD_LEGACY,
 }
 MOCK_CONFIG_ENCRYPTED_WS = {

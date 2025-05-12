@@ -81,7 +81,7 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_samsungtv_entry
 from .const import (
-    MOCK_CONFIG,
+    ENTRYDATA_LEGACY,
     MOCK_ENTRY_WS_WITH_MAC,
     MOCK_ENTRYDATA_ENCRYPTED_WS,
     SAMPLE_DEVICE_INFO_WIFI,
@@ -119,10 +119,10 @@ MOCK_ENTRY_WS = {
 }
 
 
-@pytest.mark.usefixtures("remote")
+@pytest.mark.usefixtures("remote_legacy")
 async def test_setup(hass: HomeAssistant) -> None:
     """Test setup of platform."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     assert hass.states.get(ENTITY_ID)
 
 
@@ -212,10 +212,10 @@ async def test_setup_encrypted_websocket(
     remote_class.assert_called_once()
 
 
-@pytest.mark.usefixtures("remote")
+@pytest.mark.usefixtures("remote_legacy")
 async def test_update_on(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     """Testing update tv on."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -225,10 +225,10 @@ async def test_update_on(hass: HomeAssistant, freezer: FrozenDateTimeFactory) ->
     assert state.state == STATE_ON
 
 
-@pytest.mark.usefixtures("remote")
+@pytest.mark.usefixtures("remote_legacy")
 async def test_update_off(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     """Testing update tv off."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
 
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -359,12 +359,12 @@ async def test_update_off_encryptedws(
     rest_api.rest_device_info.assert_called_once()
 
 
-@pytest.mark.usefixtures("remote")
+@pytest.mark.usefixtures("remote_legacy")
 async def test_update_access_denied(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Testing update tv access denied exception."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
 
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -464,12 +464,12 @@ async def test_update_ws_unauthorized_error(
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.usefixtures("remote")
+@pytest.mark.usefixtures("remote_legacy")
 async def test_update_unhandled_response(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Testing update tv unhandled response exception."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
 
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -483,12 +483,12 @@ async def test_update_unhandled_response(
         assert state.state == STATE_ON
 
 
-@pytest.mark.usefixtures("remote")
+@pytest.mark.usefixtures("remote_legacy")
 async def test_connection_closed_during_update_can_recover(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Testing update tv connection closed exception can recover."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
 
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -509,23 +509,23 @@ async def test_connection_closed_during_update_can_recover(
         assert state.state == STATE_ON
 
 
-async def test_send_key(hass: HomeAssistant, remote: Mock) -> None:
+async def test_send_key(hass: HomeAssistant, remote_legacy: Mock) -> None:
     """Test for send key."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     await hass.services.async_call(
         MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     state = hass.states.get(ENTITY_ID)
     # key called
-    assert remote.control.call_count == 1
-    assert remote.control.call_args_list == [call("KEY_VOLUP")]
+    assert remote_legacy.control.call_count == 1
+    assert remote_legacy.control.call_args_list == [call("KEY_VOLUP")]
     assert state.state == STATE_ON
 
 
-async def test_send_key_broken_pipe(hass: HomeAssistant, remote: Mock) -> None:
+async def test_send_key_broken_pipe(hass: HomeAssistant, remote_legacy: Mock) -> None:
     """Testing broken pipe Exception."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
-    remote.control = Mock(side_effect=BrokenPipeError("Boom"))
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
+    remote_legacy.control = Mock(side_effect=BrokenPipeError("Boom"))
     await hass.services.async_call(
         MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
@@ -534,11 +534,11 @@ async def test_send_key_broken_pipe(hass: HomeAssistant, remote: Mock) -> None:
 
 
 async def test_send_key_connection_closed_retry_succeed(
-    hass: HomeAssistant, remote: Mock
+    hass: HomeAssistant, remote_legacy: Mock
 ) -> None:
     """Test retry on connection closed."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
-    remote.control = Mock(
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
+    remote_legacy.control = Mock(
         side_effect=[exceptions.ConnectionClosed("Boom"), DEFAULT_MOCK, DEFAULT_MOCK]
     )
     await hass.services.async_call(
@@ -546,18 +546,20 @@ async def test_send_key_connection_closed_retry_succeed(
     )
     state = hass.states.get(ENTITY_ID)
     # key because of retry two times
-    assert remote.control.call_count == 2
-    assert remote.control.call_args_list == [
+    assert remote_legacy.control.call_count == 2
+    assert remote_legacy.control.call_args_list == [
         call("KEY_VOLUP"),
         call("KEY_VOLUP"),
     ]
     assert state.state == STATE_ON
 
 
-async def test_send_key_unhandled_response(hass: HomeAssistant, remote: Mock) -> None:
+async def test_send_key_unhandled_response(
+    hass: HomeAssistant, remote_legacy: Mock
+) -> None:
     """Testing unhandled response exception."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
-    remote.control = Mock(side_effect=exceptions.UnhandledResponse("Boom"))
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
+    remote_legacy.control = Mock(side_effect=exceptions.UnhandledResponse("Boom"))
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
@@ -619,10 +621,10 @@ async def test_send_key_os_error_ws_encrypted(
     assert state.state == STATE_ON
 
 
-async def test_send_key_os_error(hass: HomeAssistant, remote: Mock) -> None:
+async def test_send_key_os_error(hass: HomeAssistant, remote_legacy: Mock) -> None:
     """Testing broken pipe Exception."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
-    remote.control = Mock(side_effect=OSError("Boom"))
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
+    remote_legacy.control = Mock(side_effect=OSError("Boom"))
     await hass.services.async_call(
         MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
@@ -630,18 +632,18 @@ async def test_send_key_os_error(hass: HomeAssistant, remote: Mock) -> None:
     assert state.state == STATE_ON
 
 
-@pytest.mark.usefixtures("remote")
+@pytest.mark.usefixtures("remote_legacy")
 async def test_name(hass: HomeAssistant) -> None:
     """Test for name property."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_FRIENDLY_NAME] == "Mock Title"
 
 
-@pytest.mark.usefixtures("remote")
+@pytest.mark.usefixtures("remote_legacy")
 async def test_state(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     """Test for state property."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     await hass.services.async_call(
         MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
@@ -667,18 +669,18 @@ async def test_state(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.usefixtures("remote")
+@pytest.mark.usefixtures("remote_legacy")
 async def test_supported_features(hass: HomeAssistant) -> None:
     """Test for supported_features property."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_SAMSUNGTV
 
 
-@pytest.mark.usefixtures("remote")
+@pytest.mark.usefixtures("remote_legacy")
 async def test_device_class(hass: HomeAssistant) -> None:
     """Test for device_class property."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_DEVICE_CLASS] == MediaPlayerDeviceClass.TV
 
@@ -821,24 +823,24 @@ async def test_turn_off_encrypted_websocket_key_type(
     assert "Unknown power_off command for" not in caplog.text
 
 
-async def test_turn_off_legacy(hass: HomeAssistant, remote: Mock) -> None:
+async def test_turn_off_legacy(hass: HomeAssistant, remote_legacy: Mock) -> None:
     """Test for turn_off."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     await hass.services.async_call(
         MP_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     # key called
-    assert remote.control.call_count == 1
-    assert remote.control.call_args_list == [call("KEY_POWEROFF")]
+    assert remote_legacy.control.call_count == 1
+    assert remote_legacy.control.call_args_list == [call("KEY_POWEROFF")]
 
 
 async def test_turn_off_os_error(
-    hass: HomeAssistant, remote: Mock, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, remote_legacy: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for turn_off with OSError."""
     caplog.set_level(logging.DEBUG)
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
-    remote.close = Mock(side_effect=OSError("BOOM"))
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
+    remote_legacy.close = Mock(side_effect=OSError("BOOM"))
     await hass.services.async_call(
         MP_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
@@ -873,31 +875,31 @@ async def test_turn_off_encryptedws_os_error(
     assert "Error closing connection" in caplog.text
 
 
-async def test_volume_up(hass: HomeAssistant, remote: Mock) -> None:
+async def test_volume_up(hass: HomeAssistant, remote_legacy: Mock) -> None:
     """Test for volume_up."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     await hass.services.async_call(
         MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     # key called
-    assert remote.control.call_count == 1
-    assert remote.control.call_args_list == [call("KEY_VOLUP")]
+    assert remote_legacy.control.call_count == 1
+    assert remote_legacy.control.call_args_list == [call("KEY_VOLUP")]
 
 
-async def test_volume_down(hass: HomeAssistant, remote: Mock) -> None:
+async def test_volume_down(hass: HomeAssistant, remote_legacy: Mock) -> None:
     """Test for volume_down."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     await hass.services.async_call(
         MP_DOMAIN, SERVICE_VOLUME_DOWN, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     # key called
-    assert remote.control.call_count == 1
-    assert remote.control.call_args_list == [call("KEY_VOLDOWN")]
+    assert remote_legacy.control.call_count == 1
+    assert remote_legacy.control.call_args_list == [call("KEY_VOLDOWN")]
 
 
-async def test_mute_volume(hass: HomeAssistant, remote: Mock) -> None:
+async def test_mute_volume(hass: HomeAssistant, remote_legacy: Mock) -> None:
     """Test for mute_volume."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     await hass.services.async_call(
         MP_DOMAIN,
         SERVICE_VOLUME_MUTE,
@@ -905,66 +907,66 @@ async def test_mute_volume(hass: HomeAssistant, remote: Mock) -> None:
         True,
     )
     # key called
-    assert remote.control.call_count == 1
-    assert remote.control.call_args_list == [call("KEY_MUTE")]
+    assert remote_legacy.control.call_count == 1
+    assert remote_legacy.control.call_args_list == [call("KEY_MUTE")]
 
 
-async def test_media_play(hass: HomeAssistant, remote: Mock) -> None:
+async def test_media_play(hass: HomeAssistant, remote_legacy: Mock) -> None:
     """Test for media_play."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     await hass.services.async_call(
         MP_DOMAIN, SERVICE_MEDIA_PLAY, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     # key called
-    assert remote.control.call_count == 1
-    assert remote.control.call_args_list == [call("KEY_PLAY")]
+    assert remote_legacy.control.call_count == 1
+    assert remote_legacy.control.call_args_list == [call("KEY_PLAY")]
 
     await hass.services.async_call(
         MP_DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     # key called
-    assert remote.control.call_count == 2
-    assert remote.control.call_args_list == [call("KEY_PLAY"), call("KEY_PAUSE")]
+    assert remote_legacy.control.call_count == 2
+    assert remote_legacy.control.call_args_list == [call("KEY_PLAY"), call("KEY_PAUSE")]
 
 
-async def test_media_pause(hass: HomeAssistant, remote: Mock) -> None:
+async def test_media_pause(hass: HomeAssistant, remote_legacy: Mock) -> None:
     """Test for media_pause."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     await hass.services.async_call(
         MP_DOMAIN, SERVICE_MEDIA_PAUSE, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     # key called
-    assert remote.control.call_count == 1
-    assert remote.control.call_args_list == [call("KEY_PAUSE")]
+    assert remote_legacy.control.call_count == 1
+    assert remote_legacy.control.call_args_list == [call("KEY_PAUSE")]
 
     await hass.services.async_call(
         MP_DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     # key called
-    assert remote.control.call_count == 2
-    assert remote.control.call_args_list == [call("KEY_PAUSE"), call("KEY_PLAY")]
+    assert remote_legacy.control.call_count == 2
+    assert remote_legacy.control.call_args_list == [call("KEY_PAUSE"), call("KEY_PLAY")]
 
 
-async def test_media_next_track(hass: HomeAssistant, remote: Mock) -> None:
+async def test_media_next_track(hass: HomeAssistant, remote_legacy: Mock) -> None:
     """Test for media_next_track."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     await hass.services.async_call(
         MP_DOMAIN, SERVICE_MEDIA_NEXT_TRACK, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     # key  called
-    assert remote.control.call_count == 1
-    assert remote.control.call_args_list == [call("KEY_CHUP")]
+    assert remote_legacy.control.call_count == 1
+    assert remote_legacy.control.call_args_list == [call("KEY_CHUP")]
 
 
-async def test_media_previous_track(hass: HomeAssistant, remote: Mock) -> None:
+async def test_media_previous_track(hass: HomeAssistant, remote_legacy: Mock) -> None:
     """Test for media_previous_track."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     await hass.services.async_call(
         MP_DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     # key called
-    assert remote.control.call_count == 1
-    assert remote.control.call_args_list == [call("KEY_CHDOWN")]
+    assert remote_legacy.control.call_count == 1
+    assert remote_legacy.control.call_args_list == [call("KEY_CHDOWN")]
 
 
 @pytest.mark.usefixtures("remotews", "rest_api")
@@ -988,21 +990,21 @@ async def test_turn_on_wol(hass: HomeAssistant) -> None:
     assert mock_send_magic_packet.called
 
 
-async def test_turn_on_without_turnon(hass: HomeAssistant, remote: Mock) -> None:
+async def test_turn_on_without_turnon(hass: HomeAssistant, remote_legacy: Mock) -> None:
     """Test turn on."""
     await async_setup_component(hass, "homeassistant", {})
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     with pytest.raises(ServiceNotSupported, match="does not support action"):
         await hass.services.async_call(
             MP_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
         )
     # nothing called as not supported feature
-    assert remote.control.call_count == 0
+    assert remote_legacy.control.call_count == 0
 
 
-async def test_play_media(hass: HomeAssistant, remote: Mock) -> None:
+async def test_play_media(hass: HomeAssistant, remote_legacy: Mock) -> None:
     """Test for play_media."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     with patch("homeassistant.components.samsungtv.bridge.asyncio.sleep") as sleep:
         await hass.services.async_call(
             MP_DOMAIN,
@@ -1015,8 +1017,8 @@ async def test_play_media(hass: HomeAssistant, remote: Mock) -> None:
             True,
         )
     # keys and update called
-    assert remote.control.call_count == 4
-    assert remote.control.call_args_list == [
+    assert remote_legacy.control.call_count == 4
+    assert remote_legacy.control.call_args_list == [
         call("KEY_5"),
         call("KEY_7"),
         call("KEY_6"),
@@ -1029,7 +1031,7 @@ async def test_play_media_invalid_type(hass: HomeAssistant) -> None:
     """Test for play_media with invalid media type."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         url = "https://example.com"
-        await setup_samsungtv_entry(hass, MOCK_CONFIG)
+        await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
         remote.reset_mock()
         await hass.services.async_call(
             MP_DOMAIN,
@@ -1049,7 +1051,7 @@ async def test_play_media_channel_as_string(hass: HomeAssistant) -> None:
     """Test for play_media with invalid channel as string."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         url = "https://example.com"
-        await setup_samsungtv_entry(hass, MOCK_CONFIG)
+        await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
         remote.reset_mock()
         await hass.services.async_call(
             MP_DOMAIN,
@@ -1068,7 +1070,7 @@ async def test_play_media_channel_as_string(hass: HomeAssistant) -> None:
 async def test_play_media_channel_as_non_positive(hass: HomeAssistant) -> None:
     """Test for play_media with invalid channel as non positive integer."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
-        await setup_samsungtv_entry(hass, MOCK_CONFIG)
+        await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
         remote.reset_mock()
         await hass.services.async_call(
             MP_DOMAIN,
@@ -1084,9 +1086,9 @@ async def test_play_media_channel_as_non_positive(hass: HomeAssistant) -> None:
         assert remote.control.call_count == 0
 
 
-async def test_select_source(hass: HomeAssistant, remote: Mock) -> None:
+async def test_select_source(hass: HomeAssistant, remote_legacy: Mock) -> None:
     """Test for select_source."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     await hass.services.async_call(
         MP_DOMAIN,
         SERVICE_SELECT_SOURCE,
@@ -1094,8 +1096,8 @@ async def test_select_source(hass: HomeAssistant, remote: Mock) -> None:
         True,
     )
     # key called
-    assert remote.control.call_count == 1
-    assert remote.control.call_args_list == [call("KEY_HDMI")]
+    assert remote_legacy.control.call_count == 1
+    assert remote_legacy.control.call_args_list == [call("KEY_HDMI")]
 
 
 async def test_select_source_invalid_source(hass: HomeAssistant) -> None:
@@ -1104,7 +1106,7 @@ async def test_select_source_invalid_source(hass: HomeAssistant) -> None:
     source = "INVALID"
 
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
-        await setup_samsungtv_entry(hass, MOCK_CONFIG)
+        await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
         remote.reset_mock()
         with pytest.raises(HomeAssistantError) as exc_info:
             await hass.services.async_call(
