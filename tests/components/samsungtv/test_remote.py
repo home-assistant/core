@@ -17,7 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_samsungtv_entry
-from .const import MOCK_CONFIG, MOCK_ENTRY_WS_WITH_MAC, MOCK_ENTRYDATA_ENCRYPTED_WS
+from .const import ENTRYDATA_LEGACY, MOCK_ENTRY_WS_WITH_MAC, MOCK_ENTRYDATA_ENCRYPTED_WS
 
 from tests.common import MockConfigEntry
 
@@ -119,15 +119,15 @@ async def test_turn_on_wol(hass: HomeAssistant) -> None:
     assert mock_send_magic_packet.called
 
 
-async def test_turn_on_without_turnon(hass: HomeAssistant, remote: Mock) -> None:
+async def test_turn_on_without_turnon(hass: HomeAssistant, remote_legacy: Mock) -> None:
     """Test turn on."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             REMOTE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
         )
     # nothing called as not supported feature
-    assert remote.control.call_count == 0
+    assert remote_legacy.control.call_count == 0
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "service_unsupported"
     assert exc_info.value.translation_placeholders == {

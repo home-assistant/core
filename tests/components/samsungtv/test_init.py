@@ -179,7 +179,7 @@ async def test_reauth_triggered_encrypted(hass: HomeAssistant) -> None:
     assert len(flows_in_progress) == 1
 
 
-@pytest.mark.usefixtures("remote", "remotews", "rest_api_failing")
+@pytest.mark.usefixtures("remote_legacy", "remotews", "rest_api_failing")
 async def test_update_imported_legacy_without_method(hass: HomeAssistant) -> None:
     """Test updating an imported legacy entry without a method."""
     await setup_samsungtv_entry(
