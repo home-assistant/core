@@ -403,8 +403,7 @@ class CloudClient(Interface):
     ) -> None:
         """Create a repair issue."""
         if translation_key not in VALID_REPAIR_TRANSLATION_KEYS:
-            _LOGGER.log(
-                logging.ERROR if severity == "error" else logging.WARNING,
+            _LOGGER.error(
                 "Invalid translation key %s for repair issue %s",
                 translation_key,
                 identifier,
