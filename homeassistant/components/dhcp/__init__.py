@@ -432,6 +432,7 @@ class DHCPWatcher(WatcherBase):
                 for adapter in await network.async_get_adapters(self.hass)
                 if (
                     adapter["enabled"]
+                    and adapter["index"] is not None
                     and adapter["ipv4"]
                     and (
                         addresses := [
