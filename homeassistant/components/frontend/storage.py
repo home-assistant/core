@@ -42,7 +42,7 @@ class UserStore:
         """Initialize the user store."""
         self._store = _UserStore(hass, user_id)
         self.data: dict[str, Any] = {}
-        self.subscriptions: dict[str | Any, list[Callable[[], None]]] = {}
+        self.subscriptions: dict[str | None, list[Callable[[], None]]] = {}
 
     async def async_load(self) -> None:
         """Load the data from the store."""
