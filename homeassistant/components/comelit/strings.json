@@ -74,10 +74,13 @@
       "message": "Error connecting: {error}"
     },
     "cannot_authenticate": {
-      "message": "Error authenticating: {error}"
+      "message": "Error authenticating"
     },
     "cannot_retrieve_data": {
       "message": "Error retrieving data: {error}"
+    },
+    "update_failed": {
+      "message": "Failed to update data: {error}"
     }
   }
 }

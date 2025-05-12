@@ -8,5 +8,5 @@
   "iot_class": "local_polling",
   "loggers": ["aiocomelit"],
   "quality_scale": "silver",
-  "requirements": ["aiocomelit==0.12.0"]
+  "requirements": ["aiocomelit==0.12.1"]
 }

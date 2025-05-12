@@ -23,7 +23,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, LOGGER, MODELS
+from .const import DOMAIN, LOGGER
 from .coordinator import (
     TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
@@ -119,7 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 manufacturer="Tesla",
                 configuration_url="https://teslemetry.com/console",
                 name=product["display_name"],
-                model=MODELS.get(vin[3]),
+                model=api.model,
                 serial_number=vin,
             )
 
@@ -129,12 +129,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             )
             firmware = vehicle_metadata[vin].get("firmware", "Unknown")
             stream_vehicle = stream.get_vehicle(vin)
+            poll = product["command_signing"] == "off"
 
             vehicles.append(
                 TeslemetryVehicleData(
                     api=api,
                     config_entry=entry,
                     coordinator=coordinator,
+                    poll=poll,
                     stream=stream,
                     stream_vehicle=stream_vehicle,
                     vin=vin,
@@ -203,6 +205,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         *(
             vehicle.coordinator.async_config_entry_first_refresh()
             for vehicle in vehicles
+            if vehicle.poll
         ),
         *(
             energysite.info_coordinator.async_config_entry_first_refresh()
