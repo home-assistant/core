@@ -37,6 +37,7 @@ class IrmKmiWeather(CoordinatorEntity, WeatherEntity):
     _attr_attribution = (
         "Weather data from the Royal Meteorological Institute of Belgium meteo.be"
     )
+    _attr_has_entity_name = True
 
     def __init__(self, entry: IrmKmiConfigEntry) -> None:
         """Create a new instance of the weather entity from a configuration entry."""
