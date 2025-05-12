@@ -73,6 +73,12 @@
           "on": "mdi:snowflake-melt"
         }
       },
+      "lights_hazards_active": {
+        "state": {
+          "off": "mdi:car-light-dimmed",
+          "on": "mdi:hazard-lights"
+        }
+      },
       "lights_high_beams": {
         "state": {
           "off": "mdi:car-light-dimmed",
@@ -576,6 +582,12 @@
       },
       "hvac_fan_status": {
         "default": "mdi:fan"
+      },
+      "hvac_left_temperature_request": {
+        "default": "mdi:thermometer"
+      },
+      "hvac_right_temperature_request": {
+        "default": "mdi:thermometer"
       },
       "isolation_resistance": {
         "default": "mdi:resistor"

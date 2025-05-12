@@ -434,7 +434,6 @@ homeassistant.components.roku.*
 homeassistant.components.romy.*
 homeassistant.components.rpi_power.*
 homeassistant.components.rss_feed_template.*
-homeassistant.components.rtsp_to_webrtc.*
 homeassistant.components.russound_rio.*
 homeassistant.components.ruuvi_gateway.*
 homeassistant.components.ruuvitag_ble.*

@@ -13,5 +13,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["aiokem"],
   "quality_scale": "silver",
-  "requirements": ["aiokem==0.5.9"]
+  "requirements": ["aiokem==0.5.10"]
 }

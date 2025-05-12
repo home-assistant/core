@@ -125,6 +125,14 @@
         "name": "Player count off service",
         "unit_of_measurement": "[%key:component::squeezebox::entity::sensor::player_count::unit_of_measurement%]"
       }
+    },
+    "update": {
+      "newversion": {
+        "name": "Lyrion Music Server"
+      },
+      "newplugins": {
+        "name": "Updated plugins"
+      }
     }
   },
   "options": {
