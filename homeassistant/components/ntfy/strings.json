@@ -234,10 +234,6 @@
       "name": "Publish notification",
       "description": "Publishes a notification message to a ntfy topic",
       "fields": {
-        "entity_id": {
-          "name": "[%key:component::ntfy::common::topic%]",
-          "description": "Select a target entity to publish to a topic"
-        },
         "title": {
           "name": "[%key:component::notify::services::send_message::fields::title::name%]",
           "description": "[%key:component::notify::services::send_message::fields::title::description%]"
