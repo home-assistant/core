@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 from aioesphomeapi import (
     APIVersion,
+    ColorMode as ESPHomeColorMode,
     EntityInfo,
     LightColorCapability,
     LightInfo,
@@ -106,15 +107,15 @@ def _mired_to_kelvin(mired_temperature: float) -> int:
 
 
 @lru_cache
-def _color_mode_to_ha(mode: int) -> str:
+def _color_mode_to_ha(mode: ESPHomeColorMode) -> ColorMode:
     """Convert an esphome color mode to a HA color mode constant.
 
     Choose the color mode that best matches the feature-set.
     """
-    candidates = []
+    candidates: list[tuple[ColorMode, LightColorCapability]] = []
     for ha_mode, cap_lists in _COLOR_MODE_MAPPING.items():
         for caps in cap_lists:
-            if caps == mode:
+            if caps.value == mode.value:
                 # exact match
                 return ha_mode
             if (mode & caps) == caps:
@@ -131,8 +132,8 @@ def _color_mode_to_ha(mode: int) -> str:
 
 @lru_cache
 def _filter_color_modes(
-    supported: list[int], features: LightColorCapability
-) -> tuple[int, ...]:
+    supported: list[ESPHomeColorMode], features: LightColorCapability
+) -> tuple[ESPHomeColorMode, ...]:
     """Filter the given supported color modes.
 
     Excluding all values that don't have the requested features.
@@ -156,7 +157,7 @@ def _least_complex_color_mode(color_modes: tuple[int, ...]) -> int:
 class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
     """A light implementation for ESPHome."""
 
-    _native_supported_color_modes: tuple[int, ...]
+    _native_supported_color_modes: tuple[ESPHomeColorMode, ...]
     _supports_color_mode = False
 
     @property

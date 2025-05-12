@@ -5,6 +5,7 @@ from unittest.mock import call
 from aioesphomeapi import (
     APIClient,
     APIVersion,
+    ColorMode as ESPColorMode,
     LightColorCapability,
     LightInfo,
     LightState,
@@ -58,7 +59,7 @@ async def test_light_on_off(
             unique_id="my_light",
             min_mireds=153,
             max_mireds=400,
-            supported_color_modes=[LightColorCapability.ON_OFF],
+            supported_color_modes=[ESPColorMode.ON_OFF],
         )
     ]
     states = [LightState(key=1, state=True)]
@@ -218,9 +219,7 @@ async def test_light_brightness_on_off(
             unique_id="my_light",
             min_mireds=153,
             max_mireds=400,
-            supported_color_modes=[
-                LightColorCapability.ON_OFF | LightColorCapability.BRIGHTNESS
-            ],
+            supported_color_modes=[ESPColorMode.ON_OFF, ESPColorMode.BRIGHTNESS],
         )
     ]
     states = [LightState(key=1, state=True, brightness=100)]
@@ -234,6 +233,10 @@ async def test_light_brightness_on_off(
     state = hass.states.get("light.test_mylight")
     assert state is not None
     assert state.state == STATE_ON
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+        ColorMode.BRIGHTNESS,
+    ]
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.BRIGHTNESS
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
