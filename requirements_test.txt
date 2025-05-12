@@ -18,7 +18,7 @@ pre-commit==4.0.0
 pydantic==2.11.3
 pylint==3.3.7
 pylint-per-file-ignores==1.4.0
-pipdeptree==2.25.1
+pipdeptree==2.26.1
 pytest-asyncio==0.26.0
 pytest-aiohttp==1.1.0
 pytest-cov==6.0.0
