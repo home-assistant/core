@@ -14,10 +14,13 @@ from bluecurrent_api.exceptions import (
 )
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_TOKEN
+from homeassistant.const import CONF_API_TOKEN, CONF_ID
+from homeassistant.core import callback
 
-from .const import DOMAIN, LOGGER
+from . import BlueCurrentConfigEntry, Connector
+from .const import CARD, DOMAIN, LOGGER
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_TOKEN): str})
 
@@ -50,7 +53,6 @@ class BlueCurrentConfigFlow(ConfigFlow, domain=DOMAIN):
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
-
             else:
                 if self.source != SOURCE_REAUTH:
                     await self.async_set_unique_id(customer_id)
@@ -76,3 +78,38 @@ class BlueCurrentConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a reauthorization flow request."""
         return await self.async_step_user()
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: BlueCurrentConfigEntry,
+    ) -> ChargeCardsFlowHandler:
+        """Get the options flow for Blue Current."""
+        return ChargeCardsFlowHandler()
+
+
+class ChargeCardsFlowHandler(config_entries.OptionsFlow):
+    """Handle the options flow for Blue Current."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the card step."""
+
+        connector: Connector = self.config_entry.runtime_data
+
+        card_ids = [card[CONF_ID] for card in connector.charge_cards.values()]
+        card_schema = vol.Schema({vol.Required(CARD): vol.In(card_ids)})
+
+        if user_input is not None:
+            selected_card = list(
+                filter(
+                    lambda card: card[CONF_ID] == user_input[CARD],
+                    connector.charge_cards.values(),
+                )
+            )[0]
+
+            user_input[CARD] = selected_card["uid"]
+            return self.async_create_entry(title=CARD, data=user_input)
+
+        return self.async_show_form(step_id="init", data_schema=card_schema)

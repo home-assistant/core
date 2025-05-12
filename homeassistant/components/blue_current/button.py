@@ -41,6 +41,11 @@ CHARGE_POINT_BUTTONS = (
         device_class=ButtonDeviceClass.RESTART,
     ),
     ChargePointButtonEntityDescription(
+        key="start_charge_session",
+        translation_key="start_charge_session",
+        function=lambda client, evse_id: client.start_session(evse_id, "BCU-CARD"),
+    ),
+    ChargePointButtonEntityDescription(
         key="stop_charge_session",
         translation_key="stop_charge_session",
         function=lambda client, evse_id: client.stop_session(evse_id),

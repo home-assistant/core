@@ -26,6 +26,7 @@ type BlueCurrentConfigEntry = ConfigEntry[Connector]
 
 PLATFORMS = [Platform.BUTTON, Platform.SENSOR]
 CHARGE_POINTS = "CHARGE_POINTS"
+CHARGE_CARDS = "CHARGE_CARDS"
 DATA = "data"
 DELAY = 5
 
@@ -53,6 +54,7 @@ async def async_setup_entry(
     )
 
     await client.wait_for_charge_points()
+    await client.get_charge_cards()
     config_entry.runtime_data = connector
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -79,6 +81,7 @@ class Connector:
         self.client = client
         self.charge_points: dict[str, dict] = {}
         self.grid: dict[str, Any] = {}
+        self.charge_cards: dict[str, dict[str, Any]] = {}
 
     async def on_data(self, message: dict) -> None:
         """Handle received data."""
@@ -102,6 +105,9 @@ class Connector:
             self.grid = data
             self.dispatch_grid_update_signal()
 
+        elif object_name == CHARGE_CARDS:
+            self.add_charge_cards(message["cards"])
+
     async def handle_charge_point_data(self, charge_points_data: list) -> None:
         """Handle incoming chargepoint data."""
         await asyncio.gather(
@@ -122,6 +128,15 @@ class Connector:
     def add_charge_point(self, evse_id: str, model: str, name: str) -> None:
         """Add a charge point to charge_points."""
         self.charge_points[evse_id] = {MODEL_TYPE: model, ATTR_NAME: name}
+
+    def add_charge_cards(self, cards: list[dict[str, Any]]) -> None:
+        """Add charge cards to charge_cards. Only adding valid charge cards."""
+        valid_cards = {}
+        for card in cards:
+            if card["valid"] == 1:
+                valid_cards[card["uid"]] = card
+
+        self.charge_cards = valid_cards
 
     def update_charge_point(self, evse_id: str, data: dict) -> None:
         """Update the charge point data."""
