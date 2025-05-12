@@ -14,13 +14,13 @@ from typing import Any
 
 from mcp import types
 from mcp.server import Server
+from pydantic import AnyUrl
 import voluptuous as vol
 from voluptuous_openapi import convert
 
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import llm, entity_registry
+from homeassistant.helpers import entity_registry as er, llm
 
 from .const import STATELESS_LLM_API
 
@@ -117,14 +117,14 @@ async def create_server(
 
     @server.list_resources()  # type: ignore[no-untyped-call, misc]
     async def list_resources() -> list[types.Resource]:
-        registry = entity_registry.async_get(hass)
+        entity_registry = er.async_get(hass)
         return [
             types.Resource(
-                uri=f"homeassistant://entities/{entity.unique_id}",
+                uri=AnyUrl(url=f"homeassistant://entities/{entity.unique_id}"),
                 name=entity.name or entity.unique_id,
                 description=f"{entity.entity_id} is in area {entity.area_id}.",
             )
-            for entity in registry.entities.values()
+            for entity in entity_registry.entities.values()
         ]
 
     return server
