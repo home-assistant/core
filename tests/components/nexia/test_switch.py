@@ -2,6 +2,8 @@
 
 from datetime import timedelta
 
+from freezegun.api import FrozenDateTimeFactory
+
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -13,7 +15,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.util import utcnow
 
 from .util import async_init_integration
 
@@ -26,7 +27,9 @@ async def test_hold_switch(hass: HomeAssistant) -> None:
     assert hass.states.get("switch.nick_office_hold").state == STATE_ON
 
 
-async def test_nexia_sensor_switch(hass: HomeAssistant) -> None:
+async def test_nexia_sensor_switch(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test NexiaRoomIQSensorSwitch."""
     await async_init_integration(hass, house_fixture="nexia/sensors_xl1050_house.json")
     sw1_id = f"{Platform.SWITCH}.center_nativezone_include_center"
@@ -57,7 +60,8 @@ async def test_nexia_sensor_switch(hass: HomeAssistant) -> None:
     assert hass.states.get(sw2_id).state == STATE_OFF
 
     # Wait for switches to revert to device status.
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=4))
+    freezer.tick(timedelta(seconds=6))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(sw1_id).state == STATE_ON
     assert hass.states.get(sw2_id).state == STATE_ON
