@@ -121,7 +121,7 @@ async def test_raise_config_entry_not_ready_when_offline_and_expired(
     assert len(hass.config_entries.flow.async_progress()) == 0
 
 
-async def test_migrate_config_entry_1(
+async def test_migrate_config_entry(
     hass: HomeAssistant,
     mock_fyta_connector: AsyncMock,
 ) -> None:
@@ -150,32 +150,3 @@ async def test_migrate_config_entry_1(
     assert entry.data[CONF_PASSWORD] == PASSWORD
     assert entry.data[CONF_ACCESS_TOKEN] == ACCESS_TOKEN
     assert entry.data[CONF_EXPIRATION] == EXPIRATION
-
-
-async def test_migrate_config_entry_2(
-    hass: HomeAssistant,
-    mock_fyta_connector: AsyncMock,
-) -> None:
-    """Test successful migration of entry data."""
-    entry = MockConfigEntry(
-        domain=FYTA_DOMAIN,
-        title=USERNAME,
-        data={
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-            CONF_ACCESS_TOKEN: ACCESS_TOKEN,
-            CONF_EXPIRATION: EXPIRATION,
-        },
-        version=1,
-        minor_version=2,
-    )
-    entry.add_to_hass(hass)
-
-    assert entry.version == 1
-    assert entry.minor_version == 2
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.version == 1
-    assert entry.minor_version == 2

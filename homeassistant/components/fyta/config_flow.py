@@ -51,7 +51,7 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     credentials: Credentials
     VERSION = 1
-    MINOR_VERSION = 3
+    MINOR_VERSION = 2
 
     async def async_auth(self, user_input: Mapping[str, Any]) -> dict[str, str]:
         """Reusable Auth Helper."""

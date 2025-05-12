@@ -27,7 +27,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_ACCESS_TOKEN: ACCESS_TOKEN,
             CONF_EXPIRATION: EXPIRATION,
         },
-        minor_version=3,
+        minor_version=2,
         entry_id="ce5f5431554d101905d31797e1232da8",
     )
 
