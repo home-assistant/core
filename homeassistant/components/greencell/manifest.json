@@ -1,0 +1,15 @@
+{
+    "domain": "greencell",
+    "name": "Greencell",
+    "integration_type": "device",
+    "codeowners": ["@greencell"],
+    "dependencies": ["mqtt"],
+    "version": "1.0.0",
+    "config_flow": true,
+    "translation_key": "evse",
+    "supported_platforms": [
+        "sensor",
+        "switch",
+        "number"
+    ]
+}

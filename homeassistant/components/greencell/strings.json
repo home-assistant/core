@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "EVSE Device Setup"
+      }
+    },
+    "abort": {
+      "discovery_timeout": "No device responded to the discovery request.",
+      "invalid_discovery_data": "The received discovery data is invalid."
+    }
+  }
+}
