@@ -1,5 +1,6 @@
 """Tests for the Samsung TV Integration."""
 
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -11,7 +12,6 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
 )
 from homeassistant.components.samsungtv.const import (
-    CONF_MANUFACTURER,
     CONF_SESSION_ID,
     CONF_SSDP_MAIN_TV_AGENT_LOCATION,
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
@@ -179,12 +179,20 @@ async def test_reauth_triggered_encrypted(hass: HomeAssistant) -> None:
     assert len(flows_in_progress) == 1
 
 
-@pytest.mark.usefixtures("remote_legacy", "remotews", "rest_api_failing")
-async def test_update_imported_legacy_without_method(hass: HomeAssistant) -> None:
-    """Test updating an imported legacy entry without a method."""
-    await setup_samsungtv_entry(
-        hass, {CONF_HOST: "fake_host", CONF_MANUFACTURER: "Samsung"}
-    )
+@pytest.mark.usefixtures("remote_legacy", "remoteencws_failing", "rest_api_failing")
+@pytest.mark.parametrize(
+    "entry_data",
+    [
+        {CONF_HOST: "1.2.3.4"},  # Missing port/method
+        {CONF_HOST: "1.2.3.4", CONF_PORT: LEGACY_PORT},  # Missing method
+        {CONF_HOST: "1.2.3.4", CONF_METHOD: METHOD_LEGACY},  # Missing port
+    ],
+)
+async def test_update_imported_legacy(
+    hass: HomeAssistant, entry_data: dict[str, Any]
+) -> None:
+    """Test updating an imported legacy entry."""
+    await setup_samsungtv_entry(hass, entry_data)
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
