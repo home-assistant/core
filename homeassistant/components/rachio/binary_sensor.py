@@ -75,13 +75,10 @@ CONTROLLER_BINARY_SENSOR_TYPES: tuple[RachioControllerBinarySensorDescription, .
         device_class=BinarySensorDeviceClass.MOISTURE,
         signal_string=SIGNAL_RACHIO_RAIN_SENSOR_UPDATE,
         is_on=lambda controller: controller.init_data[KEY_RAIN_SENSOR_TRIPPED],
-        update_received=lambda state: (
-            True
-            if state == SUBTYPE_RAIN_SENSOR_DETECTION_ON
-            else False
-            if state == SUBTYPE_RAIN_SENSOR_DETECTION_OFF
-            else None
-        ),
+        update_received={
+            SUBTYPE_RAIN_SENSOR_DETECTION_ON: True,
+            SUBTYPE_RAIN_SENSOR_DETECTION_OFF: False,
+        }.get,
     ),
 )
 
