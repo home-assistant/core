@@ -1018,7 +1018,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==9.2.1
+ical==9.2.2
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -1744,7 +1744,7 @@ pymeteoclimatic==0.1.0
 pymicro-vad==1.0.1
 
 # homeassistant.components.miele
-pymiele==0.4.3
+pymiele==0.5.1
 
 # homeassistant.components.mochad
 pymochad==0.2.0
@@ -2144,7 +2144,7 @@ renault-api==0.3.1
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.13.2
+reolink-aio==0.13.3
 
 # homeassistant.components.rflink
 rflink==0.0.66

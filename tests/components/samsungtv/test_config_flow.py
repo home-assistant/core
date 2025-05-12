@@ -26,6 +26,7 @@ from homeassistant.components.samsungtv.const import (
     DEFAULT_MANUFACTURER,
     DOMAIN,
     LEGACY_PORT,
+    METHOD_LEGACY,
     RESULT_AUTH_MISSING,
     RESULT_CANNOT_CONNECT,
     RESULT_NOT_SUPPORTED,
@@ -54,8 +55,9 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
 
 from .const import (
+    ENTRYDATA_LEGACY,
+    ENTRYDATA_WEBSOCKET,
     MOCK_ENTRYDATA_ENCRYPTED_WS,
-    MOCK_ENTRYDATA_WS,
     MOCK_SSDP_DATA,
     MOCK_SSDP_DATA_MAIN_TV_AGENT_ST,
     MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
@@ -71,7 +73,6 @@ MOCK_USER_DATA = {CONF_HOST: "fake_host"}
 MOCK_DHCP_DATA = DhcpServiceInfo(
     ip="10.10.12.34", macaddress="aabbccddeeff", hostname="fake_hostname"
 )
-EXISTING_IP = "192.168.40.221"
 MOCK_ZEROCONF_DATA = ZeroconfServiceInfo(
     ip_address=ip_address("127.0.0.1"),
     ip_addresses=[ip_address("127.0.0.1")],
@@ -86,16 +87,6 @@ MOCK_ZEROCONF_DATA = ZeroconfServiceInfo(
     },
     type="mock_type",
 )
-MOCK_OLD_ENTRY = {
-    CONF_HOST: "10.10.12.34",
-    CONF_METHOD: "legacy",
-    CONF_PORT: None,
-}
-MOCK_LEGACY_ENTRY = {
-    CONF_HOST: EXISTING_IP,
-    CONF_METHOD: "legacy",
-    CONF_PORT: None,
-}
 MOCK_DEVICE_INFO = {
     "device": {
         "type": "Samsung SmartTV",
@@ -109,7 +100,7 @@ AUTODETECT_LEGACY = {
     "name": "HomeAssistant",
     "description": "HomeAssistant",
     "id": "ha.component.samsung",
-    "method": "legacy",
+    "method": METHOD_LEGACY,
     "port": LEGACY_PORT,
     "host": "fake_host",
     "timeout": TIMEOUT_REQUEST,
@@ -144,7 +135,7 @@ DEVICEINFO_WEBSOCKET_NO_SSL = {
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-@pytest.mark.usefixtures("remote", "rest_api_failing")
+@pytest.mark.usefixtures("remote_legacy", "rest_api_failing")
 async def test_user_legacy(hass: HomeAssistant) -> None:
     """Test starting a flow by user."""
     # show form
@@ -162,7 +153,7 @@ async def test_user_legacy(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "fake_host"
     assert result["data"][CONF_HOST] == "fake_host"
-    assert result["data"][CONF_METHOD] == "legacy"
+    assert result["data"][CONF_METHOD] == METHOD_LEGACY
     assert result["data"][CONF_MANUFACTURER] == DEFAULT_MANUFACTURER
     assert result["data"][CONF_MODEL] is None
     assert result["result"].unique_id is None
@@ -196,13 +187,13 @@ async def test_user_legacy_does_not_ok_first_time(hass: HomeAssistant) -> None:
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "fake_host"
     assert result3["data"][CONF_HOST] == "fake_host"
-    assert result3["data"][CONF_METHOD] == "legacy"
+    assert result3["data"][CONF_METHOD] == METHOD_LEGACY
     assert result3["data"][CONF_MANUFACTURER] == DEFAULT_MANUFACTURER
     assert result3["data"][CONF_MODEL] is None
     assert result3["result"].unique_id is None
 
 
-@pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
 async def test_user_websocket(hass: HomeAssistant) -> None:
     """Test starting a flow by user."""
     with patch(
@@ -447,7 +438,7 @@ async def test_user_not_successful_2(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_CANNOT_CONNECT
 
 
-@pytest.mark.usefixtures("remote", "rest_api_failing")
+@pytest.mark.usefixtures("remote_legacy", "rest_api_failing")
 async def test_ssdp(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery."""
     # confirm to add the entry
@@ -469,7 +460,7 @@ async def test_ssdp(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "068e7781-006e-1000-bbbf-84a4668d8423"
 
 
-@pytest.mark.usefixtures("remote", "rest_api_failing")
+@pytest.mark.usefixtures("remote_legacy", "rest_api_failing")
 async def test_ssdp_no_manufacturer(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery when the manufacturer data is missing."""
     ssdp_data = deepcopy(MOCK_SSDP_DATA)
@@ -487,7 +478,7 @@ async def test_ssdp_no_manufacturer(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     "data", [MOCK_SSDP_DATA_MAIN_TV_AGENT_ST, MOCK_SSDP_DATA_RENDERING_CONTROL_ST]
 )
-@pytest.mark.usefixtures("remote", "rest_api_failing")
+@pytest.mark.usefixtures("remote_legacy", "rest_api_failing")
 async def test_ssdp_legacy_not_remote_control_receiver_udn(
     hass: HomeAssistant, data: SsdpServiceInfo
 ) -> None:
@@ -499,7 +490,7 @@ async def test_ssdp_legacy_not_remote_control_receiver_udn(
     assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
-@pytest.mark.usefixtures("remote", "rest_api_failing")
+@pytest.mark.usefixtures("remote_legacy", "rest_api_failing")
 async def test_ssdp_noprefix(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery when friendly name doesn't start with [TV]."""
     ssdp_data = deepcopy(MOCK_SSDP_DATA)
@@ -527,7 +518,7 @@ async def test_ssdp_noprefix(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "068e7781-006e-1000-bbbf-84a4668d8423"
 
 
-@pytest.mark.usefixtures("remotews", "rest_api_failing")
+@pytest.mark.usefixtures("remote_websocket", "rest_api_failing")
 async def test_ssdp_legacy_missing_auth(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery with authentication."""
     with patch(
@@ -562,7 +553,7 @@ async def test_ssdp_legacy_missing_auth(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "068e7781-006e-1000-bbbf-84a4668d8423"
 
 
-@pytest.mark.usefixtures("remotews", "rest_api_failing")
+@pytest.mark.usefixtures("remote_websocket", "rest_api_failing")
 async def test_ssdp_legacy_not_supported(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery for not supported device."""
     with patch(
@@ -577,7 +568,7 @@ async def test_ssdp_legacy_not_supported(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
-@pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
 async def test_ssdp_websocket_success_populates_mac_address_and_ssdp_location(
     hass: HomeAssistant,
 ) -> None:
@@ -606,7 +597,7 @@ async def test_ssdp_websocket_success_populates_mac_address_and_ssdp_location(
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
 async def test_ssdp_websocket_success_populates_mac_address_and_main_tv_ssdp_location(
     hass: HomeAssistant,
 ) -> None:
@@ -720,8 +711,8 @@ async def test_ssdp_websocket_cannot_connect(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote",
-        ) as remotews,
-        patch.object(remotews, "open", side_effect=WebSocketException("Boom")),
+        ) as remote_websocket,
+        patch.object(remote_websocket, "open", side_effect=WebSocketException("Boom")),
     ):
         # device not supported
         result = await hass.config_entries.flow.async_init(
@@ -731,7 +722,7 @@ async def test_ssdp_websocket_cannot_connect(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_CANNOT_CONNECT
 
 
-@pytest.mark.usefixtures("remote")
+@pytest.mark.usefixtures("remote_legacy")
 async def test_ssdp_wrong_manufacturer(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery."""
     ssdp_data = deepcopy(MOCK_SSDP_DATA)
@@ -810,7 +801,7 @@ async def test_ssdp_not_successful_2(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_CANNOT_CONNECT
 
 
-@pytest.mark.usefixtures("remote", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_legacy", "remoteencws_failing")
 async def test_ssdp_already_in_progress(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery twice."""
     with patch(
@@ -832,7 +823,7 @@ async def test_ssdp_already_in_progress(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_ALREADY_IN_PROGRESS
 
 
-@pytest.mark.usefixtures("remotews", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "remoteencws_failing")
 async def test_ssdp_already_configured(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery when already configured."""
     with patch(
@@ -860,7 +851,9 @@ async def test_ssdp_already_configured(hass: HomeAssistant) -> None:
         assert entry.unique_id == "123"
 
 
-@pytest.mark.usefixtures("remotews", "rest_api_non_ssl_only", "remoteencws_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api_non_ssl_only", "remoteencws_failing"
+)
 async def test_dhcp_wireless(hass: HomeAssistant) -> None:
     """Test starting a flow from dhcp."""
     # confirm to add the entry
@@ -886,7 +879,7 @@ async def test_dhcp_wireless(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "223da676-497a-4e06-9507-5e27ec4f0fb3"
 
 
-@pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
 async def test_dhcp_wired(hass: HomeAssistant, rest_api: Mock) -> None:
     """Test starting a flow from dhcp."""
     # Even though it is named "wifiMac", it matches the mac of the wired connection
@@ -916,7 +909,9 @@ async def test_dhcp_wired(hass: HomeAssistant, rest_api: Mock) -> None:
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remotews", "rest_api_non_ssl_only", "remoteencws_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api_non_ssl_only", "remoteencws_failing"
+)
 @pytest.mark.parametrize(
     ("source1", "data1", "source2", "data2", "is_matching_result"),
     [
@@ -988,7 +983,7 @@ async def test_dhcp_zeroconf_already_in_progress(
     assert return_values == [is_matching_result]
 
 
-@pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
 async def test_zeroconf(hass: HomeAssistant) -> None:
     """Test starting a flow from zeroconf."""
     result = await hass.config_entries.flow.async_init(
@@ -1013,7 +1008,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remotews", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "remoteencws_failing")
 async def test_zeroconf_ignores_soundbar(hass: HomeAssistant, rest_api: Mock) -> None:
     """Test starting a flow from zeroconf where the device is actually a soundbar."""
     rest_api.rest_device_info.return_value = {
@@ -1036,7 +1031,9 @@ async def test_zeroconf_ignores_soundbar(hass: HomeAssistant, rest_api: Mock) ->
     assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
-@pytest.mark.usefixtures("remote", "remotews", "remoteencws", "rest_api_failing")
+@pytest.mark.usefixtures(
+    "remote_legacy", "remote_websocket", "remoteencws", "rest_api_failing"
+)
 async def test_zeroconf_no_device_info(hass: HomeAssistant) -> None:
     """Test starting a flow from zeroconf where device_info returns None."""
     result = await hass.config_entries.flow.async_init(
@@ -1049,7 +1046,7 @@ async def test_zeroconf_no_device_info(hass: HomeAssistant) -> None:
     assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
-@pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
 async def test_zeroconf_and_dhcp_same_time(hass: HomeAssistant) -> None:
     """Test starting a flow from zeroconf and dhcp."""
     result = await hass.config_entries.flow.async_init(
@@ -1081,7 +1078,7 @@ async def test_autodetect_websocket(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote"
-        ) as remotews,
+        ) as remote_websocket,
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",
         ) as rest_api_class,
@@ -1104,7 +1101,7 @@ async def test_autodetect_websocket(hass: HomeAssistant) -> None:
             }
         )
         remote.token = "123456789"
-        remotews.return_value = remote
+        remote_websocket.return_value = remote
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
@@ -1112,7 +1109,7 @@ async def test_autodetect_websocket(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_METHOD] == "websocket"
         assert result["data"][CONF_TOKEN] == "123456789"
-        remotews.assert_called_once_with(**AUTODETECT_WEBSOCKET_SSL)
+        remote_websocket.assert_called_once_with(**AUTODETECT_WEBSOCKET_SSL)
         rest_api_class.assert_called_once_with(**DEVICEINFO_WEBSOCKET_SSL)
         await hass.async_block_till_done()
 
@@ -1132,7 +1129,7 @@ async def test_websocket_no_mac(hass: HomeAssistant, mac_address: Mock) -> None:
         ),
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote"
-        ) as remotews,
+        ) as remote_websocket,
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",
         ) as rest_api_class,
@@ -1154,7 +1151,7 @@ async def test_websocket_no_mac(hass: HomeAssistant, mac_address: Mock) -> None:
         )
 
         remote.token = "123456789"
-        remotews.return_value = remote
+        remote_websocket.return_value = remote
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
@@ -1163,7 +1160,7 @@ async def test_websocket_no_mac(hass: HomeAssistant, mac_address: Mock) -> None:
         assert result["data"][CONF_METHOD] == "websocket"
         assert result["data"][CONF_TOKEN] == "123456789"
         assert result["data"][CONF_MAC] == "gg:ee:tt:mm:aa:cc"
-        remotews.assert_called_once_with(**AUTODETECT_WEBSOCKET_SSL)
+        remote_websocket.assert_called_once_with(**AUTODETECT_WEBSOCKET_SSL)
         rest_api_class.assert_called_once_with(**DEVICEINFO_WEBSOCKET_SSL)
         await hass.async_block_till_done()
 
@@ -1217,14 +1214,14 @@ async def test_autodetect_not_supported(hass: HomeAssistant) -> None:
         assert remote.call_args_list == [call(AUTODETECT_LEGACY)]
 
 
-@pytest.mark.usefixtures("remote", "rest_api_failing")
+@pytest.mark.usefixtures("remote_legacy", "rest_api_failing")
 async def test_autodetect_legacy(hass: HomeAssistant) -> None:
     """Test for send key with autodetection of protocol."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_METHOD] == "legacy"
+    assert result["data"][CONF_METHOD] == METHOD_LEGACY
     assert result["data"][CONF_MAC] is None
     assert result["data"][CONF_PORT] == LEGACY_PORT
 
@@ -1253,10 +1250,10 @@ async def test_autodetect_none(hass: HomeAssistant) -> None:
         assert rest_device_info.call_count == 2
 
 
-@pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
 async def test_update_old_entry(hass: HomeAssistant) -> None:
     """Test update of old entry sets unique id."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY)
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRYDATA_LEGACY)
     entry.add_to_hass(hass)
 
     config_entries_domain = hass.config_entries.async_entries(DOMAIN)
@@ -1282,12 +1279,12 @@ async def test_update_old_entry(hass: HomeAssistant) -> None:
     assert entry2.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
 async def test_update_missing_mac_unique_id_added_from_dhcp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test missing mac and unique id added."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY, unique_id=None)
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRYDATA_LEGACY, unique_id=None)
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -1304,12 +1301,12 @@ async def test_update_missing_mac_unique_id_added_from_dhcp(
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
 async def test_update_incorrectly_formatted_mac_unique_id_added_from_dhcp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test incorrectly formatted mac is updated and unique id added."""
-    entry_data = MOCK_OLD_ENTRY.copy()
+    entry_data = ENTRYDATA_LEGACY.copy()
     entry_data[CONF_MAC] = "aabbccddeeff"
     entry = MockConfigEntry(domain=DOMAIN, data=entry_data, unique_id=None)
     entry.add_to_hass(hass)
@@ -1328,13 +1325,15 @@ async def test_update_incorrectly_formatted_mac_unique_id_added_from_dhcp(
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
 async def test_update_missing_mac_unique_id_added_from_zeroconf(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test missing mac and unique id added."""
     entry = MockConfigEntry(
-        domain=DOMAIN, data={**MOCK_OLD_ENTRY, "host": "127.0.0.1"}, unique_id=None
+        domain=DOMAIN,
+        data={**ENTRYDATA_LEGACY, "host": "127.0.0.1"},
+        unique_id=None,
     )
     entry.add_to_hass(hass)
 
@@ -1352,14 +1351,14 @@ async def test_update_missing_mac_unique_id_added_from_zeroconf(
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remote", "rest_api_failing")
+@pytest.mark.usefixtures("remote_legacy", "rest_api_failing")
 async def test_update_missing_model_added_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test missing model added via ssdp on legacy models."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=MOCK_OLD_ENTRY,
+        data=ENTRYDATA_LEGACY,
         unique_id=None,
     )
     entry.add_to_hass(hass)
@@ -1377,12 +1376,12 @@ async def test_update_missing_model_added_from_ssdp(
     assert entry.data[CONF_MODEL] == "UE55H6400"
 
 
-@pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
 async def test_update_missing_mac_unique_id_ssdp_location_added_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test missing mac, ssdp_location, and unique id added via ssdp."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY, unique_id=None)
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRYDATA_LEGACY, unique_id=None)
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -1402,7 +1401,7 @@ async def test_update_missing_mac_unique_id_ssdp_location_added_from_ssdp(
 
 
 @pytest.mark.usefixtures(
-    "remote", "remotews", "remoteencws_failing", "rest_api_failing"
+    "remote_legacy", "remote_websocket", "remoteencws_failing", "rest_api_failing"
 )
 async def test_update_zeroconf_discovery_preserved_unique_id(
     hass: HomeAssistant,
@@ -1410,7 +1409,7 @@ async def test_update_zeroconf_discovery_preserved_unique_id(
     """Test zeroconf discovery preserves unique id."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:zz:ee:rr:oo"},
+        data={**ENTRYDATA_LEGACY, CONF_MAC: "aa:bb:zz:ee:rr:oo"},
         unique_id="original",
     )
     entry.add_to_hass(hass)
@@ -1426,7 +1425,7 @@ async def test_update_zeroconf_discovery_preserved_unique_id(
     assert entry.unique_id == "original"
 
 
-@pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
 async def test_update_missing_mac_unique_id_added_ssdp_location_updated_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -1434,7 +1433,7 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_updated_from_ssd
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            **MOCK_OLD_ENTRY,
+            **ENTRYDATA_LEGACY,
             CONF_SSDP_RENDERING_CONTROL_LOCATION: "https://1.2.3.4:555/test",
         },
         unique_id=None,
@@ -1459,7 +1458,7 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_updated_from_ssd
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
 async def test_update_missing_mac_unique_id_added_ssdp_location_rendering_st_updated_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -1467,7 +1466,7 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_rendering_st_upd
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            **MOCK_OLD_ENTRY,
+            **ENTRYDATA_LEGACY,
             CONF_SSDP_RENDERING_CONTROL_LOCATION: "https://1.2.3.4:555/test",
         },
         unique_id=None,
@@ -1493,7 +1492,7 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_rendering_st_upd
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
 async def test_update_missing_mac_unique_id_added_ssdp_location_main_tv_agent_st_updated_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -1501,7 +1500,7 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_main_tv_agent_st
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            **MOCK_OLD_ENTRY,
+            **ENTRYDATA_LEGACY,
             CONF_SSDP_RENDERING_CONTROL_LOCATION: "https://1.2.3.4:555/test",
             CONF_SSDP_MAIN_TV_AGENT_LOCATION: "https://1.2.3.4:555/test",
         },
@@ -1531,14 +1530,14 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_main_tv_agent_st
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
 async def test_update_ssdp_location_rendering_st_updated_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test with outdated ssdp_location with the correct st added via ssdp."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
+        data={**ENTRYDATA_LEGACY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
         unique_id="be9554b9-c9fb-41f4-8920-22da015376a4",
     )
     entry.add_to_hass(hass)
@@ -1562,14 +1561,14 @@ async def test_update_ssdp_location_rendering_st_updated_from_ssdp(
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
 async def test_update_main_tv_ssdp_location_rendering_st_updated_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test with outdated ssdp_location with the correct st added via ssdp."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
+        data={**ENTRYDATA_LEGACY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
         unique_id="be9554b9-c9fb-41f4-8920-22da015376a4",
     )
     entry.add_to_hass(hass)
@@ -1592,14 +1591,14 @@ async def test_update_main_tv_ssdp_location_rendering_st_updated_from_ssdp(
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remotews", "rest_api")
+@pytest.mark.usefixtures("remote_websocket", "rest_api")
 async def test_update_missing_mac_added_unique_id_preserved_from_zeroconf(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test missing mac and unique id added."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_OLD_ENTRY, "host": "127.0.0.1"},
+        data={**ENTRYDATA_LEGACY, "host": "127.0.0.1"},
         unique_id="0d1cef00-00dc-1000-9c80-4844f7b172de",
     )
     entry.add_to_hass(hass)
@@ -1618,14 +1617,14 @@ async def test_update_missing_mac_added_unique_id_preserved_from_zeroconf(
     assert entry.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
-@pytest.mark.usefixtures("remote")
+@pytest.mark.usefixtures("remote_legacy")
 async def test_update_legacy_missing_mac_from_dhcp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test missing mac added."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=MOCK_LEGACY_ENTRY,
+        data=ENTRYDATA_LEGACY,
         unique_id="0d1cef00-00dc-1000-9c80-4844f7b172de",
     )
     entry.add_to_hass(hass)
@@ -1634,7 +1633,7 @@ async def test_update_legacy_missing_mac_from_dhcp(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
         data=DhcpServiceInfo(
-            ip=EXISTING_IP, macaddress="aabbccddeeff", hostname="fake_hostname"
+            ip="10.10.12.34", macaddress="aabbccddeeff", hostname="fake_hostname"
         ),
     )
     await hass.async_block_till_done()
@@ -1646,7 +1645,7 @@ async def test_update_legacy_missing_mac_from_dhcp(
     assert entry.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
-@pytest.mark.usefixtures("remote")
+@pytest.mark.usefixtures("remote_legacy")
 async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(
     hass: HomeAssistant, rest_api: Mock, mock_setup_entry: AsyncMock
 ) -> None:
@@ -1654,7 +1653,7 @@ async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(
     rest_api.rest_device_info.side_effect = HttpApiError
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=MOCK_LEGACY_ENTRY,
+        data=ENTRYDATA_LEGACY,
     )
     entry.add_to_hass(hass)
     with (
@@ -1671,7 +1670,7 @@ async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data=DhcpServiceInfo(
-                ip=EXISTING_IP, macaddress="aabbccddeeff", hostname="fake_hostname"
+                ip="10.10.12.34", macaddress="aabbccddeeff", hostname="fake_hostname"
             ),
         )
         await hass.async_block_till_done()
@@ -1683,14 +1682,14 @@ async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(
     assert entry.unique_id is None
 
 
-@pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
 async def test_update_ssdp_location_unique_id_added_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test missing ssdp_location, and unique id added via ssdp."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
+        data={**ENTRYDATA_LEGACY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
         unique_id=None,
     )
     entry.add_to_hass(hass)
@@ -1711,14 +1710,14 @@ async def test_update_ssdp_location_unique_id_added_from_ssdp(
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
 async def test_update_ssdp_location_unique_id_added_from_ssdp_with_rendering_control_st(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test missing ssdp_location, and unique id added via ssdp with rendering control st."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
+        data={**ENTRYDATA_LEGACY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
         unique_id=None,
     )
     entry.add_to_hass(hass)
@@ -1742,10 +1741,10 @@ async def test_update_ssdp_location_unique_id_added_from_ssdp_with_rendering_con
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remote")
+@pytest.mark.usefixtures("remote_legacy")
 async def test_form_reauth_legacy(hass: HomeAssistant) -> None:
     """Test reauthenticate legacy."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY)
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRYDATA_LEGACY)
     entry.add_to_hass(hass)
     result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
@@ -1760,10 +1759,10 @@ async def test_form_reauth_legacy(hass: HomeAssistant) -> None:
     assert result2["reason"] == "reauth_successful"
 
 
-@pytest.mark.usefixtures("remotews", "rest_api")
+@pytest.mark.usefixtures("remote_websocket", "rest_api")
 async def test_form_reauth_websocket(hass: HomeAssistant) -> None:
     """Test reauthenticate websocket."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRYDATA_WS)
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRYDATA_WEBSOCKET)
     entry.add_to_hass(hass)
     assert entry.state is ConfigEntryState.NOT_LOADED
 
@@ -1783,16 +1782,16 @@ async def test_form_reauth_websocket(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("rest_api")
 async def test_form_reauth_websocket_cannot_connect(
-    hass: HomeAssistant, remotews: Mock
+    hass: HomeAssistant, remote_websocket: Mock
 ) -> None:
     """Test reauthenticate websocket when we cannot connect on the first attempt."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRYDATA_WS)
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRYDATA_WEBSOCKET)
     entry.add_to_hass(hass)
     result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch.object(remotews, "open", side_effect=ConnectionFailure):
+    with patch.object(remote_websocket, "open", side_effect=ConnectionFailure):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
@@ -1814,7 +1813,7 @@ async def test_form_reauth_websocket_cannot_connect(
 
 async def test_form_reauth_websocket_not_supported(hass: HomeAssistant) -> None:
     """Test reauthenticate websocket when the device is not supported."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRYDATA_WS)
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRYDATA_WEBSOCKET)
     entry.add_to_hass(hass)
     result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
@@ -1904,14 +1903,14 @@ async def test_form_reauth_encrypted(hass: HomeAssistant) -> None:
     assert entry.data[CONF_SESSION_ID] == "1"
 
 
-@pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
 async def test_update_incorrect_udn_matching_upnp_udn_unique_id_added_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test updating the wrong udn from ssdp via upnp udn match."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=MOCK_OLD_ENTRY,
+        data=ENTRYDATA_LEGACY,
         unique_id="068e7781-006e-1000-bbbf-84a4668d8423",
     )
     entry.add_to_hass(hass)
@@ -1930,14 +1929,14 @@ async def test_update_incorrect_udn_matching_upnp_udn_unique_id_added_from_ssdp(
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
 async def test_update_incorrect_udn_matching_mac_unique_id_added_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test updating the wrong udn from ssdp via mac match."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
+        data={**ENTRYDATA_LEGACY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
         unique_id=None,
     )
     entry.add_to_hass(hass)
@@ -1956,14 +1955,14 @@ async def test_update_incorrect_udn_matching_mac_unique_id_added_from_ssdp(
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
 async def test_update_incorrect_udn_matching_mac_from_dhcp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test that DHCP updates the wrong udn from ssdp via mac match."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_ENTRYDATA_WS, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
+        data={**ENTRYDATA_WEBSOCKET, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
         source=config_entries.SOURCE_SSDP,
         unique_id="0d1cef00-00dc-1000-9c80-4844f7b172de",
     )
@@ -1983,14 +1982,14 @@ async def test_update_incorrect_udn_matching_mac_from_dhcp(
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "rest_api", "remoteencws_failing")
 async def test_no_update_incorrect_udn_not_matching_mac_from_dhcp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test that DHCP does not update the wrong udn from ssdp via host match."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_ENTRYDATA_WS, CONF_MAC: "aa:bb:ss:ss:dd:pp"},
+        data={**ENTRYDATA_WEBSOCKET, CONF_MAC: "aa:bb:ss:ss:dd:pp"},
         source=config_entries.SOURCE_SSDP,
         unique_id="0d1cef00-00dc-1000-9c80-4844f7b172de",
     )
@@ -2010,7 +2009,7 @@ async def test_no_update_incorrect_udn_not_matching_mac_from_dhcp(
     assert entry.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
-@pytest.mark.usefixtures("remotews", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "remoteencws_failing")
 async def test_ssdp_update_mac(hass: HomeAssistant) -> None:
     """Ensure that MAC address is correctly updated from SSDP."""
     with patch(

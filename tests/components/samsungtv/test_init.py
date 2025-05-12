@@ -1,5 +1,6 @@
 """Tests for the Samsung TV Integration."""
 
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -11,7 +12,6 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
 )
 from homeassistant.components.samsungtv.const import (
-    CONF_MANUFACTURER,
     CONF_SESSION_ID,
     CONF_SSDP_MAIN_TV_AGENT_LOCATION,
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
@@ -40,9 +40,9 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_samsungtv_entry
 from .const import (
+    ENTRYDATA_WEBSOCKET,
     MOCK_ENTRY_WS_WITH_MAC,
     MOCK_ENTRYDATA_ENCRYPTED_WS,
-    MOCK_ENTRYDATA_WS,
     MOCK_SSDP_DATA_MAIN_TV_AGENT_ST,
     MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
 )
@@ -57,7 +57,7 @@ MOCK_CONFIG = {
 }
 
 
-@pytest.mark.usefixtures("remotews", "remoteencws_failing", "rest_api")
+@pytest.mark.usefixtures("remote_websocket", "remoteencws_failing", "rest_api")
 async def test_setup(hass: HomeAssistant) -> None:
     """Test Samsung TV integration is setup."""
     await setup_samsungtv_entry(hass, MOCK_CONFIG)
@@ -101,7 +101,7 @@ async def test_setup_without_port_device_offline(hass: HomeAssistant) -> None:
     assert config_entries_domain[0].state is ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.usefixtures("remotews", "remoteencws_failing", "rest_api")
+@pytest.mark.usefixtures("remote_websocket", "remoteencws_failing", "rest_api")
 async def test_setup_without_port_device_online(hass: HomeAssistant) -> None:
     """Test import from yaml when the device is online."""
     await setup_samsungtv_entry(hass, MOCK_CONFIG)
@@ -111,7 +111,7 @@ async def test_setup_without_port_device_online(hass: HomeAssistant) -> None:
     assert config_entries_domain[0].data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
 
 
-@pytest.mark.usefixtures("remotews", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "remoteencws_failing")
 async def test_setup_h_j_model(
     hass: HomeAssistant, rest_api: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -126,13 +126,13 @@ async def test_setup_h_j_model(
     assert "H and J series use an encrypted protocol" in caplog.text
 
 
-@pytest.mark.usefixtures("remotews", "remoteencws_failing", "rest_api")
+@pytest.mark.usefixtures("remote_websocket", "rest_api")
 async def test_setup_updates_from_ssdp(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
 ) -> None:
     """Test setting up the entry fetches data from ssdp cache."""
     entry = MockConfigEntry(
-        domain="samsungtv", data=MOCK_ENTRYDATA_WS, entry_id="sample-entry-id"
+        domain="samsungtv", data=ENTRYDATA_WEBSOCKET, entry_id="sample-entry-id"
     )
     entry.add_to_hass(hass)
 
@@ -179,12 +179,20 @@ async def test_reauth_triggered_encrypted(hass: HomeAssistant) -> None:
     assert len(flows_in_progress) == 1
 
 
-@pytest.mark.usefixtures("remote", "remotews", "rest_api_failing")
-async def test_update_imported_legacy_without_method(hass: HomeAssistant) -> None:
-    """Test updating an imported legacy entry without a method."""
-    await setup_samsungtv_entry(
-        hass, {CONF_HOST: "fake_host", CONF_MANUFACTURER: "Samsung"}
-    )
+@pytest.mark.usefixtures("remote_legacy", "remoteencws_failing", "rest_api_failing")
+@pytest.mark.parametrize(
+    "entry_data",
+    [
+        {CONF_HOST: "1.2.3.4"},  # Missing port/method
+        {CONF_HOST: "1.2.3.4", CONF_PORT: LEGACY_PORT},  # Missing method
+        {CONF_HOST: "1.2.3.4", CONF_METHOD: METHOD_LEGACY},  # Missing port
+    ],
+)
+async def test_update_imported_legacy(
+    hass: HomeAssistant, entry_data: dict[str, Any]
+) -> None:
+    """Test updating an imported legacy entry."""
+    await setup_samsungtv_entry(hass, entry_data)
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
@@ -192,7 +200,7 @@ async def test_update_imported_legacy_without_method(hass: HomeAssistant) -> Non
     assert entries[0].data[CONF_PORT] == LEGACY_PORT
 
 
-@pytest.mark.usefixtures("remotews", "rest_api")
+@pytest.mark.usefixtures("remote_websocket", "rest_api")
 async def test_incorrectly_formatted_mac_fixed(hass: HomeAssistant) -> None:
     """Test incorrectly formatted mac is corrected."""
     with patch(
@@ -222,7 +230,7 @@ async def test_incorrectly_formatted_mac_fixed(hass: HomeAssistant) -> None:
         assert config_entries[0].data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
 
 
-@pytest.mark.usefixtures("remotews", "rest_api")
+@pytest.mark.usefixtures("remote_websocket", "rest_api")
 @pytest.mark.xfail
 async def test_cleanup_mac(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry, snapshot: SnapshotAssertion
