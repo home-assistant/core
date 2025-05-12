@@ -6,6 +6,7 @@ from homeassistant.components.samsungtv.const import (
     LEGACY_PORT,
     METHOD_LEGACY,
     METHOD_WEBSOCKET,
+    WEBSOCKET_SSL_PORT,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -37,12 +38,11 @@ MOCK_ENTRYDATA_ENCRYPTED_WS = {
     CONF_TOKEN: "037739871315caef138547b03e348b72",
     CONF_SESSION_ID: "2",
 }
-MOCK_ENTRYDATA_WS = {
+ENTRYDATA_WEBSOCKET = {
     CONF_HOST: "10.10.12.34",
     CONF_METHOD: METHOD_WEBSOCKET,
-    CONF_PORT: 8002,
-    CONF_MODEL: "any",
-    CONF_NAME: "any",
+    CONF_PORT: WEBSOCKET_SSL_PORT,
+    CONF_MODEL: "UE43LS003",
 }
 MOCK_ENTRY_WS_WITH_MAC = {
     CONF_HOST: "fake_host",

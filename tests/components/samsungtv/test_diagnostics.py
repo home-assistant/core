@@ -18,7 +18,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.mark.usefixtures("remotews", "rest_api")
+@pytest.mark.usefixtures("remote_websocket", "rest_api")
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
