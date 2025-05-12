@@ -17,7 +17,11 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_samsungtv_entry
-from .const import ENTRYDATA_LEGACY, MOCK_ENTRY_WS_WITH_MAC, MOCK_ENTRYDATA_ENCRYPTED_WS
+from .const import (
+    ENTRYDATA_ENCRYPTED_WEBSOCKET,
+    ENTRYDATA_LEGACY,
+    MOCK_ENTRY_WS_WITH_MAC,
+)
 
 from tests.common import MockConfigEntry
 
@@ -27,7 +31,7 @@ ENTITY_ID = f"{REMOTE_DOMAIN}.mock_title"
 @pytest.mark.usefixtures("remoteencws", "rest_api")
 async def test_setup(hass: HomeAssistant) -> None:
     """Test setup with basic config."""
-    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+    await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
     assert hass.states.get(ENTITY_ID)
 
 
@@ -36,7 +40,7 @@ async def test_unique_id(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test unique id."""
-    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+    await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
 
     main = entity_registry.async_get(ENTITY_ID)
     assert main.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
@@ -47,7 +51,7 @@ async def test_main_services(
     hass: HomeAssistant, remoteencws: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for turn_off."""
-    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+    await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
 
     remoteencws.send_commands.reset_mock()
 
@@ -82,7 +86,7 @@ async def test_main_services(
 @pytest.mark.usefixtures("remoteencws", "rest_api")
 async def test_send_command_service(hass: HomeAssistant, remoteencws: Mock) -> None:
     """Test the send command."""
-    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+    await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
 
     await hass.services.async_call(
         REMOTE_DOMAIN,

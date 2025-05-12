@@ -12,7 +12,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import setup_samsungtv_entry
-from .const import MOCK_ENTRYDATA_ENCRYPTED_WS
+from .const import ENTRYDATA_ENCRYPTED_WEBSOCKET
 
 from tests.common import MockEntity, MockEntityPlatform
 
@@ -26,7 +26,7 @@ async def test_turn_on_trigger_device_id(
     entity_domain: str,
 ) -> None:
     """Test for turn_on triggers by device_id firing."""
-    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+    await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
 
     entity_id = f"{entity_domain}.mock_title"
 
@@ -90,7 +90,7 @@ async def test_turn_on_trigger_entity_id(
     hass: HomeAssistant, service_calls: list[ServiceCall], entity_domain: str
 ) -> None:
     """Test for turn_on triggers by entity_id firing."""
-    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+    await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
 
     entity_id = f"{entity_domain}.mock_title"
 
@@ -132,7 +132,7 @@ async def test_wrong_trigger_platform_type(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, entity_domain: str
 ) -> None:
     """Test wrong trigger platform type."""
-    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+    await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
     entity_id = f"{entity_domain}.fake"
 
     await async_setup_component(
@@ -169,7 +169,7 @@ async def test_trigger_invalid_entity_id(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, entity_domain: str
 ) -> None:
     """Test turn on trigger using invalid entity_id."""
-    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+    await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
     entity_id = f"{entity_domain}.fake"
 
     platform = MockEntityPlatform(hass)

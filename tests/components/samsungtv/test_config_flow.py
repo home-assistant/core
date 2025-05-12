@@ -55,9 +55,9 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
 
 from .const import (
+    ENTRYDATA_ENCRYPTED_WEBSOCKET,
     ENTRYDATA_LEGACY,
     ENTRYDATA_WEBSOCKET,
-    MOCK_ENTRYDATA_ENCRYPTED_WS,
     MOCK_SSDP_DATA,
     MOCK_SSDP_DATA_MAIN_TV_AGENT_ST,
     MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
@@ -1836,7 +1836,7 @@ async def test_form_reauth_websocket_not_supported(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("remoteencws", "rest_api")
 async def test_form_reauth_encrypted(hass: HomeAssistant) -> None:
     """Test reauth flow for encrypted TVs."""
-    encrypted_entry_data = {**MOCK_ENTRYDATA_ENCRYPTED_WS}
+    encrypted_entry_data = deepcopy(ENTRYDATA_ENCRYPTED_WEBSOCKET)
     del encrypted_entry_data[CONF_TOKEN]
     del encrypted_entry_data[CONF_SESSION_ID]
 
@@ -1889,7 +1889,7 @@ async def test_form_reauth_encrypted(hass: HomeAssistant) -> None:
         assert entry.state is ConfigEntryState.LOADED
 
     authenticator_mock.assert_called_once()
-    assert authenticator_mock.call_args[0] == ("fake_host",)
+    assert authenticator_mock.call_args[0] == ("10.10.12.34",)
 
     authenticator_mock.return_value.start_pairing.assert_called_once()
     assert authenticator_mock.return_value.try_pin.call_count == 2

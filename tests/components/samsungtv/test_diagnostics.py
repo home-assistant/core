@@ -11,7 +11,7 @@ from homeassistant.components.samsungtv.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import setup_samsungtv_entry
-from .const import MOCK_ENTRY_WS_WITH_MAC, MOCK_ENTRYDATA_ENCRYPTED_WS
+from .const import ENTRYDATA_ENCRYPTED_WEBSOCKET, MOCK_ENTRY_WS_WITH_MAC
 
 from tests.common import load_json_object_fixture
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -43,7 +43,7 @@ async def test_entry_diagnostics_encrypted(
     rest_api.rest_device_info.return_value = load_json_object_fixture(
         "device_info_UE48JU6400.json", DOMAIN
     )
-    config_entry = await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+    config_entry = await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
 
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
@@ -59,7 +59,7 @@ async def test_entry_diagnostics_encrypte_offline(
 ) -> None:
     """Test config entry diagnostics."""
     rest_api.rest_device_info.side_effect = HttpApiError
-    config_entry = await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+    config_entry = await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
 
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry

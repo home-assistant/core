@@ -40,9 +40,9 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_samsungtv_entry
 from .const import (
+    ENTRYDATA_ENCRYPTED_WEBSOCKET,
     ENTRYDATA_WEBSOCKET,
     MOCK_ENTRY_WS_WITH_MAC,
-    MOCK_ENTRYDATA_ENCRYPTED_WS,
     MOCK_SSDP_DATA_MAIN_TV_AGENT_ST,
     MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
 )
@@ -165,7 +165,7 @@ async def test_setup_updates_from_ssdp(
 @pytest.mark.usefixtures("remoteencws", "rest_api")
 async def test_reauth_triggered_encrypted(hass: HomeAssistant) -> None:
     """Test reauth flow is triggered for encrypted TVs."""
-    encrypted_entry_data = {**MOCK_ENTRYDATA_ENCRYPTED_WS}
+    encrypted_entry_data = {**ENTRYDATA_ENCRYPTED_WEBSOCKET}
     del encrypted_entry_data[CONF_TOKEN]
     del encrypted_entry_data[CONF_SESSION_ID]
 

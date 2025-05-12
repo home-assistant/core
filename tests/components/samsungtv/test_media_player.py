@@ -81,9 +81,9 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_samsungtv_entry
 from .const import (
+    ENTRYDATA_ENCRYPTED_WEBSOCKET,
     ENTRYDATA_LEGACY,
     MOCK_ENTRY_WS_WITH_MAC,
-    MOCK_ENTRYDATA_ENCRYPTED_WS,
     SAMPLE_DEVICE_INFO_WIFI,
 )
 
@@ -201,7 +201,7 @@ async def test_setup_encrypted_websocket(
         remote.__aexit__ = AsyncMock()
         remote_class.return_value = remote
 
-        await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+        await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
 
         freezer.tick(timedelta(minutes=5))
         async_fire_time_changed(hass)
@@ -346,7 +346,7 @@ async def test_update_off_encryptedws(
     rest_api: Mock,
 ) -> None:
     """Testing update tv off."""
-    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+    await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
 
     rest_api.rest_device_info.assert_called_once()
 
@@ -598,7 +598,7 @@ async def test_send_key_websocketexception_encrypted(
     hass: HomeAssistant, remoteencws: Mock
 ) -> None:
     """Testing unhandled response exception."""
-    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+    await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
     remoteencws.send_commands = Mock(side_effect=WebSocketException("Boom"))
     await hass.services.async_call(
         MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
@@ -626,7 +626,7 @@ async def test_send_key_os_error_ws_encrypted(
     hass: HomeAssistant, remoteencws: Mock
 ) -> None:
     """Testing unhandled response exception."""
-    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+    await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
     remoteencws.send_commands = Mock(side_effect=OSError("Boom"))
     await hass.services.async_call(
         MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
@@ -777,7 +777,7 @@ async def test_turn_off_encrypted_websocket(
     hass: HomeAssistant, remoteencws: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for turn_off."""
-    entry_data = deepcopy(MOCK_ENTRYDATA_ENCRYPTED_WS)
+    entry_data = deepcopy(ENTRYDATA_ENCRYPTED_WEBSOCKET)
     entry_data[CONF_MODEL] = "UE48UNKNOWN"
     await setup_samsungtv_entry(hass, entry_data)
 
@@ -795,7 +795,7 @@ async def test_turn_off_encrypted_websocket(
     assert command.body["param3"] == "KEY_POWEROFF"
     assert isinstance(command := commands[1], SamsungTVEncryptedCommand)
     assert command.body["param3"] == "KEY_POWER"
-    assert "Unknown power_off command for UE48UNKNOWN (fake_host)" in caplog.text
+    assert "Unknown power_off command for UE48UNKNOWN (10.10.12.34)" in caplog.text
 
     # commands not sent : power off in progress
     remoteencws.send_commands.reset_mock()
@@ -818,7 +818,7 @@ async def test_turn_off_encrypted_websocket_key_type(
     expected_key_type: str,
 ) -> None:
     """Test for turn_off."""
-    entry_data = deepcopy(MOCK_ENTRYDATA_ENCRYPTED_WS)
+    entry_data = deepcopy(ENTRYDATA_ENCRYPTED_WEBSOCKET)
     entry_data[CONF_MODEL] = model
     await setup_samsungtv_entry(hass, entry_data)
 
@@ -881,7 +881,7 @@ async def test_turn_off_encryptedws_os_error(
 ) -> None:
     """Test for turn_off with OSError."""
     caplog.set_level(logging.DEBUG)
-    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+    await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
     remoteencws.close = Mock(side_effect=OSError("BOOM"))
     await hass.services.async_call(
         MP_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
