@@ -149,14 +149,14 @@ async def test_tts_entity_subclass_properties(
 def test_streaming_supported() -> None:
     """Test streaming support."""
     base_entity = tts.TextToSpeechEntity()
-    assert base_entity.supports_streaming_input is False
+    assert base_entity.async_supports_streaming_input() is False
 
     class StreamingEntity(tts.TextToSpeechEntity):
         async def async_stream_tts_audio(self) -> None:
             pass
 
     streaming_entity = StreamingEntity()
-    assert streaming_entity.supports_streaming_input is True
+    assert streaming_entity.async_supports_streaming_input() is True
 
     class NonStreamingEntity(tts.TextToSpeechEntity):
         async def async_get_tts_audio(
@@ -165,7 +165,7 @@ def test_streaming_supported() -> None:
             pass
 
     non_streaming_entity = NonStreamingEntity()
-    assert non_streaming_entity.supports_streaming_input is False
+    assert non_streaming_entity.async_supports_streaming_input() is False
 
     class SyncNonStreamingEntity(tts.TextToSpeechEntity):
         def get_tts_audio(
@@ -174,4 +174,4 @@ def test_streaming_supported() -> None:
             pass
 
     sync_non_streaming_entity = SyncNonStreamingEntity()
-    assert sync_non_streaming_entity.supports_streaming_input is False
+    assert sync_non_streaming_entity.async_supports_streaming_input() is False

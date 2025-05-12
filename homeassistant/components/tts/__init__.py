@@ -735,7 +735,7 @@ class SpeechManager:
 
         supports_streaming_input = (
             isinstance(engine_instance, TextToSpeechEntity)
-            and engine_instance.supports_streaming_input
+            and engine_instance.async_supports_streaming_input()
         )
         language, options = self.process_options(engine_instance, language, options)
         if use_file_cache is None:

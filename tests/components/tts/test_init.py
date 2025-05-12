@@ -4,7 +4,7 @@ import asyncio
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -1906,7 +1906,7 @@ async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> No
         )
 
     mock_tts_entity.async_stream_tts_audio = async_stream_tts_audio
-    del mock_tts_entity.__dict__["supports_streaming_input"]
+    mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
 
     async def stream_message():
         """Mock stream message."""
