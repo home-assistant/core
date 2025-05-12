@@ -165,7 +165,7 @@ class ModbusLight(BaseSwitch, LightEntity):
                     brightness_result.registers[0]
                 )
 
-        if not self._color_temp_address:
+        if self._color_temp_address:
             color_result = await self._hub.async_pb_call(
                 unit=self._slave,
                 value=1,
