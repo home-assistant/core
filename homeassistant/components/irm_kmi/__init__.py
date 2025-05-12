@@ -16,8 +16,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: IrmKmiConfigEntry) -> bo
     """Set up this integration using UI."""
     entry.runtime_data = RuntimeData(hass, entry)
 
-    # When integration is set up, set the logging level of the irm_kmi_api package to the same level to help debugging.
-    logging.getLogger("irm_kmi_api").setLevel(_LOGGER.getEffectiveLevel())
     try:
         await entry.runtime_data.coordinator.async_config_entry_first_refresh()
     except ConfigEntryError:
