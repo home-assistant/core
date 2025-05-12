@@ -1,0 +1,12 @@
+{
+  "domain": "idrive_e2",
+  "name": "IDrive e2",
+  "codeowners": ["@tomasbedrich", "@patrickvorgers"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/idrive_e2",
+  "integration_type": "service",
+  "iot_class": "cloud_push",
+  "loggers": ["aiobotocore"],
+  "quality_scale": "bronze",
+  "requirements": ["aiobotocore==2.21.1"]
+}

@@ -1,0 +1,53 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "access_key_id": "Access key ID",
+          "secret_access_key": "Secret access key"
+        },
+        "data_description": {
+          "access_key_id": "Access key ID to connect to IDrive e2 API",
+          "secret_access_key": "Secret access key to connect to IDrive e2 API"
+        },
+        "title": "Add IDrive e2"
+      },
+      "bucket": {
+        "data": {
+          "bucket": "Bucket name"
+        },
+        "data_description": {
+          "bucket": "Bucket must be writable by the provided credentials."
+        },
+        "title": "Select IDrive e2 bucket"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:component::idrive_e2::exceptions::cannot_connect::message%]",
+      "invalid_bucket_name": "[%key:component::idrive_e2::exceptions::invalid_bucket_name::message%]",
+      "invalid_credentials": "[%key:component::idrive_e2::exceptions::invalid_credentials::message%]",
+      "invalid_endpoint_url": "[%key:component::idrive_e2::exceptions::invalid_endpoint_url::message%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:component::idrive_e2::exceptions::cannot_connect::message%]",
+      "invalid_credentials": "[%key:component::idrive_e2::exceptions::invalid_credentials::message%]",
+      "invalid_bucket_name": "[%key:component::idrive_e2::exceptions::invalid_bucket_name::message%]",
+      "invalid_endpoint_url": "[%key:component::idrive_e2::exceptions::invalid_endpoint_url::message%]"
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Cannot connect to endpoint"
+    },
+    "invalid_bucket_name": {
+      "message": "Invalid bucket name"
+    },
+    "invalid_credentials": {
+      "message": "Bucket cannot be accessed using provided combination of access key ID and secret access key."
+    },
+    "invalid_endpoint_url": {
+      "message": "Invalid endpoint URL. Please make sure it's a valid IDrive e2 endpoint URL."
+    }
+  }
+}
