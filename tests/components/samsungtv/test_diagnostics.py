@@ -4,138 +4,63 @@ from unittest.mock import Mock
 
 import pytest
 from samsungtvws.exceptions import HttpApiError
+from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
-from homeassistant.components.diagnostics import REDACTED
+from homeassistant.components.samsungtv.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import setup_samsungtv_entry
-from .const import (
-    MOCK_ENTRY_WS_WITH_MAC,
-    MOCK_ENTRYDATA_ENCRYPTED_WS,
-    SAMPLE_DEVICE_INFO_UE48JU6400,
-    SAMPLE_DEVICE_INFO_WIFI,
-)
+from .const import MOCK_ENTRY_WS_WITH_MAC, MOCK_ENTRYDATA_ENCRYPTED_WS
 
-from tests.common import ANY
+from tests.common import load_json_object_fixture
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.mark.usefixtures("remotews", "rest_api")
+@pytest.mark.usefixtures("remote_websocket", "rest_api")
 async def test_entry_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
     config_entry = await setup_samsungtv_entry(hass, MOCK_ENTRY_WS_WITH_MAC)
 
-    assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
-        "entry": {
-            "created_at": ANY,
-            "data": {
-                "host": "fake_host",
-                "ip_address": "test",
-                "mac": "aa:bb:cc:dd:ee:ff",
-                "method": "websocket",
-                "model": "82GXARRS",
-                "name": "fake",
-                "port": 8002,
-                "token": REDACTED,
-            },
-            "disabled_by": None,
-            "discovery_keys": {},
-            "domain": "samsungtv",
-            "entry_id": "123456",
-            "minor_version": 2,
-            "modified_at": ANY,
-            "options": {},
-            "pref_disable_new_entities": False,
-            "pref_disable_polling": False,
-            "source": "user",
-            "subentries": [],
-            "title": "Mock Title",
-            "unique_id": "any",
-            "version": 2,
-        },
-        "device_info": SAMPLE_DEVICE_INFO_WIFI,
-    }
+    assert await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry
+    ) == snapshot(exclude=props("created_at", "modified_at"))
 
 
 @pytest.mark.usefixtures("remoteencws")
 async def test_entry_diagnostics_encrypted(
-    hass: HomeAssistant, rest_api: Mock, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    rest_api: Mock,
+    hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
-    rest_api.rest_device_info.return_value = SAMPLE_DEVICE_INFO_UE48JU6400
+    rest_api.rest_device_info.return_value = load_json_object_fixture(
+        "device_info_UE48JU6400.json", DOMAIN
+    )
     config_entry = await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
 
-    assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
-        "entry": {
-            "created_at": ANY,
-            "data": {
-                "host": "fake_host",
-                "ip_address": "test",
-                "mac": "aa:bb:cc:dd:ee:ff",
-                "method": "encrypted",
-                "model": "UE48JU6400",
-                "name": "fake",
-                "port": 8000,
-                "token": REDACTED,
-                "session_id": REDACTED,
-            },
-            "disabled_by": None,
-            "discovery_keys": {},
-            "domain": "samsungtv",
-            "entry_id": "123456",
-            "minor_version": 2,
-            "modified_at": ANY,
-            "options": {},
-            "pref_disable_new_entities": False,
-            "pref_disable_polling": False,
-            "source": "user",
-            "subentries": [],
-            "title": "Mock Title",
-            "unique_id": "any",
-            "version": 2,
-        },
-        "device_info": SAMPLE_DEVICE_INFO_UE48JU6400,
-    }
+    assert await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry
+    ) == snapshot(exclude=props("created_at", "modified_at"))
 
 
 @pytest.mark.usefixtures("remoteencws")
 async def test_entry_diagnostics_encrypte_offline(
-    hass: HomeAssistant, rest_api: Mock, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    rest_api: Mock,
+    hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
     rest_api.rest_device_info.side_effect = HttpApiError
     config_entry = await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
 
-    assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
-        "entry": {
-            "created_at": ANY,
-            "data": {
-                "host": "fake_host",
-                "ip_address": "test",
-                "mac": "aa:bb:cc:dd:ee:ff",
-                "method": "encrypted",
-                "name": "fake",
-                "port": 8000,
-                "token": REDACTED,
-                "session_id": REDACTED,
-            },
-            "disabled_by": None,
-            "discovery_keys": {},
-            "domain": "samsungtv",
-            "entry_id": "123456",
-            "minor_version": 2,
-            "modified_at": ANY,
-            "options": {},
-            "pref_disable_new_entities": False,
-            "pref_disable_polling": False,
-            "source": "user",
-            "subentries": [],
-            "title": "Mock Title",
-            "unique_id": "any",
-            "version": 2,
-        },
-        "device_info": None,
-    }
+    assert await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry
+    ) == snapshot(exclude=props("created_at", "modified_at"))

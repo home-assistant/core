@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import AMBIENT_LIGHT, DOMAIN, LIGHT, LIGHT_OFF, LIGHT_ON, MieleAppliance
-from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
+from .coordinator import MieleConfigEntry
 from .entity import MieleDevice, MieleEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,13 +85,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up the light platform."""
     coordinator = config_entry.runtime_data
+    added_devices: set[str] = set()
 
-    async_add_entities(
-        MieleLight(coordinator, device_id, definition.description)
-        for device_id, device in coordinator.data.devices.items()
-        for definition in LIGHT_TYPES
-        if device.device_type in definition.types
-    )
+    def _async_add_new_devices() -> None:
+        nonlocal added_devices
+        new_devices_set, current_devices = coordinator.async_add_devices(added_devices)
+        added_devices = current_devices
+
+        async_add_entities(
+            MieleLight(coordinator, device_id, definition.description)
+            for device_id, device in coordinator.data.devices.items()
+            for definition in LIGHT_TYPES
+            if device_id in new_devices_set and device.device_type in definition.types
+        )
+
+    config_entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
+    _async_add_new_devices()
 
 
 class MieleLight(MieleEntity, LightEntity):
@@ -100,16 +109,6 @@ class MieleLight(MieleEntity, LightEntity):
     entity_description: MieleLightDescription
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
-
-    def __init__(
-        self,
-        coordinator: MieleDataUpdateCoordinator,
-        device_id: str,
-        description: MieleLightDescription,
-    ) -> None:
-        """Initialize the light."""
-        super().__init__(coordinator, device_id, description)
-        self.api = coordinator.api
 
     @property
     def is_on(self) -> bool:

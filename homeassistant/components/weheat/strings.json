@@ -101,7 +101,7 @@
           "dhw": "Heating DHW",
           "legionella_prevention": "Legionella prevention",
           "defrosting": "Defrosting",
-          "self_test": "Self test",
+          "self_test": "Self-test",
           "manual_control": "Manual control"
         }
       },

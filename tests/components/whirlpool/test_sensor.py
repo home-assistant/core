@@ -1,7 +1,6 @@
 """Test the Whirlpool Sensor domain."""
 
 from datetime import UTC, datetime, timedelta
-from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -14,23 +13,12 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import as_timestamp, utc_from_timestamp, utcnow
 
-from . import init_integration, snapshot_whirlpool_entities
+from . import init_integration, snapshot_whirlpool_entities, trigger_attr_callback
 
 from tests.common import async_fire_time_changed, mock_restore_cache_with_extra_data
 
 WASHER_ENTITY_ID_BASE = "sensor.washer"
 DRYER_ENTITY_ID_BASE = "sensor.dryer"
-
-
-async def trigger_attr_callback(
-    hass: HomeAssistant, mock_api_instance: MagicMock
-) -> None:
-    """Simulate an update trigger from the API."""
-
-    for call in mock_api_instance.register_attr_callback.call_args_list:
-        update_ha_state_cb = call[0][0]
-        update_ha_state_cb()
-    await hass.async_block_till_done()
 
 
 # Freeze time for WasherDryerTimeSensor

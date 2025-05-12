@@ -17,11 +17,11 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_samsungtv_entry
-from .const import MOCK_CONFIG, MOCK_ENTRY_WS_WITH_MAC, MOCK_ENTRYDATA_ENCRYPTED_WS
+from .const import ENTRYDATA_LEGACY, MOCK_ENTRY_WS_WITH_MAC, MOCK_ENTRYDATA_ENCRYPTED_WS
 
 from tests.common import MockConfigEntry
 
-ENTITY_ID = f"{REMOTE_DOMAIN}.fake"
+ENTITY_ID = f"{REMOTE_DOMAIN}.mock_title"
 
 
 @pytest.mark.usefixtures("remoteencws", "rest_api")
@@ -39,7 +39,7 @@ async def test_unique_id(
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
 
     main = entity_registry.async_get(ENTITY_ID)
-    assert main.unique_id == "any"
+    assert main.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
 @pytest.mark.usefixtures("remoteencws", "rest_api")
@@ -98,13 +98,13 @@ async def test_send_command_service(hass: HomeAssistant, remoteencws: Mock) -> N
     assert command.body["param3"] == "dash"
 
 
-@pytest.mark.usefixtures("remotews", "rest_api")
+@pytest.mark.usefixtures("remote_websocket", "rest_api")
 async def test_turn_on_wol(hass: HomeAssistant) -> None:
     """Test turn on."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_ENTRY_WS_WITH_MAC,
-        unique_id="any",
+        unique_id="be9554b9-c9fb-41f4-8920-22da015376a4",
     )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -119,15 +119,15 @@ async def test_turn_on_wol(hass: HomeAssistant) -> None:
     assert mock_send_magic_packet.called
 
 
-async def test_turn_on_without_turnon(hass: HomeAssistant, remote: Mock) -> None:
+async def test_turn_on_without_turnon(hass: HomeAssistant, remote_legacy: Mock) -> None:
     """Test turn on."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
+    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             REMOTE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
         )
     # nothing called as not supported feature
-    assert remote.control.call_count == 0
+    assert remote_legacy.control.call_count == 0
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "service_unsupported"
     assert exc_info.value.translation_placeholders == {

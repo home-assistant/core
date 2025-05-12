@@ -87,7 +87,10 @@ async def test_entry_unload(hass: HomeAssistant, mock_bridge) -> None:
 
 
 async def test_remove_device(
-    hass: HomeAssistant, mock_bridge, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    mock_bridge,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test being able to remove a disconnected device."""
     assert await async_setup_component(hass, "config", {})
@@ -101,7 +104,6 @@ async def test_remove_device(
     assert mock_bridge.is_running is True
     assert len(entry.runtime_data) == 2
 
-    device_registry = dr.async_get(hass)
     live_device_id = DUMMY_DEVICE_ID1
     dead_device_id = DUMMY_DEVICE_ID4
 
