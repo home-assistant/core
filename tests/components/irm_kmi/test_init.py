@@ -1,6 +1,6 @@
 """Tests for the IRM KMI integration."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -23,7 +23,7 @@ async def test_load_unload_config_entry(
     mock_irm_kmi_api: AsyncMock,
 ) -> None:
     """Test the IRM KMI configuration entry loading/unloading."""
-    mock_config_entry.runtime_data = mock_irm_kmi_api
+    mock_config_entry.runtime_data.api_client = mock_irm_kmi_api
 
     hass.states.async_set(
         "zone.home",
@@ -56,6 +56,8 @@ async def test_config_entry_not_ready(
         0,
         {"latitude": 50.738681639, "longitude": 4.054077148},
     )
+
+    mock_config_entry.runtime_data.api_client = mock_exception_irm_kmi_api
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -75,6 +77,7 @@ async def test_config_entry_zone_removed(
         data={CONF_ZONE: "zone.castle", CONF_LANGUAGE_OVERRIDE: "none"},
         unique_id="zone.castle",
     )
+    mock_config_entry.runtime_data = MagicMock()
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

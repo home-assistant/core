@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from irm_kmi_api import IrmKmiApiError
+from irm_kmi_api import IrmKmiApiClientHa, IrmKmiApiError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_ZONE
@@ -20,7 +20,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN, IRM_KMI_NAME, OUT_OF_BENELUX
-from .data import IrmKmiConfigEntry, ProcessedCoordinatorData
+from .data import ProcessedCoordinatorData
 from .utils import disable_from_config, get_config_value, preferred_language
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +29,9 @@ _LOGGER = logging.getLogger(__name__)
 class IrmKmiCoordinator(TimestampDataUpdateCoordinator):
     """Coordinator to update data from IRM KMI."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, api_client: IrmKmiApiClientHa
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
@@ -40,8 +42,8 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator):
             # Polling interval. Will only be polled if there are subscribers.
             update_interval=timedelta(minutes=7),
         )
-        self.config_entry: IrmKmiConfigEntry = entry
-        self._api = entry.runtime_data
+        self.config_entry: ConfigEntry = entry
+        self._api = api_client
         self._zone = get_config_value(entry, CONF_ZONE)
         self.shared_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
