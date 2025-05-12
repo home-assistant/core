@@ -239,7 +239,6 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
         self._states = cast(dict[int, _StateT], entry_data.state[state_type])
         assert entry_data.device_info is not None
         device_info = entry_data.device_info
-        self._device_info = device_info
         self._on_entry_data_changed()
         self._key = entity_info.key
         self._state_type = state_type
@@ -277,6 +276,12 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
             )
         )
         self._update_state_from_entry_data()
+
+    @property
+    def _device_info(self) -> EsphomeDeviceInfo:
+        """Return the device info."""
+        assert self._entry_data.device_info is not None
+        return self._entry_data.device_info
 
     @callback
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
