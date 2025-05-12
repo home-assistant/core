@@ -901,6 +901,14 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         """Set in progress task."""
         self.__progress_task = progress_task
 
+    def get_step_id(self, step_function: Callable) -> str:
+        """Get the step id for a step function."""
+        name = step_function.__name__
+        if not name.startswith("async_step_"):
+            raise ValueError(f"{step_function!r} is not a valid step function")
+
+        return name.removeprefix("async_step_")
+
 
 class SectionConfig(TypedDict, total=False):
     """Class to represent a section config."""
