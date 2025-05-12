@@ -4942,7 +4942,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[window_covering_full][sensor.mock_full_window_covering_target_open_to_position-entry]
+# name: test_sensors[window_covering_full][sensor.mock_full_window_covering_target_opening_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4955,7 +4955,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_full_window_covering_target_open_to_position',
+    'entity_id': 'sensor.mock_full_window_covering_target_opening_position',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4967,7 +4967,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Target open-to position',
+    'original_name': 'Target opening position',
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -4976,21 +4976,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[window_covering_full][sensor.mock_full_window_covering_target_open_to_position-state]
+# name: test_sensors[window_covering_full][sensor.mock_full_window_covering_target_opening_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Full Window Covering Target open-to position',
+      'friendly_name': 'Mock Full Window Covering Target opening position',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_full_window_covering_target_open_to_position',
+    'entity_id': 'sensor.mock_full_window_covering_target_opening_position',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_sensors[window_covering_pa_lift][sensor.longan_link_wncv_da01_target_open_to_position-entry]
+# name: test_sensors[window_covering_pa_lift][sensor.longan_link_wncv_da01_target_opening_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5003,7 +5003,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.longan_link_wncv_da01_target_open_to_position',
+    'entity_id': 'sensor.longan_link_wncv_da01_target_opening_position',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5015,7 +5015,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Target open-to position',
+    'original_name': 'Target opening position',
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -5024,14 +5024,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[window_covering_pa_lift][sensor.longan_link_wncv_da01_target_open_to_position-state]
+# name: test_sensors[window_covering_pa_lift][sensor.longan_link_wncv_da01_target_opening_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Longan link WNCV DA01 Target open-to position',
+      'friendly_name': 'Longan link WNCV DA01 Target opening position',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.longan_link_wncv_da01_target_open_to_position',
+    'entity_id': 'sensor.longan_link_wncv_da01_target_opening_position',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
