@@ -385,6 +385,10 @@ def get_shelly_model_name(
 
 def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     """Get name based on device and channel name."""
+    instances = len(
+        get_rpc_key_instances(device.status, key.split(":")[0], all_lights=True)
+    )
+
     if key in device.config:
         if entity_name := device.config[key].get("name"):
             return cast(str, entity_name)
@@ -392,7 +396,7 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     # main function of the device
     if (
         key.startswith(("switch:", "light:cct:", "rgb:", "rgbw:", "em1", "thermostat:"))
-        and len(get_rpc_key_instances(device.status, key, all_lights=True)) == 1
+        and instances == 1
     ):
         return None
 
