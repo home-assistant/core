@@ -25,7 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> bool:
     """Set up Volvo from a config entry."""
-    _LOGGER.debug("%s - Loading entry", entry.entry_id)
 
     # Create APIs
     implementation = await async_get_config_entry_implementation(hass, entry)
