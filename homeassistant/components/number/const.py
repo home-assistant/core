@@ -45,6 +45,7 @@ from homeassistant.const import (
 )
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    ReactiveEnergyConverter,
     TemperatureConverter,
     VolumeFlowRateConverter,
 )
@@ -538,6 +539,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
 }
 
 UNIT_CONVERTERS: dict[NumberDeviceClass, type[BaseUnitConverter]] = {
+    NumberDeviceClass.REACTIVE_ENERGY: ReactiveEnergyConverter,
     NumberDeviceClass.TEMPERATURE: TemperatureConverter,
     NumberDeviceClass.VOLUME_FLOW_RATE: VolumeFlowRateConverter,
 }
