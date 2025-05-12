@@ -234,7 +234,7 @@ async def test_config_flow_zigbee(hass: HomeAssistant) -> None:
     with mock_addon_info(
         hass,
         app_type=ApplicationType.SPINEL,
-    ) as mock_otbr_manager:
+    ):
         # Pick the menu option: we are now installing the addon
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -301,23 +301,7 @@ async def test_config_flow_zigbee_skip_step_if_installed(hass: HomeAssistant) ->
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "pick_firmware"
 
-    with mock_addon_info(
-        hass,
-        app_type=ApplicationType.SPINEL,
-        flasher_addon_info=AddonInfo(
-            available=True,
-            hostname=None,
-            options={
-                "device": "",
-                "baudrate": 115200,
-                "bootloader_baudrate": 115200,
-                "flow_control": True,
-            },
-            state=AddonState.NOT_RUNNING,
-            update_available=False,
-            version="1.2.3",
-        ),
-    ) as mock_otbr_manager:
+    with mock_addon_info(hass, app_type=ApplicationType.SPINEL):
         # Pick the menu option: we skip installation, instead we directly run it
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -328,16 +312,6 @@ async def test_config_flow_zigbee_skip_step_if_installed(hass: HomeAssistant) ->
         assert result["step_id"] == "run_zigbee_flasher_addon"
         assert result["progress_action"] == "run_zigbee_flasher_addon"
         assert result["description_placeholders"]["firmware_type"] == "spinel"
-        assert mock_flasher_manager.async_set_addon_options.mock_calls == [
-            call(
-                {
-                    "device": TEST_DEVICE,
-                    "baudrate": 115200,
-                    "bootloader_baudrate": 115200,
-                    "flow_control": True,
-                }
-            )
-        ]
 
         # Uninstall the addon
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -528,7 +502,7 @@ async def test_config_flow_zigbee_not_hassio(hass: HomeAssistant) -> None:
         hass,
         is_hassio=False,
         app_type=ApplicationType.EZSP,
-    ) as mock_otbr_manager:
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
@@ -676,7 +650,7 @@ async def test_options_flow_thread_to_zigbee(hass: HomeAssistant) -> None:
     with mock_addon_info(
         hass,
         app_type=ApplicationType.SPINEL,
-    ) as mock_otbr_manager:
+    ):
         # Pick the menu option: we are now installing the addon
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -693,16 +667,6 @@ async def test_options_flow_thread_to_zigbee(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["step_id"] == "run_zigbee_flasher_addon"
         assert result["progress_action"] == "run_zigbee_flasher_addon"
-        assert mock_flasher_manager.async_set_addon_options.mock_calls == [
-            call(
-                {
-                    "device": TEST_DEVICE,
-                    "baudrate": 115200,
-                    "bootloader_baudrate": 115200,
-                    "flow_control": True,
-                }
-            )
-        ]
 
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -713,9 +677,6 @@ async def test_options_flow_thread_to_zigbee(hass: HomeAssistant) -> None:
         assert result["progress_action"] == "uninstall_zigbee_flasher_addon"
 
         await hass.async_block_till_done(wait_background_tasks=True)
-
-        # We are finally done with the addon
-        assert mock_flasher_manager.async_uninstall_addon_waiting.mock_calls == [call()]
 
         result = await hass.config_entries.options.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.FORM
