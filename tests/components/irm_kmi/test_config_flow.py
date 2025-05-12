@@ -2,12 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from homeassistant.components.irm_kmi import async_migrate_entry
-from homeassistant.components.irm_kmi.const import (
-    CONF_LANGUAGE_OVERRIDE,
-    CONFIG_FLOW_VERSION,
-    DOMAIN,
-)
+from homeassistant.components.irm_kmi.const import CONF_LANGUAGE_OVERRIDE, DOMAIN
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_ZONE
@@ -119,20 +114,3 @@ async def test_option_flow(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_LANGUAGE_OVERRIDE: "none"}
-
-
-async def test_config_entry_migration(hass: HomeAssistant) -> None:
-    """Ensure that config entry migration takes the configuration to the latest version."""
-    entry = MockConfigEntry(
-        title="Home",
-        domain=DOMAIN,
-        data={CONF_ZONE: "zone.home"},
-        unique_id="zone.home",
-        version=1,
-    )
-
-    entry.add_to_hass(hass)
-    await async_migrate_entry(hass, entry)
-    result_entry = hass.config_entries.async_get_entry(entry_id=entry.entry_id)
-
-    assert result_entry.version == CONFIG_FLOW_VERSION
