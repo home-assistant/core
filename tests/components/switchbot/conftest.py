@@ -131,21 +131,120 @@ async def switchbot_device(
 
 
 @pytest.fixture
-async def mock_switchbot_blind_tilt() -> AsyncGenerator[AsyncMock]:
+async def mock_switchbot_blind_tilt() -> AsyncGenerator[dict[str, AsyncMock]]:
     """Fixture to create a mock Switchbot device."""
-    with patch(
-        "homeassistant.components.switchbot.fan.switchbot.SwitchbotBlindTilt.update"
+    with (
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt.open"
+        ) as mock_open,
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt.close"
+        ) as mock_close,
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt.stop"
+        ) as mock_stop,
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt.set_position"
+        ) as mock_set_position,
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt.get_basic_info"
+        ) as mock_get_basic_info,
     ):
-        yield
+        mock_get_basic_info.return_value = {
+            "motionDirection": {
+                "opening": False,
+                "closing": False,
+                "up": False,
+                "down": False,
+            },
+        }
+        yield {
+            "open": mock_open,
+            "close": mock_close,
+            "stop": mock_stop,
+            "set_position": mock_set_position,
+            "get_basic_info": mock_get_basic_info,
+        }
+    # with patch.multiple(
+    #     "homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt",
+    #     open=AsyncMock(),
+    #     close=AsyncMock(),
+    #     stop=AsyncMock(),
+    #     set_position=AsyncMock(),
+    #     get_basic_info=AsyncMock(),
+    # ) as mock_blind_tilt:
+    #     mock_blind_tilt.get_basic_info.return_value = {
+    #         "motionDirection": {
+    #             "opening": False,
+    #             "closing": False,
+    #             "up": False,
+    #             "down": False,
+    #         },
+    #     }
+    #     print(mock_blind_tilt)
+    #     yield mock_blind_tilt
 
 
 @pytest.fixture
-async def mock_switchbot_roller_shade() -> AsyncGenerator[AsyncMock]:
+async def mock_switchbot_roller_shade() -> AsyncGenerator[dict[str, AsyncMock]]:
     """Fixture to create a mock Switchbot device."""
-    with patch(
-        "homeassistant.components.switchbot.fan.switchbot.SwitchbotRollerShade.update"
+    with (
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotRollerShade.update"
+        ) as mock_update,
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotRollerShade.open"
+        ) as mock_open,
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotRollerShade.close"
+        ) as mock_close,
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotRollerShade.stop"
+        ) as mock_stop,
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotRollerShade.set_position"
+        ) as mock_set_position,
     ):
-        yield
+        yield {
+            "update": mock_update,
+            "open": mock_open,
+            "close": mock_close,
+            "stop": mock_stop,
+            "set_position": mock_set_position,
+        }
+
+
+@pytest.fixture
+async def mock_switchbot_humidifier() -> AsyncGenerator[dict[str, AsyncMock]]:
+    """Fixture to create a mock Switchbot device."""
+    with (
+        patch(
+            "homeassistant.components.switchbot.humidifier.switchbot.SwitchbotHumidifier.update"
+        ) as mock_open,
+        patch(
+            "homeassistant.components.switchbot.humidifier.switchbot.SwitchbotHumidifier.set_level"
+        ) as mock_set_level,
+        patch(
+            "homeassistant.components.switchbot.humidifier.switchbot.SwitchbotHumidifier.async_set_auto"
+        ) as mock_set_auto,
+        patch(
+            "homeassistant.components.switchbot.humidifier.switchbot.SwitchbotHumidifier.async_set_manual"
+        ) as mock_set_manual,
+        patch(
+            "homeassistant.components.switchbot.humidifier.switchbot.SwitchbotHumidifier.turn_off"
+        ) as mock_turn_off,
+        patch(
+            "homeassistant.components.switchbot.humidifier.switchbot.SwitchbotHumidifier.turn_on"
+        ) as mock_turn_on,
+    ):
+        yield {
+            "open": mock_open,
+            "set_level": mock_set_level,
+            "set_auto": mock_set_auto,
+            "set_manual": mock_set_manual,
+            "turn_off": mock_turn_off,
+            "turn_on": mock_turn_on,
+        }
 
 
 @pytest.fixture
