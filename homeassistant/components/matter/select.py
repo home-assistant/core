@@ -447,7 +447,7 @@ DISCOVERY_SCHEMAS = [
                 0: "silent",
                 1: "low",
                 3: "medium",
-                4: "high",
+                2: "high",
             }.get,
             ha_to_native_value={
                 "silent": 0,
