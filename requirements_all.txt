@@ -212,13 +212,13 @@ aiobafi6==0.9.0
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
-aiocomelit==0.12.0
+aiocomelit==0.12.1
 
 # homeassistant.components.dhcp
 aiodhcpwatcher==1.1.1
 
 # homeassistant.components.dhcp
-aiodiscover==2.6.1
+aiodiscover==2.7.0
 
 # homeassistant.components.dnsip
 aiodns==3.4.0
@@ -984,7 +984,7 @@ gardena-bluetooth==1.6.0
 gassist-text==0.0.12
 
 # homeassistant.components.google
-gcal-sync==7.0.0
+gcal-sync==7.0.1
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
@@ -1156,7 +1156,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.70
+holidays==0.72
 
 # homeassistant.components.frontend
 home-assistant-frontend==20250509.0
@@ -1198,7 +1198,7 @@ ibmiotf==0.3.4
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==9.2.0
+ical==9.2.2
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -1953,7 +1953,7 @@ pyeiscp==0.0.7
 pyemoncms==0.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.26.0
+pyenphase==1.26.1
 
 # homeassistant.components.envisalink
 pyenvisalink==4.7
@@ -2091,7 +2091,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.1
+pylamarzocco==2.0.2
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2133,7 +2133,7 @@ pymeteoclimatic==0.1.0
 pymicro-vad==1.0.1
 
 # homeassistant.components.miele
-pymiele==0.4.3
+pymiele==0.5.1
 
 # homeassistant.components.xiaomi_tv
 pymitv==1.4.3
@@ -2438,7 +2438,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.10.2
 
 # homeassistant.components.linkplay
-python-linkplay==0.2.4
+python-linkplay==0.2.5
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
@@ -2638,7 +2638,7 @@ renault-api==0.3.1
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.13.2
+reolink-aio==0.13.3
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -3102,7 +3102,7 @@ xbox-webapi==2.1.0
 xiaomi-ble==0.38.0
 
 # homeassistant.components.knx
-xknx==3.6.0
+xknx==3.8.0
 
 # homeassistant.components.knx
 xknxproject==3.8.2

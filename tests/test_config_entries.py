@@ -5271,6 +5271,52 @@ async def test_async_abort_entries_match(
 @pytest.mark.parametrize(
     ("matchers", "reason"),
     [
+        ({"host": "3.4.5.6", "ip": "1.2.3.4", "port": 23}, "no_match"),
+    ],
+)
+async def test_async_abort_entries_match_context(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    matchers: dict[str, str],
+    reason: str,
+) -> None:
+    """Test aborting if matching config entries exist."""
+    entry = MockConfigEntry(
+        domain="comp", data={"ip": "1.2.3.4", "host": "3.4.5.6", "port": 23}
+    )
+    entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(return_value=True)
+    mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_reconfigure(self, user_input=None):
+            """Test user step."""
+            self._async_abort_entries_match(matchers)
+            return self.async_abort(reason="no_match")
+
+    with mock_config_flow("comp", TestFlow), mock_config_flow("invalid_flow", 5):
+        result = await manager.flow.async_init(
+            "comp",
+            context={
+                "source": config_entries.SOURCE_RECONFIGURE,
+                "entry_id": entry.entry_id,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == reason
+
+
+@pytest.mark.parametrize(
+    ("matchers", "reason"),
+    [
         ({}, "already_configured"),
         ({"host": "3.3.3.3"}, "no_match"),
         ({"vendor": "no_match"}, "no_match"),

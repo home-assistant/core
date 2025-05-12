@@ -142,6 +142,19 @@
         }
       }
     },
+    "fan": {
+      "homee": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "manual": "[%key:common::state::manual%]",
+              "auto": "[%key:common::state::auto%]",
+              "summer": "Summer"
+            }
+          }
+        }
+      }
+    },
     "light": {
       "light_instance": {
         "name": "Light {instance}"
@@ -356,6 +369,9 @@
   "exceptions": {
     "connection_closed": {
       "message": "Could not connect to homee while setting attribute."
+    },
+    "invalid_preset_mode": {
+      "message": "Invalid preset mode: {preset_mode}. Turning on is only supported with preset mode 'Manual'."
     }
   },
   "issues": {
