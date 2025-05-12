@@ -461,3 +461,18 @@ async def test_read_resource(
         assert result.contents[0].mimeType == "application/json"
         light_state = json.loads(result.contents[0].text)
         assert light_state.get("state") == "off"
+
+
+async def test_read_non_existent_resource(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_sse_url: str,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test read resource endpoint throws error on non existent resource."""
+
+    async with mcp_session(mcp_sse_url, hass_supervisor_access_token) as session:
+        with pytest.raises(McpError):
+            await session.read_resource(
+                AnyUrl("homeassistant://entities/does.not.exist")
+            )
