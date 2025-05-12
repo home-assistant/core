@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import math
 from typing import Any
 
@@ -24,6 +25,7 @@ from .coordinator import DreoDataUpdateCoordinator
 from .entity import DreoEntity
 
 UNIQUE_ID_SUFFIX = "fan"
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -40,10 +42,11 @@ async def async_setup_entry(
 
         for device in config_entry.runtime_data.devices:
             device_model = device.get("model")
-            if DEVICE_TYPE.get(device_model) is None:
+            device_type = DEVICE_TYPE.get(device_model)
+            if device_type is None:
                 continue
 
-            if FAN_DEVICE.get("type") != DEVICE_TYPE.get(device_model):
+            if device_type != FAN_DEVICE.get("type"):
                 continue
 
             device_id = str(device.get("deviceSn", ""))
@@ -52,6 +55,7 @@ async def async_setup_entry(
 
             coordinator = config_entry.runtime_data.coordinators.get(device_id)
             if not coordinator:
+                _LOGGER.error("Coordinator not found for device %s", device_id)
                 continue
 
             fan = DreoFan(device, coordinator)
@@ -64,7 +68,7 @@ async def async_setup_entry(
 
     @callback
     def update_listener(_hass, _entry):
-        """Handle device update."""
+        """Handle config entry update."""
         async_add_fan_devices()
 
     config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
@@ -99,13 +103,11 @@ class DreoFan(DreoEntity, FanEntity):
         self._attr_preset_modes = model_config.get("preset_modes")
         self._low_high_range = speed_range
 
-        self._update_attributes()
-
     @callback
     def _handle_coordinator_update(self):
         """Handle updated data from the coordinator."""
         self._update_attributes()
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
     def _update_attributes(self):
         """Update attributes from coordinator data."""
@@ -134,23 +136,9 @@ class DreoFan(DreoEntity, FanEntity):
         preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
-        """Turn the device on.
-
-        Args:
-            percentage: Optional speed percentage (0-100)
-            preset_mode: Optional preset mode to set
-            **kwargs: Additional parameters passed to parent classes
-
-        """
-
-        speed = None
-        if percentage is not None and percentage > 0 and self._low_high_range:
-            speed = math.ceil(
-                percentage_to_ranged_value(self._low_high_range, percentage)
-            )
-
+        """Turn the device on."""
         await self.async_execute_fan_common_command(
-            ERROR_TURN_ON_FAILED, speed=speed, preset_mode=preset_mode
+            ERROR_TURN_ON_FAILED, percentage=percentage, preset_mode=preset_mode
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -166,21 +154,15 @@ class DreoFan(DreoEntity, FanEntity):
         )
 
     async def async_set_percentage(self, percentage: int) -> None:
-        """Set the speed of fan.
+        """Set the speed of fan."""
 
-        Converts the percentage (0-100) to the device's native speed range.
-        A percentage of 0 will turn the fan off.
-
-        Args:
-            percentage: Speed percentage (0-100)
-
-        """
         if percentage <= 0:
             await self.async_turn_off()
             return
 
-        speed = math.ceil(percentage_to_ranged_value(self._low_high_range, percentage))
-        await self.async_execute_fan_common_command(ERROR_SET_SPEED_FAILED, speed=speed)
+        await self.async_execute_fan_common_command(
+            ERROR_SET_SPEED_FAILED, percentage=percentage
+        )
 
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set the oscillation of fan."""
@@ -191,29 +173,23 @@ class DreoFan(DreoEntity, FanEntity):
     async def async_execute_fan_common_command(
         self,
         translation_key: str,
+        percentage: int | None = None,
         speed: int | None = None,
         preset_mode: str | None = None,
         oscillate: bool | None = None,
     ) -> None:
-        """Execute fan command with common parameter handling.
-
-        This helper method consolidates common fan command logic:
-        - Automatically turns on the fan if it's off
-        - Handles speed, preset mode and oscillation parameters
-        - Sends the appropriate command to the device
-
-        Args:
-            translation_key: Error translation key for error messages
-            speed: Fan speed (optional)
-            preset_mode: Fan mode (optional)
-            oscillate: Oscillation state (optional)
-
-        """
+        """Execute fan command with common parameter handling."""
 
         command_params: dict[str, Any] = {}
 
         if not self.is_on:
             command_params["power_switch"] = True
+
+        if percentage is not None and percentage > 0 and self._low_high_range:
+            speed = math.ceil(
+                percentage_to_ranged_value(self._low_high_range, percentage)
+            )
+
         if speed is not None and speed > 0:
             command_params["speed"] = speed
         if preset_mode is not None:
