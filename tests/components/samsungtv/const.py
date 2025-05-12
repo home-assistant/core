@@ -15,7 +15,6 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_METHOD,
     CONF_MODEL,
-    CONF_NAME,
     CONF_PORT,
     CONF_TOKEN,
 )
@@ -40,14 +39,8 @@ ENTRYDATA_WEBSOCKET = {
     CONF_HOST: "10.10.12.34",
     CONF_METHOD: METHOD_WEBSOCKET,
     CONF_PORT: WEBSOCKET_SSL_PORT,
-    CONF_MODEL: "UE43LS003",
-}
-MOCK_ENTRY_WS_WITH_MAC = {
-    CONF_HOST: "fake_host",
-    CONF_METHOD: "websocket",
     CONF_MAC: "aa:bb:cc:dd:ee:ff",
-    CONF_NAME: "fake",
-    CONF_PORT: 8002,
+    CONF_MODEL: "UE43LS003",
     CONF_TOKEN: "123456789",
 }
 
