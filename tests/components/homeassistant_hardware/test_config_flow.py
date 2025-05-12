@@ -19,7 +19,6 @@ from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
     get_otbr_addon_manager,
-    get_zigbee_flasher_addon_manager,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
 from homeassistant.core import HomeAssistant, callback
@@ -61,6 +60,18 @@ class FakeFirmwareConfigFlow(BaseFirmwareConfigFlow, domain=TEST_DOMAIN):
         self._hardware_name = TEST_HARDWARE_NAME
 
         return await self.async_step_confirm()
+
+    async def async_step_install_zigbee_firmware(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Install Zigbee firmware."""
+        return await self.async_step_confirm_zigbee()
+
+    async def async_step_install_thread_firmware(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Install Thread firmware."""
+        return await self.async_step_start_otbr_addon()
 
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""
@@ -160,29 +171,8 @@ def mock_addon_info(
         update_available=False,
         version=None,
     ),
-    flasher_addon_info: AddonInfo = AddonInfo(
-        available=True,
-        hostname=None,
-        options={},
-        state=AddonState.NOT_INSTALLED,
-        update_available=False,
-        version=None,
-    ),
 ) -> Iterator[tuple[Mock, Mock]]:
     """Mock the main addon states for the config flow."""
-    mock_flasher_manager = Mock(spec_set=get_zigbee_flasher_addon_manager(hass))
-    mock_flasher_manager.addon_name = "Silicon Labs Flasher"
-    mock_flasher_manager.async_start_addon_waiting = AsyncMock(
-        side_effect=delayed_side_effect()
-    )
-    mock_flasher_manager.async_install_addon_waiting = AsyncMock(
-        side_effect=delayed_side_effect()
-    )
-    mock_flasher_manager.async_uninstall_addon_waiting = AsyncMock(
-        side_effect=delayed_side_effect()
-    )
-    mock_flasher_manager.async_get_addon_info.return_value = flasher_addon_info
-
     mock_otbr_manager = Mock(spec_set=get_otbr_addon_manager(hass))
     mock_otbr_manager.addon_name = "OpenThread Border Router"
     mock_otbr_manager.async_install_addon_waiting = AsyncMock(
@@ -217,10 +207,6 @@ def mock_addon_info(
             return_value=mock_otbr_manager,
         ),
         patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.get_zigbee_flasher_addon_manager",
-            return_value=mock_flasher_manager,
-        ),
-        patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.is_hassio",
             return_value=is_hassio,
         ),
@@ -233,7 +219,7 @@ def mock_addon_info(
             return_value=firmware_info_result,
         ),
     ):
-        yield mock_otbr_manager, mock_flasher_manager
+        yield mock_otbr_manager
 
 
 async def test_config_flow_zigbee(hass: HomeAssistant) -> None:
@@ -248,7 +234,7 @@ async def test_config_flow_zigbee(hass: HomeAssistant) -> None:
     with mock_addon_info(
         hass,
         app_type=ApplicationType.SPINEL,
-    ) as (mock_otbr_manager, mock_flasher_manager):
+    ) as mock_otbr_manager:
         # Pick the menu option: we are now installing the addon
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -266,16 +252,6 @@ async def test_config_flow_zigbee(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["step_id"] == "run_zigbee_flasher_addon"
         assert result["progress_action"] == "run_zigbee_flasher_addon"
-        assert mock_flasher_manager.async_set_addon_options.mock_calls == [
-            call(
-                {
-                    "device": TEST_DEVICE,
-                    "baudrate": 115200,
-                    "bootloader_baudrate": 115200,
-                    "flow_control": True,
-                }
-            )
-        ]
 
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -286,9 +262,6 @@ async def test_config_flow_zigbee(hass: HomeAssistant) -> None:
         assert result["progress_action"] == "uninstall_zigbee_flasher_addon"
 
         await hass.async_block_till_done(wait_background_tasks=True)
-
-        # We are finally done with the addon
-        assert mock_flasher_manager.async_uninstall_addon_waiting.mock_calls == [call()]
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.FORM
@@ -344,7 +317,7 @@ async def test_config_flow_zigbee_skip_step_if_installed(hass: HomeAssistant) ->
             update_available=False,
             version="1.2.3",
         ),
-    ) as (mock_otbr_manager, mock_flasher_manager):
+    ) as mock_otbr_manager:
         # Pick the menu option: we skip installation, instead we directly run it
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -419,7 +392,7 @@ async def test_config_flow_thread(hass: HomeAssistant) -> None:
     with mock_addon_info(
         hass,
         app_type=ApplicationType.EZSP,
-    ) as (mock_otbr_manager, mock_flasher_manager):
+    ) as mock_otbr_manager:
         # Pick the menu option
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -507,7 +480,7 @@ async def test_config_flow_thread_addon_already_installed(hass: HomeAssistant) -
             update_available=False,
             version=None,
         ),
-    ) as (mock_otbr_manager, mock_flasher_manager):
+    ) as mock_otbr_manager:
         # Pick the menu option
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -555,7 +528,7 @@ async def test_config_flow_zigbee_not_hassio(hass: HomeAssistant) -> None:
         hass,
         is_hassio=False,
         app_type=ApplicationType.EZSP,
-    ) as (mock_otbr_manager, mock_flasher_manager):
+    ) as mock_otbr_manager:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
@@ -604,7 +577,7 @@ async def test_options_flow_zigbee_to_thread(hass: HomeAssistant) -> None:
     with mock_addon_info(
         hass,
         app_type=ApplicationType.EZSP,
-    ) as (mock_otbr_manager, mock_flasher_manager):
+    ) as mock_otbr_manager:
         # First step is confirmation
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
         assert result["type"] is FlowResultType.MENU
@@ -703,7 +676,7 @@ async def test_options_flow_thread_to_zigbee(hass: HomeAssistant) -> None:
     with mock_addon_info(
         hass,
         app_type=ApplicationType.SPINEL,
-    ) as (mock_otbr_manager, mock_flasher_manager):
+    ) as mock_otbr_manager:
         # Pick the menu option: we are now installing the addon
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],

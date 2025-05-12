@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import AsyncGenerator
 import dataclasses
 import logging
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import aiohttp
 from ha_silabs_firmware_client import FirmwareManifest, FirmwareMetadata
@@ -353,10 +353,14 @@ async def test_update_entity_installation(
         "https://example.org/release_notes"
     )
 
-    mock_firmware = Mock()
-    mock_flasher = AsyncMock()
-
-    async def mock_flash_firmware(fw_image, progress_callback):
+    async def mock_flash_firmware(
+        hass: HomeAssistant,
+        device: str,
+        fw_data: bytes,
+        expected_installed_firmware_type: ApplicationType,
+        bootloader_reset_type: str | None = None,
+        progress_callback: Callable[[int, int], None] | None = None,
+    ) -> FirmwareInfo:
         await asyncio.sleep(0)
         progress_callback(0, 100)
         await asyncio.sleep(0)
@@ -364,31 +368,20 @@ async def test_update_entity_installation(
         await asyncio.sleep(0)
         progress_callback(100, 100)
 
-    mock_flasher.flash_firmware = mock_flash_firmware
+        return FirmwareInfo(
+            device=TEST_DEVICE,
+            firmware_type=ApplicationType.EZSP,
+            firmware_version="7.4.4.0 build 0",
+            owners=[],
+            source="probe",
+        )
 
     # When we install it, the other integration is reloaded
     with (
         patch(
-            "homeassistant.components.homeassistant_hardware.update.parse_firmware_image",
-            return_value=mock_firmware,
+            "homeassistant.components.homeassistant_hardware.update.async_flash_silabs_firmware",
+            side_effect=mock_flash_firmware,
         ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.update.Flasher",
-            return_value=mock_flasher,
-        ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.update.probe_silabs_firmware_info",
-            return_value=FirmwareInfo(
-                device=TEST_DEVICE,
-                firmware_type=ApplicationType.EZSP,
-                firmware_version="7.4.4.0 build 0",
-                owners=[],
-                source="probe",
-            ),
-        ),
-        patch.object(
-            owning_config_entry, "async_unload", wraps=owning_config_entry.async_unload
-        ) as owning_config_entry_unload,
     ):
         state_changes: list[Event[EventStateChangedData]] = async_capture_events(
             hass, EVENT_STATE_CHANGED
@@ -421,9 +414,6 @@ async def test_update_entity_installation(
     assert state_changes[6].data["new_state"].attributes["update_percentage"] is None
     assert state_changes[6].data["new_state"].attributes["in_progress"] is False
 
-    # The owning integration was unloaded and is again running
-    assert len(owning_config_entry_unload.mock_calls) == 1
-
     # After the firmware update, the entity has the new version and the correct state
     state_after_install = hass.states.get(TEST_UPDATE_ENTITY_ID)
     assert state_after_install is not None
@@ -454,19 +444,10 @@ async def test_update_entity_installation_failure(
     assert state_before_install.attributes["installed_version"] == "7.3.1.0"
     assert state_before_install.attributes["latest_version"] == "7.4.4.0"
 
-    mock_flasher = AsyncMock()
-    mock_flasher.flash_firmware.side_effect = RuntimeError(
-        "Something broke during flashing!"
-    )
-
     with (
         patch(
-            "homeassistant.components.homeassistant_hardware.update.parse_firmware_image",
-            return_value=Mock(),
-        ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.update.Flasher",
-            return_value=mock_flasher,
+            "homeassistant.components.homeassistant_hardware.update.async_flash_silabs_firmware",
+            side_effect=HomeAssistantError("Failed to flash firmware"),
         ),
         pytest.raises(HomeAssistantError, match="Failed to flash firmware"),
     ):
@@ -509,16 +490,10 @@ async def test_update_entity_installation_probe_failure(
 
     with (
         patch(
-            "homeassistant.components.homeassistant_hardware.update.parse_firmware_image",
-            return_value=Mock(),
-        ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.update.Flasher",
-            return_value=AsyncMock(),
-        ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.update.probe_silabs_firmware_info",
-            return_value=None,
+            "homeassistant.components.homeassistant_hardware.update.async_flash_silabs_firmware",
+            side_effect=HomeAssistantError(
+                "Failed to probe the firmware after flashing"
+            ),
         ),
         pytest.raises(
             HomeAssistantError, match="Failed to probe the firmware after flashing"
