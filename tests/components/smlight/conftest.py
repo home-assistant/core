@@ -21,6 +21,7 @@ from tests.common import (
 
 MOCK_DEVICE_NAME = "slzb-06"
 MOCK_HOST = "192.168.1.161"
+MOCK_HOSTNAME = "slzb-06p7.lan"
 MOCK_USERNAME = "test-user"
 MOCK_PASSWORD = "test-pass"
 
