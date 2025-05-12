@@ -48,29 +48,37 @@ rules:
   test-coverage: todo
 
   # Gold
-  devices: todo
-  diagnostics: todo
-  discovery-update-info: todo
-  discovery: todo
-  docs-data-update: todo
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: |
+      Discovery is just used to initiate setup of the integration. No data from devices is collected.
+  discovery: done
+  docs-data-update: done
   docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
   docs-troubleshooting: todo
   docs-use-cases: done
-  dynamic-devices: todo
-  entity-category: todo
-  entity-device-class: todo
-  entity-disabled-by-default: todo
-  entity-translations: todo
-  exception-translations: todo
-  icon-translations: todo
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
   reconfiguration-flow: done
-  repair-issues: todo
-  stale-devices: todo
+  repair-issues:
+    status: exempt
+    comment: |
+      No repair issues are created.
+  stale-devices:
+    status: done
+    comment: Stale devices can be deleted from GUI. Automatic deletion will have to wait until we get experience if devices are missing from API data intermittently.
 
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: todo
+  strict-typing: done
