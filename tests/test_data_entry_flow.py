@@ -61,7 +61,8 @@ async def test_configure_reuses_handler_instance(manager: MockFlowManager) -> No
         async def async_step_init(self, user_input=None):
             self.handle_count += 1
             return self.async_show_form(
-                errors={"base": str(self.handle_count)}, step_id="init"
+                errors={"base": str(self.handle_count)},
+                step_id=self.get_step_id(self.async_step_init),
             )
 
     form = await manager.async_init("test")
@@ -89,14 +90,20 @@ async def test_configure_two_steps(manager: MockFlowManager) -> None:
         async def async_step_first(self, user_input=None):
             if user_input is not None:
                 return await self.async_step_second()
-            return self.async_show_form(step_id="first", data_schema=vol.Schema([str]))
+            return self.async_show_form(
+                step_id=self.get_step_id(self.async_step_first),
+                data_schema=vol.Schema([str]),
+            )
 
         async def async_step_second(self, user_input=None):
             if user_input is not None:
                 return self.async_create_entry(
                     title="Test Entry", data=self.init_data + user_input
                 )
-            return self.async_show_form(step_id="second", data_schema=vol.Schema([str]))
+            return self.async_show_form(
+                step_id=self.get_step_id(self.async_step_second),
+                data_schema=vol.Schema([str]),
+            )
 
     form = await manager.async_init(
         "test", context={"init_step": "first"}, data=["INIT-DATA"]
@@ -122,7 +129,7 @@ async def test_show_form(manager: MockFlowManager) -> None:
     class TestFlow(data_entry_flow.FlowHandler):
         async def async_step_init(self, user_input=None):
             return self.async_show_form(
-                step_id="init",
+                step_id=self.get_step_id(self.async_step_init),
                 data_schema=schema,
                 errors={"username": "Should be unique."},
             )
@@ -162,7 +169,7 @@ async def test_form_shows_with_added_suggested_values(manager: MockFlowManager) 
                 },
             )
             return self.async_show_form(
-                step_id="init",
+                step_id=self.get_step_id(self.async_step_init),
                 data_schema=data_schema,
             )
 
@@ -376,7 +383,8 @@ async def test_finish_callback_change_result_type(hass: HomeAssistant) -> None:
             if input is not None:
                 return self.async_create_entry(title="init", data=input)
             return self.async_show_form(
-                step_id="init", data_schema=vol.Schema({"count": int})
+                step_id=self.get_step_id(self.async_step_init),
+                data_schema=vol.Schema({"count": int}),
             )
 
     class FlowManager(data_entry_flow.FlowManager):
@@ -389,7 +397,8 @@ async def test_finish_callback_change_result_type(hass: HomeAssistant) -> None:
             if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
                 if result["data"] is None or result["data"].get("count", 0) <= 1:
                     return flow.async_show_form(
-                        step_id="init", data_schema=vol.Schema({"count": int})
+                        step_id=flow.get_step_id(flow.async_step_init),
+                        data_schema=vol.Schema({"count": int}),
                     )
                 result["result"] = result["data"]["count"]
             return result
@@ -422,11 +431,14 @@ async def test_external_step(hass: HomeAssistant, manager: MockFlowManager) -> N
         async def async_step_init(self, user_input=None):
             if not user_input:
                 return self.async_external_step(
-                    step_id="init", url="https://example.com"
+                    step_id=self.get_step_id(self.async_step_init),
+                    url="https://example.com",
                 )
 
             self.data = user_input
-            return self.async_external_step_done(next_step_id="finish")
+            return self.async_external_step_done(
+                next_step_id=self.get_step_id(self.async_step_finish)
+            )
 
         async def async_step_finish(self, user_input=None):
             return self.async_create_entry(title=self.data["title"], data=self.data)
@@ -518,7 +530,9 @@ async def test_show_progress(hass: HomeAssistant, manager: MockFlowManager) -> N
                     progress_task=uncompleted_task,
                 )
 
-            return self.async_show_progress_done(next_step_id="finish")
+            return self.async_show_progress_done(
+                next_step_id=self.get_step_id(self.async_step_finish)
+            )
 
         async def async_step_finish(self, user_input=None):
             return self.async_create_entry(title=self.data["title"], data=self.data)
@@ -608,8 +622,12 @@ async def test_show_progress_error(
                 self.progress_task = hass.async_create_task(long_running_task())
             if self.progress_task and self.progress_task.done():
                 if self.progress_task.exception():
-                    return self.async_show_progress_done(next_step_id="error")
-                return self.async_show_progress_done(next_step_id="no_error")
+                    return self.async_show_progress_done(
+                        next_step_id=self.get_step_id(self.async_step_error)
+                    )
+                return self.async_show_progress_done(
+                    next_step_id=self.get_step_id(self.async_step_no_error)
+                )
             return self.async_show_progress(
                 progress_action="task", progress_task=self.progress_task
             )
@@ -669,9 +687,11 @@ async def test_show_progress_hidden_from_frontend(
             if progress_task.done():
                 nonlocal async_show_progress_done_called
                 async_show_progress_done_called = True
-                return self.async_show_progress_done(next_step_id="finish")
+                return self.async_show_progress_done(
+                    next_step_id=self.get_step_id(self.async_step_finish)
+                )
             return self.async_show_progress(
-                step_id="init",
+                step_id=self.get_step_id(self.async_step_init),
                 progress_action="task",
                 # Set to a task which never finishes to simulate flow manager has not
                 # yet called when frontend loads
@@ -727,12 +747,14 @@ async def test_show_progress_legacy(
                 progress_action = "task_two"
             if not self.task_one_done or not self.task_two_done:
                 return self.async_show_progress(
-                    step_id="init",
+                    step_id=self.get_step_id(self.async_step_init),
                     progress_action=progress_action,
                 )
 
             self.data = user_input
-            return self.async_show_progress_done(next_step_id="finish")
+            return self.async_show_progress_done(
+                next_step_id=self.get_step_id(self.async_step_finish)
+            )
 
         async def async_step_finish(self, user_input=None):
             return self.async_create_entry(title=self.data["title"], data=self.data)
@@ -815,11 +837,14 @@ async def test_show_progress_fires_only_when_changed(
                 progress_action = user_input["progress_action"]
                 description_placeholders = user_input["description_placeholders"]
                 return self.async_show_progress(
-                    step_id="init",
+                    step_id=self.get_step_id(self.async_step_init),
                     progress_action=progress_action,
                     description_placeholders=description_placeholders,
                 )
-            return self.async_show_progress(step_id="init", progress_action="task_one")
+            return self.async_show_progress(
+                step_id=self.get_step_id(self.async_step_init),
+                progress_action="task_one",
+            )
 
         async def async_step_finish(self, user_input=None):
             return self.async_create_entry(title=self.data["title"], data=self.data)
@@ -983,7 +1008,7 @@ async def test_manager_abort_calls_async_flow_removed(manager: MockFlowManager) 
     @manager.mock_reg_handler("test")
     class TestFlow(data_entry_flow.FlowHandler):
         async def async_step_init(self, user_input=None):
-            return self.async_show_form(step_id="init")
+            return self.async_show_form(step_id=self.get_step_id(self.async_step_init))
 
     manager.async_flow_removed = Mock()
     result = await manager.async_init("test")
@@ -1019,16 +1044,20 @@ async def test_show_menu(
 
         async def async_step_init(self, user_input=None):
             return self.async_show_menu(
-                step_id="init",
+                step_id=self.get_step_id(self.async_step_init),
                 menu_options=menu_options,
                 description_placeholders={"name": "Paulus"},
             )
 
         async def async_step_target1(self, user_input=None):
-            return self.async_show_form(step_id="target1")
+            return self.async_show_form(
+                step_id=self.get_step_id(self.async_step_target1)
+            )
 
         async def async_step_target2(self, user_input=None):
-            return self.async_show_form(step_id="target2")
+            return self.async_show_form(
+                step_id=self.get_step_id(self.async_step_target2)
+            )
 
     result = await manager.async_init("test")
     assert result["type"] == data_entry_flow.FlowResultType.MENU
@@ -1068,7 +1097,10 @@ async def test_find_flows_by_init_data_type(manager: MockFlowManager) -> None:
         async def async_step_first(self, user_input=None):
             if user_input is not None:
                 return await self.async_step_second()
-            return self.async_show_form(step_id="first", data_schema=vol.Schema([str]))
+            return self.async_show_form(
+                step_id=self.get_step_id(self.async_step_first),
+                data_schema=vol.Schema([str]),
+            )
 
         async def async_step_second(self, user_input=None):
             if user_input is not None:
@@ -1076,7 +1108,10 @@ async def test_find_flows_by_init_data_type(manager: MockFlowManager) -> None:
                     title="Test Entry",
                     data={"init": self.init_data, "user": user_input},
                 )
-            return self.async_show_form(step_id="second", data_schema=vol.Schema([str]))
+            return self.async_show_form(
+                step_id=self.get_step_id(self.async_step_second),
+                data_schema=vol.Schema([str]),
+            )
 
     bluetooth_data = BluetoothDiscoveryData("aa:bb:cc:dd:ee:ff")
     wifi_data = WiFiDiscoveryData("host")
