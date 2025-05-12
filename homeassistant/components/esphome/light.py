@@ -115,7 +115,7 @@ def _color_mode_to_ha(mode: ESPHomeColorMode) -> ColorMode:
     candidates: list[tuple[ColorMode, LightColorCapability]] = []
     for ha_mode, cap_lists in _COLOR_MODE_MAPPING.items():
         for caps in cap_lists:
-            if caps.value == mode.value:
+            if caps.value == mode:
                 # exact match
                 return ha_mode
             if (mode & caps) == caps:
