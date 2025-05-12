@@ -4,7 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'robot_vacuum_cleaner',
+    'calculated_object_id': 'Robot vacuum cleaner',
     'capabilities': dict({
       'fan_speed_list': list([
         'normal',
