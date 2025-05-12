@@ -173,11 +173,6 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="reconfigure", data_schema=STEP_RECONFIGURE
             )
 
-        updated_host = user_input[CONF_HOST]
-
-        if reconfigure_entry.data[CONF_HOST] != updated_host:
-            self._async_abort_entries_match({CONF_HOST: updated_host})
-
         errors: dict[str, str] = {}
 
         try:
@@ -191,7 +186,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             return self.async_update_reload_and_abort(
-                reconfigure_entry, data_updates={CONF_HOST: updated_host}
+                reconfigure_entry, data_updates={CONF_HOST: user_input[CONF_HOST]}
             )
 
         return self.async_show_form(
