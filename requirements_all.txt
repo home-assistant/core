@@ -576,7 +576,7 @@ azure-servicebus==7.10.0
 azure-storage-blob==12.24.0
 
 # homeassistant.components.backblaze
-b2sdk==2.7.0
+b2sdk==2.8.1
 
 # homeassistant.components.holiday
 babel==2.15.0
