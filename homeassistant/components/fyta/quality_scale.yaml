@@ -39,7 +39,10 @@ rules:
   test-coverage: done
   integration-owner: done
   docs-installation-parameters: done
-  docs-configuration-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      No options flow.
 
   # Gold
   entity-translations: done

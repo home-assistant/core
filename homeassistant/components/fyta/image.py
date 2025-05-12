@@ -57,10 +57,10 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     entities: list[FytaPlantImageEntity] = [
-      FytaPlantImageEntity(coordinator, entry, description, plant_id)
-      for plant_id in coordinator.fyta.plant_list
-      if plant_id in coordinator.data
-      for description in IMAGES
+        FytaPlantImageEntity(coordinator, entry, description, plant_id)
+        for plant_id in coordinator.fyta.plant_list
+        if plant_id in coordinator.data
+        for description in IMAGES
     ]
 
     async_add_entities(entities)
@@ -89,7 +89,6 @@ class FytaPlantImageEntity(FytaPlantEntity, ImageEntity):
         """Initialize Fyta Image entity."""
         super().__init__(coordinator, entry, description, plant_id)
         ImageEntity.__init__(self, coordinator.hass)
-
 
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""
