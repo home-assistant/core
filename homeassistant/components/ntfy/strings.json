@@ -39,7 +39,7 @@
         },
         "data_description": {
           "password": "Enter the password corresponding to the aforementioned username to automatically create an access token",
-          "token": "Enter a new access token. To create a new access token navigate to Account → Access tokens and click create access token"
+          "token": "Enter a new access token. To create a new access token navigate to Account → Access tokens and select 'Create access token'"
         }
       },
       "reconfigure": {
@@ -53,7 +53,7 @@
         "data_description": {
           "username": "[%key:component::ntfy::config::step::user::sections::auth::data_description::username%]",
           "password": "[%key:component::ntfy::config::step::user::sections::auth::data_description::password%]",
-          "token": "Enter a new or existing access token. To create a new access token navigate to Account → Access tokens and click create access token"
+          "token": "Enter a new or existing access token. To create a new access token navigate to Account → Access tokens and select 'Create access token'"
         }
       },
       "reconfigure_user": {
