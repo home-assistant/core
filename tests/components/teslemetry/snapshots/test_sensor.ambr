@@ -2460,7 +2460,7 @@
     'supported_features': 0,
     'translation_key': 'credit_balance',
     'unique_id': 'abc-123_credit_balance',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'credits',
   })
 # ---
 # name: test_sensors[sensor.teslemetry_credits-state]
@@ -2468,6 +2468,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Teslemetry credits',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'credits',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.teslemetry_credits',
@@ -2482,6 +2483,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Teslemetry credits',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'credits',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.teslemetry_credits',
