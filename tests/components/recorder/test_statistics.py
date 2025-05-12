@@ -3451,11 +3451,15 @@ async def test_recorder_platform_with_partial_statistics_support(
                 "statistics": {
                     "sensor.total_energy_import1": [
                         {
+                            "last_reset": "2021-12-31T22:00:00+00:00",
                             "change": 2.0,
                             "end": "2023-05-08T08:00:00+00:00",
                             "start": "2023-05-08T07:00:00+00:00",
                             "state": 0.0,
                             "sum": 2.0,
+                            "min": 0.0,
+                            "max": 10.0,
+                            "mean": 1.0,
                         },
                         {
                             "change": 1.0,
@@ -3463,6 +3467,9 @@ async def test_recorder_platform_with_partial_statistics_support(
                             "start": "2023-05-08T08:00:00+00:00",
                             "state": 1.0,
                             "sum": 3.0,
+                            "min": 1.0,
+                            "max": 11.0,
+                            "mean": 1.0,
                         },
                         {
                             "change": 2.0,
@@ -3470,6 +3477,9 @@ async def test_recorder_platform_with_partial_statistics_support(
                             "start": "2023-05-08T09:00:00+00:00",
                             "state": 2.0,
                             "sum": 5.0,
+                            "min": 2.0,
+                            "max": 12.0,
+                            "mean": 1.0,
                         },
                         {
                             "change": 3.0,
@@ -3477,15 +3487,22 @@ async def test_recorder_platform_with_partial_statistics_support(
                             "start": "2023-05-08T10:00:00+00:00",
                             "state": 3.0,
                             "sum": 8.0,
+                            "min": 3.0,
+                            "max": 13.0,
+                            "mean": 1.0,
                         },
                     ],
                     "sensor.total_energy_import2": [
                         {
+                            "last_reset": "2021-12-31T22:00:00+00:00",
                             "change": 2.0,
                             "end": "2023-05-08T08:00:00+00:00",
                             "start": "2023-05-08T07:00:00+00:00",
                             "state": 0.0,
                             "sum": 2.0,
+                            "min": 0.0,
+                            "max": 10.0,
+                            "mean": 1.0,
                         },
                         {
                             "change": 1.0,
@@ -3493,6 +3510,9 @@ async def test_recorder_platform_with_partial_statistics_support(
                             "start": "2023-05-08T08:00:00+00:00",
                             "state": 1.0,
                             "sum": 3.0,
+                            "min": 1.0,
+                            "max": 11.0,
+                            "mean": 1.0,
                         },
                         {
                             "change": 2.0,
@@ -3500,6 +3520,9 @@ async def test_recorder_platform_with_partial_statistics_support(
                             "start": "2023-05-08T09:00:00+00:00",
                             "state": 2.0,
                             "sum": 5.0,
+                            "min": 2.0,
+                            "max": 12.0,
+                            "mean": 1.0,
                         },
                         {
                             "change": 3.0,
@@ -3507,6 +3530,9 @@ async def test_recorder_platform_with_partial_statistics_support(
                             "start": "2023-05-08T10:00:00+00:00",
                             "state": 3.0,
                             "sum": 8.0,
+                            "min": 3.0,
+                            "max": 13.0,
+                            "mean": 1.0,
                         },
                     ],
                 }
@@ -3577,14 +3603,47 @@ async def test_get_statistics_service(
     period3 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 02:00:00"))
     period4 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 03:00:00"))
 
+    last_reset = dt_util.parse_datetime("2022-01-01T00:00:00+02:00")
     external_statistics = (
-        {"start": period1, "last_reset": None, "state": 0, "sum": 2},
-        {"start": period2, "last_reset": None, "state": 1, "sum": 3},
-        {"start": period3, "last_reset": None, "state": 2, "sum": 5},
-        {"start": period4, "last_reset": None, "state": 3, "sum": 8},
+        {
+            "start": period1,
+            "state": 0,
+            "sum": 2,
+            "min": 0,
+            "max": 10,
+            "mean": 1,
+            "last_reset": last_reset,
+        },
+        {
+            "start": period2,
+            "state": 1,
+            "sum": 3,
+            "min": 1,
+            "max": 11,
+            "mean": 1,
+            "last_reset": None,
+        },
+        {
+            "start": period3,
+            "state": 2,
+            "sum": 5,
+            "min": 2,
+            "max": 12,
+            "mean": 1,
+            "last_reset": None,
+        },
+        {
+            "start": period4,
+            "state": 3,
+            "sum": 8,
+            "min": 3,
+            "max": 13,
+            "mean": 1,
+            "last_reset": None,
+        },
     )
     external_metadata1 = {
-        "has_mean": False,
+        "has_mean": True,
         "has_sum": True,
         "name": "Total imported energy",
         "source": "recorder",
@@ -3592,7 +3651,7 @@ async def test_get_statistics_service(
         "unit_of_measurement": "kWh",
     }
     external_metadata2 = {
-        "has_mean": False,
+        "has_mean": True,
         "has_sum": True,
         "name": "Total imported energy",
         "source": "recorder",

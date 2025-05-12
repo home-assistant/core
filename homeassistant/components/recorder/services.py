@@ -212,8 +212,6 @@ def _async_register_get_statistics_service(
                     formatted_row["max"] = max_value
                 if (mean := row.get("mean")) is not None:
                     formatted_row["mean"] = mean
-                if (mean_weight := row.get("mean_weight")) is not None:
-                    formatted_row["mean_weight"] = mean_weight
                 if (change := row.get("change")) is not None:
                     formatted_row["change"] = change
 
