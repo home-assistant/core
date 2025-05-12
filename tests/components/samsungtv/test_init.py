@@ -57,7 +57,9 @@ MOCK_CONFIG = {
 }
 
 
-@pytest.mark.usefixtures("remote_websocket", "remoteencws_failing", "rest_api")
+@pytest.mark.usefixtures(
+    "remote_websocket", "remote_encrypted_websocket_failing", "rest_api"
+)
 async def test_setup(hass: HomeAssistant) -> None:
     """Test Samsung TV integration is setup."""
     await setup_samsungtv_entry(hass, MOCK_CONFIG)
@@ -101,7 +103,9 @@ async def test_setup_without_port_device_offline(hass: HomeAssistant) -> None:
     assert config_entries_domain[0].state is ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.usefixtures("remote_websocket", "remoteencws_failing", "rest_api")
+@pytest.mark.usefixtures(
+    "remote_websocket", "remote_encrypted_websocket_failing", "rest_api"
+)
 async def test_setup_without_port_device_online(hass: HomeAssistant) -> None:
     """Test import from yaml when the device is online."""
     await setup_samsungtv_entry(hass, MOCK_CONFIG)
@@ -111,7 +115,7 @@ async def test_setup_without_port_device_online(hass: HomeAssistant) -> None:
     assert config_entries_domain[0].data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
 
 
-@pytest.mark.usefixtures("remote_websocket", "remoteencws_failing")
+@pytest.mark.usefixtures("remote_websocket", "remote_encrypted_websocket_failing")
 async def test_setup_h_j_model(
     hass: HomeAssistant, rest_api: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -179,7 +183,9 @@ async def test_reauth_triggered_encrypted(hass: HomeAssistant) -> None:
     assert len(flows_in_progress) == 1
 
 
-@pytest.mark.usefixtures("remote_legacy", "remoteencws_failing", "rest_api_failing")
+@pytest.mark.usefixtures(
+    "remote_legacy", "remote_encrypted_websocket_failing", "rest_api_failing"
+)
 @pytest.mark.parametrize(
     "entry_data",
     [

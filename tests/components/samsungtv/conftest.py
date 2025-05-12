@@ -209,8 +209,8 @@ def rest_api_failure_fixture() -> Generator[None]:
         yield
 
 
-@pytest.fixture(name="remoteencws_failing")
-def remoteencws_failing_fixture() -> Generator[None]:
+@pytest.fixture(name="remote_encrypted_websocket_failing")
+def remote_encrypted_websocket_failing_fixture() -> Generator[None]:
     """Patch the samsungtvws SamsungTVEncryptedWSAsyncRemote."""
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
