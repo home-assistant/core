@@ -198,7 +198,14 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self._host.api.camera_online(self._channel)
+        if self.entity_description.always_available:
+            return True
+
+        return (
+            super().available
+            and self._host.api.camera_online(self._channel)
+            and not self._host.api.baichuan.privacy_mode(self._channel)
+        )
 
     def register_callback(self, callback_id: str, cmd_id: int) -> None:
         """Register callback for TCP push events."""

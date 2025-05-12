@@ -45,10 +45,9 @@
     'device_info': None,
     'entry': dict({
       'data': dict({
-        'host': 'fake_host',
+        'host': '10.10.12.34',
         'mac': 'aa:bb:cc:dd:ee:ff',
         'method': 'encrypted',
-        'name': 'fake',
         'port': 8000,
         'session_id': '**REDACTED**',
         'token': '**REDACTED**',
@@ -104,11 +103,10 @@
     }),
     'entry': dict({
       'data': dict({
-        'host': 'fake_host',
+        'host': '10.10.12.34',
         'mac': 'aa:bb:cc:dd:ee:ff',
         'method': 'encrypted',
         'model': 'UE48JU6400',
-        'name': 'fake',
         'port': 8000,
         'session_id': '**REDACTED**',
         'token': '**REDACTED**',

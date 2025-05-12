@@ -81,10 +81,6 @@
     "deprecated_keylock_sensor": {
       "title": "Deprecated LCN key lock binary sensor",
       "description": "Your LCN key lock binary sensor entity `{entity}` is being used in automations or scripts. A key lock switch entity is available and should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue."
-    },
-    "deprecated_address_parameter": {
-      "title": "Deprecated 'address' parameter",
-      "description": "The 'address' parameter in the LCN action calls is deprecated. The 'device ID' parameter should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue."
     }
   },
   "services": {
@@ -418,9 +414,6 @@
     }
   },
   "exceptions": {
-    "no_device_identifier": {
-      "message": "No device identifier provided. Please provide the device ID."
-    },
     "invalid_address": {
       "message": "LCN device for given address has not been configured."
     },

@@ -1,31 +1,34 @@
-"""Test the sma sensor platform."""
+"""Test the SMA sensor platform."""
 
-from pysma.const import (
-    ENERGY_METER_VIA_INVERTER,
-    GENERIC_SENSORS,
-    OPTIMIZERS_VIA_INVERTER,
-)
-from pysma.definitions import sensor_map
+from collections.abc import Generator
+from unittest.mock import patch
 
-from homeassistant.components.sma.sensor import SENSOR_ENTITIES
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfPower
+import pytest
+from syrupy import SnapshotAssertion
+
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from . import setup_integration
+
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_sensors(hass: HomeAssistant, init_integration) -> None:
-    """Test states of the sensors."""
-    state = hass.states.get("sensor.sma_device_grid_power")
-    assert state
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
-
-
-async def test_sensor_entities(hass: HomeAssistant, init_integration) -> None:
-    """Test SENSOR_ENTITIES contains a SensorEntityDescription for each pysma sensor."""
-    pysma_sensor_definitions = (
-        sensor_map[GENERIC_SENSORS]
-        + sensor_map[OPTIMIZERS_VIA_INVERTER]
-        + sensor_map[ENERGY_METER_VIA_INVERTER]
-    )
-
-    for sensor in pysma_sensor_definitions:
-        assert sensor.name in SENSOR_ENTITIES
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_sma_client: Generator,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test all entities."""
+    with patch(
+        "homeassistant.components.sma.PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        await setup_integration(hass, mock_config_entry)
+        await snapshot_platform(
+            hass, entity_registry, snapshot, mock_config_entry.entry_id
+        )

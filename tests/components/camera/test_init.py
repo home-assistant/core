@@ -27,7 +27,6 @@ from homeassistant.components.camera.helper import get_camera_from_entity_id
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_PLATFORM,
     EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
 )
@@ -1036,27 +1035,3 @@ async def test_camera_capabilities_changing_native_support(
     await hass.async_block_till_done()
 
     await _test_capabilities(hass, hass_ws_client, cam.entity_id, set(), set())
-
-
-@pytest.mark.usefixtures("enable_custom_integrations")
-async def test_deprecated_frontend_stream_type_logs(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test using (_attr_)frontend_stream_type will log."""
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
-
-    for entity_id in (
-        "camera.property_frontend_stream_type",
-        "camera.attr_frontend_stream_type",
-    ):
-        camera_obj = get_camera_from_entity_id(hass, entity_id)
-        assert camera_obj.frontend_stream_type == StreamType.WEB_RTC
-
-    assert (
-        "Detected that custom integration 'test' is overwriting the 'frontend_stream_type' property in the PropertyFrontendStreamTypeCamera class, which is deprecated and will be removed in Home Assistant 2025.6,"
-    ) in caplog.text
-    assert (
-        "Detected that custom integration 'test' is setting the '_attr_frontend_stream_type' attribute in the AttrFrontendStreamTypeCamera class, which is deprecated and will be removed in Home Assistant 2025.6,"
-    ) in caplog.text

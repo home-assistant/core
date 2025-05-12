@@ -465,10 +465,11 @@ class ReolinkHost:
             wake = True
             self.last_wake = time()
 
+        for channel in self._api.channels:
+            if self._api.baichuan.privacy_mode(channel):
+                await self._api.baichuan.get_privacy_mode(channel)
         if self._api.baichuan.privacy_mode():
-            await self._api.baichuan.get_privacy_mode()
-            if self._api.baichuan.privacy_mode():
-                return  # API is shutdown, no need to check states
+            return  # API is shutdown, no need to check states
 
         await self._api.get_states(cmd_list=self.update_cmd, wake=wake)
 
