@@ -14,6 +14,7 @@ from typing import Any
 
 from mcp import types
 from mcp.server import Server
+from mcp.server.lowlevel.helper_types import ReadResourceContents
 from pydantic import AnyUrl
 import voluptuous as vol
 from voluptuous_openapi import convert
@@ -120,11 +121,25 @@ async def create_server(
         entity_registry = er.async_get(hass)
         return [
             types.Resource(
-                uri=AnyUrl(url=f"homeassistant://entities/{entity.unique_id}"),
-                name=entity.name or entity.unique_id,
+                uri=AnyUrl(url=f"homeassistant://entities/{entity.entity_id}"),
+                name=entity.name or entity.entity_id,
                 description=f"{entity.entity_id} is in area {entity.area_id}.",
             )
             for entity in entity_registry.entities.values()
+        ]
+
+    @server.read_resource()  # type: ignore[no-untyped-call, misc]
+    async def read_resource(uri: AnyUrl) -> list[ReadResourceContents]:
+        if not (uri_path := uri.path):
+            raise HomeAssistantError(f"Resource URI {uri} has no path")
+        entity_id = uri_path.removeprefix("/")
+        if not (state := hass.states.get(entity_id=entity_id)):
+            raise HomeAssistantError(f"No state available for entity id: {entity_id}")
+        return [
+            ReadResourceContents(
+                content=json.dumps(state.as_dict()),
+                mime_type="application/json",
+            )
         ]
 
     return server

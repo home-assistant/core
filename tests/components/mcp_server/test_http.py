@@ -11,6 +11,7 @@ import mcp
 import mcp.client.session
 import mcp.client.sse
 from mcp.shared.exceptions import McpError
+from pydantic import AnyUrl
 import pytest
 
 from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
@@ -438,6 +439,25 @@ async def test_list_resources(
         result = await session.list_resources()
         assert len(result.resources) == 1
         kitchen_light = result.resources[0]
-        assert str(kitchen_light.uri) == "homeassistant://entities/test-light-unique-id"
-        assert kitchen_light.name == "test-light-unique-id"
+        assert str(kitchen_light.uri) == "homeassistant://entities/light.kitchen"
+        assert kitchen_light.name == "light.kitchen"
         assert kitchen_light.description == "light.kitchen is in area kitchen."
+
+
+async def test_read_resource(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_sse_url: str,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test read resource endpoint."""
+
+    async with mcp_session(mcp_sse_url, hass_supervisor_access_token) as session:
+        result = await session.read_resource(
+            AnyUrl("homeassistant://entities/light.kitchen")
+        )
+        assert len(result.contents) == 1
+        assert isinstance(result.contents[0], mcp.types.TextResourceContents)
+        assert result.contents[0].mimeType == "application/json"
+        light_state = json.loads(result.contents[0].text)
+        assert light_state.get("state") == "off"
