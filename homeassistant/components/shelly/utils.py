@@ -391,11 +391,17 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
 
     if key in device.config:
         if entity_name := device.config[key].get("name"):
-            return cast(str, entity_name)
+            return (
+                cast(str, entity_name)
+                if instances == 1 or key.startswith("input:")
+                else None
+            )
 
     # main function of the device
     if (
-        key.startswith(("switch:", "light:cct:", "rgb:", "rgbw:", "em1", "thermostat:"))
+        key.startswith(
+            ("switch:", "light:", "cct:", "rgb:", "rgbw:", "em1", "thermostat:")
+        )
         and instances == 1
     ):
         return None
