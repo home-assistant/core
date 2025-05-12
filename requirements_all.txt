@@ -211,7 +211,7 @@ aiobafi6==0.9.0
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
-aiocomelit==0.12.0
+aiocomelit==0.12.1
 
 # homeassistant.components.dhcp
 aiodhcpwatcher==1.1.1
@@ -1197,7 +1197,7 @@ ibmiotf==0.3.4
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==9.2.1
+ical==9.2.2
 
 # homeassistant.components.caldav
 icalendar==6.1.0
