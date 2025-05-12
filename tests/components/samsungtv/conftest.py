@@ -148,15 +148,16 @@ def upnp_notify_server_fixture(upnp_factory: Mock) -> Generator[Mock]:
         yield notify_server
 
 
-@pytest.fixture(name="remote")
-def remote_fixture() -> Generator[Mock]:
+@pytest.fixture(name="remote_legacy")
+def remote_legacy_fixture() -> Generator[Mock]:
     """Patch the samsungctl Remote."""
-    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote_class:
-        remote = Mock(Remote)
-        remote.__enter__ = Mock()
-        remote.__exit__ = Mock()
-        remote_class.return_value = remote
-        yield remote
+    remote_legacy = Mock(Remote)
+    remote_legacy.__enter__ = Mock()
+    remote_legacy.__exit__ = Mock()
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote", return_value=remote_legacy
+    ):
+        yield remote_legacy
 
 
 @pytest.fixture(name="rest_api")
