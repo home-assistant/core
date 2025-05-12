@@ -1,5 +1,8 @@
 {
   "title": "Royal Meteorological Institute of Belgium",
+  "common": {
+    "language_override_description": "Override the Home Assistant language for the textual weather forecast."
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
@@ -11,6 +14,10 @@
         "data": {
           "zone": "[%key:common::device_automation::extra_fields::zone%]",
           "language_override": "[%key:common::config_flow::data::language%]"
+        },
+        "data_description": {
+          "language_override": "[%key:component::irm_kmi::common::language_override_description%]",
+          "zone": "[%key:common::device_automation::extra_fields::zone%]"
         }
       }
     },
@@ -44,6 +51,9 @@
         "title": "Options",
         "data": {
           "language_override": "[%key:common::config_flow::data::language%]"
+        },
+        "data_description": {
+          "language_override": "[%key:component::irm_kmi::common::language_override_description%]"
         }
       }
     }
