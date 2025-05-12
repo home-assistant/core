@@ -194,24 +194,21 @@ class ModbusLight(BaseSwitch, LightEntity):
 
     def _convert_modbus_percent_to_temperature(self, percent: int) -> int | None:
         """Convert Modbus scale (0-100) to the color temperature in Kelvin (2000-7000 К)."""
-        if not isinstance(self._attr_min_color_temp_kelvin, int) or not isinstance(
+        if isinstance(self._attr_min_color_temp_kelvin, int) and isinstance(
             self._attr_max_color_temp_kelvin, int
         ):
-            _LOGGER.error(
-                "Invalid color temp bounds or value from device: min=%s, max=%s, temp_value=%s",
-                self._attr_min_color_temp_kelvin,
-                self._attr_max_color_temp_kelvin,
-                percent,
+            return round(
+                self._attr_min_color_temp_kelvin
+                + (
+                    percent
+                    / (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
+                    * (
+                        self._attr_max_color_temp_kelvin
+                        - self._attr_min_color_temp_kelvin
+                    )
+                )
             )
-            return None
-        return round(
-            self._attr_min_color_temp_kelvin
-            + (
-                percent
-                / (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
-                * (self._attr_max_color_temp_kelvin - self._attr_min_color_temp_kelvin)
-            )
-        )
+        return None
 
     @staticmethod
     def _convert_brightness_to_modbus(brightness: int) -> int:
@@ -224,20 +221,13 @@ class ModbusLight(BaseSwitch, LightEntity):
 
     def _convert_color_temp_to_modbus(self, kelvin: int) -> int | None:
         """Convert color temperature from Kelvin to the Modbus scale (0-100)."""
-        if not isinstance(self._attr_min_color_temp_kelvin, int) or not isinstance(
+        if isinstance(self._attr_min_color_temp_kelvin, int) and isinstance(
             self._attr_max_color_temp_kelvin, int
         ):
-            _LOGGER.error(
-                "Invalid color temp bounds or value from switch: min=%s, max=%s, temp_value=%s",
-                self._attr_min_color_temp_kelvin,
-                self._attr_max_color_temp_kelvin,
-                kelvin,
+            return round(
+                LIGHT_MODBUS_SCALE_MIN
+                + (kelvin - self._attr_min_color_temp_kelvin)
+                * (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
+                / (self._attr_max_color_temp_kelvin - self._attr_min_color_temp_kelvin)
             )
-            return None
-
-        return round(
-            LIGHT_MODBUS_SCALE_MIN
-            + (kelvin - self._attr_min_color_temp_kelvin)
-            * (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
-            / (self._attr_max_color_temp_kelvin - self._attr_min_color_temp_kelvin)
-        )
+        return None
