@@ -10,7 +10,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import DOMAIN as GF_DOMAIN, TRACKER_UPDATE
+from . import DOMAIN, TRACKER_UPDATE
 
 
 async def async_setup_entry(
@@ -23,14 +23,14 @@ async def async_setup_entry(
     @callback
     def _receive_data(device, gps, location_name, attributes):
         """Fire HA event to set location."""
-        if device in hass.data[GF_DOMAIN]["devices"]:
+        if device in hass.data[DOMAIN]["devices"]:
             return
 
-        hass.data[GF_DOMAIN]["devices"].add(device)
+        hass.data[DOMAIN]["devices"].add(device)
 
         async_add_entities([GeofencyEntity(device, gps, location_name, attributes)])
 
-    hass.data[GF_DOMAIN]["unsub_device_tracker"][config_entry.entry_id] = (
+    hass.data[DOMAIN]["unsub_device_tracker"][config_entry.entry_id] = (
         async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
     )
 
@@ -45,7 +45,7 @@ async def async_setup_entry(
     }
 
     if dev_ids:
-        hass.data[GF_DOMAIN]["devices"].update(dev_ids)
+        hass.data[DOMAIN]["devices"].update(dev_ids)
         async_add_entities(GeofencyEntity(dev_id) for dev_id in dev_ids)
 
 
@@ -66,7 +66,7 @@ class GeofencyEntity(TrackerEntity, RestoreEntity):
         self._unsub_dispatcher = None
         self._attr_unique_id = device
         self._attr_device_info = DeviceInfo(
-            identifiers={(GF_DOMAIN, device)},
+            identifiers={(DOMAIN, device)},
             name=device,
         )
 
@@ -93,7 +93,7 @@ class GeofencyEntity(TrackerEntity, RestoreEntity):
         """Clean up after entity before removal."""
         await super().async_will_remove_from_hass()
         self._unsub_dispatcher()
-        self.hass.data[GF_DOMAIN]["devices"].remove(self.unique_id)
+        self.hass.data[DOMAIN]["devices"].remove(self.unique_id)
 
     @callback
     def _async_receive_data(self, device, gps, location_name, attributes):

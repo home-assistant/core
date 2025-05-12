@@ -360,7 +360,7 @@ class NMBSSensor(SensorEntity):
             attrs[ATTR_LONGITUDE] = self.station_coordinates[1]
 
         if self.is_via_connection and not self._excl_vias:
-            via = self._attrs.vias.via[0]
+            via = self._attrs.vias[0]
 
             attrs["via"] = via.station
             attrs["via_arrival_platform"] = via.arrival.platform

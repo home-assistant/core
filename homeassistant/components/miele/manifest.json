@@ -1,0 +1,14 @@
+{
+  "domain": "miele",
+  "name": "Miele",
+  "codeowners": ["@astrandb"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/miele",
+  "iot_class": "cloud_push",
+  "loggers": ["pymiele"],
+  "quality_scale": "bronze",
+  "requirements": ["pymiele==0.5.1"],
+  "single_config_entry": true,
+  "zeroconf": ["_mieleathome._tcp.local."]
+}
