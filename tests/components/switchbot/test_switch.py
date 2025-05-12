@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from switchbot.devices.device import SwitchbotOperationError
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -12,14 +13,29 @@ from homeassistant.components.switch import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
-from . import WOHAND_SERVICE_INFO
+from . import WOHAND_SERVICE_INFO, setup_integration, snapshot_switchbot_entities
 
 from tests.common import MockConfigEntry, mock_restore_cache
 from tests.components.bluetooth import inject_bluetooth_service_info
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_entities(
+    hass: HomeAssistant,
+    switchbot_device: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the Switchbot entities."""
+    await setup_integration(hass, mock_config_entry)
+
+    snapshot_switchbot_entities(hass, entity_registry, snapshot, Platform.SWITCH)
 
 
 async def test_switchbot_switch_with_restore_state(

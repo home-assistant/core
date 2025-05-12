@@ -1,11 +1,12 @@
 """Define fixtures available for all tests."""
 
-from collections.abc import Generator
-from typing import Any, AsyncGenerator
+from collections.abc import AsyncGenerator, Generator
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from habluetooth import BluetoothServiceInfoBleak
 import pytest
-from switchbot import SwitchbotModel, SwitchbotDevice
+from switchbot import SwitchbotModel
 
 from homeassistant.components.switchbot import ENCRYPTED_MODELS
 from homeassistant.components.switchbot.const import (
@@ -60,31 +61,51 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         SwitchbotModel.K10_PRO_VACUUM,
         SwitchbotModel.K10_VACUUM,
         SwitchbotModel.K10_PRO_COMBO_VACUUM,
-        SwitchbotModel.S10_VACUUM
+        SwitchbotModel.S10_VACUUM,
     ]
 )
-async def switchbot_model(
-    hass: HomeAssistant, request: pytest.FixtureRequest
-) -> SwitchbotModel:
+async def switchbot_model(request: pytest.FixtureRequest) -> SwitchbotModel:
     """Return every device."""
-    model = SwitchbotModel(request.param)
-    await async_setup_component(hass, "bluetooth", {})
-    inject_bluetooth_service_info(hass, BLUETOOTH_SERVICES[model])
-    return model
+    return SwitchbotModel(request.param)
 
 
 @pytest.fixture
-def mock_config_entry(switchbot_model: SwitchbotModel, encrypted_data: dict[str, Any]) -> MockConfigEntry:
+async def bluetooth_service_info(
+    switchbot_model: SwitchbotModel,
+) -> BluetoothServiceInfoBleak:
+    """Return a BluetoothServiceInfoBleak object for the given Switchbot model."""
+    return BLUETOOTH_SERVICES[switchbot_model]
+
+
+@pytest.fixture
+async def setup_service(
+    hass: HomeAssistant,
+    bluetooth_service_info: BluetoothServiceInfoBleak,
+) -> None:
+    """Set up the Switchbot service."""
+    await async_setup_component(hass, "bluetooth", {})
+    inject_bluetooth_service_info(hass, bluetooth_service_info)
+
+
+@pytest.fixture
+def mock_config_entry(
+    switchbot_model: SwitchbotModel,
+    encrypted_data: dict[str, Any],
+    bluetooth_service_info: BluetoothServiceInfoBleak,
+    setup_service: None,
+) -> MockConfigEntry:
     """Fixture to create a MockConfigEntry for a Switchbot device."""
     return MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_ADDRESS: BLUETOOTH_SERVICES[switchbot_model].address,
+            CONF_ADDRESS: bluetooth_service_info.address,
             CONF_NAME: "test-name",
             CONF_SENSOR_TYPE: SUPPORTED_MODEL_TYPES[switchbot_model],
-        } | encrypted_data,
+        }
+        | encrypted_data,
         unique_id="aabbccddeeff",
     )
+
 
 @pytest.fixture
 def encrypted_data(switchbot_model: SwitchbotModel) -> dict[str, Any]:
@@ -96,32 +117,85 @@ def encrypted_data(switchbot_model: SwitchbotModel) -> dict[str, Any]:
         }
     return {}
 
+
 @pytest.fixture
-async def switchbot_device() -> AsyncGenerator[AsyncMock]:
+async def switchbot_device(
+    mock_switchbot_blind_tilt: AsyncMock,
+    mock_switchbot_roller_shade: AsyncMock,
+    mock_switchbot_light_strip: AsyncMock,
+    mock_switchbot_fan: AsyncMock,
+    mock_switchbot_vacuum: AsyncMock,
+) -> None:
     """Fixture to create a mock Switchbot device."""
-    # device = AsyncMock(spec=SwitchbotDevice, autospec=True)
-    with (
-        # patch("homeassistant.components.switchbot.coordinator.switchbot.SwitchbotDevice", new=device),
-        # patch("switchbot.SwitchbotVacuum"),
-        # patch("switchbot.devices.vacuum.SwitchbotVacuum"),
-        # patch("switchbot.SwitchbotFan"),
-        patch("switchbot.SwitchbotBlindTilt", AsyncMock()),
-        patch("switchbot.devices.blind_tilt.SwitchbotBlindTilt", AsyncMock()),
-        # patch("homeassistant.components.switchbot.switchbot.SwitchbotBlindTilt", new=AsyncMock()),
-        # patch("homeassistant.components.switchbot.switchbot.Switchbot", new=device),
-        # patch("homeassistant.components.switchbot.switchbot.SwitchbotPlugMini", new=device),
-        # patch("homeassistant.components.switchbot.switchbot.SwitchbotBulb", new=device),
-        # patch("homeassistant.components.switchbot.switchbot.SwitchbotLightStrip", new=device),
-        # patch("homeassistant.components.switchbot.switchbot.SwitchbotHumidifier", new=device),
-        # patch("homeassistant.components.switchbot.switchbot.SwitchbotLock", new=device),
-        # patch("homeassistant.components.switchbot.switchbot.SwitchbotBlindTilt", new=device),
-        # patch("homeassistant.components.switchbot.switchbot.SwitchbotRelaySwitch", new=device),
-        # patch("homeassistant.components.switchbot.switchbot.SwitchbotRollerShade", new=device),
-        # patch("homeassistant.components.switchbot.switchbot.SwitchbotFan", device),
-        # patch("homeassistant.components.switchbot.switchbot.SwitchbotVacuum", new=device),
-          ):
-        # device.update = AsyncMock()
+
+
+@pytest.fixture
+async def mock_switchbot_blind_tilt() -> AsyncGenerator[AsyncMock]:
+    """Fixture to create a mock Switchbot device."""
+    with patch(
+        "homeassistant.components.switchbot.fan.switchbot.SwitchbotBlindTilt.update"
+    ):
         yield
+
+
+@pytest.fixture
+async def mock_switchbot_roller_shade() -> AsyncGenerator[AsyncMock]:
+    """Fixture to create a mock Switchbot device."""
+    with patch(
+        "homeassistant.components.switchbot.fan.switchbot.SwitchbotRollerShade.update"
+    ):
+        yield
+
+
+@pytest.fixture
+async def mock_switchbot_light_strip() -> AsyncGenerator[AsyncMock]:
+    """Fixture to create a mock Switchbot device."""
+    with patch(
+        "homeassistant.components.switchbot.fan.switchbot.SwitchbotLightStrip.update"
+    ):
+        yield
+
+
+@pytest.fixture
+async def mock_switchbot_fan() -> AsyncGenerator[AsyncMock]:
+    """Fixture to create a mock Switchbot device."""
+    with patch("homeassistant.components.switchbot.fan.switchbot.SwitchbotFan.update"):
+        yield
+
+
+@pytest.fixture
+async def mock_switchbot_vacuum() -> AsyncGenerator[AsyncMock]:
+    """Fixture to create a mock Switchbot device."""
+    with patch(
+        "homeassistant.components.switchbot.vacuum.switchbot.SwitchbotVacuum.update"
+    ):
+        yield
+
+
+@pytest.fixture
+async def mock_switchbot_curtain() -> AsyncGenerator[dict[str, AsyncMock]]:
+    """Fixture to create a mock Switchbot device."""
+    with (
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotCurtain.open"
+        ) as mock_open,
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotCurtain.close"
+        ) as mock_close,
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotCurtain.stop"
+        ) as mock_stop,
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotCurtain.set_position"
+        ) as mock_set_position,
+    ):
+        yield {
+            "open": mock_open,
+            "close": mock_close,
+            "stop": mock_stop,
+            "set_position": mock_set_position,
+        }
+
 
 @pytest.fixture
 def mock_entry_factory():

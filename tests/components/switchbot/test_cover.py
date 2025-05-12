@@ -1,10 +1,13 @@
 """Test the switchbot covers."""
 
 from collections.abc import Callable
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from switchbot import SwitchbotModel
 from switchbot.devices.device import SwitchbotOperationError
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.cover import (
@@ -25,28 +28,45 @@ from homeassistant.const import (
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
     SERVICE_STOP_COVER_TILT,
+    STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 from . import (
     ROLLER_SHADE_SERVICE_INFO,
     WOBLINDTILT_SERVICE_INFO,
     WOCURTAIN3_SERVICE_INFO,
     make_advertisement,
+    setup_integration,
+    snapshot_switchbot_entities,
 )
 
 from tests.common import MockConfigEntry, mock_restore_cache
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_entities(
+    hass: HomeAssistant,
+    switchbot_device: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the Switchbot entities."""
+    await setup_integration(hass, mock_config_entry)
+
+    snapshot_switchbot_entities(hass, entity_registry, snapshot, Platform.COVER)
+
+
+@pytest.mark.parametrize("switchbot_model", [SwitchbotModel.CURTAIN])
 async def test_curtain3_setup(
-    hass: HomeAssistant, mock_entry_factory: Callable[[str], MockConfigEntry]
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test setting up the Curtain3."""
-    inject_bluetooth_service_info(hass, WOCURTAIN3_SERVICE_INFO)
-
-    entry = mock_entry_factory(sensor_type="curtain")
 
     entity_id = "cover.test_name"
     mock_restore_cache(
@@ -60,114 +80,104 @@ async def test_curtain3_setup(
         ],
     )
 
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get(entity_id)
     assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_POSITION] == 50
 
 
-async def test_curtain3_controlling(
-    hass: HomeAssistant, mock_entry_factory: Callable[[str], MockConfigEntry]
+@pytest.mark.parametrize("switchbot_model", [SwitchbotModel.CURTAIN])
+@pytest.mark.parametrize(
+    ("manufacturer_data", "expected_state", "current_position"),
+    [
+        (
+            b"\xcf;Zwu\x0c\x19\x0b\x05\x11D\x006",
+            CoverState.OPEN,
+            95,
+        ),
+        (
+            b"\xcf;Zwu\x0c\x19\x0b\x58\x11D\x006",
+            CoverState.CLOSED,
+            12,
+        ),
+        (
+            b"\xcf;Zwu\x0c\x19\x0b\x3c\x11D\x006",
+            CoverState.OPEN,
+            40,
+        ),
+        (
+            b"\xcf;Zwu\x0c\x19\x0b(\x11D\x006",
+            CoverState.OPEN,
+            60,
+        ),
+    ],
+)
+async def test_curtain3_state_updates(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    manufacturer_data: bytes,
+    expected_state: CoverState,
+    current_position: int,
 ) -> None:
     """Test Curtain3 controlling."""
-    inject_bluetooth_service_info(hass, WOCURTAIN3_SERVICE_INFO)
 
-    entry = mock_entry_factory(sensor_type="curtain")
-    entry.add_to_hass(hass)
+    await setup_integration(hass, mock_config_entry)
 
-    with (
-        patch(
-            "homeassistant.components.switchbot.cover.switchbot.SwitchbotCurtain.open",
-            new=AsyncMock(return_value=True),
-        ) as mock_open,
-        patch(
-            "homeassistant.components.switchbot.cover.switchbot.SwitchbotCurtain.close",
-            new=AsyncMock(return_value=True),
-        ) as mock_close,
-        patch(
-            "homeassistant.components.switchbot.cover.switchbot.SwitchbotCurtain.stop",
-            new=AsyncMock(return_value=True),
-        ) as mock_stop,
-        patch(
-            "homeassistant.components.switchbot.cover.switchbot.SwitchbotCurtain.set_position",
-            new=AsyncMock(return_value=True),
-        ) as mock_set_position,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    entity_id = "cover.test_name"
+    address = "AA:BB:CC:DD:EE:FF"
+    service_data = b"{\xc06\x00\x11D"
 
-        entity_id = "cover.test_name"
-        address = "AA:BB:CC:DD:EE:FF"
-        service_data = b"{\xc06\x00\x11D"
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNKNOWN
+    assert ATTR_CURRENT_POSITION not in state.attributes
 
-        # Test open
-        manufacturer_data = b"\xcf;Zwu\x0c\x19\x0b\x05\x11D\x006"
-        await hass.services.async_call(
-            COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: entity_id}, blocking=True
-        )
-        inject_bluetooth_service_info(
-            hass, make_advertisement(address, manufacturer_data, service_data)
-        )
-        await hass.async_block_till_done()
+    inject_bluetooth_service_info(
+        hass, make_advertisement(address, manufacturer_data, service_data)
+    )
+    await hass.async_block_till_done()
 
-        mock_open.assert_awaited_once()
-        state = hass.states.get(entity_id)
-        assert state.state == CoverState.OPEN
-        assert state.attributes[ATTR_CURRENT_POSITION] == 95
+    state = hass.states.get(entity_id)
+    assert state.state == expected_state
+    assert state.attributes[ATTR_CURRENT_POSITION] == current_position
 
-        # Test close
-        manufacturer_data = b"\xcf;Zwu\x0c\x19\x0b\x58\x11D\x006"
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: entity_id},
-            blocking=True,
-        )
-        inject_bluetooth_service_info(
-            hass, make_advertisement(address, manufacturer_data, service_data)
-        )
-        await hass.async_block_till_done()
 
-        mock_close.assert_awaited_once()
-        state = hass.states.get(entity_id)
-        assert state.state == CoverState.CLOSED
-        assert state.attributes[ATTR_CURRENT_POSITION] == 12
-
-        # Test stop
-        manufacturer_data = b"\xcf;Zwu\x0c\x19\x0b\x3c\x11D\x006"
-        await hass.services.async_call(
-            COVER_DOMAIN, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: entity_id}, blocking=True
-        )
-        inject_bluetooth_service_info(
-            hass, make_advertisement(address, manufacturer_data, service_data)
-        )
-        await hass.async_block_till_done()
-
-        mock_stop.assert_awaited_once()
-        state = hass.states.get(entity_id)
-        assert state.state == CoverState.OPEN
-        assert state.attributes[ATTR_CURRENT_POSITION] == 40
-
-        # Test set position
-        manufacturer_data = b"\xcf;Zwu\x0c\x19\x0b(\x11D\x006"
-        await hass.services.async_call(
-            COVER_DOMAIN,
+@pytest.mark.parametrize("switchbot_model", [SwitchbotModel.CURTAIN])
+@pytest.mark.parametrize(
+    ("service", "extra_service_data", "method", "args"),
+    [
+        (SERVICE_OPEN_COVER, {}, "open", []),
+        (SERVICE_CLOSE_COVER, {}, "close", []),
+        (SERVICE_STOP_COVER, {}, "stop", []),
+        (
             SERVICE_SET_COVER_POSITION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 50},
-            blocking=True,
-        )
-        inject_bluetooth_service_info(
-            hass, make_advertisement(address, manufacturer_data, service_data)
-        )
-        await hass.async_block_till_done()
+            {ATTR_POSITION: 50},
+            "set_position",
+            [50],
+        ),
+    ],
+)
+async def test_curtain3_controlling(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_switchbot_curtain: dict[str, AsyncMock],
+    service: str,
+    extra_service_data: dict[str, Any],
+    method: str,
+    args: list[Any],
+) -> None:
+    """Test Curtain3 controlling."""
 
-        mock_set_position.assert_awaited_once()
-        state = hass.states.get(entity_id)
-        assert state.state == CoverState.OPEN
-        assert state.attributes[ATTR_CURRENT_POSITION] == 60
+    await setup_integration(hass, mock_config_entry)
+    entity_id = "cover.test_name"
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: entity_id} | extra_service_data,
+        blocking=True,
+    )
+    mock_switchbot_curtain[method].assert_awaited_once_with(*args)
 
 
 async def test_blindtilt_setup(

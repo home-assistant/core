@@ -142,7 +142,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
         )
 
     cls = CLASS_BY_DEVICE.get(sensor_type, switchbot.SwitchbotDevice)
-    print(cls)
     if switchbot_model in ENCRYPTED_MODELS:
         try:
             device = cls(
@@ -163,7 +162,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
             retry_count=entry.options[CONF_RETRY_COUNT],
         )
 
-    print(device)
     coordinator = entry.runtime_data = SwitchbotDataUpdateCoordinator(
         hass,
         _LOGGER,

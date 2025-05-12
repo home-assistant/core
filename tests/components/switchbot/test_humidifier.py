@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from switchbot.devices.device import SwitchbotOperationError
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
@@ -17,14 +18,29 @@ from homeassistant.components.humidifier import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
-from . import HUMIDIFIER_SERVICE_INFO
+from . import HUMIDIFIER_SERVICE_INFO, setup_integration, snapshot_switchbot_entities
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_entities(
+    hass: HomeAssistant,
+    switchbot_device: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the Switchbot entities."""
+    await setup_integration(hass, mock_config_entry)
+
+    snapshot_switchbot_entities(hass, entity_registry, snapshot, Platform.HUMIDIFIER)
 
 
 @pytest.mark.parametrize(
