@@ -25,8 +25,15 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_ALIASES
+from .const import (
+    CONF_ALIASES,
+    DATA_ENTITY_LOOKUP,
+    EVENT_KEY_COMMAND,
+    EVENT_KEY_SENSOR,
+    TMP_ENTITY,
+)
 from .entity import RflinkDevice
+from .utils import identify_event_type
 
 CONF_OFF_DELAY = "off_delay"
 DEFAULT_FORCE_UPDATE = False
@@ -73,6 +80,19 @@ async def async_setup_platform(
     async_add_entities(devices_from_config(config))
 
 
+def get_event_value(event):
+    """Look at event to get its value.
+
+    Async friendly.
+    """
+    event_type = identify_event_type(event)
+    if event_type == EVENT_KEY_COMMAND:
+        return event[EVENT_KEY_COMMAND]
+    if event_type == EVENT_KEY_SENSOR:
+        return event["value"]
+    return "unknown"
+
+
 class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):
     """Representation of an Rflink binary sensor."""
 
@@ -93,8 +113,30 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):
         super().__init__(device_id, **kwargs)
 
     async def async_added_to_hass(self) -> None:
-        """Restore RFLink BinarySensor state."""
+        """Register update callback."""
+        # Remove temporary bogus entity_id if added
+        tmp_entity = TMP_ENTITY.format(self._device_id)
+        if (
+            tmp_entity
+            in self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][self._device_id]
+        ):
+            self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][
+                self._device_id
+            ].remove(tmp_entity)
+
+        # Register id and aliases
+        self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][self._device_id].append(
+            self.entity_id
+        )
+
+        # aliases respond to both normal and group commands (allon/alloff)
+        if self._aliases:
+            for _id in self._aliases:
+                self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][_id].append(
+                    self.entity_id
+                )
         await super().async_added_to_hass()
+        # Restore RFLink BinarySensor state
         if (old_state := await self.async_get_last_state()) is not None:
             if self._off_delay is None:
                 self._state = old_state.state == STATE_ON
@@ -103,10 +145,10 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):
 
     def _handle_event(self, event):
         """Domain specific event handler."""
-        command = event["command"]
-        if command in ["on", "allon"]:
+        value = get_event_value(event)
+        if value in ["on", "allon", "low"]:
             self._state = True
-        elif command in ["off", "alloff"]:
+        elif value in ["off", "alloff", "ok"]:
             self._state = False
 
         if self._state and self._off_delay is not None:
