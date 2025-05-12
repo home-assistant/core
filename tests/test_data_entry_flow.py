@@ -1222,3 +1222,25 @@ def test_nested_section_in_serializer() -> None:
                 {"collapsed": False},
             )
         )
+
+
+def test_get_step_id_error() -> None:
+    """Test get_step_id with an invalid step ID."""
+
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 1
+
+        def some_helper(self):
+            pass
+
+        async def async_step_first(self, user_input=None):
+            pass
+
+        async def async_step_second(self, user_input=None):
+            pass
+
+    assert TestFlow.get_step_id(TestFlow.async_step_first) == "first"
+    assert TestFlow.get_step_id(TestFlow.async_step_second) == "second"
+
+    with pytest.raises(ValueError, match="'some_helper' is not a valid step function"):
+        TestFlow.get_step_id(TestFlow.some_helper)
