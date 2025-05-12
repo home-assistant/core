@@ -37,9 +37,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload config entry."""
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-async def async_migrate_entry(_hass: HomeAssistant, _config_entry: ConfigEntry) -> bool:
-    """Migrate old entry."""
-    # There are no previous versions of the config entry at this time.
-    return True
