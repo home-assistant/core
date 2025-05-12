@@ -199,7 +199,7 @@ aiobafi6==0.9.0
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
-aiocomelit==0.12.0
+aiocomelit==0.12.1
 
 # homeassistant.components.dhcp
 aiodhcpwatcher==1.1.1
@@ -837,7 +837,7 @@ gardena-bluetooth==1.6.0
 gassist-text==0.0.12
 
 # homeassistant.components.google
-gcal-sync==7.0.0
+gcal-sync==7.0.1
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
@@ -1018,7 +1018,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==9.2.1
+ical==9.2.2
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -2144,7 +2144,7 @@ renault-api==0.3.1
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.13.2
+reolink-aio==0.13.3
 
 # homeassistant.components.rflink
 rflink==0.0.66
@@ -2509,7 +2509,7 @@ xbox-webapi==2.1.0
 xiaomi-ble==0.38.0
 
 # homeassistant.components.knx
-xknx==3.6.0
+xknx==3.8.0
 
 # homeassistant.components.knx
 xknxproject==3.8.2
