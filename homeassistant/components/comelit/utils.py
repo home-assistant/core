@@ -71,7 +71,7 @@ async def cleanup_stale_entity(
 
         if entry.unique_id == entry_unique_id:
             entry_name = entry.name or entry.original_name
-            _LOGGER.info("Removing entity: %s", entry_name)
+            _LOGGER.info("Removing entity: %s [%s]", entry.entity_id, entry_name)
             entity_reg.async_remove(entry.entity_id)
             entities_removed = True
 
