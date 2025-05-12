@@ -55,8 +55,8 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
 
 from .const import (
+    ENTRYDATA_LEGACY,
     MOCK_ENTRYDATA_ENCRYPTED_WS,
-    MOCK_ENTRYDATA_LEGACY,
     MOCK_ENTRYDATA_WS,
     MOCK_SSDP_DATA,
     MOCK_SSDP_DATA_MAIN_TV_AGENT_ST,
@@ -1247,7 +1247,7 @@ async def test_autodetect_none(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
 async def test_update_old_entry(hass: HomeAssistant) -> None:
     """Test update of old entry sets unique id."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRYDATA_LEGACY)
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRYDATA_LEGACY)
     entry.add_to_hass(hass)
 
     config_entries_domain = hass.config_entries.async_entries(DOMAIN)
@@ -1278,7 +1278,7 @@ async def test_update_missing_mac_unique_id_added_from_dhcp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test missing mac and unique id added."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRYDATA_LEGACY, unique_id=None)
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRYDATA_LEGACY, unique_id=None)
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -1300,7 +1300,7 @@ async def test_update_incorrectly_formatted_mac_unique_id_added_from_dhcp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test incorrectly formatted mac is updated and unique id added."""
-    entry_data = MOCK_ENTRYDATA_LEGACY.copy()
+    entry_data = ENTRYDATA_LEGACY.copy()
     entry_data[CONF_MAC] = "aabbccddeeff"
     entry = MockConfigEntry(domain=DOMAIN, data=entry_data, unique_id=None)
     entry.add_to_hass(hass)
@@ -1326,7 +1326,7 @@ async def test_update_missing_mac_unique_id_added_from_zeroconf(
     """Test missing mac and unique id added."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_ENTRYDATA_LEGACY, "host": "127.0.0.1"},
+        data={**ENTRYDATA_LEGACY, "host": "127.0.0.1"},
         unique_id=None,
     )
     entry.add_to_hass(hass)
@@ -1352,7 +1352,7 @@ async def test_update_missing_model_added_from_ssdp(
     """Test missing model added via ssdp on legacy models."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=MOCK_ENTRYDATA_LEGACY,
+        data=ENTRYDATA_LEGACY,
         unique_id=None,
     )
     entry.add_to_hass(hass)
@@ -1375,7 +1375,7 @@ async def test_update_missing_mac_unique_id_ssdp_location_added_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test missing mac, ssdp_location, and unique id added via ssdp."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRYDATA_LEGACY, unique_id=None)
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRYDATA_LEGACY, unique_id=None)
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -1403,7 +1403,7 @@ async def test_update_zeroconf_discovery_preserved_unique_id(
     """Test zeroconf discovery preserves unique id."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_ENTRYDATA_LEGACY, CONF_MAC: "aa:bb:zz:ee:rr:oo"},
+        data={**ENTRYDATA_LEGACY, CONF_MAC: "aa:bb:zz:ee:rr:oo"},
         unique_id="original",
     )
     entry.add_to_hass(hass)
@@ -1427,7 +1427,7 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_updated_from_ssd
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            **MOCK_ENTRYDATA_LEGACY,
+            **ENTRYDATA_LEGACY,
             CONF_SSDP_RENDERING_CONTROL_LOCATION: "https://1.2.3.4:555/test",
         },
         unique_id=None,
@@ -1460,7 +1460,7 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_rendering_st_upd
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            **MOCK_ENTRYDATA_LEGACY,
+            **ENTRYDATA_LEGACY,
             CONF_SSDP_RENDERING_CONTROL_LOCATION: "https://1.2.3.4:555/test",
         },
         unique_id=None,
@@ -1494,7 +1494,7 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_main_tv_agent_st
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            **MOCK_ENTRYDATA_LEGACY,
+            **ENTRYDATA_LEGACY,
             CONF_SSDP_RENDERING_CONTROL_LOCATION: "https://1.2.3.4:555/test",
             CONF_SSDP_MAIN_TV_AGENT_LOCATION: "https://1.2.3.4:555/test",
         },
@@ -1531,7 +1531,7 @@ async def test_update_ssdp_location_rendering_st_updated_from_ssdp(
     """Test with outdated ssdp_location with the correct st added via ssdp."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_ENTRYDATA_LEGACY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
+        data={**ENTRYDATA_LEGACY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
         unique_id="be9554b9-c9fb-41f4-8920-22da015376a4",
     )
     entry.add_to_hass(hass)
@@ -1562,7 +1562,7 @@ async def test_update_main_tv_ssdp_location_rendering_st_updated_from_ssdp(
     """Test with outdated ssdp_location with the correct st added via ssdp."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_ENTRYDATA_LEGACY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
+        data={**ENTRYDATA_LEGACY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
         unique_id="be9554b9-c9fb-41f4-8920-22da015376a4",
     )
     entry.add_to_hass(hass)
@@ -1592,7 +1592,7 @@ async def test_update_missing_mac_added_unique_id_preserved_from_zeroconf(
     """Test missing mac and unique id added."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_ENTRYDATA_LEGACY, "host": "127.0.0.1"},
+        data={**ENTRYDATA_LEGACY, "host": "127.0.0.1"},
         unique_id="0d1cef00-00dc-1000-9c80-4844f7b172de",
     )
     entry.add_to_hass(hass)
@@ -1618,7 +1618,7 @@ async def test_update_legacy_missing_mac_from_dhcp(
     """Test missing mac added."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=MOCK_ENTRYDATA_LEGACY,
+        data=ENTRYDATA_LEGACY,
         unique_id="0d1cef00-00dc-1000-9c80-4844f7b172de",
     )
     entry.add_to_hass(hass)
@@ -1647,7 +1647,7 @@ async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(
     rest_api.rest_device_info.side_effect = HttpApiError
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=MOCK_ENTRYDATA_LEGACY,
+        data=ENTRYDATA_LEGACY,
     )
     entry.add_to_hass(hass)
     with (
@@ -1683,7 +1683,7 @@ async def test_update_ssdp_location_unique_id_added_from_ssdp(
     """Test missing ssdp_location, and unique id added via ssdp."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_ENTRYDATA_LEGACY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
+        data={**ENTRYDATA_LEGACY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
         unique_id=None,
     )
     entry.add_to_hass(hass)
@@ -1711,7 +1711,7 @@ async def test_update_ssdp_location_unique_id_added_from_ssdp_with_rendering_con
     """Test missing ssdp_location, and unique id added via ssdp with rendering control st."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_ENTRYDATA_LEGACY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
+        data={**ENTRYDATA_LEGACY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
         unique_id=None,
     )
     entry.add_to_hass(hass)
@@ -1738,7 +1738,7 @@ async def test_update_ssdp_location_unique_id_added_from_ssdp_with_rendering_con
 @pytest.mark.usefixtures("remote_legacy")
 async def test_form_reauth_legacy(hass: HomeAssistant) -> None:
     """Test reauthenticate legacy."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRYDATA_LEGACY)
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRYDATA_LEGACY)
     entry.add_to_hass(hass)
     result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
@@ -1904,7 +1904,7 @@ async def test_update_incorrect_udn_matching_upnp_udn_unique_id_added_from_ssdp(
     """Test updating the wrong udn from ssdp via upnp udn match."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=MOCK_ENTRYDATA_LEGACY,
+        data=ENTRYDATA_LEGACY,
         unique_id="068e7781-006e-1000-bbbf-84a4668d8423",
     )
     entry.add_to_hass(hass)
@@ -1930,7 +1930,7 @@ async def test_update_incorrect_udn_matching_mac_unique_id_added_from_ssdp(
     """Test updating the wrong udn from ssdp via mac match."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_ENTRYDATA_LEGACY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
+        data={**ENTRYDATA_LEGACY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
         unique_id=None,
     )
     entry.add_to_hass(hass)

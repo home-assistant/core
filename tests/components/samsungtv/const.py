@@ -20,7 +20,7 @@ from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from tests.common import load_json_object_fixture
 
-MOCK_ENTRYDATA_LEGACY = {
+ENTRYDATA_LEGACY = {
     CONF_HOST: "10.10.12.34",
     CONF_PORT: LEGACY_PORT,
     CONF_METHOD: METHOD_LEGACY,
