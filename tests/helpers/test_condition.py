@@ -2237,52 +2237,6 @@ async def test_condition_template_invalid_results(hass: HomeAssistant) -> None:
     assert not test(hass)
 
 
-def _find_run_id(traces, trace_type, item_id):
-    """Find newest run_id for a script or automation."""
-    for _trace in reversed(traces):
-        if _trace["domain"] == trace_type and _trace["item_id"] == item_id:
-            return _trace["run_id"]
-
-    return None
-
-
-async def assert_automation_condition_trace(hass_ws_client, automation_id, expected):
-    """Test the result of automation condition."""
-    msg_id = 1
-
-    def next_id():
-        nonlocal msg_id
-        msg_id += 1
-        return msg_id
-
-    client = await hass_ws_client()
-
-    # List traces
-    await client.send_json(
-        {"id": next_id(), "type": "trace/list", "domain": "automation"}
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    run_id = _find_run_id(response["result"], "automation", automation_id)
-
-    # Get trace
-    await client.send_json(
-        {
-            "id": next_id(),
-            "type": "trace/get",
-            "domain": "automation",
-            "item_id": "sun",
-            "run_id": run_id,
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    trace = response["result"]
-    assert len(trace["trace"]["condition/0"]) == 1
-    condition_trace = trace["trace"]["condition/0"][0]["result"]
-    assert condition_trace == expected
-
-
 async def test_trigger(hass: HomeAssistant) -> None:
     """Test trigger condition."""
     config = {"alias": "Trigger Cond", "condition": "trigger", "id": "123456"}

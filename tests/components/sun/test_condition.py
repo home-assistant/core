@@ -3,14 +3,22 @@
 from datetime import datetime
 
 from freezegun import freeze_time
+import pytest
 
 from homeassistant.components import automation
 from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import trace
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.typing import WebSocketGenerator
+
+
+@pytest.fixture(autouse=True)
+def prepare_condition_trace() -> None:
+    """Clear previous trace."""
+    trace.trace_clear()
 
 
 def _find_run_id(traces, trace_type, item_id):
