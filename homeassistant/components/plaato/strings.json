@@ -11,7 +11,7 @@
       },
       "api_method": {
         "title": "Select API method",
-        "description": "To be able to query the API an 'auth token' is required which can be obtained by following [these instructions](https://intercom.help/plaato/en/articles/5004720-auth_token)\n\n Selected device: **{device_type}** \n\nIf you prefer to use the built-in webhook method (Airlock only) please check the box below and leave 'Auth token' blank",
+        "description": "To be able to query the API an 'auth token' is required which can be obtained by following [these instructions](https://intercom.help/plaato/en/articles/5004720-auth_token)\n\nSelected device: **{device_type}** \n\nIf you prefer to use the built-in webhook method (Airlock only) please check the box below and leave 'Auth token' blank",
         "data": {
           "use_webhook": "Use webhook",
           "token": "Auth token"
