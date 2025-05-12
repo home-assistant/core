@@ -82,7 +82,7 @@ def mock_irm_kmi_api(request: pytest.FixtureRequest) -> Generator[None, MagicMoc
 
     forecast = json.loads(load_fixture(fixture, "irm_kmi"))
     with patch(
-        "homeassistant.components.irm_kmi.IrmKmiApiClientHa", autospec=True
+        "homeassistant.components.irm_kmi.types.IrmKmiApiClientHa", autospec=True
     ) as irm_kmi_api_mock:
         irm_kmi = irm_kmi_api_mock.return_value
         irm_kmi.get_forecasts_coord.return_value = forecast
@@ -127,7 +127,7 @@ def mock_exception_irm_kmi_api(
 ) -> Generator[None, MagicMock]:
     """Return a mocked IrmKmi api client that will raise an error upon refreshing data."""
     with patch(
-        "homeassistant.components.irm_kmi.IrmKmiApiClientHa", autospec=True
+        "homeassistant.components.irm_kmi.types.IrmKmiApiClientHa", autospec=True
     ) as irm_kmi_api_mock:
         irm_kmi = irm_kmi_api_mock.return_value
         irm_kmi.refresh_forecasts_coord.side_effect = IrmKmiApiError

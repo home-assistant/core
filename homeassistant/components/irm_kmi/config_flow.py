@@ -27,7 +27,7 @@ from .const import (
     OUT_OF_BENELUX,
     USER_AGENT,
 )
-from .data import IrmKmiConfigEntry
+from .types import IrmKmiConfigEntry
 from .utils import get_config_value
 
 _LOGGER = logging.getLogger(__name__)
