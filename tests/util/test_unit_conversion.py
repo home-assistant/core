@@ -631,8 +631,18 @@ _CONVERTED_VALUE: dict[
         (5, UnitOfPressure.BAR, 72.51887, UnitOfPressure.PSI),
     ],
     ReactiveEnergyConverter: [
-        (5, UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR , 5000, UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR ),
-        (5, UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR , 0.005, UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR ),
+        (
+            5,
+            UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
+            5000,
+            UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
+        ),
+        (
+            5,
+            UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
+            0.005,
+            UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
+        ),
     ],
     SpeedConverter: [
         # 5 km/h / 1.609 km/mi = 3.10686 mi/h
