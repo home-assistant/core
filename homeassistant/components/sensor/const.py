@@ -629,6 +629,11 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.WIND_SPEED: set(UnitOfSpeed),
 }
 
+UNITS_PRECISION = {
+    UnitOfPressure.PA: 0,
+    UnitOfEnergy.WATT_HOUR: 1,
+}
+
 DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.APPARENT_POWER: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.AQI: {SensorStateClass.MEASUREMENT},

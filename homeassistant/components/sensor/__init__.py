@@ -48,6 +48,7 @@ from .const import (  # noqa: F401
     STATE_CLASSES,
     STATE_CLASSES_SCHEMA,
     UNIT_CONVERTERS,
+    UNITS_PRECISION,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -663,29 +664,9 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             converter := UNIT_CONVERTERS.get(device_class)
         ):
             # Unit conversion needed
-            converted_numerical_value = converter.converter_factory(
-                native_unit_of_measurement,
-                unit_of_measurement,
+            value = converter.converter_factory(
+                native_unit_of_measurement, unit_of_measurement
             )(float(numerical_value))
-
-            # If unit conversion is happening, and there's no rounding for display,
-            # do a best effort rounding here.
-            if (
-                suggested_precision is None
-                and self._sensor_option_display_precision is None
-            ):
-                # Deduce the precision by finding the decimal point, if any
-                value_s = str(value)
-                # Scale the precision when converting to a larger unit
-                # For example 1.1 Wh should be rendered as 0.0011 kWh, not 0.0 kWh
-                precision = (
-                    len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
-                ) + converter.get_unit_floored_log_ratio(
-                    native_unit_of_measurement, unit_of_measurement
-                )
-                value = f"{converted_numerical_value:z.{precision}f}"
-            else:
-                value = converted_numerical_value
 
         # Validate unit of measurement used for sensors with a device class
         if (
@@ -739,33 +720,57 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 return cast(int, precision)
         return None
 
-    def _update_suggested_precision(self) -> None:
-        """Update suggested display precision stored in registry."""
-        assert self.registry_entry
-
+    def _get_adjusted_display_precision(self) -> int | None:
         device_class = self.device_class
-        display_precision = self.suggested_display_precision
-        default_unit_of_measurement = (
-            self.suggested_unit_of_measurement or self.native_unit_of_measurement
-        )
-        unit_of_measurement = self.unit_of_measurement
+        if device_class is None or device_class not in UNIT_CONVERTERS:
+            return None
 
-        if (
-            display_precision is not None
-            and default_unit_of_measurement != unit_of_measurement
-            and device_class in UNIT_CONVERTERS
-        ):
+        def _get_ratio(base_unit: str, base_precision: int) -> int:
             converter = UNIT_CONVERTERS[device_class]
 
             # Scale the precision when converting to a larger or smaller unit
             # For example 1.1 Wh should be rendered as 0.0011 kWh, not 0.0 kWh
-            ratio_log = log10(
-                converter.get_unit_ratio(
-                    default_unit_of_measurement, unit_of_measurement
-                )
-            )
+            ratio_log = log10(converter.get_unit_ratio(base_unit, unit_of_measurement))
             ratio_log = floor(ratio_log) if ratio_log > 0 else ceil(ratio_log)
-            display_precision = max(0, display_precision + ratio_log)
+            return max(0, base_precision + ratio_log)
+
+        default_unit_of_measurement = (
+            self.suggested_unit_of_measurement or self.native_unit_of_measurement
+        )
+        if default_unit_of_measurement is None:
+            return None
+
+        display_precision = self.suggested_display_precision
+        unit_of_measurement = self.unit_of_measurement
+
+        if display_precision is not None:
+            if default_unit_of_measurement != unit_of_measurement:
+                return _get_ratio(default_unit_of_measurement, display_precision)
+            return display_precision
+
+        device_class_units = DEVICE_CLASS_UNITS.get(device_class)
+        if not device_class_units:
+            return None
+
+        base_precision_info = next(
+            (
+                (unit, precision)
+                for unit, precision in UNITS_PRECISION.items()
+                if unit in device_class_units
+            ),
+            None,
+        )
+        if base_precision_info is None:
+            return None
+
+        device_class_base_unit, device_class_base_precision = base_precision_info
+        return _get_ratio(device_class_base_unit, device_class_base_precision)
+
+    def _update_suggested_precision(self) -> None:
+        """Update suggested display precision stored in registry."""
+        assert self.registry_entry
+
+        display_precision = self._get_adjusted_display_precision()
 
         sensor_options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
         if "suggested_display_precision" not in sensor_options:
@@ -944,5 +949,4 @@ def async_rounded_state(hass: HomeAssistant, entity_id: str, state: State) -> st
     with suppress(TypeError, ValueError):
         numerical_value = float(value)
         value = f"{numerical_value:z.{precision}f}"
-
     return value

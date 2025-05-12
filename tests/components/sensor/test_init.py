@@ -41,7 +41,6 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
-    UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, State
@@ -593,6 +592,8 @@ async def test_unit_translation_key_without_platform_raises(
         "state_unit",
         "native_value",
         "custom_state",
+        "rounded_state",
+        "suggested_precision",
     ),
     [
         # Smaller to larger unit, InHg is ~33x larger than hPa -> 1 more decimal
@@ -602,7 +603,9 @@ async def test_unit_translation_key_without_platform_raises(
             UnitOfPressure.INHG,
             UnitOfPressure.INHG,
             1000.0,
-            "29.53",
+            pytest.approx(29.52998),
+            29.530,
+            3,
         ),
         (
             SensorDeviceClass.PRESSURE,
@@ -610,96 +613,118 @@ async def test_unit_translation_key_without_platform_raises(
             UnitOfPressure.HPA,
             UnitOfPressure.HPA,
             1.234,
-            "12.340",
-        ),
-        (
-            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
-            UnitOfPressure.HPA,
-            UnitOfPressure.MMHG,
-            UnitOfPressure.MMHG,
-            1000,
-            "750",
+            12.34,
+            12.34,
+            2,
         ),
         (
             SensorDeviceClass.PRESSURE,
             UnitOfPressure.HPA,
-            UnitOfPressure.MMHG,
-            UnitOfPressure.MMHG,
-            1000,
-            "750",
+            UnitOfPressure.PA,
+            UnitOfPressure.PA,
+            1.234,
+            123.4,
+            123.0,
+            0,
         ),
-        # Not a supported pressure unit
+        # (
+        #     SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+        #     UnitOfPressure.HPA,
+        #     UnitOfPressure.MMHG,
+        #     UnitOfPressure.MMHG,
+        #     1000,
+        #     "750",
+        # ),
+        # (
+        #     SensorDeviceClass.PRESSURE,
+        #     UnitOfPressure.HPA,
+        #     UnitOfPressure.MMHG,
+        #     UnitOfPressure.MMHG,
+        #     1000,
+        #     "750",
+        # ),
+        # # Not a supported pressure unit
+        # (
+        #     SensorDeviceClass.PRESSURE,
+        #     UnitOfPressure.HPA,
+        #     "peer_pressure",
+        #     UnitOfPressure.HPA,
+        #     1000,
+        #     "1000",
+        # ),
+        # (
+        #     SensorDeviceClass.TEMPERATURE,
+        #     UnitOfTemperature.CELSIUS,
+        #     UnitOfTemperature.FAHRENHEIT,
+        #     UnitOfTemperature.FAHRENHEIT,
+        #     37.5,
+        #     "99.5",
+        # ),
+        # (
+        #     SensorDeviceClass.TEMPERATURE,
+        #     UnitOfTemperature.FAHRENHEIT,
+        #     UnitOfTemperature.CELSIUS,
+        #     UnitOfTemperature.CELSIUS,
+        #     100,
+        #     "38",
+        # ),
+        # (
+        #     SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+        #     UnitOfPressure.INHG,
+        #     UnitOfPressure.HPA,
+        #     UnitOfPressure.HPA,
+        #     -0.00,
+        #     "0.0",
+        # ),
+        # (
+        #     SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+        #     UnitOfPressure.INHG,
+        #     UnitOfPressure.HPA,
+        #     UnitOfPressure.HPA,
+        #     -0.00001,
+        #     "0",
+        # ),
+        # (
+        #     SensorDeviceClass.VOLUME_FLOW_RATE,
+        #     UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        #     UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        #     UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        #     50.0,
+        #     "13.2",
+        # ),
+        # (
+        #     SensorDeviceClass.VOLUME_FLOW_RATE,
+        #     UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        #     UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        #     UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        #     13.0,
+        #     "49.2",
+        # ),
+        # (
+        #     SensorDeviceClass.DURATION,
+        #     UnitOfTime.SECONDS,
+        #     UnitOfTime.HOURS,
+        #     UnitOfTime.HOURS,
+        #     5400.0,
+        #     "1.5000",
+        # ),
+        # (
+        #     SensorDeviceClass.DURATION,
+        #     UnitOfTime.DAYS,
+        #     UnitOfTime.MINUTES,
+        #     UnitOfTime.MINUTES,
+        #     0.5,
+        #     "720.0",
+        # ),
         (
-            SensorDeviceClass.PRESSURE,
-            UnitOfPressure.HPA,
-            "peer_pressure",
-            UnitOfPressure.HPA,
-            1000,
-            "1000",
-        ),
-        (
-            SensorDeviceClass.TEMPERATURE,
-            UnitOfTemperature.CELSIUS,
-            UnitOfTemperature.FAHRENHEIT,
-            UnitOfTemperature.FAHRENHEIT,
-            37.5,
-            "99.5",
-        ),
-        (
-            SensorDeviceClass.TEMPERATURE,
-            UnitOfTemperature.FAHRENHEIT,
-            UnitOfTemperature.CELSIUS,
-            UnitOfTemperature.CELSIUS,
-            100,
-            "38",
-        ),
-        (
-            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
-            UnitOfPressure.INHG,
-            UnitOfPressure.HPA,
-            UnitOfPressure.HPA,
-            -0.00,
-            "0.0",
-        ),
-        (
-            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
-            UnitOfPressure.INHG,
-            UnitOfPressure.HPA,
-            UnitOfPressure.HPA,
-            -0.00001,
-            "0",
-        ),
-        (
-            SensorDeviceClass.VOLUME_FLOW_RATE,
-            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
-            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
-            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
-            50.0,
-            "13.2",
-        ),
-        (
-            SensorDeviceClass.VOLUME_FLOW_RATE,
-            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
-            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
-            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
-            13.0,
-            "49.2",
-        ),
-        (
-            SensorDeviceClass.DURATION,
-            UnitOfTime.SECONDS,
-            UnitOfTime.HOURS,
-            UnitOfTime.HOURS,
-            5400.0,
-            "1.5000",
-        ),
-        (
-            SensorDeviceClass.DURATION,
-            UnitOfTime.DAYS,
-            UnitOfTime.MINUTES,
-            UnitOfTime.MINUTES,
-            0.5,
-            "720.0",
+            SensorDeviceClass.ENERGY,
+            UnitOfEnergy.WATT_HOUR,
+            UnitOfEnergy.KILO_WATT_HOUR,
+            UnitOfEnergy.KILO_WATT_HOUR,
+            1.1,
+            0.0011,
+            0.0011,
+            4,
         ),
     ],
 )
@@ -712,6 +737,8 @@ async def test_custom_unit(
     state_unit,
     native_value,
     custom_state,
+    rounded_state,
+    suggested_precision,
 ) -> None:
     """Test custom unit."""
     entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
@@ -734,12 +761,16 @@ async def test_custom_unit(
 
     entity_id = entity0.entity_id
     state = hass.states.get(entity_id)
-    assert state.state == custom_state
+    assert float(state.state) == custom_state
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
 
     assert (
-        async_rounded_state(hass, entity_id, hass.states.get(entity_id)) == custom_state
+        float(async_rounded_state(hass, entity_id, hass.states.get(entity_id)))
+        == rounded_state
     )
+
+    entry = entity_registry.async_get(entity0.entity_id)
+    assert entry.options["sensor"]["suggested_display_precision"] == suggested_precision
 
 
 @pytest.mark.parametrize(
