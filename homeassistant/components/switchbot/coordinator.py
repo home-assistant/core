@@ -53,6 +53,7 @@ class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
             connectable=connectable,
         )
         self.ble_device = ble_device
+        print(device)
         self.device = device
         self.device_name = device_name
         self.base_unique_id = base_unique_id

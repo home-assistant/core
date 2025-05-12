@@ -35,6 +35,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up Switchbot curtain based on a config entry."""
     coordinator = entry.runtime_data
+    print(type(coordinator.device))
+    print(switchbot.SwitchbotBlindTilt)
     if isinstance(coordinator.device, switchbot.SwitchbotBlindTilt):
         async_add_entities([SwitchBotBlindTiltEntity(coordinator)])
     elif isinstance(coordinator.device, switchbot.SwitchbotRollerShade):

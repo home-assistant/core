@@ -1,6 +1,6 @@
 """Test the switchbot sensors."""
 
-from unittest.mock import patch
+from unittest.mock import patch, AsyncMock
 
 import pytest
 from syrupy import SnapshotAssertion
@@ -38,6 +38,7 @@ from tests.components.bluetooth import inject_bluetooth_service_info
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entities(
     hass: HomeAssistant,
+    switchbot_device: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
