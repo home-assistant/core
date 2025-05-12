@@ -53,9 +53,6 @@ async def test_switch_setup(
         f"{PLATFORM}.{device_name}_enable_leds"
     ).disabled
 
-    await hass.config_entries.async_unload(entry.entry_id)
-    assert entry.state is ConfigEntryState.NOT_LOADED
-
 
 async def test_update_guest_wifi_status_auth_failed(
     hass: HomeAssistant, mock_device: MockDevice

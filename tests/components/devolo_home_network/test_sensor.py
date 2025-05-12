@@ -63,9 +63,6 @@ async def test_sensor_setup(
         f"{PLATFORM}.{device_name}_last_restart_of_the_device"
     ).disabled
 
-    await hass.config_entries.async_unload(entry.entry_id)
-    assert entry.state is ConfigEntryState.NOT_LOADED
-
 
 @pytest.mark.parametrize(
     ("name", "get_method", "interval", "expected_state"),

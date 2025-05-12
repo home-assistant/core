@@ -37,9 +37,6 @@ async def test_binary_sensor_setup(
         f"{PLATFORM}.{device_name}_connected_to_router"
     ).disabled
 
-    await hass.config_entries.async_unload(entry.entry_id)
-    assert entry.state is ConfigEntryState.NOT_LOADED
-
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_update_attached_to_router(

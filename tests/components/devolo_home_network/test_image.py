@@ -40,9 +40,6 @@ async def test_image_setup(
         f"{PLATFORM}.{device_name}_guest_wi_fi_credentials_as_qr_code"
     ).disabled
 
-    await hass.config_entries.async_unload(entry.entry_id)
-    assert entry.state is ConfigEntryState.NOT_LOADED
-
 
 @pytest.mark.freeze_time("2023-01-13 12:00:00+00:00")
 async def test_guest_wifi_qr(

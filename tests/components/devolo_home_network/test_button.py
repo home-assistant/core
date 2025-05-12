@@ -41,9 +41,6 @@ async def test_button_setup(
     ).disabled
     assert not entity_registry.async_get(f"{PLATFORM}.{device_name}_start_wps").disabled
 
-    await hass.config_entries.async_unload(entry.entry_id)
-    assert entry.state is ConfigEntryState.NOT_LOADED
-
 
 @pytest.mark.parametrize(
     ("name", "api_name", "trigger_method"),

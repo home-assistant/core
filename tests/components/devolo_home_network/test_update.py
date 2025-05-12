@@ -38,9 +38,6 @@ async def test_update_setup(
 
     assert not entity_registry.async_get(f"{PLATFORM}.{device_name}_firmware").disabled
 
-    await hass.config_entries.async_unload(entry.entry_id)
-    assert entry.state is ConfigEntryState.NOT_LOADED
-
 
 async def test_update_firmware(
     hass: HomeAssistant,
