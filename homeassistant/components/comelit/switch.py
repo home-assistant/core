@@ -75,4 +75,7 @@ class ComelitSwitchEntity(ComelitBridgeBaseEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return True if switch is on."""
-        return self.coordinator.data[OTHER][self._device.index].status == STATE_ON
+        return (
+            self.coordinator.data[self._device.type][self._device.index].status
+            == STATE_ON
+        )

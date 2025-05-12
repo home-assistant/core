@@ -1,11 +1,17 @@
 {
-  "processAction": [],
+  "processAction": [1, 2, 3],
   "light": [],
   "ambientLight": [],
   "startTime": [],
   "ventilationStep": [],
   "programId": [],
-  "targetTemperature": [],
+  "targetTemperature": [
+    {
+      "zone": 1,
+      "min": -28,
+      "max": -14
+    }
+  ],
   "deviceName": true,
   "powerOn": true,
   "powerOff": false,

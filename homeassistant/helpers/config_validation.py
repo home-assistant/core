@@ -21,7 +21,7 @@ from socket import (  # type: ignore[attr-defined]  # private, not in typeshed
     _GLOBAL_DEFAULT_TIMEOUT,
 )
 import threading
-from typing import Any, cast, overload
+from typing import TYPE_CHECKING, Any, cast, overload
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -355,7 +355,13 @@ def ensure_list[_T](value: _T | None) -> list[_T] | list[Any]:
     """Wrap value in list if it is not one."""
     if value is None:
         return []
-    return cast(list[_T], value) if isinstance(value, list) else [value]
+    if isinstance(value, list):
+        if TYPE_CHECKING:
+            # https://github.com/home-assistant/core/pull/71960
+            # cast with a type variable is still slow.
+            return cast(list[_T], value)
+        return value  # type: ignore[unreachable]
+    return [value]
 
 
 def entity_id(value: Any) -> str:
@@ -1053,9 +1059,37 @@ def removed(
     )
 
 
+def renamed(
+    old_key: str,
+    new_key: str,
+) -> Callable[[Any], Any]:
+    """Replace key with a new key.
+
+    Fails if both the new and old key are present.
+    """
+
+    def validator(value: Any) -> Any:
+        if not isinstance(value, dict):
+            return value
+
+        if old_key in value:
+            if new_key in value:
+                raise vol.Invalid(
+                    f"Cannot specify both '{old_key}' and '{new_key}'. Please use '{new_key}' only."
+                )
+            value[new_key] = value.pop(old_key)
+
+        return value
+
+    return validator
+
+
+type ValueSchemas = dict[Hashable, VolSchemaType | Callable[[Any], dict[str, Any]]]
+
+
 def key_value_schemas(
     key: str,
-    value_schemas: dict[Hashable, VolSchemaType | Callable[[Any], dict[str, Any]]],
+    value_schemas: ValueSchemas,
     default_schema: VolSchemaType | None = None,
     default_description: str | None = None,
 ) -> Callable[[Any], dict[Hashable, Any]]:
@@ -1704,26 +1738,25 @@ CONDITION_SHORTHAND_SCHEMA = vol.Schema(
     }
 )
 
+BUILT_IN_CONDITIONS: ValueSchemas = {
+    "and": AND_CONDITION_SCHEMA,
+    "device": DEVICE_CONDITION_SCHEMA,
+    "not": NOT_CONDITION_SCHEMA,
+    "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+    "or": OR_CONDITION_SCHEMA,
+    "state": STATE_CONDITION_SCHEMA,
+    "sun": SUN_CONDITION_SCHEMA,
+    "template": TEMPLATE_CONDITION_SCHEMA,
+    "time": TIME_CONDITION_SCHEMA,
+    "trigger": TRIGGER_CONDITION_SCHEMA,
+    "zone": ZONE_CONDITION_SCHEMA,
+}
+
 CONDITION_SCHEMA: vol.Schema = vol.Schema(
     vol.Any(
         vol.All(
             expand_condition_shorthand,
-            key_value_schemas(
-                CONF_CONDITION,
-                {
-                    "and": AND_CONDITION_SCHEMA,
-                    "device": DEVICE_CONDITION_SCHEMA,
-                    "not": NOT_CONDITION_SCHEMA,
-                    "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
-                    "or": OR_CONDITION_SCHEMA,
-                    "state": STATE_CONDITION_SCHEMA,
-                    "sun": SUN_CONDITION_SCHEMA,
-                    "template": TEMPLATE_CONDITION_SCHEMA,
-                    "time": TIME_CONDITION_SCHEMA,
-                    "trigger": TRIGGER_CONDITION_SCHEMA,
-                    "zone": ZONE_CONDITION_SCHEMA,
-                },
-            ),
+            key_value_schemas(CONF_CONDITION, BUILT_IN_CONDITIONS),
         ),
         dynamic_template_condition,
     )
@@ -1749,19 +1782,7 @@ CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
         expand_condition_shorthand,
         key_value_schemas(
             CONF_CONDITION,
-            {
-                "and": AND_CONDITION_SCHEMA,
-                "device": DEVICE_CONDITION_SCHEMA,
-                "not": NOT_CONDITION_SCHEMA,
-                "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
-                "or": OR_CONDITION_SCHEMA,
-                "state": STATE_CONDITION_SCHEMA,
-                "sun": SUN_CONDITION_SCHEMA,
-                "template": TEMPLATE_CONDITION_SCHEMA,
-                "time": TIME_CONDITION_SCHEMA,
-                "trigger": TRIGGER_CONDITION_SCHEMA,
-                "zone": ZONE_CONDITION_SCHEMA,
-            },
+            BUILT_IN_CONDITIONS,
             dynamic_template_condition_action,
             "a list of conditions or a valid template",
         ),

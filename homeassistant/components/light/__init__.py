@@ -442,7 +442,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 brightness += params.pop(ATTR_BRIGHTNESS_STEP)
 
             else:
-                brightness += round(params.pop(ATTR_BRIGHTNESS_STEP_PCT) / 100 * 255)
+                brightness_pct = round(brightness / 255 * 100)
+                brightness = round(
+                    (brightness_pct + params.pop(ATTR_BRIGHTNESS_STEP_PCT)) / 100 * 255
+                )
 
             params[ATTR_BRIGHTNESS] = max(0, min(255, brightness))
 
