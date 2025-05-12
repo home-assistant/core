@@ -13,7 +13,7 @@
           "bucket": "Bucket"
         },
         "data_description": {
-          "bucket": "Select the bucked to store backups in."
+          "bucket": "Select the bucket to store backups in."
         },
         "description": "Pick the bucket you want to use for backups. Please note, it is best to create a dedicated bucket for Home Assistant backups."
       },
