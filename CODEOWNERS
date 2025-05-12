@@ -1138,6 +1138,8 @@ build.json @home-assistant/supervisor
 /tests/components/palazzetti/ @dotvav
 /homeassistant/components/panel_custom/ @home-assistant/frontend
 /tests/components/panel_custom/ @home-assistant/frontend
+/homeassistant/components/paperless_ngx/ @fvgarrel
+/tests/components/paperless_ngx/ @fvgarrel
 /homeassistant/components/peblar/ @frenck
 /tests/components/peblar/ @frenck
 /homeassistant/components/peco/ @IceBotYT

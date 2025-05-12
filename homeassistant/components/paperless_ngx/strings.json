@@ -1,0 +1,25 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "host": "Host to connect to Paperless-ngx API",
+          "access_token": "Access token to connect to Paperless-ngx API"
+        },
+        "title": "Add Paperless-ngx instance"
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect. Invalid URL or authentication token.",
+      "cannot_connect_host": "Failed to connect to host.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

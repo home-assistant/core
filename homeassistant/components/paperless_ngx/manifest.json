@@ -1,0 +1,12 @@
+{
+  "domain": "paperless_ngx",
+  "name": "Paperless-ngx",
+  "codeowners": ["@fvgarrel"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/paperless_ngx",
+  "integration_type": "service",
+  "iot_class": "local_polling",
+  "loggers": ["pypaperless"],
+  "quality_scale": "bronze",
+  "requirements": ["pypaperless==4.0.0"]
+}

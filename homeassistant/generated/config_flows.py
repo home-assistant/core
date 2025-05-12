@@ -468,6 +468,7 @@ FLOWS = {
         "p1_monitor",
         "palazzetti",
         "panasonic_viera",
+        "paperless_ngx",
         "peblar",
         "peco",
         "pegel_online",
