@@ -57,6 +57,8 @@ from homeassistant.util.unit_conversion import (
     MassConverter,
     PowerConverter,
     PressureConverter,
+    ReactiveEnergyConverter,
+    ReactivePowerConverter;
     SpeedConverter,
     TemperatureConverter,
     UnitlessRatioConverter,
@@ -208,6 +210,8 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     **dict.fromkeys(MassConverter.VALID_UNITS, MassConverter),
     **dict.fromkeys(PowerConverter.VALID_UNITS, PowerConverter),
     **dict.fromkeys(PressureConverter.VALID_UNITS, PressureConverter),
+    **dict.fromkeys(ReactiveEnergyConverter.VALID_UNITS, ReactiveEnergyConverter),
+    **dict.fromkeys(ReactivePowerConverter.VALID_UNITS, ReactivePowerConverter),
     **dict.fromkeys(SpeedConverter.VALID_UNITS, SpeedConverter),
     **dict.fromkeys(TemperatureConverter.VALID_UNITS, TemperatureConverter),
     **dict.fromkeys(UnitlessRatioConverter.VALID_UNITS, UnitlessRatioConverter),
