@@ -61,13 +61,11 @@ CONTROLLER_BINARY_SENSOR_TYPES: tuple[RachioControllerBinarySensorDescription, .
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         signal_string=SIGNAL_RACHIO_CONTROLLER_UPDATE,
         is_on=lambda controller: controller.init_data[KEY_STATUS] == STATUS_ONLINE,
-        update_received=lambda state: (
-            True
-            if state in (SUBTYPE_ONLINE, SUBTYPE_COLD_REBOOT)
-            else False
-            if state == SUBTYPE_OFFLINE
-            else None
-        ),
+        update_received={
+            SUBTYPE_ONLINE: True,
+            SUBTYPE_COLD_REBOOT: True,
+            SUBTYPE_OFFLINE: False,
+        }.get,
     ),
     RachioControllerBinarySensorDescription(
         key=KEY_RAIN_SENSOR,
@@ -166,8 +164,11 @@ class RachioControllerBinarySensor(RachioDevice, BinarySensorEntity):
     @callback
     def _async_handle_update(self, *args, **kwargs) -> None:
         """Handle an update to the state of this sensor."""
-        updated_state = self.entity_description.update_received(args[0][0][KEY_SUBTYPE])
-        if updated_state is not None:
+        if (
+            updated_state := self.entity_description.update_received(
+                args[0][0][KEY_SUBTYPE]
+            )
+        ) is not None:
             self._attr_is_on = updated_state
 
         self.async_write_ha_state()
