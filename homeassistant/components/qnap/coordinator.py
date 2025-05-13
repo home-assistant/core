@@ -39,7 +39,7 @@ def suppress_insecure_request_warning():
     https://github.com/colinodell/python-qnapstats/issues/96
     """
     with warnings.catch_warnings():
-        warnings.simplefilter('ignore', urllib3.exceptions.InsecureRequestWarning)
+        warnings.simplefilter("ignore", urllib3.exceptions.InsecureRequestWarning)
         yield
 
 
