@@ -43,6 +43,7 @@ class JewishCalendarSensorDescription(JewishCalendarBaseSensorDescription):
     """Class describing Jewish Calendar sensor entities."""
 
     value_fn: Callable[[JewishCalendarDataResults], str | int]
+    attr_fn: Callable[[JewishCalendarDataResults], dict[str, str]] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -60,6 +61,11 @@ INFO_SENSORS: tuple[JewishCalendarSensorDescription, ...] = (
         translation_key="hebrew_date",
         icon="mdi:star-david",
         value_fn=lambda results: str(results.after_shkia_date.hdate),
+        attr_fn=lambda results: {
+            "hebrew_year": str(results.after_shkia_date.hdate.year),
+            "hebrew_month_name": str(results.after_shkia_date.hdate.month),
+            "hebrew_day": str(results.after_shkia_date.hdate.day),
+        },
     ),
     JewishCalendarSensorDescription(
         key="weekly_portion",
@@ -76,6 +82,16 @@ INFO_SENSORS: tuple[JewishCalendarSensorDescription, ...] = (
         value_fn=lambda results: ", ".join(
             str(holiday) for holiday in results.after_shkia_date.holidays
         ),
+        attr_fn=lambda results: {
+            "id": ", ".join(
+                holiday.name for holiday in results.after_shkia_date.holidays
+            ),
+            "type": ", ".join(
+                dict.fromkeys(
+                    _holiday.type.name for _holiday in results.after_shkia_date.holidays
+                )
+            ),
+        },
     ),
     JewishCalendarSensorDescription(
         key="omer_count",
@@ -310,20 +326,8 @@ class JewishCalendarSensor(JewishCalendarBaseSensor):
         """Return the state attributes."""
         if self.data.results is None:
             return {}
-        if self.entity_description.key == "date":
-            hdate = self.data.results.after_shkia_date.hdate
-            return {
-                "hebrew_year": str(hdate.year),
-                "hebrew_month_name": str(hdate.month),
-                "hebrew_day": str(hdate.day),
-            }
-        if self.entity_description.key == "holiday":
-            _holidays = self.data.results.after_shkia_date.holidays
-            _id = ", ".join(holiday.name for holiday in _holidays)
-            _type = ", ".join(
-                dict.fromkeys(_holiday.type.name for _holiday in _holidays)
-            )
-            return {"id": _id, "type": _type}
+        if self.entity_description.attr_fn is not None:
+            return self.entity_description.attr_fn(self.data.results)
         return {}
 
 
