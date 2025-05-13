@@ -149,5 +149,37 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "invalid_announce_media_type": {
+      "message": "Announcements must have media type of music. {media_type} is not a supported type."
+    },
+    "invalid_announce_volume": {
+      "message": "{announce_volume} must be a number greater than 0 and less than or equal to 1."
+    },
+    "invalid_announce_timeout": {
+      "message": "{announce_timeout} must be a number greater than 0."
+    },
+    "join_cannot_find_other_player": {
+      "message": "Could not find player with entity_id {other_player_entity_id}."
+    },
+    "join_cannot_join_unknown_player": {
+      "message": "Could not join unknown player {other_player_entity_id}."
+    },
+    "coordinator_no_data": {
+      "message": "No data from status poll."
+    },
+    "browse_search_media_not_found": {
+      "message": "Media not found: {search_type} / {search_id}."
+    },
+    "browse_media_not_found": {
+      "message": "Media not found: {media_type} / {media_id}"
+    },
+    "browse_media_type_not_supported": {
+      "message": "Media type not supported: {media_type}."
+    },
+    "update_restart_failed": {
+      "message": "Error trying to update LMS Plugins: Restart failed."
+    }
   }
 }
