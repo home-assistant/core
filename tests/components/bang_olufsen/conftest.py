@@ -81,14 +81,12 @@ async def integration_fixture(
     hass: HomeAssistant,
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-) -> tuple[MockConfigEntry, AsyncMock]:
+) -> None:
     """Set up the Bang & Olufsen integration."""
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-
-    return (mock_config_entry, mock_mozart_client)
 
 
 @pytest.fixture
