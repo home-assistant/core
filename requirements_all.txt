@@ -542,7 +542,7 @@ aurorapy==0.2.7
 autarco==3.1.0
 
 # homeassistant.components.husqvarna_automower_ble
-automower-ble==0.2.0
+automower-ble==0.2.1
 
 # homeassistant.components.generic
 # homeassistant.components.stream
@@ -2132,7 +2132,7 @@ pymeteoclimatic==0.1.0
 pymicro-vad==1.0.1
 
 # homeassistant.components.miele
-pymiele==0.5.1
+pymiele==0.5.2
 
 # homeassistant.components.xiaomi_tv
 pymitv==1.4.3
