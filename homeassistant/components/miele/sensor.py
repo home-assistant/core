@@ -201,7 +201,6 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
         ),
         description=MieleSensorDescription(
             key="current_energy_consumption",
-            translation_key="energy_consumption",
             value_fn=lambda value: value.current_energy_consumption,
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
@@ -221,10 +220,11 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
         description=MieleSensorDescription(
             key="energy_forecast",
             translation_key="energy_forecast",
-            value_fn=lambda value: value.energy_forecast * 100
-            if value.energy_forecast is not None
-            else None,
-            name="Energy Forecast",
+            value_fn=(
+                lambda value: value.energy_forecast * 100
+                if value.energy_forecast is not None
+                else None
+            ),
             icon="mdi:lightning-bolt-outline",
             native_unit_of_measurement=PERCENTAGE,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -255,9 +255,11 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
         description=MieleSensorDescription(
             key="water_forecast",
             translation_key="water_forecast",
-            value_fn=lambda value: value.water_forecast * 100
-            if value.water_forecast is not None
-            else value.water_forecast,
+            value_fn=(
+                lambda value: value.water_forecast * 100
+                if value.water_forecast is not None
+                else None
+            ),
             icon="mdi:water-outline",
             native_unit_of_measurement=PERCENTAGE,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -492,9 +494,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             key="state_drying_step",
             translation_key="drying_step",
             value_fn=lambda value: StateDryingStep(
-                int(value.state_drying_step)
-                if value.state_drying_step is not None
-                else -9999
+                cast(int, value.state_drying_step)
             ).name,
             entity_category=EntityCategory.DIAGNOSTIC,
             device_class=SensorDeviceClass.ENUM,
