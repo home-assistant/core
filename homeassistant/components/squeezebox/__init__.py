@@ -100,7 +100,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
             )
     except TimeoutError as err:  # Specifically catch timeout
         _LOGGER.warning("Timeout connecting to LMS %s: %s", host, err)
-        raise ConfigEntryNotReady(f"Timeout connecting to LMS {host}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="init_timeout",
+            translation_placeholders={
+                "host": f"{host}",
+            },
+        ) from err
     except Exception as err:  # Catch other unexpected errors during the query attempt
         _LOGGER.warning(
             "Error communicating with LMS %s during initial query: %s",
@@ -108,14 +114,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
             err,
             exc_info=True,
         )
-        raise ConfigEntryNotReady(f"Error communicating with LMS {host}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="init_comms_error",
+            translation_placeholders={
+                "host": f"{host}",
+            },
+        ) from err
 
     if not status:
         # pysqueezebox's async_query returns None on various issues,
         # including HTTP errors where it sets lms.http_status.
         if hasattr(lms, "http_status") and lms.http_status == HTTPStatus.UNAUTHORIZED:
             _LOGGER.warning("Authentication failed for Squeezebox server %s", host)
-            raise ConfigEntryAuthFailed(f"Authentication failed for {host}")
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="init_auth_failed",
+                translation_placeholders={"host": f"{host}"},
+            )
 
         # For other errors where status is None (e.g., server error, connection refused by server)
         _LOGGER.warning(
@@ -124,7 +140,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
             getattr(lms, "http_status", "N/A"),
         )
         raise ConfigEntryNotReady(
-            f"Failed to get status from LMS {host} (HTTP status: {getattr(lms, 'http_status', 'N/A')}). Will retry."
+            translation_domain=DOMAIN,
+            translation_key="init_get_status_failed",
+            translation_placeholders={
+                "host": f"{host}",
+                "http_status": f"{getattr(lms, 'http_status', 'N/A')}",
+            },
         )
 
     # If we are here, status is a valid dictionary
@@ -135,7 +156,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
         _LOGGER.error("LMS %s status response missing UUID", host)
         # This is a non-recoverable error with the current server response
         raise ConfigEntryError(
-            f"LMS {host} status response missing essential data (UUID)."
+            translation_domain=DOMAIN,
+            translation_key="init_missing_uuid",
+            translation_placeholders={"host": f"{host}"},
         )
 
     lms.uuid = status[STATUS_QUERY_UUID]

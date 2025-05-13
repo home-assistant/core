@@ -149,5 +149,22 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "init_timeout": {
+      "message": "Timeout connecting to LMS {host}."
+    },
+    "init_comms_error": {
+      "message": "Error communicating with LMS {host}."
+    },
+    "init_auth_failed": {
+      "message": "Authentication failed for {host)."
+    },
+    "init_get_status_failed": {
+      "message": "Failed to get status from LMS {host} (HTTP status: {http_status}). Will retry."
+    },
+    "init_missing_uuid": {
+      "message": "LMS {host} status response missing essential data (UUID)."
+    }
   }
 }
