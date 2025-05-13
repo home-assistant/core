@@ -331,6 +331,7 @@ FLOWS = {
         "incomfort",
         "indevolt",
         "inels",
+        "influxdb",
         "inkbird",
         "insteon",
         "intelliclima",
