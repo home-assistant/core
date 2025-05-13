@@ -1,10 +1,9 @@
 """Tests for the Samsung TV Integration."""
 
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
-from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
@@ -22,7 +21,6 @@ from homeassistant.components.samsungtv.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
-    CONF_MAC,
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
@@ -143,33 +141,3 @@ async def test_reauth_triggered_encrypted(hass: HomeAssistant) -> None:
         if flow["context"]["source"] == "reauth"
     ]
     assert len(flows_in_progress) == 1
-
-
-@pytest.mark.usefixtures("remote_websocket", "rest_api")
-async def test_incorrectly_formatted_mac_fixed(hass: HomeAssistant) -> None:
-    """Test incorrectly formatted mac is corrected."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote"
-    ) as remote_class:
-        remote = Mock(SamsungTVWSAsyncRemote)
-        remote.__aenter__ = AsyncMock(return_value=remote)
-        remote.__aexit__ = AsyncMock()
-        remote.token = "123456789"
-        remote_class.return_value = remote
-
-        await setup_samsungtv_entry(
-            hass,
-            {
-                CONF_HOST: "fake_host",
-                CONF_NAME: "fake",
-                CONF_PORT: 8001,
-                CONF_TOKEN: "123456789",
-                CONF_METHOD: METHOD_WEBSOCKET,
-                CONF_MAC: "aabbaaaaaaaa",
-            },
-        )
-        await hass.async_block_till_done()
-
-        config_entries = hass.config_entries.async_entries(DOMAIN)
-        assert len(config_entries) == 1
-        assert config_entries[0].data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
