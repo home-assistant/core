@@ -99,29 +99,30 @@ async def test_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("exception", "reason"),
+    ("exception", "errors"),
     [
         (
             ParamValidationError(report="Invalid bucket name"),
-            "invalid_bucket_name",
+            {CONF_BUCKET: "invalid_bucket_name"},
         ),
-        (ValueError(), "invalid_endpoint_url"),
+        (ValueError(), {"base": "invalid_endpoint_url"}),
         (
             EndpointConnectionError(endpoint_url="http://example.com"),
-            "cannot_connect",
+            {"base": "cannot_connect"},
         ),
     ],
 )
-async def test_flow_create_client_errors(
+async def test_flow_bucket_step_errors(
     hass: HomeAssistant,
     exception: Exception,
-    reason: dict[str, str],
+    errors: dict[str, str],
 ) -> None:
     """Test config flow errors."""
     result = await _async_start_flow(hass, exception=exception)
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == reason
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == errors
 
     # Fix and finish the test
     result = await _async_start_flow(hass)

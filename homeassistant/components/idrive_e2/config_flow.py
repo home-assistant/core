@@ -41,6 +41,28 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
+def _build_user_step_schema(
+    access_key: str | None = None, secret_key: str | None = None
+) -> vol.Schema:
+    """Build the user step schema."""
+    if access_key is None or secret_key is None:
+        return STEP_USER_DATA_SCHEMA
+
+    # Return a schema with prefilled values
+    return vol.Schema(
+        {
+            vol.Required(
+                CONF_ACCESS_KEY_ID,
+                default=access_key,
+            ): cv.string,
+            vol.Required(
+                CONF_SECRET_ACCESS_KEY,
+                default=secret_key,
+            ): cv.string,
+        }
+    )
+
+
 def _list_buckets(endpoint_url: str, access_key: str, secret_key: str) -> list[str]:
     """List S3 buckets."""
     session = boto3.session.Session()
@@ -107,14 +129,25 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
 
             if not errors:
+                # Process to the next step (select bucket)
                 self._access_key = user_input[CONF_ACCESS_KEY_ID]
                 self._secret_key = user_input[CONF_SECRET_ACCESS_KEY]
                 self._endpoint_url = endpoint
                 return await self.async_step_bucket()
 
+            # Show the userform with the entered data and errors
+            # Prefill the access key and secret key fields with the previous values
+            return self.async_show_form(
+                step_id="user",
+                data_schema=_build_user_step_schema(
+                    user_input[CONF_ACCESS_KEY_ID], user_input[CONF_SECRET_ACCESS_KEY]
+                ),
+                errors=errors,
+            )
+
         return self.async_show_form(
             step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            data_schema=_build_user_step_schema(),
             errors=errors,
         )
 
@@ -166,22 +199,24 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
 
         if errors:
-            # Abort the config_flow in case of bucket listing failure
-            reason: str = errors.get("base") or errors.get(CONF_BUCKET) or "unknown"
-            return self.async_abort(reason=reason)
+            # Go back to the user step if there are errors getting buckets
+            # Prefill the access key and secret key fields with the current values
+            return self.async_show_form(
+                step_id="user",
+                data_schema=_build_user_step_schema(self._access_key, self._secret_key),
+                errors=errors,
+            )
 
-        # Create a dropdown selector schema for the available buckets
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_BUCKET): SelectSelector(
-                    config=SelectSelectorConfig(
-                        options=buckets, mode=SelectSelectorMode.DROPDOWN
-                    )
-                )
-            }
-        )
-
+        # Show the bucket selection form with a dropdown selector
         return self.async_show_form(
             step_id="bucket",
-            data_schema=schema,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_BUCKET): SelectSelector(
+                        config=SelectSelectorConfig(
+                            options=buckets, mode=SelectSelectorMode.DROPDOWN
+                        )
+                    )
+                }
+            ),
         )
