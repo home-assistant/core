@@ -201,6 +201,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
         ),
         description=MieleSensorDescription(
             key="current_energy_consumption",
+            translation_key="energy_consumption",
             value_fn=lambda value: value.current_energy_consumption,
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
