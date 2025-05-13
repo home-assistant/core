@@ -6,7 +6,7 @@ import asyncio
 import logging
 import os
 import re
-from typing import Any, TypedDict, cast
+from typing import Any, Literal, TypedDict, cast
 from urllib.parse import urlparse
 
 from aiohttp import BasicAuth
@@ -23,6 +23,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import ATTR_ICON, CONF_PATH
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client, config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -37,6 +38,7 @@ from .const import (
     ATTR_USERNAME,
     CONF_DEFAULT_CHANNEL,
     DATA_CLIENT,
+    DOMAIN,
     SLACK_DATA,
 )
 from .utils import upload_file_to_slack
@@ -120,7 +122,9 @@ def _async_get_filename_from_url(url: str) -> str:
 
 
 @callback
-def _async_process_target(target: str) -> tuple[str, str]:
+def _async_process_target(
+    target: str,
+) -> tuple[Literal["user_id", "channel_id", "channel_name"], str]:
     """Process a target and determine its type.
 
     Returns:
@@ -164,18 +168,29 @@ class SlackNotificationService(BaseNotificationService):
         """
         try:
             response = await self._client.conversations_open(users=[user_id])
-            if response["ok"]:
-                return cast(str, response["channel"]["id"])
-
-            _LOGGER.error(
-                "Failed to open DM with user %s: %s", user_id, response["error"]
-            )
         except SlackApiError as err:
-            _LOGGER.error("Error opening DM with user %s: %r", user_id, err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="error_opening_dm",
+                translation_placeholders={
+                    "user_id": user_id,
+                    "error": str(err),
+                },
+            ) from err
 
-        return None
+        if not response["ok"]:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="error_opening_dm",
+                translation_placeholders={
+                    "user_id": user_id,
+                    "error": response["error"],
+                },
+            )
 
-    async def _async_get_channel_id_by_name(self, channel_name: str) -> str | None:
+        return cast("str", response["channel"]["id"])
+
+    async def _async_get_channel_id_by_name(self, channel_name: str) -> str:
         """Get channel ID by name, checking cache first."""
         if channel_id := self._channel_id_cache.get(channel_name):
             return channel_id
@@ -185,25 +200,36 @@ class SlackNotificationService(BaseNotificationService):
             for channel_type in ("public_channel", "private_channel"):
                 response = await self._client.conversations_list(types=channel_type)
                 if not response["ok"]:
-                    _LOGGER.error(
+                    _LOGGER.debug(
                         "Error listing %s channels: %s",
                         channel_type,
                         response.get("error", "Unknown error"),
                     )
+                    # If the API call fails, we skip this type of channel
                     continue
                 channels.extend(response["channels"])
-
-            for channel in channels:
-                if channel["name"] == channel_name:
-                    self._channel_id_cache[channel_name] = channel["id"]
-                    return cast(str, channel["id"])
-
-            _LOGGER.error("Channel %s not found", channel_name)
-
         except SlackApiError as err:
-            _LOGGER.error("Error getting channel ID: %r", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="error_getting_channel",
+                translation_placeholders={
+                    "channel_name": channel_name,
+                    "error": str(err),
+                },
+            ) from err
 
-        return None
+        for channel in channels:
+            if channel["name"] == channel_name:
+                self._channel_id_cache[channel_name] = channel["id"]
+                return cast("str", channel["id"])
+
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="error_channel_not_found",
+            translation_placeholders={
+                "channel_name": channel_name,
+            },
+        )
 
     async def _async_resolve_target(self, target: str) -> str | None:
         """Resolve a target to its Slack channel ID.
@@ -243,8 +269,13 @@ class SlackNotificationService(BaseNotificationService):
         ]
 
         if not target_ids:
-            _LOGGER.error("No valid targets resolved for: %s", targets)
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="error_targets_not_found",
+                translation_placeholders={
+                    "targets": ", ".join(targets),
+                },
+            )
 
         await upload_file_to_slack(
             client=self._client,
@@ -295,8 +326,13 @@ class SlackNotificationService(BaseNotificationService):
         ]
 
         if not target_ids:
-            _LOGGER.error("No valid targets resolved for: %s", targets)
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="error_targets_not_found",
+                translation_placeholders={
+                    "targets": ", ".join(targets),
+                },
+            )
 
         await upload_file_to_slack(
             client=self._client,

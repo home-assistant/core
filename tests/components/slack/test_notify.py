@@ -18,6 +18,7 @@ from homeassistant.components.slack.notify import (
 )
 from homeassistant.const import ATTR_ICON, CONF_API_KEY, CONF_NAME, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from . import CONF_DATA
 
@@ -56,7 +57,7 @@ def mock_client():
     return client
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def hass_mock(hass: HomeAssistant):
     """Mock hass for allowing external URLs."""
     hass.config.is_allowed_external_url = Mock(return_value=True)
@@ -140,10 +141,13 @@ async def test_target_resolution_failure(mock_client) -> None:
 
     service = SlackNotificationService(None, mock_client, CONF_DATA)
 
-    # Should not raise an exception
-    await service.async_send_message(
-        "test", target=["#nonexistent", "INVALID", "U123456789"]
-    )
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await service.async_send_message(
+            "test", target=["#nonexistent", "INVALID", "U123456789"]
+        )
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "error_channel_not_found"
+    assert excinfo.value.translation_placeholders == {"channel_name": "nonexistent"}
 
     # No successful message sends due to resolution failures
     assert mock_client.chat_postMessage.call_count == 0
@@ -218,7 +222,16 @@ async def test_conversation_list_error(mock_client) -> None:
     mock_client.conversations_list.side_effect = SlackApiError("error", {"ok": False})
     service = SlackNotificationService(None, mock_client, CONF_DATA)
 
-    await service.async_send_message("test", target="#some-channel")
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await service.async_send_message("test", target="#some-channel")
+
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "error_getting_channel"
+    assert excinfo.value.translation_placeholders == {
+        "channel_name": "some-channel",
+        "error": "error\nThe server responded with: {'ok': False}",
+    }
+
     mock_client.chat_postMessage.assert_not_called()
 
 
@@ -226,7 +239,13 @@ async def test_channel_not_found(mock_client) -> None:
     """Test handling of non-existent channel."""
     service = SlackNotificationService(None, mock_client, CONF_DATA)
 
-    await service.async_send_message("test", target="#nonexistent")
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await service.async_send_message("test", target="#nonexistent")
+
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "error_channel_not_found"
+    assert excinfo.value.translation_placeholders == {"channel_name": "nonexistent"}
+
     mock_client.chat_postMessage.assert_not_called()
 
 
@@ -336,7 +355,16 @@ async def test_dm_channel_api_error(mock_client) -> None:
     mock_client.conversations_open.side_effect = SlackApiError("error", {"ok": False})
     service = SlackNotificationService(None, mock_client, CONF_DATA)
 
-    await service.async_send_message("test", target="U123456789")
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await service.async_send_message("test", target="U123456789")
+
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "error_opening_dm"
+    assert excinfo.value.translation_placeholders == {
+        "error": "error\nThe server responded with: {'ok': False}",
+        "user_id": "U123456789",
+    }
+
     mock_client.chat_postMessage.assert_not_called()
 
 

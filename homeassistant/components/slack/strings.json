@@ -32,5 +32,19 @@
         "name": "Do not disturb until"
       }
     }
+  },
+  "exceptions": {
+    "error_opening_dm": {
+      "message": "Error opening DM with user {user_id}: {error}"
+    },
+    "error_getting_channel": {
+      "message": "Error getting channel ID {channel_name}: {error}"
+    },
+    "error_channel_not_found": {
+      "message": "Channel {channel_name} not found"
+    },
+    "error_targets_not_found": {
+      "message": "No targets resolved for: {targets}"
+    }
   }
 }
