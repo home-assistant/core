@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Iterable
+import functools as ft
 from typing import Any
 
 from nexia.const import OPERATION_MODE_OFF
@@ -18,6 +21,15 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import NexiaDataUpdateCoordinator
 from .entity import NexiaThermostatEntity, NexiaThermostatZoneEntity
 from .types import NexiaConfigEntry
+
+
+async def _stop_harmonizers(
+    _: Event, harmonizers: Iterable[NexiaRoomIQHarmonizer]
+) -> None:
+    """Await the shutdown methods in parallel when preparing to stop."""
+    async with asyncio.TaskGroup() as tg:
+        for harmonizer in harmonizers:
+            tg.create_task(harmonizer.async_shutdown())
 
 
 async def async_setup_entry(
@@ -44,14 +56,10 @@ async def async_setup_entry(
                 )
 
     async_add_entities(entities)
-    for harmonizer in room_iq_zones.values():
-
-        async def _stop_obj(_: Event, obj: NexiaRoomIQHarmonizer = harmonizer) -> None:
-            """Run the shutdown method when preparing to stop."""
-            await obj.async_shutdown()
-
+    if room_iq_zones:
+        listener = ft.partial(_stop_harmonizers, harmonizers=room_iq_zones.values())
         config_entry.async_on_unload(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_obj)
+            hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, listener)
         )
 
 

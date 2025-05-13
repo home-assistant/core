@@ -1,7 +1,5 @@
 """The switch tests for the nexia platform."""
 
-from datetime import timedelta
-
 from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -60,7 +58,7 @@ async def test_nexia_sensor_switch(
     assert hass.states.get(sw2_id).state == STATE_OFF
 
     # Wait for switches to revert to device status.
-    freezer.tick(timedelta(seconds=6))
+    freezer.tick(6)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(sw1_id).state == STATE_ON
