@@ -194,23 +194,19 @@ class ModbusLight(BaseSwitch, LightEntity):
             * LIGHT_MAX_BRIGHTNESS
         )
 
-    def _convert_modbus_percent_to_temperature(self, percent: int) -> int | None:
+    def _convert_modbus_percent_to_temperature(self, percent: int) -> int:
         """Convert Modbus scale (0-100) to the color temperature in Kelvin (2000-7000 К)."""
-        if isinstance(self._attr_min_color_temp_kelvin, int) and isinstance(
+        assert isinstance(self._attr_min_color_temp_kelvin, int) and isinstance(
             self._attr_max_color_temp_kelvin, int
-        ):
-            return round(
-                self._attr_min_color_temp_kelvin
-                + (
-                    percent
-                    / (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
-                    * (
-                        self._attr_max_color_temp_kelvin
-                        - self._attr_min_color_temp_kelvin
-                    )
-                )
+        )
+        return round(
+            self._attr_min_color_temp_kelvin
+            + (
+                percent
+                / (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
+                * (self._attr_max_color_temp_kelvin - self._attr_min_color_temp_kelvin)
             )
-        return None
+        )
 
     @staticmethod
     def _convert_brightness_to_modbus(brightness: int) -> int:
@@ -221,15 +217,14 @@ class ModbusLight(BaseSwitch, LightEntity):
             * (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
         )
 
-    def _convert_color_temp_to_modbus(self, kelvin: int) -> int | None:
+    def _convert_color_temp_to_modbus(self, kelvin: int) -> int:
         """Convert color temperature from Kelvin to the Modbus scale (0-100)."""
-        if isinstance(self._attr_min_color_temp_kelvin, int) and isinstance(
+        assert isinstance(self._attr_min_color_temp_kelvin, int) and isinstance(
             self._attr_max_color_temp_kelvin, int
-        ):
-            return round(
-                LIGHT_MODBUS_SCALE_MIN
-                + (kelvin - self._attr_min_color_temp_kelvin)
-                * (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
-                / (self._attr_max_color_temp_kelvin - self._attr_min_color_temp_kelvin)
-            )
-        return None
+        )
+        return round(
+            LIGHT_MODBUS_SCALE_MIN
+            + (kelvin - self._attr_min_color_temp_kelvin)
+            * (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
+            / (self._attr_max_color_temp_kelvin - self._attr_min_color_temp_kelvin)
+        )
