@@ -76,21 +76,6 @@
       },
       "snooze": {
         "name": "Snooze"
-      },
-      "filter_reset": {
-        "name": "Filter reset"
-      },
-      "pump": {
-        "name": "Pump"
-      },
-      "water_pump_reset": {
-        "name": "Water pump reset"
-      },
-      "reset_of_water_usage_days": {
-        "name": "Reset of water usage days"
-      },
-      "uv_sterilization": {
-        "name": "UV sterilization"
       }
     },
     "cover": {
