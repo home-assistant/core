@@ -1463,6 +1463,12 @@ def test_key_value_schemas_with_default() -> None:
         # The validation error message could be improved to explain that this is not
         # a valid shorthand template
         (
+            {"condition": 123},
+            "Unexpected value for condition: '123'. Expected and, device, not, "
+            "numeric_state, or, state, template, time, trigger, zone, a list of "
+            "conditions or a valid template",
+        ),
+        (
             {"condition": "not", "conditions": "not a dynamic template"},
             "Expected a dictionary",
         ),
