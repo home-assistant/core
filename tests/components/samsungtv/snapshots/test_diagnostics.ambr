@@ -13,11 +13,10 @@
     }),
     'entry': dict({
       'data': dict({
-        'host': 'fake_host',
+        'host': '10.10.12.34',
         'mac': 'aa:bb:cc:dd:ee:ff',
         'method': 'websocket',
-        'model': '82GXARRS',
-        'name': 'fake',
+        'model': 'UE43LS003',
         'port': 8002,
         'token': '**REDACTED**',
       }),

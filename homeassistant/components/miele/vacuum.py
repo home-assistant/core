@@ -24,6 +24,8 @@ from .const import DOMAIN, PROCESS_ACTION, PROGRAM_ID, MieleActions, MieleApplia
 from .coordinator import MieleConfigEntry
 from .entity import MieleEntity
 
+PARALLEL_UPDATES = 1
+
 _LOGGER = logging.getLogger(__name__)
 
 # The following const classes define program speeds and programs for the vacuum cleaner.
