@@ -92,17 +92,6 @@ def _entry_is_complete(
     )
 
 
-def _mac_is_same_with_incorrect_formatting(
-    current_unformatted_mac: str, formatted_mac: str
-) -> bool:
-    """Check if two macs are the same but formatted incorrectly."""
-    current_formatted_mac = format_mac(current_unformatted_mac)
-    return (
-        current_formatted_mac == formatted_mac
-        and current_unformatted_mac != current_formatted_mac
-    )
-
-
 class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Samsung TV config flow."""
 
@@ -383,10 +372,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             and data.get(CONF_SSDP_MAIN_TV_AGENT_LOCATION)
             != self._ssdp_main_tv_agent_location
         )
-        update_mac = self._mac and (
-            not (data_mac := data.get(CONF_MAC))
-            or _mac_is_same_with_incorrect_formatting(data_mac, self._mac)
-        )
+        update_mac = self._mac and not data.get(CONF_MAC)
         update_model = self._model and not data.get(CONF_MODEL)
         if (
             update_ssdp_rendering_control_location
