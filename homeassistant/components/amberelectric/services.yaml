@@ -1,0 +1,4 @@
+get_forecasts:
+  target:
+    entity:
+      integration: amberelectric

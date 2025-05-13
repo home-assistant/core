@@ -3,9 +3,14 @@
 import amberelectric
 
 from homeassistant.const import CONF_API_TOKEN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
 
-from .const import CONF_SITE_ID, PLATFORMS
+from .const import CONF_SITE_ID, DOMAIN, PLATFORMS
 from .coordinator import AmberConfigEntry, AmberUpdateCoordinator
 
 
@@ -20,6 +25,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmberConfigEntry) -> boo
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    async def handle_get_forecasts(call: ServiceCall) -> ServiceResponse:
+        return coordinator.get_forecasts()
+
+    hass.services.async_register(DOMAIN, "get_forecasts", handle_get_forecasts, {}, supports_response=SupportsResponse.ONLY)
     return True
 
 
