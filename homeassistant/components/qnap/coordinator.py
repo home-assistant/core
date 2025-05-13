@@ -6,10 +6,10 @@ from contextlib import contextmanager, nullcontext
 from datetime import timedelta
 import logging
 from typing import Any
+import warnings
 
 from qnapstats import QNAPStats
 import urllib3
-import warnings
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -34,6 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 @contextmanager
 def suppress_insecure_request_warning():
     """Context manager to suppress InsecureRequestWarning.
+    
     Was added in here to solve the following issue, not being solved upstream.
     https://github.com/colinodell/python-qnapstats/issues/96
     """
