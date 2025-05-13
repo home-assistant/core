@@ -2,10 +2,7 @@
 
 from volvocarsapi.auth import AUTHORIZE_URL, TOKEN_URL
 
-from homeassistant.components.application_credentials import (
-    AuthorizationServer,
-    ClientCredential,
-)
+from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
     AbstractOAuth2Implementation,
@@ -22,33 +19,15 @@ async def async_get_auth_implementation(
     return VolvoOAuth2Implementation(
         hass,
         auth_domain,
-        credential,
-        authorization_server=AuthorizationServer(
-            authorize_url=AUTHORIZE_URL,
-            token_url=TOKEN_URL,
-        ),
+        credential.client_id,
+        AUTHORIZE_URL,
+        TOKEN_URL,
+        credential.client_secret,
     )
 
 
 class VolvoOAuth2Implementation(LocalOAuth2ImplementationWithPkce):
     """Volvo oauth2 implementation."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        auth_domain: str,
-        credential: ClientCredential,
-        authorization_server: AuthorizationServer,
-    ) -> None:
-        """Initialize."""
-        super().__init__(
-            hass,
-            auth_domain,
-            credential.client_id,
-            authorization_server.authorize_url,
-            authorization_server.token_url,
-            credential.client_secret,
-        )
 
     @property
     def extra_authorize_data(self) -> dict:
