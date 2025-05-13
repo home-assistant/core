@@ -173,16 +173,11 @@ async def test_air_conditioner_no_last_state(
         ),
     ]
 
-    with patch.object(
-        RestoreEntity,
-        "async_get_last_state",
-        return_value=None,
-    ):
-        entry = await configure_integration(hass)
-        assert entry.state is ConfigEntryState.LOADED
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
 
-        entity_id = "climate.climate_1"
-        state = hass.states.get(entity_id)
-        assert state.state == "fan_only"
-        assert state.attributes["fan_mode"] == "auto"
-        assert state.attributes["temperature"] == 21
+    entity_id = "climate.climate_1"
+    state = hass.states.get(entity_id)
+    assert state.state == "fan_only"
+    assert state.attributes["fan_mode"] == "auto"
+    assert state.attributes["temperature"] == 21

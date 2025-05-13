@@ -62,7 +62,6 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
     As it is an IR device, we don't know the actual state.
     """
 
-    _attr_should_poll = False
     _attr_assumed_state = True
     _attr_supported_features = (
         ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
