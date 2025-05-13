@@ -56,7 +56,6 @@ from .const import (
     RESULT_INVALID_PIN,
     RESULT_NOT_SUPPORTED,
     RESULT_SUCCESS,
-    RESULT_UNKNOWN_HOST,
     SUCCESSFUL_RESULTS,
     UPNP_SVC_MAIN_TV_AGENT,
     UPNP_SVC_RENDERING_CONTROL,
@@ -252,32 +251,40 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             self._mac = mac
         return True
 
-    async def _async_set_name_host_from_input(self, user_input: dict[str, Any]) -> None:
+    async def _async_set_name_host_from_input(self, user_input: dict[str, Any]) -> bool:
         try:
             self._host = await self.hass.async_add_executor_job(
                 socket.gethostbyname, user_input[CONF_HOST]
             )
         except socket.gaierror as err:
-            raise AbortFlow(RESULT_UNKNOWN_HOST) from err
+            LOGGER.debug("Failed to get IP for %s: %s", user_input[CONF_HOST], err)
+            return False
         self._title = self._host
+        return True
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
+        errors: dict[str, str] | None = None
         if user_input is not None:
-            await self._async_set_name_host_from_input(user_input)
-            await self._async_create_bridge()
-            assert self._bridge
-            self._async_abort_entries_match({CONF_HOST: self._host})
-            if self._bridge.method != METHOD_LEGACY:
-                # Legacy bridge does not provide device info
-                await self._async_set_device_unique_id(raise_on_progress=False)
-            if self._bridge.method == METHOD_ENCRYPTED_WEBSOCKET:
-                return await self.async_step_encrypted_pairing()
-            return await self.async_step_pairing({})
+            if await self._async_set_name_host_from_input(user_input):
+                await self._async_create_bridge()
+                assert self._bridge
+                self._async_abort_entries_match({CONF_HOST: self._host})
+                if self._bridge.method != METHOD_LEGACY:
+                    # Legacy bridge does not provide device info
+                    await self._async_set_device_unique_id(raise_on_progress=False)
+                if self._bridge.method == METHOD_ENCRYPTED_WEBSOCKET:
+                    return await self.async_step_encrypted_pairing()
+                return await self.async_step_pairing({})
+            errors = {"base": "invalid_host"}
 
-        return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(DATA_SCHEMA, user_input),
+            errors=errors,
+        )
 
     async def async_step_pairing(
         self, user_input: dict[str, Any] | None = None
