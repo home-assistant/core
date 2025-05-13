@@ -33,12 +33,14 @@ PLATFORMS: list[Platform] = [
 class SwitchbotDevices:
     """Switchbot devices data."""
 
-    buttons: list[Device] = field(default_factory=list)
-    climates: list[Remote] = field(default_factory=list)
-    switches: list[Device | Remote] = field(default_factory=list)
-    sensors: list[Device] = field(default_factory=list)
-    vacuums: list[Device] = field(default_factory=list)
-    locks: list[Device] = field(default_factory=list)
+    buttons: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
+    climates: list[tuple[Remote, SwitchBotCoordinator]] = field(default_factory=list)
+    switches: list[tuple[Device | Remote, SwitchBotCoordinator]] = field(
+        default_factory=list
+    )
+    sensors: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
+    vacuums: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
+    locks: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
 
 
 @dataclass
@@ -55,12 +57,12 @@ async def coordinator_for_device(
     api: SwitchBotAPI,
     device: Device | Remote,
     coordinators_by_id: dict[str, SwitchBotCoordinator],
-    update_by_webhook: bool = False,
+    manageable_by_webhook: bool = False,
 ) -> SwitchBotCoordinator:
     """Instantiate coordinator and adds to list for gathering."""
     coordinator = coordinators_by_id.setdefault(
         device.device_id,
-        SwitchBotCoordinator(hass, entry, api, device, update_by_webhook),
+        SwitchBotCoordinator(hass, entry, api, device, manageable_by_webhook),
     )
 
     if coordinator.data is None:
@@ -209,18 +211,19 @@ async def _initialize_webhook(
 ) -> None:
     """Initialize webhook if needed."""
     if any(
-        coordinator.update_by_webhook() for coordinator in coordinators_by_id.values()
+        coordinator.manageable_by_webhook()
+        for coordinator in coordinators_by_id.values()
     ):
         # Need webhook because there coordinator updated by this
         if CONF_WEBHOOK_ID not in entry.data or entry.unique_id is None:
             new_data = entry.data.copy()
+            unique_id = str(entry.data[CONF_API_TOKEN])
             if CONF_WEBHOOK_ID not in new_data:
                 # create new id and new conf
                 new_data[CONF_WEBHOOK_ID] = webhook.async_generate_id()
 
             hass.config_entries.async_update_entry(
-                entry,
-                data=new_data,
+                entry, data=new_data, unique_id=unique_id
             )
 
         # register webhook
@@ -263,10 +266,20 @@ async def _initialize_webhook(
             # it seems is impossible to register multiple webhook.
             # So, if webhook already exists, we delete it
             await api.delete_webhook(actual_webhook_urls[0])
+            _LOGGER.debug(
+                "Deleted previous Switchbot cloud webhook url: %s",
+                actual_webhook_urls[0],
+            )
 
         if need_add_webhook:
             # call api for register webhookurl
             await api.setup_webhook(webhook_url)
+            _LOGGER.debug("Registered Switchbot cloud webhook at hass: %s", webhook_url)
+
+        for coordinator in coordinators_by_id.values():
+            coordinator.webhook_subscription_listener(True)
+
+        _LOGGER.debug("Registered Switchbot cloud webhook at: %s", webhook_url)
 
 
 def _create_handle_webhook(
@@ -278,42 +291,24 @@ def _create_handle_webhook(
         hass: HomeAssistant, webhook_id: str, request: web.Request
     ) -> None:
         """Handle webhook callback."""
+        if not request.body_exists:
+            _LOGGER.debug("Received invalid request from switchbot webhook")
+            return
+
         data = await request.json()
-        _LOGGER.info("Receive data from webhook %s", repr(data))
-
-        if not isinstance(data, dict):
-            _LOGGER.error(
-                "Received invalid data from switchbot webhook. Data needs to be a dictionary: %s",
-                data,
-            )
-            return
-
-        if "eventType" not in data or data["eventType"] != "changeReport":
-            _LOGGER.error(
-                'Received invalid data from switchbot webhook. Attribute eventType is missing or not equals to "changeReport": %s',
-                data,
-            )
-            return
-
-        if "eventVersion" not in data or data["eventVersion"] != "1":
-            _LOGGER.error(
-                'Received invalid data from switchbot webhook. Attribute eventVersion is missing or not equals to "1": %s',
-                data,
-            )
-            return
-
-        if "context" not in data or not isinstance(data["context"], dict):
-            _LOGGER.error(
-                "Received invalid data from switchbot webhook. Attribute context is missing or not instance of dict: %s",
-                data,
-            )
-            return
-
-        if "deviceType" not in data["context"] or "deviceMac" not in data["context"]:
-            _LOGGER.error(
-                "Received invalid data from switchbot webhook. Missing deviceType or deviceMac: %s",
-                data,
-            )
+        # Structure validation
+        if (
+            not isinstance(data, dict)
+            or "eventType" not in data
+            or data["eventType"] != "changeReport"
+            or "eventVersion" not in data
+            or data["eventVersion"] != "1"
+            or "context" not in data
+            or not isinstance(data["context"], dict)
+            or "deviceType" not in data["context"]
+            or "deviceMac" not in data["context"]
+        ):
+            _LOGGER.debug("Received invalid data from switchbot webhook %s", repr(data))
             return
 
         deviceMac = data["context"]["deviceMac"]
