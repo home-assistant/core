@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Iterable
 import functools as ft
 from typing import Any
@@ -26,10 +25,9 @@ from .types import NexiaConfigEntry
 async def _stop_harmonizers(
     _: Event, harmonizers: Iterable[NexiaRoomIQHarmonizer]
 ) -> None:
-    """Await the shutdown methods in parallel when preparing to stop."""
-    async with asyncio.TaskGroup() as tg:
-        for harmonizer in harmonizers:
-            tg.create_task(harmonizer.async_shutdown())
+    """Run the shutdown methods when preparing to stop."""
+    for harmonizer in harmonizers:
+        await harmonizer.async_shutdown()  # Never suspends
 
 
 async def async_setup_entry(
