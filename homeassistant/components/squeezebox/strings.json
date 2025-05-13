@@ -173,7 +173,7 @@
       "message": "Media not found: {search_type} / {search_id}."
     },
     "browse_media_not_found": {
-      "message": "Media not found: {media_type} / {media_id}"
+      "message": "Media not found: {media_type} / {media_id}."
     },
     "browse_media_type_not_supported": {
       "message": "Media type not supported: {media_type}."
