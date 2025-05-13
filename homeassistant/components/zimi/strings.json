@@ -48,14 +48,11 @@
       "door_temperature": {
         "name": "Outside temperature"
       },
-      "garage_battery": {
-        "name": "Battery Level"
-      },
       "garage_temperature": {
-        "name": "Garage temperature"
+        "name": "Temperature"
       },
       "garage_humidty": {
-        "name": "Garage humidity"
+        "name": "Humidity"
       }
     }
   }

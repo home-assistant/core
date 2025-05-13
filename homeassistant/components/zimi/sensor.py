@@ -40,7 +40,6 @@ GARAGE_SENSOR_DESCRIPTIONS: tuple[ZimiSensorEntityDescription, ...] = (
     ),
     ZimiSensorEntityDescription(
         key="garage_battery",
-        translation_key="garage_battery",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.BATTERY,
