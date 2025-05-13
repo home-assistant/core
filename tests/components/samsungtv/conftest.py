@@ -67,7 +67,7 @@ def fake_host_fixture() -> Generator[None]:
     """Patch gethostbyname."""
     with patch(
         "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
-        return_value="fake_host",
+        return_value="10.20.43.21",
     ):
         yield
 
@@ -148,15 +148,16 @@ def upnp_notify_server_fixture(upnp_factory: Mock) -> Generator[Mock]:
         yield notify_server
 
 
-@pytest.fixture(name="remote")
-def remote_fixture() -> Generator[Mock]:
+@pytest.fixture(name="remote_legacy")
+def remote_legacy_fixture() -> Generator[Mock]:
     """Patch the samsungctl Remote."""
-    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote_class:
-        remote = Mock(Remote)
-        remote.__enter__ = Mock()
-        remote.__exit__ = Mock()
-        remote_class.return_value = remote
-        yield remote
+    remote_legacy = Mock(Remote)
+    remote_legacy.__enter__ = Mock()
+    remote_legacy.__exit__ = Mock()
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote", return_value=remote_legacy
+    ):
+        yield remote_legacy
 
 
 @pytest.fixture(name="rest_api")
@@ -208,8 +209,8 @@ def rest_api_failure_fixture() -> Generator[None]:
         yield
 
 
-@pytest.fixture(name="remoteencws_failing")
-def remoteencws_failing_fixture() -> Generator[None]:
+@pytest.fixture(name="remote_encrypted_websocket_failing")
+def remote_encrypted_websocket_failing_fixture() -> Generator[None]:
     """Patch the samsungtvws SamsungTVEncryptedWSAsyncRemote."""
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
@@ -218,71 +219,77 @@ def remoteencws_failing_fixture() -> Generator[None]:
         yield
 
 
-@pytest.fixture(name="remotews")
-def remotews_fixture() -> Generator[Mock]:
+@pytest.fixture(name="remote_websocket")
+def remote_websocket_fixture() -> Generator[Mock]:
     """Patch the samsungtvws SamsungTVWS."""
-    remotews = Mock(SamsungTVWSAsyncRemote)
-    remotews.__aenter__ = AsyncMock(return_value=remotews)
-    remotews.__aexit__ = AsyncMock()
-    remotews.token = "FAKE_TOKEN"
-    remotews.app_list_data = None
+    remote_websocket = Mock(SamsungTVWSAsyncRemote)
+    remote_websocket.__aenter__ = AsyncMock(return_value=remote_websocket)
+    remote_websocket.__aexit__ = AsyncMock()
+    remote_websocket.token = "FAKE_TOKEN"
+    remote_websocket.app_list_data = None
 
     async def _start_listening(
         ws_event_callback: Callable[[str, Any], Awaitable[None] | None] | None = None,
     ):
-        remotews.ws_event_callback = ws_event_callback
+        remote_websocket.ws_event_callback = ws_event_callback
 
     async def _send_commands(commands: list[SamsungTVCommand]):
         if (
             len(commands) == 1
             and isinstance(commands[0], ChannelEmitCommand)
             and commands[0].params["event"] == "ed.installedApp.get"
-            and remotews.app_list_data is not None
+            and remote_websocket.app_list_data is not None
         ):
-            remotews.raise_mock_ws_event_callback(
+            remote_websocket.raise_mock_ws_event_callback(
                 ED_INSTALLED_APP_EVENT,
-                remotews.app_list_data,
+                remote_websocket.app_list_data,
             )
 
     def _mock_ws_event_callback(event: str, response: Any):
-        if remotews.ws_event_callback:
-            remotews.ws_event_callback(event, response)
+        if remote_websocket.ws_event_callback:
+            remote_websocket.ws_event_callback(event, response)
 
-    remotews.start_listening.side_effect = _start_listening
-    remotews.send_commands.side_effect = _send_commands
-    remotews.raise_mock_ws_event_callback = Mock(side_effect=_mock_ws_event_callback)
+    remote_websocket.start_listening.side_effect = _start_listening
+    remote_websocket.send_commands.side_effect = _send_commands
+    remote_websocket.raise_mock_ws_event_callback = Mock(
+        side_effect=_mock_ws_event_callback
+    )
 
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote",
-    ) as remotews_class:
-        remotews_class.return_value = remotews
-        yield remotews
+        return_value=remote_websocket,
+    ):
+        yield remote_websocket
 
 
-@pytest.fixture(name="remoteencws")
-def remoteencws_fixture() -> Generator[Mock]:
+@pytest.fixture(name="remote_encrypted_websocket")
+def remote_encrypted_websocket_fixture() -> Generator[Mock]:
     """Patch the samsungtvws SamsungTVEncryptedWSAsyncRemote."""
-    remoteencws = Mock(SamsungTVEncryptedWSAsyncRemote)
-    remoteencws.__aenter__ = AsyncMock(return_value=remoteencws)
-    remoteencws.__aexit__ = AsyncMock()
+    remote_encrypted_websocket = Mock(SamsungTVEncryptedWSAsyncRemote)
+    remote_encrypted_websocket.__aenter__ = AsyncMock(
+        return_value=remote_encrypted_websocket
+    )
+    remote_encrypted_websocket.__aexit__ = AsyncMock()
 
     def _start_listening(
         ws_event_callback: Callable[[str, Any], Awaitable[None] | None] | None = None,
     ):
-        remoteencws.ws_event_callback = ws_event_callback
+        remote_encrypted_websocket.ws_event_callback = ws_event_callback
 
     def _mock_ws_event_callback(event: str, response: Any):
-        if remoteencws.ws_event_callback:
-            remoteencws.ws_event_callback(event, response)
+        if remote_encrypted_websocket.ws_event_callback:
+            remote_encrypted_websocket.ws_event_callback(event, response)
 
-    remoteencws.start_listening.side_effect = _start_listening
-    remoteencws.raise_mock_ws_event_callback = Mock(side_effect=_mock_ws_event_callback)
+    remote_encrypted_websocket.start_listening.side_effect = _start_listening
+    remote_encrypted_websocket.raise_mock_ws_event_callback = Mock(
+        side_effect=_mock_ws_event_callback
+    )
 
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote",
     ) as remotews_class:
-        remotews_class.return_value = remoteencws
-        yield remoteencws
+        remotews_class.return_value = remote_encrypted_websocket
+        yield remote_encrypted_websocket
 
 
 @pytest.fixture(name="mac_address", autouse=True)

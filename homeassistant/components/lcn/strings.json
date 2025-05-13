@@ -66,11 +66,11 @@
     "error": {
       "authentication_error": "Authentication failed. Wrong username or password.",
       "license_error": "Maximum number of connections was reached. An additional licence key is required.",
-      "connection_refused": "Unable to connect to PCHK. Check IP and port.",
-      "already_configured": "PCHK connection using the same ip address/port is already configured."
+      "connection_refused": "Unable to connect to PCHK. Check IP and port."
     },
     "abort": {
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "already_configured": "PCHK connection using the same ip address/port is already configured."
     }
   },
   "issues": {
