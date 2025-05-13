@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any, cast
@@ -29,14 +28,7 @@ from .const import DATA_BATTERY_CAPACITY, DOMAIN, MANUFACTURER
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class VolvoData:
-    """Data for Volvo Cars integration."""
-
-    coordinator: VolvoDataCoordinator
-
-
-type VolvoConfigEntry = ConfigEntry[VolvoData]
+type VolvoConfigEntry = ConfigEntry[VolvoDataCoordinator]
 type CoordinatorData = dict[str, VolvoCarsApiBaseModel | None]
 
 

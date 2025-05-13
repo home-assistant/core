@@ -9,13 +9,13 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_API_TIMESTAMP, CONF_VIN, DOMAIN
+from .const import ATTR_API_TIMESTAMP, CONF_VIN
 from .coordinator import VolvoDataCoordinator
 
 
 def get_unique_id(vin: str, key: str) -> str:
     """Get the unique ID."""
-    return f"{DOMAIN}_{vin}_{key}".lower()
+    return f"{vin}_{key}".lower()
 
 
 def value_to_translation_key(value: str) -> str:

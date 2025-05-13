@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 from aiohttp import ClientResponseError
 from volvocarsapi.api import VolvoCarsApi
 
@@ -18,9 +16,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 
 from .api import VolvoAuth
 from .const import CONF_VIN, PLATFORMS
-from .coordinator import VolvoConfigEntry, VolvoData, VolvoDataCoordinator
-
-_LOGGER = logging.getLogger(__name__)
+from .coordinator import VolvoConfigEntry, VolvoDataCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> bool:
@@ -50,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> boo
     # Setup entry
     coordinator = VolvoDataCoordinator(hass, entry, api)
     await coordinator.async_config_entry_first_refresh()
-    entry.runtime_data = VolvoData(coordinator)
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -58,5 +54,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> boo
 
 async def async_unload_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> bool:
     """Unload a config entry."""
-    _LOGGER.debug("%s - Unloading entry", entry.entry_id)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

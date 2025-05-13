@@ -319,7 +319,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors."""
 
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
     items = [
         VolvoSensor(coordinator, description)
         for description in _DESCRIPTIONS
