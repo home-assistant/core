@@ -54,6 +54,23 @@ BUTTONS: dict[str, tuple[ButtonEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Wake Up Light II
+    # Not documented
+    "hxd": (
+        ButtonEntityDescription(
+            key=DPCode.SWITCH_USB6,
+            translation_key="snooze",
+        ),
+    ),
+    # Smart Pet Feeder
+    # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
+    "cwwsq": (
+        ButtonEntityDescription(
+            key=DPCode.MEAL_PLAN,
+            translation_key="meal_plan",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
 }
 
 
