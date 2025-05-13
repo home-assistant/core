@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 @contextmanager
 def suppress_insecure_request_warning():
     """Context manager to suppress InsecureRequestWarning.
-    
+
     Was added in here to solve the following issue, not being solved upstream.
     https://github.com/colinodell/python-qnapstats/issues/96
     """
