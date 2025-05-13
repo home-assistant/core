@@ -95,13 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     energysites: list[TeslemetryEnergyData] = []
 
     # Create the stream
-    stream = TeslemetryStream(
-        session,
-        access_token,
-        server=f"{region.lower()}.teslemetry.com",
-        parse_timestamp=True,
-        manual=True,
-    )
+    stream: TeslemetryStream | None = None
 
     for product in products:
         if (
@@ -122,6 +116,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 model=api.model,
                 serial_number=vin,
             )
+
+            # Create stream if required
+            if not stream:
+                stream = TeslemetryStream(
+                    session,
+                    access_token,
+                    server=f"{region.lower()}.teslemetry.com",
+                    parse_timestamp=True,
+                    manual=True,
+                )
 
             remove_listener = stream.async_add_listener(
                 create_handle_vehicle_stream(vin, coordinator),
@@ -240,7 +244,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     entry.runtime_data = TeslemetryData(vehicles, energysites, scopes)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    entry.async_create_background_task(hass, stream.listen(), "Teslemetry Stream")
+    if stream:
+        entry.async_create_background_task(hass, stream.listen(), "Teslemetry Stream")
 
     return True
 
