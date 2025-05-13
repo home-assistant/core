@@ -42,5 +42,21 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "door_temperature": {
+        "name": "Outside temperature"
+      },
+      "garage_battery": {
+        "name": "Battery Level"
+      },
+      "garage_temperature": {
+        "name": "Garage temperature"
+      },
+      "garage_humidty": {
+        "name": "Garage humidity"
+      }
+    }
   }
 }

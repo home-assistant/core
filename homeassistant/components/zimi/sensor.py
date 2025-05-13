@@ -33,14 +33,14 @@ class ZimiSensorEntityDescription(SensorEntityDescription):
 GARAGE_SENSOR_DESCRIPTIONS: tuple[ZimiSensorEntityDescription, ...] = (
     ZimiSensorEntityDescription(
         key="door_temperature",
-        name="Outside temperature",
+        translation_key="door_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         value_fn=lambda device: device.door_temp,
     ),
     ZimiSensorEntityDescription(
         key="garage_battery",
-        name="Battery Level",
+        translation_key="garage_battery",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.BATTERY,
@@ -48,14 +48,14 @@ GARAGE_SENSOR_DESCRIPTIONS: tuple[ZimiSensorEntityDescription, ...] = (
     ),
     ZimiSensorEntityDescription(
         key="garage_temperature",
-        name="Garage temperature",
+        translation_key="garage_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         value_fn=lambda device: device.garage_temp,
     ),
     ZimiSensorEntityDescription(
         key="garage_humidty",
-        name="Garage humidity",
+        translation_key="garage_humidty",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         value_fn=lambda device: device.garage_humidity,
