@@ -32,16 +32,10 @@ _LOGGER = logging.getLogger(__name__)
 
 @contextmanager
 def suppress_insecure_request_warning():
-    """Context manager to suppress InsecureRequestWarning.
-
-    Was added in here to solve the following issue, not being solved upstream.
-    https://github.com/colinodell/python-qnapstats/issues/96
-    """
-    with urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning):
-        try:
-            yield
-        finally:
-            pass
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', urllib3.exceptions.InsecureRequestWarning)
+        yield
 
 
 class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
