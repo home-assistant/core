@@ -17,8 +17,9 @@ from zwave_js_server.exceptions import FailedCommand
 from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
+from homeassistant.components.zwave_js.config_flow import TITLE
 from homeassistant.components.zwave_js.const import ADDON_SLUG, CONF_USB_PATH, DOMAIN
+from homeassistant.components.zwave_js.helpers import SERVER_VERSION_TIMEOUT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
@@ -87,44 +88,6 @@ def mock_supervisor_fixture() -> Generator[None]:
         "homeassistant.components.zwave_js.config_flow.is_hassio", return_value=True
     ):
         yield
-
-
-@pytest.fixture(name="server_version_side_effect")
-def server_version_side_effect_fixture() -> Any | None:
-    """Return the server version side effect."""
-    return None
-
-
-@pytest.fixture(name="get_server_version", autouse=True)
-def mock_get_server_version(
-    server_version_side_effect: Any | None, server_version_timeout: int
-) -> Generator[AsyncMock]:
-    """Mock server version."""
-    version_info = VersionInfo(
-        driver_version="mock-driver-version",
-        server_version="mock-server-version",
-        home_id=1234,
-        min_schema_version=0,
-        max_schema_version=1,
-    )
-    with (
-        patch(
-            "homeassistant.components.zwave_js.config_flow.get_server_version",
-            side_effect=server_version_side_effect,
-            return_value=version_info,
-        ) as mock_version,
-        patch(
-            "homeassistant.components.zwave_js.config_flow.SERVER_VERSION_TIMEOUT",
-            new=server_version_timeout,
-        ),
-    ):
-        yield mock_version
-
-
-@pytest.fixture(name="server_version_timeout")
-def mock_server_version_timeout() -> int:
-    """Patch the timeout for getting server version."""
-    return SERVER_VERSION_TIMEOUT
 
 
 @pytest.fixture(name="addon_setup_time", autouse=True)
