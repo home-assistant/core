@@ -44,6 +44,7 @@ class JewishCalendarSensorDescription(JewishCalendarBaseSensorDescription):
 
     value_fn: Callable[[JewishCalendarDataResults], str | int]
     attr_fn: Callable[[JewishCalendarDataResults], dict[str, str]] | None = None
+    options_fn: Callable[[bool], list[str]] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -72,6 +73,7 @@ INFO_SENSORS: tuple[JewishCalendarSensorDescription, ...] = (
         translation_key="weekly_portion",
         icon="mdi:book-open-variant",
         device_class=SensorDeviceClass.ENUM,
+        options_fn=lambda _: [str(p) for p in Parasha],
         value_fn=lambda results: results.after_tzais_date.upcoming_shabbat.parasha,
     ),
     JewishCalendarSensorDescription(
@@ -79,6 +81,7 @@ INFO_SENSORS: tuple[JewishCalendarSensorDescription, ...] = (
         translation_key="holiday",
         icon="mdi:calendar-star",
         device_class=SensorDeviceClass.ENUM,
+        options_fn=lambda diaspora: HolidayDatabase(diaspora).get_all_names(),
         value_fn=lambda results: ", ".join(
             str(holiday) for holiday in results.after_shkia_date.holidays
         ),
@@ -307,12 +310,9 @@ class JewishCalendarSensor(JewishCalendarBaseSensor):
     ) -> None:
         """Initialize the Jewish calendar sensor."""
         super().__init__(config_entry, description)
-
         # Set the options for enumeration sensors
-        if description.key == "weekly_portion":
-            self._attr_options = [str(p) for p in Parasha]
-        elif description.key == "holiday":
-            self._attr_options = HolidayDatabase(self.data.diaspora).get_all_names()
+        if self.entity_description.options_fn is not None:
+            self._attr_options = self.entity_description.options_fn(self.data.diaspora)
 
     @property
     def native_value(self) -> str | int | dt.datetime | None:
