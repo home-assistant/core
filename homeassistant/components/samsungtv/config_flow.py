@@ -109,10 +109,9 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 2
     MINOR_VERSION = 2
 
-    _host: str
-
     def __init__(self) -> None:
         """Initialize flow."""
+        self._host: str = ""
         self._mac: str | None = None
         self._udn: str | None = None
         self._upnp_udn: str | None = None
@@ -165,6 +164,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self, raise_on_progress: bool = True
     ) -> None:
         """Set the unique id from the udn."""
+        assert self._host is not None
         # Set the unique id without raising on progress in case
         # there are two SSDP flows with for each ST
         await self.async_set_unique_id(self._udn, raise_on_progress=False)
@@ -251,22 +251,24 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             self._mac = mac
         return True
 
+    async def _async_set_name_host_from_input(self, user_input: dict[str, Any]) -> bool:
+        try:
+            self._host = await self.hass.async_add_executor_job(
+                socket.gethostbyname, user_input[CONF_HOST]
+            )
+        except socket.gaierror as err:
+            LOGGER.debug("Failed to get IP for %s: %s", user_input[CONF_HOST], err)
+            return False
+        self._title = self._host
+        return True
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors: dict[str, str] | None = None
         if user_input is not None:
-            try:
-                self._host = await self.hass.async_add_executor_job(
-                    socket.gethostbyname, user_input[CONF_HOST]
-                )
-            except socket.gaierror as err:
-                LOGGER.debug(
-                    "Failed to retrieve IP for %s: %s", user_input[CONF_HOST], err
-                )
-            else:
-                self._title = self._host
+            if await self._async_set_name_host_from_input(user_input):
                 await self._async_create_bridge()
                 assert self._bridge
                 self._async_abort_entries_match({CONF_HOST: self._host})
