@@ -35,12 +35,14 @@ class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
         ContainerClient has a blocking call to open in cpython
         """
 
+        session = async_get_clientsession(self.hass)
+
         def create_container_client() -> ContainerClient:
             return ContainerClient(
                 account_url=f"https://{account_name}.blob.core.windows.net/",
                 container_name=container_name,
                 credential=storage_account_key,
-                transport=AioHttpTransport(session=async_get_clientsession(self.hass)),
+                transport=AioHttpTransport(session=session),
             )
 
         return await self.hass.async_add_executor_job(create_container_client)
