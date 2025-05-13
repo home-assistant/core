@@ -226,7 +226,6 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
                 if value.energy_forecast is not None
                 else None
             ),
-            icon="mdi:lightning-bolt-outline",
             native_unit_of_measurement=PERCENTAGE,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
@@ -261,7 +260,6 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
                 if value.water_forecast is not None
                 else None
             ),
-            icon="mdi:water-outline",
             native_unit_of_measurement=PERCENTAGE,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
