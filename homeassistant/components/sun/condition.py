@@ -20,7 +20,7 @@ from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.util import dt as dt_util
 
-CONDITION_SCHEMA = vol.All(
+_CONDITION_SCHEMA = vol.All(
     vol.Schema(
         {
             **cv.CONDITION_BASE_SCHEMA,
@@ -35,6 +35,13 @@ CONDITION_SCHEMA = vol.All(
     ),
     cv.has_at_least_one_key("before", "after"),
 )
+
+
+async def async_validate_condition_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate config."""
+    return _CONDITION_SCHEMA(config)  # type: ignore[no-any-return]
 
 
 def sun(
