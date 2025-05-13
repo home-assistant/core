@@ -66,13 +66,6 @@ async def async_setup_entry(
 
     async_add_fan_devices()
 
-    @callback
-    def update_listener(_hass, _entry):
-        """Handle config entry update."""
-        async_add_fan_devices()
-
-    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
-
 
 class DreoFan(DreoEntity, FanEntity):
     """Dreo fan."""
@@ -174,7 +167,6 @@ class DreoFan(DreoEntity, FanEntity):
         self,
         translation_key: str,
         percentage: int | None = None,
-        speed: int | None = None,
         preset_mode: str | None = None,
         oscillate: bool | None = None,
     ) -> None:
@@ -189,9 +181,9 @@ class DreoFan(DreoEntity, FanEntity):
             speed = math.ceil(
                 percentage_to_ranged_value(self._low_high_range, percentage)
             )
+            if speed is not None and speed > 0:
+                command_params["speed"] = speed
 
-        if speed is not None and speed > 0:
-            command_params["speed"] = speed
         if preset_mode is not None:
             command_params["mode"] = preset_mode
         if oscillate is not None:
