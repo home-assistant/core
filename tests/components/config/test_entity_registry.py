@@ -1361,6 +1361,12 @@ async def test_get_automatic_entity_ids(
                 unique_id="uniq9",
                 platform="test_domain",
             ),
+            "test_domain.test_10": RegistryEntryWithDefaults(
+                entity_id="test_domain.test_10",
+                unique_id="uniq10",
+                platform="test_domain",
+                suggested_object_id="test_10",
+            ),
             "test_domain.collision": RegistryEntryWithDefaults(
                 entity_id="test_domain.collision",
                 unique_id="uniq_collision",
@@ -1390,6 +1396,7 @@ async def test_get_automatic_entity_ids(
                 "test_domain.test_7",
                 "test_domain.test_8",
                 "test_domain.test_9",
+                "test_domain.test_10",
                 "test_domain.unknown",
             ],
         }
@@ -1408,5 +1415,6 @@ async def test_get_automatic_entity_ids(
         "test_domain.test_7": "test_domain.entity_name_7",  # entity name property
         "test_domain.test_8": "test_domain.suggested_8",  # suggested_object_id
         "test_domain.test_9": "test_domain.name_by_user_9",  # name by user in registry
+        "test_domain.test_10": None,  # automatic entity id matches current entity id
         "test_domain.unknown": None,  # no test_domain.unknown in registry
     }
