@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DOMAIN, EVSE_ID, LOGGER, MODEL_TYPE
+from .const import CARD, DEFAULT_CARD, DOMAIN, EVSE_ID, LOGGER, MODEL_TYPE
 
 type BlueCurrentConfigEntry = ConfigEntry[Connector]
 
@@ -82,6 +82,15 @@ class Connector:
         self.charge_points: dict[str, dict] = {}
         self.grid: dict[str, Any] = {}
         self.charge_cards: dict[str, dict[str, Any]] = {}
+        self.selected_charge_card = config.options.get(CARD, DEFAULT_CARD)
+
+        async def update_listener(
+            hass: HomeAssistant, entry: BlueCurrentConfigEntry
+        ) -> None:
+            """Update listener to update the selected card when the options flow is finished."""
+            self.selected_charge_card = entry.options[CARD]
+
+        config.async_on_unload(config.add_update_listener(update_listener))
 
     async def on_data(self, message: dict) -> None:
         """Handle received data."""
@@ -106,7 +115,7 @@ class Connector:
             self.dispatch_grid_update_signal()
 
         elif object_name == CHARGE_CARDS:
-            self.add_charge_cards(message["cards"])
+            self.add_charge_cards(message["default_card"], message["cards"])
 
     async def handle_charge_point_data(self, charge_points_data: list) -> None:
         """Handle incoming chargepoint data."""
@@ -129,11 +138,16 @@ class Connector:
         """Add a charge point to charge_points."""
         self.charge_points[evse_id] = {MODEL_TYPE: model, ATTR_NAME: name}
 
-    def add_charge_cards(self, cards: list[dict[str, Any]]) -> None:
+    def add_charge_cards(
+        self, default_card: dict[str, Any], cards: list[dict[str, Any]]
+    ) -> None:
         """Add charge cards to charge_cards. Only adding valid charge cards."""
-        valid_cards = {}
+
+        # Add the standard default card.
+        valid_cards = {default_card["uid"]: default_card}
+
         for card in cards:
-            if card["valid"] == 1:
+            if card["valid"]:
                 valid_cards[card["uid"]] = card
 
         self.charge_cards = valid_cards

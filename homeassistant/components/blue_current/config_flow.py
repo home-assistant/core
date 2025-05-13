@@ -99,7 +99,12 @@ class ChargeCardsFlowHandler(config_entries.OptionsFlow):
         connector: Connector = self.config_entry.runtime_data
 
         card_ids = [card[CONF_ID] for card in connector.charge_cards.values()]
-        card_schema = vol.Schema({vol.Required(CARD): vol.In(card_ids)})
+
+        current_charge_card_id = connector.selected_charge_card[CONF_ID]
+
+        card_schema = vol.Schema(
+            {vol.Required(CARD, default=current_charge_card_id): vol.In(card_ids)}
+        )
 
         if user_input is not None:
             selected_card = list(
@@ -109,7 +114,7 @@ class ChargeCardsFlowHandler(config_entries.OptionsFlow):
                 )
             )[0]
 
-            user_input[CARD] = selected_card["uid"]
+            user_input[CARD] = selected_card
             return self.async_create_entry(title=CARD, data=user_input)
 
         return self.async_show_form(step_id="init", data_schema=card_schema)

@@ -6,8 +6,6 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
-from bluecurrent_api.client import Client
-
 from homeassistant.components.button import (
     ButtonDeviceClass,
     ButtonEntity,
@@ -17,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BlueCurrentConfigEntry, Connector
+from .const import UID
 from .entity import ChargepointEntity
 
 
@@ -24,31 +23,33 @@ from .entity import ChargepointEntity
 class ChargePointButtonEntityDescription(ButtonEntityDescription):
     """Describes a Blue Current button entity."""
 
-    function: Callable[[Client, str], Coroutine[Any, Any, None]]
+    function: Callable[[Connector, str], Coroutine[Any, Any, None]]
 
 
 CHARGE_POINT_BUTTONS = (
     ChargePointButtonEntityDescription(
         key="reset",
         translation_key="reset",
-        function=lambda client, evse_id: client.reset(evse_id),
+        function=lambda connector, evse_id: connector.client.reset(evse_id),
         device_class=ButtonDeviceClass.RESTART,
     ),
     ChargePointButtonEntityDescription(
         key="reboot",
         translation_key="reboot",
-        function=lambda client, evse_id: client.reboot(evse_id),
+        function=lambda connector, evse_id: connector.client.reboot(evse_id),
         device_class=ButtonDeviceClass.RESTART,
     ),
     ChargePointButtonEntityDescription(
         key="start_charge_session",
         translation_key="start_charge_session",
-        function=lambda client, evse_id: client.start_session(evse_id, "BCU-CARD"),
+        function=lambda connector, evse_id: connector.client.start_session(
+            evse_id, connector.selected_charge_card[UID]
+        ),
     ),
     ChargePointButtonEntityDescription(
         key="stop_charge_session",
         translation_key="stop_charge_session",
-        function=lambda client, evse_id: client.stop_session(evse_id),
+        function=lambda connector, evse_id: connector.client.stop_session(evse_id),
     ),
 )
 
@@ -85,10 +86,9 @@ class ChargePointButton(ChargepointEntity, ButtonEntity):
     ) -> None:
         """Initialize the button."""
         super().__init__(connector, evse_id)
-
         self.entity_description = description
         self._attr_unique_id = f"{description.key}_{evse_id}"
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        await self.entity_description.function(self.connector.client, self.evse_id)
+        await self.entity_description.function(self.connector, self.evse_id)
