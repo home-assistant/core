@@ -50,6 +50,8 @@ _STATES: EsphomeEnumMapper[EspMediaPlayerState, MediaPlayerState] = EsphomeEnumM
         EspMediaPlayerState.IDLE: MediaPlayerState.IDLE,
         EspMediaPlayerState.PLAYING: MediaPlayerState.PLAYING,
         EspMediaPlayerState.PAUSED: MediaPlayerState.PAUSED,
+        EspMediaPlayerState.OFF: MediaPlayerState.OFF,
+        EspMediaPlayerState.ON: MediaPlayerState.ON,
     }
 )
 
@@ -77,6 +79,11 @@ class EsphomeMediaPlayer(
         )
         if self._static_info.supports_pause:
             flags |= MediaPlayerEntityFeature.PAUSE | MediaPlayerEntityFeature.PLAY
+
+        if self._static_info.supports_turn_off_on:
+            flags |= (
+                MediaPlayerEntityFeature.TURN_OFF | MediaPlayerEntityFeature.TURN_ON
+            )
         self._attr_supported_features = flags
         self._entry_data.media_player_formats[static_info.unique_id] = cast(
             MediaPlayerInfo, static_info
@@ -238,6 +245,18 @@ class EsphomeMediaPlayer(
         self._client.media_player_command(
             self._key,
             command=MediaPlayerCommand.MUTE if mute else MediaPlayerCommand.UNMUTE,
+        )
+
+    @convert_api_error_ha_error
+    async def async_turn_on(self) -> None:
+        """Send turn on command."""
+        self._client.media_player_command(self._key, command=MediaPlayerCommand.TURN_ON)
+
+    @convert_api_error_ha_error
+    async def async_turn_off(self) -> None:
+        """Send turn off command."""
+        self._client.media_player_command(
+            self._key, command=MediaPlayerCommand.TURN_OFF
         )
 
 
