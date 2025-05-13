@@ -94,7 +94,7 @@ class ZimiSensor(ZimiEntity, SensorEntity):
     ) -> None:
         """Initialize an ZimiSensor with specified type."""
 
-        super().__init__(device, api)
+        super().__init__(device, api, use_device_name=False)
 
         self.entity_description = description
         self._attr_unique_id = device.identifier + "." + self.entity_description.key
