@@ -197,6 +197,9 @@
   "exceptions": {
     "operation_error": {
       "message": "An error occurred while performing the action: {error}"
+    },
+    "value_error": {
+      "message": "Switchbot device initialization failed because of incorrect configuration parameters: {error}"
     }
   }
 }

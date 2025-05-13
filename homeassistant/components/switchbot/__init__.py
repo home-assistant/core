@@ -15,7 +15,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from .const import (
@@ -24,6 +24,7 @@ from .const import (
     CONF_RETRY_COUNT,
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
     DEFAULT_RETRY_COUNT,
+    DOMAIN,
     ENCRYPTED_MODELS,
     HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL,
     SupportedModels,
@@ -152,8 +153,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
                 model=switchbot_model,
             )
         except ValueError as error:
-            raise ConfigEntryNotReady(
-                "Invalid encryption configuration provided"
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="value_error",
+                translation_placeholders={"error": str(error)},
             ) from error
     else:
         device = cls(
