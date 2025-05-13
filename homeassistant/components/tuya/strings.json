@@ -76,6 +76,21 @@
       },
       "snooze": {
         "name": "Snooze"
+      },
+      "filter_reset": {
+        "name": "Filter reset"
+      },
+      "pump": {
+        "name": "Pump"
+      },
+      "water_pump_reset": {
+        "name": "Water pump reset"
+      },
+      "reset_of_water_usage_days": {
+        "name": "Reset of water usage days"
+      },
+      "uv_sterilization": {
+        "name": "UV sterilization"
       }
     },
     "cover": {
@@ -640,6 +655,15 @@
           "level_5": "Level 5",
           "level_6": "Level 6"
         }
+      },
+      "water_time":{
+        "name": "Water time"
+      },
+      "pump_time":{
+        "name": "Pump time"
+      },
+      "uv_runtime":{
+        "name": "UV runtime"
       }
     },
     "switch": {

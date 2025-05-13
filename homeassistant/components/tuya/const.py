@@ -200,6 +200,8 @@ class DPCode(StrEnum):
     FILTER = "filter"
     FILTER_LIFE = "filter"
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
+    PUMP_TIME = "pump_time"
+    WATER_TIME = "water_time"
     FLOODLIGHT_LIGHTNESS = "floodlight_lightness"
     FLOODLIGHT_SWITCH = "floodlight_switch"
     FORWARD_ENERGY_TOTAL = "forward_energy_total"
@@ -359,6 +361,7 @@ class DPCode(StrEnum):
     UPPER_TEMP = "upper_temp"
     UPPER_TEMP_F = "upper_temp_f"
     UV = "uv"  # UV sterilization
+    UV_RUNTIME = "uv_runtime"
     VA_BATTERY = "va_battery"
     VA_HUMIDITY = "va_humidity"
     VA_TEMPERATURE = "va_temperature"
@@ -371,6 +374,7 @@ class DPCode(StrEnum):
     WARM_TIME = "warm_time"  # Heat preservation time
     WATER = "water"
     WATER_RESET = "water_reset"  # Resetting of water usage days
+    WATER_LEVEL = "water_level"
     WATER_SET = "water_set"  # Water level
     WATERSENSOR_STATE = "watersensor_state"
     WEATHER_DELAY = "weather_delay"
