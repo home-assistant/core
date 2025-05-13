@@ -7,6 +7,9 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+)
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.blueprint import (
     is_blueprint_instance_config,
@@ -43,6 +46,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_notify_setup_error
 
 from . import (
+    alarm_control_panel as alarm_control_panel_platform,
     binary_sensor as binary_sensor_platform,
     button as button_platform,
     cover as cover_platform,
@@ -110,6 +114,10 @@ CONFIG_SECTION_SCHEMA = vol.All(
             vol.Optional(CONF_BINARY_SENSORS): cv.schema_with_slug_keys(
                 binary_sensor_platform.LEGACY_BINARY_SENSOR_SCHEMA
             ),
+            vol.Optional(ALARM_CONTROL_PANEL_DOMAIN): vol.All(
+                cv.ensure_list,
+                [alarm_control_panel_platform.ALARM_CONTROL_PANEL_SCHEMA],
+            ),
             vol.Optional(SELECT_DOMAIN): vol.All(
                 cv.ensure_list, [select_platform.SELECT_SCHEMA]
             ),
@@ -133,7 +141,9 @@ CONFIG_SECTION_SCHEMA = vol.All(
             ),
         },
     ),
-    ensure_domains_do_not_have_trigger_or_action(BUTTON_DOMAIN, COVER_DOMAIN),
+    ensure_domains_do_not_have_trigger_or_action(
+        BUTTON_DOMAIN, ALARM_CONTROL_PANEL_DOMAIN, COVER_DOMAIN
+    ),
 )
 
 TEMPLATE_BLUEPRINT_SCHEMA = vol.All(
