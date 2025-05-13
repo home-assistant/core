@@ -28,31 +28,30 @@ _LOGGER = logging.getLogger(__name__)
 INFO_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="date",
-        name="Date",
-        icon="mdi:star-david",
         translation_key="hebrew_date",
+        icon="mdi:star-david",
     ),
     SensorEntityDescription(
         key="weekly_portion",
-        name="Parshat Hashavua",
+        translation_key="weekly_portion",
         icon="mdi:book-open-variant",
         device_class=SensorDeviceClass.ENUM,
     ),
     SensorEntityDescription(
         key="holiday",
-        name="Holiday",
+        translation_key="holiday",
         icon="mdi:calendar-star",
         device_class=SensorDeviceClass.ENUM,
     ),
     SensorEntityDescription(
         key="omer_count",
-        name="Day of the Omer",
+        translation_key="omer_count",
         icon="mdi:counter",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="daf_yomi",
-        name="Daf Yomi",
+        translation_key="daf_yomi",
         icon="mdi:book-open-variant",
         entity_registry_enabled_default=False,
     ),
@@ -61,106 +60,106 @@ INFO_SENSORS: tuple[SensorEntityDescription, ...] = (
 TIME_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="alot_hashachar",
-        name="Alot Hashachar",  # codespell:ignore alot
+        translation_key="alot_hashachar",
         icon="mdi:weather-sunset-up",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="talit_and_tefillin",
-        name="Talit and Tefillin",
+        translation_key="talit_and_tefillin",
         icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="netz_hachama",
-        name="Hanetz Hachama",
+        translation_key="netz_hachama",
         icon="mdi:calendar-clock",
     ),
     SensorEntityDescription(
         key="sof_zman_shema_gra",
-        name='Latest time for Shma Gr"a',
+        translation_key="sof_zman_shema_gra",
         icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="sof_zman_shema_mga",
-        name='Latest time for Shma MG"A',
+        translation_key="sof_zman_shema_mga",
         icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="sof_zman_tfilla_gra",
-        name='Latest time for Tefilla Gr"a',
+        translation_key="sof_zman_tfilla_gra",
         icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="sof_zman_tfilla_mga",
-        name='Latest time for Tefilla MG"A',
+        translation_key="sof_zman_tfilla_mga",
         icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="chatzot_hayom",
-        name="Chatzot Hayom",
+        translation_key="chatzot_hayom",
         icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="mincha_gedola",
-        name="Mincha Gedola",
+        translation_key="mincha_gedola",
         icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="mincha_ketana",
-        name="Mincha Ketana",
+        translation_key="mincha_ketana",
         icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="plag_hamincha",
-        name="Plag Hamincha",
+        translation_key="plag_hamincha",
         icon="mdi:weather-sunset-down",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="shkia",
-        name="Shkia",
+        translation_key="shkia",
         icon="mdi:weather-sunset",
     ),
     SensorEntityDescription(
         key="tset_hakohavim_tsom",
-        name="T'set Hakochavim",
+        translation_key="tset_hakohavim_tsom",
         icon="mdi:weather-night",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="tset_hakohavim_shabbat",
-        name="T'set Hakochavim, 3 stars",
+        translation_key="tset_hakohavim_shabbat",
         icon="mdi:weather-night",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="upcoming_shabbat_candle_lighting",
-        name="Upcoming Shabbat Candle Lighting",
+        translation_key="upcoming_shabbat_candle_lighting",
         icon="mdi:candle",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="upcoming_shabbat_havdalah",
-        name="Upcoming Shabbat Havdalah",
+        translation_key="upcoming_shabbat_havdalah",
         icon="mdi:weather-night",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="upcoming_candle_lighting",
-        name="Upcoming Candle Lighting",
+        translation_key="upcoming_candle_lighting",
         icon="mdi:candle",
     ),
     SensorEntityDescription(
         key="upcoming_havdalah",
-        name="Upcoming Havdalah",
+        translation_key="upcoming_havdalah",
         icon="mdi:weather-night",
     ),
 )
@@ -197,6 +196,11 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
         super().__init__(config_entry, description)
         self._attrs: dict[str, str] = {}
 
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+        await self.async_update()
+
     async def async_update(self) -> None:
         """Update the state of the sensor."""
         now = dt_util.now()
@@ -213,9 +217,7 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
 
         _LOGGER.debug("Now: %s Sunset: %s", now, sunset)
 
-        daytime_date = HDateInfo(
-            today, diaspora=self._diaspora, language=self._language
-        )
+        daytime_date = HDateInfo(today, diaspora=self._diaspora)
 
         # The Jewish day starts after darkness (called "tzais") and finishes at
         # sunset ("shkia"). The time in between is a gray area
@@ -248,7 +250,6 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
             location=self._location,
             candle_lighting_offset=self._candle_lighting_offset,
             havdalah_offset=self._havdalah_offset,
-            language=self._language,
         )
 
     @property
@@ -267,7 +268,6 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
         # refers to "current" or "upcoming" dates.
         if self.entity_description.key == "date":
             hdate = after_shkia_date.hdate
-            hdate.month.set_language(self._language)
             self._attrs = {
                 "hebrew_year": str(hdate.year),
                 "hebrew_month_name": str(hdate.month),
@@ -285,9 +285,7 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
                 dict.fromkeys(_holiday.type.name for _holiday in _holidays)
             )
             self._attrs = {"id": _id, "type": _type}
-            self._attr_options = HolidayDatabase(self._diaspora).get_all_names(
-                self._language
-            )
+            self._attr_options = HolidayDatabase(self._diaspora).get_all_names()
             return ", ".join(str(holiday) for holiday in _holidays) if _holidays else ""
         if self.entity_description.key == "omer_count":
             return after_shkia_date.omer.total_days if after_shkia_date.omer else 0

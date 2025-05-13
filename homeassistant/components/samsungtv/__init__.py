@@ -10,7 +10,6 @@ from urllib.parse import urlparse
 import getmac
 
 from homeassistant.components import ssdp
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -22,25 +21,19 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 
-from .bridge import (
-    SamsungTVBridge,
-    async_get_device_info,
-    mac_from_device_info,
-    model_requires_encryption,
-)
+from .bridge import SamsungTVBridge, mac_from_device_info, model_requires_encryption
 from .const import (
     CONF_SESSION_ID,
     CONF_SSDP_MAIN_TV_AGENT_LOCATION,
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
+    DOMAIN,
     ENTRY_RELOAD_COOLDOWN,
-    LEGACY_PORT,
     LOGGER,
     METHOD_ENCRYPTED_WEBSOCKET,
-    METHOD_LEGACY,
     UPNP_SVC_MAIN_TV_AGENT,
     UPNP_SVC_RENDERING_CONTROL,
 )
@@ -66,7 +59,7 @@ def _async_get_device_bridge(
 class DebouncedEntryReloader:
     """Reload only after the timer expires."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: SamsungTVConfigEntry) -> None:
         """Init the debounced entry reloader."""
         self.hass = hass
         self.entry = entry
@@ -79,7 +72,9 @@ class DebouncedEntryReloader:
             function=self._async_reload_entry,
         )
 
-    async def async_call(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    async def async_call(
+        self, hass: HomeAssistant, entry: SamsungTVConfigEntry
+    ) -> None:
         """Start the countdown for a reload."""
         if (new_token := entry.data.get(CONF_TOKEN)) != self.token:
             LOGGER.debug("Skipping reload as its a token update")
@@ -99,7 +94,9 @@ class DebouncedEntryReloader:
         await self.hass.config_entries.async_reload(self.entry.entry_id)
 
 
-async def _async_update_ssdp_locations(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_update_ssdp_locations(
+    hass: HomeAssistant, entry: SamsungTVConfigEntry
+) -> None:
     """Update ssdp locations from discovery cache."""
     updates = {}
     for ssdp_st, key in (
@@ -123,7 +120,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) ->
     if entry.data.get(CONF_METHOD) == METHOD_ENCRYPTED_WEBSOCKET:
         if not entry.data.get(CONF_TOKEN) or not entry.data.get(CONF_SESSION_ID):
             raise ConfigEntryAuthFailed(
-                "Token and session id are required in encrypted mode"
+                translation_domain=DOMAIN, translation_key="encrypted_mode_auth_failed"
             )
     bridge = await _async_create_bridge_with_updated_data(hass, entry)
 
@@ -171,33 +168,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) ->
 
 
 async def _async_create_bridge_with_updated_data(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: SamsungTVConfigEntry
 ) -> SamsungTVBridge:
     """Create a bridge object and update any missing data in the config entry."""
     updated_data: dict[str, str | int] = {}
     host: str = entry.data[CONF_HOST]
-    port: int | None = entry.data.get(CONF_PORT)
-    method: str | None = entry.data.get(CONF_METHOD)
+    method: str = entry.data[CONF_METHOD]
     load_info_attempted = False
     info: dict[str, Any] | None = None
-
-    if not port or not method:
-        LOGGER.debug("Attempting to get port or method for %s", host)
-        if method == METHOD_LEGACY:
-            port = LEGACY_PORT
-        else:
-            # When we imported from yaml we didn't setup the method
-            # because we didn't know it
-            _result, port, method, info = await async_get_device_info(hass, host)
-            load_info_attempted = True
-            if not port or not method:
-                raise ConfigEntryNotReady(
-                    "Failed to determine connection method, make sure the device is on."
-                )
-
-        LOGGER.debug("Updated port to %s and method to %s for %s", port, method, host)
-        updated_data[CONF_PORT] = port
-        updated_data[CONF_METHOD] = method
 
     bridge = _async_get_device_bridge(hass, {**entry.data, **updated_data})
 
@@ -258,7 +236,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) -
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: SamsungTVConfigEntry
+) -> bool:
     """Migrate old entry."""
     version = config_entry.version
     minor_version = config_entry.minor_version
