@@ -94,10 +94,12 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         self._attr_media_duration = 0
         self._pianobar: pexpect.spawn[str] | None = None
 
-    async def start_pianobar(self) -> bool:
+    async def _start_pianobar(self) -> bool:
         pianobar = pexpect.spawn("pianobar", encoding="utf-8")
         pianobar.delaybeforesend = None
-        pianobar.delayafterread = None
+        # mypy thinks delayafterread must be a float but that is not what pexpect says
+        # https://github.com/pexpect/pexpect/blob/4.9/pexpect/expect.py#L170
+        pianobar.delayafterread = None  # type: ignore[assignment]
         pianobar.delayafterclose = 0
         pianobar.delayafterterminate = 0
         _LOGGER.debug("Started pianobar subprocess")
@@ -124,7 +126,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
-        if self.state == MediaPlayerState.OFF and await self.start_pianobar():
+        if self.state == MediaPlayerState.OFF and await self._start_pianobar():
             await self._update_stations()
             await self.update_playing_status()
             self._attr_state = MediaPlayerState.IDLE
