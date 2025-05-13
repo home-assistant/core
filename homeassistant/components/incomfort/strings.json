@@ -143,7 +143,7 @@
           "sensor_fault_s2_e22": "[%key:component::incomfort::entity::water_heater::boiler::state::sensor_fault_s2_e20%]",
           "sensor_fault_s2_e23": "[%key:component::incomfort::entity::water_heater::boiler::state::sensor_fault_s2_e20%]",
           "sensor_fault_s2_e24": "[%key:component::incomfort::entity::water_heater::boiler::state::sensor_fault_s2_e20%]",
-          "shortcut_outside_sensor_temperature_e27": "Shortcut outside sensor",
+          "shortcut_outside_sensor_temperature_e27": "Shortcut outside temperature sensor",
           "gas_valve_relay_faulty_e29": "Gas valve relay faulty",
           "gas_valve_relay_faulty_e30": "[%key:component::incomfort::entity::water_heater::boiler::state::gas_valve_relay_faulty_e29%]"
         }
