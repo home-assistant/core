@@ -54,7 +54,7 @@
       'identifiers': set({
         tuple(
           'samsungtv',
-          'some-entry-id',
+          '123456',
         ),
       }),
       'is_new': False,

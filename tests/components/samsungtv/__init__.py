@@ -20,7 +20,7 @@ async def setup_samsungtv_entry(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=data,
-        entry_id="some-entry-id",
+        entry_id="123456",
         unique_id=(
             None
             if data[CONF_METHOD] == METHOD_LEGACY

@@ -24,7 +24,7 @@
       'discovery_keys': dict({
       }),
       'domain': 'samsungtv',
-      'entry_id': 'some-entry-id',
+      'entry_id': '123456',
       'minor_version': 2,
       'options': dict({
       }),
@@ -55,7 +55,7 @@
       'discovery_keys': dict({
       }),
       'domain': 'samsungtv',
-      'entry_id': 'some-entry-id',
+      'entry_id': '123456',
       'minor_version': 2,
       'options': dict({
       }),
@@ -114,7 +114,7 @@
       'discovery_keys': dict({
       }),
       'domain': 'samsungtv',
-      'entry_id': 'some-entry-id',
+      'entry_id': '123456',
       'minor_version': 2,
       'options': dict({
       }),
