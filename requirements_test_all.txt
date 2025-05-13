@@ -202,7 +202,7 @@ aiobotocore==2.21.1
 aiocomelit==0.12.1
 
 # homeassistant.components.dhcp
-aiodhcpwatcher==1.1.1
+aiodhcpwatcher==1.2.0
 
 # homeassistant.components.dhcp
 aiodiscover==2.7.0
@@ -837,7 +837,7 @@ gardena-bluetooth==1.6.0
 gassist-text==0.0.12
 
 # homeassistant.components.google
-gcal-sync==7.0.0
+gcal-sync==7.0.1
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
@@ -2512,7 +2512,7 @@ xbox-webapi==2.1.0
 xiaomi-ble==0.38.0
 
 # homeassistant.components.knx
-xknx==3.6.0
+xknx==3.8.0
 
 # homeassistant.components.knx
 xknxproject==3.8.2
