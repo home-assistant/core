@@ -109,9 +109,10 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 2
     MINOR_VERSION = 2
 
+    _host: str
+
     def __init__(self) -> None:
         """Initialize flow."""
-        self._host: str = ""
         self._mac: str | None = None
         self._udn: str | None = None
         self._upnp_udn: str | None = None
@@ -164,7 +165,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self, raise_on_progress: bool = True
     ) -> None:
         """Set the unique id from the udn."""
-        assert self._host is not None
         # Set the unique id without raising on progress in case
         # there are two SSDP flows with for each ST
         await self.async_set_unique_id(self._udn, raise_on_progress=False)
@@ -251,40 +251,38 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             self._mac = mac
         return True
 
-    async def _async_set_name_host_from_input(
-        self, user_input: dict[str, Any]
-    ) -> dict[str, str] | None:
-        try:
-            self._host = await self.hass.async_add_executor_job(
-                socket.gethostbyname, user_input[CONF_HOST]
-            )
-        except socket.gaierror as err:
-            LOGGER.debug("Failed to retrieve IP for %s: %s", self._host, err)
-            return {"base": "invalid_host"}
-        self._title = self._host
-        return None
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
+        errors: dict[str, str] | None = None
         if user_input is not None:
-            errors = await self._async_set_name_host_from_input(user_input)
-            if errors:
-                return self.async_show_form(
-                    step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            try:
+                self._host = await self.hass.async_add_executor_job(
+                    socket.gethostbyname, user_input[CONF_HOST]
                 )
-            await self._async_create_bridge()
-            assert self._bridge
-            self._async_abort_entries_match({CONF_HOST: self._host})
-            if self._bridge.method != METHOD_LEGACY:
-                # Legacy bridge does not provide device info
-                await self._async_set_device_unique_id(raise_on_progress=False)
-            if self._bridge.method == METHOD_ENCRYPTED_WEBSOCKET:
-                return await self.async_step_encrypted_pairing()
-            return await self.async_step_pairing({})
+            except socket.gaierror as err:
+                LOGGER.debug(
+                    "Failed to retrieve IP for %s: %s", user_input[CONF_HOST], err
+                )
+            else:
+                self._title = self._host
+                await self._async_create_bridge()
+                assert self._bridge
+                self._async_abort_entries_match({CONF_HOST: self._host})
+                if self._bridge.method != METHOD_LEGACY:
+                    # Legacy bridge does not provide device info
+                    await self._async_set_device_unique_id(raise_on_progress=False)
+                if self._bridge.method == METHOD_ENCRYPTED_WEBSOCKET:
+                    return await self.async_step_encrypted_pairing()
+                return await self.async_step_pairing({})
+            errors = {"base": "invalid_host"}
 
-        return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(DATA_SCHEMA, user_input),
+            errors=errors,
+        )
 
     async def async_step_pairing(
         self, user_input: dict[str, Any] | None = None
