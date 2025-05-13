@@ -202,7 +202,7 @@ aiobotocore==2.21.1
 aiocomelit==0.12.1
 
 # homeassistant.components.dhcp
-aiodhcpwatcher==1.1.1
+aiodhcpwatcher==1.2.0
 
 # homeassistant.components.dhcp
 aiodiscover==2.7.0
@@ -647,7 +647,7 @@ datapoint==0.9.9
 dbus-fast==2.43.0
 
 # homeassistant.components.debugpy
-debugpy==1.8.13
+debugpy==1.8.14
 
 # homeassistant.components.ecovacs
 deebot-client==13.1.0
