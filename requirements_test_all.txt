@@ -1107,7 +1107,7 @@ iometer==0.1.0
 iottycloud==0.3.0
 
 # homeassistant.components.irm_kmi
-irm-kmi-api==1.0.2
+irm-kmi-api==1.0.3
 
 # homeassistant.components.isal
 isal==1.8.0
