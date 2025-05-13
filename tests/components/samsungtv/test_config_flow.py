@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 from ipaddress import ip_address
+import socket
 from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 import pytest
@@ -106,33 +107,20 @@ AUTODETECT_LEGACY = {
     "id": "ha.component.samsung",
     "method": METHOD_LEGACY,
     "port": LEGACY_PORT,
-    "host": "fake_host",
+    "host": "10.20.43.21",
     "timeout": TIMEOUT_REQUEST,
-}
-AUTODETECT_WEBSOCKET_PLAIN = {
-    "host": "fake_host",
-    "name": "HomeAssistant",
-    "port": 8001,
-    "timeout": TIMEOUT_REQUEST,
-    "token": None,
 }
 AUTODETECT_WEBSOCKET_SSL = {
-    "host": "fake_host",
+    "host": "10.20.43.21",
     "name": "HomeAssistant",
     "port": 8002,
     "timeout": TIMEOUT_REQUEST,
     "token": None,
 }
 DEVICEINFO_WEBSOCKET_SSL = {
-    "host": "fake_host",
+    "host": "10.20.43.21",
     "session": ANY,
     "port": 8002,
-    "timeout": TIMEOUT_WEBSOCKET,
-}
-DEVICEINFO_WEBSOCKET_NO_SSL = {
-    "host": "fake_host",
-    "session": ANY,
-    "port": 8001,
     "timeout": TIMEOUT_WEBSOCKET,
 }
 
@@ -149,14 +137,27 @@ async def test_user_legacy(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    # entry was added
+    # Wrong host allow to retry
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+        side_effect=socket.gaierror("[Error -2] Name or Service not known"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_host"}
+
+    # Good host creates entry
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_USER_DATA
     )
     # legacy tv entry created
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "fake_host"
-    assert result["data"][CONF_HOST] == "fake_host"
+    assert result["title"] == "10.20.43.21"
+    assert result["data"][CONF_HOST] == "10.20.43.21"
     assert result["data"][CONF_METHOD] == METHOD_LEGACY
     assert result["data"][CONF_MANUFACTURER] == DEFAULT_MANUFACTURER
     assert result["data"][CONF_MODEL] is None
@@ -189,8 +190,8 @@ async def test_user_legacy_does_not_ok_first_time(hass: HomeAssistant) -> None:
 
     # legacy tv entry created
     assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "fake_host"
-    assert result3["data"][CONF_HOST] == "fake_host"
+    assert result3["title"] == "10.20.43.21"
+    assert result3["data"][CONF_HOST] == "10.20.43.21"
     assert result3["data"][CONF_METHOD] == METHOD_LEGACY
     assert result3["data"][CONF_MANUFACTURER] == DEFAULT_MANUFACTURER
     assert result3["data"][CONF_MODEL] is None
@@ -219,7 +220,7 @@ async def test_user_websocket(hass: HomeAssistant) -> None:
         # websocket tv entry created
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "Living Room (82GXARRS)"
-        assert result["data"][CONF_HOST] == "fake_host"
+        assert result["data"][CONF_HOST] == "10.20.43.21"
         assert result["data"][CONF_METHOD] == "websocket"
         assert result["data"][CONF_MANUFACTURER] == "Samsung"
         assert result["data"][CONF_MODEL] == "82GXARRS"
@@ -267,7 +268,7 @@ async def test_user_encrypted_websocket(
 
     assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["title"] == "TV-UE48JU6470 (UE48JU6400)"
-    assert result4["data"][CONF_HOST] == "fake_host"
+    assert result4["data"][CONF_HOST] == "10.20.43.21"
     assert result4["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result4["data"][CONF_MANUFACTURER] == "Samsung"
     assert result4["data"][CONF_MODEL] == "UE48JU6400"
@@ -398,7 +399,7 @@ async def test_user_websocket_auth_retry(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Living Room (82GXARRS)"
-    assert result["data"][CONF_HOST] == "fake_host"
+    assert result["data"][CONF_HOST] == "10.20.43.21"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "82GXARRS"
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
