@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
@@ -42,10 +43,16 @@ class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN],
                 }
             )
+
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                client = Paperless(user_input[CONF_HOST], user_input[CONF_ACCESS_TOKEN])
+                aiohttp_session = async_get_clientsession(self.hass)
+                client = Paperless(
+                    user_input[CONF_HOST],
+                    user_input[CONF_ACCESS_TOKEN],
+                    session=aiohttp_session,
+                )
                 await client.initialize()
             except OSError:
                 errors[CONF_HOST] = "cannot_connect_host"

@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from pypaperless.exceptions import BadJsonResponseError
+
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from . import PaperlessConfigEntry, PaperlessData
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 
 
 class PaperlessEntity(Entity):
@@ -24,6 +26,35 @@ class PaperlessEntity(Entity):
         self.client = data.client
         self.inbox_tags = data.inbox_tags
         self.entry = entry
+
+    async def async_update(self) -> None:
+        """Update Paperless-ngx entity."""
+        if not self.enabled:
+            return
+
+        try:
+            await self._paperless_update()
+            self._attr_available = True
+        except BadJsonResponseError as err:
+            response = err.args[0]
+            status_code = response.status
+            if status_code == 403 and self._attr_available:
+                self._attr_available = False
+                LOGGER.debug(
+                    "Paperless-ngx API returned 403 Forbidden. "
+                    "Check if the access token is valid and the user has the required permissions",
+                )
+        except Exception:  # noqa: BLE001
+            if self._attr_available:
+                LOGGER.debug(
+                    "An error occurred while updating the Paperless-ngx sensor",
+                    exc_info=True,
+                )
+            self._attr_available = False
+
+    async def _paperless_update(self) -> None:
+        """Update Paperless-ngx entity."""
+        raise NotImplementedError
 
     @property
     def device_info(self) -> DeviceInfo:

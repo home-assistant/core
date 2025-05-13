@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
@@ -33,16 +34,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) ->
     """Set up Paperless-ngx from a config entry."""
     data = cast(dict, entry.data)
     try:
-        client = Paperless(url=data[CONF_HOST], token=data[CONF_ACCESS_TOKEN])
+        aiohttp_session = async_get_clientsession(hass)
+        client = Paperless(
+            url=data[CONF_HOST], token=data[CONF_ACCESS_TOKEN], session=aiohttp_session
+        )
         await client.initialize()
         inbox_tags = [tag async for tag in client.tags if tag.is_inbox_tag]
 
     except OSError as err:
-        if "Connect call failed" in str(err) or "Domain name not found" in str(err):
-            raise ConfigEntryError(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect_host",
-            ) from err
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect_host",
+        ) from err
     except InitializationError as err:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
@@ -58,5 +61,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) ->
 
 async def async_unload_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) -> bool:
     """Unload a config entry."""
-    await entry.runtime_data.client.close()
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)

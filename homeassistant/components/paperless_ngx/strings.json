@@ -35,6 +35,21 @@
       },
       "storage_available": {
         "name": "Storage available"
+      },
+      "status_database": {
+        "name": "Status database"
+      },
+      "status_redis": {
+        "name": "Status Redis"
+      },
+      "status_celery": {
+        "name": "Status Celery"
+      },
+      "status_index": {
+        "name": "Status index"
+      },
+      "status_classifier": {
+        "name": "Status classifier"
       }
     }
   }
