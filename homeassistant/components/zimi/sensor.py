@@ -27,7 +27,6 @@ from .entity import ZimiEntity
 class ZimiSensorEntityDescription(SensorEntityDescription):
     """Class describing Zimi sensor entities."""
 
-    sensor_name: str | None = None
     value_fn: Callable[[ControlPointDevice], StateType]
 
 
@@ -37,7 +36,6 @@ GARAGE_SENSOR_DESCRIPTIONS: tuple[ZimiSensorEntityDescription, ...] = (
         translation_key="door_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
-        sensor_name="Outside Temperature",
         value_fn=lambda device: device.door_temp,
     ),
     ZimiSensorEntityDescription(
@@ -46,7 +44,6 @@ GARAGE_SENSOR_DESCRIPTIONS: tuple[ZimiSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.BATTERY,
-        sensor_name="Battery Level",
         value_fn=lambda device: device.battery_level,
     ),
     ZimiSensorEntityDescription(
@@ -54,7 +51,6 @@ GARAGE_SENSOR_DESCRIPTIONS: tuple[ZimiSensorEntityDescription, ...] = (
         translation_key="garage_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
-        sensor_name="Garage Temperature",
         value_fn=lambda device: device.garage_temp,
     ),
     ZimiSensorEntityDescription(
@@ -62,7 +58,6 @@ GARAGE_SENSOR_DESCRIPTIONS: tuple[ZimiSensorEntityDescription, ...] = (
         translation_key="garage_humidty",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
-        sensor_name="Garage Humidity",
         value_fn=lambda device: device.garage_humidity,
     ),
 )
@@ -103,7 +98,6 @@ class ZimiSensor(ZimiEntity, SensorEntity):
 
         self.entity_description = description
         self._attr_unique_id = device.identifier + "." + self.entity_description.key
-        self._attr_name = self.entity_description.sensor_name
 
     @property
     def native_value(self) -> str | int | float | None:
