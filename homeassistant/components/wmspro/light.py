@@ -55,11 +55,13 @@ class WebControlProLight(WebControlProGenericEntity, LightEntity):
         """Turn the light on."""
         action = self._dest.action(WMS_WebControl_pro_API_actionDescription.LightSwitch)
         await action(onOffState=True)
+        await self.async_schedule_update()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         action = self._dest.action(WMS_WebControl_pro_API_actionDescription.LightSwitch)
         await action(onOffState=False)
+        await self.async_schedule_update()
 
 
 class WebControlProDimmer(WebControlProLight):
@@ -88,3 +90,4 @@ class WebControlProDimmer(WebControlProLight):
         await action(
             percentage=brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS])
         )
+        await self.async_schedule_update()
