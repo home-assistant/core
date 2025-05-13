@@ -64,12 +64,7 @@ async def async_setup_entry(
 
     api = config_entry.runtime_data
 
-    sensors: list[ZimiSensor] = []
-
-    for description in GARAGE_SENSOR_DESCRIPTIONS:
-        sensors.extend([ZimiSensor(device, description, api) for device in api.sensors])
-
-    async_add_entities(sensors)
+    async_add_entities(ZimiSensor(device, description, api) for device in api.sensors for description in GARAGE_SENSOR_DESCRIPTIONS)
 
 
 class ZimiSensor(ZimiEntity, SensorEntity):
