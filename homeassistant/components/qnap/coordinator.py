@@ -9,6 +9,7 @@ from typing import Any
 
 from qnapstats import QNAPStats
 import urllib3
+import warnings
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -32,7 +33,10 @@ _LOGGER = logging.getLogger(__name__)
 
 @contextmanager
 def suppress_insecure_request_warning():
-    import warnings
+    """Context manager to suppress InsecureRequestWarning.
+    Was added in here to solve the following issue, not being solved upstream.
+    https://github.com/colinodell/python-qnapstats/issues/96
+    """
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', urllib3.exceptions.InsecureRequestWarning)
         yield
