@@ -99,11 +99,23 @@ class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
 
         if user_input is not None:
-            container_client = ContainerClient(
-                account_url=self.get_account_url(reauth_entry.data[CONF_ACCOUNT_NAME]),
-                container_name=reauth_entry.data[CONF_CONTAINER_NAME],
-                credential=user_input[CONF_STORAGE_ACCOUNT_KEY],
-                transport=AioHttpTransport(session=async_get_clientsession(self.hass)),
+
+            def create_container_client() -> ContainerClient:
+                """Create a ContainerClient."""
+                return ContainerClient(
+                    account_url=self.get_account_url(
+                        reauth_entry.data[CONF_ACCOUNT_NAME]
+                    ),
+                    container_name=reauth_entry.data[CONF_CONTAINER_NAME],
+                    credential=user_input[CONF_STORAGE_ACCOUNT_KEY],
+                    transport=AioHttpTransport(
+                        session=async_get_clientsession(self.hass)
+                    ),
+                )
+
+            # has a blocking call to open in cpython
+            container_client: ContainerClient = await self.hass.async_add_executor_job(
+                create_container_client
             )
             errors = await self.validate_config(container_client)
             if not errors:
