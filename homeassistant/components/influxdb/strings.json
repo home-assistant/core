@@ -1,6 +1,12 @@
 {
   "config": {
     "step": {
+      "user": {
+        "data": {
+          "api_version": "Version"
+        },
+        "title": "Select InfluxDB Version"
+      },
       "import": {
         "data": {},
         "title": "Import configuration"
