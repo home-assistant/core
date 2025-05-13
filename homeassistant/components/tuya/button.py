@@ -54,6 +54,30 @@ BUTTONS: dict[str, tuple[ButtonEntityDescription, ...]] = {
             translation_key="snooze",
         ),
     ),
+    # Pet Water Feeder
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46aewxem5
+    "cwysj": (
+        ButtonEntityDescription(
+            key=DPCode.FILTER_RESET,
+            translation_key="filter_reset",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        ButtonEntityDescription(
+            key=DPCode.PUMP_RESET,
+            translation_key="water_pump_reset",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        ButtonEntityDescription(
+            key=DPCode.WATER_RESET,
+            translation_key="reset_of_water_usage_days",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        ButtonEntityDescription(
+            key=DPCode.UV,
+            translation_key="uv_sterilization",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
 }
 
 

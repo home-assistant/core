@@ -84,28 +84,8 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     # https://developer.tuya.com/en/docs/iot/f?id=K9gf46aewxem5
     "cwysj": (
         SwitchEntityDescription(
-            key=DPCode.FILTER_RESET,
-            translation_key="filter_reset",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.PUMP_RESET,
-            translation_key="water_pump_reset",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="power",
-        ),
-        SwitchEntityDescription(
-            key=DPCode.WATER_RESET,
-            translation_key="reset_of_water_usage_days",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.UV,
-            translation_key="uv_sterilization",
-            entity_category=EntityCategory.CONFIG,
         ),
     ),
     # Light
