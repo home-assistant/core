@@ -3,15 +3,18 @@
 from homeassistant.components.samsungtv.const import (
     CONF_SESSION_ID,
     DOMAIN,
+    ENCRYPTED_WEBSOCKET_PORT,
+    LEGACY_PORT,
+    METHOD_ENCRYPTED_WEBSOCKET,
     METHOD_LEGACY,
     METHOD_WEBSOCKET,
+    WEBSOCKET_SSL_PORT,
 )
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
     CONF_METHOD,
     CONF_MODEL,
-    CONF_NAME,
     CONF_PORT,
     CONF_TOKEN,
 )
@@ -19,37 +22,25 @@ from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from tests.common import load_json_object_fixture
 
-MOCK_CONFIG = {
-    CONF_HOST: "fake_host",
-    CONF_NAME: "fake",
-    CONF_PORT: 55000,
+ENTRYDATA_LEGACY = {
+    CONF_HOST: "10.10.12.34",
+    CONF_PORT: LEGACY_PORT,
     CONF_METHOD: METHOD_LEGACY,
 }
-MOCK_CONFIG_ENCRYPTED_WS = {
-    CONF_HOST: "fake_host",
-    CONF_NAME: "fake",
-    CONF_PORT: 8000,
-}
-MOCK_ENTRYDATA_ENCRYPTED_WS = {
-    **MOCK_CONFIG_ENCRYPTED_WS,
-    CONF_METHOD: "encrypted",
+ENTRYDATA_ENCRYPTED_WEBSOCKET = {
+    CONF_HOST: "10.10.12.34",
+    CONF_PORT: ENCRYPTED_WEBSOCKET_PORT,
+    CONF_METHOD: METHOD_ENCRYPTED_WEBSOCKET,
     CONF_MAC: "aa:bb:cc:dd:ee:ff",
     CONF_TOKEN: "037739871315caef138547b03e348b72",
     CONF_SESSION_ID: "2",
 }
-MOCK_ENTRYDATA_WS = {
+ENTRYDATA_WEBSOCKET = {
     CONF_HOST: "10.10.12.34",
     CONF_METHOD: METHOD_WEBSOCKET,
-    CONF_PORT: 8002,
-    CONF_MODEL: "any",
-    CONF_NAME: "any",
-}
-MOCK_ENTRY_WS_WITH_MAC = {
-    CONF_HOST: "fake_host",
-    CONF_METHOD: "websocket",
+    CONF_PORT: WEBSOCKET_SSL_PORT,
     CONF_MAC: "aa:bb:cc:dd:ee:ff",
-    CONF_NAME: "fake",
-    CONF_PORT: 8002,
+    CONF_MODEL: "UE43LS003",
     CONF_TOKEN: "123456789",
 }
 
