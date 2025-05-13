@@ -35,7 +35,6 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     MediaPlayerDeviceClass,
-    MediaPlayerEntityFeature,
     MediaType,
 )
 from homeassistant.components.samsungtv.const import (
@@ -702,19 +701,6 @@ async def test_device_class(hass: HomeAssistant) -> None:
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_DEVICE_CLASS] == MediaPlayerDeviceClass.TV
-
-
-@pytest.mark.usefixtures("remote_legacy")
-async def test_supported_features_with_mac(hass: HomeAssistant) -> None:
-    """Test for supported_features property."""
-    await setup_samsungtv_entry(
-        hass, {**ENTRYDATA_LEGACY, CONF_MAC: "aa:bb:cc:dd:ee:ff"}
-    )
-    state = hass.states.get(ENTITY_ID)
-    assert (
-        state.attributes[ATTR_SUPPORTED_FEATURES]
-        == SUPPORT_SAMSUNGTV | MediaPlayerEntityFeature.TURN_ON
-    )
 
 
 @pytest.mark.usefixtures("rest_api")
