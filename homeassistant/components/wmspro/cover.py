@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import WebControlProConfigEntry
 from .entity import WebControlProGenericEntity
 
-SCAN_INTERVAL = timedelta(seconds=5)
+SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 1
 
 

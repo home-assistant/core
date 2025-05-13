@@ -16,7 +16,7 @@ from . import WebControlProConfigEntry
 from .const import BRIGHTNESS_SCALE
 from .entity import WebControlProGenericEntity
 
-SCAN_INTERVAL = timedelta(seconds=5)
+SCAN_INTERVAL = timedelta(seconds=15)
 PARALLEL_UPDATES = 1
 
 
