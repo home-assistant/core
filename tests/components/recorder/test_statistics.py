@@ -10,6 +10,7 @@ import pytest
 from sqlalchemy import select
 import voluptuous as vol
 
+from homeassistant import exceptions
 from homeassistant.components import recorder
 from homeassistant.components.recorder import Recorder, history, statistics
 from homeassistant.components.recorder.db_schema import StatisticsShortTerm
@@ -42,7 +43,7 @@ from homeassistant.components.recorder.table_managers.statistics_meta import (
 )
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.sensor import UNIT_CONVERTERS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -58,7 +59,7 @@ from .common import (
     statistics_during_period,
 )
 
-from tests.common import MockPlatform, mock_platform
+from tests.common import MockPlatform, MockUser, mock_platform
 from tests.typing import RecorderInstanceContextManager, WebSocketGenerator
 
 
@@ -3594,6 +3595,7 @@ async def test_recorder_platform_with_partial_statistics_support(
 @pytest.mark.usefixtures("recorder_mock")
 async def test_get_statistics_service(
     hass: HomeAssistant,
+    hass_read_only_user: MockUser,
     service_args: dict[str, Any],
     expected_result: dict[str, Any],
 ) -> None:
@@ -3668,6 +3670,16 @@ async def test_get_statistics_service(
         "recorder", "get_statistics", service_args, return_response=True, blocking=True
     )
     assert result == expected_result
+
+    with pytest.raises(exceptions.Unauthorized):
+        result = await hass.services.async_call(
+            "recorder",
+            "get_statistics",
+            service_args,
+            return_response=True,
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
 
 
 @pytest.mark.parametrize(

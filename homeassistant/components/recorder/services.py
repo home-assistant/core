@@ -221,7 +221,8 @@ def _async_register_get_statistics_service(
 
         return {"statistics": formatted_result}
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_GET_STATISTICS,
         async_handle_get_statistics_service,
