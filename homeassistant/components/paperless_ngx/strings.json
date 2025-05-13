@@ -21,5 +21,21 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "document_count": {
+        "name": "Document count"
+      },
+      "document_inbox_count": {
+        "name": "Inbox count"
+      },
+      "storage_total": {
+        "name": "Storage total"
+      },
+      "storage_available": {
+        "name": "Storage available"
+      }
+    }
   }
 }

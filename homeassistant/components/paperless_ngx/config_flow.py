@@ -39,6 +39,7 @@ class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match(
                 {
                     CONF_HOST: user_input[CONF_HOST],
+                    CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN],
                 }
             )
         errors: dict[str, str] = {}
@@ -46,11 +47,8 @@ class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 client = Paperless(user_input[CONF_HOST], user_input[CONF_ACCESS_TOKEN])
                 await client.initialize()
-            except OSError as err:
-                if "Connect call failed" in str(err) or "Domain name not found" in str(
-                    err
-                ):
-                    errors[CONF_HOST] = "cannot_connect_host"
+            except OSError:
+                errors[CONF_HOST] = "cannot_connect_host"
             except InitializationError:
                 errors["base"] = "cannot_connect"
             except Exception:
