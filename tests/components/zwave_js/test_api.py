@@ -5191,7 +5191,7 @@ async def test_hard_reset_controller(
     client.async_send_command.side_effect = async_send_command_no_driver_ready
 
     with patch(
-        "homeassistant.components.zwave_js.api.HARD_RESET_CONTROLLER_DRIVER_READY_TIMEOUT",
+        "homeassistant.components.zwave_js.api.DRIVER_READY_TIMEOUT",
         new=0,
     ):
         await ws_client.send_json_auto_id(
@@ -5663,7 +5663,7 @@ async def test_restore_nvm(
     client.async_send_command.side_effect = async_send_command_no_driver_ready
 
     with patch(
-        "homeassistant.components.zwave_js.api.RESTORE_NVM_DRIVER_READY_TIMEOUT",
+        "homeassistant.components.zwave_js.api.DRIVER_READY_TIMEOUT",
         new=0,
     ):
         # Send the subscription request
