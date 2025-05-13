@@ -1,6 +1,5 @@
 """Tests for the Samsung TV Integration."""
 
-from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -16,8 +15,6 @@ from homeassistant.components.samsungtv.const import (
     CONF_SSDP_MAIN_TV_AGENT_LOCATION,
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DOMAIN,
-    LEGACY_PORT,
-    METHOD_LEGACY,
     METHOD_WEBSOCKET,
     UPNP_SVC_MAIN_TV_AGENT,
     UPNP_SVC_RENDERING_CONTROL,
@@ -53,6 +50,7 @@ MOCK_CONFIG = {
     CONF_HOST: "fake_host",
     CONF_NAME: "fake_name",
     CONF_METHOD: METHOD_WEBSOCKET,
+    CONF_PORT: 8001,
 }
 
 
@@ -76,42 +74,6 @@ async def test_setup(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
-
-
-async def test_setup_without_port_device_offline(hass: HomeAssistant) -> None:
-    """Test import from yaml when the device is offline."""
-    with (
-        patch("homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError),
-        patch(
-            "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
-            side_effect=OSError,
-        ),
-        patch(
-            "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
-            side_effect=OSError,
-        ),
-        patch(
-            "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
-            return_value=None,
-        ),
-    ):
-        await setup_samsungtv_entry(hass, MOCK_CONFIG)
-
-    config_entries_domain = hass.config_entries.async_entries(DOMAIN)
-    assert len(config_entries_domain) == 1
-    assert config_entries_domain[0].state is ConfigEntryState.SETUP_RETRY
-
-
-@pytest.mark.usefixtures(
-    "remote_websocket", "remote_encrypted_websocket_failing", "rest_api"
-)
-async def test_setup_without_port_device_online(hass: HomeAssistant) -> None:
-    """Test import from yaml when the device is online."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
-
-    config_entries_domain = hass.config_entries.async_entries(DOMAIN)
-    assert len(config_entries_domain) == 1
-    assert config_entries_domain[0].data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
 
 
 @pytest.mark.usefixtures("remote_websocket", "remote_encrypted_websocket_failing")
@@ -180,29 +142,6 @@ async def test_reauth_triggered_encrypted(hass: HomeAssistant) -> None:
         if flow["context"]["source"] == "reauth"
     ]
     assert len(flows_in_progress) == 1
-
-
-@pytest.mark.usefixtures(
-    "remote_legacy", "remote_encrypted_websocket_failing", "rest_api_failing"
-)
-@pytest.mark.parametrize(
-    "entry_data",
-    [
-        {CONF_HOST: "1.2.3.4"},  # Missing port/method
-        {CONF_HOST: "1.2.3.4", CONF_PORT: LEGACY_PORT},  # Missing method
-        {CONF_HOST: "1.2.3.4", CONF_METHOD: METHOD_LEGACY},  # Missing port
-    ],
-)
-async def test_update_imported_legacy(
-    hass: HomeAssistant, entry_data: dict[str, Any]
-) -> None:
-    """Test updating an imported legacy entry."""
-    await setup_samsungtv_entry(hass, entry_data)
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].data[CONF_METHOD] == METHOD_LEGACY
-    assert entries[0].data[CONF_PORT] == LEGACY_PORT
 
 
 @pytest.mark.usefixtures("remote_websocket", "rest_api")
