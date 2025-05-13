@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
     EntityCategory,
     UnitOfEnergy,
@@ -211,6 +212,27 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
     MieleSensorDefinition(
         types=(
             MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.WASHING_MACHINE_SEMI_PROFESSIONAL,
+            MieleAppliance.TUMBLE_DRYER,
+            MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL,
+            MieleAppliance.DISHWASHER,
+            MieleAppliance.WASHER_DRYER,
+        ),
+        description=MieleSensorDescription(
+            key="energy_forecast",
+            translation_key="energy_forecast",
+            value_fn=lambda value: value.energy_forecast * 100
+            if value.energy_forecast is not None
+            else None,
+            name="Energy Forecast",
+            icon="mdi:lightning-bolt-outline",
+            native_unit_of_measurement=PERCENTAGE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.WASHING_MACHINE,
             MieleAppliance.DISHWASHER,
             MieleAppliance.WASHER_DRYER,
         ),
@@ -221,6 +243,23 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             device_class=SensorDeviceClass.WATER,
             state_class=SensorStateClass.TOTAL_INCREASING,
             native_unit_of_measurement=UnitOfVolume.LITERS,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.DISHWASHER,
+            MieleAppliance.WASHER_DRYER,
+        ),
+        description=MieleSensorDescription(
+            key="water_forecast",
+            translation_key="water_forecast",
+            value_fn=lambda value: value.water_forecast * 100
+            if value.water_forecast is not None
+            else value.water_forecast,
+            icon="mdi:water-outline",
+            native_unit_of_measurement=PERCENTAGE,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
@@ -453,7 +492,9 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             key="state_drying_step",
             translation_key="drying_step",
             value_fn=lambda value: StateDryingStep(
-                cast(int, value.state_drying_step)
+                int(value.state_drying_step)
+                if value.state_drying_step is not None
+                else -9999
             ).name,
             entity_category=EntityCategory.DIAGNOSTIC,
             device_class=SensorDeviceClass.ENUM,
