@@ -1,7 +1,7 @@
 {
   "domain": "idrive_e2",
   "name": "IDrive e2",
-  "codeowners": ["@tomasbedrich", "@patrickvorgers"],
+  "codeowners": ["@patrickvorgers", "@tomasbedrich"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/idrive_e2",
   "integration_type": "service",

@@ -694,8 +694,8 @@ build.json @home-assistant/supervisor
 /tests/components/icloud/ @Quentame @nzapponi
 /homeassistant/components/idasen_desk/ @abmantis
 /tests/components/idasen_desk/ @abmantis
-/homeassistant/components/idrive_e2/ @tomasbedrich @patrickvorgers
-/tests/components/idrive_e2/ @tomasbedrich @patrickvorgers
+/homeassistant/components/idrive_e2/ @patrickvorgers @tomasbedrich
+/tests/components/idrive_e2/ @patrickvorgers @tomasbedrich
 /homeassistant/components/igloohome/ @keithle888
 /tests/components/igloohome/ @keithle888
 /homeassistant/components/ign_sismologia/ @exxamalte
