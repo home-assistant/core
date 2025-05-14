@@ -423,6 +423,16 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ],
     },
+    Capability.SAMSUNG_CE_EHS_DIVERTER_VALVE: {
+        Attribute.POSITION: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.POSITION,
+                translation_key="diverter_valve_position",
+                device_class=SensorDeviceClass.ENUM,
+                options=["room", "tank"],
+            )
+        ]
+    },
     Capability.ENERGY_METER: {
         Attribute.ENERGY: [
             SmartThingsSensorEntityDescription(

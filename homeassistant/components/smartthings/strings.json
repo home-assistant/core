@@ -223,6 +223,13 @@
       "completion_time": {
         "name": "Completion time"
       },
+      "diverter_valve_position": {
+        "name": "Valve position",
+        "state": {
+          "room": "Room",
+          "tank": "Tank"
+        }
+      },
       "dryer_mode": {
         "name": "Dryer mode"
       },
