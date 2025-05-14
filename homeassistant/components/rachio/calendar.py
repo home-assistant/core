@@ -17,7 +17,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    DOMAIN as DOMAIN_RACHIO,
+    DOMAIN,
     KEY_ADDRESS,
     KEY_DURATION_SECONDS,
     KEY_ID,
@@ -44,7 +44,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry for Rachio smart hose timer calendar."""
-    person: RachioPerson = hass.data[DOMAIN_RACHIO][config_entry.entry_id]
+    person: RachioPerson = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
         RachioCalendarEntity(base_station.schedule_coordinator, base_station)
         for base_station in person.base_stations
