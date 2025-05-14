@@ -61,7 +61,7 @@ async def test_init_unauthorized(
     ):
         mock_server_instance.return_value.http_status = HTTPStatus.UNAUTHORIZED
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
-        assert config_entry.state is ConfigEntryState.SETUP_RETRY
+        assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_init_missing_uuid(

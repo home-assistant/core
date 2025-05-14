@@ -107,20 +107,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
                 "host": str(host),
             },
         ) from err
-    except Exception as err:  # Catch other unexpected errors during the query attempt
-        _LOGGER.warning(
-            "Error communicating with LMS %s during initial query: %s",
-            host,
-            err,
-            exc_info=True,
-        )
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="init_comms_error",
-            translation_placeholders={
-                "host": str(host),
-            },
-        ) from err
 
     if not status:
         # pysqueezebox's async_query returns None on various issues,

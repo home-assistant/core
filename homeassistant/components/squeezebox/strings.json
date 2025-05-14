@@ -154,9 +154,6 @@
     "init_timeout": {
       "message": "Timeout connecting to LMS {host}."
     },
-    "init_comms_error": {
-      "message": "Error communicating with LMS {host}."
-    },
     "init_auth_failed": {
       "message": "Authentication failed for {host)."
     },
