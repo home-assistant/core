@@ -46,7 +46,7 @@ from .const import (
     VID,
     HardwareVariant,
 )
-from .util import get_hardware_variant, get_usb_service_info
+from .util import get_hardware_variant, get_supported_firmwares, get_usb_service_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -156,11 +156,8 @@ class HomeAssistantSkyConnectConfigFlow(
 
             zigbee_fw_meta = next(
                 fw
-                for fw in manifest.firmwares
-                if (
-                    fw.metadata["fw_type"] == fw_type
-                    and fw.filename.startswith(("skyconnect_", "zbt1_"))
-                )
+                for fw in get_supported_firmwares(manifest)
+                if fw.metadata["fw_type"] == fw_type
             )
 
             zigbee_fw_data = await client.async_fetch_firmware(zigbee_fw_meta)
