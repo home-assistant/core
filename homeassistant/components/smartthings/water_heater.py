@@ -63,7 +63,7 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
         | WaterHeaterEntityFeature.AWAY_MODE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_min_temp = 40
+    _attr_min_temp = 35
     _attr_max_temp = 70
 
     def __init__(self, client: SmartThings, device: FullDevice) -> None:
