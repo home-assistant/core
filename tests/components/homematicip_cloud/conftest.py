@@ -97,7 +97,8 @@ async def mock_hap_with_service_fixture(
     mock_hap = await default_mock_hap_factory.async_get_mock_hap()
     await hmip_async_setup(hass, dummy_config)
     await hass.async_block_till_done()
-    hass.data[HMIPC_DOMAIN] = {HAPID: mock_hap}
+    entry = hass.config_entries.async_entries(HMIPC_DOMAIN)[0]
+    entry.runtime_data = {HAPID: mock_hap}
     return mock_hap
 
 
