@@ -46,6 +46,7 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_component
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
@@ -53,6 +54,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_SESSION_ID,
+    DOMAIN,
     ENCRYPTED_WEBSOCKET_PORT,
     LEGACY_PORT,
     LOGGER,
@@ -150,7 +152,7 @@ class SamsungTVBridge(ABC):
     ) -> SamsungTVBridge:
         """Get Bridge instance."""
         if method == METHOD_LEGACY or port == LEGACY_PORT:
-            return SamsungTVLegacyBridge(hass, method, host, port)
+            return SamsungTVLegacyBridge(hass, method, host, port or LEGACY_PORT)
         if method == METHOD_ENCRYPTED_WEBSOCKET or port == ENCRYPTED_WEBSOCKET_PORT:
             return SamsungTVEncryptedBridge(hass, method, host, port, entry_data)
         return SamsungTVWSBridge(hass, method, host, port, entry_data)
@@ -262,14 +264,14 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         self, hass: HomeAssistant, method: str, host: str, port: int | None
     ) -> None:
         """Initialize Bridge."""
-        super().__init__(hass, method, host, LEGACY_PORT)
+        super().__init__(hass, method, host, port)
         self.config = {
             CONF_NAME: VALUE_CONF_NAME,
             CONF_DESCRIPTION: VALUE_CONF_NAME,
             CONF_ID: VALUE_CONF_ID,
             CONF_HOST: host,
             CONF_METHOD: method,
-            CONF_PORT: None,
+            CONF_PORT: port,
             CONF_TIMEOUT: 1,
         }
         self._remote: Remote | None = None
@@ -301,7 +303,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             CONF_ID: VALUE_CONF_ID,
             CONF_HOST: self.host,
             CONF_METHOD: self.method,
-            CONF_PORT: None,
+            CONF_PORT: self.port,
             # We need this high timeout because waiting for auth popup
             # is just an open socket
             CONF_TIMEOUT: TIMEOUT_REQUEST,
@@ -371,9 +373,13 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
                 except (ConnectionClosed, BrokenPipeError):
                     # BrokenPipe can occur when the commands is sent to fast
                     self._remote = None
-        except (UnhandledResponse, AccessDenied):
+        except (UnhandledResponse, AccessDenied) as err:
             # We got a response so it's on.
-            LOGGER.debug("Failed sending command %s", key, exc_info=True)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="error_sending_command",
+                translation_placeholders={"error": repr(err), "host": self.host},
+            ) from err
         except OSError:
             # Different reasons, e.g. hostname not resolveable
             pass
@@ -510,6 +516,7 @@ class SamsungTVWSBridge(
 
     async def async_try_connect(self) -> str:
         """Try to connect to the Websocket TV."""
+        temp_result = None
         for self.port in WEBSOCKET_PORTS:
             config = {
                 CONF_NAME: VALUE_CONF_NAME,
@@ -521,7 +528,6 @@ class SamsungTVWSBridge(
                 CONF_TIMEOUT: TIMEOUT_REQUEST,
             }
 
-            result = None
             try:
                 LOGGER.debug("Try config: %s", config)
                 async with SamsungTVWSAsyncRemote(
@@ -545,22 +551,19 @@ class SamsungTVWSBridge(
                     config,
                     err,
                 )
-                result = RESULT_NOT_SUPPORTED
+                temp_result = RESULT_NOT_SUPPORTED
             except WebSocketException as err:
                 LOGGER.debug(
                     "Working but unsupported config: %s, error: %s", config, err
                 )
-                result = RESULT_NOT_SUPPORTED
+                temp_result = RESULT_NOT_SUPPORTED
             except UnauthorizedError as err:
                 LOGGER.debug("Failing config: %s, %s error: %s", config, type(err), err)
                 return RESULT_AUTH_MISSING
             except (ConnectionFailure, OSError, AsyncioTimeoutError) as err:
                 LOGGER.debug("Failing config: %s, %s error: %s", config, type(err), err)
-        else:  # noqa: PLW0120
-            if result:
-                return result
 
-        return RESULT_CANNOT_CONNECT
+        return temp_result or RESULT_CANNOT_CONNECT
 
     async def async_device_info(self, force: bool = False) -> dict[str, Any] | None:
         """Try to gather infos of this TV."""

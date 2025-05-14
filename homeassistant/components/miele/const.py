@@ -2,6 +2,8 @@
 
 from enum import IntEnum
 
+from pymiele import MieleEnum
+
 DOMAIN = "miele"
 MANUFACTURER = "Miele"
 
@@ -9,6 +11,7 @@ ACTIONS = "actions"
 POWER_ON = "powerOn"
 POWER_OFF = "powerOff"
 PROCESS_ACTION = "processAction"
+PROGRAM_ID = "programId"
 VENTILATION_STEP = "ventilationStep"
 TARGET_TEMPERATURE = "targetTemperature"
 AMBIENT_LIGHT = "ambientLight"
@@ -246,6 +249,7 @@ STATE_PROGRAM_PHASE_OVEN = {
 }
 STATE_PROGRAM_PHASE_WARMING_DRAWER = {
     0: "not_running",
+    3073: "heating_up",
     3075: "door_open",
     3094: "keeping_warm",
     3088: "cooling_down",
@@ -312,6 +316,8 @@ STATE_PROGRAM_PHASE: dict[int, dict[int, str]] = {
     MieleAppliance.TUMBLE_DRYER: STATE_PROGRAM_PHASE_TUMBLE_DRYER,
     MieleAppliance.DRYER_PROFESSIONAL: STATE_PROGRAM_PHASE_TUMBLE_DRYER,
     MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL: STATE_PROGRAM_PHASE_TUMBLE_DRYER,
+    MieleAppliance.WASHER_DRYER: STATE_PROGRAM_PHASE_WASHING_MACHINE
+    | STATE_PROGRAM_PHASE_TUMBLE_DRYER,
     MieleAppliance.DISHWASHER: STATE_PROGRAM_PHASE_DISHWASHER,
     MieleAppliance.DISHWASHER_SEMI_PROFESSIONAL: STATE_PROGRAM_PHASE_DISHWASHER,
     MieleAppliance.DISHWASHER_PROFESSIONAL: STATE_PROGRAM_PHASE_DISHWASHER,
@@ -324,13 +330,31 @@ STATE_PROGRAM_PHASE: dict[int, dict[int, str]] = {
     MieleAppliance.ROBOT_VACUUM_CLEANER: STATE_PROGRAM_PHASE_ROBOT_VACUUM_CLEANER,
 }
 
-STATE_PROGRAM_TYPE = {
-    0: "normal_operation_mode",
-    1: "own_program",
-    2: "automatic_program",
-    3: "cleaning_care_program",
-    4: "maintenance_program",
-}
+
+class StateProgramType(MieleEnum):
+    """Defines program types."""
+
+    normal_operation_mode = 0
+    own_program = 1
+    automatic_program = 2
+    cleaning_care_program = 3
+    maintenance_program = 4
+    unknown = -9999
+
+
+class StateDryingStep(MieleEnum):
+    """Defines drying steps."""
+
+    extra_dry = 0
+    normal_plus = 1
+    normal = 2
+    slightly_dry = 3
+    hand_iron_1 = 4
+    hand_iron_2 = 5
+    machine_iron = 6
+    smoothing = 7
+    unknown = -9999
+
 
 WASHING_MACHINE_PROGRAM_ID: dict[int, str] = {
     -1: "no_program",  # Extrapolated from other device types.
@@ -404,14 +428,21 @@ DISHWASHER_PROGRAM_ID: dict[int, str] = {
 TUMBLE_DRYER_PROGRAM_ID: dict[int, str] = {
     -1: "no_program",  # Extrapolated from other device types.
     0: "no_program",  # Extrapolated from other device types
+    2: "cottons",
+    3: "minimum_iron",
+    4: "woollens_handcare",
+    5: "delicates",
+    6: "warm_air",
+    8: "express",
     10: "automatic_plus",
     20: "cottons",
     23: "cottons_hygiene",
     30: "minimum_iron",
-    31: "gentle_minimum_iron",
+    31: "bed_linen",
     40: "woollens_handcare",
     50: "delicates",
     60: "warm_air",
+    66: "eco",
     70: "cool_air",
     80: "express",
     90: "cottons",
@@ -449,17 +480,29 @@ OVEN_PROGRAM_ID: dict[int, str] = {
     31: "bottom_heat",
     35: "moisture_plus_auto_roast",
     40: "moisture_plus_fan_plus",
+    48: "moisture_plus_auto_roast",
+    49: "moisture_plus_fan_plus",
+    50: "moisture_plus_intensive_bake",
+    51: "moisture_plus_conventional_heat",
     74: "moisture_plus_intensive_bake",
     76: "moisture_plus_conventional_heat",
-    49: "moisture_plus_fan_plus",
+    323: "pyrolytic",
+    326: "descale",
+    335: "shabbat_program",
+    336: "yom_tov",
     356: "defrost",
     357: "drying",
     358: "heat_crockery",
+    360: "low_temperature_cooking",
     361: "steam_cooking",
     362: "keeping_warm",
     512: "1_tray",
     513: "2_trays",
     529: "baking_tray",
+    554: "baiser_one_large",
+    555: "baiser_several_small",
+    556: "lemon_meringue_pie",
+    557: "viennese_apple_strudel",
     621: "prove_15_min",
     622: "prove_30_min",
     623: "prove_45_min",
@@ -673,7 +716,7 @@ STEAM_OVEN_MICRO_PROGRAM_ID: dict[int, str] = {
     2019: "defrosting_with_steam",
     2020: "blanching",
     2021: "bottling",
-    2022: "heat_crockery",
+    2022: "sterilize_crockery",
     2023: "prove_dough",
     2027: "soak",
     2029: "reheating_with_microwave",
@@ -745,7 +788,7 @@ STEAM_OVEN_MICRO_PROGRAM_ID: dict[int, str] = {
     2129: "potatoes_floury_diced",
     2130: "german_turnip_sliced",
     2131: "german_turnip_cut_into_batons",
-    2132: "german_turnip_sliced",
+    2132: "german_turnip_diced",
     2133: "pumpkin_diced",
     2134: "corn_on_the_cob",
     2135: "mangel_cut",

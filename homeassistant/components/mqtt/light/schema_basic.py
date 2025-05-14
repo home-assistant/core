@@ -104,6 +104,7 @@ from ..const import (
     DEFAULT_PAYLOAD_ON,
     DEFAULT_WHITE_SCALE,
     PAYLOAD_NONE,
+    VALUES_ON_COMMAND_TYPE,
 )
 from ..entity import MqttEntity
 from ..models import (
@@ -142,8 +143,6 @@ MQTT_LIGHT_ATTRIBUTES_BLOCKED = frozenset(
         ATTR_XY_COLOR,
     }
 )
-
-VALUES_ON_COMMAND_TYPE = ["first", "last", "brightness"]
 
 COMMAND_TEMPLATE_KEYS = [
     CONF_BRIGHTNESS_COMMAND_TEMPLATE,

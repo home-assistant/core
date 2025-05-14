@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_cleanup_mac
+# name: test_setup[encrypted]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -11,10 +11,6 @@
           'mac',
           'aa:bb:cc:dd:ee:ff',
         ),
-        tuple(
-          'mac',
-          'none',
-        ),
       }),
       'disabled_by': None,
       'entry_type': None,
@@ -23,16 +19,16 @@
       'identifiers': set({
         tuple(
           'samsungtv',
-          'any',
+          'be9554b9-c9fb-41f4-8920-22da015376a4',
         ),
       }),
       'is_new': False,
       'labels': set({
       }),
       'manufacturer': None,
-      'model': '82GXARRS',
+      'model': None,
       'model_id': None,
-      'name': 'fake',
+      'name': 'Mock Title',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
@@ -42,7 +38,42 @@
     }),
   ])
 # ---
-# name: test_cleanup_mac.1
+# name: test_setup[legacy]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'samsungtv',
+          '123456',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': None,
+      'model': None,
+      'model_id': None,
+      'name': 'Mock Title',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_setup[websocket]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -54,10 +85,6 @@
           'mac',
           'aa:bb:cc:dd:ee:ff',
         ),
-        tuple(
-          'mac',
-          'none',
-        ),
       }),
       'disabled_by': None,
       'entry_type': None,
@@ -66,16 +93,16 @@
       'identifiers': set({
         tuple(
           'samsungtv',
-          'any',
+          'be9554b9-c9fb-41f4-8920-22da015376a4',
         ),
       }),
       'is_new': False,
       'labels': set({
       }),
       'manufacturer': None,
-      'model': '82GXARRS',
-      'model_id': '82GXARRS',
-      'name': 'fake',
+      'model': None,
+      'model_id': 'UE43LS003',
+      'name': 'Mock Title',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
@@ -89,7 +116,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'tv',
-      'friendly_name': 'any',
+      'friendly_name': 'Mock Title',
       'is_volume_muted': False,
       'source_list': list([
         'TV',
@@ -98,7 +125,7 @@
       'supported_features': <MediaPlayerEntityFeature: 24509>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.any',
+    'entity_id': 'media_player.mock_title',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -123,7 +150,7 @@
     'disabled_by': None,
     'domain': 'media_player',
     'entity_category': None,
-    'entity_id': 'media_player.any',
+    'entity_id': 'media_player.mock_title',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,

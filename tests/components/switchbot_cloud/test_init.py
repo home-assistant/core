@@ -33,30 +33,35 @@ async def test_setup_entry_success(
     """Test successful setup of entry."""
     mock_list_devices.return_value = [
         Remote(
+            version="V1.0",
             deviceId="air-conditonner-id-1",
             deviceName="air-conditonner-name-1",
             remoteType="Air Conditioner",
             hubDeviceId="test-hub-id",
         ),
         Device(
+            version="V1.0",
             deviceId="plug-id-1",
             deviceName="plug-name-1",
             deviceType="Plug",
             hubDeviceId="test-hub-id",
         ),
         Remote(
+            version="V1.0",
             deviceId="plug-id-2",
             deviceName="plug-name-2",
             remoteType="DIY Plug",
             hubDeviceId="test-hub-id",
         ),
         Remote(
+            version="V1.0",
             deviceId="meter-pro-1",
             deviceName="meter-pro-name-1",
             deviceType="MeterPro(CO2)",
             hubDeviceId="test-hub-id",
         ),
         Remote(
+            version="V1.0",
             deviceId="hub2-1",
             deviceName="hub2-name-1",
             deviceType="Hub 2",
@@ -104,6 +109,7 @@ async def test_setup_entry_fails_when_refreshing(
     """Test error handling in get_status in setup of entry."""
     mock_list_devices.return_value = [
         Device(
+            version="V1.0",
             deviceId="test-id",
             deviceName="test-name",
             deviceType="Plug",
