@@ -64,17 +64,17 @@ CONF_SET_PRESET_MODE_ACTION = "set_preset_mode"
 
 _VALID_DIRECTIONS = [DIRECTION_FORWARD, DIRECTION_REVERSE]
 
+CONF_DIRECTION = "direction"
+CONF_OSCILLATING = "oscillating"
 CONF_PERCENTAGE = "percentage"
 CONF_PRESET_MODE = "preset_mode"
-CONF_OSCILLATING = "oscillating"
-CONF_DIRECTION = "direction"
 
 LEGACY_FIELDS = TEMPLATE_ENTITY_LEGACY_FIELDS | {
-    CONF_VALUE_TEMPLATE: CONF_STATE,
+    CONF_DIRECTION_TEMPLATE: CONF_DIRECTION,
+    CONF_OSCILLATING_TEMPLATE: CONF_OSCILLATING,
     CONF_PERCENTAGE_TEMPLATE: CONF_PERCENTAGE,
     CONF_PRESET_MODE_TEMPLATE: CONF_PRESET_MODE,
-    CONF_OSCILLATING_TEMPLATE: CONF_OSCILLATING,
-    CONF_DIRECTION_TEMPLATE: CONF_DIRECTION,
+    CONF_VALUE_TEMPLATE: CONF_STATE,
 }
 
 DEFAULT_NAME = "Template Fan"
@@ -84,6 +84,8 @@ FAN_SCHEMA = vol.All(
         {
             vol.Optional(CONF_DIRECTION): cv.template,
             vol.Optional(CONF_NAME): cv.template,
+            vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_OSCILLATING): cv.template,
             vol.Optional(CONF_PERCENTAGE): cv.template,
             vol.Optional(CONF_PICTURE): cv.template,
@@ -96,8 +98,6 @@ FAN_SCHEMA = vol.All(
             vol.Optional(CONF_SPEED_COUNT): vol.Coerce(int),
             vol.Optional(CONF_STATE): cv.template,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
         }
     )
     .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
@@ -108,22 +108,22 @@ LEGACY_FAN_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
     vol.Schema(
         {
+            vol.Optional(CONF_DIRECTION_TEMPLATE): cv.template,
+            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
             vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+            vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_OSCILLATING_TEMPLATE): cv.template,
             vol.Optional(CONF_PERCENTAGE_TEMPLATE): cv.template,
             vol.Optional(CONF_PRESET_MODE_TEMPLATE): cv.template,
-            vol.Optional(CONF_OSCILLATING_TEMPLATE): cv.template,
-            vol.Optional(CONF_DIRECTION_TEMPLATE): cv.template,
-            vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_PRESET_MODES): cv.ensure_list,
+            vol.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_SET_PERCENTAGE_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_SET_PRESET_MODE_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_SPEED_COUNT): vol.Coerce(int),
-            vol.Optional(CONF_PRESET_MODES): cv.ensure_list,
-            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
+            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         }
     ).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema),
 )
