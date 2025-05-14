@@ -2,13 +2,20 @@
 
 from __future__ import annotations
 
+from typing import Any, Generic, TypeVar
+
 from pypaperless.exceptions import BadJsonResponseError
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from . import PaperlessConfigEntry, PaperlessData
 from .const import DOMAIN, LOGGER
+from .sensor import SensorEntityDescription
 
 
 class PaperlessEntity(Entity):
@@ -21,11 +28,14 @@ class PaperlessEntity(Entity):
         self,
         data: PaperlessData,
         entry: PaperlessConfigEntry,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize the Paperless-ngx entity."""
         self.client = data.client
         self.inbox_tags = data.inbox_tags
         self.entry = entry
+        self.entity_description = description
+        self._attr_unique_id = f"{DOMAIN}_{self}_{data.client.base_url}_sensor_{description.key}_{entry.entry_id}"
 
     async def async_update(self) -> None:
         """Update Paperless-ngx entity."""
@@ -62,14 +72,31 @@ class PaperlessEntity(Entity):
 
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={
-                (
-                    DOMAIN,
-                    self.entry.entry_id,
-                )
-            },
+            identifiers={(DOMAIN, self.entry.entry_id)},
             manufacturer="Paperless-ngx",
             name="Paperless-ngx",
             sw_version=self.client.host_version,
             configuration_url=self.client.base_url,
         )
+
+
+TCoordinator = TypeVar("TCoordinator", bound=DataUpdateCoordinator[Any])
+
+
+class PaperlessCoordinatorEntity(
+    Generic[TCoordinator],
+    CoordinatorEntity[TCoordinator],
+    PaperlessEntity,
+):
+    """Defines a base Paperless-ngx coordinator entity."""
+
+    def __init__(
+        self,
+        data: PaperlessData,
+        entry: PaperlessConfigEntry,
+        description: SensorEntityDescription,
+        coordinator: TCoordinator,
+    ) -> None:
+        """Initialize the Paperless-ngx coordinator entity."""
+        CoordinatorEntity.__init__(self, coordinator)
+        PaperlessEntity.__init__(self, data, entry, description)
