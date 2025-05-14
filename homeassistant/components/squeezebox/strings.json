@@ -152,7 +152,7 @@
   },
   "exceptions": {
     "invalid_announce_media_type": {
-      "message": "Announcements must have media type of music. {media_type} is not a supported type."
+      "message": "Only type 'music' can be played as announcement (received type {media_type})."
     },
     "invalid_announce_volume": {
       "message": "{announce_volume} must be a number greater than 0 and less than or equal to 1."
@@ -169,11 +169,8 @@
     "coordinator_no_data": {
       "message": "No data from status poll."
     },
-    "browse_search_media_not_found": {
-      "message": "Media not found: {search_type} / {search_id}."
-    },
     "browse_media_not_found": {
-      "message": "Media not found: {media_type} / {media_id}."
+      "message": "Media not found: {type} / {id}."
     },
     "browse_media_type_not_supported": {
       "message": "Media type not supported: {media_type}."

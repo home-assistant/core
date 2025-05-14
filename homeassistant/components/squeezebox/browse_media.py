@@ -317,10 +317,10 @@ async def build_item_response(
     if children is None:
         raise BrowseError(
             translation_domain=DOMAIN,
-            translation_key="browse_search_media_not_found",
+            translation_key="browse_media_not_found",
             translation_placeholders={
-                "search_type": f"{search_type}",
-                "search_id": f"{search_id}",
+                "type": str(search_type),
+                "id": str(search_id),
             },
         )
 
@@ -409,7 +409,7 @@ async def generate_playlist(
             translation_domain=DOMAIN,
             translation_key="browse_media_type_not_supported",
             translation_placeholders={
-                "media_type": f"{media_type}",
+                "media_type": str(media_type),
             },
         )
 
@@ -429,7 +429,7 @@ async def generate_playlist(
         translation_domain=DOMAIN,
         translation_key="browse_media_not_found",
         translation_placeholders={
-            "media_type": f"{media_type}",
-            "media_id": f"{media_id}",
+            "type": str(media_type),
+            "id": str(media_id),
         },
     )

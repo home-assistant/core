@@ -474,7 +474,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
                     translation_domain=DOMAIN,
                     translation_key="invalid_announce_media_type",
                     translation_placeholders={
-                        "media_type": f"{media_type}",
+                        "media_type": str(media_type),
                     },
                 )
 
@@ -487,7 +487,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
                     translation_domain=DOMAIN,
                     translation_key="invalid_announce_volume",
                     translation_placeholders={
-                        "announce_volume": f"{ATTR_ANNOUNCE_VOLUME}",
+                        "announce_volume": ATTR_ANNOUNCE_VOLUME,
                     },
                 ) from None
             else:
@@ -500,7 +500,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
                     translation_domain=DOMAIN,
                     translation_key="invalid_announce_timeout",
                     translation_placeholders={
-                        "announce_timeout": f"{ATTR_ANNOUNCE_TIMEOUT}",
+                        "announce_timeout": ATTR_ANNOUNCE_TIMEOUT,
                     },
                 ) from None
             else:
@@ -610,7 +610,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
                     translation_domain=DOMAIN,
                     translation_key="join_cannot_find_other_player",
                     translation_placeholders={
-                        "other_player_entity_id": f"{other_player_entity_id}"
+                        "other_player_entity_id": str(other_player_entity_id)
                     },
                 )
             if other_player_id := other_player.unique_id:
@@ -620,7 +620,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
                     translation_domain=DOMAIN,
                     translation_key="join_cannot_join_unknown_player",
                     translation_placeholders={
-                        "other_player_entity_id": f"{other_player_entity_id}"
+                        "other_player_entity_id": str(other_player_entity_id)
                     },
                 )
 
