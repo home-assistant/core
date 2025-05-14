@@ -118,6 +118,33 @@
       }
     },
     "sensor": {
+      "alarms_gas": {
+        "name": "Gas alarm issues",
+        "state": {
+          "supervisory": "Supervisory",
+          "trouble": "Trouble",
+          "alarm": "Alarm",
+          "no_issues": "No issues"
+        }
+      },
+      "alarms_fire": {
+        "name": "Fire alarm issues",
+        "state": {
+          "supervisory": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::supervisory%]",
+          "trouble": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::trouble%]",
+          "alarm": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::alarm%]",
+          "no_issues": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::no_issues%]"
+        }
+      },
+      "alarms_burglary": {
+        "name": "Burglary alarm issues",
+        "state": {
+          "supervisory": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::supervisory%]",
+          "trouble": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::trouble%]",
+          "alarm": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::alarm%]",
+          "no_issues": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::no_issues%]"
+        }
+      },
       "faulting_points": {
         "name": "Faulting points",
         "unit_of_measurement": "points"
