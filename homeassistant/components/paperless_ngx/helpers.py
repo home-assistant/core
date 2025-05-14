@@ -1,38 +1,25 @@
 """Helper function for Paperless-ngx sensors."""
 
 from collections.abc import Callable
-from dataclasses import dataclass
-from datetime import datetime
 from typing import Any, TypeVar
 
+from homeassistant.const import UnitOfInformation
+from homeassistant.util.unit_conversion import InformationConverter
+
 from .coordinator import PaperlessData
-
-
-@dataclass(frozen=True, kw_only=True)
-class PaperlessStatusEntry:
-    """Describes Paperless-ngx sensor entity."""
-
-    state: Any
-    last_run: datetime | None = None
-    error: str | None = None
-
 
 TState = TypeVar("TState")
 TTransformed = TypeVar("TTransformed")
 
 
-def get_paperless_status_entry(
+def build_state_fn(
     get_state: Callable[[PaperlessData], TState | None],
-    get_error: Callable[[PaperlessData], str | None] | None = None,
-    get_last_run: Callable[[PaperlessData], datetime | None] | None = None,
     transform: Callable[[TState], TTransformed] | None = None,
-) -> Callable[[PaperlessData], PaperlessStatusEntry]:
+) -> Callable[[PaperlessData], TState | TTransformed | None]:
     """Create a function to extract and transform state and error from the status object."""
 
-    def extractor(status: PaperlessData) -> PaperlessStatusEntry:
+    def extractor(status: PaperlessData) -> TState | TTransformed | None:
         state = get_state(status) if get_state is not None else None
-        last_run = get_last_run(status) if get_last_run is not None else None
-        error = get_error(status) if get_error is not None else None
 
         transformed_state: TState | TTransformed | None
 
@@ -41,15 +28,32 @@ def get_paperless_status_entry(
         else:
             transformed_state = state
 
-        return PaperlessStatusEntry(
-            state=transformed_state,
-            error=error,
-            last_run=last_run,
-        )
+        return transformed_state
 
     return extractor
 
 
+def build_attributes_fn(
+    **kwargs: Callable[[PaperlessData], Any],
+) -> Callable[[str, PaperlessData], dict[str, str]]:
+    """Create a function to extract and transform attributes from the status object."""
+
+    def attributes(key: str, data: PaperlessData) -> dict[str, str]:
+        result = {}
+        for name, fn in kwargs.items():
+            value = fn(data)
+            if value is not None:
+                result[name] = str(value)
+        return result
+
+    return attributes
+
+
 def bytes_to_gb_converter(value: int) -> float:
     """Convert bytes to gigabytes."""
-    return round(value / (1024**3), 2)
+    return round(
+        InformationConverter().convert(
+            value, UnitOfInformation.BYTES, UnitOfInformation.GIGABYTES
+        ),
+        2,
+    )

@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import Enum
+from typing import Any
 
 from pypaperless import Paperless
 from pypaperless.models.common import StatusType
@@ -33,11 +35,7 @@ from .const import (
 )
 from .coordinator import PaperlessConfigEntry, PaperlessCoordinator, PaperlessData
 from .entity import PaperlessCoordinatorEntity
-from .helpers import (
-    PaperlessStatusEntry,
-    bytes_to_gb_converter,
-    get_paperless_status_entry,
-)
+from .helpers import build_state_fn, bytes_to_gb_converter
 
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 2
@@ -47,7 +45,8 @@ PARALLEL_UPDATES = 2
 class PaperlessEntityDescription(SensorEntityDescription):
     """Describes Paperless-ngx sensor entity."""
 
-    value_fn: Callable[[PaperlessData], PaperlessStatusEntry]
+    value_fn: Callable[[PaperlessData], Any] | None = None
+    attributes_fn: Callable[[PaperlessData], dict[str, str | None]] | None = None
 
 
 SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
@@ -56,14 +55,14 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
         translation_key=ENTITY_SENSOR_DOCUMENT_COUNT,
         icon="mdi:file-document-multiple",
         state_class=SensorStateClass.TOTAL,
-        value_fn=get_paperless_status_entry(lambda data: data.document_count),
+        value_fn=build_state_fn(lambda data: data.document_count),
     ),
     PaperlessEntityDescription(
         key=ENTITY_SENSOR_INBOX_COUNT,
         translation_key=ENTITY_SENSOR_INBOX_COUNT,
         icon="mdi:tray-full",
         state_class=SensorStateClass.TOTAL,
-        value_fn=get_paperless_status_entry(lambda data: data.inbox_count),
+        value_fn=build_state_fn(lambda data: data.inbox_count),
     ),
     PaperlessEntityDescription(
         key=ENTITY_SENSOR_STORAGE_TOTAL,
@@ -72,7 +71,7 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=get_paperless_status_entry(
+        value_fn=build_state_fn(
             lambda data: data.status.storage.total
             if data.status and data.status.storage
             else None,
@@ -86,7 +85,7 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=get_paperless_status_entry(
+        value_fn=build_state_fn(
             lambda data: data.status.storage.available
             if data.status and data.status.storage
             else None,
@@ -100,14 +99,16 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
         options=[status.value for status in StatusType],
-        value_fn=get_paperless_status_entry(
+        value_fn=build_state_fn(
             lambda data: data.status.database.status
             if data.status and data.status.database
             else None,
-            lambda data: data.status.database.error
+        ),
+        attributes_fn=lambda data: {
+            "error": str(data.status.database.error)
             if data.status and data.status.database
             else None,
-        ),
+        },
     ),
     PaperlessEntityDescription(
         key=ENTITY_SENSOR_STATUS_REDIS,
@@ -116,14 +117,16 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
         options=[status.value for status in StatusType],
-        value_fn=get_paperless_status_entry(
+        value_fn=build_state_fn(
             lambda data: data.status.tasks.redis_status
             if data.status and data.status.tasks
             else None,
-            lambda data: data.status.tasks.redis_error
+        ),
+        attributes_fn=lambda data: {
+            "error": str(data.status.tasks.redis_error)
             if data.status and data.status.tasks
             else None,
-        ),
+        },
     ),
     PaperlessEntityDescription(
         key=ENTITY_SENSOR_STATUS_CELERY,
@@ -132,11 +135,8 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
         options=[status.value for status in StatusType],
-        value_fn=get_paperless_status_entry(
+        value_fn=build_state_fn(
             lambda data: data.status.tasks.celery_status
-            if data.status and data.status.tasks
-            else None,
-            lambda data: data.status.tasks.celery_error
             if data.status and data.status.tasks
             else None,
         ),
@@ -148,17 +148,19 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
         options=[status.value for status in StatusType],
-        value_fn=get_paperless_status_entry(
+        value_fn=build_state_fn(
             lambda data: data.status.tasks.index_status
             if data.status and data.status.tasks
             else None,
-            lambda data: data.status.tasks.index_error
-            if data.status and data.status.tasks
-            else None,
-            lambda data: data.status.tasks.index_last_modified
-            if data.status and data.status.tasks
-            else None,
         ),
+        attributes_fn=lambda data: {
+            "last_modified": str(data.status.tasks.index_last_modified)
+            if data.status and data.status.tasks
+            else None,
+            "error": str(data.status.tasks.index_error)
+            if data.status and data.status.tasks
+            else None,
+        },
     ),
     PaperlessEntityDescription(
         key=ENTITY_SENSOR_STATUS_CLASSIFIER,
@@ -167,17 +169,19 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
         options=[status.value for status in StatusType],
-        value_fn=get_paperless_status_entry(
+        value_fn=build_state_fn(
             lambda data: data.status.tasks.classifier_status
             if data.status and data.status.tasks
             else None,
-            lambda data: data.status.tasks.classifier_error
-            if data.status and data.status.tasks
-            else None,
-            lambda data: data.status.tasks.classifier_last_trained
-            if data.status and data.status.tasks
-            else None,
         ),
+        attributes_fn=lambda data: {
+            "last_trained": str(data.status.tasks.classifier_last_trained)
+            if data.status and data.status.tasks
+            else None,
+            "error": str(data.status.tasks.classifier_error)
+            if data.status and data.status.tasks
+            else None,
+        },
     ),
 )
 
@@ -200,9 +204,7 @@ class PaperlessSensor(
         """Initialize Paperless-ngx coordinator sensor."""
         super().__init__(data, entry, description, coordinator)
         self.paperless_data = data
-        self._attr_unique_id = (
-            f"{DOMAIN}_{self}_{data.base_url}_sensor_{description.key}_{entry.entry_id}"
-        )
+        self._attr_unique_id = f"{DOMAIN}__{entry.entry_id}_sensor_{description.key}"
 
     @property
     def available(self) -> bool:
@@ -213,30 +215,24 @@ class PaperlessSensor(
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         value_fn = self.entity_description.value_fn
+        attributes_fn = self.entity_description.attributes_fn
+
         if value_fn is None:
             raise NotImplementedError
 
-        status_entry = value_fn(self.coordinator.data)
+        state = value_fn(self.coordinator.data)
 
-        if status_entry.state is None:
+        if state is None:
             self._attr_native_value = None
             self._attr_available = False
         else:
-            self._attr_native_value = (
-                status_entry.state.value
-                if isinstance(status_entry.state, StatusType)
-                else status_entry.state
-            )
+            self._attr_native_value = state.value if isinstance(state, Enum) else state
             self._attr_available = True
 
         self._attr_extra_state_attributes = {}
-
-        if status_entry.error:
-            self._attr_extra_state_attributes["error_message"] = status_entry.error
-
-        if status_entry.last_run:
-            self._attr_extra_state_attributes["last_run"] = (
-                status_entry.last_run.isoformat()
+        if attributes_fn:
+            self._attr_extra_state_attributes.update(
+                attributes_fn(self.coordinator.data)
             )
 
         self.async_write_ha_state()
