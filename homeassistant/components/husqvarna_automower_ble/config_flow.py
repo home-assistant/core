@@ -68,11 +68,11 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm discovery."""
+        """Confirm Bluetooth discovery."""
 
         if user_input is not None:
             self.pin = user_input[CONF_PIN]
-            return await self.async_step_confirm()
+            return await self.async_step_bluetooth_finalise()
 
         return self.async_show_form(
             step_id="bluetooth_confirm",
@@ -86,14 +86,14 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial step."""
+        """Handle the initial manual step."""
 
         if user_input is not None:
             self.address = user_input[CONF_ADDRESS]
             self.pin = user_input[CONF_PIN]
             await self.async_set_unique_id(self.address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
-            return await self.async_step_confirm()
+            return await self.async_step_finalise()
 
         return self.async_show_form(
             step_id="user",
@@ -109,12 +109,14 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         """Probe the mower to see if it exists."""
         channel_id = random.randint(1, 0xFFFFFFFF)
 
+        assert self.address
+
         try:
             (manufacturer, device_type, model) = await Mower(
                 channel_id, self.address
             ).probe_gatts(device)
-        except (BleakError, TimeoutError) as exception:
-            LOGGER.exception("Failed to connect to device: %s", exception)
+        except (BleakError, TimeoutError):
+            LOGGER.exception("Failed to probe device ({self.address}): {exception}")
             return None
 
         title = manufacturer + " " + device_type
@@ -132,10 +134,12 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return (channel_id, mower)
 
-    async def async_step_confirm(
-        self, user_input: dict[str, Any] | None = None
+    async def check_mower(
+        self,
+        ble_flow: bool,
+        user_input: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
-        """Confirm discovery."""
+        """Check that the mower exists and is setup."""
         device = bluetooth.async_ble_device_from_address(
             self.hass, self.address, connectable=True
         )
@@ -151,9 +155,24 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             if not await mower.connect(device):
                 errors["base"] = "invalid_auth"
 
+                if ble_flow:
+                    return self.async_show_form(
+                        step_id="bluetooth_confirm",
+                        data_schema=vol.Schema(
+                            {
+                                vol.Required(CONF_PIN): str,
+                            },
+                        ),
+                        errors=errors,
+                    )
                 return self.async_show_form(
-                    step_id="reauth_confirm",
-                    data_schema=vol.Schema({vol.Required(CONF_PIN): str}),
+                    step_id="user",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(CONF_ADDRESS): str,
+                            vol.Required(CONF_PIN): str,
+                        },
+                    ),
                     errors=errors,
                 )
         except (TimeoutError, BleakError):
@@ -167,6 +186,20 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PIN: self.pin,
             },
         )
+
+    async def async_step_bluetooth_finalise(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Finalise the Bluetooth setup."""
+        return await self.check_mower(True, user_input)
+
+    async def async_step_finalise(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Finalise the Manual setup."""
+        return await self.check_mower(False, user_input)
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
