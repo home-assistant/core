@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator, Sequence
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -16,6 +17,7 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
+from homeassistant.components.script import Script
 from homeassistant.const import (
     CONF_COVERS,
     CONF_DEVICE_CLASS,
@@ -213,48 +215,18 @@ async def async_setup_platform(
     )
 
 
-class CoverTemplate(TemplateEntity, CoverEntity):
-    """Representation of a Template cover."""
+class AbstractTemplateCover(CoverEntity):
+    """Representation of a template cover features."""
 
-    _attr_should_poll = False
+    def __init__(self, config: dict[str, Any]) -> None:
+        """Initialize the features."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: dict[str, Any],
-        unique_id,
-    ) -> None:
-        """Initialize the Template cover."""
-        super().__init__(hass, config=config, fallback_name=None, unique_id=unique_id)
-        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
-            self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, object_id, hass=hass
-            )
-        name = self._attr_name
-        if TYPE_CHECKING:
-            assert name is not None
+        self._registered_scripts: list[str] = []
+
         self._template = config.get(CONF_STATE)
-
         self._position_template = config.get(CONF_POSITION)
         self._tilt_template = config.get(CONF_TILT)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
-
-        # The config requires (open and close scripts) or a set position script,
-        # therefore the base supported features will always include them.
-        self._attr_supported_features = (
-            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
-        )
-        for action_id, supported_feature in (
-            (OPEN_ACTION, 0),
-            (CLOSE_ACTION, 0),
-            (STOP_ACTION, CoverEntityFeature.STOP),
-            (POSITION_ACTION, CoverEntityFeature.SET_POSITION),
-            (TILT_ACTION, TILT_FEATURES),
-        ):
-            # Scripts can be an empty list, therefore we need to check for None
-            if (action_config := config.get(action_id)) is not None:
-                self.add_script(action_id, action_config, name, DOMAIN)
-                self._attr_supported_features |= supported_feature
 
         optimistic = config.get(CONF_OPTIMISTIC)
         self._optimistic = optimistic or (
@@ -267,61 +239,55 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         self._is_closing = False
         self._tilt_value: int | None = None
 
-    @callback
-    def _async_setup_templates(self) -> None:
-        """Set up templates."""
-        if self._template:
-            self.add_template_attribute(
-                "_position", self._template, None, self._update_state
-            )
-        if self._position_template:
-            self.add_template_attribute(
-                "_position",
-                self._position_template,
-                None,
-                self._update_position,
-                none_on_template_error=True,
-            )
-        if self._tilt_template:
-            self.add_template_attribute(
-                "_tilt_value",
-                self._tilt_template,
-                None,
-                self._update_tilt,
-                none_on_template_error=True,
-            )
-        super()._async_setup_templates()
+    def _register_scripts(
+        self, config: dict[str, Any]
+    ) -> Generator[tuple[str, Sequence[dict[str, Any]], CoverEntityFeature | int]]:
+        for action_id, supported_feature in (
+            (OPEN_ACTION, 0),
+            (CLOSE_ACTION, 0),
+            (STOP_ACTION, CoverEntityFeature.STOP),
+            (POSITION_ACTION, CoverEntityFeature.SET_POSITION),
+            (TILT_ACTION, TILT_FEATURES),
+        ):
+            if (action_config := config.get(action_id)) is not None:
+                self._registered_scripts.append(action_id)
+                yield (action_id, action_config, supported_feature)
 
-    @callback
-    def _update_state(self, result):
-        super()._update_state(result)
-        if isinstance(result, TemplateError):
-            self._position = None
-            return
+    @property
+    def is_closed(self) -> bool | None:
+        """Return if the cover is closed."""
+        if self._position is None:
+            return None
 
-        state = str(result).lower()
+        return self._position == 0
 
-        if state in _VALID_STATES:
-            if not self._position_template:
-                if state in ("true", OPEN_STATE):
-                    self._position = 100
-                else:
-                    self._position = 0
+    @property
+    def is_opening(self) -> bool:
+        """Return if the cover is currently opening."""
+        return self._is_opening
 
-            self._is_opening = state == OPENING_STATE
-            self._is_closing = state == CLOSING_STATE
-        else:
-            _LOGGER.error(
-                "Received invalid cover is_on state: %s for entity %s. Expected: %s",
-                state,
-                self.entity_id,
-                ", ".join(_VALID_STATES),
-            )
-            if not self._position_template:
-                self._position = None
+    @property
+    def is_closing(self) -> bool:
+        """Return if the cover is currently closing."""
+        return self._is_closing
 
-            self._is_opening = False
-            self._is_closing = False
+    @property
+    def current_cover_position(self) -> int | None:
+        """Return current position of cover.
+
+        None is unknown, 0 is closed, 100 is fully open.
+        """
+        if self._position_template or POSITION_ACTION in self._registered_scripts:
+            return self._position
+        return None
+
+    @property
+    def current_cover_tilt_position(self) -> int | None:
+        """Return current position of cover tilt.
+
+        None is unknown, 0 is closed, 100 is fully open.
+        """
+        return self._tilt_value
 
     @callback
     def _update_position(self, result):
@@ -367,48 +333,39 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         else:
             self._tilt_value = state
 
-    @property
-    def is_closed(self) -> bool | None:
-        """Return if the cover is closed."""
-        if self._position is None:
-            return None
+    def _update_opening_and_closing(self, result: Any) -> None:
+        state = str(result).lower()
 
-        return self._position == 0
+        if state in _VALID_STATES:
+            if not self._position_template:
+                if state in ("true", OPEN_STATE):
+                    self._position = 100
+                else:
+                    self._position = 0
 
-    @property
-    def is_opening(self) -> bool:
-        """Return if the cover is currently opening."""
-        return self._is_opening
+            self._is_opening = state == OPENING_STATE
+            self._is_closing = state == CLOSING_STATE
+        else:
+            _LOGGER.error(
+                "Received invalid cover is_on state: %s for entity %s. Expected: %s",
+                state,
+                self.entity_id,
+                ", ".join(_VALID_STATES),
+            )
+            if not self._position_template:
+                self._position = None
 
-    @property
-    def is_closing(self) -> bool:
-        """Return if the cover is currently closing."""
-        return self._is_closing
+            self._is_opening = False
+            self._is_closing = False
 
-    @property
-    def current_cover_position(self) -> int | None:
-        """Return current position of cover.
-
-        None is unknown, 0 is closed, 100 is fully open.
-        """
-        if self._position_template or self._action_scripts.get(POSITION_ACTION):
-            return self._position
-        return None
-
-    @property
-    def current_cover_tilt_position(self) -> int | None:
-        """Return current position of cover tilt.
-
-        None is unknown, 0 is closed, 100 is fully open.
-        """
-        return self._tilt_value
-
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def _async_open_cover(
+        self, run_script, scripts: dict[str, Script], **kwargs: Any
+    ) -> None:
         """Move the cover up."""
-        if open_script := self._action_scripts.get(OPEN_ACTION):
-            await self.async_run_script(open_script, context=self._context)
-        elif position_script := self._action_scripts.get(POSITION_ACTION):
-            await self.async_run_script(
+        if open_script := scripts.get(OPEN_ACTION):
+            await run_script(open_script, context=self._context)
+        elif position_script := scripts.get(POSITION_ACTION):
+            await run_script(
                 position_script,
                 run_variables={"position": 100},
                 context=self._context,
@@ -417,12 +374,14 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             self._position = 100
             self.async_write_ha_state()
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def _async_close_cover(
+        self, run_script, scripts: dict[str, Script], **kwargs: Any
+    ) -> None:
         """Move the cover down."""
-        if close_script := self._action_scripts.get(CLOSE_ACTION):
-            await self.async_run_script(close_script, context=self._context)
-        elif position_script := self._action_scripts.get(POSITION_ACTION):
-            await self.async_run_script(
+        if close_script := scripts.get(CLOSE_ACTION):
+            await run_script(close_script, context=self._context)
+        elif position_script := scripts.get(POSITION_ACTION):
+            await run_script(
                 position_script,
                 run_variables={"position": 0},
                 context=self._context,
@@ -431,51 +390,174 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             self._position = 0
             self.async_write_ha_state()
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def _async_stop_cover(
+        self, run_script, scripts: dict[str, Script], **kwargs: Any
+    ) -> None:
         """Fire the stop action."""
-        if stop_script := self._action_scripts.get(STOP_ACTION):
-            await self.async_run_script(stop_script, context=self._context)
+        if stop_script := scripts.get(STOP_ACTION):
+            await run_script(stop_script, context=self._context)
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def _async_set_cover_position(
+        self, run_script, scripts: dict[str, Script], **kwargs: Any
+    ) -> None:
         """Set cover position."""
         self._position = kwargs[ATTR_POSITION]
-        await self.async_run_script(
-            self._action_scripts[POSITION_ACTION],
+        await run_script(
+            scripts[POSITION_ACTION],
             run_variables={"position": self._position},
             context=self._context,
         )
         if self._optimistic:
             self.async_write_ha_state()
 
-    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+    async def _async_open_cover_tilt(
+        self, run_script, scripts: dict[str, Script], **kwargs: Any
+    ) -> None:
         """Tilt the cover open."""
         self._tilt_value = 100
-        await self.async_run_script(
-            self._action_scripts[TILT_ACTION],
+        await run_script(
+            scripts[TILT_ACTION],
             run_variables={"tilt": self._tilt_value},
             context=self._context,
         )
         if self._tilt_optimistic:
             self.async_write_ha_state()
+
+    async def _async_close_cover_tilt(
+        self, run_script, scripts: dict[str, Script], **kwargs: Any
+    ) -> None:
+        """Tilt the cover closed."""
+        self._tilt_value = 0
+        await run_script(
+            scripts[TILT_ACTION],
+            run_variables={"tilt": self._tilt_value},
+            context=self._context,
+        )
+        if self._tilt_optimistic:
+            self.async_write_ha_state()
+
+    async def _async_set_cover_tilt_position(
+        self, run_script, scripts: dict[str, Script], **kwargs: Any
+    ) -> None:
+        """Move the cover tilt to a specific position."""
+        self._tilt_value = kwargs[ATTR_TILT_POSITION]
+        await run_script(
+            scripts[TILT_ACTION],
+            run_variables={"tilt": self._tilt_value},
+            context=self._context,
+        )
+        if self._tilt_optimistic:
+            self.async_write_ha_state()
+
+
+class CoverTemplate(TemplateEntity, AbstractTemplateCover):
+    """Representation of a Template cover."""
+
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: dict[str, Any],
+        unique_id,
+    ) -> None:
+        """Initialize the Template cover."""
+        TemplateEntity.__init__(
+            self, hass, config=config, fallback_name=None, unique_id=unique_id
+        )
+        AbstractTemplateCover.__init__(self, config)
+        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
+            self.entity_id = async_generate_entity_id(
+                ENTITY_ID_FORMAT, object_id, hass=hass
+            )
+        name = self._attr_name
+        if TYPE_CHECKING:
+            assert name is not None
+
+        # The config requires (open and close scripts) or a set position script,
+        # therefore the base supported features will always include them.
+        self._attr_supported_features = (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+        )
+
+        for action_id, action_config, supported_feature in self._register_scripts(
+            config
+        ):
+            self.add_script(action_id, action_config, name, DOMAIN)
+            self._attr_supported_features |= supported_feature
+
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
+        if self._template:
+            self.add_template_attribute(
+                "_position", self._template, None, self._update_state
+            )
+        if self._position_template:
+            self.add_template_attribute(
+                "_position",
+                self._position_template,
+                None,
+                self._update_position,
+                none_on_template_error=True,
+            )
+        if self._tilt_template:
+            self.add_template_attribute(
+                "_tilt_value",
+                self._tilt_template,
+                None,
+                self._update_tilt,
+                none_on_template_error=True,
+            )
+        super()._async_setup_templates()
+
+    @callback
+    def _update_state(self, result):
+        super()._update_state(result)
+        if isinstance(result, TemplateError):
+            self._position = None
+            return
+
+        self._update_opening_and_closing(result)
+
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Move the cover up."""
+        await self._async_open_cover(
+            self.async_run_script, self._action_scripts, **kwargs
+        )
+
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Move the cover down."""
+        await self._async_close_cover(
+            self.async_run_script, self._action_scripts, **kwargs
+        )
+
+    async def async_stop_cover(self, **kwargs: Any) -> None:
+        """Fire the stop action."""
+        await self._async_stop_cover(
+            self.async_run_script, self._action_scripts, **kwargs
+        )
+
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
+        """Set cover position."""
+        await self._async_set_cover_position(
+            self.async_run_script, self._action_scripts, **kwargs
+        )
+
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+        """Tilt the cover open."""
+        await self._async_open_cover_tilt(
+            self.async_run_script, self._action_scripts, **kwargs
+        )
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt the cover closed."""
-        self._tilt_value = 0
-        await self.async_run_script(
-            self._action_scripts[TILT_ACTION],
-            run_variables={"tilt": self._tilt_value},
-            context=self._context,
+        await self._async_close_cover_tilt(
+            self.async_run_script, self._action_scripts, **kwargs
         )
-        if self._tilt_optimistic:
-            self.async_write_ha_state()
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        self._tilt_value = kwargs[ATTR_TILT_POSITION]
-        await self.async_run_script(
-            self._action_scripts[TILT_ACTION],
-            run_variables={"tilt": self._tilt_value},
-            context=self._context,
+        await self._async_set_cover_tilt_position(
+            self.async_run_script, self._action_scripts, **kwargs
         )
-        if self._tilt_optimistic:
-            self.async_write_ha_state()
