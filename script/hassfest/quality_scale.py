@@ -1610,7 +1610,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "konnected",
     "kostal_plenticore",
     "kraken",
-    "knx",
     "kulersky",
     "kwb",
     "lacrosse",
