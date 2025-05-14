@@ -126,7 +126,8 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.BITS_PER_SECOND,
-        suggested_display_precision=0,
+        suggested_display_precision=3,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         value_fn=lambda data: data.status["uplink_throughput_bps"],
     ),
     StarlinkSensorEntityDescription(
@@ -135,7 +136,8 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.BITS_PER_SECOND,
-        suggested_display_precision=0,
+        suggested_display_precision=3,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         value_fn=lambda data: data.status["downlink_throughput_bps"],
     ),
     StarlinkSensorEntityDescription(
