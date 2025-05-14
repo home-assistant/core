@@ -26,7 +26,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-TWO_YEARS = 2 * 365 * 24
+TWO_YEARS = 2 * 365
 
 
 class MillDataUpdateCoordinator(DataUpdateCoordinator):
