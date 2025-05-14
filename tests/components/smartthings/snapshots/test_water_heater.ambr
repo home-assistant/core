@@ -5,8 +5,8 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max_temp': 60.0,
-      'min_temp': 43.3,
+      'max_temp': 70,
+      'min_temp': 40,
       'operation_list': list([
         'eco',
         'standard',
@@ -48,8 +48,8 @@
       'away_mode': 'off',
       'current_temperature': 57,
       'friendly_name': 'Heat pump',
-      'max_temp': 60.0,
-      'min_temp': 43.3,
+      'max_temp': 70,
+      'min_temp': 40,
       'operation_list': list([
         'eco',
         'standard',
@@ -76,8 +76,8 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max_temp': 60.0,
-      'min_temp': 43.3,
+      'max_temp': 70,
+      'min_temp': 40,
       'operation_list': list([
         'eco',
         'standard',
@@ -118,8 +118,8 @@
       'away_mode': 'off',
       'current_temperature': 54.3,
       'friendly_name': 'Eco Heating System',
-      'max_temp': 60.0,
-      'min_temp': 43.3,
+      'max_temp': 70,
+      'min_temp': 40,
       'operation_list': list([
         'eco',
         'standard',
@@ -145,8 +145,8 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max_temp': 60.0,
-      'min_temp': 43.3,
+      'max_temp': 70,
+      'min_temp': 40,
       'operation_list': list([
         'eco',
         'standard',
@@ -188,8 +188,8 @@
       'away_mode': 'off',
       'current_temperature': 49.6,
       'friendly_name': 'Wärmepumpe',
-      'max_temp': 60.0,
-      'min_temp': 43.3,
+      'max_temp': 70,
+      'min_temp': 40,
       'operation_list': list([
         'eco',
         'standard',

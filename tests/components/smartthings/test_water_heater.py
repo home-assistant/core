@@ -1,10 +1,22 @@
-"""Test for the SmartThings valve platform."""
+"""Test for the SmartThings water heater platform."""
 
 from unittest.mock import AsyncMock
 
+from pysmartthings import Capability, Command
+import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.components.smartthings import MAIN
+from homeassistant.components.water_heater import (
+    ATTR_AWAY_MODE,
+    ATTR_OPERATION_MODE,
+    DOMAIN as WATER_HEATER_DOMAIN,
+    SERVICE_SET_AWAY_MODE,
+    SERVICE_SET_OPERATION_MODE,
+    SERVICE_SET_TEMPERATURE,
+    STATE_ECO,
+)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -25,4 +37,105 @@ async def test_all_entities(
 
     snapshot_smartthings_entities(
         hass, entity_registry, snapshot, Platform.WATER_HEATER
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
+@pytest.mark.parametrize(
+    ("operation_mode", "argument"),
+    [
+        (STATE_ECO, "eco"),
+        ("standard", "std"),
+        ("force", "force"),
+        ("power", "power"),
+    ],
+)
+async def test_set_operation_mode(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    operation_mode: str,
+    argument: str,
+) -> None:
+    """Test set operation mode."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        SERVICE_SET_OPERATION_MODE,
+        {
+            ATTR_ENTITY_ID: "water_heater.warmepumpe",
+            ATTR_OPERATION_MODE: operation_mode,
+        },
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "3810e5ad-5351-d9f9-12ff-000001200000",
+        Capability.AIR_CONDITIONER_MODE,
+        Command.SET_AIR_CONDITIONER_MODE,
+        MAIN,
+        argument=argument,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
+async def test_set_temperature(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test set operation mode."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: "water_heater.warmepumpe",
+            ATTR_TEMPERATURE: 56,
+        },
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "3810e5ad-5351-d9f9-12ff-000001200000",
+        Capability.THERMOSTAT_COOLING_SETPOINT,
+        Command.SET_COOLING_SETPOINT,
+        MAIN,
+        argument=56,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
+@pytest.mark.parametrize(
+    ("on", "argument"),
+    [
+        (True, "on"),
+        (False, "off"),
+    ],
+)
+async def test_away_mode(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    on: bool,
+    argument: str,
+) -> None:
+    """Test set away mode."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        SERVICE_SET_AWAY_MODE,
+        {
+            ATTR_ENTITY_ID: "water_heater.warmepumpe",
+            ATTR_AWAY_MODE: on,
+        },
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "3810e5ad-5351-d9f9-12ff-000001200000",
+        Capability.CUSTOM_OUTING_MODE,
+        Command.SET_OUTING_MODE,
+        MAIN,
+        argument=argument,
     )
