@@ -91,10 +91,10 @@
     "freezer": {
       "name": "Freezer"
     },
-    "robot_vacuum_cleander": {
+    "robot_vacuum_cleaner": {
       "name": "Robot vacuum cleaner"
     },
-    "steam_oven_microwave": {
+    "steam_oven_micro": {
       "name": "Steam oven micro"
     },
     "dialog_oven": {
@@ -115,9 +115,6 @@
   },
   "entity": {
     "binary_sensor": {
-      "door": {
-        "name": "Door"
-      },
       "failure": {
         "name": "Failure"
       },
@@ -193,6 +190,48 @@
       },
       "energy_consumption": {
         "name": "Energy consumption"
+      },
+      "plate": {
+        "name": "Plate {plate_no}",
+        "state": {
+          "0": "0",
+          "110": "Warming",
+          "220": "[%key:component::miele::entity::sensor::plate::state::110%]",
+          "1": "1",
+          "2": "1\u2022",
+          "3": "2",
+          "4": "2\u2022",
+          "5": "3",
+          "6": "3\u2022",
+          "7": "4",
+          "8": "4\u2022",
+          "9": "5",
+          "10": "5\u2022",
+          "11": "6",
+          "12": "6\u2022",
+          "13": "7",
+          "14": "7\u2022",
+          "15": "8",
+          "16": "8\u2022",
+          "17": "9",
+          "18": "9\u2022",
+          "117": "Boost",
+          "118": "[%key:component::miele::entity::sensor::plate::state::117%]",
+          "217": "[%key:component::miele::entity::sensor::plate::state::117%]"
+        }
+      },
+      "drying_step": {
+        "name": "Drying step",
+        "state": {
+          "extra_dry": "Extra dry",
+          "hand_iron_1": "Hand iron 1",
+          "hand_iron_2": "Hand iron 2",
+          "machine_iron": "Machine iron",
+          "normal_plus": "Normal plus",
+          "normal": "Normal",
+          "slightly_dry": "Slightly dry",
+          "smoothing": "Smoothing"
+        }
       },
       "program_phase": {
         "name": "Program phase",
@@ -865,6 +904,9 @@
       },
       "core_temperature": {
         "name": "Core temperature"
+      },
+      "target_temperature": {
+        "name": "Target temperature"
       },
       "core_target_temperature": {
         "name": "Core target temperature"
