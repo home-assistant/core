@@ -23,7 +23,7 @@ from .types import BoschAlarmConfigEntry
 
 SET_DATE_TIME_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): vol.All(cv.ensure_list, [cv.string]),
+        vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
         vol.Optional(DATETIME_ATTR): cv.datetime,
     }
 )
@@ -36,32 +36,32 @@ def setup_services(hass: HomeAssistant) -> None:
         """Set the date and time on a bosch alarm panel."""
         config_entry: BoschAlarmConfigEntry | None
         value: dt.datetime = call.data.get(DATETIME_ATTR, dt_util.now())
-        for entry_id in call.data[ATTR_CONFIG_ENTRY_ID]:
-            if not (config_entry := hass.config_entries.async_get_entry(entry_id)):
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="integration_not_found",
-                    translation_placeholders={"target": DOMAIN},
-                )
-            if config_entry.state != ConfigEntryState.LOADED:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="not_loaded",
-                    translation_placeholders={"target": config_entry.title},
-                )
-            panel = config_entry.runtime_data
-            try:
-                await panel.set_panel_date(value)
-            except ValueError as err:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN, translation_key="incorrect_year"
-                ) from err
-            except asyncio.InvalidStateError as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="connection_error",
-                    translation_placeholders={"target": config_entry.title},
-                ) from err
+        entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
+        if not (config_entry := hass.config_entries.async_get_entry(entry_id)):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="integration_not_found",
+                translation_placeholders={"target": DOMAIN},
+            )
+        if config_entry.state != ConfigEntryState.LOADED:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="not_loaded",
+                translation_placeholders={"target": config_entry.title},
+            )
+        panel = config_entry.runtime_data
+        try:
+            await panel.set_panel_date(value)
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="incorrect_year"
+            ) from err
+        except asyncio.InvalidStateError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+                translation_placeholders={"target": config_entry.title},
+            ) from err
 
     hass.services.async_register(
         DOMAIN,

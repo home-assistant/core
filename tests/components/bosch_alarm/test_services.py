@@ -41,7 +41,7 @@ async def test_set_date_time_service(
         DOMAIN,
         SET_DATE_TIME_SERVICE_NAME,
         {
-            ATTR_CONFIG_ENTRY_ID: [mock_config_entry.entry_id],
+            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             DATETIME_ATTR: dt_util.now(),
         },
         blocking=True,
@@ -61,7 +61,7 @@ async def test_set_date_time_service_fails_bad_entity(
             DOMAIN,
             SET_DATE_TIME_SERVICE_NAME,
             {
-                ATTR_CONFIG_ENTRY_ID: ["bad-config_id"],
+                ATTR_CONFIG_ENTRY_ID: "bad-config_id",
                 DATETIME_ATTR: dt_util.now(),
             },
             blocking=True,
@@ -81,7 +81,7 @@ async def test_set_date_time_service_fails_bad_params(
             DOMAIN,
             SET_DATE_TIME_SERVICE_NAME,
             {
-                ATTR_CONFIG_ENTRY_ID: [mock_config_entry.entry_id],
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 DATETIME_ATTR: "",
             },
             blocking=True,
@@ -102,7 +102,7 @@ async def test_set_date_time_service_fails_bad_year(
             DOMAIN,
             SET_DATE_TIME_SERVICE_NAME,
             {
-                ATTR_CONFIG_ENTRY_ID: [mock_config_entry.entry_id],
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 DATETIME_ATTR: dt_util.now(),
             },
             blocking=True,
@@ -123,7 +123,7 @@ async def test_set_date_time_service_fails_connection_error(
             DOMAIN,
             SET_DATE_TIME_SERVICE_NAME,
             {
-                ATTR_CONFIG_ENTRY_ID: [mock_config_entry.entry_id],
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 DATETIME_ATTR: dt_util.now(),
             },
             blocking=True,
@@ -145,7 +145,7 @@ async def test_set_date_time_service_fails_unloaded(
             DOMAIN,
             SET_DATE_TIME_SERVICE_NAME,
             {
-                ATTR_CONFIG_ENTRY_ID: [mock_config_entry.entry_id],
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 DATETIME_ATTR: dt_util.now(),
             },
             blocking=True,
