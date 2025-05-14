@@ -21,6 +21,7 @@ from homeassistant.exceptions import HomeAssistantError
 from .const import (
     CONF_AUTO_DISCOVERED,
     CONF_OVERRIDE_TYPE,
+    CONF_DISABLE_COMFORT_CONTROL,
     CONF_SERIAL,
     DOMAIN,
     OVERRIDE_TYPE_CONSTANT,
@@ -196,6 +197,7 @@ class OptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             data = {
                 CONF_OVERRIDE_TYPE: user_input.get(CONF_OVERRIDE_TYPE),
+                CONF_DISABLE_COMFORT_CONTROL: user_input.get(CONF_DISABLE_COMFORT_CONTROL),
             }
             return self.async_create_entry(title="", data=data)
 
@@ -203,11 +205,16 @@ class OptionsFlowHandler(OptionsFlow):
             CONF_OVERRIDE_TYPE, OVERRIDE_TYPE_CONSTANT
         )
 
+        disable_comfort_control = self.config_entry.options.get(
+            CONF_DISABLE_COMFORT_CONTROL, False
+        )
+
         schema = vol.Schema(
             {
                 vol.Required(CONF_OVERRIDE_TYPE, default=override_type): vol.In(
                     [OVERRIDE_TYPE_CONSTANT, OVERRIDE_TYPE_NOW]
                 ),
+                vol.Optional(CONF_DISABLE_COMFORT_CONTROL, default=disable_comfort_control): bool,
             }
         )
 
