@@ -110,6 +110,18 @@ class FakeFirmwareOptionsFlowHandler(BaseFirmwareOptionsFlow):
         # Regenerate the translation placeholders
         self._get_translation_placeholders()
 
+    async def async_step_install_zigbee_firmware(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Install Zigbee firmware."""
+        return await self.async_step_confirm_zigbee()
+
+    async def async_step_install_thread_firmware(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Install Thread firmware."""
+        return await self.async_step_start_otbr_addon()
+
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""
         assert self._probed_firmware_info is not None
@@ -240,28 +252,6 @@ async def test_config_flow_zigbee(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
         )
-        assert result["type"] is FlowResultType.SHOW_PROGRESS
-        assert result["progress_action"] == "install_addon"
-        assert result["step_id"] == "install_zigbee_flasher_addon"
-        assert result["description_placeholders"]["firmware_type"] == "spinel"
-
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-        # Progress the flow, we are now configuring the addon and running it
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result["type"] is FlowResultType.SHOW_PROGRESS
-        assert result["step_id"] == "run_zigbee_flasher_addon"
-        assert result["progress_action"] == "run_zigbee_flasher_addon"
-
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-        # Progress the flow, we are now uninstalling the addon
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result["type"] is FlowResultType.SHOW_PROGRESS
-        assert result["step_id"] == "uninstall_zigbee_flasher_addon"
-        assert result["progress_action"] == "uninstall_zigbee_flasher_addon"
-
-        await hass.async_block_till_done(wait_background_tasks=True)
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.FORM
@@ -308,13 +298,7 @@ async def test_config_flow_zigbee_skip_step_if_installed(hass: HomeAssistant) ->
             user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
         )
 
-        assert result["type"] is FlowResultType.SHOW_PROGRESS
-        assert result["step_id"] == "run_zigbee_flasher_addon"
-        assert result["progress_action"] == "run_zigbee_flasher_addon"
-        assert result["description_placeholders"]["firmware_type"] == "spinel"
-
-        # Uninstall the addon
-        await hass.async_block_till_done(wait_background_tasks=True)
+        # Confirm
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Done
@@ -388,7 +372,7 @@ async def test_config_flow_thread(hass: HomeAssistant) -> None:
                 "device": "",
                 "baudrate": 460800,
                 "flow_control": True,
-                "autoflash_firmware": True,
+                "autoflash_firmware": False,
             },
             state=AddonState.NOT_RUNNING,
             update_available=False,
@@ -408,7 +392,7 @@ async def test_config_flow_thread(hass: HomeAssistant) -> None:
                     "device": TEST_DEVICE,
                     "baudrate": 460800,
                     "flow_control": True,
-                    "autoflash_firmware": True,
+                    "autoflash_firmware": False,
                 }
             )
         ]
@@ -470,7 +454,7 @@ async def test_config_flow_thread_addon_already_installed(hass: HomeAssistant) -
                     "device": TEST_DEVICE,
                     "baudrate": 460800,
                     "flow_control": True,
-                    "autoflash_firmware": True,
+                    "autoflash_firmware": False,
                 }
             )
         ]
@@ -577,7 +561,7 @@ async def test_options_flow_zigbee_to_thread(hass: HomeAssistant) -> None:
                 "device": "",
                 "baudrate": 460800,
                 "flow_control": True,
-                "autoflash_firmware": True,
+                "autoflash_firmware": False,
             },
             state=AddonState.NOT_RUNNING,
             update_available=False,
@@ -597,7 +581,7 @@ async def test_options_flow_zigbee_to_thread(hass: HomeAssistant) -> None:
                     "device": TEST_DEVICE,
                     "baudrate": 460800,
                     "flow_control": True,
-                    "autoflash_firmware": True,
+                    "autoflash_firmware": False,
                 }
             )
         ]
@@ -656,27 +640,6 @@ async def test_options_flow_thread_to_zigbee(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
         )
-        assert result["type"] is FlowResultType.SHOW_PROGRESS
-        assert result["progress_action"] == "install_addon"
-        assert result["step_id"] == "install_zigbee_flasher_addon"
-
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-        # Progress the flow, we are now configuring the addon and running it
-        result = await hass.config_entries.options.async_configure(result["flow_id"])
-        assert result["type"] is FlowResultType.SHOW_PROGRESS
-        assert result["step_id"] == "run_zigbee_flasher_addon"
-        assert result["progress_action"] == "run_zigbee_flasher_addon"
-
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-        # Progress the flow, we are now uninstalling the addon
-        result = await hass.config_entries.options.async_configure(result["flow_id"])
-        assert result["type"] is FlowResultType.SHOW_PROGRESS
-        assert result["step_id"] == "uninstall_zigbee_flasher_addon"
-        assert result["progress_action"] == "uninstall_zigbee_flasher_addon"
-
-        await hass.async_block_till_done(wait_background_tasks=True)
 
         result = await hass.config_entries.options.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.FORM

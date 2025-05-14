@@ -72,35 +72,6 @@ async def test_config_flow_cannot_probe_firmware(
     "ignore_translations_for_mock_domains",
     ["test_firmware_domain"],
 )
-async def test_config_flow_zigbee_not_hassio_wrong_firmware(
-    hass: HomeAssistant,
-) -> None:
-    """Test when the stick is used with a non-hassio setup but the firmware is bad."""
-    result = await hass.config_entries.flow.async_init(
-        TEST_DOMAIN, context={"source": "hardware"}
-    )
-
-    with mock_addon_info(
-        hass,
-        app_type=ApplicationType.SPINEL,
-        is_hassio=False,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
-        )
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "not_hassio"
-
-
-@pytest.mark.parametrize(
-    "ignore_translations_for_mock_domains",
-    ["test_firmware_domain"],
-)
 async def test_config_flow_zigbee_confirmation_fails(hass: HomeAssistant) -> None:
     """Test the config flow failing due to Zigbee firmware not being detected."""
     result = await hass.config_entries.flow.async_init(
