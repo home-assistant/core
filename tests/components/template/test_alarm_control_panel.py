@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SERVICE_DATA,
     EVENT_CALL_SERVICE,
+    STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -276,13 +277,14 @@ async def test_template_state_text(hass: HomeAssistant) -> None:
     """Test the state text of a template."""
 
     for set_state in (
-        AlarmControlPanelState.ARMED_HOME,
         AlarmControlPanelState.ARMED_AWAY,
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+        AlarmControlPanelState.ARMED_HOME,
         AlarmControlPanelState.ARMED_NIGHT,
         AlarmControlPanelState.ARMED_VACATION,
-        AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
         AlarmControlPanelState.ARMING,
         AlarmControlPanelState.DISARMED,
+        AlarmControlPanelState.DISARMING,
         AlarmControlPanelState.PENDING,
         AlarmControlPanelState.TRIGGERED,
     ):
@@ -295,6 +297,95 @@ async def test_template_state_text(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == "unknown"
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    ("state_template", "expected"),
+    [
+        ("{{ 'disarmed' }}", AlarmControlPanelState.DISARMED),
+        ("{{ 'armed_home' }}", AlarmControlPanelState.ARMED_HOME),
+        ("{{ 'armed_away' }}", AlarmControlPanelState.ARMED_AWAY),
+        ("{{ 'armed_night' }}", AlarmControlPanelState.ARMED_NIGHT),
+        ("{{ 'armed_vacation' }}", AlarmControlPanelState.ARMED_VACATION),
+        ("{{ 'armed_custom_bypass' }}", AlarmControlPanelState.ARMED_CUSTOM_BYPASS),
+        ("{{ 'pending' }}", AlarmControlPanelState.PENDING),
+        ("{{ 'arming' }}", AlarmControlPanelState.ARMING),
+        ("{{ 'disarming' }}", AlarmControlPanelState.DISARMING),
+        ("{{ 'triggered' }}", AlarmControlPanelState.TRIGGERED),
+        ("{{ x - 1 }}", STATE_UNKNOWN),
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+)
+@pytest.mark.usefixtures("setup_state_panel")
+async def test_state_template_states(hass: HomeAssistant, expected: str) -> None:
+    """Test the state template."""
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == expected
+
+
+@pytest.mark.parametrize(
+    ("count", "state_template", "attribute_template"),
+    [
+        (
+            1,
+            "{{ 'disarmed' }}",
+            "{% if states.switch.test_state.state %}mdi:check{% endif %}",
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.MODERN, "icon"),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_state_panel")
+async def test_icon_template(
+    hass: HomeAssistant,
+) -> None:
+    """Test icon template."""
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.attributes.get("icon") in ("", None)
+
+    hass.states.async_set("switch.test_state", STATE_ON)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.attributes["icon"] == "mdi:check"
+
+
+@pytest.mark.parametrize(
+    ("count", "state_template", "attribute_template"),
+    [
+        (
+            1,
+            "{{ 'disarmed' }}",
+            "{% if states.switch.test_state.state %}local/panel.png{% endif %}",
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.MODERN, "picture"),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_state_panel")
+async def test_picture_template(
+    hass: HomeAssistant,
+) -> None:
+    """Test icon template."""
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.attributes.get("entity_picture") in ("", None)
+
+    hass.states.async_set("switch.test_state", STATE_ON)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.attributes["entity_picture"] == "local/panel.png"
 
 
 async def test_setup_config_entry(

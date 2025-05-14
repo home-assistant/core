@@ -57,21 +57,22 @@ _VALID_STATES = [
     AlarmControlPanelState.ARMED_VACATION,
     AlarmControlPanelState.ARMING,
     AlarmControlPanelState.DISARMED,
+    AlarmControlPanelState.DISARMING,
     AlarmControlPanelState.PENDING,
     AlarmControlPanelState.TRIGGERED,
     STATE_UNAVAILABLE,
 ]
 
+CONF_ALARM_CONTROL_PANELS = "panels"
 CONF_ARM_AWAY_ACTION = "arm_away"
 CONF_ARM_CUSTOM_BYPASS_ACTION = "arm_custom_bypass"
 CONF_ARM_HOME_ACTION = "arm_home"
 CONF_ARM_NIGHT_ACTION = "arm_night"
 CONF_ARM_VACATION_ACTION = "arm_vacation"
-CONF_DISARM_ACTION = "disarm"
-CONF_TRIGGER_ACTION = "trigger"
-CONF_ALARM_CONTROL_PANELS = "panels"
 CONF_CODE_ARM_REQUIRED = "code_arm_required"
 CONF_CODE_FORMAT = "code_format"
+CONF_DISARM_ACTION = "disarm"
+CONF_TRIGGER_ACTION = "trigger"
 
 
 class TemplateCodeFormat(Enum):
@@ -115,20 +116,20 @@ ALARM_CONTROL_PANEL_SCHEMA = vol.All(
 
 LEGACY_ALARM_CONTROL_PANEL_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_DISARM_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_ARM_AWAY_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_ARM_CUSTOM_BYPASS_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_ARM_HOME_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_ARM_NIGHT_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_ARM_VACATION_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_TRIGGER_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
         vol.Optional(CONF_CODE_FORMAT, default=TemplateCodeFormat.number.name): cv.enum(
             TemplateCodeFormat
         ),
+        vol.Optional(CONF_DISARM_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_TRIGGER_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }
 )
 
@@ -142,20 +143,20 @@ PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
 
 ALARM_CONTROL_PANEL_CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): cv.template,
-        vol.Optional(CONF_STATE): cv.template,
-        vol.Optional(CONF_DISARM_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_ARM_AWAY_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_ARM_CUSTOM_BYPASS_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_ARM_HOME_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_ARM_NIGHT_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_ARM_VACATION_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_TRIGGER_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
         vol.Optional(CONF_CODE_FORMAT, default=TemplateCodeFormat.number.name): cv.enum(
             TemplateCodeFormat
         ),
         vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
+        vol.Optional(CONF_DISARM_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Required(CONF_NAME): cv.template,
+        vol.Optional(CONF_STATE): cv.template,
+        vol.Optional(CONF_TRIGGER_ACTION): cv.SCRIPT_SCHEMA,
     }
 )
 
