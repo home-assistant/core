@@ -20,7 +20,13 @@ from homeassistant.components.water_heater import (
     SERVICE_SET_TEMPERATURE,
     STATE_ECO,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    STATE_OFF,
+    STATE_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -308,7 +314,8 @@ async def test_away_mode_update(
     await setup_integration(hass, mock_config_entry)
 
     assert (
-        hass.states.get("water_heater.warmepumpe").attributes[ATTR_AWAY_MODE] == "off"
+        hass.states.get("water_heater.warmepumpe").attributes[ATTR_AWAY_MODE]
+        == STATE_OFF
     )
 
     await trigger_update(
@@ -320,4 +327,7 @@ async def test_away_mode_update(
         "on",
     )
 
-    assert hass.states.get("water_heater.warmepumpe").attributes[ATTR_AWAY_MODE] == "on"
+    assert (
+        hass.states.get("water_heater.warmepumpe").attributes[ATTR_AWAY_MODE]
+        == STATE_ON
+    )

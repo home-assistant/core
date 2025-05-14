@@ -57,6 +57,7 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
     """Define a SmartThings Water Heater."""
 
     _attr_name = None
+    _attr_translation_key = "water_heater"
     _attr_supported_features = (
         WaterHeaterEntityFeature.OPERATION_MODE
         | WaterHeaterEntityFeature.TARGET_TEMPERATURE

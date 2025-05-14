@@ -37,7 +37,7 @@
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': <WaterHeaterEntityFeature: 7>,
-    'translation_key': None,
+    'translation_key': 'water_heater',
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main',
     'unit_of_measurement': None,
   })
@@ -107,7 +107,7 @@
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': <WaterHeaterEntityFeature: 7>,
-    'translation_key': None,
+    'translation_key': 'water_heater',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main',
     'unit_of_measurement': None,
   })
@@ -177,7 +177,7 @@
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': <WaterHeaterEntityFeature: 7>,
-    'translation_key': None,
+    'translation_key': 'water_heater',
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main',
     'unit_of_measurement': None,
   })
