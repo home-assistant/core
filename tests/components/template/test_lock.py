@@ -338,41 +338,16 @@ async def test_template_syntax_error(hass: HomeAssistant) -> None:
     assert hass.states.async_all("lock") == []
 
 
-@pytest.mark.parametrize("count", [0])
+@pytest.mark.parametrize(("count", "state_template"), [(0, "{{ 1==1 }}")])
+@pytest.mark.parametrize("attribute_template", ["{{ rubbish }", "{% if rubbish %}"])
 @pytest.mark.parametrize(
-    ("style", "state_template", "extra_config"),
+    ("style", "attribute"),
     [
-        (
-            ConfigurationStyle.LEGACY,
-            "{{ 1==1 }}",
-            {
-                "code_format_template": "{{ rubbish }",
-            },
-        ),
-        (
-            ConfigurationStyle.LEGACY,
-            "{{ 1==1 }}",
-            {
-                "code_format_template": "{% if rubbish %}",
-            },
-        ),
-        (
-            ConfigurationStyle.MODERN,
-            "{{ 1==1 }}",
-            {
-                "code_format": "{{ rubbish }",
-            },
-        ),
-        (
-            ConfigurationStyle.MODERN,
-            "{{ 1==1 }}",
-            {
-                "code_format": "{% if rubbish %}",
-            },
-        ),
+        (ConfigurationStyle.LEGACY, "code_format_template"),
+        (ConfigurationStyle.MODERN, "code_format"),
     ],
 )
-@pytest.mark.usefixtures("setup_state_lock_with_extra_config")
+@pytest.mark.usefixtures("setup_state_lock_with_attribute")
 async def test_template_code_template_syntax_error(hass: HomeAssistant) -> None:
     """Test templating code_format syntax errors don't create entities."""
     assert hass.states.async_all("lock") == []
@@ -392,6 +367,73 @@ async def test_template_static(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == LockState.LOCKED
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+)
+@pytest.mark.parametrize(
+    ("state_template", "expected"),
+    [
+        ("{{ True }}", LockState.LOCKED),
+        ("{{ False }}", LockState.UNLOCKED),
+        ("{{ x - 12 }}", STATE_UNAVAILABLE),
+    ],
+)
+@pytest.mark.usefixtures("setup_state_lock")
+async def test_state_template(hass: HomeAssistant, expected: str) -> None:
+    """Test state and value_template template."""
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == expected
+
+
+@pytest.mark.parametrize(("count", "state_template"), [(1, "{{ 1==1 }}")])
+@pytest.mark.parametrize(
+    "attribute_template",
+    ["{% if states.switch.test_state.state %}/local/switch.png{% endif %}"],
+)
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.MODERN, "picture"),
+    ],
+)
+@pytest.mark.usefixtures("setup_state_lock_with_attribute")
+async def test_picture_template(hass: HomeAssistant) -> None:
+    """Test entity_picture template."""
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.attributes.get("entity_picture") in ("", None)
+
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.attributes["entity_picture"] == "/local/switch.png"
+
+
+@pytest.mark.parametrize(("count", "state_template"), [(1, "{{ 1==1 }}")])
+@pytest.mark.parametrize(
+    "attribute_template",
+    ["{% if states.switch.test_state.state %}mdi:eye{% endif %}"],
+)
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.MODERN, "icon"),
+    ],
+)
+@pytest.mark.usefixtures("setup_state_lock_with_attribute")
+async def test_icon_template(hass: HomeAssistant) -> None:
+    """Test entity_picture template."""
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.attributes.get("icon") in ("", None)
+
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.attributes["icon"] == "mdi:eye"
 
 
 @pytest.mark.parametrize(

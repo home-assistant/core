@@ -26,7 +26,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
+from .const import CONF_PICTURE, DOMAIN
 from .template_entity import (
     LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
@@ -54,12 +54,13 @@ LOCK_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Optional(CONF_CODE_FORMAT): cv.template,
+            vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_NAME): cv.template,
             vol.Optional(CONF_OPEN): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_PICTURE): cv.template,
             vol.Required(CONF_STATE): cv.template,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
         }
     )
@@ -70,14 +71,14 @@ LOCK_SCHEMA = vol.All(
 
 PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_OPEN): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_CODE_FORMAT_TEMPLATE): cv.template,
+        vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_OPEN): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
+        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
     }
 ).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema)
 
