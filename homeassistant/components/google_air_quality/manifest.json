@@ -1,0 +1,12 @@
+{
+  "domain": "google_air_quality",
+  "name": "Google Air Quality",
+  "codeowners": ["@Thomas55555"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/google_photos",
+  "iot_class": "cloud_polling",
+  "loggers": ["google_air_quality_api"],
+  "quality_scale": "bronze",
+  "requirements": ["google_air_quality_api==0.0.0a6"]
+}

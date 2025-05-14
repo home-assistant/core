@@ -8,6 +8,7 @@ APPLICATION_CREDENTIALS = [
     "fitbit",
     "geocaching",
     "google",
+    "google_air_quality",
     "google_assistant_sdk",
     "google_drive",
     "google_mail",

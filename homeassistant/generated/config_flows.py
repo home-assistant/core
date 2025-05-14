@@ -231,6 +231,7 @@ FLOWS = {
         "gogogate2",
         "goodwe",
         "google",
+        "google_air_quality",
         "google_assistant_sdk",
         "google_cloud",
         "google_drive",

@@ -564,6 +564,7 @@ build.json @home-assistant/supervisor
 /tests/components/goodwe/ @mletenay @starkillerOG
 /homeassistant/components/google/ @allenporter
 /tests/components/google/ @allenporter
+/homeassistant/components/google_air_quality/ @Thomas55555
 /homeassistant/components/google_assistant/ @home-assistant/cloud
 /tests/components/google_assistant/ @home-assistant/cloud
 /homeassistant/components/google_assistant_sdk/ @tronikos

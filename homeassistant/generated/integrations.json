@@ -2343,6 +2343,12 @@
     "google": {
       "name": "Google",
       "integrations": {
+        "google_air_quality": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Google Air Quality"
+        },
         "google_assistant_sdk": {
           "integration_type": "service",
           "config_flow": true,

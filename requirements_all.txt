@@ -1056,6 +1056,9 @@ google-nest-sdm==7.1.4
 # homeassistant.components.google_photos
 google-photos-library-api==0.12.1
 
+# homeassistant.components.google_air_quality
+google_air_quality_api==0.0.0a6
+
 # homeassistant.components.slide
 # homeassistant.components.slide_local
 goslide-api==0.7.0
