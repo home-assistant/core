@@ -2,14 +2,18 @@
 
 from unittest.mock import AsyncMock
 
-from pysmartthings import Capability, Command
+from pysmartthings import Attribute, Capability, Command
 import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.smartthings import MAIN
 from homeassistant.components.water_heater import (
     ATTR_AWAY_MODE,
+    ATTR_CURRENT_TEMPERATURE,
+    ATTR_OPERATION_LIST,
     ATTR_OPERATION_MODE,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     DOMAIN as WATER_HEATER_DOMAIN,
     SERVICE_SET_AWAY_MODE,
     SERVICE_SET_OPERATION_MODE,
@@ -20,7 +24,7 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration, snapshot_smartthings_entities
+from . import setup_integration, snapshot_smartthings_entities, trigger_update
 
 from tests.common import MockConfigEntry
 
@@ -139,3 +143,181 @@ async def test_away_mode(
         MAIN,
         argument=argument,
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
+async def test_operation_list_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state update."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("water_heater.warmepumpe").attributes[
+        ATTR_OPERATION_LIST
+    ] == [
+        STATE_ECO,
+        "standard",
+        "power",
+        "force",
+    ]
+
+    await trigger_update(
+        hass,
+        devices,
+        "3810e5ad-5351-d9f9-12ff-000001200000",
+        Capability.AIR_CONDITIONER_MODE,
+        Attribute.SUPPORTED_AC_MODES,
+        ["eco", "force", "power"],
+    )
+
+    assert hass.states.get("water_heater.warmepumpe").attributes[
+        ATTR_OPERATION_LIST
+    ] == [
+        STATE_ECO,
+        "force",
+        "power",
+    ]
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
+async def test_current_operation_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state update."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("water_heater.warmepumpe").state == "standard"
+
+    await trigger_update(
+        hass,
+        devices,
+        "3810e5ad-5351-d9f9-12ff-000001200000",
+        Capability.AIR_CONDITIONER_MODE,
+        Attribute.AIR_CONDITIONER_MODE,
+        "eco",
+    )
+
+    assert hass.states.get("water_heater.warmepumpe").state == STATE_ECO
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
+async def test_current_temperature_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state update."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("water_heater.warmepumpe").attributes[ATTR_CURRENT_TEMPERATURE]
+        == 49.6
+    )
+
+    await trigger_update(
+        hass,
+        devices,
+        "3810e5ad-5351-d9f9-12ff-000001200000",
+        Capability.TEMPERATURE_MEASUREMENT,
+        Attribute.TEMPERATURE,
+        50.0,
+    )
+
+    assert (
+        hass.states.get("water_heater.warmepumpe").attributes[ATTR_CURRENT_TEMPERATURE]
+        == 50.0
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
+async def test_target_temperature_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state update."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("water_heater.warmepumpe").attributes[ATTR_TEMPERATURE] == 52.0
+    )
+
+    await trigger_update(
+        hass,
+        devices,
+        "3810e5ad-5351-d9f9-12ff-000001200000",
+        Capability.THERMOSTAT_COOLING_SETPOINT,
+        Attribute.COOLING_SETPOINT,
+        50.0,
+    )
+
+    assert (
+        hass.states.get("water_heater.warmepumpe").attributes[ATTR_TEMPERATURE] == 50.0
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
+@pytest.mark.parametrize(
+    ("attribute", "old_value", "state_attribute"),
+    [
+        (Attribute.MINIMUM_SETPOINT, 40, ATTR_TARGET_TEMP_LOW),
+        (Attribute.MAXIMUM_SETPOINT, 57, ATTR_TARGET_TEMP_HIGH),
+    ],
+)
+async def test_target_temperature_bound_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    attribute: Attribute,
+    old_value: float,
+    state_attribute: str,
+) -> None:
+    """Test state update."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("water_heater.warmepumpe").attributes[state_attribute]
+        == old_value
+    )
+
+    await trigger_update(
+        hass,
+        devices,
+        "3810e5ad-5351-d9f9-12ff-000001200000",
+        Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL,
+        attribute,
+        50.0,
+    )
+
+    assert (
+        hass.states.get("water_heater.warmepumpe").attributes[state_attribute] == 50.0
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
+async def test_away_mode_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state update."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("water_heater.warmepumpe").attributes[ATTR_AWAY_MODE] == "off"
+    )
+
+    await trigger_update(
+        hass,
+        devices,
+        "3810e5ad-5351-d9f9-12ff-000001200000",
+        Capability.CUSTOM_OUTING_MODE,
+        Attribute.OUTING_MODE,
+        "on",
+    )
+
+    assert hass.states.get("water_heater.warmepumpe").attributes[ATTR_AWAY_MODE] == "on"
