@@ -1060,7 +1060,7 @@ UNITS = {
     "ccf": UnitOfVolume.CENTUM_CUBIC_FEET,
     "lux": LIGHT_LUX,
     "mG": None,
-    "μg/m^3": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    "µg/m^3": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
 }
 
 

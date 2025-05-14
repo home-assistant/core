@@ -65,7 +65,7 @@ async def test_sensors_aranet_radiation(
         temp_sensor_attrs[ATTR_FRIENDLY_NAME]
         == "Aranet\u2622 12345 Radiation Dose Rate"
     )
-    assert temp_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "μSv/h"
+    assert temp_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "µSv/h"
     assert temp_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
     interval_sensor = hass.states.get("sensor.aranet_12345_update_interval")

@@ -294,19 +294,19 @@ class SensorDeviceClass(StrEnum):
     """
 
     PM1 = "pm1"
-    """Particulate matter <= 1 μm.
+    """Particulate matter <= 1 µm.
 
     Unit of measurement: `µg/m³`
     """
 
     PM10 = "pm10"
-    """Particulate matter <= 10 μm.
+    """Particulate matter <= 10 µm.
 
     Unit of measurement: `µg/m³`
     """
 
     PM25 = "pm25"
-    """Particulate matter <= 2.5 μm.
+    """Particulate matter <= 2.5 µm.
 
     Unit of measurement: `µg/m³`
     """

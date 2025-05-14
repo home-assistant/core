@@ -709,7 +709,7 @@ async def test_chat_log_continue_conversation(
         chat_log.async_add_assistant_content_without_tools(
             AssistantContent(
                 agent_id="mock-agent-id",
-                content="Ποιο είναι το αγαπημένο σου χρώμα στα ελληνικά;",
+                content="Ποιο είναι το αγαπηµένο σου χρώµα στα ελληνικά;",
             )
         )
         assert chat_log.continue_conversation is True

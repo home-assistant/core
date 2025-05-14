@@ -684,7 +684,7 @@ class UnitOfTemperature(StrEnum):
 class UnitOfTime(StrEnum):
     """Time units."""
 
-    MICROSECONDS = "μs"
+    MICROSECONDS = "µs"
     MILLISECONDS = "ms"
     SECONDS = "s"
     MINUTES = "min"
@@ -902,7 +902,7 @@ class UnitOfPrecipitationDepth(StrEnum):
 # Concentration units
 CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"
 CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = "mg/m³"
-CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = "μg/ft³"
+CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = "µg/ft³"
 CONCENTRATION_PARTS_PER_CUBIC_METER: Final = "p/m³"
 CONCENTRATION_PARTS_PER_MILLION: Final = "ppm"
 CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"

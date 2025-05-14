@@ -854,12 +854,12 @@
           'dustSensor': dict({
             'dustLevel': dict({
               'timestamp': '2021-04-06T16:44:10.122Z',
-              'unit': 'μg/m^3',
+              'unit': 'µg/m^3',
               'value': None,
             }),
             'fineDustLevel': dict({
               'timestamp': '2021-04-06T16:44:10.122Z',
-              'unit': 'μg/m^3',
+              'unit': 'µg/m^3',
               'value': None,
             }),
           }),
@@ -994,7 +994,7 @@
           'veryFineDustSensor': dict({
             'veryFineDustLevel': dict({
               'timestamp': '2021-04-06T16:43:38.529Z',
-              'unit': 'μg/m^3',
+              'unit': 'µg/m^3',
               'value': None,
             }),
           }),
@@ -1260,12 +1260,12 @@
           'dustSensor': dict({
             'dustLevel': dict({
               'timestamp': '2021-04-06T16:43:35.665Z',
-              'unit': 'μg/m^3',
+              'unit': 'µg/m^3',
               'value': None,
             }),
             'fineDustLevel': dict({
               'timestamp': '2021-04-06T16:43:35.665Z',
-              'unit': 'μg/m^3',
+              'unit': 'µg/m^3',
               'value': None,
             }),
           }),
@@ -1521,7 +1521,7 @@
           'veryFineDustSensor': dict({
             'veryFineDustLevel': dict({
               'timestamp': '2021-04-06T16:43:35.363Z',
-              'unit': 'μg/m^3',
+              'unit': 'µg/m^3',
               'value': None,
             }),
           }),

@@ -59,7 +59,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     ),
     "bed_activity": SensorEntityDescription(
         key="bed_activity",
-        native_unit_of_measurement="μm",
+        native_unit_of_measurement="µm",
         device_class=None,
         state_class=SensorStateClass.MEASUREMENT,
     ),
