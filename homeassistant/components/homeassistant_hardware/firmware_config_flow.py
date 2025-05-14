@@ -28,12 +28,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 
 from .const import OTBR_DOMAIN, ZHA_DOMAIN
-from .helpers import async_flash_silabs_firmware
 from .util import (
     ApplicationType,
     FirmwareInfo,
     OwningAddon,
     OwningIntegration,
+    async_flash_silabs_firmware,
     get_otbr_addon_manager,
     guess_firmware_info,
     guess_hardware_owners,

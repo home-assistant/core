@@ -21,8 +21,8 @@ from homeassistant.helpers.restore_state import ExtraStoredData
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import FirmwareUpdateCoordinator
-from .helpers import async_flash_silabs_firmware, async_register_firmware_info_callback
-from .util import ApplicationType, FirmwareInfo
+from .helpers import async_register_firmware_info_callback
+from .util import ApplicationType, FirmwareInfo, async_flash_silabs_firmware
 
 _LOGGER = logging.getLogger(__name__)
 
