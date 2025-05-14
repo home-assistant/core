@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import abc
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Coroutine
@@ -49,18 +50,26 @@ DATA_PLUGGABLE_ACTIONS: HassKey[defaultdict[tuple, PluggableActionsEntry]] = Has
 )
 
 
-@dataclass
-class Trigger:
-    """Trigger descriptor data class."""
+class Trigger(abc.ABC):
+    """Trigger class."""
 
-    async_validate_trigger_config: Callable[
-        [HomeAssistant, ConfigType],
-        Coroutine[Any, Any, ConfigType],
-    ]
-    async_attach_trigger: Callable[
-        [HomeAssistant, ConfigType, TriggerActionType, TriggerInfo],
-        Coroutine[Any, Any, CALLBACK_TYPE],
-    ]
+    @classmethod
+    @abc.abstractmethod
+    async def async_validate_trigger_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+
+    @classmethod
+    @abc.abstractmethod
+    async def async_attach_trigger(
+        cls,
+        hass: HomeAssistant,
+        config: ConfigType,
+        action: TriggerActionType,
+        trigger_info: TriggerInfo,
+    ) -> CALLBACK_TYPE:
+        """Attach a trigger."""
 
 
 class TriggerProtocol(Protocol):
@@ -69,7 +78,7 @@ class TriggerProtocol(Protocol):
     New implementations should only implement async_get_triggers.
     """
 
-    async def async_get_triggers(self, hass: HomeAssistant) -> dict[str, Trigger]:
+    async def async_get_triggers(self, hass: HomeAssistant) -> dict[str, type[Trigger]]:
         """Return the triggers provided by this integration."""
 
     TRIGGER_SCHEMA: vol.Schema
