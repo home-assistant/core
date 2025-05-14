@@ -1,9 +1,5 @@
 """Tests Starlink integration init/unload."""
 
-from datetime import timedelta
-
-from freezegun.api import FrozenDateTimeFactory
-
 from homeassistant.components.starlink.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS
@@ -19,9 +15,7 @@ from .patchers import (
 from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data
 
 
-async def test_successful_entry(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
+async def test_successful_entry(hass: HomeAssistant) -> None:
     """Test configuring Starlink."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -60,15 +54,7 @@ async def test_successful_entry(
         assert entry.runtime_data.data
         assert entry.state is ConfigEntryState.LOADED
 
-        state = hass.states.get(entity_id)
-        assert state.state == str(1)
-
-        freezer.tick(timedelta(minutes=5, seconds=1))
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
-
-        state = hass.states.get(entity_id)
-        assert state.state == str(1 + 0.007862313684887356)
+        assert hass.states.get(entity_id).state == str(1 + 0.007862313684887356)
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
