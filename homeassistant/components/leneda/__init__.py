@@ -9,7 +9,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_ENERGY_ID, CONF_METERING_POINTS, DOMAIN
 from .coordinator import LenedaCoordinator
@@ -23,12 +22,6 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 type LenedaConfigEntry = ConfigEntry[LenedaCoordinator]
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Leneda component."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: LenedaConfigEntry) -> bool:
     """Set up Leneda from a config entry."""
     coordinator = LenedaCoordinator(hass, entry)
@@ -40,12 +33,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: LenedaConfigEntry) -> bo
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LenedaConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id, None)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(
