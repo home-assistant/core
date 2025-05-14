@@ -86,15 +86,6 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     MetOfficeSensorEntityDescription(
-        key="pressure",
-        native_attr_name="mslp",
-        name="Pressure",
-        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
-        native_unit_of_measurement=UnitOfPressure.PA,
-        icon=None,
-        entity_registry_enabled_default=True,
-    ),
-    MetOfficeSensorEntityDescription(
         key="wind_speed",
         native_attr_name="windSpeed10m",
         name="Wind speed",
