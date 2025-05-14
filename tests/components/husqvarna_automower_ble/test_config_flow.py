@@ -94,7 +94,7 @@ async def test_user_selection_incorrect_pin(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
+    assert result["step_id"] == "user"
 
     mock_automower_client.connect.return_value = True
 
