@@ -7,7 +7,7 @@ from homeassistant.helpers.trigger import Trigger
 
 from .triggers import event, value_updated
 
-TRIGGERS = {
+TRIGGERS: dict[str, type[Trigger]] = {
     event.PLATFORM_TYPE: event.EventTrigger,
     value_updated.PLATFORM_TYPE: value_updated.ValueUpdatedTrigger,
 }
