@@ -104,7 +104,7 @@ STATUS_SENSOR_DESCRIPTION: tuple[PaperlessStatusEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_paperless_status_entry(
-            lambda s: s.storage.total if s.storage else None,
+            lambda s: s.storage.total if s and s.storage else None,
             transform=bytes_to_gb_converter,
         ),
     ),
@@ -116,7 +116,7 @@ STATUS_SENSOR_DESCRIPTION: tuple[PaperlessStatusEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_paperless_status_entry(
-            lambda s: s.storage.available if s.storage else None,
+            lambda s: s.storage.available if s and s.storage else None,
             transform=bytes_to_gb_converter,
         ),
     ),
@@ -128,8 +128,8 @@ STATUS_SENSOR_DESCRIPTION: tuple[PaperlessStatusEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=[status.value for status in StatusType],
         value_fn=get_paperless_status_entry(
-            lambda s: s.database.status if s.database else None,
-            lambda s: s.database.error if s.database else None,
+            lambda s: s.database.status if s and s.database else None,
+            lambda s: s.database.error if s and s.database else None,
         ),
     ),
     PaperlessStatusEntityDescription(
@@ -140,8 +140,8 @@ STATUS_SENSOR_DESCRIPTION: tuple[PaperlessStatusEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=[status.value for status in StatusType],
         value_fn=get_paperless_status_entry(
-            lambda s: s.tasks.redis_status if s.tasks else None,
-            lambda s: s.tasks.redis_error if s.tasks else None,
+            lambda s: s.tasks.redis_status if s and s.tasks else None,
+            lambda s: s.tasks.redis_error if s and s.tasks else None,
         ),
     ),
     PaperlessStatusEntityDescription(
@@ -152,8 +152,7 @@ STATUS_SENSOR_DESCRIPTION: tuple[PaperlessStatusEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=[status.value for status in StatusType],
         value_fn=get_paperless_status_entry(
-            lambda s: s.tasks.celery_status if s.tasks else None,
-            lambda s: s.tasks.celery_error if s.tasks else None,
+            lambda s: s.tasks.celery_status if s and s.tasks else None,
         ),
     ),
     PaperlessStatusEntityDescription(
@@ -164,9 +163,9 @@ STATUS_SENSOR_DESCRIPTION: tuple[PaperlessStatusEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=[status.value for status in StatusType],
         value_fn=get_paperless_status_entry(
-            lambda s: s.tasks.index_status if s.tasks else None,
-            lambda s: s.tasks.index_error if s.tasks else None,
-            lambda s: s.tasks.index_last_modified if s.tasks else None,
+            lambda s: s.tasks.index_status if s and s.tasks else None,
+            lambda s: s.tasks.index_error if s and s.tasks else None,
+            lambda s: s.tasks.index_last_modified if s and s.tasks else None,
         ),
     ),
     PaperlessStatusEntityDescription(
@@ -177,9 +176,9 @@ STATUS_SENSOR_DESCRIPTION: tuple[PaperlessStatusEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=[status.value for status in StatusType],
         value_fn=get_paperless_status_entry(
-            lambda s: s.tasks.classifier_status if s.tasks else None,
-            lambda s: s.tasks.classifier_error if s.tasks else None,
-            lambda s: s.tasks.classifier_last_trained if s.tasks else None,
+            lambda s: s.tasks.classifier_status if s and s.tasks else None,
+            lambda s: s.tasks.classifier_error if s and s.tasks else None,
+            lambda s: s.tasks.classifier_last_trained if s and s.tasks else None,
         ),
     ),
 )
