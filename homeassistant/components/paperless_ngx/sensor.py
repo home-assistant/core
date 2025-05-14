@@ -248,17 +248,11 @@ async def async_setup_entry(
     coordinator = PaperlessCoordinator(hass, entry, data)
     await coordinator.async_request_refresh()
 
-    entities = []
-
-    for description_status in SENSOR_DESCRIPTIONS:
-        entity = PaperlessSensor(
-            coordinator,
-            data,
-            entry,
-            description_status,
-        )
-        entities.append(entity)
-
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            PaperlessSensor(coordinator, data, entry, description)
+            for description in SENSOR_DESCRIPTIONS
+        ]
+    )
 
     await coordinator.async_config_entry_first_refresh()
