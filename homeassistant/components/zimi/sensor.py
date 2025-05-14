@@ -47,7 +47,6 @@ GARAGE_SENSOR_DESCRIPTIONS: tuple[ZimiSensorEntityDescription, ...] = (
     ),
     ZimiSensorEntityDescription(
         key="garage_temperature",
-        translation_key="garage_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         value_fn=lambda device: device.garage_temp,
