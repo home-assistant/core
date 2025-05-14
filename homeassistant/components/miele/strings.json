@@ -201,8 +201,7 @@
           "normal_plus": "Normal plus",
           "normal": "Normal",
           "slightly_dry": "Slightly dry",
-          "smoothing": "Smoothing",
-          "unknown_code": "%key:component::miele::entity::sensor::program_id::state::unknown_code%"
+          "smoothing": "Smoothing"
         }
       },
       "program_phase": {
@@ -296,8 +295,7 @@
           "cleaning_care_program": "Cleaning/care program",
           "maintenance_program": "Maintenance program",
           "normal_operation_mode": "Normal operation mode",
-          "own_program": "Own program",
-          "unknown_code": "Unknown code"
+          "own_program": "Own program"
         }
       },
       "program_id": {
