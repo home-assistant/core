@@ -74,7 +74,7 @@ INFO_SENSORS: tuple[JewishCalendarSensorDescription, ...] = (
         icon="mdi:book-open-variant",
         device_class=SensorDeviceClass.ENUM,
         options_fn=lambda _: [str(p) for p in Parasha],
-        value_fn=lambda results: results.after_tzais_date.upcoming_shabbat.parasha,
+        value_fn=lambda results: str(results.after_tzais_date.upcoming_shabbat.parasha),
     ),
     JewishCalendarSensorDescription(
         key="holiday",
