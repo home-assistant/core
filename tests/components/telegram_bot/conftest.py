@@ -84,11 +84,14 @@ def mock_register_webhook() -> Generator[None]:
 def mock_external_calls() -> Generator[None]:
     """Mock calls that make calls to the live Telegram API."""
     test_user = User(123456, "Testbot", True)
-    message = Message(
-        message_id=12345,
-        date=datetime.now(),
-        chat=Chat(id=123456, type=ChatType.PRIVATE),
-    )
+
+    def _get_message_with_chat(chat_id, *args, **kwargs):
+        """Create a Message object with the specified chat_id."""
+        return Message(
+            message_id=12345,
+            date=datetime.now(),
+            chat=Chat(id=chat_id, type=ChatType.PRIVATE),
+        )
 
     class BotMock(Bot):
         """Mock bot class."""
@@ -104,15 +107,15 @@ def mock_external_calls() -> Generator[None]:
         patch("homeassistant.components.telegram_bot.Bot", BotMock),
         patch.object(BotMock, "get_me", return_value=test_user),
         patch.object(BotMock, "bot", test_user),
-        patch.object(BotMock, "send_message", return_value=message),
-        patch.object(BotMock, "send_photo", return_value=message),
-        patch.object(BotMock, "send_sticker", return_value=message),
-        patch.object(BotMock, "send_video", return_value=message),
-        patch.object(BotMock, "send_document", return_value=message),
-        patch.object(BotMock, "send_voice", return_value=message),
-        patch.object(BotMock, "send_animation", return_value=message),
-        patch.object(BotMock, "send_location", return_value=message),
-        patch.object(BotMock, "send_poll", return_value=message),
+        patch.object(BotMock, "send_message", side_effect=_get_message_with_chat),
+        patch.object(BotMock, "send_photo", side_effect=_get_message_with_chat),
+        patch.object(BotMock, "send_sticker", side_effect=_get_message_with_chat),
+        patch.object(BotMock, "send_video", side_effect=_get_message_with_chat),
+        patch.object(BotMock, "send_document", side_effect=_get_message_with_chat),
+        patch.object(BotMock, "send_voice", side_effect=_get_message_with_chat),
+        patch.object(BotMock, "send_animation", side_effect=_get_message_with_chat),
+        patch.object(BotMock, "send_location", side_effect=_get_message_with_chat),
+        patch.object(BotMock, "send_poll", side_effect=_get_message_with_chat),
         patch("telegram.ext.Updater._bootstrap"),
     ):
         yield

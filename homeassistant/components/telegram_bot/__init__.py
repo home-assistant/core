@@ -384,6 +384,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         {p_config[CONF_PLATFORM] for p_config in domain_config}
     )
 
+    # List to hold all notification services
+    notify_services = []
+
     for p_config in domain_config:
         # Each platform config gets its own bot
         bot = await hass.async_add_executor_job(initialize_bot, hass, p_config)
@@ -405,6 +408,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         notify_service = TelegramNotificationService(
             hass, bot, p_config.get(CONF_ALLOWED_CHAT_IDS), p_config.get(ATTR_PARSER)
         )
+        notify_services.append(notify_service)
 
     async def async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
         """Handle sending Telegram Bot message service calls."""
@@ -413,9 +417,36 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         kwargs = dict(service.data)
         _LOGGER.debug("New telegram message %s: %s", msgtype, kwargs)
 
+        # Determine which notification service to use based on target
+        target = kwargs.get(ATTR_TARGET)
+
+        # Convert single target to list for consistent handling
+        if target is not None and isinstance(target, int):
+            target = [target]
+
+        # Choose the appropriate notify service based on target chat IDs
+        selected_service = None
+
+        if target is not None:
+            # Try to find a service where the target is in the allowed_chat_ids
+            for notifier in notify_services:
+                # Check if at least one target is in the allowed chat IDs for this service
+                if any(t in notifier.allowed_chat_ids for t in target):
+                    selected_service = notifier
+                    break
+
+        # If no service was found for the target, use the first service as fallback
+        if selected_service is None:
+            selected_service = notify_services[0]
+            if target is not None:
+                _LOGGER.warning(
+                    "No Telegram bot configured for target(s): %s, using first configured bot",
+                    target,
+                )
+
         messages = None
         if msgtype == SERVICE_SEND_MESSAGE:
-            messages = await notify_service.send_message(
+            messages = await selected_service.send_message(
                 context=service.context, **kwargs
             )
         elif msgtype in [
@@ -425,27 +456,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             SERVICE_SEND_VOICE,
             SERVICE_SEND_DOCUMENT,
         ]:
-            messages = await notify_service.send_file(
+            messages = await selected_service.send_file(
                 msgtype, context=service.context, **kwargs
             )
         elif msgtype == SERVICE_SEND_STICKER:
-            messages = await notify_service.send_sticker(
+            messages = await selected_service.send_sticker(
                 context=service.context, **kwargs
             )
         elif msgtype == SERVICE_SEND_LOCATION:
-            messages = await notify_service.send_location(
+            messages = await selected_service.send_location(
                 context=service.context, **kwargs
             )
         elif msgtype == SERVICE_SEND_POLL:
-            messages = await notify_service.send_poll(context=service.context, **kwargs)
+            messages = await selected_service.send_poll(
+                context=service.context, **kwargs
+            )
         elif msgtype == SERVICE_ANSWER_CALLBACK_QUERY:
-            await notify_service.answer_callback_query(
+            await selected_service.answer_callback_query(
                 context=service.context, **kwargs
             )
         elif msgtype == SERVICE_DELETE_MESSAGE:
-            await notify_service.delete_message(context=service.context, **kwargs)
+            await selected_service.delete_message(context=service.context, **kwargs)
         else:
-            await notify_service.edit_message(
+            await selected_service.edit_message(
                 msgtype, context=service.context, **kwargs
             )
 
