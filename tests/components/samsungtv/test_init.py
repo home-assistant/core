@@ -21,6 +21,7 @@ from homeassistant.components.samsungtv.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MAC,
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
@@ -141,3 +142,18 @@ async def test_reauth_triggered_encrypted(hass: HomeAssistant) -> None:
         if flow["context"]["source"] == "reauth"
     ]
     assert len(flows_in_progress) == 1
+
+
+@pytest.mark.usefixtures("remote_websocket", "rest_api")
+async def test_incorrectly_formatted_mac_fixed(hass: HomeAssistant) -> None:
+    """Test incorrectly formatted mac is corrected."""
+    # Introduced in #110599, can be removed in 2026.3
+    await setup_samsungtv_entry(
+        hass,
+        {**ENTRYDATA_WEBSOCKET, CONF_MAC: "aabbaaaaaaaa"},
+    )
+    await hass.async_block_till_done()
+
+    config_entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(config_entries) == 1
+    assert config_entries[0].data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"

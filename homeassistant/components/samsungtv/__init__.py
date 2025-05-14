@@ -180,10 +180,12 @@ async def _async_create_bridge_with_updated_data(
 
     mac: str | None = entry.data.get(CONF_MAC)
     model: str | None = entry.data.get(CONF_MODEL)
-    if not mac or not model:
+    # Incorrect MAC cleanup introduced in #110599, can be removed in 2026.3
+    mac_is_incorrectly_formatted = mac and dr.format_mac(mac) != mac
+    if not mac or not model or mac_is_incorrectly_formatted:
         info = await bridge.async_device_info()
 
-    if not mac:
+    if not mac or mac_is_incorrectly_formatted:
         LOGGER.debug("Attempting to get mac for %s", host)
         if info:
             mac = mac_from_device_info(info)

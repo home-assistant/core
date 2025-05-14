@@ -1308,7 +1308,34 @@ async def test_update_missing_mac_unique_id_added_from_dhcp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test missing mac and unique id added."""
+    # Introduced in #110599, can be removed in 2026.3
     entry = MockConfigEntry(domain=DOMAIN, data=ENTRYDATA_LEGACY, unique_id=None)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=MOCK_DHCP_DATA,
+    )
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+    assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
+
+
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
+)
+async def test_update_incorrectly_formatted_mac_unique_id_added_from_dhcp(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test incorrectly formatted mac is updated and unique id added."""
+    entry_data = ENTRYDATA_LEGACY.copy()
+    entry_data[CONF_MAC] = "aabbccddeeff"
+    entry = MockConfigEntry(domain=DOMAIN, data=entry_data, unique_id=None)
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
