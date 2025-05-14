@@ -16,7 +16,8 @@ from .patchers import (
     STATUS_DATA_SUCCESS_PATCHER,
 )
 
-from tests.common import mock_restore_cache_with_extra_data, MockConfigEntry
+from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data
+
 
 async def test_successful_entry(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
@@ -68,6 +69,7 @@ async def test_successful_entry(
 
         state = hass.states.get(entity_id)
         assert state.state == str(1 + 0.007862313684887356)
+
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test removing Starlink."""
