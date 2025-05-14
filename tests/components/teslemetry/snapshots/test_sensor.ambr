@@ -2424,6 +2424,75 @@
     'state': '0',
   })
 # ---
+# name: test_sensors[sensor.teslemetry_credits-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.teslemetry_credits',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Teslemetry credits',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'credit_balance',
+    'unique_id': 'abc-123_credit_balance',
+    'unit_of_measurement': 'credits',
+  })
+# ---
+# name: test_sensors[sensor.teslemetry_credits-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Teslemetry credits',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'credits',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.teslemetry_credits',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.teslemetry_credits-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Teslemetry credits',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'credits',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.teslemetry_credits',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensors[sensor.test_battery_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -5053,6 +5122,9 @@
     'last_updated': <ANY>,
     'state': 'disconnected',
   })
+# ---
+# name: test_sensors_streaming[sensor.teslemetry_credits-state]
+  '1980'
 # ---
 # name: test_sensors_streaming[sensor.test_battery_level-state]
   '90'
