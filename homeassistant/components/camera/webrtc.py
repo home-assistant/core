@@ -8,7 +8,7 @@ from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import asdict, dataclass, field
 from functools import cache, partial, wraps
 import logging
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any
 
 from mashumaro import MissingField
 import voluptuous as vol
@@ -22,8 +22,7 @@ from webrtc_models import (
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.deprecation import deprecated_function
+from homeassistant.helpers import config_validation as cv
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.ulid import ulid
 
@@ -38,9 +37,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_WEBRTC_PROVIDERS: HassKey[set[CameraWebRTCProvider]] = HassKey(
     "camera_webrtc_providers"
-)
-DATA_WEBRTC_LEGACY_PROVIDERS: HassKey[dict[str, CameraWebRTCLegacyProvider]] = HassKey(
-    "camera_webrtc_legacy_providers"
 )
 DATA_ICE_SERVERS: HassKey[list[Callable[[], Iterable[RTCIceServer]]]] = HassKey(
     "camera_webrtc_ice_servers"
@@ -115,13 +111,11 @@ class WebRTCClientConfiguration:
 
     configuration: RTCConfiguration = field(default_factory=RTCConfiguration)
     data_channel: str | None = None
-    get_candidates_upfront: bool = False
 
     def to_frontend_dict(self) -> dict[str, Any]:
         """Return a dict that can be used by the frontend."""
         data: dict[str, Any] = {
             "configuration": self.configuration.to_dict(),
-            "getCandidatesUpfront": self.get_candidates_upfront,
         }
         if self.data_channel is not None:
             data["dataChannel"] = self.data_channel
@@ -163,18 +157,6 @@ class CameraWebRTCProvider(ABC):
         return  ## This is an optional method so we need a default here.
 
 
-class CameraWebRTCLegacyProvider(Protocol):
-    """WebRTC provider."""
-
-    async def async_is_supported(self, stream_source: str) -> bool:
-        """Determine if the provider supports the stream source."""
-
-    async def async_handle_web_rtc_offer(
-        self, camera: Camera, offer_sdp: str
-    ) -> str | None:
-        """Handle the WebRTC offer and return an answer."""
-
-
 @callback
 def async_register_webrtc_provider(
     hass: HomeAssistant,
@@ -204,8 +186,6 @@ def async_register_webrtc_provider(
 
 async def _async_refresh_providers(hass: HomeAssistant) -> None:
     """Check all cameras for any state changes for registered providers."""
-    _async_check_conflicting_legacy_provider(hass)
-
     component = hass.data[DATA_COMPONENT]
     await asyncio.gather(
         *(camera.async_refresh_providers() for camera in component.entities)
@@ -380,21 +360,6 @@ async def async_get_supported_provider(
     return None
 
 
-async def async_get_supported_legacy_provider(
-    hass: HomeAssistant, camera: Camera
-) -> CameraWebRTCLegacyProvider | None:
-    """Return the first supported provider for the camera."""
-    providers = hass.data.get(DATA_WEBRTC_LEGACY_PROVIDERS)
-    if not providers or not (stream_source := await camera.stream_source()):
-        return None
-
-    for provider in providers.values():
-        if await provider.async_is_supported(stream_source):
-            return provider
-
-    return None
-
-
 @callback
 def async_register_ice_servers(
     hass: HomeAssistant,
@@ -411,94 +376,3 @@ def async_register_ice_servers(
 
     servers.append(get_ice_server_fn)
     return remove
-
-
-# The following code is legacy code that was introduced with rtsp_to_webrtc and will be deprecated/removed in the future.
-# Left it so custom integrations can still use it.
-
-_RTSP_PREFIXES = {"rtsp://", "rtsps://", "rtmp://"}
-
-# An RtspToWebRtcProvider accepts these inputs:
-#     stream_source: The RTSP url
-#     offer_sdp: The WebRTC SDP offer
-#     stream_id: A unique id for the stream, used to update an existing source
-# The output is the SDP answer, or None if the source or offer is not eligible.
-# The Callable may throw HomeAssistantError on failure.
-type RtspToWebRtcProviderType = Callable[[str, str, str], Awaitable[str | None]]
-
-
-class _CameraRtspToWebRTCProvider(CameraWebRTCLegacyProvider):
-    def __init__(self, fn: RtspToWebRtcProviderType) -> None:
-        """Initialize the RTSP to WebRTC provider."""
-        self._fn = fn
-
-    async def async_is_supported(self, stream_source: str) -> bool:
-        """Return if this provider is supports the Camera as source."""
-        return any(stream_source.startswith(prefix) for prefix in _RTSP_PREFIXES)
-
-    async def async_handle_web_rtc_offer(
-        self, camera: Camera, offer_sdp: str
-    ) -> str | None:
-        """Handle the WebRTC offer and return an answer."""
-        if not (stream_source := await camera.stream_source()):
-            return None
-
-        return await self._fn(stream_source, offer_sdp, camera.entity_id)
-
-
-@deprecated_function("async_register_webrtc_provider", breaks_in_ha_version="2025.6")
-def async_register_rtsp_to_web_rtc_provider(
-    hass: HomeAssistant,
-    domain: str,
-    provider: RtspToWebRtcProviderType,
-) -> Callable[[], None]:
-    """Register an RTSP to WebRTC provider.
-
-    The first provider to satisfy the offer will be used.
-    """
-    if DOMAIN not in hass.data:
-        raise ValueError("Unexpected state, camera not loaded")
-
-    legacy_providers = hass.data.setdefault(DATA_WEBRTC_LEGACY_PROVIDERS, {})
-
-    if domain in legacy_providers:
-        raise ValueError("Provider already registered")
-
-    provider_instance = _CameraRtspToWebRTCProvider(provider)
-
-    @callback
-    def remove_provider() -> None:
-        legacy_providers.pop(domain)
-        hass.async_create_task(_async_refresh_providers(hass))
-
-    legacy_providers[domain] = provider_instance
-    hass.async_create_task(_async_refresh_providers(hass))
-
-    return remove_provider
-
-
-@callback
-def _async_check_conflicting_legacy_provider(hass: HomeAssistant) -> None:
-    """Check if a legacy provider is registered together with the builtin provider."""
-    builtin_provider_domain = "go2rtc"
-    if (
-        (legacy_providers := hass.data.get(DATA_WEBRTC_LEGACY_PROVIDERS))
-        and (providers := hass.data.get(DATA_WEBRTC_PROVIDERS))
-        and any(provider.domain == builtin_provider_domain for provider in providers)
-    ):
-        for domain in legacy_providers:
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                f"legacy_webrtc_provider_{domain}",
-                is_fixable=False,
-                is_persistent=False,
-                issue_domain=domain,
-                learn_more_url="https://www.home-assistant.io/integrations/go2rtc/",
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="legacy_webrtc_provider",
-                translation_placeholders={
-                    "legacy_integration": domain,
-                    "builtin_integration": builtin_provider_domain,
-                },
-            )

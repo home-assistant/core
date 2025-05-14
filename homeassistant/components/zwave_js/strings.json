@@ -273,6 +273,17 @@
     "invalid_server_version": {
       "description": "The version of Z-Wave Server you are currently running is too old for this version of Home Assistant. Please update the Z-Wave Server to the latest version to fix this issue.",
       "title": "Newer version of Z-Wave Server needed"
+    },
+    "migrate_unique_id": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "A Z-Wave controller of model {controller_model} with a different ID ({new_unique_id}) than the previously connected controller ({old_unique_id}) was connected to the {config_entry_title} configuration entry.\n\nReasons for a different controller ID could be:\n\n1. The controller was factory reset, with a 3rd party application.\n2. A controller Non Volatile Memory (NVM) backup was restored to the controller, with a 3rd party application.\n3. A different controller was connected to this configuration entry.\n\nIf a different controller was connected, you should instead set up a new configuration entry for the new controller.\n\nIf you are sure that the current controller is the correct controller you can confirm this by pressing Submit, and the configuration entry will remember the new controller ID.",
+            "title": "An unknown controller was detected"
+          }
+        }
+      },
+      "title": "An unknown controller was detected"
     }
   },
   "services": {

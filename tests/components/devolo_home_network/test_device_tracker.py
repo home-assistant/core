@@ -70,8 +70,6 @@ async def test_device_tracker(
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
-    await hass.config_entries.async_unload(entry.entry_id)
-
 
 async def test_restoring_clients(
     hass: HomeAssistant,

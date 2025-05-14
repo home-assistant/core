@@ -37,7 +37,7 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 1
+  CACHE_VERSION: 2
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 1
   HA_SHORT_VERSION: "2025.6"
@@ -653,7 +653,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
       - name: Dependency review
-        uses: actions/dependency-review-action@v4.7.0
+        uses: actions/dependency-review-action@v4.7.1
         with:
           license-check: false # We use our own license audit checks
 

@@ -32,11 +32,14 @@ from .const import (
     STATE_PROGRAM_PHASE,
     STATE_STATUS_TAGS,
     MieleAppliance,
+    StateDryingStep,
     StateProgramType,
     StateStatus,
 )
 from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
 from .entity import MieleEntity
+
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -381,6 +384,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             MieleAppliance.OVEN,
             MieleAppliance.OVEN_MICROWAVE,
             MieleAppliance.STEAM_OVEN_COMBI,
+            MieleAppliance.STEAM_OVEN_MK2,
         ),
         description=MieleSensorDescription(
             key="state_core_target_temperature",
@@ -393,6 +397,29 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
                 lambda value: cast(
                     int, value.state_core_target_temperature[0].temperature
                 )
+                / 100.0
+            ),
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.WASHER_DRYER,
+            MieleAppliance.OVEN,
+            MieleAppliance.OVEN_MICROWAVE,
+            MieleAppliance.STEAM_OVEN_MICRO,
+            MieleAppliance.STEAM_OVEN_COMBI,
+            MieleAppliance.STEAM_OVEN_MK2,
+        ),
+        description=MieleSensorDescription(
+            key="state_target_temperature",
+            translation_key="target_temperature",
+            zone=1,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=(
+                lambda value: cast(int, value.state_target_temperature[0].temperature)
                 / 100.0
             ),
         ),
@@ -416,6 +443,23 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             ),
         ),
     ),
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.WASHER_DRYER,
+            MieleAppliance.TUMBLE_DRYER,
+            MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL,
+        ),
+        description=MieleSensorDescription(
+            key="state_drying_step",
+            translation_key="drying_step",
+            value_fn=lambda value: StateDryingStep(
+                cast(int, value.state_drying_step)
+            ).name,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_class=SensorDeviceClass.ENUM,
+            options=sorted(StateDryingStep.keys()),
+        ),
+    ),
 )
 
 
@@ -437,7 +481,10 @@ async def async_setup_entry(
 
         for device_id, device in coordinator.data.devices.items():
             for definition in SENSOR_TYPES:
-                if device.device_type in definition.types:
+                if (
+                    device_id in new_devices_set
+                    and device.device_type in definition.types
+                ):
                     match definition.description.key:
                         case "state_status":
                             entity_class = MieleStatusSensor
@@ -448,8 +495,7 @@ async def async_setup_entry(
                         case _:
                             entity_class = MieleSensor
                     if (
-                        device_id in new_devices_set
-                        and definition.description.device_class
+                        definition.description.device_class
                         == SensorDeviceClass.TEMPERATURE
                         and definition.description.value_fn(device)
                         == DISABLED_TEMPERATURE / 100

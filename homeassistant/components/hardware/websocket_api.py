@@ -3,41 +3,25 @@
 from __future__ import annotations
 
 import contextlib
-from dataclasses import asdict, dataclass
+from dataclasses import asdict
 from datetime import datetime, timedelta
 from typing import Any
 
-import psutil_home_assistant as ha_psutil
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
 
 from .const import DATA_HARDWARE
-from .hardware import async_process_hardware_platforms
-
-
-@dataclass(slots=True)
-class SystemStatus:
-    """System status."""
-
-    ha_psutil: ha_psutil
-    remove_periodic_timer: CALLBACK_TYPE | None
-    subscribers: set[tuple[websocket_api.ActiveConnection, int]]
 
 
 async def async_setup(hass: HomeAssistant) -> None:
     """Set up the hardware websocket API."""
     websocket_api.async_register_command(hass, ws_info)
     websocket_api.async_register_command(hass, ws_subscribe_system_status)
-    hass.data[DATA_HARDWARE].system_status = SystemStatus(
-        ha_psutil=await hass.async_add_executor_job(ha_psutil.PsutilWrapper),
-        remove_periodic_timer=None,
-        subscribers=set(),
-    )
 
 
 @websocket_api.websocket_command(
@@ -51,9 +35,6 @@ async def ws_info(
 ) -> None:
     """Return hardware info."""
     hardware_info = []
-
-    if hass.data[DATA_HARDWARE].hardware_platform is None:
-        await async_process_hardware_platforms(hass)
 
     hardware_platform = hass.data[DATA_HARDWARE].hardware_platform
     for platform in hardware_platform.values():

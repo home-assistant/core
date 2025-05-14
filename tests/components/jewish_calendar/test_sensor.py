@@ -96,7 +96,7 @@ TEST_PARAMS = [
                 "device_class": "enum",
                 "friendly_name": "Jewish Calendar Weekly Torah portion",
                 "icon": "mdi:book-open-variant",
-                "options": list(Parasha),
+                "options": [str(p) for p in Parasha],
             },
         },
         "he",

@@ -478,6 +478,28 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
+        key="hvac_left_temperature_request",
+        streaming_listener=lambda vehicle,
+        callback: vehicle.listen_HvacLeftTemperatureRequest(callback),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryVehicleSensorEntityDescription(
+        key="hvac_right_temperature_request",
+        streaming_listener=lambda vehicle,
+        callback: vehicle.listen_HvacRightTemperatureRequest(callback),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryVehicleSensorEntityDescription(
         key="drive_state_active_route_traffic_minutes_delay",
         polling=True,
         streaming_listener=lambda vehicle,
@@ -1763,8 +1785,7 @@ class TeslemetryWallConnectorSensorEntity(TeslemetryWallConnectorEntity, SensorE
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
-        if self.exists:
-            self._attr_native_value = self.entity_description.value_fn(self._value)
+        self._attr_native_value = self.entity_description.value_fn(self._value)
 
 
 class TeslemetryEnergyInfoSensorEntity(TeslemetryEnergyInfoEntity, SensorEntity):

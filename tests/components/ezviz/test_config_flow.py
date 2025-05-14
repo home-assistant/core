@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from pyezviz.exceptions import (
+from pyezvizapi.exceptions import (
     EzvizAuthVerificationCode,
     InvalidHost,
     InvalidURL,

@@ -77,6 +77,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ComelitConfigEntry) -> 
     coordinator = entry.runtime_data
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, platforms):
         await coordinator.api.logout()
-        await coordinator.api.close()
 
     return unload_ok

@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import astuple, dataclass
 import logging
 from typing import Any, cast
 
+import aiohttp
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import (
@@ -25,6 +27,7 @@ from zwave_js_server.model.value import (
     ValueDataType,
     get_value_id_str,
 )
+from zwave_js_server.version import VersionInfo, get_server_version
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -38,6 +41,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.group import expand_entity_ids
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
@@ -53,6 +57,8 @@ from .const import (
     LIB_LOGGER,
     LOGGER,
 )
+
+SERVER_VERSION_TIMEOUT = 10
 
 
 @dataclass
@@ -568,3 +574,23 @@ def get_network_identifier_for_notification(
             return f"`{config_entry.title}`, with the home ID `{home_id}`,"
         return f"with the home ID `{home_id}`"
     return ""
+
+
+async def async_get_version_info(hass: HomeAssistant, ws_address: str) -> VersionInfo:
+    """Return Z-Wave JS version info."""
+    try:
+        async with asyncio.timeout(SERVER_VERSION_TIMEOUT):
+            version_info: VersionInfo = await get_server_version(
+                ws_address, async_get_clientsession(hass)
+            )
+    except (TimeoutError, aiohttp.ClientError) as err:
+        # We don't want to spam the log if the add-on isn't started
+        # or takes a long time to start.
+        LOGGER.debug("Failed to connect to Z-Wave JS server: %s", err)
+        raise CannotConnect from err
+
+    return version_info
+
+
+class CannotConnect(HomeAssistantError):
+    """Indicate connection error."""
