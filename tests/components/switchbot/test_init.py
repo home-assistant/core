@@ -1,12 +1,11 @@
 """Test the switchbot init."""
 
 from collections.abc import Callable
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 
 from . import LOCK_SERVICE_INFO
 
@@ -28,6 +27,7 @@ async def test_exception_handling_for_device_initialization(
     mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
     exception: Exception,
     error_message: str,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test exception handling for lock initialization."""
     inject_bluetooth_service_info(hass, LOCK_SERVICE_INFO)
@@ -35,11 +35,9 @@ async def test_exception_handling_for_device_initialization(
     entry = mock_entry_encrypted_factory(sensor_type="lock")
     entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.switchbot.CLASS_BY_DEVICE",
-            {"lock": MagicMock(side_effect=exception)},
-        ),
-        pytest.raises(HomeAssistantError, match=error_message),
+    with patch(
+        "homeassistant.components.switchbot.lock.switchbot.SwitchbotLock.__init__",
+        side_effect=exception,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
+    assert error_message in caplog.text
