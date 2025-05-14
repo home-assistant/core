@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import TeslemetryConfigEntry
-from .entity import TeslemetryEnergyInfoEntity, TeslemetryVehicleEntity
+from .entity import TeslemetryEnergyInfoEntity, TeslemetryVehiclePollingEntity
 from .models import TeslemetryVehicleData
 
 
@@ -89,7 +89,7 @@ class Schedule:
     rrule: str | None
 
 
-class TeslemetryChargeSchedule(TeslemetryVehicleEntity, CalendarEntity):
+class TeslemetryChargeSchedule(TeslemetryVehiclePollingEntity, CalendarEntity):
     """Vehicle Charge Schedule Calendar."""
 
     _attr_entity_registry_enabled_default = False
@@ -205,7 +205,7 @@ class TeslemetryChargeSchedule(TeslemetryVehicleEntity, CalendarEntity):
             )
 
 
-class TeslemetryPreconditionSchedule(TeslemetryVehicleEntity, CalendarEntity):
+class TeslemetryPreconditionSchedule(TeslemetryVehiclePollingEntity, CalendarEntity):
     """Vehicle Precondition Schedule Calendar."""
 
     _attr_entity_registry_enabled_default = False
