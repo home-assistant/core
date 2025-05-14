@@ -127,18 +127,18 @@ class HomeAssistantYellowConfigFlow(BaseFirmwareConfigFlow, domain=DOMAIN):
             client = FirmwareUpdateClient(NABU_CASA_FIRMWARE_RELEASES_URL, session)
             manifest = await client.async_update_data()
 
-            zigbee_fw_meta = next(
+            fw_meta = next(
                 fw
                 for fw in get_supported_firmwares(manifest)
-                if fw.metadata["fw_type"] == fw_type
+                if fw.filename.startswith(fw_type)
             )
 
-            zigbee_fw_data = await client.async_fetch_firmware(zigbee_fw_meta)
+            fw_data = await client.async_fetch_firmware(fw_meta)
             self._firmware_install_task = self.hass.async_create_task(
                 async_flash_silabs_firmware(
                     hass=self.hass,
                     device=self._device,
-                    fw_data=zigbee_fw_data,
+                    fw_data=fw_data,
                     expected_installed_firmware_type=expected_installed_firmware_type,
                     bootloader_reset_type=None,
                     progress_callback=lambda offset, total: self.async_update_progress(
@@ -165,7 +165,7 @@ class HomeAssistantYellowConfigFlow(BaseFirmwareConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Install Zigbee firmware."""
         return await self._install_firmware_step(
-            fw_type="zigbee_ncp",
+            fw_type="yellow_zigbee_ncp",
             firmware_name="Zigbee",
             expected_installed_firmware_type=ApplicationType.EZSP,
             next_step_id="confirm_zigbee",
@@ -176,7 +176,7 @@ class HomeAssistantYellowConfigFlow(BaseFirmwareConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Install Thread firmware."""
         return await self._install_firmware_step(
-            fw_type="openthread_rcp",
+            fw_type="yellow_openthread_rcp",
             firmware_name="OpenThread",
             expected_installed_firmware_type=ApplicationType.SPINEL,
             next_step_id="start_otbr_addon",

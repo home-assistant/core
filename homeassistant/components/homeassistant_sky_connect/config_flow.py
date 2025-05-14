@@ -46,7 +46,7 @@ from .const import (
     VID,
     HardwareVariant,
 )
-from .util import get_hardware_variant, get_supported_firmwares, get_usb_service_info
+from .util import get_hardware_variant, get_usb_service_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -154,18 +154,16 @@ class HomeAssistantSkyConnectConfigFlow(
             client = FirmwareUpdateClient(NABU_CASA_FIRMWARE_RELEASES_URL, session)
             manifest = await client.async_update_data()
 
-            zigbee_fw_meta = next(
-                fw
-                for fw in get_supported_firmwares(manifest)
-                if fw.metadata["fw_type"] == fw_type
+            fw_meta = next(
+                fw for fw in manifest.firmwares if fw.filename.startswith(fw_type)
             )
 
-            zigbee_fw_data = await client.async_fetch_firmware(zigbee_fw_meta)
+            fw_data = await client.async_fetch_firmware(fw_meta)
             self._firmware_install_task = self.hass.async_create_task(
                 async_flash_silabs_firmware(
                     hass=self.hass,
                     device=self._device,
-                    fw_data=zigbee_fw_data,
+                    fw_data=fw_data,
                     expected_installed_firmware_type=expected_installed_firmware_type,
                     bootloader_reset_type=None,
                     progress_callback=lambda offset, total: self.async_update_progress(
