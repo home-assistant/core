@@ -54,7 +54,6 @@ GARAGE_SENSOR_DESCRIPTIONS: tuple[ZimiSensorEntityDescription, ...] = (
     ),
     ZimiSensorEntityDescription(
         key="garage_humidty",
-        translation_key="garage_humidty",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         value_fn=lambda device: device.garage_humidity,
