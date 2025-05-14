@@ -211,10 +211,10 @@ aiobafi6==0.9.0
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
-aiocomelit==0.12.0
+aiocomelit==0.12.1
 
 # homeassistant.components.dhcp
-aiodhcpwatcher==1.1.1
+aiodhcpwatcher==1.2.0
 
 # homeassistant.components.dhcp
 aiodiscover==2.7.0
@@ -542,7 +542,7 @@ aurorapy==0.2.7
 autarco==3.1.0
 
 # homeassistant.components.husqvarna_automower_ble
-automower-ble==0.2.0
+automower-ble==0.2.1
 
 # homeassistant.components.generic
 # homeassistant.components.stream
@@ -750,7 +750,7 @@ datapoint==0.9.9
 dbus-fast==2.43.0
 
 # homeassistant.components.debugpy
-debugpy==1.8.13
+debugpy==1.8.14
 
 # homeassistant.components.decora_wifi
 # decora-wifi==1.4
@@ -983,7 +983,7 @@ gardena-bluetooth==1.6.0
 gassist-text==0.0.12
 
 # homeassistant.components.google
-gcal-sync==7.0.0
+gcal-sync==7.0.1
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
@@ -2132,7 +2132,7 @@ pymeteoclimatic==0.1.0
 pymicro-vad==1.0.1
 
 # homeassistant.components.miele
-pymiele==0.5.1
+pymiele==0.5.2
 
 # homeassistant.components.xiaomi_tv
 pymitv==1.4.3
@@ -3101,7 +3101,7 @@ xbox-webapi==2.1.0
 xiaomi-ble==0.38.0
 
 # homeassistant.components.knx
-xknx==3.6.0
+xknx==3.8.0
 
 # homeassistant.components.knx
 xknxproject==3.8.2

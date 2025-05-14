@@ -56,7 +56,6 @@ from .const import (
     RESULT_INVALID_PIN,
     RESULT_NOT_SUPPORTED,
     RESULT_SUCCESS,
-    RESULT_UNKNOWN_HOST,
     SUCCESSFUL_RESULTS,
     UPNP_SVC_MAIN_TV_AGENT,
     UPNP_SVC_RENDERING_CONTROL,
@@ -110,9 +109,11 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 2
     MINOR_VERSION = 2
 
+    _host: str
+    _bridge: SamsungTVBridge
+
     def __init__(self) -> None:
         """Initialize flow."""
-        self._host: str = ""
         self._mac: str | None = None
         self._udn: str | None = None
         self._upnp_udn: str | None = None
@@ -125,13 +126,11 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self._name: str | None = None
         self._title: str = ""
         self._id: int | None = None
-        self._bridge: SamsungTVBridge | None = None
         self._device_info: dict[str, Any] | None = None
         self._authenticator: SamsungTVEncryptedWSAsyncAuthenticator | None = None
 
     def _base_config_entry(self) -> dict[str, Any]:
         """Generate the base config entry without the method."""
-        assert self._bridge is not None
         return {
             CONF_HOST: self._host,
             CONF_MAC: self._mac,
@@ -145,7 +144,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def _get_entry_from_bridge(self) -> ConfigFlowResult:
         """Get device entry."""
-        assert self._bridge
         data = self._base_config_entry()
         if self._bridge.token:
             data[CONF_TOKEN] = self._bridge.token
@@ -165,7 +163,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self, raise_on_progress: bool = True
     ) -> None:
         """Set the unique id from the udn."""
-        assert self._host is not None
         # Set the unique id without raising on progress in case
         # there are two SSDP flows with for each ST
         await self.async_set_unique_id(self._udn, raise_on_progress=False)
@@ -252,38 +249,44 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             self._mac = mac
         return True
 
-    async def _async_set_name_host_from_input(self, user_input: dict[str, Any]) -> None:
+    async def _async_set_name_host_from_input(self, user_input: dict[str, Any]) -> bool:
         try:
             self._host = await self.hass.async_add_executor_job(
                 socket.gethostbyname, user_input[CONF_HOST]
             )
         except socket.gaierror as err:
-            raise AbortFlow(RESULT_UNKNOWN_HOST) from err
+            LOGGER.debug("Failed to get IP for %s: %s", user_input[CONF_HOST], err)
+            return False
         self._title = self._host
+        return True
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
+        errors: dict[str, str] | None = None
         if user_input is not None:
-            await self._async_set_name_host_from_input(user_input)
-            await self._async_create_bridge()
-            assert self._bridge
-            self._async_abort_entries_match({CONF_HOST: self._host})
-            if self._bridge.method != METHOD_LEGACY:
-                # Legacy bridge does not provide device info
-                await self._async_set_device_unique_id(raise_on_progress=False)
-            if self._bridge.method == METHOD_ENCRYPTED_WEBSOCKET:
-                return await self.async_step_encrypted_pairing()
-            return await self.async_step_pairing({})
+            if await self._async_set_name_host_from_input(user_input):
+                await self._async_create_bridge()
+                self._async_abort_entries_match({CONF_HOST: self._host})
+                if self._bridge.method != METHOD_LEGACY:
+                    # Legacy bridge does not provide device info
+                    await self._async_set_device_unique_id(raise_on_progress=False)
+                if self._bridge.method == METHOD_ENCRYPTED_WEBSOCKET:
+                    return await self.async_step_encrypted_pairing()
+                return await self.async_step_pairing({})
+            errors = {"base": "invalid_host"}
 
-        return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(DATA_SCHEMA, user_input),
+            errors=errors,
+        )
 
     async def async_step_pairing(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a pairing by accepting the message on the TV."""
-        assert self._bridge is not None
         errors: dict[str, str] = {}
         if user_input is not None:
             result = await self._bridge.async_try_connect()
@@ -305,7 +308,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a encrypted pairing."""
-        assert self._host is not None
         await self._async_start_encrypted_pairing(self._host)
         assert self._authenticator is not None
         errors: dict[str, str] = {}
@@ -420,7 +422,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_start_discovery_with_mac_address(self) -> None:
         """Start discovery."""
-        assert self._host is not None
         if (entry := self._async_update_existing_matching_entry()) and entry.unique_id:
             # If we have the unique id and the mac we abort
             # as we do not need anything else
@@ -518,7 +519,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle user-confirmation of discovered node."""
         if user_input is not None:
             await self._async_create_bridge()
-            assert self._bridge
             if self._bridge.method == METHOD_ENCRYPTED_WEBSOCKET:
                 return await self.async_step_encrypted_pairing()
             return await self.async_step_pairing({})
