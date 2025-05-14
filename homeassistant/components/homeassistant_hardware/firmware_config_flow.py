@@ -7,6 +7,8 @@ import asyncio
 import logging
 from typing import Any
 
+from ha_silabs_firmware_client import FirmwareUpdateClient
+
 from homeassistant.components.hassio import (
     AddonError,
     AddonInfo,
@@ -22,9 +24,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 
 from .const import OTBR_DOMAIN, ZHA_DOMAIN
+from .helpers import async_flash_silabs_firmware
 from .util import (
     ApplicationType,
     FirmwareInfo,
@@ -59,6 +63,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         self.addon_install_task: asyncio.Task | None = None
         self.addon_start_task: asyncio.Task | None = None
         self.addon_uninstall_task: asyncio.Task | None = None
+        self.firmware_install_task: asyncio.Task | None = None
 
     def _get_translation_placeholders(self) -> dict[str, str]:
         """Shared translation placeholders."""
@@ -131,6 +136,52 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 ApplicationType.CPC,
             )
         )
+
+    async def _install_firmware_step(
+        self,
+        fw_update_url: str,
+        fw_type: str,
+        firmware_name: str,
+        expected_installed_firmware_type: ApplicationType,
+        next_step_id: str,
+    ) -> ConfigFlowResult:
+        assert self._device is not None
+
+        if not self.firmware_install_task:
+            session = async_get_clientsession(self.hass)
+            client = FirmwareUpdateClient(fw_update_url, session)
+            manifest = await client.async_update_data()
+
+            fw_meta = next(
+                fw for fw in manifest.firmwares if fw.filename.startswith(fw_type)
+            )
+
+            fw_data = await client.async_fetch_firmware(fw_meta)
+            self.firmware_install_task = self.hass.async_create_task(
+                async_flash_silabs_firmware(
+                    hass=self.hass,
+                    device=self._device,
+                    fw_data=fw_data,
+                    expected_installed_firmware_type=expected_installed_firmware_type,
+                    bootloader_reset_type=None,
+                    progress_callback=lambda offset, total: self.async_update_progress(
+                        offset / total
+                    ),
+                ),
+                f"Flash {firmware_name} firmware",
+            )
+
+        if not self.firmware_install_task.done():
+            return self.async_show_progress(
+                progress_action="install_firmware",
+                description_placeholders={
+                    **self._get_translation_placeholders(),
+                    "firmware_name": firmware_name,
+                },
+                progress_task=self.firmware_install_task,
+            )
+
+        return self.async_show_progress_done(next_step_id=next_step_id)
 
     async def async_step_pick_firmware_zigbee(
         self, user_input: dict[str, Any] | None = None
