@@ -16,10 +16,10 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import SUN_EVENT_SUNSET, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EntityCategory
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers import event
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import dt as dt_util
 
 from .entity import (
@@ -37,15 +37,19 @@ class JewishCalendarBaseSensorDescription(SensorEntityDescription):
     """Base class describing Jewish Calendar sensor entities."""
 
     value_fn: Callable | None
+    next_update_fn: Callable[[Zmanim], dt.datetime] | None
 
 
 @dataclass(frozen=True, kw_only=True)
 class JewishCalendarSensorDescription(JewishCalendarBaseSensorDescription):
     """Class describing Jewish Calendar sensor entities."""
 
-    value_fn: Callable[[JewishCalendarDataResults], str | int]
-    attr_fn: Callable[[JewishCalendarDataResults], dict[str, str]] | None = None
+    value_fn: Callable[[HDateInfo], str | int]
+    attr_fn: Callable[[HDateInfo], dict[str, str]] | None = None
     options_fn: Callable[[bool], list[str]] | None = None
+    next_update_fn: Callable[[Zmanim], dt.datetime] | None = (
+        lambda zmanim: zmanim.shkia.local
+    )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -55,17 +59,18 @@ class JewishCalendarTimestampSensorDescription(JewishCalendarBaseSensorDescripti
     value_fn: (
         Callable[[HDateInfo, Callable[[dt.date], Zmanim]], dt.datetime | None] | None
     ) = None
+    next_update_fn: Callable[[Zmanim], dt.datetime] | None = None
 
 
 INFO_SENSORS: tuple[JewishCalendarSensorDescription, ...] = (
     JewishCalendarSensorDescription(
         key="date",
         translation_key="hebrew_date",
-        value_fn=lambda results: str(results.after_shkia_date.hdate),
-        attr_fn=lambda results: {
-            "hebrew_year": str(results.after_shkia_date.hdate.year),
-            "hebrew_month_name": str(results.after_shkia_date.hdate.month),
-            "hebrew_day": str(results.after_shkia_date.hdate.day),
+        value_fn=lambda info: str(info.hdate),
+        attr_fn=lambda info: {
+            "hebrew_year": str(info.hdate.year),
+            "hebrew_month_name": str(info.hdate.month),
+            "hebrew_day": str(info.hdate.day),
         },
     ),
     JewishCalendarSensorDescription(
@@ -73,24 +78,19 @@ INFO_SENSORS: tuple[JewishCalendarSensorDescription, ...] = (
         translation_key="weekly_portion",
         device_class=SensorDeviceClass.ENUM,
         options_fn=lambda _: [str(p) for p in Parasha],
-        value_fn=lambda results: str(results.after_tzais_date.upcoming_shabbat.parasha),
+        value_fn=lambda info: str(info.upcoming_shabbat.parasha),
+        next_update_fn=lambda zmanim: zmanim.tset_hakohavim_tsom.local,
     ),
     JewishCalendarSensorDescription(
         key="holiday",
         translation_key="holiday",
         device_class=SensorDeviceClass.ENUM,
         options_fn=lambda diaspora: HolidayDatabase(diaspora).get_all_names(),
-        value_fn=lambda results: ", ".join(
-            str(holiday) for holiday in results.after_shkia_date.holidays
-        ),
-        attr_fn=lambda results: {
-            "id": ", ".join(
-                holiday.name for holiday in results.after_shkia_date.holidays
-            ),
+        value_fn=lambda info: ", ".join(str(holiday) for holiday in info.holidays),
+        attr_fn=lambda info: {
+            "id": ", ".join(holiday.name for holiday in info.holidays),
             "type": ", ".join(
-                dict.fromkeys(
-                    _holiday.type.name for _holiday in results.after_shkia_date.holidays
-                )
+                dict.fromkeys(_holiday.type.name for _holiday in info.holidays)
             ),
         },
     ),
@@ -98,17 +98,13 @@ INFO_SENSORS: tuple[JewishCalendarSensorDescription, ...] = (
         key="omer_count",
         translation_key="omer_count",
         entity_registry_enabled_default=False,
-        value_fn=lambda results: (
-            results.after_shkia_date.omer.total_days
-            if results.after_shkia_date.omer
-            else 0
-        ),
+        value_fn=lambda info: info.omer.total_days if info.omer else 0,
     ),
     JewishCalendarSensorDescription(
         key="daf_yomi",
         translation_key="daf_yomi",
         entity_registry_enabled_default=False,
-        value_fn=lambda results: str(results.daytime_date.daf_yomi),
+        value_fn=lambda info: str(info.daf_yomi),
     ),
 )
 
@@ -188,12 +184,14 @@ TIME_SENSORS: tuple[JewishCalendarTimestampSensorDescription, ...] = (
         value_fn=lambda at_date, mz: mz(
             at_date.upcoming_shabbat.previous_day.gdate
         ).candle_lighting,
+        next_update_fn=lambda zmanim: zmanim.tset_hakohavim_shabbat.local,
     ),
     JewishCalendarTimestampSensorDescription(
         key="upcoming_shabbat_havdalah",
         translation_key="upcoming_shabbat_havdalah",
         entity_registry_enabled_default=False,
         value_fn=lambda at_date, mz: mz(at_date.upcoming_shabbat.gdate).havdalah,
+        next_update_fn=lambda zmanim: zmanim.tset_hakohavim_shabbat.local,
     ),
     JewishCalendarTimestampSensorDescription(
         key="upcoming_candle_lighting",
@@ -201,6 +199,7 @@ TIME_SENSORS: tuple[JewishCalendarTimestampSensorDescription, ...] = (
         value_fn=lambda at_date, mz: mz(
             at_date.upcoming_shabbat_or_yom_tov.first_day.previous_day.gdate
         ).candle_lighting,
+        next_update_fn=lambda zmanim: zmanim.tset_hakohavim_shabbat.local,
     ),
     JewishCalendarTimestampSensorDescription(
         key="upcoming_havdalah",
@@ -208,6 +207,7 @@ TIME_SENSORS: tuple[JewishCalendarTimestampSensorDescription, ...] = (
         value_fn=lambda at_date, mz: mz(
             at_date.upcoming_shabbat_or_yom_tov.last_day.gdate
         ).havdalah,
+        next_update_fn=lambda zmanim: zmanim.tset_hakohavim_shabbat.local,
     ),
 )
 
@@ -231,51 +231,62 @@ async def async_setup_entry(
 class JewishCalendarBaseSensor(JewishCalendarEntity, SensorEntity):
     """Base class for Jewish calendar sensors."""
 
+    _attr_should_poll = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _update_unsub: CALLBACK_TYPE | None = None
+
+    entity_description: JewishCalendarBaseSensorDescription
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         await super().async_added_to_hass()
-        await self.async_update_data()
+        self._schedule_update()
 
-    async def async_update_data(self) -> None:
-        """Update the state of the sensor."""
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        if self._update_unsub:
+            self._update_unsub()
+            self._update_unsub = None
+        return await super().async_will_remove_from_hass()
+
+    def _schedule_update(self) -> None:
+        """Schedule the next update of the sensor."""
         now = dt_util.now()
+        zmanim = self.make_zmanim(now.date())
+        update = None
+        if self.entity_description.next_update_fn:
+            update = self.entity_description.next_update_fn(zmanim)
+        next_midnight = dt_util.start_of_local_day() + dt.timedelta(days=1)
+        if update is None or now > update:
+            update = next_midnight
+        if self._update_unsub:
+            self._update_unsub()
+        self._update_unsub = event.async_track_point_in_time(
+            self.hass, self._update_data, update
+        )
+
+    @callback
+    def _update_data(self, now: dt.datetime | None = None) -> None:
+        """Update the sensor data."""
+        self._update_unsub = None
+        self._schedule_update()
+
+        if now is None:
+            now = dt_util.now()
+
         _LOGGER.debug("Now: %s Location: %r", now, self.data.location)
 
         today = now.date()
-        event_date = get_astral_event_date(self.hass, SUN_EVENT_SUNSET, today)
-
-        if event_date is None:
-            _LOGGER.error("Can't get sunset event date for %s", today)
-            return
-
-        sunset = dt_util.as_local(event_date)
-
-        _LOGGER.debug("Now: %s Sunset: %s", now, sunset)
-
-        daytime_date = HDateInfo(today, diaspora=self.data.diaspora)
-
-        # The Jewish day starts after darkness (called "tzais") and finishes at
-        # sunset ("shkia"). The time in between is a gray area
-        # (aka "Bein Hashmashot"  # codespell:ignore
-        # - literally: "in between the sun and the moon").
-
-        # For some sensors, it is more interesting to consider the date to be
-        # tomorrow based on sunset ("shkia"), for others based on "tzais".
-        # Hence the following variables.
-        after_tzais_date = after_shkia_date = daytime_date
-        today_times = self.make_zmanim(today)
-
-        if now > sunset:
-            after_shkia_date = daytime_date.next_day
-
-        if today_times.havdalah and now > today_times.havdalah:
-            after_tzais_date = daytime_date.next_day
-
-        self.data.results = JewishCalendarDataResults(
-            daytime_date, after_shkia_date, after_tzais_date, today_times
-        )
+        zmanim = self.make_zmanim(today)
+        update = None
+        if self.entity_description.next_update_fn:
+            update = self.entity_description.next_update_fn(zmanim)
+        if update is not None and now >= update:
+            today += dt.timedelta(days=1)
+        _LOGGER.debug("Today: %s, update: %s", today, update)
+        dateinfo = HDateInfo(today, diaspora=self.data.diaspora)
+        self.data.results = JewishCalendarDataResults(dateinfo, zmanim)
+        self.async_write_ha_state()
 
 
 class JewishCalendarSensor(JewishCalendarBaseSensor):
@@ -298,17 +309,19 @@ class JewishCalendarSensor(JewishCalendarBaseSensor):
     def native_value(self) -> str | int | dt.datetime | None:
         """Return the state of the sensor."""
         if self.data.results is None:
-            return None
-        return self.entity_description.value_fn(self.data.results)
+            self._update_data()
+        assert self.data.results is not None, "Results should be available"
+        return self.entity_description.value_fn(self.data.results.dateinfo)
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
-        if self.data.results is None:
+        if self.entity_description.attr_fn is None:
             return {}
-        if self.entity_description.attr_fn is not None:
-            return self.entity_description.attr_fn(self.data.results)
-        return {}
+        if self.data.results is None:
+            self._update_data()
+        assert self.data.results is not None, "Results should be available"
+        return self.entity_description.attr_fn(self.data.results.dateinfo)
 
 
 class JewishCalendarTimeSensor(JewishCalendarBaseSensor):
@@ -321,9 +334,10 @@ class JewishCalendarTimeSensor(JewishCalendarBaseSensor):
     def native_value(self) -> dt.datetime | None:
         """Return the state of the sensor."""
         if self.data.results is None:
-            return None
+            self._update_data()
+        assert self.data.results is not None, "Results should be available"
         if self.entity_description.value_fn is None:
             return self.data.results.zmanim.zmanim[self.entity_description.key].local
         return self.entity_description.value_fn(
-            self.data.results.after_tzais_date, self.make_zmanim
+            self.data.results.dateinfo, self.make_zmanim
         )
