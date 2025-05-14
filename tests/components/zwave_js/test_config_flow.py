@@ -4292,7 +4292,7 @@ async def test_get_driver_failure_instruct_unplug(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "config_entry_not_loaded"
+    assert result["reason"] == "reset_failed"
 
 
 async def test_hard_reset_failure(hass: HomeAssistant, integration, client) -> None:
