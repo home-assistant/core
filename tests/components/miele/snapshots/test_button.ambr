@@ -177,7 +177,7 @@
 # name: test_button_states[platforms0][button.steam_oven_micro_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'steam_oven_micro Start',
+      'friendly_name': 'Steam oven micro Start',
     }),
     'context': <ANY>,
     'entity_id': 'button.steam_oven_micro_start',
@@ -224,7 +224,7 @@
 # name: test_button_states[platforms0][button.steam_oven_micro_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'steam_oven_micro Stop',
+      'friendly_name': 'Steam oven micro Stop',
     }),
     'context': <ANY>,
     'entity_id': 'button.steam_oven_micro_stop',

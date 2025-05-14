@@ -209,7 +209,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'color_mode': None,
-      'friendly_name': 'steam_oven_micro Light',
+      'friendly_name': 'Steam oven micro Light',
       'supported_color_modes': list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),

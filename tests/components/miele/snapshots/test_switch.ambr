@@ -224,7 +224,7 @@
 # name: test_switch_states[platforms0][switch.steam_oven_micro_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'steam_oven_micro Power',
+      'friendly_name': 'Steam oven micro Power',
     }),
     'context': <ANY>,
     'entity_id': 'switch.steam_oven_micro_power',

@@ -1129,7 +1129,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'steam_oven_micro Door',
+      'friendly_name': 'Steam oven micro Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.steam_oven_micro_door',
@@ -1176,7 +1176,7 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.steam_oven_micro_mobile_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'steam_oven_micro Mobile start',
+      'friendly_name': 'Steam oven micro Mobile start',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.steam_oven_micro_mobile_start',
@@ -1224,7 +1224,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'steam_oven_micro Notification active',
+      'friendly_name': 'Steam oven micro Notification active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.steam_oven_micro_notification_active',
@@ -1272,7 +1272,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'steam_oven_micro Problem',
+      'friendly_name': 'Steam oven micro Problem',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.steam_oven_micro_problem',
@@ -1319,7 +1319,7 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.steam_oven_micro_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'steam_oven_micro Remote control',
+      'friendly_name': 'Steam oven micro Remote control',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.steam_oven_micro_remote_control',
@@ -1366,7 +1366,7 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.steam_oven_micro_smart_grid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'steam_oven_micro Smart grid',
+      'friendly_name': 'Steam oven micro Smart grid',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.steam_oven_micro_smart_grid',
