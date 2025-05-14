@@ -1109,6 +1109,8 @@ ha-iotawattpy==0.1.2
 ha-philipsjs==3.2.2
 
 # homeassistant.components.homeassistant_hardware
+# homeassistant.components.homeassistant_sky_connect
+# homeassistant.components.homeassistant_yellow
 ha-silabs-firmware-client==0.2.0
 
 # homeassistant.components.habitica
