@@ -137,7 +137,6 @@ class HomematicipHAP:
             "Connected to HomematicIP with HAP %s", self.config_entry.unique_id
         )
 
-        self.config_entry.runtime_data = self
         await self.hass.config_entries.async_forward_entry_setups(
             self.config_entry, PLATFORMS
         )

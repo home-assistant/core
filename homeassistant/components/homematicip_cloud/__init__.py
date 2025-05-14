@@ -79,6 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicIPConfigEntry) 
 
     hap = HomematicipHAP(hass, entry)
 
+    entry.runtime_data = hap
     if not await hap.async_setup():
         return False
 
