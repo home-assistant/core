@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import random
+import re
 from typing import Any
 
 from automower_ble.mower import Mower
@@ -39,6 +40,16 @@ def _is_supported(discovery_info: BluetoothServiceInfo):
     return manufacturer and service_husqvarna and service_generic
 
 
+def _check_mac(mac: str) -> str:
+    """Verify MAC address format."""
+    mac = re.sub("[.:-]", "", mac)
+    mac = mac.lower()
+    mac = "".join(mac.split())
+    assert len(mac) == 12
+    assert mac.isalnum()
+    return ":".join([f"{mac[i : i + 2]}" for i in range(0, 12, 2)])
+
+
 class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Husqvarna Bluetooth."""
 
@@ -67,6 +78,8 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm discovery."""
         assert self.address
+
+        self.address = _check_mac(self.address)
 
         device = bluetooth.async_ble_device_from_address(
             self.hass, self.address, connectable=True
