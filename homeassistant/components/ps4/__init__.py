@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING
 
 from pyps4_2ndscreen.ddp import DDPProtocol, async_create_ddp_endpoint
 from pyps4_2ndscreen.media_art import COUNTRIES
-import voluptuous as vol
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.media_player import (
@@ -18,15 +17,8 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_COMMAND,
-    ATTR_ENTITY_ID,
-    ATTR_LOCKED,
-    CONF_REGION,
-    CONF_TOKEN,
-    Platform,
-)
-from homeassistant.core import HomeAssistant, ServiceCall, split_entity_id
+from homeassistant.const import ATTR_LOCKED, CONF_REGION, CONF_TOKEN, Platform
+from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -36,28 +28,14 @@ from homeassistant.util import location as location_util
 from homeassistant.util.json import JsonObjectType, load_json_object
 
 from .config_flow import PlayStation4FlowHandler  # noqa: F401
-from .const import (
-    ATTR_MEDIA_IMAGE_URL,
-    COMMANDS,
-    COUNTRYCODE_NAMES,
-    DOMAIN,
-    GAMES_FILE,
-    PS4_DATA,
-)
+from .const import ATTR_MEDIA_IMAGE_URL, COUNTRYCODE_NAMES, DOMAIN, GAMES_FILE, PS4_DATA
+from .services import register_services
 
 if TYPE_CHECKING:
     from .media_player import PS4Device
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_COMMAND = "send_command"
-
-PS4_COMMAND_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_COMMAND): vol.In(list(COMMANDS)),
-    }
-)
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
@@ -80,7 +58,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         protocol=protocol,
     )
     _LOGGER.debug("PS4 DDP endpoint created: %s, %s", transport, protocol)
-    service_handle(hass)
+    register_services(hass)
     return True
 
 
@@ -223,19 +201,3 @@ def _reformat_data(hass: HomeAssistant, games: dict, unique_id: str) -> dict:
     if data_reformatted:
         save_games(hass, games, unique_id)
     return games
-
-
-def service_handle(hass: HomeAssistant):
-    """Handle for services."""
-
-    async def async_service_command(call: ServiceCall) -> None:
-        """Service for sending commands."""
-        entity_ids = call.data[ATTR_ENTITY_ID]
-        command = call.data[ATTR_COMMAND]
-        for device in hass.data[PS4_DATA].devices:
-            if device.entity_id in entity_ids:
-                await device.async_send_command(command)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_COMMAND, async_service_command, schema=PS4_COMMAND_SCHEMA
-    )
