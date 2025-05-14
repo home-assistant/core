@@ -54,7 +54,7 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
     @property
     def available(self) -> bool:
         """Return the availability of the device."""
-        if self._bridge.auth_failed:
+        if not super().available or self._bridge.auth_failed:
             return False
         return (
             self.coordinator.is_on

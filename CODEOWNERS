@@ -46,8 +46,8 @@ build.json @home-assistant/supervisor
 /tests/components/accuweather/ @bieniu
 /homeassistant/components/acmeda/ @atmurray
 /tests/components/acmeda/ @atmurray
-/homeassistant/components/adax/ @danielhiversen
-/tests/components/adax/ @danielhiversen
+/homeassistant/components/adax/ @danielhiversen @lazytarget
+/tests/components/adax/ @danielhiversen @lazytarget
 /homeassistant/components/adguard/ @frenck
 /tests/components/adguard/ @frenck
 /homeassistant/components/ads/ @mrpasztoradam
@@ -1111,8 +1111,8 @@ build.json @home-assistant/supervisor
 /tests/components/opentherm_gw/ @mvn23
 /homeassistant/components/openuv/ @bachya
 /tests/components/openuv/ @bachya
-/homeassistant/components/openweathermap/ @fabaff @freekode @nzapponi
-/tests/components/openweathermap/ @fabaff @freekode @nzapponi
+/homeassistant/components/openweathermap/ @fabaff @freekode @nzapponi @wittypluck
+/tests/components/openweathermap/ @fabaff @freekode @nzapponi @wittypluck
 /homeassistant/components/opnsense/ @mtreinish
 /tests/components/opnsense/ @mtreinish
 /homeassistant/components/opower/ @tronikos
@@ -1484,8 +1484,8 @@ build.json @home-assistant/supervisor
 /tests/components/subaru/ @G-Two
 /homeassistant/components/suez_water/ @ooii @jb101010-2
 /tests/components/suez_water/ @ooii @jb101010-2
-/homeassistant/components/sun/ @Swamp-Ig
-/tests/components/sun/ @Swamp-Ig
+/homeassistant/components/sun/ @home-assistant/core
+/tests/components/sun/ @home-assistant/core
 /homeassistant/components/supla/ @mwegrzynek
 /homeassistant/components/surepetcare/ @benleb @danielhiversen
 /tests/components/surepetcare/ @benleb @danielhiversen
@@ -1498,8 +1498,8 @@ build.json @home-assistant/supervisor
 /tests/components/switch_as_x/ @home-assistant/core
 /homeassistant/components/switchbee/ @jafar-atili
 /tests/components/switchbee/ @jafar-atili
-/homeassistant/components/switchbot/ @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski
-/tests/components/switchbot/ @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski
+/homeassistant/components/switchbot/ @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski @zerzhang
+/tests/components/switchbot/ @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski @zerzhang
 /homeassistant/components/switchbot_cloud/ @SeraphicRav @laurence-presland @Gigatrappeur
 /tests/components/switchbot_cloud/ @SeraphicRav @laurence-presland @Gigatrappeur
 /homeassistant/components/switcher_kis/ @thecode @YogevBokobza
