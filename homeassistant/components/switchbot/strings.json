@@ -200,6 +200,12 @@
     },
     "value_error": {
       "message": "Switchbot device initialization failed because of incorrect configuration parameters: {error}"
+    },
+    "advertising_state_error": {
+      "message": "{address} is not advertising state"
+    },
+    "device_not_found_error": {
+      "message": "Could not find Switchbot {sensor_type} with address {address}"
     }
   }
 }
