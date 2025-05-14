@@ -10,7 +10,7 @@
     "schedule_id_description": "The ID of an existing schedule to modify. Omit if creating a new schedule.",
     "days_of_week": "Days of week",
     "days_of_week_description": "Select which days this schedule should be enabled on. You can select multiple days.",
-    "one_time": "One time",
+    "one_time": "One-time",
     "one_time_description": "If this is a one-time schedule.",
     "location_description": "The approximate location the vehicle must be at to use this schedule. Defaults to Home Assistant's configured location."
   },
