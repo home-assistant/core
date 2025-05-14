@@ -105,14 +105,21 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
         )
 
     @property
-    def min_temp(self) -> float:
+    def target_temperature(self) -> float | None:
+        """Return the target temperature."""
+        return self.get_attribute_value(
+            Capability.THERMOSTAT_COOLING_SETPOINT, Attribute.COOLING_SETPOINT
+        )
+
+    @property
+    def target_temperature_low(self) -> float:
         """Return the minimum temperature."""
         return self.get_attribute_value(
             Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL, Attribute.MINIMUM_SETPOINT
         )
 
     @property
-    def max_temp(self) -> float:
+    def target_temperature_high(self) -> float:
         """Return the maximum temperature."""
         return self.get_attribute_value(
             Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL, Attribute.MAXIMUM_SETPOINT
