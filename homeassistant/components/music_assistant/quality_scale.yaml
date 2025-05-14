@@ -38,7 +38,7 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery-update-info: todo
+  discovery-update-info: done
   discovery: done
   docs-data-update:
     status: exempt
@@ -52,8 +52,8 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices: done
-  entity-category: todo
-  entity-device-class: todo
+  entity-category: done
+  entity-device-class: done
   entity-disabled-by-default:
     status: exempt
     comment: The integration only creates media player entities which are needed for its functioning. Therefore no entities are disabled by default
