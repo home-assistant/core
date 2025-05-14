@@ -163,7 +163,7 @@ async def test_two_sensor_sites_running(
         f"visibility_distance_{TEST_LATITUDE_WAVERTREE}_{TEST_LONGITUDE_WAVERTREE}_daily",
     ],
 )
-async def test_legacy_config_entry_is_removed(
+async def test_legacy_entities_are_removed(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     requests_mock: requests_mock.Mocker,
