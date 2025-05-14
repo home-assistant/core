@@ -133,7 +133,7 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
         await self.execute_device_command(
             Capability.AIR_CONDITIONER_MODE,
             Command.SET_AIR_CONDITIONER_MODE,
-            argument=operation_mode,
+            argument=HA_TO_OPERATION_MAP[operation_mode],
         )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
