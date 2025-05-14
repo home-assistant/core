@@ -23,6 +23,8 @@ from homeassistant.util import slugify
 
 from .const import DOMAIN
 
+type GeofencyConfigEntry = ConfigEntry[set[str]]
+
 PLATFORMS = [Platform.DEVICE_TRACKER]
 
 CONF_MOBILE_BEACONS = "mobile_beacons"
@@ -80,10 +82,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up the Geofency component."""
     config = hass_config.get(DOMAIN, {})
     mobile_beacons = config.get(CONF_MOBILE_BEACONS, [])
-    hass.data[DOMAIN] = {
-        "beacons": [slugify(beacon) for beacon in mobile_beacons],
-        "devices": set(),
-    }
+    hass.data[DOMAIN] = {"beacons": [slugify(beacon) for beacon in mobile_beacons]}
     return True
 
 
@@ -139,8 +138,9 @@ def _set_location(hass, data, location_name):
     return web.Response(text=f"Setting location for {device}")
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GeofencyConfigEntry) -> bool:
     """Configure based on config entry."""
+    entry.runtime_data = set()
     webhook.async_register(
         hass, DOMAIN, "Geofency", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
@@ -149,7 +149,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GeofencyConfigEntry) -> bool:
     """Unload a config entry."""
     webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
