@@ -36,7 +36,7 @@ from .const import (
 
 UNIT_PREFIXES = [
     selector.SelectOptionDict(value="n", label="n (nano)"),
-    selector.SelectOptionDict(value="µ", label="µ (micro)"),
+    selector.SelectOptionDict(value="μ", label="μ (micro)"),
     selector.SelectOptionDict(value="m", label="m (milli)"),
     selector.SelectOptionDict(value="k", label="k (kilo)"),
     selector.SelectOptionDict(value="M", label="M (mega)"),
