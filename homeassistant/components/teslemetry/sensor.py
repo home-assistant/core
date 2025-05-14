@@ -1763,8 +1763,7 @@ class TeslemetryWallConnectorSensorEntity(TeslemetryWallConnectorEntity, SensorE
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
-        if self.exists:
-            self._attr_native_value = self.entity_description.value_fn(self._value)
+        self._attr_native_value = self.entity_description.value_fn(self._value)
 
 
 class TeslemetryEnergyInfoSensorEntity(TeslemetryEnergyInfoEntity, SensorEntity):
