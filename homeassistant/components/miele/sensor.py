@@ -399,23 +399,11 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
     ),
     MieleSensorDefinition(
         types=(
-            MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL,
-            MieleAppliance.OVEN,
-            MieleAppliance.OVEN_MICROWAVE,
-            MieleAppliance.DISH_WARMER,
-            MieleAppliance.STEAM_OVEN,
-            MieleAppliance.MICROWAVE,
-            MieleAppliance.FRIDGE,
-            MieleAppliance.FREEZER,
             MieleAppliance.FRIDGE_FREEZER,
-            MieleAppliance.STEAM_OVEN_COMBI,
             MieleAppliance.WINE_CABINET,
             MieleAppliance.WINE_CONDITIONING_UNIT,
             MieleAppliance.WINE_STORAGE_CONDITIONING_UNIT,
-            MieleAppliance.STEAM_OVEN_MICRO,
-            MieleAppliance.DIALOG_OVEN,
             MieleAppliance.WINE_CABINET_FREEZER,
-            MieleAppliance.STEAM_OVEN_MK2,
         ),
         description=MieleSensorDescription(
             key="state_temperature_2",
@@ -430,23 +418,10 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
     ),
     MieleSensorDefinition(
         types=(
-            MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL,
-            MieleAppliance.OVEN,
-            MieleAppliance.OVEN_MICROWAVE,
-            MieleAppliance.DISH_WARMER,
-            MieleAppliance.STEAM_OVEN,
-            MieleAppliance.MICROWAVE,
-            MieleAppliance.FRIDGE,
-            MieleAppliance.FREEZER,
-            MieleAppliance.FRIDGE_FREEZER,
-            MieleAppliance.STEAM_OVEN_COMBI,
             MieleAppliance.WINE_CABINET,
             MieleAppliance.WINE_CONDITIONING_UNIT,
             MieleAppliance.WINE_STORAGE_CONDITIONING_UNIT,
-            MieleAppliance.STEAM_OVEN_MICRO,
-            MieleAppliance.DIALOG_OVEN,
             MieleAppliance.WINE_CABINET_FREEZER,
-            MieleAppliance.STEAM_OVEN_MK2,
         ),
         description=MieleSensorDescription(
             key="state_temperature_3",
@@ -510,6 +485,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
         description=MieleSensorDescription(
             key="state_core_temperature",
             translation_key="core_temperature",
+            zone=1,
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,
@@ -596,13 +572,12 @@ async def async_setup_entry(
                         == SensorDeviceClass.TEMPERATURE
                     ):
                         entity_class = MieleTemperatureSensor
-                        if definition.description.value_fn(
-                            device
-                        ) in DISABLED_TEMP_ENTITIES and (
-                            definition.description.zone is not None
+                        if (
+                            definition.description.value_fn(device)
+                            in DISABLED_TEMP_ENTITIES
                             and definition.description.zone > 1
                         ):
-                            # All appliances supporting temperature have at least zone 1 or None (for core temperature)
+                            # All appliances supporting temperature have at least zone 1 (including core temperature)
                             # Don't create entity if API signals that datapoint is disabled (other zones)
                             continue
                     if (
