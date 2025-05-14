@@ -5,13 +5,21 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pylitterbot import Account, FeederRobot, LitterRobot3, LitterRobot4, Robot
+from pylitterbot import Account, FeederRobot, LitterRobot3, LitterRobot4, Pet, Robot
 from pylitterbot.exceptions import InvalidCommandException
+from pylitterbot.robot.litterrobot4 import HopperStatus
 import pytest
 
 from homeassistant.core import HomeAssistant
 
-from .common import CONFIG, DOMAIN, FEEDER_ROBOT_DATA, ROBOT_4_DATA, ROBOT_DATA
+from .common import (
+    CONFIG,
+    DOMAIN,
+    FEEDER_ROBOT_DATA,
+    PET_DATA,
+    ROBOT_4_DATA,
+    ROBOT_DATA,
+)
 
 from tests.common import MockConfigEntry
 
@@ -50,6 +58,7 @@ def create_mock_account(
     skip_robots: bool = False,
     v4: bool = False,
     feeder: bool = False,
+    pet: bool = False,
 ) -> MagicMock:
     """Create a mock Litter-Robot account."""
     account = MagicMock(spec=Account)
@@ -60,6 +69,7 @@ def create_mock_account(
         if skip_robots
         else [create_mock_robot(robot_data, account, v4, feeder, side_effect)]
     )
+    account.pets = [Pet(PET_DATA, account.session)] if pet else []
     return account
 
 
@@ -76,9 +86,24 @@ def mock_account_with_litterrobot_4() -> MagicMock:
 
 
 @pytest.fixture
+def mock_account_with_litterhopper() -> MagicMock:
+    """Mock account with LitterHopper attached to Litter-Robot 4."""
+    return create_mock_account(
+        robot_data={"hopperStatus": HopperStatus.ENABLED, "isHopperRemoved": False},
+        v4=True,
+    )
+
+
+@pytest.fixture
 def mock_account_with_feederrobot() -> MagicMock:
     """Mock account with Feeder-Robot."""
     return create_mock_account(feeder=True)
+
+
+@pytest.fixture
+def mock_account_with_pet() -> MagicMock:
+    """Mock account with Feeder-Robot."""
+    return create_mock_account(pet=True)
 
 
 @pytest.fixture
@@ -123,15 +148,9 @@ async def setup_integration(
     )
     entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.litterrobot.coordinator.Account",
-            return_value=mock_account,
-        ),
-        patch(
-            "homeassistant.components.litterrobot.PLATFORMS_BY_TYPE",
-            {Robot: (platform_domain,)} if platform_domain else {},
-        ),
+    with patch(
+        "homeassistant.components.litterrobot.coordinator.Account",
+        return_value=mock_account,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

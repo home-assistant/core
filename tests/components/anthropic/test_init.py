@@ -1,6 +1,6 @@
 """Tests for the Anthropic integration."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from anthropic import (
     APIConnectionError,
@@ -55,8 +55,7 @@ async def test_init_error(
 ) -> None:
     """Test initialization errors."""
     with patch(
-        "anthropic.resources.messages.AsyncMessages.create",
-        new_callable=AsyncMock,
+        "anthropic.resources.models.AsyncModels.retrieve",
         side_effect=side_effect,
     ):
         assert await async_setup_component(hass, "anthropic", {})

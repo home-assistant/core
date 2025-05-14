@@ -16,7 +16,7 @@ from homeassistant import __path__ as HOMEASSISTANT_PATH
 from homeassistant.components import websocket_api
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 type KeyType = tuple[str, tuple[str, int], tuple[str, int, str] | None]

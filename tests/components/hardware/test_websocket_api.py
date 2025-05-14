@@ -10,7 +10,7 @@ import psutil_home_assistant as ha_psutil
 from homeassistant.components.hardware.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.typing import WebSocketGenerator
 
@@ -50,7 +50,7 @@ async def test_system_status_subscription(
         return mock_psutil
 
     with patch(
-        "homeassistant.components.hardware.websocket_api.ha_psutil.PsutilWrapper",
+        "homeassistant.components.hardware.ha_psutil.PsutilWrapper",
         wraps=create_mock_psutil,
     ):
         assert await async_setup_component(hass, DOMAIN, {})

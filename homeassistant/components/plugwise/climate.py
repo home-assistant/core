@@ -16,11 +16,10 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PlugwiseConfigEntry
 from .const import DOMAIN, MASTER_THERMOSTATS
-from .coordinator import PlugwiseDataUpdateCoordinator
+from .coordinator import PlugwiseConfigEntry, PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 from .util import plugwise_command
 
@@ -30,7 +29,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PlugwiseConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Smile Thermostats from a config entry."""
     coordinator = entry.runtime_data
@@ -41,18 +40,17 @@ async def async_setup_entry(
         if not coordinator.new_devices:
             return
 
-        if coordinator.data.gateway["smile_name"] == "Adam":
+        if coordinator.api.smile_name == "Adam":
             async_add_entities(
                 PlugwiseClimateEntity(coordinator, device_id)
                 for device_id in coordinator.new_devices
-                if coordinator.data.devices[device_id]["dev_class"] == "climate"
+                if coordinator.data[device_id]["dev_class"] == "climate"
             )
         else:
             async_add_entities(
                 PlugwiseClimateEntity(coordinator, device_id)
                 for device_id in coordinator.new_devices
-                if coordinator.data.devices[device_id]["dev_class"]
-                in MASTER_THERMOSTATS
+                if coordinator.data[device_id]["dev_class"] in MASTER_THERMOSTATS
             )
 
     _add_entities()
@@ -77,10 +75,8 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         super().__init__(coordinator, device_id)
         self._attr_unique_id = f"{device_id}-climate"
 
-        self._devices = coordinator.data.devices
-        self._gateway = coordinator.data.gateway
-        gateway_id: str = self._gateway["gateway_id"]
-        self._gateway_data = self._devices[gateway_id]
+        gateway_id: str = coordinator.api.gateway_id
+        self._gateway_data = coordinator.data[gateway_id]
 
         self._location = device_id
         if (location := self.device.get("location")) is not None:
@@ -88,7 +84,10 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
 
         # Determine supported features
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-        if self._gateway["cooling_present"] and self._gateway["smile_name"] != "Adam":
+        if (
+            self.coordinator.api.cooling_present
+            and coordinator.api.smile_name != "Adam"
+        ):
             self._attr_supported_features = (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )
@@ -170,7 +169,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         if "available_schedules" in self.device:
             hvac_modes.append(HVACMode.AUTO)
 
-        if self._gateway["cooling_present"]:
+        if self.coordinator.api.cooling_present:
             if "regulation_modes" in self._gateway_data:
                 if self._gateway_data["select_regulation_mode"] == "cooling":
                     hvac_modes.append(HVACMode.COOL)

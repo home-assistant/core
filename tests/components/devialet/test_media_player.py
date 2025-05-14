@@ -6,7 +6,6 @@ from devialet import DevialetApi
 from devialet.const import UrlSuffix
 from yarl import URL
 
-from homeassistant.components.devialet.const import DOMAIN
 from homeassistant.components.devialet.media_player import SUPPORT_DEVIALET
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.media_player import (
@@ -108,7 +107,6 @@ async def test_media_player_playing(
     await async_setup_component(hass, "homeassistant", {})
     entry = await setup_integration(hass, aioclient_mock)
 
-    assert entry.entry_id in hass.data[DOMAIN]
     assert entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(
@@ -227,7 +225,6 @@ async def test_media_player_playing(
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.entry_id not in hass.data[DOMAIN]
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
@@ -237,7 +234,6 @@ async def test_media_player_offline(
     """Test the Devialet configuration entry loading and unloading."""
     entry = await setup_integration(hass, aioclient_mock, state=STATE_UNAVAILABLE)
 
-    assert entry.entry_id in hass.data[DOMAIN]
     assert entry.state is ConfigEntryState.LOADED
 
     state = hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}")
@@ -247,7 +243,6 @@ async def test_media_player_offline(
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.entry_id not in hass.data[DOMAIN]
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
@@ -257,14 +252,12 @@ async def test_media_player_without_serial(
     """Test the Devialet configuration entry loading and unloading."""
     entry = await setup_integration(hass, aioclient_mock, serial=None)
 
-    assert entry.entry_id in hass.data[DOMAIN]
     assert entry.state is ConfigEntryState.LOADED
     assert entry.unique_id is None
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.entry_id not in hass.data[DOMAIN]
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
@@ -276,7 +269,6 @@ async def test_media_player_services(
         hass, aioclient_mock, state=MediaPlayerState.PLAYING
     )
 
-    assert entry.entry_id in hass.data[DOMAIN]
     assert entry.state is ConfigEntryState.LOADED
 
     target = {ATTR_ENTITY_ID: hass.states.get(f"{MP_DOMAIN}.{NAME}").entity_id}
@@ -309,5 +301,4 @@ async def test_media_player_services(
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.entry_id not in hass.data[DOMAIN]
     assert entry.state is ConfigEntryState.NOT_LOADED

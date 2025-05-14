@@ -10,7 +10,7 @@ from homeassistant.const import Platform
 from script.hassfest import ast_parse_module
 from script.hassfest.model import Config, Integration
 
-_ANNOTATION_MATCH = re.compile(r"^[A-Za-z]+ConfigEntry$")
+_ANNOTATION_MATCH = re.compile(r"^[A-Za-z][A-Za-z0-9]+ConfigEntry$")
 _FUNCTIONS: dict[str, dict[str, int]] = {
     "__init__": {  # based on ComponentProtocol
         "async_migrate_entry": 2,

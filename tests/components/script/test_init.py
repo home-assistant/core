@@ -42,8 +42,7 @@ from homeassistant.helpers.script import (
 )
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.setup import async_setup_component
-from homeassistant.util import yaml as yaml_util
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util, yaml as yaml_util
 
 from tests.common import (
     MockConfigEntry,

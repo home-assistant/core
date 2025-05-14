@@ -6,7 +6,7 @@
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The yolink integration needs to re-authenticate your account"
+        "description": "The YoLink integration needs to re-authenticate your account"
       }
     },
     "abort": {
@@ -44,6 +44,9 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "water_running": { "name": "Water is flowing" }
+    },
     "switch": {
       "usb_ports": { "name": "USB ports" },
       "plug_1": { "name": "Plug 1" },
@@ -61,8 +64,8 @@
       "power_failure_alarm": {
         "name": "Power failure alarm",
         "state": {
-          "normal": "Normal",
           "alert": "Alert",
+          "normal": "[%key:common::state::normal%]",
           "off": "[%key:common::state::off%]"
         }
       },
@@ -72,7 +75,11 @@
       },
       "power_failure_alarm_volume": {
         "name": "Power failure alarm volume",
-        "state": { "low": "Low", "medium": "Medium", "high": "High" }
+        "state": {
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
+        }
       },
       "power_failure_alarm_beep": {
         "name": "Power failure alarm beep",
@@ -99,11 +106,11 @@
   "services": {
     "play_on_speaker_hub": {
       "name": "Play on SpeakerHub",
-      "description": "Convert text to audio play on YoLink SpeakerHub",
+      "description": "Converts text to speech for playback on a YoLink SpeakerHub",
       "fields": {
         "target_device": {
-          "name": "SpeakerHub Device",
-          "description": "SpeakerHub Device"
+          "name": "SpeakerHub device",
+          "description": "SpeakerHub device for audio playback."
         },
         "message": {
           "name": "Text message",
@@ -115,7 +122,7 @@
         },
         "volume": {
           "name": "Volume",
-          "description": "Override the speaker volume during playback of this message only."
+          "description": "Overrides the speaker volume during playback of this message only."
         },
         "repeat": {
           "name": "Repeat",

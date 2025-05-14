@@ -26,7 +26,7 @@ from homeassistant.components.humidifier import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
@@ -70,7 +70,7 @@ DEHUMIDIFIER_ENTITY_DESCRIPTION = ZwaveHumidifierEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave humidifier from config entry."""
     client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]

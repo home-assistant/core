@@ -20,6 +20,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': '**REDACTED**',
       'unique_id': '**REDACTED**',
       'version': 1,
@@ -31,6 +33,11 @@
           'config_entries': list([
             '45a36e55aaddb2007c5f6602e0c38e72',
           ]),
+          'config_entries_subentries': dict({
+            '45a36e55aaddb2007c5f6602e0c38e72': list([
+              None,
+            ]),
+          }),
           'configuration_url': None,
           'connections': list([
           ]),
@@ -68,6 +75,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -119,6 +127,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -168,6 +177,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -218,6 +228,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -266,6 +277,11 @@
           'config_entries': list([
             '45a36e55aaddb2007c5f6602e0c38e72',
           ]),
+          'config_entries_subentries': dict({
+            '45a36e55aaddb2007c5f6602e0c38e72': list([
+              None,
+            ]),
+          }),
           'configuration_url': None,
           'connections': list([
           ]),
@@ -303,6 +319,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -346,6 +363,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': 'integration',
               'domain': 'sensor',
@@ -405,6 +423,8 @@
       'tariff': None,
     }),
     'envoy_properties': dict({
+      'active interface': dict({
+      }),
       'active_phasecount': 0,
       'ct_consumption_meter': None,
       'ct_count': 0,
@@ -449,6 +469,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': '**REDACTED**',
       'unique_id': '**REDACTED**',
       'version': 1,
@@ -460,6 +482,11 @@
           'config_entries': list([
             '45a36e55aaddb2007c5f6602e0c38e72',
           ]),
+          'config_entries_subentries': dict({
+            '45a36e55aaddb2007c5f6602e0c38e72': list([
+              None,
+            ]),
+          }),
           'configuration_url': None,
           'connections': list([
           ]),
@@ -497,6 +524,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -548,6 +576,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -597,6 +626,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -647,6 +677,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -695,6 +726,11 @@
           'config_entries': list([
             '45a36e55aaddb2007c5f6602e0c38e72',
           ]),
+          'config_entries_subentries': dict({
+            '45a36e55aaddb2007c5f6602e0c38e72': list([
+              None,
+            ]),
+          }),
           'configuration_url': None,
           'connections': list([
           ]),
@@ -732,6 +768,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -775,6 +812,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': 'integration',
               'domain': 'sensor',
@@ -834,6 +872,8 @@
       'tariff': None,
     }),
     'envoy_properties': dict({
+      'active interface': dict({
+      }),
       'active_phasecount': 0,
       'ct_consumption_meter': None,
       'ct_count': 0,
@@ -856,6 +896,8 @@
       '/api/v1/production/inverters': 'Testing request replies.',
       '/api/v1/production/inverters_log': '{"headers":{"Hello":"World"},"code":200}',
       '/api/v1/production_log': '{"headers":{"Hello":"World"},"code":200}',
+      '/home': 'Testing request replies.',
+      '/home_log': '{"headers":{"Hello":"World"},"code":200}',
       '/info': 'Testing request replies.',
       '/info_log': '{"headers":{"Hello":"World"},"code":200}',
       '/ivp/ensemble/dry_contacts': 'Testing request replies.',
@@ -918,6 +960,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': '**REDACTED**',
       'unique_id': '**REDACTED**',
       'version': 1,
@@ -929,6 +973,11 @@
           'config_entries': list([
             '45a36e55aaddb2007c5f6602e0c38e72',
           ]),
+          'config_entries_subentries': dict({
+            '45a36e55aaddb2007c5f6602e0c38e72': list([
+              None,
+            ]),
+          }),
           'configuration_url': None,
           'connections': list([
           ]),
@@ -966,6 +1015,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -1017,6 +1067,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -1066,6 +1117,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -1116,6 +1168,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -1164,6 +1217,11 @@
           'config_entries': list([
             '45a36e55aaddb2007c5f6602e0c38e72',
           ]),
+          'config_entries_subentries': dict({
+            '45a36e55aaddb2007c5f6602e0c38e72': list([
+              None,
+            ]),
+          }),
           'configuration_url': None,
           'connections': list([
           ]),
@@ -1201,6 +1259,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -1244,6 +1303,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': 'integration',
               'domain': 'sensor',
@@ -1303,6 +1363,8 @@
       'tariff': None,
     }),
     'envoy_properties': dict({
+      'active interface': dict({
+      }),
       'active_phasecount': 0,
       'ct_consumption_meter': None,
       'ct_count': 0,
@@ -1319,7 +1381,527 @@
       ]),
     }),
     'fixtures': dict({
-      'Error': "EnvoyError('Test')",
+      '/admin/lib/tariff_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/api/v1/production/inverters_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/api/v1/production_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/home_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/info_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/ensemble/dry_contacts_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/ensemble/generator_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/ensemble/inventory_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/ensemble/power_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/ensemble/secctrl_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/ensemble/status_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/meters/readings_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/meters_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/sc/pvlimit_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/ss/dry_contact_settings_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/ss/gen_config_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/ss/gen_schedule_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/ss/pel_settings_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/production.json?details=1_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/production.json_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/production_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+    }),
+    'raw_data': dict({
+      'varies_by': 'firmware_version',
+    }),
+  })
+# ---
+# name: test_entry_diagnostics_with_interface_information
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'host': '1.1.1.1',
+        'name': '**REDACTED**',
+        'password': '**REDACTED**',
+        'token': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'enphase_envoy',
+      'entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'envoy_entities_by_device': list([
+      dict({
+        'device': dict({
+          'area_id': None,
+          'config_entries': list([
+            '45a36e55aaddb2007c5f6602e0c38e72',
+          ]),
+          'config_entries_subentries': dict({
+            '45a36e55aaddb2007c5f6602e0c38e72': list([
+              None,
+            ]),
+          }),
+          'configuration_url': None,
+          'connections': list([
+          ]),
+          'disabled_by': None,
+          'entry_type': None,
+          'hw_version': None,
+          'identifiers': list([
+            list([
+              'enphase_envoy',
+              '1',
+            ]),
+          ]),
+          'is_new': False,
+          'labels': list([
+          ]),
+          'manufacturer': 'Enphase',
+          'model': 'Inverter',
+          'model_id': None,
+          'name': 'Inverter 1',
+          'name_by_user': None,
+          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
+          'serial_number': None,
+          'suggested_area': None,
+          'sw_version': None,
+        }),
+        'entities': list([
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'state_class': 'measurement',
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.inverter_1',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'power',
+              'original_icon': None,
+              'original_name': None,
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': None,
+              'unique_id': '1',
+              'unit_of_measurement': 'W',
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'power',
+                'friendly_name': 'Inverter 1',
+                'state_class': 'measurement',
+                'unit_of_measurement': 'W',
+              }),
+              'entity_id': 'sensor.inverter_1',
+              'state': '1',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.inverter_1_last_reported',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'timestamp',
+              'original_icon': None,
+              'original_name': 'Last reported',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'last_reported',
+              'unique_id': '1_last_reported',
+              'unit_of_measurement': None,
+            }),
+            'state': None,
+          }),
+        ]),
+      }),
+      dict({
+        'device': dict({
+          'area_id': None,
+          'config_entries': list([
+            '45a36e55aaddb2007c5f6602e0c38e72',
+          ]),
+          'config_entries_subentries': dict({
+            '45a36e55aaddb2007c5f6602e0c38e72': list([
+              None,
+            ]),
+          }),
+          'configuration_url': None,
+          'connections': list([
+            list([
+              'mac',
+              '00:11:22:33:44:55',
+            ]),
+          ]),
+          'disabled_by': None,
+          'entry_type': None,
+          'hw_version': '<<envoyserial>>56789',
+          'identifiers': list([
+            list([
+              'enphase_envoy',
+              '<<envoyserial>>',
+            ]),
+          ]),
+          'is_new': False,
+          'labels': list([
+          ]),
+          'manufacturer': 'Enphase',
+          'model': 'Envoy',
+          'model_id': None,
+          'name': 'Envoy <<envoyserial>>',
+          'name_by_user': None,
+          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
+          'serial_number': '<<envoyserial>>',
+          'suggested_area': None,
+          'sw_version': '7.6.175',
+        }),
+        'entities': list([
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'state_class': 'measurement',
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_production',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+                'sensor': dict({
+                  'suggested_display_precision': 3,
+                }),
+                'sensor.private': dict({
+                  'suggested_unit_of_measurement': 'kW',
+                }),
+              }),
+              'original_device_class': 'power',
+              'original_icon': None,
+              'original_name': 'Current power production',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'current_power_production',
+              'unique_id': '<<envoyserial>>_production',
+              'unit_of_measurement': 'kW',
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'power',
+                'friendly_name': 'Envoy <<envoyserial>> Current power production',
+                'state_class': 'measurement',
+                'unit_of_measurement': 'kW',
+              }),
+              'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_production',
+              'state': '1.234',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'state_class': 'total_increasing',
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_today',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+                'sensor': dict({
+                  'suggested_display_precision': 2,
+                }),
+                'sensor.private': dict({
+                  'suggested_unit_of_measurement': 'kWh',
+                }),
+              }),
+              'original_device_class': 'energy',
+              'original_icon': None,
+              'original_name': 'Energy production today',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'daily_production',
+              'unique_id': '<<envoyserial>>_daily_production',
+              'unit_of_measurement': 'kWh',
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'energy',
+                'friendly_name': 'Envoy <<envoyserial>> Energy production today',
+                'state_class': 'total_increasing',
+                'unit_of_measurement': 'kWh',
+              }),
+              'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_today',
+              'state': '1.234',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_last_seven_days',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+                'sensor': dict({
+                  'suggested_display_precision': 1,
+                }),
+                'sensor.private': dict({
+                  'suggested_unit_of_measurement': 'kWh',
+                }),
+              }),
+              'original_device_class': 'energy',
+              'original_icon': None,
+              'original_name': 'Energy production last seven days',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'seven_days_production',
+              'unique_id': '<<envoyserial>>_seven_days_production',
+              'unit_of_measurement': 'kWh',
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'energy',
+                'friendly_name': 'Envoy <<envoyserial>> Energy production last seven days',
+                'unit_of_measurement': 'kWh',
+              }),
+              'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_last_seven_days',
+              'state': '1.234',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'state_class': 'total_increasing',
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_production',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+                'sensor': dict({
+                  'suggested_display_precision': 3,
+                }),
+                'sensor.private': dict({
+                  'suggested_unit_of_measurement': 'MWh',
+                }),
+              }),
+              'original_device_class': 'energy',
+              'original_icon': None,
+              'original_name': 'Lifetime energy production',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'lifetime_production',
+              'unique_id': '<<envoyserial>>_lifetime_production',
+              'unit_of_measurement': 'MWh',
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'energy',
+                'friendly_name': 'Envoy <<envoyserial>> Lifetime energy production',
+                'state_class': 'total_increasing',
+                'unit_of_measurement': 'MWh',
+              }),
+              'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_production',
+              'state': '0.00<<envoyserial>>',
+            }),
+          }),
+        ]),
+      }),
+    ]),
+    'envoy_model_data': dict({
+      'ctmeter_consumption': None,
+      'ctmeter_consumption_phases': None,
+      'ctmeter_production': None,
+      'ctmeter_production_phases': None,
+      'ctmeter_storage': None,
+      'ctmeter_storage_phases': None,
+      'dry_contact_settings': dict({
+      }),
+      'dry_contact_status': dict({
+      }),
+      'encharge_aggregate': None,
+      'encharge_inventory': None,
+      'encharge_power': None,
+      'enpower': None,
+      'inverters': dict({
+        '1': dict({
+          '__type': "<class 'pyenphase.models.inverter.EnvoyInverter'>",
+          'repr': "EnvoyInverter(serial_number='1', last_report_date=1, last_report_watts=1, max_report_watts=1)",
+        }),
+      }),
+      'system_consumption': None,
+      'system_consumption_phases': None,
+      'system_production': dict({
+        '__type': "<class 'pyenphase.models.system_production.EnvoySystemProduction'>",
+        'repr': 'EnvoySystemProduction(watt_hours_lifetime=1234, watt_hours_last_7_days=1234, watt_hours_today=1234, watts_now=1234)',
+      }),
+      'system_production_phases': None,
+      'tariff': None,
+    }),
+    'envoy_properties': dict({
+      'active interface': dict({
+        'envoy timezone': 'Europe/Amsterdam',
+        'firmware build date': '2024-06-27 15:59:26',
+        'interface type': 'ethernet',
+        'mac': '00:11:22:33:44:55',
+        'name': 'eth0',
+        'uses dhcp': True,
+      }),
+      'active_phasecount': 0,
+      'ct_consumption_meter': None,
+      'ct_count': 0,
+      'ct_production_meter': None,
+      'ct_storage_meter': None,
+      'envoy_firmware': '7.6.175',
+      'envoy_model': 'Envoy',
+      'part_number': '123456789',
+      'phase_count': 1,
+      'phase_mode': None,
+      'supported_features': list([
+        'INVERTERS',
+        'PRODUCTION',
+      ]),
+    }),
+    'fixtures': dict({
     }),
     'raw_data': dict({
       'varies_by': 'firmware_version',

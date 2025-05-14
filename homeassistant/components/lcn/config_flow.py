@@ -19,8 +19,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import PchkConnectionManager
@@ -42,21 +41,6 @@ USER_DATA = {vol.Required(CONF_HOST, default="pchk"): str, **CONFIG_DATA}
 
 CONFIG_SCHEMA = vol.Schema(CONFIG_DATA)
 USER_SCHEMA = vol.Schema(USER_DATA)
-
-
-def get_config_entry(
-    hass: HomeAssistant, data: ConfigType
-) -> config_entries.ConfigEntry | None:
-    """Check config entries for already configured entries based on the ip address/port."""
-    return next(
-        (
-            entry
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.data[CONF_IP_ADDRESS] == data[CONF_IP_ADDRESS]
-            and entry.data[CONF_PORT] == data[CONF_PORT]
-        ),
-        None,
-    )
 
 
 async def validate_connection(data: ConfigType) -> str | None:
@@ -110,7 +94,7 @@ async def validate_connection(data: ConfigType) -> str | None:
 class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a LCN config flow."""
 
-    VERSION = 2
+    VERSION = 3
     MINOR_VERSION = 1
 
     async def async_step_user(
@@ -120,19 +104,20 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=USER_SCHEMA)
 
-        errors = None
-        if get_config_entry(self.hass, user_input):
-            errors = {CONF_BASE: "already_configured"}
-        elif (error := await validate_connection(user_input)) is not None:
-            errors = {CONF_BASE: error}
+        self._async_abort_entries_match(
+            {
+                CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
+                CONF_PORT: user_input[CONF_PORT],
+            }
+        )
 
-        if errors is not None:
+        if (error := await validate_connection(user_input)) is not None:
             return self.async_show_form(
                 step_id="user",
                 data_schema=self.add_suggested_values_to_schema(
                     USER_SCHEMA, user_input
                 ),
-                errors=errors,
+                errors={CONF_BASE: error},
             )
 
         data: dict = {
@@ -152,15 +137,21 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             user_input[CONF_HOST] = reconfigure_entry.data[CONF_HOST]
 
-            await self.hass.config_entries.async_unload(reconfigure_entry.entry_id)
-            if (error := await validate_connection(user_input)) is not None:
-                errors = {CONF_BASE: error}
+            self._async_abort_entries_match(
+                {
+                    CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
+                    CONF_PORT: user_input[CONF_PORT],
+                }
+            )
 
-            if errors is None:
+            await self.hass.config_entries.async_unload(reconfigure_entry.entry_id)
+
+            if (error := await validate_connection(user_input)) is None:
                 return self.async_update_reload_and_abort(
                     reconfigure_entry, data_updates=user_input
                 )
 
+            errors = {CONF_BASE: error}
             await self.hass.config_entries.async_setup(reconfigure_entry.entry_id)
 
         return self.async_show_form(

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Final, cast
 
@@ -34,11 +35,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
 
-from .const import CONF_SLEEP_PERIOD, SHAIR_MAX_WORK_HOURS
+from .const import CONF_SLEEP_PERIOD, ROLE_TO_DEVICE_CLASS_MAP
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -57,9 +58,12 @@ from .utils import (
     async_remove_orphaned_entities,
     get_device_entry_gen,
     get_device_uptime,
+    get_shelly_air_lamp_life,
     get_virtual_component_ids,
     is_rpc_wifi_stations_disabled,
 )
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -70,6 +74,8 @@ class BlockSensorDescription(BlockEntityDescription, SensorEntityDescription):
 @dataclass(frozen=True, kw_only=True)
 class RpcSensorDescription(RpcEntityDescription, SensorEntityDescription):
     """Class to describe a RPC sensor."""
+
+    device_class_fn: Callable[[dict], SensorDeviceClass | None] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -94,6 +100,12 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
 
         if self.option_map:
             self._attr_options = list(self.option_map.values())
+
+        if description.device_class_fn is not None:
+            if device_class := description.device_class_fn(
+                coordinator.device.config[key]
+            ):
+                self._attr_device_class = device_class
 
     @property
     def native_value(self) -> StateType:
@@ -346,8 +358,9 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         name="Lamp life",
         native_unit_of_measurement=PERCENTAGE,
         translation_key="lamp_life",
-        value=lambda value: 100 - (value / 3600 / SHAIR_MAX_WORK_HOURS),
+        value=get_shelly_air_lamp_life,
         suggested_display_precision=1,
+        # Deprecated, remove in 2025.10
         extra_state_attributes=lambda block: {
             "Operational hours": round(cast(int, block.totalWorkTime) / 3600, 1)
         },
@@ -365,9 +378,10 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         key="sensor|sensorOp",
         name="Operation",
         device_class=SensorDeviceClass.ENUM,
-        options=["unknown", "warmup", "normal", "fault"],
+        options=["warmup", "normal", "fault"],
         translation_key="operation",
-        value=lambda value: value,
+        value=lambda value: None if value == "unknown" else value,
+        # Deprecated, remove in 2025.10
         extra_state_attributes=lambda block: {"self_test": block.selfTest},
     ),
     ("valve", "valve"): BlockSensorDescription(
@@ -382,10 +396,32 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
             "failure",
             "opened",
             "opening",
-            "unknown",
         ],
+        value=lambda value: None if value == "unknown" else value,
         entity_category=EntityCategory.DIAGNOSTIC,
         removal_condition=lambda _, block: block.valve == "not_connected",
+    ),
+    ("sensor", "gas"): BlockSensorDescription(
+        key="sensor|gas",
+        name="Gas detected",
+        translation_key="gas_detected",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "none",
+            "mild",
+            "heavy",
+            "test",
+        ],
+        value=lambda value: None if value == "unknown" else value,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    ("sensor", "selfTest"): BlockSensorDescription(
+        key="sensor|selfTest",
+        name="Self test",
+        translation_key="self_test",
+        device_class=SensorDeviceClass.ENUM,
+        options=["not_completed", "completed", "running", "pending"],
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
 
@@ -1266,6 +1302,9 @@ RPC_SENSORS: Final = {
         unit=lambda config: config["meta"]["ui"]["unit"]
         if config["meta"]["ui"]["unit"]
         else None,
+        device_class_fn=lambda config: ROLE_TO_DEVICE_CLASS_MAP.get(config["role"])
+        if "role" in config
+        else None,
     ),
     "enum": RpcSensorDescription(
         key="enum",
@@ -1312,7 +1351,7 @@ RPC_SENSORS: Final = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors for device."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:

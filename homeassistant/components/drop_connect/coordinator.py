@@ -16,14 +16,19 @@ from .const import CONF_COMMAND_TOPIC, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+type DROPConfigEntry = ConfigEntry[DROPDeviceDataUpdateCoordinator]
+
+
 class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """DROP device object."""
 
-    config_entry: ConfigEntry
+    config_entry: DROPConfigEntry
 
-    def __init__(self, hass: HomeAssistant, unique_id: str) -> None:
+    def __init__(self, hass: HomeAssistant, entry: DROPConfigEntry) -> None:
         """Initialize the device."""
-        super().__init__(hass, _LOGGER, name=f"{DOMAIN}-{unique_id}")
+        super().__init__(
+            hass, _LOGGER, config_entry=entry, name=f"{DOMAIN}-{entry.unique_id}"
+        )
         self.drop_api = DropAPI()
 
     async def set_water(self, value: int) -> None:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from copy import copy
 from datetime import datetime, timedelta
 import json
@@ -17,7 +18,7 @@ from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.json import JSONEncoder
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import (
     assert_dict_of_states_equal_without_context_and_last_changed,
@@ -50,9 +51,9 @@ def disable_states_meta_manager():
 
 
 @pytest.fixture(autouse=True)
-def db_schema_32():
+def db_schema_32(hass: HomeAssistant) -> Generator[None]:
     """Fixture to initialize the db with the old schema 32."""
-    with old_db_schema("32"):
+    with old_db_schema(hass, "32"):
         yield
 
 

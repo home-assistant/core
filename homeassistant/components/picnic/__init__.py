@@ -1,6 +1,6 @@
 """The Picnic integration."""
 
-from python_picnic_api import PicnicAPI
+from python_picnic_api2 import PicnicAPI
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY_CODE, Platform

@@ -30,11 +30,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ATTR_ADDRESS,
@@ -70,6 +71,7 @@ from .const import (
 from .validators import check_config
 
 _LOGGER = logging.getLogger(__name__)
+DATA_MODBUS_HUBS: HassKey[dict[str, ModbusHub]] = HassKey(DOMAIN)
 
 
 ConfEntry = namedtuple("ConfEntry", "call_type attr func_name value_attr_name")  # noqa: PYI024
@@ -136,14 +138,14 @@ async def async_modbus_setup(
         config[DOMAIN] = check_config(hass, config[DOMAIN])
         if not config[DOMAIN]:
             return False
-    if DOMAIN in hass.data and config[DOMAIN] == []:
-        hubs = hass.data[DOMAIN]
-        for name in hubs:
-            if not await hubs[name].async_setup():
+    if DATA_MODBUS_HUBS in hass.data and config[DOMAIN] == []:
+        hubs = hass.data[DATA_MODBUS_HUBS]
+        for hub in hubs.values():
+            if not await hub.async_setup():
                 return False
-        hub_collect = hass.data[DOMAIN]
+        hub_collect = hass.data[DATA_MODBUS_HUBS]
     else:
-        hass.data[DOMAIN] = hub_collect = {}
+        hass.data[DATA_MODBUS_HUBS] = hub_collect = {}
 
     for conf_hub in config[DOMAIN]:
         my_hub = ModbusHub(hass, conf_hub)
@@ -378,8 +380,15 @@ class ModbusHub:
         self, slave: int | None, address: int, value: int | list[int], use_call: str
     ) -> ModbusPDU | None:
         """Call sync. pymodbus."""
-        kwargs: dict[str, Any] = {"slave": slave} if slave else {}
+        kwargs: dict[str, Any] = (
+            {ATTR_SLAVE: slave} if slave is not None else {ATTR_SLAVE: 1}
+        )
         entry = self._pb_request[use_call]
+
+        if use_call in {"write_registers", "write_coils"}:
+            if not isinstance(value, list):
+                value = [value]
+
         kwargs[entry.value_attr_name] = value
         try:
             result: ModbusPDU = await entry.func(address, **kwargs)

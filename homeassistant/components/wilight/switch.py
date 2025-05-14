@@ -12,7 +12,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .entity import WiLightDevice
@@ -75,7 +75,9 @@ def entities_from_discovered_wilight(api_device: PyWiLightDevice) -> tuple[Any]:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WiLight switches from a config entry."""
     parent: WiLightParent = hass.data[DOMAIN][entry.entry_id]

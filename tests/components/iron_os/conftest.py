@@ -20,10 +20,12 @@ from pynecil import (
     ScrollSpeed,
     SettingsDataResponse,
     TempUnit,
+    TipType,
 )
 import pytest
 
 from homeassistant.components.iron_os import DOMAIN
+from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import CONF_ADDRESS
 
 from tests.common import MockConfigEntry
@@ -110,6 +112,19 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
+@pytest.fixture(name="config_entry_ignored")
+def mock_config_entry_ignored() -> MockConfigEntry:
+    """Mock Pinecil configuration entry for ignored device."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=DEFAULT_NAME,
+        data={},
+        unique_id="c0:ff:ee:c0:ff:ee",
+        entry_id="1234567890",
+        source=SOURCE_IGNORE,
+    )
+
+
 @pytest.fixture(name="ble_device")
 def mock_ble_device() -> Generator[MagicMock]:
     """Mock BLEDevice."""
@@ -144,17 +159,19 @@ def mock_ironosupdate() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_pynecil() -> Generator[AsyncMock]:
     """Mock Pynecil library."""
-    with patch(
-        "homeassistant.components.iron_os.Pynecil", autospec=True
-    ) as mock_client:
+    with (
+        patch("homeassistant.components.iron_os.Pynecil", autospec=True) as mock_client,
+        patch("homeassistant.components.iron_os.config_flow.Pynecil", new=mock_client),
+    ):
         client = mock_client.return_value
 
         client.get_device_info.return_value = DeviceInfoResponse(
-            build="v2.22",
+            build="v2.23",
             device_id="c0ffeeC0",
             address="c0:ff:ee:c0:ff:ee",
             device_sn="0000c0ffeec0ffee",
             name=DEFAULT_NAME,
+            is_synced=True,
         )
         client.get_settings.return_value = SettingsDataResponse(
             sleep_temp=150,
@@ -191,6 +208,8 @@ def mock_pynecil() -> Generator[AsyncMock]:
             display_invert=True,
             calibrate_cjc=True,
             usb_pd_mode=True,
+            hall_sleep_time=5,
+            tip_type=TipType.PINE_SHORT,
         )
         client.get_live_data.return_value = LiveDataResponse(
             live_temp=298,
@@ -208,4 +227,6 @@ def mock_pynecil() -> Generator[AsyncMock]:
             operating_mode=OperatingMode.SOLDERING,
             estimated_power=24.8,
         )
+        client._client = AsyncMock()
+        client._client.return_value.is_connected = True
         yield client

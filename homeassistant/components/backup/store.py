@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 STORE_DELAY_SAVE = 30
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-STORAGE_VERSION_MINOR = 2
+STORAGE_VERSION_MINOR = 6
 
 
 class StoredBackupData(TypedDict):
@@ -47,8 +47,12 @@ class _BackupStore(Store[StoredBackupData]):
         """Migrate to the new version."""
         data = old_data
         if old_major_version == 1:
-            if old_minor_version < 2:
-                # Version 1.2 adds configurable backup time and custom days
+            if old_minor_version < 3:
+                # Version 1.2 bumped to 1.3 because 1.2 was changed several
+                # times during development.
+                # Version 1.3 adds per agent settings, configurable backup time
+                # and custom days
+                data["config"]["agents"] = {}
                 data["config"]["schedule"]["time"] = None
                 if (state := data["config"]["schedule"]["state"]) in ("daily", "never"):
                     data["config"]["schedule"]["days"] = []
@@ -56,6 +60,22 @@ class _BackupStore(Store[StoredBackupData]):
                 else:
                     data["config"]["schedule"]["days"] = [state]
                     data["config"]["schedule"]["recurrence"] = "custom_days"
+            if old_minor_version < 4:
+                # Workaround for a bug in frontend which incorrectly set days to 0
+                # instead of to None for unlimited retention.
+                if data["config"]["retention"]["copies"] == 0:
+                    data["config"]["retention"]["copies"] = None
+                if data["config"]["retention"]["days"] == 0:
+                    data["config"]["retention"]["days"] = None
+            if old_minor_version < 5:
+                # Version 1.5 adds automatic_backups_configured
+                data["config"]["automatic_backups_configured"] = (
+                    data["config"]["create_backup"]["password"] is not None
+                )
+            if old_minor_version < 6:
+                # Version 1.6 adds agent retention settings
+                for agent in data["config"]["agents"]:
+                    data["config"]["agents"][agent]["retention"] = None
 
         # Note: We allow reading data with major version 2.
         # Reject if major version is higher than 2.

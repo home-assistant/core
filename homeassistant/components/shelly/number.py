@@ -22,10 +22,10 @@ from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 
-from .const import CONF_SLEEP_PERIOD, LOGGER, VIRTUAL_NUMBER_MODE_MAP
+from .const import CONF_SLEEP_PERIOD, DOMAIN, LOGGER, VIRTUAL_NUMBER_MODE_MAP
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -34,12 +34,15 @@ from .entity import (
     ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
     async_setup_entry_rpc,
+    rpc_call,
 )
 from .utils import (
     async_remove_orphaned_entities,
     get_device_entry_gen,
     get_virtual_component_ids,
 )
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -59,13 +62,14 @@ class RpcNumberDescription(RpcEntityDescription, NumberEntityDescription):
     step_fn: Callable[[dict], float] | None = None
     mode_fn: Callable[[dict], NumberMode] | None = None
     method: str
-    method_params_fn: Callable[[int, float], dict]
 
 
 class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
     """Represent a RPC number entity."""
 
     entity_description: RpcNumberDescription
+    attribute_value: float | None
+    _id: int | None
 
     def __init__(
         self,
@@ -93,20 +97,17 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """Return value of number."""
-        if TYPE_CHECKING:
-            assert isinstance(self.attribute_value, float | None)
-
         return self.attribute_value
 
+    @rpc_call
     async def async_set_native_value(self, value: float) -> None:
         """Change the value."""
-        if TYPE_CHECKING:
-            assert isinstance(self._id, int)
+        method = getattr(self.coordinator.device, self.entity_description.method)
 
-        await self.call_rpc(
-            self.entity_description.method,
-            self.entity_description.method_params_fn(self._id, value),
-        )
+        if TYPE_CHECKING:
+            assert method is not None
+
+        await method(self._id, value)
 
 
 class RpcBluTrvNumber(RpcNumber):
@@ -126,6 +127,24 @@ class RpcBluTrvNumber(RpcNumber):
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, ble_addr)}
         )
+
+
+class RpcBluTrvExtTempNumber(RpcBluTrvNumber):
+    """Represent a RPC BluTrv External Temperature number."""
+
+    _reported_value: float | None = None
+
+    @property
+    def native_value(self) -> float | None:
+        """Return value of number."""
+        return self._reported_value
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Change the value."""
+        await super().async_set_native_value(value)
+
+        self._reported_value = value
+        self.async_write_ha_state()
 
 
 NUMBERS: dict[tuple[str, str], BlockNumberDescription] = {
@@ -158,13 +177,8 @@ RPC_NUMBERS: Final = {
         mode=NumberMode.BOX,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        method="BluTRV.Call",
-        method_params_fn=lambda idx, value: {
-            "id": idx,
-            "method": "Trv.SetExternalTemperature",
-            "params": {"id": 0, "t_C": value},
-        },
-        entity_class=RpcBluTrvNumber,
+        method="blu_trv_set_external_temperature",
+        entity_class=RpcBluTrvExtTempNumber,
     ),
     "number": RpcNumberDescription(
         key="number",
@@ -175,13 +189,12 @@ RPC_NUMBERS: Final = {
         mode_fn=lambda config: VIRTUAL_NUMBER_MODE_MAP.get(
             config["meta"]["ui"]["view"], NumberMode.BOX
         ),
-        step_fn=lambda config: config["meta"]["ui"]["step"],
+        step_fn=lambda config: config["meta"]["ui"].get("step"),
         # If the unit is not set, the device sends an empty string
         unit=lambda config: config["meta"]["ui"]["unit"]
         if config["meta"]["ui"]["unit"]
         else None,
-        method="Number.Set",
-        method_params_fn=lambda idx, value: {"id": idx, "value": value},
+        method="number_set",
     ),
     "valve_position": RpcNumberDescription(
         key="blutrv",
@@ -193,12 +206,7 @@ RPC_NUMBERS: Final = {
         native_step=1,
         mode=NumberMode.SLIDER,
         native_unit_of_measurement=PERCENTAGE,
-        method="BluTRV.Call",
-        method_params_fn=lambda idx, value: {
-            "id": idx,
-            "method": "Trv.SetPosition",
-            "params": {"id": 0, "pos": value},
-        },
+        method="blu_trv_set_valve_position",
         removal_condition=lambda config, _status, key: config[key].get("enable", True)
         is True,
         entity_class=RpcBluTrvNumber,
@@ -209,7 +217,7 @@ RPC_NUMBERS: Final = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up numbers for device."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
@@ -295,8 +303,12 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
         except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
-                f"Setting state for entity {self.name} failed, state: {params}, error:"
-                f" {err!r}"
+                translation_domain=DOMAIN,
+                translation_key="device_communication_action_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "device": self.coordinator.name,
+                },
             ) from err
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()

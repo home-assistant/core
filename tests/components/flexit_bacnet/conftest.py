@@ -67,6 +67,7 @@ def mock_flexit_bacnet() -> Generator[AsyncMock]:
         flexit_bacnet.air_filter_polluted = False
         flexit_bacnet.air_filter_exchange_interval = 8784
         flexit_bacnet.electric_heater = True
+        flexit_bacnet.fireplace_mode_runtime = 10
 
         # Mock fan setpoints
         flexit_bacnet.fan_setpoint_extract_air_fire = 56

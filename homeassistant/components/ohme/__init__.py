@@ -1,36 +1,25 @@
 """Set up ohme integration."""
 
-from dataclasses import dataclass
-
 from ohme import ApiException, AuthException, OhmeApiClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import (
     OhmeAdvancedSettingsCoordinator,
     OhmeChargeSessionCoordinator,
+    OhmeConfigEntry,
     OhmeDeviceInfoCoordinator,
+    OhmeRuntimeData,
 )
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-type OhmeConfigEntry = ConfigEntry[OhmeRuntimeData]
-
-
-@dataclass()
-class OhmeRuntimeData:
-    """Dataclass to hold ohme coordinators."""
-
-    charge_session_coordinator: OhmeChargeSessionCoordinator
-    advanced_settings_coordinator: OhmeAdvancedSettingsCoordinator
-    device_info_coordinator: OhmeDeviceInfoCoordinator
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -43,7 +32,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: OhmeConfigEntry) -> bool:
     """Set up Ohme from a config entry."""
 
-    client = OhmeApiClient(entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD])
+    client = OhmeApiClient(
+        email=entry.data[CONF_EMAIL],
+        password=entry.data[CONF_PASSWORD],
+        session=async_get_clientsession(hass),
+    )
 
     try:
         await client.async_login()
@@ -62,9 +55,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OhmeConfigEntry) -> bool
         ) from e
 
     coordinators = (
-        OhmeChargeSessionCoordinator(hass, client),
-        OhmeAdvancedSettingsCoordinator(hass, client),
-        OhmeDeviceInfoCoordinator(hass, client),
+        OhmeChargeSessionCoordinator(hass, entry, client),
+        OhmeAdvancedSettingsCoordinator(hass, entry, client),
+        OhmeDeviceInfoCoordinator(hass, entry, client),
     )
 
     for coordinator in coordinators:

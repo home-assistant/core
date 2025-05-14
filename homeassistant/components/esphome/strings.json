@@ -2,20 +2,29 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_configured_detailed": "A device `{name}`, with MAC address `{mac}` is already configured as `{title}`.",
+      "already_configured_updates": "A device `{name}`, with MAC address `{mac}` is already configured as `{title}`; the existing configuration will be updated with the validated data.",
+      "reconfigure_already_configured": "A device `{name}` with MAC address `{mac}` is already configured as `{title}`. Reconfiguration was aborted because the new configuration appears to refer to a different device.",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "mdns_missing_mac": "Missing MAC address in MDNS properties.",
+      "mdns_missing_mac": "Missing MAC address in mDNS properties.",
       "service_received": "Action received",
       "mqtt_missing_mac": "Missing MAC address in MQTT properties.",
       "mqtt_missing_api": "Missing API port in MQTT properties.",
       "mqtt_missing_ip": "Missing IP address in MQTT properties.",
-      "mqtt_missing_payload": "Missing MQTT Payload."
+      "mqtt_missing_payload": "Missing MQTT Payload.",
+      "name_conflict_migrated": "The configuration for `{name}` has been migrated to a new device with MAC address `{mac}` from `{existing_mac}`.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "reauth_unique_id_changed": "**Re-authentication of `{name}` was aborted** because the address `{host}` points to a different device: `{unexpected_device_name}` (MAC: `{unexpected_mac}`) instead of the expected one (MAC: `{expected_mac}`).",
+      "reconfigure_name_conflict": "**Reconfiguration of `{name}` was aborted** because the address `{host}` points to a device named `{name}` (MAC: `{expected_mac}`), which is already in use by another configuration entry: `{existing_title}`.",
+      "reconfigure_unique_id_changed": "**Reconfiguration of `{name}` was aborted** because the address `{host}` points to a different device: `{unexpected_device_name}` (MAC: `{unexpected_mac}`) instead of the expected one (MAC: `{expected_mac}`)."
     },
     "error": {
-      "resolve_error": "Can't resolve address of the ESP. If this error persists, please set a static IP address",
-      "connection_error": "Can't connect to ESP. Please make sure your YAML file contains an 'api:' line.",
+      "resolve_error": "Unable to resolve the address of the ESPHome device. If this issue continues, consider setting a static IP address.",
+      "connection_error": "Unable to connect to the ESPHome device. Make sure the device’s YAML configuration includes an `api` section.",
+      "requires_encryption_key": "The ESPHome device requires an encryption key. Enter the key defined in the device’s YAML configuration under `api -> encryption -> key`.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_psk": "The transport encryption key is invalid. Please ensure it matches what you have in your configuration"
+      "invalid_psk": "The encryption key is invalid. Make sure it matches the value in the device’s YAML configuration under `api -> encryption -> key`."
     },
     "step": {
       "user": {
@@ -23,29 +32,53 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
-        "description": "Please enter connection settings of your [ESPHome]({esphome_url}) node."
+        "data_description": {
+          "host": "IP address or hostname of the ESPHome device",
+          "port": "Port that the native API is running on"
+        },
+        "description": "Please enter connection settings of your ESPHome device."
       },
       "authenticate": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         },
-        "description": "Please enter the password you set in your configuration for {name}."
+        "data_description": {
+          "password": "Passwords are deprecated and will be removed in a future version. Please update your ESPHome device YAML configuration to use an encryption key instead."
+        },
+        "description": "Please enter the password you set in your ESPHome device YAML configuration for `{name}`."
       },
       "encryption_key": {
         "data": {
           "noise_psk": "Encryption key"
         },
-        "description": "Please enter the encryption key for {name}. You can find it in the ESPHome Dashboard or in your device configuration."
+        "data_description": {
+          "noise_psk": "The encryption key is used to encrypt the connection between Home Assistant and the ESPHome device. You can find this in the api: section of your ESPHome device YAML configuration."
+        },
+        "description": "Please enter the encryption key for `{name}`. You can find it in the ESPHome Dashboard or in your ESPHome device YAML configuration."
       },
       "reauth_confirm": {
         "data": {
           "noise_psk": "[%key:component::esphome::config::step::encryption_key::data::noise_psk%]"
         },
-        "description": "The ESPHome device {name} enabled transport encryption or changed the encryption key. Please enter the updated key. You can find it in the ESPHome Dashboard or in your device configuration."
+        "data_description": {
+          "noise_psk": "[%key:component::esphome::config::step::encryption_key::data_description::noise_psk%]"
+        },
+        "description": "The ESPHome device `{name}` enabled transport encryption or changed the encryption key. Please enter the updated key. You can find it in the ESPHome Dashboard or in your ESPHome device YAML configuration."
+      },
+      "reauth_encryption_removed_confirm": {
+        "description": "The ESPHome device `{name}` disabled transport encryption. Please confirm that you want to remove the encryption key and allow unencrypted connections."
       },
       "discovery_confirm": {
-        "description": "Do you want to add the ESPHome node `{name}` to Home Assistant?",
-        "title": "Discovered ESPHome node"
+        "description": "Do you want to add the device `{name}` to Home Assistant?",
+        "title": "Discovered ESPHome device"
+      },
+      "name_conflict": {
+        "title": "Name conflict",
+        "description": "**The name `{name}` is already being used by another device: {existing_title} (MAC address: `{existing_mac}`)**\n\nTo continue, please choose one of the following options:\n\n**Migrate configuration to new device:** If this is a replacement, migrate the existing settings to the new device (`{mac}`).\n**Overwrite the existing configuration:** If this is not a replacement, delete the old configuration for `{existing_mac}` and use the new device instead.",
+        "menu_options": {
+          "name_conflict_migrate": "Migrate configuration to new device",
+          "name_conflict_overwrite": "Overwrite the existing configuration"
+        }
       }
     },
     "flow_title": "{name}"
@@ -54,7 +87,12 @@
     "step": {
       "init": {
         "data": {
-          "allow_service_calls": "Allow the device to perform Home Assistant actions."
+          "allow_service_calls": "Allow the device to perform Home Assistant actions.",
+          "subscribe_logs": "Subscribe to logs from the device."
+        },
+        "data_description": {
+          "allow_service_calls": "When enabled, ESPHome devices can perform Home Assistant actions, such as calling services or sending events. Only enable this if you trust the device.",
+          "subscribe_logs": "When enabled, the device will send logs to Home Assistant and you can view them in the logs panel."
         }
       }
     }
@@ -63,11 +101,6 @@
     "assist_satellite": {
       "assist_satellite": {
         "name": "[%key:component::assist_satellite::entity_component::_::name%]"
-      }
-    },
-    "binary_sensor": {
-      "assist_in_progress": {
-        "name": "[%key:component::assist_pipeline::entity::binary_sensor::assist_in_progress::name%]"
       }
     },
     "select": {
@@ -126,6 +159,46 @@
     "service_calls_not_allowed": {
       "title": "{name} is not permitted to perform Home Assistant actions",
       "description": "The ESPHome device attempted to perform a Home Assistant action, but this functionality is not enabled.\n\nIf you trust this device and want to allow it to perform Home Assistant action, you can enable this functionality in the options flow."
+    },
+    "device_conflict": {
+      "title": "Device conflict for {name}",
+      "fix_flow": {
+        "step": {
+          "init": {
+            "title": "Device conflict for {name}",
+            "description": "**The device `{name}` (`{model}`) at `{ip}` has reported a MAC address change from `{stored_mac}` to `{mac}`.**\n\nIf you have multiple devices with the same name, please rename or remove the one with MAC address `{mac}` to avoid conflicts.\n\nIf this is a hardware replacement, please confirm that you would like to migrate the Home Assistant configuration to the new device with MAC address `{mac}`.",
+            "menu_options": {
+              "migrate": "Migrate configuration to new device",
+              "manual": "Remove or rename device"
+            }
+          },
+          "migrate": {
+            "title": "Confirm device replacement for {name}",
+            "description": "Are you sure you want to migrate the Home Assistant configuration for `{name}` (`{model}`) at `{ip}` from `{stored_mac}` to `{mac}`?"
+          },
+          "manual": {
+            "title": "Remove or rename device {name}",
+            "description": "To resolve the conflict, either remove the device with MAC address `{mac}` from the network and restart the one with MAC address `{stored_mac}`, or re-flash the device with MAC address `{mac}` using a different name than `{name}`. Submit again once done."
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "action_call_failed": {
+      "message": "Failed to execute the action call {call_name} on {device_name}: {error}"
+    },
+    "error_communicating_with_device": {
+      "message": "Error communicating with the device {device_name}: {error}"
+    },
+    "error_compiling": {
+      "message": "Error compiling {configuration}; Try again in ESPHome dashboard for more information."
+    },
+    "error_uploading": {
+      "message": "Error during OTA (Over-The-Air) of {configuration}; Try again in ESPHome dashboard for more information."
+    },
+    "ota_in_progress": {
+      "message": "An OTA (Over-The-Air) update is already in progress for {configuration}."
     }
   }
 }

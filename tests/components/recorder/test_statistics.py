@@ -1,16 +1,21 @@
 """The tests for sensor recorder platform."""
 
+from collections.abc import Generator
 from datetime import timedelta
+import re
 from typing import Any
 from unittest.mock import ANY, Mock, patch
 
 import pytest
 from sqlalchemy import select
+import voluptuous as vol
 
+from homeassistant import exceptions
 from homeassistant.components import recorder
 from homeassistant.components.recorder import Recorder, history, statistics
 from homeassistant.components.recorder.db_schema import StatisticsShortTerm
 from homeassistant.components.recorder.models import (
+    StatisticMeanType,
     datetime_to_timestamp_or_none,
     process_timestamp,
 )
@@ -18,7 +23,8 @@ from homeassistant.components.recorder.statistics import (
     STATISTIC_UNIT_TO_UNIT_CONVERTER,
     PlatformCompiledStatistics,
     _generate_max_mean_min_statistic_in_sub_period_stmt,
-    _generate_statistics_at_time_stmt,
+    _generate_statistics_at_time_stmt_dependent_sub_query,
+    _generate_statistics_at_time_stmt_group_by,
     _generate_statistics_during_period_stmt,
     async_add_external_statistics,
     async_import_statistics,
@@ -37,11 +43,11 @@ from homeassistant.components.recorder.table_managers.statistics_meta import (
 )
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.sensor import UNIT_CONVERTERS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import (
     assert_dict_of_states_equal_without_context_and_last_changed,
@@ -53,8 +59,26 @@ from .common import (
     statistics_during_period,
 )
 
-from tests.common import MockPlatform, mock_platform
+from tests.common import MockPlatform, MockUser, mock_platform
 from tests.typing import RecorderInstanceContextManager, WebSocketGenerator
+
+
+@pytest.fixture
+def multiple_start_time_chunk_sizes(
+    ids_for_start_time_chunk_sizes: int,
+) -> Generator[None]:
+    """Fixture to test different chunk sizes for start time query.
+
+    Force the statistics query to use different chunk sizes for start time query.
+
+    In effect this forces _statistics_at_time
+    to call _generate_statistics_at_time_stmt_group_by multiple times.
+    """
+    with patch(
+        "homeassistant.components.recorder.statistics.MAX_IDS_FOR_INDEXED_GROUP_BY",
+        ids_for_start_time_chunk_sizes,
+    ):
+        yield
 
 
 @pytest.fixture
@@ -103,32 +127,38 @@ async def test_compile_hourly_statistics(
         stats = get_latest_short_term_statistics_with_session(
             hass,
             session,
-            {"sensor.test1"},
+            {"sensor.test1", "sensor.wind_direction"},
             {"last_reset", "max", "mean", "min", "state", "sum"},
         )
     assert stats == {}
 
-    for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
+    for kwargs in ({}, {"statistic_ids": ["sensor.test1", "sensor.wind_direction"]}):
         stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
         assert stats == {}
-    stats = get_last_short_term_statistics(
-        hass,
-        0,
-        "sensor.test1",
-        True,
-        {"last_reset", "max", "mean", "min", "state", "sum"},
-    )
-    assert stats == {}
+    for sensor in ("sensor.test1", "sensor.wind_direction"):
+        stats = get_last_short_term_statistics(
+            hass,
+            0,
+            sensor,
+            True,
+            {"last_reset", "max", "mean", "min", "state", "sum"},
+        )
+        assert stats == {}
 
     do_adhoc_statistics(hass, start=zero)
     do_adhoc_statistics(hass, start=four)
     await async_wait_recording_done(hass)
 
-    metadata = get_metadata(hass, statistic_ids={"sensor.test1", "sensor.test2"})
-    assert metadata["sensor.test1"][1]["has_mean"] is True
-    assert metadata["sensor.test1"][1]["has_sum"] is False
-    assert metadata["sensor.test2"][1]["has_mean"] is True
-    assert metadata["sensor.test2"][1]["has_sum"] is False
+    metadata = get_metadata(
+        hass, statistic_ids={"sensor.test1", "sensor.test2", "sensor.wind_direction"}
+    )
+    for sensor, mean_type in (
+        ("sensor.test1", StatisticMeanType.ARITHMETIC),
+        ("sensor.test2", StatisticMeanType.ARITHMETIC),
+        ("sensor.wind_direction", StatisticMeanType.CIRCULAR),
+    ):
+        assert metadata[sensor][1]["mean_type"] is mean_type
+        assert metadata[sensor][1]["has_sum"] is False
     expected_1 = {
         "start": process_timestamp(zero).timestamp(),
         "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
@@ -148,11 +178,39 @@ async def test_compile_hourly_statistics(
     expected_stats1 = [expected_1, expected_2]
     expected_stats2 = [expected_1, expected_2]
 
+    expected_stats_wind_direction1 = {
+        "start": process_timestamp(zero).timestamp(),
+        "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
+        "mean": pytest.approx(358.6387003873801),
+        "min": None,
+        "max": None,
+        "last_reset": None,
+    }
+    expected_stats_wind_direction2 = {
+        "start": process_timestamp(four).timestamp(),
+        "end": process_timestamp(four + timedelta(minutes=5)).timestamp(),
+        "mean": pytest.approx(5),
+        "min": None,
+        "max": None,
+        "last_reset": None,
+    }
+    expected_stats_wind_direction = [
+        expected_stats_wind_direction1,
+        expected_stats_wind_direction2,
+    ]
+
     # Test statistics_during_period
     stats = statistics_during_period(
-        hass, zero, period="5minute", statistic_ids={"sensor.test1", "sensor.test2"}
+        hass,
+        zero,
+        period="5minute",
+        statistic_ids={"sensor.test1", "sensor.test2", "sensor.wind_direction"},
     )
-    assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
+    assert stats == {
+        "sensor.test1": expected_stats1,
+        "sensor.test2": expected_stats2,
+        "sensor.wind_direction": expected_stats_wind_direction,
+    }
 
     # Test statistics_during_period with a far future start and end date
     future = dt_util.as_utc(dt_util.parse_datetime("2221-11-01 00:00:00"))
@@ -161,7 +219,7 @@ async def test_compile_hourly_statistics(
         future,
         end_time=future,
         period="5minute",
-        statistic_ids={"sensor.test1", "sensor.test2"},
+        statistic_ids={"sensor.test1", "sensor.test2", "sensor.wind_direction"},
     )
     assert stats == {}
 
@@ -171,9 +229,13 @@ async def test_compile_hourly_statistics(
         zero,
         end_time=future,
         period="5minute",
-        statistic_ids={"sensor.test1", "sensor.test2"},
+        statistic_ids={"sensor.test1", "sensor.test2", "sensor.wind_direction"},
     )
-    assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
+    assert stats == {
+        "sensor.test1": expected_stats1,
+        "sensor.test2": expected_stats2,
+        "sensor.wind_direction": expected_stats_wind_direction,
+    }
 
     stats = statistics_during_period(
         hass, zero, statistic_ids={"sensor.test2"}, period="5minute"
@@ -186,32 +248,39 @@ async def test_compile_hourly_statistics(
     assert stats == {}
 
     # Test get_last_short_term_statistics and get_latest_short_term_statistics
-    stats = get_last_short_term_statistics(
-        hass,
-        0,
-        "sensor.test1",
-        True,
-        {"last_reset", "max", "mean", "min", "state", "sum"},
-    )
-    assert stats == {}
+    for sensor, expected in (
+        ("sensor.test1", expected_2),
+        ("sensor.wind_direction", expected_stats_wind_direction2),
+    ):
+        stats = get_last_short_term_statistics(
+            hass,
+            0,
+            sensor,
+            True,
+            {"last_reset", "max", "mean", "min", "state", "sum"},
+        )
+        assert stats == {}
 
-    stats = get_last_short_term_statistics(
-        hass,
-        1,
-        "sensor.test1",
-        True,
-        {"last_reset", "max", "mean", "min", "state", "sum"},
-    )
-    assert stats == {"sensor.test1": [expected_2]}
+        stats = get_last_short_term_statistics(
+            hass,
+            1,
+            sensor,
+            True,
+            {"last_reset", "max", "mean", "min", "state", "sum"},
+        )
+        assert stats == {sensor: [expected]}
 
     with session_scope(hass=hass, read_only=True) as session:
         stats = get_latest_short_term_statistics_with_session(
             hass,
             session,
-            {"sensor.test1"},
+            {"sensor.test1", "sensor.wind_direction"},
             {"last_reset", "max", "mean", "min", "state", "sum"},
         )
-    assert stats == {"sensor.test1": [expected_2]}
+    assert stats == {
+        "sensor.test1": [expected_2],
+        "sensor.wind_direction": [expected_stats_wind_direction2],
+    }
 
     # Now wipe the latest_short_term_statistics_ids table and test again
     # to make sure we can rebuild the missing data
@@ -221,13 +290,15 @@ async def test_compile_hourly_statistics(
         stats = get_latest_short_term_statistics_with_session(
             hass,
             session,
-            {"sensor.test1"},
+            {"sensor.test1", "sensor.wind_direction"},
             {"last_reset", "max", "mean", "min", "state", "sum"},
         )
-    assert stats == {"sensor.test1": [expected_2]}
+    assert stats == {
+        "sensor.test1": [expected_2],
+        "sensor.wind_direction": [expected_stats_wind_direction2],
+    }
 
     metadata = get_metadata(hass, statistic_ids={"sensor.test1"})
-
     with session_scope(hass=hass, read_only=True) as session:
         stats = get_latest_short_term_statistics_with_session(
             hass,
@@ -238,23 +309,44 @@ async def test_compile_hourly_statistics(
         )
     assert stats == {"sensor.test1": [expected_2]}
 
-    stats = get_last_short_term_statistics(
-        hass,
-        2,
-        "sensor.test1",
-        True,
-        {"last_reset", "max", "mean", "min", "state", "sum"},
+    # Test with multiple metadata ids
+    metadata = get_metadata(
+        hass, statistic_ids={"sensor.test1", "sensor.wind_direction"}
     )
-    assert stats == {"sensor.test1": expected_stats1[::-1]}
+    with session_scope(hass=hass, read_only=True) as session:
+        stats = get_latest_short_term_statistics_with_session(
+            hass,
+            session,
+            {"sensor.test1", "sensor.wind_direction"},
+            {"last_reset", "max", "mean", "min", "state", "sum"},
+            metadata=metadata,
+        )
+    assert stats == {
+        "sensor.test1": [expected_2],
+        "sensor.wind_direction": [expected_stats_wind_direction2],
+    }
 
-    stats = get_last_short_term_statistics(
-        hass,
-        3,
-        "sensor.test1",
-        True,
-        {"last_reset", "max", "mean", "min", "state", "sum"},
-    )
-    assert stats == {"sensor.test1": expected_stats1[::-1]}
+    for sensor, expected in (
+        ("sensor.test1", expected_stats1[::-1]),
+        ("sensor.wind_direction", expected_stats_wind_direction[::-1]),
+    ):
+        stats = get_last_short_term_statistics(
+            hass,
+            2,
+            sensor,
+            True,
+            {"last_reset", "max", "mean", "min", "state", "sum"},
+        )
+        assert stats == {sensor: expected}
+
+        stats = get_last_short_term_statistics(
+            hass,
+            3,
+            sensor,
+            True,
+            {"last_reset", "max", "mean", "min", "state", "sum"},
+        )
+        assert stats == {sensor: expected}
 
     stats = get_last_short_term_statistics(
         hass,
@@ -271,7 +363,7 @@ async def test_compile_hourly_statistics(
         stats = get_latest_short_term_statistics_with_session(
             hass,
             session,
-            {"sensor.test1"},
+            {"sensor.test1", "sensor.wind_direction"},
             {"last_reset", "max", "mean", "min", "state", "sum"},
         )
         assert stats == {}
@@ -286,7 +378,7 @@ async def test_compile_hourly_statistics(
         stats = get_latest_short_term_statistics_with_session(
             hass,
             session,
-            {"sensor.test1"},
+            {"sensor.test1", "sensor.wind_direction"},
             {"last_reset", "max", "mean", "min", "state", "sum"},
         )
     assert stats == {}
@@ -440,15 +532,35 @@ async def test_rename_entity(
     expected_stats1 = [expected_1]
     expected_stats2 = [expected_1]
     expected_stats99 = [expected_1]
+    expected_stats_wind_direction = [
+        {
+            "start": process_timestamp(zero).timestamp(),
+            "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
+            "mean": pytest.approx(358.6387003873801),
+            "min": None,
+            "max": None,
+            "last_reset": None,
+            "state": None,
+            "sum": None,
+        }
+    ]
 
     stats = statistics_during_period(hass, zero, period="5minute")
-    assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
+    assert stats == {
+        "sensor.test1": expected_stats1,
+        "sensor.test2": expected_stats2,
+        "sensor.wind_direction": expected_stats_wind_direction,
+    }
 
     entity_registry.async_update_entity("sensor.test1", new_entity_id="sensor.test99")
     await async_wait_recording_done(hass)
 
     stats = statistics_during_period(hass, zero, period="5minute")
-    assert stats == {"sensor.test99": expected_stats99, "sensor.test2": expected_stats2}
+    assert stats == {
+        "sensor.test99": expected_stats99,
+        "sensor.test2": expected_stats2,
+        "sensor.wind_direction": expected_stats_wind_direction,
+    }
 
 
 async def test_statistics_during_period_set_back_compat(
@@ -524,9 +636,25 @@ async def test_rename_entity_collision(
     }
     expected_stats1 = [expected_1]
     expected_stats2 = [expected_1]
+    expected_stats_wind_direction = [
+        {
+            "start": process_timestamp(zero).timestamp(),
+            "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
+            "mean": pytest.approx(358.6387003873801),
+            "min": None,
+            "max": None,
+            "last_reset": None,
+            "state": None,
+            "sum": None,
+        }
+    ]
 
     stats = statistics_during_period(hass, zero, period="5minute")
-    assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
+    assert stats == {
+        "sensor.test1": expected_stats1,
+        "sensor.test2": expected_stats2,
+        "sensor.wind_direction": expected_stats_wind_direction,
+    }
 
     # Insert metadata for sensor.test99
     metadata_1 = {
@@ -547,7 +675,11 @@ async def test_rename_entity_collision(
 
     # Statistics failed to migrate due to the collision
     stats = statistics_during_period(hass, zero, period="5minute")
-    assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
+    assert stats == {
+        "sensor.test1": expected_stats1,
+        "sensor.test2": expected_stats2,
+        "sensor.wind_direction": expected_stats_wind_direction,
+    }
 
     # Verify the safeguard in the states meta manager was hit
     assert (
@@ -611,9 +743,25 @@ async def test_rename_entity_collision_states_meta_check_disabled(
     }
     expected_stats1 = [expected_1]
     expected_stats2 = [expected_1]
+    expected_stats_wind_direction = [
+        {
+            "start": process_timestamp(zero).timestamp(),
+            "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
+            "mean": pytest.approx(358.6387003873801),
+            "min": None,
+            "max": None,
+            "last_reset": None,
+            "state": None,
+            "sum": None,
+        }
+    ]
 
     stats = statistics_during_period(hass, zero, period="5minute")
-    assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
+    assert stats == {
+        "sensor.test1": expected_stats1,
+        "sensor.test2": expected_stats2,
+        "sensor.wind_direction": expected_stats_wind_direction,
+    }
 
     # Insert metadata for sensor.test99
     metadata_1 = {
@@ -640,7 +788,11 @@ async def test_rename_entity_collision_states_meta_check_disabled(
 
     # Statistics failed to migrate due to the collision
     stats = statistics_during_period(hass, zero, period="5minute")
-    assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
+    assert stats == {
+        "sensor.test1": expected_stats1,
+        "sensor.test2": expected_stats2,
+        "sensor.wind_direction": expected_stats_wind_direction,
+    }
 
     # Verify the filter_unique_constraint_integrity_error safeguard was hit
     assert "Blocked attempt to insert duplicated statistic rows" in caplog.text
@@ -766,6 +918,7 @@ async def test_import_statistics(
         {
             "display_unit_of_measurement": "kWh",
             "has_mean": False,
+            "mean_type": StatisticMeanType.NONE,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy",
@@ -780,6 +933,7 @@ async def test_import_statistics(
             1,
             {
                 "has_mean": False,
+                "mean_type": StatisticMeanType.NONE,
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
@@ -856,6 +1010,7 @@ async def test_import_statistics(
         {
             "display_unit_of_measurement": "kWh",
             "has_mean": False,
+            "mean_type": StatisticMeanType.NONE,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy renamed",
@@ -870,6 +1025,7 @@ async def test_import_statistics(
             1,
             {
                 "has_mean": False,
+                "mean_type": StatisticMeanType.NONE,
                 "has_sum": True,
                 "name": "Total imported energy renamed",
                 "source": source,
@@ -1113,6 +1269,7 @@ async def test_import_statistics_errors(
     assert get_metadata(hass, statistic_ids={"sensor.total_energy_import"}) == {}
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
 async def test_daily_statistics_sum(
@@ -1293,6 +1450,215 @@ async def test_daily_statistics_sum(
     assert stats == {}
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
+@pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
+@pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
+async def test_multiple_daily_statistics_sum(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+    timezone,
+) -> None:
+    """Test daily statistics."""
+    await hass.config.async_set_time_zone(timezone)
+    await async_wait_recording_done(hass)
+    assert "Compiling statistics for" not in caplog.text
+    assert "Statistics already compiled" not in caplog.text
+
+    zero = dt_util.utcnow()
+    period1 = dt_util.as_utc(dt_util.parse_datetime("2022-10-03 00:00:00"))
+    period2 = dt_util.as_utc(dt_util.parse_datetime("2022-10-03 23:00:00"))
+    period3 = dt_util.as_utc(dt_util.parse_datetime("2022-10-04 00:00:00"))
+    period4 = dt_util.as_utc(dt_util.parse_datetime("2022-10-04 23:00:00"))
+    period5 = dt_util.as_utc(dt_util.parse_datetime("2022-10-05 00:00:00"))
+    period6 = dt_util.as_utc(dt_util.parse_datetime("2022-10-05 23:00:00"))
+
+    external_statistics = (
+        {
+            "start": period1,
+            "last_reset": None,
+            "state": 0,
+            "sum": 2,
+        },
+        {
+            "start": period2,
+            "last_reset": None,
+            "state": 1,
+            "sum": 3,
+        },
+        {
+            "start": period3,
+            "last_reset": None,
+            "state": 2,
+            "sum": 4,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 5,
+        },
+        {
+            "start": period5,
+            "last_reset": None,
+            "state": 4,
+            "sum": 6,
+        },
+        {
+            "start": period6,
+            "last_reset": None,
+            "state": 5,
+            "sum": 7,
+        },
+    )
+    external_metadata1 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy 1",
+        "source": "test",
+        "statistic_id": "test:total_energy_import2",
+        "unit_of_measurement": "kWh",
+    }
+    external_metadata2 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy 2",
+        "source": "test",
+        "statistic_id": "test:total_energy_import1",
+        "unit_of_measurement": "kWh",
+    }
+
+    async_add_external_statistics(hass, external_metadata1, external_statistics)
+    async_add_external_statistics(hass, external_metadata2, external_statistics)
+
+    await async_wait_recording_done(hass)
+    stats = statistics_during_period(
+        hass,
+        zero,
+        period="day",
+        statistic_ids={"test:total_energy_import1", "test:total_energy_import2"},
+    )
+    day1_start = dt_util.as_utc(dt_util.parse_datetime("2022-10-03 00:00:00"))
+    day1_end = dt_util.as_utc(dt_util.parse_datetime("2022-10-04 00:00:00"))
+    day2_start = dt_util.as_utc(dt_util.parse_datetime("2022-10-04 00:00:00"))
+    day2_end = dt_util.as_utc(dt_util.parse_datetime("2022-10-05 00:00:00"))
+    day3_start = dt_util.as_utc(dt_util.parse_datetime("2022-10-05 00:00:00"))
+    day3_end = dt_util.as_utc(dt_util.parse_datetime("2022-10-06 00:00:00"))
+    expected_stats_inner = [
+        {
+            "start": day1_start.timestamp(),
+            "end": day1_end.timestamp(),
+            "last_reset": None,
+            "state": 1.0,
+            "sum": 3.0,
+        },
+        {
+            "start": day2_start.timestamp(),
+            "end": day2_end.timestamp(),
+            "last_reset": None,
+            "state": 3.0,
+            "sum": 5.0,
+        },
+        {
+            "start": day3_start.timestamp(),
+            "end": day3_end.timestamp(),
+            "last_reset": None,
+            "state": 5.0,
+            "sum": 7.0,
+        },
+    ]
+    expected_stats = {
+        "test:total_energy_import1": expected_stats_inner,
+        "test:total_energy_import2": expected_stats_inner,
+    }
+    assert stats == expected_stats
+
+    # Get change
+    stats = statistics_during_period(
+        hass,
+        start_time=period1,
+        statistic_ids={"test:total_energy_import1", "test:total_energy_import2"},
+        period="day",
+        types={"change"},
+    )
+    expected_inner = [
+        {
+            "start": day1_start.timestamp(),
+            "end": day1_end.timestamp(),
+            "change": 3.0,
+        },
+        {
+            "start": day2_start.timestamp(),
+            "end": day2_end.timestamp(),
+            "change": 2.0,
+        },
+        {
+            "start": day3_start.timestamp(),
+            "end": day3_end.timestamp(),
+            "change": 2.0,
+        },
+    ]
+    assert stats == {
+        "test:total_energy_import1": expected_inner,
+        "test:total_energy_import2": expected_inner,
+    }
+
+    # Get data with start during the first period
+    stats = statistics_during_period(
+        hass,
+        start_time=period1 + timedelta(hours=1),
+        statistic_ids={"test:total_energy_import1", "test:total_energy_import2"},
+        period="day",
+    )
+    assert stats == expected_stats
+
+    # Get data with end during the third period
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        end_time=period6 - timedelta(hours=1),
+        statistic_ids={"test:total_energy_import1", "test:total_energy_import2"},
+        period="day",
+    )
+    assert stats == expected_stats
+
+    # Try to get data for entities which do not exist
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        statistic_ids={
+            "not",
+            "the",
+            "same",
+            "test:total_energy_import1",
+            "test:total_energy_import2",
+        },
+        period="day",
+    )
+    assert stats == expected_stats
+
+    # Use 5minute to ensure table switch works
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        statistic_ids=[
+            "test:total_energy_import1",
+            "with_other",
+            "test:total_energy_import2",
+        ],
+        period="5minute",
+    )
+    assert stats == {}
+
+    # Ensure future date has not data
+    future = dt_util.as_utc(dt_util.parse_datetime("2221-11-01 00:00:00"))
+    stats = statistics_during_period(
+        hass, start_time=future, end_time=future, period="day"
+    )
+    assert stats == {}
+
+
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
 async def test_weekly_statistics_mean(
@@ -1428,6 +1794,7 @@ async def test_weekly_statistics_mean(
     assert stats == {}
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
 async def test_weekly_statistics_sum(
@@ -1608,6 +1975,7 @@ async def test_weekly_statistics_sum(
     assert stats == {}
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
 async def test_monthly_statistics_sum(
@@ -1914,20 +2282,43 @@ def test_cache_key_for_generate_max_mean_min_statistic_in_sub_period_stmt() -> N
     assert cache_key_1 != cache_key_3
 
 
-def test_cache_key_for_generate_statistics_at_time_stmt() -> None:
-    """Test cache key for _generate_statistics_at_time_stmt."""
-    stmt = _generate_statistics_at_time_stmt(StatisticsShortTerm, {0}, 0.0, set())
+def test_cache_key_for_generate_statistics_at_time_stmt_group_by() -> None:
+    """Test cache key for _generate_statistics_at_time_stmt_group_by."""
+    stmt = _generate_statistics_at_time_stmt_group_by(
+        StatisticsShortTerm, {0}, 0.0, set()
+    )
     cache_key_1 = stmt._generate_cache_key()
-    stmt2 = _generate_statistics_at_time_stmt(StatisticsShortTerm, {0}, 0.0, set())
+    stmt2 = _generate_statistics_at_time_stmt_group_by(
+        StatisticsShortTerm, {0}, 0.0, set()
+    )
     cache_key_2 = stmt2._generate_cache_key()
     assert cache_key_1 == cache_key_2
-    stmt3 = _generate_statistics_at_time_stmt(
+    stmt3 = _generate_statistics_at_time_stmt_group_by(
         StatisticsShortTerm, {0}, 0.0, {"sum", "mean"}
     )
     cache_key_3 = stmt3._generate_cache_key()
     assert cache_key_1 != cache_key_3
 
 
+def test_cache_key_for_generate_statistics_at_time_stmt_dependent_sub_query() -> None:
+    """Test cache key for _generate_statistics_at_time_stmt_dependent_sub_query."""
+    stmt = _generate_statistics_at_time_stmt_dependent_sub_query(
+        StatisticsShortTerm, {0}, 0.0, set()
+    )
+    cache_key_1 = stmt._generate_cache_key()
+    stmt2 = _generate_statistics_at_time_stmt_dependent_sub_query(
+        StatisticsShortTerm, {0}, 0.0, set()
+    )
+    cache_key_2 = stmt2._generate_cache_key()
+    assert cache_key_1 == cache_key_2
+    stmt3 = _generate_statistics_at_time_stmt_dependent_sub_query(
+        StatisticsShortTerm, {0}, 0.0, {"sum", "mean"}
+    )
+    cache_key_3 = stmt3._generate_cache_key()
+    assert cache_key_1 != cache_key_3
+
+
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
 async def test_change(
@@ -2263,6 +2654,392 @@ async def test_change(
     assert stats == {}
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
+@pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
+@pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
+async def test_change_multiple(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+    timezone,
+) -> None:
+    """Test deriving change from sum statistic."""
+    await hass.config.async_set_time_zone(timezone)
+    await async_wait_recording_done(hass)
+    assert "Compiling statistics for" not in caplog.text
+    assert "Statistics already compiled" not in caplog.text
+
+    zero = dt_util.utcnow()
+    period1 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 00:00:00"))
+    period2 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 01:00:00"))
+    period3 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 02:00:00"))
+    period4 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 03:00:00"))
+
+    external_statistics = (
+        {
+            "start": period1,
+            "last_reset": None,
+            "state": 0,
+            "sum": 2,
+        },
+        {
+            "start": period2,
+            "last_reset": None,
+            "state": 1,
+            "sum": 3,
+        },
+        {
+            "start": period3,
+            "last_reset": None,
+            "state": 2,
+            "sum": 5,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 8,
+        },
+    )
+    external_metadata1 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "recorder",
+        "statistic_id": "sensor.total_energy_import1",
+        "unit_of_measurement": "kWh",
+    }
+    external_metadata2 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "recorder",
+        "statistic_id": "sensor.total_energy_import2",
+        "unit_of_measurement": "kWh",
+    }
+    async_import_statistics(hass, external_metadata1, external_statistics)
+    async_import_statistics(hass, external_metadata2, external_statistics)
+    await async_wait_recording_done(hass)
+    # Get change from far in the past
+    stats = statistics_during_period(
+        hass,
+        zero,
+        period="hour",
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        types={"change"},
+    )
+    hour1_start = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 00:00:00"))
+    hour1_end = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 01:00:00"))
+    hour2_start = hour1_end
+    hour2_end = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 02:00:00"))
+    hour3_start = hour2_end
+    hour3_end = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 03:00:00"))
+    hour4_start = hour3_end
+    hour4_end = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 04:00:00"))
+    expected_inner = [
+        {
+            "start": hour1_start.timestamp(),
+            "end": hour1_end.timestamp(),
+            "change": 2.0,
+        },
+        {
+            "start": hour2_start.timestamp(),
+            "end": hour2_end.timestamp(),
+            "change": 1.0,
+        },
+        {
+            "start": hour3_start.timestamp(),
+            "end": hour3_end.timestamp(),
+            "change": 2.0,
+        },
+        {
+            "start": hour4_start.timestamp(),
+            "end": hour4_end.timestamp(),
+            "change": 3.0,
+        },
+    ]
+    expected_stats = {
+        "sensor.total_energy_import1": expected_inner,
+        "sensor.total_energy_import2": expected_inner,
+    }
+    assert stats == expected_stats
+
+    # Get change + sum from far in the past
+    stats = statistics_during_period(
+        hass,
+        zero,
+        period="hour",
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        types={"change", "sum"},
+    )
+    hour1_start = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 00:00:00"))
+    hour1_end = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 01:00:00"))
+    hour2_start = hour1_end
+    hour2_end = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 02:00:00"))
+    hour3_start = hour2_end
+    hour3_end = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 03:00:00"))
+    hour4_start = hour3_end
+    hour4_end = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 04:00:00"))
+    expected_inner = [
+        {
+            "start": hour1_start.timestamp(),
+            "end": hour1_end.timestamp(),
+            "change": 2.0,
+            "sum": 2.0,
+        },
+        {
+            "start": hour2_start.timestamp(),
+            "end": hour2_end.timestamp(),
+            "change": 1.0,
+            "sum": 3.0,
+        },
+        {
+            "start": hour3_start.timestamp(),
+            "end": hour3_end.timestamp(),
+            "change": 2.0,
+            "sum": 5.0,
+        },
+        {
+            "start": hour4_start.timestamp(),
+            "end": hour4_end.timestamp(),
+            "change": 3.0,
+            "sum": 8.0,
+        },
+    ]
+    expected_stats_change_sum = {
+        "sensor.total_energy_import1": expected_inner,
+        "sensor.total_energy_import2": expected_inner,
+    }
+    assert stats == expected_stats_change_sum
+
+    # Get change from far in the past with unit conversion
+    stats = statistics_during_period(
+        hass,
+        start_time=hour1_start,
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        period="hour",
+        types={"change"},
+        units={"energy": "Wh"},
+    )
+    expected_inner = [
+        {
+            "start": hour1_start.timestamp(),
+            "end": hour1_end.timestamp(),
+            "change": 2.0 * 1000,
+        },
+        {
+            "start": hour2_start.timestamp(),
+            "end": hour2_end.timestamp(),
+            "change": 1.0 * 1000,
+        },
+        {
+            "start": hour3_start.timestamp(),
+            "end": hour3_end.timestamp(),
+            "change": 2.0 * 1000,
+        },
+        {
+            "start": hour4_start.timestamp(),
+            "end": hour4_end.timestamp(),
+            "change": 3.0 * 1000,
+        },
+    ]
+    expected_stats_wh = {
+        "sensor.total_energy_import1": expected_inner,
+        "sensor.total_energy_import2": expected_inner,
+    }
+    assert stats == expected_stats_wh
+
+    # Get change from far in the past with implicit unit conversion
+    hass.states.async_set(
+        "sensor.total_energy_import1", "unknown", {"unit_of_measurement": "MWh"}
+    )
+    hass.states.async_set(
+        "sensor.total_energy_import2", "unknown", {"unit_of_measurement": "MWh"}
+    )
+    stats = statistics_during_period(
+        hass,
+        start_time=hour1_start,
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        period="hour",
+        types={"change"},
+    )
+    expected_inner = [
+        {
+            "start": hour1_start.timestamp(),
+            "end": hour1_end.timestamp(),
+            "change": 2.0 / 1000,
+        },
+        {
+            "start": hour2_start.timestamp(),
+            "end": hour2_end.timestamp(),
+            "change": 1.0 / 1000,
+        },
+        {
+            "start": hour3_start.timestamp(),
+            "end": hour3_end.timestamp(),
+            "change": 2.0 / 1000,
+        },
+        {
+            "start": hour4_start.timestamp(),
+            "end": hour4_end.timestamp(),
+            "change": 3.0 / 1000,
+        },
+    ]
+    expected_stats_mwh = {
+        "sensor.total_energy_import1": expected_inner,
+        "sensor.total_energy_import2": expected_inner,
+    }
+    assert stats == expected_stats_mwh
+    hass.states.async_remove("sensor.total_energy_import1")
+    hass.states.async_remove("sensor.total_energy_import2")
+
+    # Get change from the first recorded hour
+    stats = statistics_during_period(
+        hass,
+        start_time=hour1_start,
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        period="hour",
+        types={"change"},
+    )
+    assert stats == expected_stats
+
+    # Get change from the first recorded hour with unit conversion
+    stats = statistics_during_period(
+        hass,
+        start_time=hour1_start,
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        period="hour",
+        types={"change"},
+        units={"energy": "Wh"},
+    )
+    assert stats == expected_stats_wh
+
+    # Get change from the first recorded hour with implicit unit conversion
+    hass.states.async_set(
+        "sensor.total_energy_import1", "unknown", {"unit_of_measurement": "MWh"}
+    )
+    hass.states.async_set(
+        "sensor.total_energy_import2", "unknown", {"unit_of_measurement": "MWh"}
+    )
+    stats = statistics_during_period(
+        hass,
+        start_time=hour1_start,
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        period="hour",
+        types={"change"},
+    )
+    assert stats == expected_stats_mwh
+    hass.states.async_remove("sensor.total_energy_import1")
+    hass.states.async_remove("sensor.total_energy_import2")
+
+    # Get change from the second recorded hour
+    stats = statistics_during_period(
+        hass,
+        start_time=hour2_start,
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        period="hour",
+        types={"change"},
+    )
+    assert stats == {
+        "sensor.total_energy_import1": expected_stats["sensor.total_energy_import1"][
+            1:4
+        ],
+        "sensor.total_energy_import2": expected_stats["sensor.total_energy_import2"][
+            1:4
+        ],
+    }
+
+    # Get change from the second recorded hour with unit conversion
+    stats = statistics_during_period(
+        hass,
+        start_time=hour2_start,
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        period="hour",
+        types={"change"},
+        units={"energy": "Wh"},
+    )
+    assert stats == {
+        "sensor.total_energy_import1": expected_stats_wh["sensor.total_energy_import1"][
+            1:4
+        ],
+        "sensor.total_energy_import2": expected_stats_wh["sensor.total_energy_import2"][
+            1:4
+        ],
+    }
+
+    # Get change from the second recorded hour with implicit unit conversion
+    hass.states.async_set(
+        "sensor.total_energy_import1", "unknown", {"unit_of_measurement": "MWh"}
+    )
+    hass.states.async_set(
+        "sensor.total_energy_import2", "unknown", {"unit_of_measurement": "MWh"}
+    )
+    stats = statistics_during_period(
+        hass,
+        start_time=hour2_start,
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        period="hour",
+        types={"change"},
+    )
+    assert stats == {
+        "sensor.total_energy_import1": expected_stats_mwh[
+            "sensor.total_energy_import1"
+        ][1:4],
+        "sensor.total_energy_import2": expected_stats_mwh[
+            "sensor.total_energy_import2"
+        ][1:4],
+    }
+    hass.states.async_remove("sensor.total_energy_import1")
+    hass.states.async_remove("sensor.total_energy_import2")
+
+    # Get change from the second until the third recorded hour
+    stats = statistics_during_period(
+        hass,
+        start_time=hour2_start,
+        end_time=hour4_start,
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        period="hour",
+        types={"change"},
+    )
+    assert stats == {
+        "sensor.total_energy_import1": expected_stats["sensor.total_energy_import1"][
+            1:3
+        ],
+        "sensor.total_energy_import2": expected_stats["sensor.total_energy_import2"][
+            1:3
+        ],
+    }
+
+    # Get change from the fourth recorded hour
+    stats = statistics_during_period(
+        hass,
+        start_time=hour4_start,
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        period="hour",
+        types={"change"},
+    )
+    assert stats == {
+        "sensor.total_energy_import1": expected_stats["sensor.total_energy_import1"][
+            3:4
+        ],
+        "sensor.total_energy_import2": expected_stats["sensor.total_energy_import2"][
+            3:4
+        ],
+    }
+
+    # Test change with a far future start date
+    future = dt_util.as_utc(dt_util.parse_datetime("2221-11-01 00:00:00"))
+    stats = statistics_during_period(
+        hass,
+        start_time=future,
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        period="hour",
+        types={"change"},
+    )
+    assert stats == {}
+
+
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
 async def test_change_with_none(
@@ -2647,3 +3424,319 @@ async def test_recorder_platform_with_partial_statistics_support(
 
     for meth in supported_methods:
         getattr(recorder_platform, meth).assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("service_args", "expected_result"),
+    [
+        (
+            {
+                "start_time": "2023-05-08 07:00:00Z",
+                "period": "hour",
+                "statistic_ids": ["sensor.i_dont_exist"],
+                "types": ["change", "last_reset", "max", "mean", "min", "state", "sum"],
+            },
+            {"statistics": {}},
+        ),
+        (
+            {
+                "start_time": "2023-05-08 07:00:00Z",
+                "period": "hour",
+                "statistic_ids": [
+                    "sensor.total_energy_import1",
+                    "sensor.total_energy_import2",
+                ],
+                "types": ["change", "last_reset", "max", "mean", "min", "state", "sum"],
+            },
+            {
+                "statistics": {
+                    "sensor.total_energy_import1": [
+                        {
+                            "last_reset": "2021-12-31T22:00:00+00:00",
+                            "change": 2.0,
+                            "end": "2023-05-08T08:00:00+00:00",
+                            "start": "2023-05-08T07:00:00+00:00",
+                            "state": 0.0,
+                            "sum": 2.0,
+                            "min": 0.0,
+                            "max": 10.0,
+                            "mean": 1.0,
+                        },
+                        {
+                            "change": 1.0,
+                            "end": "2023-05-08T09:00:00+00:00",
+                            "start": "2023-05-08T08:00:00+00:00",
+                            "state": 1.0,
+                            "sum": 3.0,
+                            "min": 1.0,
+                            "max": 11.0,
+                            "mean": 1.0,
+                        },
+                        {
+                            "change": 2.0,
+                            "end": "2023-05-08T10:00:00+00:00",
+                            "start": "2023-05-08T09:00:00+00:00",
+                            "state": 2.0,
+                            "sum": 5.0,
+                            "min": 2.0,
+                            "max": 12.0,
+                            "mean": 1.0,
+                        },
+                        {
+                            "change": 3.0,
+                            "end": "2023-05-08T11:00:00+00:00",
+                            "start": "2023-05-08T10:00:00+00:00",
+                            "state": 3.0,
+                            "sum": 8.0,
+                            "min": 3.0,
+                            "max": 13.0,
+                            "mean": 1.0,
+                        },
+                    ],
+                    "sensor.total_energy_import2": [
+                        {
+                            "last_reset": "2021-12-31T22:00:00+00:00",
+                            "change": 2.0,
+                            "end": "2023-05-08T08:00:00+00:00",
+                            "start": "2023-05-08T07:00:00+00:00",
+                            "state": 0.0,
+                            "sum": 2.0,
+                            "min": 0.0,
+                            "max": 10.0,
+                            "mean": 1.0,
+                        },
+                        {
+                            "change": 1.0,
+                            "end": "2023-05-08T09:00:00+00:00",
+                            "start": "2023-05-08T08:00:00+00:00",
+                            "state": 1.0,
+                            "sum": 3.0,
+                            "min": 1.0,
+                            "max": 11.0,
+                            "mean": 1.0,
+                        },
+                        {
+                            "change": 2.0,
+                            "end": "2023-05-08T10:00:00+00:00",
+                            "start": "2023-05-08T09:00:00+00:00",
+                            "state": 2.0,
+                            "sum": 5.0,
+                            "min": 2.0,
+                            "max": 12.0,
+                            "mean": 1.0,
+                        },
+                        {
+                            "change": 3.0,
+                            "end": "2023-05-08T11:00:00+00:00",
+                            "start": "2023-05-08T10:00:00+00:00",
+                            "state": 3.0,
+                            "sum": 8.0,
+                            "min": 3.0,
+                            "max": 13.0,
+                            "mean": 1.0,
+                        },
+                    ],
+                }
+            },
+        ),
+        (
+            {
+                "start_time": "2023-05-08 07:00:00Z",
+                "period": "day",
+                "statistic_ids": [
+                    "sensor.total_energy_import1",
+                    "sensor.total_energy_import2",
+                ],
+                "types": ["sum"],
+            },
+            {
+                "statistics": {
+                    "sensor.total_energy_import1": [
+                        {
+                            "start": "2023-05-08T07:00:00+00:00",
+                            "end": "2023-05-09T07:00:00+00:00",
+                            "sum": 8.0,
+                        }
+                    ],
+                    "sensor.total_energy_import2": [
+                        {
+                            "start": "2023-05-08T07:00:00+00:00",
+                            "end": "2023-05-09T07:00:00+00:00",
+                            "sum": 8.0,
+                        }
+                    ],
+                }
+            },
+        ),
+        (
+            {
+                "start_time": "2023-05-08 07:00:00Z",
+                "end_time": "2023-05-08 08:00:00Z",
+                "period": "hour",
+                "types": ["change", "sum"],
+                "statistic_ids": ["sensor.total_energy_import1"],
+                "units": {"energy": "Wh"},
+            },
+            {
+                "statistics": {
+                    "sensor.total_energy_import1": [
+                        {
+                            "start": "2023-05-08T07:00:00+00:00",
+                            "end": "2023-05-08T08:00:00+00:00",
+                            "change": 2000.0,
+                            "sum": 2000.0,
+                        },
+                    ],
+                }
+            },
+        ),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_get_statistics_service(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    service_args: dict[str, Any],
+    expected_result: dict[str, Any],
+) -> None:
+    """Test the get_statistics service."""
+    period1 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 00:00:00"))
+    period2 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 01:00:00"))
+    period3 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 02:00:00"))
+    period4 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 03:00:00"))
+
+    last_reset = dt_util.parse_datetime("2022-01-01T00:00:00+02:00")
+    external_statistics = (
+        {
+            "start": period1,
+            "state": 0,
+            "sum": 2,
+            "min": 0,
+            "max": 10,
+            "mean": 1,
+            "last_reset": last_reset,
+        },
+        {
+            "start": period2,
+            "state": 1,
+            "sum": 3,
+            "min": 1,
+            "max": 11,
+            "mean": 1,
+            "last_reset": None,
+        },
+        {
+            "start": period3,
+            "state": 2,
+            "sum": 5,
+            "min": 2,
+            "max": 12,
+            "mean": 1,
+            "last_reset": None,
+        },
+        {
+            "start": period4,
+            "state": 3,
+            "sum": 8,
+            "min": 3,
+            "max": 13,
+            "mean": 1,
+            "last_reset": None,
+        },
+    )
+    external_metadata1 = {
+        "has_mean": True,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "recorder",
+        "statistic_id": "sensor.total_energy_import1",
+        "unit_of_measurement": "kWh",
+    }
+    external_metadata2 = {
+        "has_mean": True,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "recorder",
+        "statistic_id": "sensor.total_energy_import2",
+        "unit_of_measurement": "kWh",
+    }
+    async_import_statistics(hass, external_metadata1, external_statistics)
+    async_import_statistics(hass, external_metadata2, external_statistics)
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    result = await hass.services.async_call(
+        "recorder", "get_statistics", service_args, return_response=True, blocking=True
+    )
+    assert result == expected_result
+
+    with pytest.raises(exceptions.Unauthorized):
+        result = await hass.services.async_call(
+            "recorder",
+            "get_statistics",
+            service_args,
+            return_response=True,
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+
+
+@pytest.mark.parametrize(
+    ("service_args", "missing_key"),
+    [
+        (
+            {
+                "period": "hour",
+                "statistic_ids": ["sensor.sensor"],
+                "types": ["change", "last_reset", "max", "mean", "min", "state", "sum"],
+            },
+            "start_time",
+        ),
+        (
+            {
+                "start_time": "2023-05-08 07:00:00Z",
+                "period": "hour",
+                "types": ["change", "last_reset", "max", "mean", "min", "state", "sum"],
+            },
+            "statistic_ids",
+        ),
+        (
+            {
+                "start_time": "2023-05-08 07:00:00Z",
+                "statistic_ids": ["sensor.sensor"],
+                "types": ["change", "last_reset", "max", "mean", "min", "state", "sum"],
+            },
+            "period",
+        ),
+        (
+            {
+                "start_time": "2023-05-08 07:00:00Z",
+                "period": "hour",
+                "statistic_ids": ["sensor.sensor"],
+            },
+            "types",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_get_statistics_service_missing_mandatory_keys(
+    hass: HomeAssistant,
+    service_args: dict[str, Any],
+    missing_key: str,
+) -> None:
+    """Test the get_statistics service with missing mandatory keys."""
+
+    await async_recorder_block_till_done(hass)
+
+    with pytest.raises(
+        vol.error.MultipleInvalid,
+        match=re.escape(f"required key not provided @ data['{missing_key}']"),
+    ):
+        await hass.services.async_call(
+            "recorder",
+            "get_statistics",
+            service_args,
+            return_response=True,
+            blocking=True,
+        )

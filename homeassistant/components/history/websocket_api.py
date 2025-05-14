@@ -35,8 +35,8 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 from homeassistant.helpers.json import json_bytes
+from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import create_eager_task
-import homeassistant.util.dt as dt_util
 
 from .const import EVENT_COALESCE_TIME, MAX_PENDING_HISTORY_STATES
 from .helpers import entities_may_have_state_changes_after, has_states_before
@@ -52,7 +52,7 @@ class HistoryLiveStream:
     subscriptions: list[CALLBACK_TYPE]
     end_time_unsub: CALLBACK_TYPE | None = None
     task: asyncio.Task | None = None
-    wait_sync_task: asyncio.Task | None = None
+    wait_sync_future: asyncio.Future[None] | None = None
 
 
 @callback
@@ -491,8 +491,8 @@ async def ws_stream(
         subscriptions.clear()
         if live_stream.task:
             live_stream.task.cancel()
-        if live_stream.wait_sync_task:
-            live_stream.wait_sync_task.cancel()
+        if live_stream.wait_sync_future:
+            live_stream.wait_sync_future.cancel()
         if live_stream.end_time_unsub:
             live_stream.end_time_unsub()
             live_stream.end_time_unsub = None
@@ -554,10 +554,12 @@ async def ws_stream(
         )
     )
 
-    live_stream.wait_sync_task = create_eager_task(
-        get_instance(hass).async_block_till_done()
-    )
-    await live_stream.wait_sync_task
+    if sync_future := get_instance(hass).async_get_commit_future():
+        # Set the future so we can cancel it if the client
+        # unsubscribes before the commit is done so we don't
+        # query the database needlessly
+        live_stream.wait_sync_future = sync_future
+        await live_stream.wait_sync_future
 
     #
     # Fetch any states from the database that have

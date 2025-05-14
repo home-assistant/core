@@ -24,11 +24,11 @@ jobs:
         uses: actions/checkout@v4.2.2
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3.28.3
+        uses: github/codeql-action/init@v3.28.17
         with:
           languages: python
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3.28.3
+        uses: github/codeql-action/analyze@v3.28.17
         with:
           category: "/language:python"

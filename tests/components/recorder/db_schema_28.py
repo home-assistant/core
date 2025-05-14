@@ -43,7 +43,7 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_STATE,
 )
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 # SQLAlchemy Schema
 Base = declarative_base()

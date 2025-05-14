@@ -33,9 +33,10 @@
     },
     "select": {
       "auto_lock_time": {
-        "name": "Auto-Lock time",
+        "name": "Auto-lock time",
         "state": {
-          "0": "Disabled",
+          "0": "[%key:common::state::disabled%]",
+          "5": "5 seconds",
           "15": "15 seconds",
           "30": "30 seconds",
           "60": "1 minute",

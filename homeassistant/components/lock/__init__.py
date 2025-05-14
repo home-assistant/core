@@ -29,7 +29,7 @@ from homeassistant.const import (  # noqa: F401
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.deprecation import (
     all_with_deprecated_constants,
     check_if_deprecated_constant,

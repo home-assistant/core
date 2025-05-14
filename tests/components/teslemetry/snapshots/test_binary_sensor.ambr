@@ -6,11 +6,12 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'binary_sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'binary_sensor.energy_site_backup_capable',
     'has_entity_name': True,
     'hidden_by': None,
@@ -52,11 +53,12 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'binary_sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'binary_sensor.energy_site_grid_services_active',
     'has_entity_name': True,
     'hidden_by': None,
@@ -98,11 +100,12 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'binary_sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'binary_sensor.energy_site_grid_services_enabled',
     'has_entity_name': True,
     'hidden_by': None,
@@ -137,6 +140,54 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensor[binary_sensor.energy_site_grid_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.energy_site_grid_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Grid status',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'grid_status',
+    'unique_id': '123456-grid_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.energy_site_grid_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Energy Site Grid status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.energy_site_grid_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_binary_sensor[binary_sensor.energy_site_storm_watch_active-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -144,6 +195,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -190,6 +242,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -236,6 +289,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -282,6 +336,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -329,6 +384,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -375,6 +431,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -421,6 +478,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -467,6 +525,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -507,6 +566,54 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensor[binary_sensor.test_cellular-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_cellular',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Cellular',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cellular',
+    'unique_id': 'LRW3F7EK4NC700000-cellular',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_cellular-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Test Cellular',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_cellular',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_binary_sensor[binary_sensor.test_charge_cable-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -514,6 +621,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -554,6 +662,53 @@
     'state': 'on',
   })
 # ---
+# name: test_binary_sensor[binary_sensor.test_charge_enable_request-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_charge_enable_request',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charge enable request',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_enable_request',
+    'unique_id': 'LRW3F7EK4NC700000-charge_enable_request',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_charge_enable_request-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Charge enable request',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_charge_enable_request',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_binary_sensor[binary_sensor.test_charge_port_cold_weather_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -561,6 +716,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -607,6 +763,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -653,6 +810,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -700,6 +858,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -739,6 +898,53 @@
     'state': 'unknown',
   })
 # ---
+# name: test_binary_sensor[binary_sensor.test_defrost_for_preconditioning-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_defrost_for_preconditioning',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Defrost for preconditioning',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'defrost_for_preconditioning',
+    'unique_id': 'LRW3F7EK4NC700000-defrost_for_preconditioning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_defrost_for_preconditioning-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Defrost for preconditioning',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_defrost_for_preconditioning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_binary_sensor[binary_sensor.test_drive_rail-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -746,6 +952,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -792,6 +999,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -838,6 +1046,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -884,6 +1093,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -930,6 +1140,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -976,6 +1187,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1022,6 +1234,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1069,6 +1282,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1116,6 +1330,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1163,6 +1378,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1210,6 +1426,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1257,6 +1474,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1296,6 +1514,148 @@
     'state': 'unknown',
   })
 # ---
+# name: test_binary_sensor[binary_sensor.test_hazard_lights-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_hazard_lights',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Hazard lights',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lights_hazards_active',
+    'unique_id': 'LRW3F7EK4NC700000-lights_hazards_active',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_hazard_lights-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Hazard lights',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_hazard_lights',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_high_beams-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_high_beams',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'High beams',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lights_high_beams',
+    'unique_id': 'LRW3F7EK4NC700000-lights_high_beams',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_high_beams-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test High beams',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_high_beams',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_high_voltage_interlock_loop_fault-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_high_voltage_interlock_loop_fault',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'High voltage interlock loop fault',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'hvil',
+    'unique_id': 'LRW3F7EK4NC700000-hvil',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_high_voltage_interlock_loop_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Test High voltage interlock loop fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_high_voltage_interlock_loop_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_binary_sensor[binary_sensor.test_homelink_nearby-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1303,6 +1663,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1342,6 +1703,194 @@
     'state': 'unknown',
   })
 # ---
+# name: test_binary_sensor[binary_sensor.test_hvac_auto_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_hvac_auto_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'HVAC auto mode',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'hvac_auto_mode',
+    'unique_id': 'LRW3F7EK4NC700000-hvac_auto_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_hvac_auto_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test HVAC auto mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_hvac_auto_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_located_at_favorite-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_located_at_favorite',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Located at favorite',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'located_at_favorite',
+    'unique_id': 'LRW3F7EK4NC700000-located_at_favorite',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_located_at_favorite-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Located at favorite',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_located_at_favorite',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_located_at_home-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_located_at_home',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Located at home',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'located_at_home',
+    'unique_id': 'LRW3F7EK4NC700000-located_at_home',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_located_at_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Located at home',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_located_at_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_located_at_work-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_located_at_work',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Located at work',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'located_at_work',
+    'unique_id': 'LRW3F7EK4NC700000-located_at_work',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_located_at_work-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Located at work',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_located_at_work',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_binary_sensor[binary_sensor.test_offroad_lightbar-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1349,6 +1898,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1395,6 +1945,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1441,6 +1992,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1458,7 +2010,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Pin to drive enabled',
+    'original_name': 'PIN to Drive enabled',
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1470,7 +2022,7 @@
 # name: test_binary_sensor[binary_sensor.test_pin_to_drive_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Pin to drive enabled',
+      'friendly_name': 'Test PIN to Drive enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_pin_to_drive_enabled',
@@ -1487,6 +2039,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1533,6 +2086,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1579,6 +2133,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1625,6 +2180,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1672,6 +2228,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1719,6 +2276,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1766,6 +2324,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1806,6 +2365,53 @@
     'state': 'unknown',
   })
 # ---
+# name: test_binary_sensor[binary_sensor.test_remote_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_remote_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Remote start',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'remote_start_enabled',
+    'unique_id': 'LRW3F7EK4NC700000-remote_start_enabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_remote_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Remote start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_remote_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_binary_sensor[binary_sensor.test_right_hand_drive-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1813,6 +2419,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1859,6 +2466,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1898,6 +2506,53 @@
     'state': 'unknown',
   })
 # ---
+# name: test_binary_sensor[binary_sensor.test_seat_vent_enabled-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_seat_vent_enabled',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Seat vent enabled',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'seat_vent_enabled',
+    'unique_id': 'LRW3F7EK4NC700000-seat_vent_enabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_seat_vent_enabled-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Seat vent enabled',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_seat_vent_enabled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_binary_sensor[binary_sensor.test_service_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1905,6 +2560,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1944,6 +2600,53 @@
     'state': 'unknown',
   })
 # ---
+# name: test_binary_sensor[binary_sensor.test_speed_limited-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_speed_limited',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Speed limited',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'speed_limit_mode',
+    'unique_id': 'LRW3F7EK4NC700000-speed_limit_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_speed_limited-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Speed limited',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_speed_limited',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_binary_sensor[binary_sensor.test_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1951,6 +2654,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1988,7 +2692,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'unknown',
   })
 # ---
 # name: test_binary_sensor[binary_sensor.test_supercharger_session_trip_planner-entry]
@@ -1998,6 +2702,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2044,6 +2749,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2091,6 +2797,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2138,6 +2845,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2185,6 +2893,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2232,6 +2941,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2278,6 +2988,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2318,6 +3029,54 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensor[binary_sensor.test_wi_fi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_wi_fi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Wi-Fi',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi',
+    'unique_id': 'LRW3F7EK4NC700000-wifi',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_wi_fi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Test Wi-Fi',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_wi_fi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_binary_sensor[binary_sensor.test_wiper_heat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2325,6 +3084,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2401,6 +3161,20 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_binary_sensor_refresh[binary_sensor.energy_site_grid_status-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Energy Site Grid status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.energy_site_grid_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensor_refresh[binary_sensor.energy_site_storm_watch_active-statealt]
@@ -2509,6 +3283,20 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensor_refresh[binary_sensor.test_cellular-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Test Cellular',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_cellular',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_binary_sensor_refresh[binary_sensor.test_charge_cable-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -2521,6 +3309,19 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_binary_sensor_refresh[binary_sensor.test_charge_enable_request-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Charge enable request',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_charge_enable_request',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_binary_sensor_refresh[binary_sensor.test_charge_port_cold_weather_mode-statealt]
@@ -2570,6 +3371,19 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_dc_to_dc_converter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_binary_sensor_refresh[binary_sensor.test_defrost_for_preconditioning-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Defrost for preconditioning',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_defrost_for_preconditioning',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2737,6 +3551,46 @@
     'state': 'unknown',
   })
 # ---
+# name: test_binary_sensor_refresh[binary_sensor.test_hazard_lights-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Hazard lights',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_hazard_lights',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_binary_sensor_refresh[binary_sensor.test_high_beams-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test High beams',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_high_beams',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_binary_sensor_refresh[binary_sensor.test_high_voltage_interlock_loop_fault-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Test High voltage interlock loop fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_high_voltage_interlock_loop_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_binary_sensor_refresh[binary_sensor.test_homelink_nearby-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -2744,6 +3598,58 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_homelink_nearby',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_binary_sensor_refresh[binary_sensor.test_hvac_auto_mode-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test HVAC auto mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_hvac_auto_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_binary_sensor_refresh[binary_sensor.test_located_at_favorite-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Located at favorite',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_located_at_favorite',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_binary_sensor_refresh[binary_sensor.test_located_at_home-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Located at home',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_located_at_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_binary_sensor_refresh[binary_sensor.test_located_at_work-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Located at work',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_located_at_work',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2779,7 +3685,7 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_pin_to_drive_enabled-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Pin to drive enabled',
+      'friendly_name': 'Test PIN to Drive enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_pin_to_drive_enabled',
@@ -2884,6 +3790,19 @@
     'state': 'unknown',
   })
 # ---
+# name: test_binary_sensor_refresh[binary_sensor.test_remote_start-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Remote start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_remote_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_binary_sensor_refresh[binary_sensor.test_right_hand_drive-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -2910,6 +3829,19 @@
     'state': 'unknown',
   })
 # ---
+# name: test_binary_sensor_refresh[binary_sensor.test_seat_vent_enabled-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Seat vent enabled',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_seat_vent_enabled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_binary_sensor_refresh[binary_sensor.test_service_mode-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -2917,6 +3849,19 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_service_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_binary_sensor_refresh[binary_sensor.test_speed_limited-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Speed limited',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_speed_limited',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2934,7 +3879,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'unknown',
   })
 # ---
 # name: test_binary_sensor_refresh[binary_sensor.test_supercharger_session_trip_planner-statealt]
@@ -3033,6 +3978,20 @@
     'state': 'on',
   })
 # ---
+# name: test_binary_sensor_refresh[binary_sensor.test_wi_fi-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Test Wi-Fi',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_wi_fi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_binary_sensor_refresh[binary_sensor.test_wiper_heat-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -3045,6 +4004,12 @@
     'last_updated': <ANY>,
     'state': 'unknown',
   })
+# ---
+# name: test_binary_sensors_connectivity[binary_sensor.test_cellular-state]
+  'on'
+# ---
+# name: test_binary_sensors_connectivity[binary_sensor.test_wi_fi-state]
+  'off'
 # ---
 # name: test_binary_sensors_streaming[binary_sensor.test_driver_seat_belt-state]
   'off'
@@ -3059,5 +4024,11 @@
   'off'
 # ---
 # name: test_binary_sensors_streaming[binary_sensor.test_front_passenger_window-state]
+  'off'
+# ---
+# name: test_binary_sensors_streaming[binary_sensor.test_rear_driver_window-state]
+  'off'
+# ---
+# name: test_binary_sensors_streaming[binary_sensor.test_rear_passenger_window-state]
   'on'
 # ---

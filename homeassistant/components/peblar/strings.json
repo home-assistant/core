@@ -107,9 +107,9 @@
       "cp_state": {
         "name": "State",
         "state": {
-          "charging": "Charging",
-          "error": "Error",
-          "fault": "Fault",
+          "charging": "[%key:common::state::charging%]",
+          "error": "[%key:common::state::error%]",
+          "fault": "[%key:common::state::fault%]",
           "invalid": "Invalid",
           "no_ev_connected": "No EV connected",
           "suspended": "Suspended"
@@ -153,6 +153,9 @@
       }
     },
     "switch": {
+      "charge": {
+        "name": "Charge"
+      },
       "force_single_phase": {
         "name": "Force single phase"
       }

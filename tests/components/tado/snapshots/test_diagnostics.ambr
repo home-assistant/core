@@ -1,0 +1,143 @@
+# serializer version: 1
+# name: test_get_config_entry_diagnostics
+  dict({
+    'data': dict({
+      'device': dict({
+        'WR1': dict({
+          'accessPointWiFi': dict({
+            'ssid': 'tado8480',
+          }),
+          'characteristics': dict({
+            'capabilities': list([
+              'INSIDE_TEMPERATURE_MEASUREMENT',
+              'IDENTIFY',
+            ]),
+          }),
+          'commandTableUploadState': 'FINISHED',
+          'connectionState': dict({
+            'timestamp': '2020-03-23T18:30:07.377Z',
+            'value': True,
+          }),
+          'currentFwVersion': '59.4',
+          'deviceType': 'WR02',
+          'serialNo': 'WR1',
+          'shortSerialNo': 'WR1',
+          'temperatureOffset': dict({
+            'celsius': -1.0,
+            'fahrenheit': -1.8,
+          }),
+        }),
+        'WR4': dict({
+          'accessPointWiFi': dict({
+            'ssid': 'tado8480',
+          }),
+          'characteristics': dict({
+            'capabilities': list([
+              'INSIDE_TEMPERATURE_MEASUREMENT',
+              'IDENTIFY',
+            ]),
+          }),
+          'childLockEnabled': False,
+          'commandTableUploadState': 'FINISHED',
+          'connectionState': dict({
+            'timestamp': '2020-03-23T18:30:07.377Z',
+            'value': True,
+          }),
+          'currentFwVersion': '59.4',
+          'deviceType': 'WR02',
+          'duties': list([
+            'ZONE_UI',
+            'ZONE_DRIVER',
+            'ZONE_LEADER',
+          ]),
+          'serialNo': 'WR4',
+          'shortSerialNo': 'WR4',
+          'temperatureOffset': dict({
+            'celsius': -1.0,
+            'fahrenheit': -1.8,
+          }),
+        }),
+      }),
+      'geofence': dict({
+        'presence': 'HOME',
+        'presenceLocked': False,
+      }),
+      'weather': dict({
+        'outsideTemperature': dict({
+          'celsius': 7.46,
+          'fahrenheit': 45.43,
+          'precision': dict({
+            'celsius': 0.01,
+            'fahrenheit': 0.01,
+          }),
+          'timestamp': '2020-12-22T08:13:13.652Z',
+          'type': 'TEMPERATURE',
+        }),
+        'solarIntensity': dict({
+          'percentage': 2.1,
+          'timestamp': '2020-12-22T08:13:13.652Z',
+          'type': 'PERCENTAGE',
+        }),
+        'weatherState': dict({
+          'timestamp': '2020-12-22T08:13:13.652Z',
+          'type': 'WEATHER_STATE',
+          'value': 'FOGGY',
+        }),
+      }),
+      'zone': dict({
+        '1': dict({
+          '__type': "<class 'PyTado.zone.my_zone.TadoZone'>",
+          'repr': "TadoZone(zone_id=1, current_temp=20.65, connection=None, current_temp_timestamp='2020-03-10T07:44:11.947Z', current_humidity=45.2, current_humidity_timestamp='2020-03-10T07:44:11.947Z', is_away=False, current_hvac_action='IDLE', current_fan_speed=None, current_fan_level=None, current_hvac_mode='HEAT', current_swing_mode='OFF', current_vertical_swing_mode='OFF', current_horizontal_swing_mode='OFF', target_temp=20.5, available=True, power='ON', link='ONLINE', ac_power_timestamp=None, heating_power_timestamp='2020-03-10T07:47:45.978Z', ac_power=None, heating_power=None, heating_power_percentage=0.0, tado_mode='HOME', overlay_termination_type='MANUAL', overlay_termination_timestamp=None, default_overlay_termination_type='MANUAL', default_overlay_termination_duration=None, preparation=False, open_window=False, open_window_detected=False, open_window_attr={}, precision=0.1)",
+        }),
+        '2': dict({
+          '__type': "<class 'PyTado.zone.my_zone.TadoZone'>",
+          'repr': "TadoZone(zone_id=2, current_temp=None, connection=None, current_temp_timestamp=None, current_humidity=None, current_humidity_timestamp=None, is_away=False, current_hvac_action='IDLE', current_fan_speed=None, current_fan_level=None, current_hvac_mode='SMART_SCHEDULE', current_swing_mode='OFF', current_vertical_swing_mode='OFF', current_horizontal_swing_mode='OFF', target_temp=65.0, available=True, power='ON', link='ONLINE', ac_power_timestamp=None, heating_power_timestamp=None, ac_power=None, heating_power=None, heating_power_percentage=None, tado_mode='HOME', overlay_termination_type=None, overlay_termination_timestamp=None, default_overlay_termination_type='MANUAL', default_overlay_termination_duration=None, preparation=False, open_window=False, open_window_detected=False, open_window_attr={}, precision=0.1)",
+        }),
+        '3': dict({
+          '__type': "<class 'PyTado.zone.my_zone.TadoZone'>",
+          'repr': "TadoZone(zone_id=3, current_temp=24.76, connection=None, current_temp_timestamp='2020-03-05T03:57:38.850Z', current_humidity=60.9, current_humidity_timestamp='2020-03-05T03:57:38.850Z', is_away=False, current_hvac_action='COOLING', current_fan_speed='AUTO', current_fan_level=None, current_hvac_mode='COOL', current_swing_mode='OFF', current_vertical_swing_mode='OFF', current_horizontal_swing_mode='OFF', target_temp=17.78, available=True, power='ON', link='ONLINE', ac_power_timestamp='2020-03-05T04:01:07.162Z', heating_power_timestamp=None, ac_power='ON', heating_power=None, heating_power_percentage=None, tado_mode='HOME', overlay_termination_type='TADO_MODE', overlay_termination_timestamp=None, default_overlay_termination_type='MANUAL', default_overlay_termination_duration=None, preparation=False, open_window=False, open_window_detected=False, open_window_attr={}, precision=0.1)",
+        }),
+        '4': dict({
+          '__type': "<class 'PyTado.zone.my_zone.TadoZone'>",
+          'repr': "TadoZone(zone_id=4, current_temp=None, connection=None, current_temp_timestamp=None, current_humidity=None, current_humidity_timestamp=None, is_away=False, current_hvac_action='IDLE', current_fan_speed=None, current_fan_level=None, current_hvac_mode='HEATING', current_swing_mode='OFF', current_vertical_swing_mode='OFF', current_horizontal_swing_mode='OFF', target_temp=30.0, available=True, power='ON', link='ONLINE', ac_power_timestamp=None, heating_power_timestamp=None, ac_power=None, heating_power=None, heating_power_percentage=None, tado_mode='HOME', overlay_termination_type='TADO_MODE', overlay_termination_timestamp=None, default_overlay_termination_type='MANUAL', default_overlay_termination_duration=None, preparation=False, open_window=False, open_window_detected=False, open_window_attr={}, precision=0.1)",
+        }),
+        '5': dict({
+          '__type': "<class 'PyTado.zone.my_zone.TadoZone'>",
+          'repr': "TadoZone(zone_id=5, current_temp=20.88, connection=None, current_temp_timestamp='2020-03-28T02:09:27.830Z', current_humidity=42.3, current_humidity_timestamp='2020-03-28T02:09:27.830Z', is_away=False, current_hvac_action='HEATING', current_fan_speed='AUTO', current_fan_level=None, current_hvac_mode='SMART_SCHEDULE', current_swing_mode='ON', current_vertical_swing_mode='OFF', current_horizontal_swing_mode='OFF', target_temp=20.0, available=True, power='ON', link='ONLINE', ac_power_timestamp='2020-03-27T23:02:22.260Z', heating_power_timestamp=None, ac_power='ON', heating_power=None, heating_power_percentage=None, tado_mode='HOME', overlay_termination_type=None, overlay_termination_timestamp=None, default_overlay_termination_type='MANUAL', default_overlay_termination_duration=None, preparation=False, open_window=False, open_window_detected=False, open_window_attr={}, precision=0.1)",
+        }),
+        '6': dict({
+          '__type': "<class 'PyTado.zone.my_zone.TadoZone'>",
+          'repr': "TadoZone(zone_id=6, current_temp=24.3, connection=None, current_temp_timestamp='2024-06-28T22: 23: 15.679Z', current_humidity=70.9, current_humidity_timestamp='2024-06-28T22: 23: 15.679Z', is_away=False, current_hvac_action='HEATING', current_fan_speed='AUTO', current_fan_level='LEVEL3', current_hvac_mode='HEAT', current_swing_mode='OFF', current_vertical_swing_mode='ON', current_horizontal_swing_mode='ON', target_temp=25.0, available=True, power='ON', link='ONLINE', ac_power_timestamp='2022-07-13T18: 06: 58.183Z', heating_power_timestamp=None, ac_power='ON', heating_power=None, heating_power_percentage=None, tado_mode='HOME', overlay_termination_type='MANUAL', overlay_termination_timestamp=None, default_overlay_termination_type='MANUAL', default_overlay_termination_duration=None, preparation=False, open_window=False, open_window_detected=False, open_window_attr={}, precision=0.1)",
+        }),
+      }),
+    }),
+    'mobile_devices': dict({
+      'mobile_device': dict({
+        '123456': dict({
+          'deviceMetadata': dict({
+            'locale': 'nl',
+            'model': 'Samsung',
+            'osVersion': '14',
+            'platform': 'Android',
+          }),
+          'id': 123456,
+          'name': 'Home',
+          'settings': dict({
+            'geoTrackingEnabled': False,
+            'onDemandLogRetrievalEnabled': False,
+            'pushNotifications': dict({
+              'awayModeReminder': True,
+              'energyIqReminder': False,
+              'energySavingsReportReminder': True,
+              'homeModeReminder': True,
+              'incidentDetection': True,
+              'lowBatteryReminder': True,
+              'openWindowReminder': True,
+            }),
+            'specialOffersEnabled': False,
+          }),
+        }),
+      }),
+    }),
+  })
+# ---

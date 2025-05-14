@@ -18,6 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 class OmniLogicUpdateCoordinator(DataUpdateCoordinator[dict[tuple, dict[str, Any]]]):
     """Class to manage fetching update data from single endpoint."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -28,11 +30,11 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator[dict[tuple, dict[str, Any
     ) -> None:
         """Initialize the global Omnilogic data updater."""
         self.api = api
-        self.config_entry = config_entry
 
         super().__init__(
             hass=hass,
             logger=_LOGGER,
+            config_entry=config_entry,
             name=name,
             update_interval=timedelta(seconds=polling_interval),
         )

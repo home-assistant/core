@@ -1,0 +1,34 @@
+post:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: mastodon
+    status:
+      required: true
+      selector:
+        text:
+    visibility:
+      selector:
+        select:
+          options:
+            - public
+            - unlisted
+            - private
+            - direct
+          translation_key: post_visibility
+    content_warning:
+      selector:
+        text:
+    media:
+      selector:
+        text:
+    media_description:
+      required: false
+      selector:
+        text:
+    media_warning:
+      required: true
+      selector:
+        boolean:

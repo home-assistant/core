@@ -28,7 +28,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
 from .entity import ZHAEntity
@@ -59,7 +59,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation light from config entry."""
     zha_data = get_zha_data(hass)

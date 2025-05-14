@@ -14,8 +14,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 

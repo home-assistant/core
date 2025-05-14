@@ -14,7 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_HOSTNAME,
@@ -45,7 +45,9 @@ def sort_ips(ips: list, querytype: str) -> list:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the dnsip sensor entry."""
 
@@ -104,7 +106,7 @@ class WanIpSensor(SensorEntity):
     async def async_update(self) -> None:
         """Get the current DNS IP address for hostname."""
         try:
-            response = await self.resolver.query(self.hostname, self.querytype)
+            response = await self.resolver.query(self.hostname, self.querytype)  # type: ignore[call-overload]
         except DNSError as err:
             _LOGGER.warning("Exception while resolving host: %s", err)
             response = None

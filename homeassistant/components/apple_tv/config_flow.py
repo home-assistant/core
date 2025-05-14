@@ -20,6 +20,7 @@ import voluptuous as vol
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
+    SOURCE_REAUTH,
     SOURCE_ZEROCONF,
     ConfigEntry,
     ConfigFlow,
@@ -134,7 +135,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
         unique_id for said entry. When a new (zeroconf) service or device is
         discovered, the identifier is first used to look up if it belongs to an
         existing config entry. If that's the case, the unique_id from that entry is
-        re-used, otherwise the newly discovered identifier is used instead.
+        reused, otherwise the newly discovered identifier is used instead.
         """
         assert self.atv
         all_identifiers = set(self.atv.all_identifiers)
@@ -381,7 +382,9 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_IDENTIFIERS: list(combined_identifiers),
                     },
                 )
-                if entry.source != SOURCE_IGNORE:
+                # Don't reload ignored entries or in the middle of reauth,
+                # e.g. if the user is entering a new PIN
+                if entry.source != SOURCE_IGNORE and self.source != SOURCE_REAUTH:
                     self.hass.config_entries.async_schedule_reload(entry.entry_id)
             if not allow_exist:
                 raise DeviceAlreadyConfigured

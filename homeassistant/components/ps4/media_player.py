@@ -27,14 +27,14 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import JsonObjectType
 
 from . import format_unique_id, load_games, save_games
 from .const import (
     ATTR_MEDIA_IMAGE_URL,
     DEFAULT_ALIAS,
-    DOMAIN as PS4_DOMAIN,
+    DOMAIN,
     PS4_DATA,
     REGIONS as deprecated_regions,
 )
@@ -48,7 +48,7 @@ DEFAULT_RETRIES = 2
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up PS4 from a config entry."""
     config = config_entry
@@ -366,7 +366,7 @@ class PS4Device(MediaPlayerEntity):
             _sw_version = _sw_version[1:4]
             sw_version = f"{_sw_version[0]}.{_sw_version[1:]}"
             self._attr_device_info = DeviceInfo(
-                identifiers={(PS4_DOMAIN, status["host-id"])},
+                identifiers={(DOMAIN, status["host-id"])},
                 manufacturer="Sony Interactive Entertainment Inc.",
                 model="PlayStation 4",
                 name=status["host-name"],

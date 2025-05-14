@@ -14,7 +14,7 @@ from homeassistant.const import (
     COMPRESSED_STATE_STATE,
 )
 from homeassistant.core import Context, State
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .state_attributes import decode_attributes_from_source
 from .time import process_timestamp

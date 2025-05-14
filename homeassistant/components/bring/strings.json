@@ -5,9 +5,15 @@
   "config": {
     "step": {
       "user": {
+        "title": "Bring! Grocery shopping list",
+        "description": "Connect your Bring! account to sync your shopping lists with Home Assistant.\n\nDon't have a Bring! account? Download the app on [Google Play for Android]({google_play}) or the [App Store for iOS]({app_store}) to sign up.",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "The email address associated with your Bring! account.",
+          "password": "The password to log in to your Bring! account."
         }
       },
       "reauth_confirm": {
@@ -16,21 +22,53 @@
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "[%key:component::bring::config::step::user::data_description::email%]",
+          "password": "[%key:component::bring::config::step::user::data_description::password%]"
+        }
+      },
+      "reconfigure": {
+        "title": "Bring! configuration",
+        "description": "Update your credentials if you have changed your Bring! account email or password.",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "[%key:component::bring::config::step::user::data_description::email%]",
+          "password": "[%key:component::bring::config::step::user::data_description::password%]"
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "unique_id_mismatch": "The login details correspond to a different account. Please re-authenticate to the previously configured account."
+      "unique_id_mismatch": "The login details correspond to a different account. Please re-authenticate to the previously configured account.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "entity": {
+    "event": {
+      "activities": {
+        "name": "Activities",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "list_items_added": "Items added",
+              "list_items_changed": "Items changed",
+              "list_items_removed": "Items removed"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "urgent": {
         "name": "Urgent",

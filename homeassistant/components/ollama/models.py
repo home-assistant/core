@@ -19,9 +19,6 @@ class MessageRole(StrEnum):
 class MessageHistory:
     """Chat message history."""
 
-    timestamp: float
-    """Timestamp of last use in seconds."""
-
     messages: list[ollama.Message]
     """List of message history, including system prompt and assistant responses."""
 

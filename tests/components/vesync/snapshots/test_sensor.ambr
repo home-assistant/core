@@ -4,6 +4,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -43,6 +44,7 @@
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -74,6 +76,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -111,7 +114,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'excellent',
   })
 # ---
 # name: test_sensor_state[Air Purifier 131s][sensor.air_purifier_131s_filter_lifetime]
@@ -126,7 +129,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '25',
   })
 # ---
 # name: test_sensor_state[Air Purifier 200s][devices]
@@ -134,6 +137,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -173,6 +177,7 @@
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -220,6 +225,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -259,6 +265,7 @@
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -290,6 +297,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -323,6 +331,7 @@
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -399,6 +408,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -438,6 +448,7 @@
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -469,6 +480,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -502,6 +514,7 @@
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -578,6 +591,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -616,6 +630,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -654,6 +669,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -664,7 +680,7 @@
       'identifiers': set({
         tuple(
           'vesync',
-          '200s-humidifier',
+          '200s-humidifier4321',
         ),
       }),
       'is_new': False,
@@ -693,6 +709,7 @@
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -715,7 +732,7 @@
       'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
-      'unique_id': '200s-humidifier-humidity',
+      'unique_id': '200s-humidifier4321-humidity',
       'unit_of_measurement': '%',
     }),
   ])
@@ -741,6 +758,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -780,6 +798,7 @@
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -828,6 +847,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -867,6 +887,7 @@
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -900,6 +921,7 @@
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -933,6 +955,7 @@
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -966,6 +989,7 @@
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -999,6 +1023,7 @@
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -1032,6 +1057,7 @@
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -1155,11 +1181,51 @@
     'state': '0',
   })
 # ---
+# name: test_sensor_state[SmartTowerFan][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'smarttowerfan',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LTF-F422S-KEU',
+      'model_id': None,
+      'name': 'SmartTowerFan',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_sensor_state[SmartTowerFan][entities]
+  list([
+  ])
+# ---
 # name: test_sensor_state[Temperature Light][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1198,6 +1264,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),

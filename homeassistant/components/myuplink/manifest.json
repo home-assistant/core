@@ -7,5 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/myuplink",
   "iot_class": "cloud_polling",
   "quality_scale": "silver",
-  "requirements": ["myuplink==0.6.0"]
+  "requirements": ["myuplink==0.7.0"]
 }

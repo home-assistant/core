@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
@@ -69,7 +69,7 @@ def _get_obj_holidays_and_language(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Holiday Calendar config entry."""
     country: str = config_entry.data[CONF_COUNTRY]

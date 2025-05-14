@@ -12,6 +12,7 @@ from uiprotect.websocket import WebsocketState
 from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import (
+    CameraCapabilities,
     CameraEntityFeature,
     CameraState,
     CameraWebRTCProvider,
@@ -21,6 +22,7 @@ from homeassistant.components.camera import (
     async_get_stream_source,
     async_register_webrtc_provider,
 )
+from homeassistant.components.camera.helper import get_camera_from_entity_id
 from homeassistant.components.unifiprotect.const import (
     ATTR_BITRATE,
     ATTR_CHANNEL_ID,
@@ -174,7 +176,7 @@ def validate_common_camera_state(
     entity_id: str,
     features: int = CameraEntityFeature.STREAM,
 ):
-    """Validate state that is common to all camera entity, regradless of type."""
+    """Validate state that is common to all camera entity, regardless of type."""
     entity_state = hass.states.get(entity_id)
     assert entity_state
     assert entity_state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
@@ -345,9 +347,11 @@ async def test_webrtc_support(
     camera_high_only.channels[2].is_rtsp_enabled = False
     await init_entry(hass, ufp, [camera_high_only])
     entity_id = validate_default_camera_entity(hass, camera_high_only, 0)
-    state = hass.states.get(entity_id)
-    assert state
-    assert StreamType.WEB_RTC in state.attributes["frontend_stream_type"]
+    assert hass.states.get(entity_id)
+    camera_obj = get_camera_from_entity_id(hass, entity_id)
+    assert camera_obj.camera_capabilities == CameraCapabilities(
+        {StreamType.HLS, StreamType.WEB_RTC}
+    )
 
 
 async def test_adopt(

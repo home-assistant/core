@@ -32,7 +32,7 @@ async def test_user_flow_cannot_create_multiple_instances(hass: HomeAssistant) -
 
 
 async def test_user_flow_with_detected_dongle(hass: HomeAssistant) -> None:
-    """Test the user flow with a detected ENOcean dongle."""
+    """Test the user flow with a detected EnOcean dongle."""
     FAKE_DONGLE_PATH = "/fake/dongle"
 
     with patch(DONGLE_DETECT_METHOD, Mock(return_value=[FAKE_DONGLE_PATH])):
@@ -42,13 +42,13 @@ async def test_user_flow_with_detected_dongle(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "detect"
-    devices = result["data_schema"].schema.get("device").container
+    devices = result["data_schema"].schema.get(CONF_DEVICE).config.get("options")
     assert FAKE_DONGLE_PATH in devices
     assert EnOceanFlowHandler.MANUAL_PATH_VALUE in devices
 
 
 async def test_user_flow_with_no_detected_dongle(hass: HomeAssistant) -> None:
-    """Test the user flow with a detected ENOcean dongle."""
+    """Test the user flow with a detected EnOcean dongle."""
     with patch(DONGLE_DETECT_METHOD, Mock(return_value=[])):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
