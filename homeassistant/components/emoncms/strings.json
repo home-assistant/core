@@ -8,7 +8,7 @@
         "data": {
           "url": "[%key:common::config_flow::data::url%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "sync_mode": "Synchronization mode :"
+          "sync_mode": "Synchronization mode"
         },
         "data_description": {
           "url": "Server URL starting with the protocol (http or https)",
@@ -28,8 +28,8 @@
   "selector": {
     "sync_mode": {
       "options": {
-        "auto": "synchronize all available feeds automatically",
-        "manual": "choose manually the feeds to synchronize"
+        "auto": "Synchronize all available Feeds",
+        "manual": "Select which Feeds to synchronize"
       }
     }
   },

@@ -16,7 +16,12 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import selector
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+    selector,
+)
 
 from .const import (
     CONF_MESSAGE,
@@ -117,11 +122,6 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
                         },
                     )
                 return await self.async_step_choose_feeds()
-        sync_mode_dropdown = {
-            "options": [SYNC_MODE_MANUAL, SYNC_MODE_AUTO],
-            "mode": "dropdown",
-            "translation_key": SYNC_MODE,
-        }
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
@@ -129,8 +129,14 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
                     {
                         vol.Required(CONF_URL): str,
                         vol.Required(CONF_API_KEY): str,
-                        vol.Required(SYNC_MODE, default=SYNC_MODE_MANUAL): selector(
-                            {"select": sync_mode_dropdown}
+                        vol.Required(
+                            SYNC_MODE, default=SYNC_MODE_MANUAL
+                        ): SelectSelector(
+                            SelectSelectorConfig(
+                                options=[SYNC_MODE_MANUAL, SYNC_MODE_AUTO],
+                                mode=SelectSelectorMode.DROPDOWN,
+                                translation_key=SYNC_MODE,
+                            )
                         ),
                     }
                 ),
