@@ -48,7 +48,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self.address: str | None
+        self.address: str
         self.pin: str | None
 
     async def async_step_bluetooth(
@@ -83,54 +83,6 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Confirm discovery."""
-        assert self.address
-
-        device = bluetooth.async_ble_device_from_address(
-            self.hass, self.address, connectable=True
-        )
-        channel_id = random.randint(1, 0xFFFFFFFF)
-
-        try:
-            (manufacturer, device_type, model) = await Mower(
-                channel_id, self.address
-            ).probe_gatts(device)
-        except (BleakError, TimeoutError) as exception:
-            LOGGER.exception("Failed to connect to device: %s", exception)
-            return self.async_abort(reason="cannot_connect")
-
-        title = manufacturer + " " + device_type
-
-        LOGGER.debug("Found device: %s", title)
-
-        mower = Mower(channel_id, self.address, self.pin)
-
-        try:
-            errors: dict[str, str] = {}
-
-            if not await mower.connect(device):
-                errors["base"] = "invalid_auth"
-
-                return self.async_show_form(
-                    step_id="reauth_confirm",
-                    data_schema=vol.Schema({vol.Required(CONF_PIN): str}),
-                    errors=errors,
-                )
-        except (TimeoutError, BleakError):
-            return self.async_abort(reason="cannot_connect")
-
-        return self.async_create_entry(
-            title=title,
-            data={
-                CONF_ADDRESS: self.address,
-                CONF_CLIENT_ID: channel_id,
-                CONF_PIN: self.pin,
-            },
-        )
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -153,6 +105,69 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
+    async def probe_mower(self, device) -> str | None:
+        """Probe the mower to see if it exists."""
+        channel_id = random.randint(1, 0xFFFFFFFF)
+
+        try:
+            (manufacturer, device_type, model) = await Mower(
+                channel_id, self.address
+            ).probe_gatts(device)
+        except (BleakError, TimeoutError) as exception:
+            LOGGER.exception("Failed to connect to device: %s", exception)
+            return None
+
+        title = manufacturer + " " + device_type
+
+        LOGGER.debug("Found device: %s", title)
+
+        return title
+
+    async def connect_mower(self, device) -> tuple[int, Mower]:
+        """Connect to the Mower."""
+        assert self.address
+
+        channel_id = random.randint(1, 0xFFFFFFFF)
+        mower = Mower(channel_id, self.address, self.pin)
+
+        return (channel_id, mower)
+
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm discovery."""
+        device = bluetooth.async_ble_device_from_address(
+            self.hass, self.address, connectable=True
+        )
+
+        title = await self.probe_mower(device)
+        if title is None:
+            return self.async_abort(reason="cannot_connect")
+
+        try:
+            errors: dict[str, str] = {}
+
+            (channel_id, mower) = await self.connect_mower(device)
+            if not await mower.connect(device):
+                errors["base"] = "invalid_auth"
+
+                return self.async_show_form(
+                    step_id="reauth_confirm",
+                    data_schema=vol.Schema({vol.Required(CONF_PIN): str}),
+                    errors=errors,
+                )
+        except (TimeoutError, BleakError):
+            return self.async_abort(reason="cannot_connect")
+
+        return self.async_create_entry(
+            title=title,
+            data={
+                CONF_ADDRESS: self.address,
+                CONF_CLIENT_ID: channel_id,
+                CONF_PIN: self.pin,
+            },
+        )
+
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
@@ -166,16 +181,15 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input:
-            channel_id = random.randint(1, 0xFFFFFFFF)
             self.address = user_input[CONF_ADDRESS]
             self.pin = user_input[CONF_PIN]
-
-            mower = Mower(channel_id, self.address, self.pin)
 
             try:
                 device = bluetooth.async_ble_device_from_address(
                     self.hass, self.address, connectable=True
                 ) or await get_device(self.address)
+
+                (channel_id, mower) = await self.connect_mower(device)
 
                 if not await mower.connect(device):
                     errors["base"] = "invalid_auth"
