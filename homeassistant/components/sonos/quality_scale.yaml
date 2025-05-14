@@ -19,7 +19,10 @@ rules:
   has-entity-name: done
   runtime-data: todo
   test-before-configure: done
-  test-before-setup: todo
+  test-before-setup:
+    status: exempt
+    comment: |
+      Offline devices are automatically reconnected
   unique-config-entry:
     status: exempt
     comment: |
