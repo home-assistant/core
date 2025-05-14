@@ -7,14 +7,26 @@
         },
         "title": "Select InfluxDB Version"
       },
+      "configure_v2": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "organization": "Organization",
+          "bucket": "Bucket",
+          "token": "[%key:common::config_flow::data::api_token%]",
+          "ssl_ca_cert": "SSL CA certificate (Optional)"
+        },
+        "title": "InfluxDB Configuration"
+      },
       "import": {
         "data": {},
         "title": "Import configuration"
       }
     },
     "error": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "ssl_error": "SSL certificate error",
+      "invalid_auth": "Invalid organization, bucket or token",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {

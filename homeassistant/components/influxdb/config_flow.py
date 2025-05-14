@@ -43,24 +43,62 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+INFLUXDB_V2_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_URL, default="https://"): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.URL,
+                autocomplete="url",
+            ),
+        ),
+        vol.Required(CONF_VERIFY_SSL, default=False): bool,
+        vol.Required(CONF_ORG): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                autocomplete="username",
+            ),
+        ),
+        vol.Required(CONF_BUCKET): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                autocomplete="current-password",
+            ),
+        ),
+        vol.Required(CONF_TOKEN): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                autocomplete="database",
+            ),
+        ),
+        vol.Optional(CONF_SSL_CA_CERT): FileSelector(
+            FileSelectorConfig(accept=".pem,.crt,.cer,.der")
+        ),
+    }
+)
+
 
 async def _validate_influxdb_connection(
     hass: HomeAssistant, data: dict[str, str]
 ) -> dict[str, str]:
     """Validate connection to influxdb."""
+    errors = {}
 
     try:
         influx = await hass.async_add_executor_job(get_influx_connection, data, True)
+        influx.close()
     except ConnectionError as ex:
         _LOGGER.error(ex)
-        return {"base": "cannot_connect"}
+        if "SSLError" in ex.args[0]:
+            errors = {"base": "ssl_error"}
+        elif "token" in ex.args[0]:
+            errors = {"base": "invalid_auth"}
+        else:
+            errors = {"base": "cannot_connect"}
     except Exception:
         _LOGGER.exception("Unknown error")
-        return {"base": "unknown"}
+        errors = {"base": "unknown"}
 
-    influx.close()
-
-    return {}
+    return errors
 
 
 async def _save_uploaded_cert_file(hass: HomeAssistant, uploaded_file_id: str) -> Path:
@@ -70,7 +108,8 @@ async def _save_uploaded_cert_file(hass: HomeAssistant, uploaded_file_id: str) -
         with process_uploaded_file(hass, uploaded_file_id) as file_path:
             dest_path = Path(hass.config.path(STORAGE_DIR, DOMAIN))
             dest_path.mkdir(exist_ok=True)
-            dest_file = dest_path / "influxdb.crt"
+            file_name = f"influxdb{file_path.suffix}"
+            dest_file = dest_path / file_name
             shutil.move(file_path, dest_file)
         return dest_file
 
@@ -172,38 +211,7 @@ class InfluxDBConfigFlow(ConfigFlow, domain=DOMAIN):
                 title = f"{user_input[CONF_BUCKET]} ({user_input[CONF_URL]})"
                 return self.async_create_entry(title=title, data=data)
 
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_URL, default="https://"): TextSelector(
-                    TextSelectorConfig(
-                        type=TextSelectorType.URL,
-                        autocomplete="url",
-                    ),
-                ),
-                vol.Required(CONF_VERIFY_SSL, default=False): bool,
-                vol.Required(CONF_ORG): TextSelector(
-                    TextSelectorConfig(
-                        type=TextSelectorType.TEXT,
-                        autocomplete="username",
-                    ),
-                ),
-                vol.Required(CONF_BUCKET): TextSelector(
-                    TextSelectorConfig(
-                        type=TextSelectorType.TEXT,
-                        autocomplete="current-password",
-                    ),
-                ),
-                vol.Required(CONF_TOKEN): TextSelector(
-                    TextSelectorConfig(
-                        type=TextSelectorType.TEXT,
-                        autocomplete="database",
-                    ),
-                ),
-                vol.Optional(CONF_SSL_CA_CERT): FileSelector(
-                    FileSelectorConfig(accept=".pem,.crt,.cer,.der")
-                ),
-            }
-        )
+        schema = INFLUXDB_V2_SCHEMA
 
         return self.async_show_form(
             step_id="configure_v2", data_schema=schema, errors=errors
