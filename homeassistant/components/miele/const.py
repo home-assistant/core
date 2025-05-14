@@ -190,7 +190,7 @@ class ProgramPhaseWashingMachine(MieleEnum):
     hygiene = 279
     drying = 280
     disinfecting = 285
-    unknown_code = -9999
+    missing2none = -9999
 
 
 class ProgramPhaseTumbleDryer(MieleEnum):
@@ -220,7 +220,7 @@ class ProgramPhaseTumbleDryer(MieleEnum):
     smoothing = 534
     slightly_dry = 538
     safety_cooling = 539
-    unknown_code = -9999
+    missing2none = -9999
 
 
 class ProgramPhaseWasherDryer(MieleEnum):
@@ -237,10 +237,7 @@ class ProgramPhaseWasherDryer(MieleEnum):
     drain = 265
     spin = 266
     anti_crease = 267, 521
-    finished = (
-        268,
-        522,
-    )
+    finished = 268, 522
     venting = 269
     starch_stop = 270
     freshen_up_and_moisten = 271
@@ -267,7 +264,7 @@ class ProgramPhaseWasherDryer(MieleEnum):
     smoothing = 534
     slightly_dry = 538
     safety_cooling = 539
-    unknown_code = -9999
+    missing2none = -9999
 
 
 class ProgramPhaseDishwasher(MieleEnum):
@@ -282,7 +279,7 @@ class ProgramPhaseDishwasher(MieleEnum):
     final_rinse = 1798
     drying = 1799
     finished = 1800
-    unknown_code = -9999
+    missing2none = -9999
 
 
 class ProgramPhaseOven(MieleEnum):
@@ -293,7 +290,7 @@ class ProgramPhaseOven(MieleEnum):
     process_running = 3074
     process_finished = 3078
     energy_save = 3084
-    unknown_code = -9999
+    missing2none = -9999
 
 
 class ProgramPhaseWarmingDrawer(MieleEnum):
@@ -304,6 +301,7 @@ class ProgramPhaseWarmingDrawer(MieleEnum):
     door_open = 3075
     keeping_warm = 3094
     cooling_down = 3088
+    missing2none = -9999
 
 
 class ProgramPhaseMicrowave(MieleEnum):
@@ -314,7 +312,7 @@ class ProgramPhaseMicrowave(MieleEnum):
     process_running = 3330
     process_finished = 3334
     energy_save = 3340
-    unknown_code = -9999
+    missing2none = -9999
 
 
 class ProgramPhaseCoffeeSystem(MieleEnum):
@@ -332,6 +330,7 @@ class ProgramPhaseCoffeeSystem(MieleEnum):
     second_pre_brewing = 4393
     second_grinding = 4401
     rinse = 4405
+    missing2none = -9999
 
 
 class ProgramPhaseRobotVacuumCleaner(MieleEnum):
@@ -352,6 +351,7 @@ class ProgramPhaseRobotVacuumCleaner(MieleEnum):
     blocked_front_wheel = 5900  # F8
     docked = 5903, 5904
     remote_controlled = 5910
+    missing2none = -9999
 
 
 class ProgramPhaseMicrowaveOvenCombo(MieleEnum):
@@ -363,6 +363,7 @@ class ProgramPhaseMicrowaveOvenCombo(MieleEnum):
     waiting_for_start = 7939
     heating_up_phase = 7940
     process_finished = 7942
+    missing2none = -9999
 
 
 PROGRAM_PHASE: dict[int, type[MieleEnum]] = {
