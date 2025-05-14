@@ -81,13 +81,6 @@
           "manual": "Manual Setup (Select sensors)"
         }
       },
-      "metering_points": {
-        "title": "Configure Metering Points",
-        "description": "Configure the metering points to monitor",
-        "data": {
-          "metering_point": "Metering Point ID"
-        }
-      },
       "metering_points_summary": {
         "title": "Metering Points Summary",
         "description": "Review and confirm your metering points configuration\n\n{summary}",
