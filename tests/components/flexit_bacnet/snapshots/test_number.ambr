@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name Away extract fan setpoint',
     'capabilities': dict({
       'max': 70,
       'min': 30,
@@ -32,6 +33,7 @@
     'original_name': 'Away extract fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'away_extract_fan_setpoint',
     'unique_id': '0000-0001-away_extract_fan_setpoint',
@@ -62,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name Away supply fan setpoint',
     'capabilities': dict({
       'max': 74,
       'min': 30,
@@ -90,6 +93,7 @@
     'original_name': 'Away supply fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'away_supply_fan_setpoint',
     'unique_id': '0000-0001-away_supply_fan_setpoint',
@@ -120,6 +124,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name Cooker hood extract fan setpoint',
     'capabilities': dict({
       'max': 100,
       'min': 30,
@@ -148,6 +153,7 @@
     'original_name': 'Cooker hood extract fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cooker_hood_extract_fan_setpoint',
     'unique_id': '0000-0001-cooker_hood_extract_fan_setpoint',
@@ -178,6 +184,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name Cooker hood supply fan setpoint',
     'capabilities': dict({
       'max': 100,
       'min': 30,
@@ -206,6 +213,7 @@
     'original_name': 'Cooker hood supply fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cooker_hood_supply_fan_setpoint',
     'unique_id': '0000-0001-cooker_hood_supply_fan_setpoint',
@@ -236,6 +244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name Fireplace extract fan setpoint',
     'capabilities': dict({
       'max': 100,
       'min': 30,
@@ -264,6 +273,7 @@
     'original_name': 'Fireplace extract fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fireplace_extract_fan_setpoint',
     'unique_id': '0000-0001-fireplace_extract_fan_setpoint',
@@ -294,6 +304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name Fireplace mode runtime',
     'capabilities': dict({
       'max': 360,
       'min': 1,
@@ -322,6 +333,7 @@
     'original_name': 'Fireplace mode runtime',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fireplace_mode_runtime',
     'unique_id': '0000-0001-fireplace_mode_runtime',
@@ -352,6 +364,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name Fireplace supply fan setpoint',
     'capabilities': dict({
       'max': 100,
       'min': 30,
@@ -380,6 +393,7 @@
     'original_name': 'Fireplace supply fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fireplace_supply_fan_setpoint',
     'unique_id': '0000-0001-fireplace_supply_fan_setpoint',
@@ -410,6 +424,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name High extract fan setpoint',
     'capabilities': dict({
       'max': 100,
       'min': 70,
@@ -438,6 +453,7 @@
     'original_name': 'High extract fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'high_extract_fan_setpoint',
     'unique_id': '0000-0001-high_extract_fan_setpoint',
@@ -468,6 +484,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name High supply fan setpoint',
     'capabilities': dict({
       'max': 100,
       'min': 74,
@@ -496,6 +513,7 @@
     'original_name': 'High supply fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'high_supply_fan_setpoint',
     'unique_id': '0000-0001-high_supply_fan_setpoint',
@@ -526,6 +544,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name Home extract fan setpoint',
     'capabilities': dict({
       'max': 100,
       'min': 40,
@@ -554,6 +573,7 @@
     'original_name': 'Home extract fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'home_extract_fan_setpoint',
     'unique_id': '0000-0001-home_extract_fan_setpoint',
@@ -584,6 +604,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Name Home supply fan setpoint',
     'capabilities': dict({
       'max': 100,
       'min': 42,
@@ -612,6 +633,7 @@
     'original_name': 'Home supply fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'home_supply_fan_setpoint',
     'unique_id': '0000-0001-home_supply_fan_setpoint',

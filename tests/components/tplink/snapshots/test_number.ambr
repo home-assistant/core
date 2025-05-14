@@ -41,6 +41,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Clean count',
     'capabilities': dict({
       'max': 65536,
       'min': 0,
@@ -69,6 +70,7 @@
     'original_name': 'Clean count',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'clean_count',
     'unique_id': '123456789ABCDEFGH_clean_count',
@@ -97,6 +99,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Pan degrees',
     'capabilities': dict({
       'max': 65536,
       'min': 0,
@@ -125,6 +128,7 @@
     'original_name': 'Pan degrees',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pan_step',
     'unique_id': '123456789ABCDEFGH_pan_step',
@@ -153,6 +157,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Power protection',
     'capabilities': dict({
       'max': 65536,
       'min': 0,
@@ -181,6 +186,7 @@
     'original_name': 'Power protection',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_protection_threshold',
     'unique_id': '123456789ABCDEFGH_power_protection_threshold',
@@ -209,6 +215,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Smooth off',
     'capabilities': dict({
       'max': 60,
       'min': 0,
@@ -237,6 +244,7 @@
     'original_name': 'Smooth off',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'smooth_transition_off',
     'unique_id': '123456789ABCDEFGH_smooth_transition_off',
@@ -265,6 +273,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Smooth on',
     'capabilities': dict({
       'max': 60,
       'min': 0,
@@ -293,6 +302,7 @@
     'original_name': 'Smooth on',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'smooth_transition_on',
     'unique_id': '123456789ABCDEFGH_smooth_transition_on',
@@ -321,6 +331,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Temperature offset',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -349,6 +360,7 @@
     'original_name': 'Temperature offset',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_offset',
     'unique_id': '123456789ABCDEFGH_temperature_offset',
@@ -377,6 +389,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Tilt degrees',
     'capabilities': dict({
       'max': 65536,
       'min': 0,
@@ -405,6 +418,7 @@
     'original_name': 'Tilt degrees',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tilt_step',
     'unique_id': '123456789ABCDEFGH_tilt_step',
@@ -433,6 +447,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Turn off in',
     'capabilities': dict({
       'max': 60,
       'min': 0,
@@ -461,6 +476,7 @@
     'original_name': 'Turn off in',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_off_minutes',
     'unique_id': '123456789ABCDEFGH_auto_off_minutes',

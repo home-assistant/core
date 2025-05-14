@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Max output',
     'capabilities': dict({
       'max': 1000,
       'min': 0,
@@ -32,6 +33,7 @@
     'original_name': 'Max output',
     'platform': 'apsystems',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'max_output',
     'unique_id': 'MY_SERIAL_NUMBER_output_limit',

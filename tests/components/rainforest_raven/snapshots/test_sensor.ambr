@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RAVEn Device Energy price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,6 +30,7 @@
     'original_name': 'Energy price',
     'platform': 'rainforest_raven',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_price',
     'unique_id': '1234567890abcdef.PriceCluster.price',
@@ -57,6 +59,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RAVEn Device Power demand',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -82,6 +85,7 @@
     'original_name': 'Power demand',
     'platform': 'rainforest_raven',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_demand',
     'unique_id': '1234567890abcdef.InstantaneousDemand.demand',
@@ -109,6 +113,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RAVEn Device Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -134,6 +139,7 @@
     'original_name': 'Signal strength',
     'platform': 'rainforest_raven',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'signal_strength',
     'unique_id': 'abcdef0123456789.NetworkInfo.link_strength',
@@ -161,6 +167,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RAVEn Device Total energy delivered',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -186,6 +193,7 @@
     'original_name': 'Total energy delivered',
     'platform': 'rainforest_raven',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_delivered',
     'unique_id': '1234567890abcdef.CurrentSummationDelivered.summation_delivered',
@@ -213,6 +221,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RAVEn Device Total energy received',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -238,6 +247,7 @@
     'original_name': 'Total energy received',
     'platform': 'rainforest_raven',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_received',
     'unique_id': '1234567890abcdef.CurrentSummationDelivered.summation_received',

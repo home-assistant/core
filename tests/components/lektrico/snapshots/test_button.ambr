@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '1p7k_500006 Charge start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,6 +28,7 @@
     'original_name': 'Charge start',
     'platform': 'lektrico',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_start',
     'unique_id': '500006-charge_start',
@@ -51,6 +53,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '1p7k_500006 Charge stop',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -74,6 +77,7 @@
     'original_name': 'Charge stop',
     'platform': 'lektrico',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_stop',
     'unique_id': '500006-charge_stop',
@@ -98,6 +102,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '1p7k_500006 Restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -121,6 +126,7 @@
     'original_name': 'Restart',
     'platform': 'lektrico',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '500006-reboot',

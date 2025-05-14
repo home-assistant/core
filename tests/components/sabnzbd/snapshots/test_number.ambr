@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sabnzbd Speedlimit',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -32,6 +33,7 @@
     'original_name': 'Speedlimit',
     'platform': 'sabnzbd',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'speedlimit',
     'unique_id': '01JD2YVVPBC62D620DGYNG2R8H_speedlimit',

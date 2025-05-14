@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cover_Outputs',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,6 +28,7 @@
     'original_name': 'Cover_Outputs',
     'platform': 'lcn',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 11>,
     'translation_key': None,
     'unique_id': 'lcn/config_entry_pchk_json-m000007-outputs',
@@ -53,6 +55,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cover_Relays',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -76,6 +79,7 @@
     'original_name': 'Cover_Relays',
     'platform': 'lcn',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 11>,
     'translation_key': None,
     'unique_id': 'lcn/config_entry_pchk_json-m000007-motor1',

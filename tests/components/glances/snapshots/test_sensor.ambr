@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 Containers active',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,6 +30,7 @@
     'original_name': 'Containers active',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_active',
     'unique_id': 'test--docker_active',
@@ -54,6 +56,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 Containers CPU usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -79,6 +82,7 @@
     'original_name': 'Containers CPU usage',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_cpu_usage',
     'unique_id': 'test--docker_cpu_use',
@@ -105,6 +109,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 Containers memory used',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -130,6 +135,7 @@
     'original_name': 'Containers memory used',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_memory_used',
     'unique_id': 'test--docker_memory_use',
@@ -157,6 +163,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 cpu_thermal 1 temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -182,6 +189,7 @@
     'original_name': 'cpu_thermal 1 temperature',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': 'test-cpu_thermal 1-temperature_core',
@@ -209,6 +217,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 dummy0 RX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -237,6 +246,7 @@
     'original_name': 'dummy0 RX',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'network_rx',
     'unique_id': 'test-dummy0-rx',
@@ -264,6 +274,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 dummy0 TX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -292,6 +303,7 @@
     'original_name': 'dummy0 TX',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'network_tx',
     'unique_id': 'test-dummy0-tx',
@@ -319,6 +331,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 err_temp temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -344,6 +357,7 @@
     'original_name': 'err_temp temperature',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': 'test-err_temp-temperature_hdd',
@@ -371,6 +385,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 eth0 RX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -399,6 +414,7 @@
     'original_name': 'eth0 RX',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'network_rx',
     'unique_id': 'test-eth0-rx',
@@ -426,6 +442,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 eth0 TX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -454,6 +471,7 @@
     'original_name': 'eth0 TX',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'network_tx',
     'unique_id': 'test-eth0-tx',
@@ -481,6 +499,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 lo RX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -509,6 +528,7 @@
     'original_name': 'lo RX',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'network_rx',
     'unique_id': 'test-lo-rx',
@@ -536,6 +556,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 lo TX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -564,6 +585,7 @@
     'original_name': 'lo TX',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'network_tx',
     'unique_id': 'test-lo-tx',
@@ -591,6 +613,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 md1 available',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -616,6 +639,7 @@
     'original_name': 'md1 available',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'raid_available',
     'unique_id': 'test-md1-available',
@@ -641,6 +665,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 md1 used',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -666,6 +691,7 @@
     'original_name': 'md1 used',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'raid_used',
     'unique_id': 'test-md1-used',
@@ -691,6 +717,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 md3 available',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -716,6 +743,7 @@
     'original_name': 'md3 available',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'raid_available',
     'unique_id': 'test-md3-available',
@@ -741,6 +769,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 md3 used',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -766,6 +795,7 @@
     'original_name': 'md3 used',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'raid_used',
     'unique_id': 'test-md3-used',
@@ -791,6 +821,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 /media disk free',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -816,6 +847,7 @@
     'original_name': '/media disk free',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_free',
     'unique_id': 'test-/media-disk_free',
@@ -843,6 +875,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 /media disk usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -868,6 +901,7 @@
     'original_name': '/media disk usage',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_usage',
     'unique_id': 'test-/media-disk_use_percent',
@@ -894,6 +928,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 /media disk used',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -919,6 +954,7 @@
     'original_name': '/media disk used',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_used',
     'unique_id': 'test-/media-disk_use',
@@ -946,6 +982,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 Memory free',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -971,6 +1008,7 @@
     'original_name': 'Memory free',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_free',
     'unique_id': 'test--memory_free',
@@ -998,6 +1036,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 Memory usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1023,6 +1062,7 @@
     'original_name': 'Memory usage',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage',
     'unique_id': 'test--memory_use_percent',
@@ -1049,6 +1089,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 Memory use',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1074,6 +1115,7 @@
     'original_name': 'Memory use',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_use',
     'unique_id': 'test--memory_use',
@@ -1101,6 +1143,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 na_temp temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1126,6 +1169,7 @@
     'original_name': 'na_temp temperature',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': 'test-na_temp-temperature_hdd',
@@ -1153,6 +1197,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 NVIDIA GeForce RTX 3080 (GPU 0) fan speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1178,6 +1223,7 @@
     'original_name': 'NVIDIA GeForce RTX 3080 (GPU 0) fan speed',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fan_speed',
     'unique_id': 'test-NVIDIA GeForce RTX 3080 (GPU 0)-fan_speed',
@@ -1204,6 +1250,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 NVIDIA GeForce RTX 3080 (GPU 0) memory usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1229,6 +1276,7 @@
     'original_name': 'NVIDIA GeForce RTX 3080 (GPU 0) memory usage',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_memory_usage',
     'unique_id': 'test-NVIDIA GeForce RTX 3080 (GPU 0)-mem',
@@ -1255,6 +1303,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 NVIDIA GeForce RTX 3080 (GPU 0) processor usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1283,6 +1332,7 @@
     'original_name': 'NVIDIA GeForce RTX 3080 (GPU 0) processor usage',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_processor_usage',
     'unique_id': 'test-NVIDIA GeForce RTX 3080 (GPU 0)-proc',
@@ -1309,6 +1359,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 NVIDIA GeForce RTX 3080 (GPU 0) temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1334,6 +1385,7 @@
     'original_name': 'NVIDIA GeForce RTX 3080 (GPU 0) temperature',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': 'test-NVIDIA GeForce RTX 3080 (GPU 0)-temperature',
@@ -1361,6 +1413,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 nvme0n1 disk read',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1389,6 +1442,7 @@
     'original_name': 'nvme0n1 disk read',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'diskio_read',
     'unique_id': 'test-nvme0n1-read',
@@ -1416,6 +1470,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 nvme0n1 disk write',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1444,6 +1499,7 @@
     'original_name': 'nvme0n1 disk write',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'diskio_write',
     'unique_id': 'test-nvme0n1-write',
@@ -1471,6 +1527,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 sda disk read',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1499,6 +1556,7 @@
     'original_name': 'sda disk read',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'diskio_read',
     'unique_id': 'test-sda-read',
@@ -1526,6 +1584,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 sda disk write',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1554,6 +1613,7 @@
     'original_name': 'sda disk write',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'diskio_write',
     'unique_id': 'test-sda-write',
@@ -1581,6 +1641,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 /ssl disk free',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1606,6 +1667,7 @@
     'original_name': '/ssl disk free',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_free',
     'unique_id': 'test-/ssl-disk_free',
@@ -1633,6 +1695,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 /ssl disk usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1658,6 +1721,7 @@
     'original_name': '/ssl disk usage',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_usage',
     'unique_id': 'test-/ssl-disk_use_percent',
@@ -1684,6 +1748,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 /ssl disk used',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1709,6 +1774,7 @@
     'original_name': '/ssl disk used',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_used',
     'unique_id': 'test-/ssl-disk_use',
@@ -1736,6 +1802,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '0.0.0.0 Uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1759,6 +1826,7 @@
     'original_name': 'Uptime',
     'platform': 'glances',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': 'test--uptime',

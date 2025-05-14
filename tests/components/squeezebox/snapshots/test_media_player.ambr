@@ -41,6 +41,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Player',
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -65,6 +66,7 @@
     'original_name': None,
     'platform': 'squeezebox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 4126655>,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Spotify spotify_1',
     'capabilities': dict({
       'source_list': list([
         'DESKTOP-BKC5SIK',
@@ -31,6 +32,7 @@
     'original_name': None,
     'platform': 'spotify',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 444983>,
     'translation_key': 'spotify',
     'unique_id': '1112264111',
@@ -74,6 +76,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Spotify spotify_1',
     'capabilities': dict({
       'source_list': list([
         'DESKTOP-BKC5SIK',
@@ -101,6 +104,7 @@
     'original_name': None,
     'platform': 'spotify',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 2048>,
     'translation_key': 'spotify',
     'unique_id': '1112264111',

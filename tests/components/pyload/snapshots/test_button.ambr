@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pyLoad Abort all running downloads',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,6 +28,7 @@
     'original_name': 'Abort all running downloads',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadButtonEntity.ABORT_DOWNLOADS: 'abort_downloads'>,
     'unique_id': 'XXXXXXXXXXXXXX_abort_downloads',
@@ -51,6 +53,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pyLoad Delete finished files/packages',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -74,6 +77,7 @@
     'original_name': 'Delete finished files/packages',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadButtonEntity.DELETE_FINISHED: 'delete_finished'>,
     'unique_id': 'XXXXXXXXXXXXXX_delete_finished',
@@ -98,6 +102,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pyLoad Restart all failed files',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -121,6 +126,7 @@
     'original_name': 'Restart all failed files',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadButtonEntity.RESTART_FAILED: 'restart_failed'>,
     'unique_id': 'XXXXXXXXXXXXXX_restart_failed',
@@ -145,6 +151,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pyLoad Restart pyload core',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -168,6 +175,7 @@
     'original_name': 'Restart pyload core',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadButtonEntity.RESTART: 'restart'>,
     'unique_id': 'XXXXXXXXXXXXXX_restart',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Garden Alarm sound',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,6 +28,7 @@
     'original_name': 'Alarm sound',
     'platform': 'letpot',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm_sound',
     'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH63ABCD_alarm_sound',
@@ -51,6 +53,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Garden Auto mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -74,6 +77,7 @@
     'original_name': 'Auto mode',
     'platform': 'letpot',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_mode',
     'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH63ABCD_auto_mode',
@@ -98,6 +102,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Garden Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -121,6 +126,7 @@
     'original_name': 'Power',
     'platform': 'letpot',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
     'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH63ABCD_power',
@@ -145,6 +151,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Garden Pump cycling',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -168,6 +175,7 @@
     'original_name': 'Pump cycling',
     'platform': 'letpot',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pump_cycling',
     'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH63ABCD_pump_cycling',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Connection mode',
     'capabilities': dict({
       'options': list([
         'eth',
@@ -33,6 +34,7 @@
     'original_name': 'Connection mode',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_mode',
     'unique_id': 'aa:bb:cc:dd:ee:ff_device_mode',
@@ -63,6 +65,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Core chip temp',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -91,6 +94,7 @@
     'original_name': 'Core chip temp',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'core_temperature',
     'unique_id': 'aa:bb:cc:dd:ee:ff_core_temperature',
@@ -118,6 +122,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Core uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -141,6 +146,7 @@
     'original_name': 'Core uptime',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'core_uptime',
     'unique_id': 'aa:bb:cc:dd:ee:ff_core_uptime',
@@ -166,6 +172,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Filesystem usage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -189,6 +196,7 @@
     'original_name': 'Filesystem usage',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fs_usage',
     'unique_id': 'aa:bb:cc:dd:ee:ff_fs_usage',
@@ -215,6 +223,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Firmware channel',
     'capabilities': dict({
       'options': list([
         'dev',
@@ -243,6 +252,7 @@
     'original_name': 'Firmware channel',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'firmware_channel',
     'unique_id': 'aa:bb:cc:dd:ee:ff_firmware_channel',
@@ -272,6 +282,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title RAM usage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -295,6 +306,7 @@
     'original_name': 'RAM usage',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ram_usage',
     'unique_id': 'aa:bb:cc:dd:ee:ff_ram_usage',
@@ -321,6 +333,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Zigbee chip temp',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -349,6 +362,7 @@
     'original_name': 'Zigbee chip temp',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'zigbee_temperature',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zigbee_temperature',
@@ -376,6 +390,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Zigbee type',
     'capabilities': dict({
       'options': list([
         'coordinator',
@@ -405,6 +420,7 @@
     'original_name': 'Zigbee type',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'zigbee_type',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zigbee_type',
@@ -435,6 +451,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Zigbee uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -458,6 +475,7 @@
     'original_name': 'Zigbee uptime',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'socket_uptime',
     'unique_id': 'aa:bb:cc:dd:ee:ff_socket_uptime',

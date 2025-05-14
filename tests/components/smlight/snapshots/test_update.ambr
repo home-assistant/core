@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Core firmware',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,6 +28,7 @@
     'original_name': 'Core firmware',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 21>,
     'translation_key': 'core_update',
     'unique_id': 'aa:bb:cc:dd:ee:ff-core_update',
@@ -64,6 +66,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Zigbee firmware',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -87,6 +90,7 @@
     'original_name': 'Zigbee firmware',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 21>,
     'translation_key': 'zigbee_update',
     'unique_id': 'aa:bb:cc:dd:ee:ff-zigbee_update',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'fake_name',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
@@ -39,6 +40,7 @@
     'original_name': 'fake_name',
     'platform': 'fritzbox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': 'thermostat',
     'unique_id': '12345 1234567',

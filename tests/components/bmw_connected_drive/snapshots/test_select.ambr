@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i3 (+ REX) Charging mode',
     'capabilities': dict({
       'options': list([
         'immediate_charging',
@@ -33,6 +34,7 @@
     'original_name': 'Charging mode',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_mode',
     'unique_id': 'WBY00000000REXI01-charging_mode',
@@ -62,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i4 eDrive40 AC charging limit',
     'capabilities': dict({
       'options': list([
         '6',
@@ -101,6 +104,7 @@
     'original_name': 'AC charging limit',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_limit',
     'unique_id': 'WBA00000000DEMO02-ac_limit',
@@ -141,6 +145,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i4 eDrive40 Charging mode',
     'capabilities': dict({
       'options': list([
         'immediate_charging',
@@ -170,6 +175,7 @@
     'original_name': 'Charging mode',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_mode',
     'unique_id': 'WBA00000000DEMO02-charging_mode',
@@ -199,6 +205,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'iX xDrive50 AC charging limit',
     'capabilities': dict({
       'options': list([
         '6',
@@ -238,6 +245,7 @@
     'original_name': 'AC charging limit',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_limit',
     'unique_id': 'WBA00000000DEMO01-ac_limit',
@@ -278,6 +286,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'iX xDrive50 Charging mode',
     'capabilities': dict({
       'options': list([
         'immediate_charging',
@@ -307,6 +316,7 @@
     'original_name': 'Charging mode',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_mode',
     'unique_id': 'WBA00000000DEMO01-charging_mode',

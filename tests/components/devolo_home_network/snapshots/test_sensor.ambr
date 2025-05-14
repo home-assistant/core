@@ -17,6 +17,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Connected PLC devices',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -40,6 +41,7 @@
     'original_name': 'Connected PLC devices',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'connected_plc_devices',
     'unique_id': '1234567890_connected_plc_devices',
@@ -65,6 +67,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Connected Wi-Fi clients',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -90,6 +93,7 @@
     'original_name': 'Connected Wi-Fi clients',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'connected_wifi_clients',
     'unique_id': '1234567890_connected_wifi_clients',
@@ -115,6 +119,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Last restart of the device',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -138,6 +143,7 @@
     'original_name': 'Last restart of the device',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_restart',
     'unique_id': '1234567890_last_restart',
@@ -162,6 +168,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Neighboring Wi-Fi networks',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -185,6 +192,7 @@
     'original_name': 'Neighboring Wi-Fi networks',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'neighboring_wifi_networks',
     'unique_id': '1234567890_neighboring_wifi_networks',
@@ -211,6 +219,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title PLC downlink PHY rate (test2)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -237,6 +246,7 @@
     'original_name': 'PLC downlink PHY rate (test2)',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'plc_rx_rate',
     'unique_id': '1234567890_plc_rx_rate_11:22:33:44:55:66',
@@ -263,6 +273,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title PLC downlink PHY rate (test2)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -289,6 +300,7 @@
     'original_name': 'PLC downlink PHY rate (test2)',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'plc_rx_rate',
     'unique_id': '1234567890_plc_rx_rate_11:22:33:44:55:66',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,6 +30,7 @@
     'original_name': 'Carbon dioxide',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '84fce612f5b8-co2',
@@ -56,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient Carbon dioxide automatic baseline calibration',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -79,6 +82,7 @@
     'original_name': 'Carbon dioxide automatic baseline calibration',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'co2_automatic_baseline_calibration_days',
     'unique_id': '84fce612f5b8-co2_automatic_baseline_calibration_days',
@@ -105,6 +109,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient Display brightness',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -128,6 +133,7 @@
     'original_name': 'Display brightness',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'display_brightness',
     'unique_id': '84fce612f5b8-display_brightness',
@@ -153,6 +159,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient Display PM standard',
     'capabilities': dict({
       'options': list([
         'ugm3',
@@ -181,6 +188,7 @@
     'original_name': 'Display PM standard',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'display_pm_standard',
     'unique_id': '84fce612f5b8-display_pm_standard',
@@ -210,6 +218,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient Display temperature unit',
     'capabilities': dict({
       'options': list([
         'c',
@@ -238,6 +247,7 @@
     'original_name': 'Display temperature unit',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'display_temperature_unit',
     'unique_id': '84fce612f5b8-display_temperature_unit',
@@ -267,6 +277,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -292,6 +303,7 @@
     'original_name': 'Humidity',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '84fce612f5b8-humidity',
@@ -319,6 +331,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient LED bar brightness',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -342,6 +355,7 @@
     'original_name': 'LED bar brightness',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'led_bar_brightness',
     'unique_id': '84fce612f5b8-led_bar_brightness',
@@ -367,6 +381,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient LED bar mode',
     'capabilities': dict({
       'options': list([
         'off',
@@ -396,6 +411,7 @@
     'original_name': 'LED bar mode',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'led_bar_mode',
     'unique_id': '84fce612f5b8-led_bar_mode',
@@ -426,6 +442,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient NOx index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -451,6 +468,7 @@
     'original_name': 'NOx index',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nitrogen_index',
     'unique_id': '84fce612f5b8-nitrogen_index',
@@ -476,6 +494,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient NOx index learning offset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -499,6 +518,7 @@
     'original_name': 'NOx index learning offset',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nox_learning_offset',
     'unique_id': '84fce612f5b8-nox_learning_offset',
@@ -525,6 +545,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient PM0.3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -550,6 +571,7 @@
     'original_name': 'PM0.3',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pm003_count',
     'unique_id': '84fce612f5b8-pm003',
@@ -576,6 +598,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient PM1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -601,6 +624,7 @@
     'original_name': 'PM1',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '84fce612f5b8-pm01',
@@ -628,6 +652,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient PM10',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -653,6 +678,7 @@
     'original_name': 'PM10',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '84fce612f5b8-pm10',
@@ -680,6 +706,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -705,6 +732,7 @@
     'original_name': 'PM2.5',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '84fce612f5b8-pm02',
@@ -732,6 +760,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient Raw NOx',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -757,6 +786,7 @@
     'original_name': 'Raw NOx',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'raw_nitrogen',
     'unique_id': '84fce612f5b8-nox_raw',
@@ -783,6 +813,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient Raw PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -808,6 +839,7 @@
     'original_name': 'Raw PM2.5',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'raw_pm02',
     'unique_id': '84fce612f5b8-pm02_raw',
@@ -835,6 +867,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient Raw VOC',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -860,6 +893,7 @@
     'original_name': 'Raw VOC',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'raw_total_volatile_organic_component',
     'unique_id': '84fce612f5b8-tvoc_raw',
@@ -886,6 +920,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -911,6 +946,7 @@
     'original_name': 'Signal strength',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '84fce612f5b8-signal_strength',
@@ -938,6 +974,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -963,6 +1000,7 @@
     'original_name': 'Temperature',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '84fce612f5b8-temperature',
@@ -990,6 +1028,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient VOC index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1015,6 +1054,7 @@
     'original_name': 'VOC index',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_volatile_organic_component_index',
     'unique_id': '84fce612f5b8-tvoc',
@@ -1040,6 +1080,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient VOC index learning offset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1063,6 +1104,7 @@
     'original_name': 'VOC index learning offset',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tvoc_learning_offset',
     'unique_id': '84fce612f5b8-tvoc_learning_offset',
@@ -1089,6 +1131,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient Carbon dioxide automatic baseline calibration',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1112,6 +1155,7 @@
     'original_name': 'Carbon dioxide automatic baseline calibration',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'co2_automatic_baseline_calibration_days',
     'unique_id': '84fce612f5b8-co2_automatic_baseline_calibration_days',
@@ -1138,6 +1182,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient NOx index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1163,6 +1208,7 @@
     'original_name': 'NOx index',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nitrogen_index',
     'unique_id': '84fce612f5b8-nitrogen_index',
@@ -1188,6 +1234,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient NOx index learning offset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1211,6 +1258,7 @@
     'original_name': 'NOx index learning offset',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nox_learning_offset',
     'unique_id': '84fce612f5b8-nox_learning_offset',
@@ -1237,6 +1285,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient Raw NOx',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1262,6 +1311,7 @@
     'original_name': 'Raw NOx',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'raw_nitrogen',
     'unique_id': '84fce612f5b8-nox_raw',
@@ -1288,6 +1338,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient Raw VOC',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1313,6 +1364,7 @@
     'original_name': 'Raw VOC',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'raw_total_volatile_organic_component',
     'unique_id': '84fce612f5b8-tvoc_raw',
@@ -1339,6 +1391,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1364,6 +1417,7 @@
     'original_name': 'Signal strength',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '84fce612f5b8-signal_strength',
@@ -1391,6 +1445,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient VOC index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1416,6 +1471,7 @@
     'original_name': 'VOC index',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_volatile_organic_component_index',
     'unique_id': '84fce612f5b8-tvoc',
@@ -1441,6 +1497,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Airgradient VOC index learning offset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1464,6 +1521,7 @@
     'original_name': 'VOC index learning offset',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tvoc_learning_offset',
     'unique_id': '84fce612f5b8-tvoc_learning_offset',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My Home Station',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,6 +28,7 @@
     'original_name': None,
     'platform': 'weatherflow_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <WeatherEntityFeature: 3>,
     'translation_key': None,
     'unique_id': 'weatherflow_forecast_24432',

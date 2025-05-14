@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sanix Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,6 +30,7 @@
     'original_name': 'Battery',
     'platform': 'sanix',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1810088-battery',
@@ -56,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sanix Device number',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -79,6 +82,7 @@
     'original_name': 'Device number',
     'platform': 'sanix',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_no',
     'unique_id': '1810088-device_no',
@@ -103,6 +107,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sanix Distance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -128,6 +133,7 @@
     'original_name': 'Distance',
     'platform': 'sanix',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1810088-distance',
@@ -155,6 +161,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sanix Filled',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -180,6 +187,7 @@
     'original_name': 'Filled',
     'platform': 'sanix',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fill_perc',
     'unique_id': '1810088-fill_perc',
@@ -206,6 +214,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sanix Service date',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -229,6 +238,7 @@
     'original_name': 'Service date',
     'platform': 'sanix',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'service_date',
     'unique_id': '1810088-service_date',
@@ -254,6 +264,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sanix SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -277,6 +288,7 @@
     'original_name': 'SSID',
     'platform': 'sanix',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ssid',
     'unique_id': '1810088-ssid',

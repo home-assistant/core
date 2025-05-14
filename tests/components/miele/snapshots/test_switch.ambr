@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Freezer Superfreezing',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,6 +28,7 @@
     'original_name': 'Superfreezing',
     'platform': 'miele',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'superfreezing',
     'unique_id': 'Dummy_Appliance_1-superfreezing',
@@ -51,6 +53,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hood Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -74,6 +77,7 @@
     'original_name': 'Power',
     'platform': 'miele',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
     'unique_id': 'DummyAppliance_18-poweronoff',
@@ -98,6 +102,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Refrigerator Supercooling',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -121,6 +126,7 @@
     'original_name': 'Supercooling',
     'platform': 'miele',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'supercooling',
     'unique_id': 'Dummy_Appliance_2-supercooling',
@@ -145,6 +151,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washing machine Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -168,6 +175,7 @@
     'original_name': 'Power',
     'platform': 'miele',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
     'unique_id': 'Dummy_Appliance_3-poweronoff',

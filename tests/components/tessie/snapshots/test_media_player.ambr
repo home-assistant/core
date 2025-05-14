@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Media player',
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -28,6 +29,7 @@
     'original_name': 'Media player',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'media',
     'unique_id': 'VINVINVIN-media',

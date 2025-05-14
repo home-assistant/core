@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Clients',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,6 +30,7 @@
     'original_name': 'Clients',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_clients',
     'unique_id': 'device_clients-20:00:00:00:01:01',
@@ -54,6 +56,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device State',
     'capabilities': dict({
       'options': list([
         'disconnected',
@@ -92,6 +95,7 @@
     'original_name': 'State',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_state',
     'unique_id': 'device_state-20:00:00:00:01:01',
@@ -131,6 +135,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Temperature',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -154,6 +159,7 @@
     'original_name': 'Temperature',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'device_temperature-20:00:00:00:01:01',
@@ -180,6 +186,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -203,6 +210,7 @@
     'original_name': 'Uptime',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'device_uptime-20:00:00:00:01:01',
@@ -228,6 +236,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dummy USP-PDU-Pro AC Power Budget',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -256,6 +265,7 @@
     'original_name': 'AC Power Budget',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ac_power_budget-01:02:03:04:05:ff',
@@ -283,6 +293,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dummy USP-PDU-Pro AC Power Consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -311,6 +322,7 @@
     'original_name': 'AC Power Consumption',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ac_power_conumption-01:02:03:04:05:ff',
@@ -338,6 +350,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dummy USP-PDU-Pro Clients',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -363,6 +376,7 @@
     'original_name': 'Clients',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_clients',
     'unique_id': 'device_clients-01:02:03:04:05:ff',
@@ -388,6 +402,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dummy USP-PDU-Pro CPU utilization',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -413,6 +428,7 @@
     'original_name': 'CPU utilization',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_cpu_utilization',
     'unique_id': 'cpu_utilization-01:02:03:04:05:ff',
@@ -439,6 +455,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dummy USP-PDU-Pro Memory utilization',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -464,6 +481,7 @@
     'original_name': 'Memory utilization',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_memory_utilization',
     'unique_id': 'memory_utilization-01:02:03:04:05:ff',
@@ -490,6 +508,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dummy USP-PDU-Pro Outlet 2 Outlet Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -515,6 +534,7 @@
     'original_name': 'Outlet 2 Outlet Power',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'outlet_power-01:02:03:04:05:ff_2',
@@ -542,6 +562,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dummy USP-PDU-Pro State',
     'capabilities': dict({
       'options': list([
         'disconnected',
@@ -580,6 +601,7 @@
     'original_name': 'State',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_state',
     'unique_id': 'device_state-01:02:03:04:05:ff',
@@ -619,6 +641,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dummy USP-PDU-Pro Uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -642,6 +665,7 @@
     'original_name': 'Uptime',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'device_uptime-01:02:03:04:05:ff',
@@ -667,6 +691,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'mock-name Clients',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -692,6 +717,7 @@
     'original_name': 'Clients',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_clients',
     'unique_id': 'device_clients-10:00:00:00:01:01',
@@ -717,6 +743,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'mock-name Cloudflare WAN2 latency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -742,6 +769,7 @@
     'original_name': 'Cloudflare WAN2 latency',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'cloudflare_wan2_latency-10:00:00:00:01:01',
@@ -769,6 +797,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'mock-name Cloudflare WAN latency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -794,6 +823,7 @@
     'original_name': 'Cloudflare WAN latency',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'cloudflare_wan_latency-10:00:00:00:01:01',
@@ -821,6 +851,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'mock-name Google WAN2 latency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -846,6 +877,7 @@
     'original_name': 'Google WAN2 latency',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'google_wan2_latency-10:00:00:00:01:01',
@@ -873,6 +905,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'mock-name Google WAN latency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -898,6 +931,7 @@
     'original_name': 'Google WAN latency',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'google_wan_latency-10:00:00:00:01:01',
@@ -925,6 +959,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'mock-name Microsoft WAN2 latency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -950,6 +985,7 @@
     'original_name': 'Microsoft WAN2 latency',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'microsoft_wan2_latency-10:00:00:00:01:01',
@@ -977,6 +1013,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'mock-name Microsoft WAN latency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1002,6 +1039,7 @@
     'original_name': 'Microsoft WAN latency',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'microsoft_wan_latency-10:00:00:00:01:01',
@@ -1029,6 +1067,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'mock-name Port 1 PoE Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1054,6 +1093,7 @@
     'original_name': 'Port 1 PoE Power',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'poe_power-10:00:00:00:01:01_1',
@@ -1081,6 +1121,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'mock-name Port 1 RX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1109,6 +1150,7 @@
     'original_name': 'Port 1 RX',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'port_bandwidth_rx',
     'unique_id': 'port_rx-10:00:00:00:01:01_1',
@@ -1136,6 +1178,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'mock-name Port 1 TX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1164,6 +1207,7 @@
     'original_name': 'Port 1 TX',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'port_bandwidth_tx',
     'unique_id': 'port_tx-10:00:00:00:01:01_1',
@@ -1191,6 +1235,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'mock-name Port 2 PoE Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1216,6 +1261,7 @@
     'original_name': 'Port 2 PoE Power',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'poe_power-10:00:00:00:01:01_2',
@@ -1243,6 +1289,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'mock-name Port 2 RX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1271,6 +1318,7 @@
     'original_name': 'Port 2 RX',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'port_bandwidth_rx',
     'unique_id': 'port_rx-10:00:00:00:01:01_2',
@@ -1298,6 +1346,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'mock-name Port 2 TX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1326,6 +1375,7 @@
     'original_name': 'Port 2 TX',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'port_bandwidth_tx',
     'unique_id': 'port_tx-10:00:00:00:01:01_2',
@@ -1353,6 +1403,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'mock-name Port 3 RX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1381,6 +1432,7 @@
     'original_name': 'Port 3 RX',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'port_bandwidth_rx',
     'unique_id': 'port_rx-10:00:00:00:01:01_3',
@@ -1408,6 +1460,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'mock-name Port 3 TX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1436,6 +1489,7 @@
     'original_name': 'Port 3 TX',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'port_bandwidth_tx',
     'unique_id': 'port_tx-10:00:00:00:01:01_3',
@@ -1463,6 +1517,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'mock-name Port 4 PoE Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1488,6 +1543,7 @@
     'original_name': 'Port 4 PoE Power',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'poe_power-10:00:00:00:01:01_4',
@@ -1515,6 +1571,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'mock-name Port 4 RX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1543,6 +1600,7 @@
     'original_name': 'Port 4 RX',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'port_bandwidth_rx',
     'unique_id': 'port_rx-10:00:00:00:01:01_4',
@@ -1570,6 +1628,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'mock-name Port 4 TX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1598,6 +1657,7 @@
     'original_name': 'Port 4 TX',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'port_bandwidth_tx',
     'unique_id': 'port_tx-10:00:00:00:01:01_4',
@@ -1625,6 +1685,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'mock-name State',
     'capabilities': dict({
       'options': list([
         'disconnected',
@@ -1663,6 +1724,7 @@
     'original_name': 'State',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_state',
     'unique_id': 'device_state-10:00:00:00:01:01',
@@ -1702,6 +1764,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'mock-name Uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1725,6 +1788,7 @@
     'original_name': 'Uptime',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'device_uptime-10:00:00:00:01:01',
@@ -1750,6 +1814,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SSID 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1775,6 +1840,7 @@
     'original_name': None,
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wlan_clients',
     'unique_id': 'wlan_clients-012345678910111213141516',
@@ -1800,6 +1866,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wired client RX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1825,6 +1892,7 @@
     'original_name': 'RX',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'client_bandwidth_rx',
     'unique_id': 'rx-00:00:00:00:00:01',
@@ -1852,6 +1920,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wired client TX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1877,6 +1946,7 @@
     'original_name': 'TX',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'client_bandwidth_tx',
     'unique_id': 'tx-00:00:00:00:00:01',
@@ -1904,6 +1974,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wired client Uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1927,6 +1998,7 @@
     'original_name': 'Uptime',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'uptime-00:00:00:00:00:01',
@@ -1952,6 +2024,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wireless client RX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1977,6 +2050,7 @@
     'original_name': 'RX',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'client_bandwidth_rx',
     'unique_id': 'rx-00:00:00:00:00:02',
@@ -2004,6 +2078,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wireless client TX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2029,6 +2104,7 @@
     'original_name': 'TX',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'client_bandwidth_tx',
     'unique_id': 'tx-00:00:00:00:00:02',
@@ -2056,6 +2132,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wireless client Uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2079,6 +2156,7 @@
     'original_name': 'Uptime',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'uptime-00:00:00:00:00:02',

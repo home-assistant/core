@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Air Purifier Activated carbon filter condition',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,6 +30,7 @@
     'original_name': 'Activated carbon filter condition',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activated_carbon_filter_condition',
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-1-ActivatedCarbonFilterCondition-114-0',
@@ -55,6 +57,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Air Purifier Air quality',
     'capabilities': dict({
       'options': list([
         'extremely_poor',
@@ -87,6 +90,7 @@
     'original_name': 'Air quality',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_quality',
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-AirQuality-91-0',
@@ -120,6 +124,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Air Purifier Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -145,6 +150,7 @@
     'original_name': 'Carbon dioxide',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-CarbonDioxideSensor-1037-0',
@@ -172,6 +178,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Air Purifier Carbon monoxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -197,6 +204,7 @@
     'original_name': 'Carbon monoxide',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-CarbonMonoxideSensor-1036-0',
@@ -224,6 +232,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Air Purifier Hepa filter condition',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -249,6 +258,7 @@
     'original_name': 'Hepa filter condition',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hepa_filter_condition',
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-1-HepaFilterCondition-113-0',
@@ -275,6 +285,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Air Purifier Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -300,6 +311,7 @@
     'original_name': 'Humidity',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-4-HumiditySensor-1029-0',
@@ -327,6 +339,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Air Purifier Nitrogen dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -352,6 +365,7 @@
     'original_name': 'Nitrogen dioxide',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-NitrogenDioxideSensor-1043-0',
@@ -379,6 +393,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Air Purifier Ozone',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -404,6 +419,7 @@
     'original_name': 'Ozone',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-OzoneConcentrationSensor-1045-0',
@@ -431,6 +447,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Air Purifier PM1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -456,6 +473,7 @@
     'original_name': 'PM1',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-PM1Sensor-1068-0',
@@ -483,6 +501,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Air Purifier PM10',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -508,6 +527,7 @@
     'original_name': 'PM10',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-PM10Sensor-1069-0',
@@ -535,6 +555,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Air Purifier PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -560,6 +581,7 @@
     'original_name': 'PM2.5',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-PM25Sensor-1066-0',
@@ -587,6 +609,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Air Purifier Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -612,6 +635,7 @@
     'original_name': 'Temperature',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-3-TemperatureSensor-1026-0',
@@ -639,6 +663,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Air Purifier Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -664,6 +689,7 @@
     'original_name': 'Temperature',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-5-ThermostatLocalTemperature-513-0',
@@ -691,6 +717,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Air Purifier Volatile organic compounds parts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -716,6 +743,7 @@
     'original_name': 'Volatile organic compounds parts',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-TotalVolatileOrganicCompoundsSensor-1070-0',
@@ -743,6 +771,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'lightfi-aq1-air-quality-sensor Air quality',
     'capabilities': dict({
       'options': list([
         'extremely_poor',
@@ -775,6 +804,7 @@
     'original_name': 'Air quality',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_quality',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-AirQuality-91-0',
@@ -808,6 +838,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'lightfi-aq1-air-quality-sensor Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -833,6 +864,7 @@
     'original_name': 'Carbon dioxide',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-CarbonDioxideSensor-1037-0',
@@ -860,6 +892,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'lightfi-aq1-air-quality-sensor Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -885,6 +918,7 @@
     'original_name': 'Humidity',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-HumiditySensor-1029-0',
@@ -912,6 +946,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'lightfi-aq1-air-quality-sensor Nitrogen dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -937,6 +972,7 @@
     'original_name': 'Nitrogen dioxide',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-NitrogenDioxideSensor-1043-0',
@@ -964,6 +1000,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'lightfi-aq1-air-quality-sensor PM1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -989,6 +1026,7 @@
     'original_name': 'PM1',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PM1Sensor-1068-0',
@@ -1016,6 +1054,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'lightfi-aq1-air-quality-sensor PM10',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1041,6 +1080,7 @@
     'original_name': 'PM10',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PM10Sensor-1069-0',
@@ -1068,6 +1108,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'lightfi-aq1-air-quality-sensor PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1093,6 +1134,7 @@
     'original_name': 'PM2.5',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PM25Sensor-1066-0',
@@ -1120,6 +1162,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'lightfi-aq1-air-quality-sensor Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1145,6 +1188,7 @@
     'original_name': 'Temperature',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-TemperatureSensor-1026-0',
@@ -1172,6 +1216,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'lightfi-aq1-air-quality-sensor Volatile organic compounds parts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1197,6 +1242,7 @@
     'original_name': 'Volatile organic compounds parts',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-TotalVolatileOrganicCompoundsSensor-1070-0',
@@ -1224,6 +1270,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Cooktop Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1249,6 +1296,7 @@
     'original_name': 'Temperature',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-2-TemperatureSensor-1026-0',
@@ -1276,6 +1324,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eve Door Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1301,6 +1350,7 @@
     'original_name': 'Battery',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PowerSource-47-12',
@@ -1328,6 +1378,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eve Door Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1356,6 +1407,7 @@
     'original_name': 'Voltage',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PowerSourceBatVoltage-47-11',
@@ -1383,6 +1435,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eve Energy Plug Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1411,6 +1464,7 @@
     'original_name': 'Current',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-EveEnergySensorWattCurrent-319486977-319422473',
@@ -1438,6 +1492,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eve Energy Plug Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1466,6 +1521,7 @@
     'original_name': 'Energy',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-EveEnergySensorWattAccumulated-319486977-319422475',
@@ -1493,6 +1549,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eve Energy Plug Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1521,6 +1578,7 @@
     'original_name': 'Power',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-EveEnergySensorWatt-319486977-319422474',
@@ -1548,6 +1606,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eve Energy Plug Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1576,6 +1635,7 @@
     'original_name': 'Voltage',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-EveEnergySensorVoltage-319486977-319422472',
@@ -1603,6 +1663,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eve Energy Plug Patched Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1634,6 +1695,7 @@
     'original_name': 'Current',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-00000000000000B7-MatterNodeDevice-2-ElectricalPowerMeasurementActiveCurrent-144-5',
@@ -1661,6 +1723,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eve Energy Plug Patched Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1692,6 +1755,7 @@
     'original_name': 'Energy',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-00000000000000B7-MatterNodeDevice-2-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
@@ -1719,6 +1783,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eve Energy Plug Patched Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1750,6 +1815,7 @@
     'original_name': 'Power',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-00000000000000B7-MatterNodeDevice-2-ElectricalPowerMeasurementWatt-144-8',
@@ -1777,6 +1843,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eve Energy Plug Patched Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1808,6 +1875,7 @@
     'original_name': 'Voltage',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-00000000000000B7-MatterNodeDevice-2-ElectricalPowerMeasurementVoltage-144-4',
@@ -1835,6 +1903,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eve Thermo Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1860,6 +1929,7 @@
     'original_name': 'Battery',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-0-PowerSource-47-12',
@@ -1887,6 +1957,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eve Thermo Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1912,6 +1983,7 @@
     'original_name': 'Temperature',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-1-ThermostatLocalTemperature-513-0',
@@ -1939,6 +2011,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eve Thermo Valve position',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1962,6 +2035,7 @@
     'original_name': 'Valve position',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'valve_position',
     'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-1-EveThermoValvePosition-319486977-319422488',
@@ -1987,6 +2061,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eve Thermo Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2015,6 +2090,7 @@
     'original_name': 'Voltage',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-0-PowerSourceBatVoltage-47-11',
@@ -2042,6 +2118,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eve Weather Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2067,6 +2144,7 @@
     'original_name': 'Battery',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-0-PowerSource-47-12',
@@ -2094,6 +2172,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eve Weather Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2119,6 +2198,7 @@
     'original_name': 'Humidity',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-HumiditySensor-1029-0',
@@ -2146,6 +2226,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eve Weather Pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2174,6 +2255,7 @@
     'original_name': 'Pressure',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-EveWeatherPressure-319486977-319422484',
@@ -2201,6 +2283,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eve Weather Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2226,6 +2309,7 @@
     'original_name': 'Temperature',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-TemperatureSensor-1026-0',
@@ -2253,6 +2337,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eve Weather Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2281,6 +2366,7 @@
     'original_name': 'Voltage',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-0-PowerSourceBatVoltage-47-11',
@@ -2308,6 +2394,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Flow Sensor Flow',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2333,6 +2420,7 @@
     'original_name': 'Flow',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flow',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-FlowSensor-1028-0',
@@ -2359,6 +2447,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Humidity Sensor Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2384,6 +2473,7 @@
     'original_name': 'Humidity',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-HumiditySensor-1029-0',
@@ -2411,6 +2501,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Laundrydryer Current phase',
     'capabilities': dict({
       'options': list([
         'pre-soak',
@@ -2440,6 +2531,7 @@
     'original_name': 'Current phase',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_phase',
     'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-OperationalStateCurrentPhase-96-1',
@@ -2470,6 +2562,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Laundrydryer Operational state',
     'capabilities': dict({
       'options': list([
         'stopped',
@@ -2500,6 +2593,7 @@
     'original_name': 'Operational state',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operational_state',
     'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-OperationalState-96-4',
@@ -2531,6 +2625,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Light Sensor Illuminance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2556,6 +2651,7 @@
     'original_name': 'Illuminance',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-LightSensor-1024-0',
@@ -2583,6 +2679,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Microwave Oven Operational state',
     'capabilities': dict({
       'options': list([
         'stopped',
@@ -2613,6 +2710,7 @@
     'original_name': 'Operational state',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operational_state',
     'unique_id': '00000000000004D2-000000000000009D-MatterNodeDevice-1-OperationalState-96-4',
@@ -2644,6 +2742,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Oven Current phase',
     'capabilities': dict({
       'options': list([
         'pre-heating',
@@ -2673,6 +2772,7 @@
     'original_name': 'Current phase',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_phase',
     'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-OvenCavityOperationalStateCurrentPhase-72-1',
@@ -2703,6 +2803,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Oven Operational state',
     'capabilities': dict({
       'options': list([
         'stopped',
@@ -2732,6 +2833,7 @@
     'original_name': 'Operational state',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operational_state',
     'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-OvenCavityOperationalState-72-4',
@@ -2762,6 +2864,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Oven Temperature (2)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2787,6 +2890,7 @@
     'original_name': 'Temperature (2)',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-TemperatureSensor-1026-0',
@@ -2814,6 +2918,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Oven Temperature (4)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2839,6 +2944,7 @@
     'original_name': 'Temperature (4)',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-4-TemperatureSensor-1026-0',
@@ -2866,6 +2972,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Pressure Sensor Pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2891,6 +2998,7 @@
     'original_name': 'Pressure',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PressureSensor-1027-0',
@@ -2918,6 +3026,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Pump Flow',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2943,6 +3052,7 @@
     'original_name': 'Flow',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flow',
     'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-FlowSensor-1028-0',
@@ -2969,6 +3079,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Pump Pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2994,6 +3105,7 @@
     'original_name': 'Pressure',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-PressureSensor-1027-0',
@@ -3021,6 +3133,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Pump Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3046,6 +3159,7 @@
     'original_name': 'Temperature',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-TemperatureSensor-1026-0',
@@ -3073,6 +3187,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Room AirConditioner Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3098,6 +3213,7 @@
     'original_name': 'Temperature',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-2-TemperatureSensor-1026-0',
@@ -3125,6 +3241,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dishwasher Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3156,6 +3273,7 @@
     'original_name': 'Current',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-2-ElectricalPowerMeasurementActiveCurrent-144-5',
@@ -3183,6 +3301,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dishwasher Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3214,6 +3333,7 @@
     'original_name': 'Energy',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-2-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
@@ -3241,6 +3361,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dishwasher Operational state',
     'capabilities': dict({
       'options': list([
         'stopped',
@@ -3272,6 +3393,7 @@
     'original_name': 'Operational state',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operational_state',
     'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-1-OperationalState-96-4',
@@ -3304,6 +3426,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dishwasher Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3335,6 +3458,7 @@
     'original_name': 'Power',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-2-ElectricalPowerMeasurementWatt-144-8',
@@ -3362,6 +3486,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dishwasher Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3393,6 +3518,7 @@
     'original_name': 'Voltage',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-2-ElectricalPowerMeasurementVoltage-144-4',
@@ -3420,6 +3546,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'evse Circuit capacity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3451,6 +3578,7 @@
     'original_name': 'Circuit capacity',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'evse_circuit_capacity',
     'unique_id': '00000000000004D2-0000000000000017-MatterNodeDevice-1-EnergyEvseCircuitCapacity-153-5',
@@ -3478,6 +3606,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'evse Fault state',
     'capabilities': dict({
       'options': list([
         'no_error',
@@ -3520,6 +3649,7 @@
     'original_name': 'Fault state',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'evse_fault_state',
     'unique_id': '00000000000004D2-0000000000000017-MatterNodeDevice-1-EnergyEvseFaultState-153-2',
@@ -3563,6 +3693,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'evse Max charge current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3594,6 +3725,7 @@
     'original_name': 'Max charge current',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'evse_max_charge_current',
     'unique_id': '00000000000004D2-0000000000000017-MatterNodeDevice-1-EnergyEvseMaximumChargeCurrent-153-7',
@@ -3621,6 +3753,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'evse Min charge current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3652,6 +3785,7 @@
     'original_name': 'Min charge current',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'evse_min_charge_current',
     'unique_id': '00000000000004D2-0000000000000017-MatterNodeDevice-1-EnergyEvseMinimumChargeCurrent-153-6',
@@ -3679,6 +3813,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'evse User max charge current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3710,6 +3845,7 @@
     'original_name': 'User max charge current',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'evse_user_max_charge_current',
     'unique_id': '00000000000004D2-0000000000000017-MatterNodeDevice-1-EnergyEvseUserMaximumChargeCurrent-153-9',
@@ -3737,6 +3873,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'LaundryWasher Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3768,6 +3905,7 @@
     'original_name': 'Current',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-ElectricalPowerMeasurementActiveCurrent-144-5',
@@ -3795,6 +3933,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'LaundryWasher Current phase',
     'capabilities': dict({
       'options': list([
         'pre-soak',
@@ -3824,6 +3963,7 @@
     'original_name': 'Current phase',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_phase',
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-OperationalStateCurrentPhase-96-1',
@@ -3854,6 +3994,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'LaundryWasher Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3885,6 +4026,7 @@
     'original_name': 'Energy',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
@@ -3912,6 +4054,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'LaundryWasher Operational state',
     'capabilities': dict({
       'options': list([
         'stopped',
@@ -3942,6 +4085,7 @@
     'original_name': 'Operational state',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operational_state',
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-OperationalState-96-4',
@@ -3973,6 +4117,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'LaundryWasher Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4004,6 +4149,7 @@
     'original_name': 'Power',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-ElectricalPowerMeasurementWatt-144-8',
@@ -4031,6 +4177,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'LaundryWasher Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4062,6 +4209,7 @@
     'original_name': 'Voltage',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-ElectricalPowerMeasurementVoltage-144-4',
@@ -4089,6 +4237,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water Heater Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4120,6 +4269,7 @@
     'original_name': 'Current',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ElectricalPowerMeasurementActiveCurrent-144-5',
@@ -4147,6 +4297,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water Heater Hot water level',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4172,6 +4323,7 @@
     'original_name': 'Hot water level',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tank_percentage',
     'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-WaterHeaterManagementTankPercentage-148-4',
@@ -4198,6 +4350,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water Heater Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4229,6 +4382,7 @@
     'original_name': 'Power',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ElectricalPowerMeasurementWatt-144-8',
@@ -4256,6 +4410,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water Heater Required heating energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -4287,6 +4442,7 @@
     'original_name': 'Required heating energy',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'estimated_heat_required',
     'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-WaterHeaterManagementEstimatedHeatRequired-148-3',
@@ -4314,6 +4470,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water Heater Tank volume',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4339,6 +4496,7 @@
     'original_name': 'Tank volume',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tank_volume',
     'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-WaterHeaterManagementTankVolume-148-2',
@@ -4366,6 +4524,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water Heater Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4397,6 +4556,7 @@
     'original_name': 'Voltage',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ElectricalPowerMeasurementVoltage-144-4',
@@ -4424,6 +4584,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smoke sensor Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4449,6 +4610,7 @@
     'original_name': 'Battery',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PowerSource-47-12',
@@ -4476,6 +4638,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smoke sensor Battery type',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4499,6 +4662,7 @@
     'original_name': 'Battery type',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_replacement_description',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PowerSourceBatReplacementDescription-47-19',
@@ -4523,6 +4687,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smoke sensor Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4551,6 +4716,7 @@
     'original_name': 'Voltage',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PowerSourceBatVoltage-47-11',
@@ -4578,6 +4744,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarPower Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4609,6 +4776,7 @@
     'original_name': 'Current',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalPowerMeasurementActiveCurrent-144-5',
@@ -4636,6 +4804,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarPower Energy exported',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -4667,6 +4836,7 @@
     'original_name': 'Energy exported',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_exported',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalEnergyMeasurementCumulativeEnergyExported-145-2',
@@ -4694,6 +4864,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarPower Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4725,6 +4896,7 @@
     'original_name': 'Power',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalPowerMeasurementWatt-144-8',
@@ -4752,6 +4924,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarPower Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4783,6 +4956,7 @@
     'original_name': 'Voltage',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalPowerMeasurementVoltage-144-4',
@@ -4810,6 +4984,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Temperature Sensor Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4835,6 +5010,7 @@
     'original_name': 'Temperature',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-TemperatureSensor-1026-0',
@@ -4862,6 +5038,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Longan link HVAC Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4887,6 +5064,7 @@
     'original_name': 'Temperature',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-ThermostatLocalTemperature-513-0',
@@ -4914,6 +5092,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Vacuum Operational state',
     'capabilities': dict({
       'options': list([
         'stopped',
@@ -4947,6 +5126,7 @@
     'original_name': 'Operational state',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operational_state',
     'unique_id': '00000000000004D2-0000000000000042-MatterNodeDevice-1-RvcOperationalState-97-4',
@@ -4981,6 +5161,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'YNDX-00540 Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5009,6 +5190,7 @@
     'original_name': 'Current',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-ElectricalMeasurementRmsCurrent-2820-1288',
@@ -5036,6 +5218,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'YNDX-00540 Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5064,6 +5247,7 @@
     'original_name': 'Power',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-ElectricalMeasurementActivePower-2820-1291',
@@ -5091,6 +5275,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'YNDX-00540 Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5119,6 +5304,7 @@
     'original_name': 'Voltage',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-ElectricalMeasurementRmsVoltage-2820-1285',

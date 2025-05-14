@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Robot vacuum cleaner',
     'capabilities': dict({
       'fan_speed_list': list([
         'normal',
@@ -33,6 +34,7 @@
     'original_name': None,
     'platform': 'miele',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <VacuumEntityFeature: 13420>,
     'translation_key': 'vacuum',
     'unique_id': 'Dummy_Vacuum_1-vacuum',

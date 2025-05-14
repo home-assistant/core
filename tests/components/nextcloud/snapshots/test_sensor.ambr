@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Amount of active users last 5 minutes',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,6 +30,7 @@
     'original_name': 'Amount of active users last 5 minutes',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_activeusers_last5minutes',
     'unique_id': '1234567890abcdef#activeUsers_last5minutes',
@@ -54,6 +56,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Amount of active users last day',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -79,6 +82,7 @@
     'original_name': 'Amount of active users last day',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_activeusers_last24hours',
     'unique_id': '1234567890abcdef#activeUsers_last24hours',
@@ -104,6 +108,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Amount of active users last hour',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -129,6 +134,7 @@
     'original_name': 'Amount of active users last hour',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_activeusers_last1hour',
     'unique_id': '1234567890abcdef#activeUsers_last1hour',
@@ -154,6 +160,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Amount of files',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -179,6 +186,7 @@
     'original_name': 'Amount of files',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_storage_num_files',
     'unique_id': '1234567890abcdef#storage_num_files',
@@ -204,6 +212,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Amount of group shares',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -229,6 +238,7 @@
     'original_name': 'Amount of group shares',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_shares_num_shares_groups',
     'unique_id': '1234567890abcdef#shares_num_shares_groups',
@@ -254,6 +264,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Amount of link shares',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -279,6 +290,7 @@
     'original_name': 'Amount of link shares',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_shares_num_shares_link',
     'unique_id': '1234567890abcdef#shares_num_shares_link',
@@ -304,6 +316,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Amount of local storages',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -329,6 +342,7 @@
     'original_name': 'Amount of local storages',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_storage_num_storages_local',
     'unique_id': '1234567890abcdef#storage_num_storages_local',
@@ -354,6 +368,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Amount of mail shares',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -379,6 +394,7 @@
     'original_name': 'Amount of mail shares',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_shares_num_shares_mail',
     'unique_id': '1234567890abcdef#shares_num_shares_mail',
@@ -404,6 +420,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Amount of other storages',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -429,6 +446,7 @@
     'original_name': 'Amount of other storages',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_storage_num_storages_other',
     'unique_id': '1234567890abcdef#storage_num_storages_other',
@@ -454,6 +472,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Amount of passwordless link shares',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -479,6 +498,7 @@
     'original_name': 'Amount of passwordless link shares',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_shares_num_shares_link_no_password',
     'unique_id': '1234567890abcdef#shares_num_shares_link_no_password',
@@ -504,6 +524,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Amount of room shares',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -529,6 +550,7 @@
     'original_name': 'Amount of room shares',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_shares_num_shares_room',
     'unique_id': '1234567890abcdef#shares_num_shares_room',
@@ -554,6 +576,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Amount of shares',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -579,6 +602,7 @@
     'original_name': 'Amount of shares',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_shares_num_shares',
     'unique_id': '1234567890abcdef#shares_num_shares',
@@ -604,6 +628,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Amount of shares received',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -629,6 +654,7 @@
     'original_name': 'Amount of shares received',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_shares_num_fed_shares_received',
     'unique_id': '1234567890abcdef#shares_num_fed_shares_received',
@@ -654,6 +680,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Amount of shares sent',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -679,6 +706,7 @@
     'original_name': 'Amount of shares sent',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_shares_num_fed_shares_sent',
     'unique_id': '1234567890abcdef#shares_num_fed_shares_sent',
@@ -704,6 +732,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Amount of storages',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -729,6 +758,7 @@
     'original_name': 'Amount of storages',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_storage_num_storages',
     'unique_id': '1234567890abcdef#storage_num_storages',
@@ -754,6 +784,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Amount of storages at home',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -779,6 +810,7 @@
     'original_name': 'Amount of storages at home',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_storage_num_storages_home',
     'unique_id': '1234567890abcdef#storage_num_storages_home',
@@ -804,6 +836,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Amount of user',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -829,6 +862,7 @@
     'original_name': 'Amount of user',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_storage_num_users',
     'unique_id': '1234567890abcdef#storage_num_users',
@@ -854,6 +888,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Amount of user shares',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -879,6 +914,7 @@
     'original_name': 'Amount of user shares',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_shares_num_shares_user',
     'unique_id': '1234567890abcdef#shares_num_shares_user',
@@ -904,6 +940,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Apps installed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -929,6 +966,7 @@
     'original_name': 'Apps installed',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_apps_num_installed',
     'unique_id': '1234567890abcdef#system_apps_num_installed',
@@ -954,6 +992,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Cache expunges',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -979,6 +1018,7 @@
     'original_name': 'Cache expunges',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_cache_expunges',
     'unique_id': '1234567890abcdef#cache_expunges',
@@ -1004,6 +1044,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Cache memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1027,6 +1068,7 @@
     'original_name': 'Cache memory',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_cache_memory_type',
     'unique_id': '1234567890abcdef#cache_memory_type',
@@ -1051,6 +1093,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Cache memory size',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1080,6 +1123,7 @@
     'original_name': 'Cache memory size',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_cache_mem_size',
     'unique_id': '1234567890abcdef#cache_mem_size',
@@ -1106,6 +1150,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Cache number of entries',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1131,6 +1176,7 @@
     'original_name': 'Cache number of entries',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_cache_num_entries',
     'unique_id': '1234567890abcdef#cache_num_entries',
@@ -1156,6 +1202,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Cache number of hits',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1181,6 +1228,7 @@
     'original_name': 'Cache number of hits',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_cache_num_hits',
     'unique_id': '1234567890abcdef#cache_num_hits',
@@ -1206,6 +1254,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Cache number of inserts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1231,6 +1280,7 @@
     'original_name': 'Cache number of inserts',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_cache_num_inserts',
     'unique_id': '1234567890abcdef#cache_num_inserts',
@@ -1256,6 +1306,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Cache number of misses',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1281,6 +1332,7 @@
     'original_name': 'Cache number of misses',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_cache_num_misses',
     'unique_id': '1234567890abcdef#cache_num_misses',
@@ -1306,6 +1358,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Cache number of slots',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1331,6 +1384,7 @@
     'original_name': 'Cache number of slots',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_cache_num_slots',
     'unique_id': '1234567890abcdef#cache_num_slots',
@@ -1356,6 +1410,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Cache start time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1379,6 +1434,7 @@
     'original_name': 'Cache start time',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_cache_start_time',
     'unique_id': '1234567890abcdef#cache_start_time',
@@ -1404,6 +1460,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Cache TTL',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1427,6 +1484,7 @@
     'original_name': 'Cache TTL',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_cache_ttl',
     'unique_id': '1234567890abcdef#cache_ttl',
@@ -1451,6 +1509,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local CPU load last 15 minutes',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1477,6 +1536,7 @@
     'original_name': 'CPU load last 15 minutes',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_cpuload_15',
     'unique_id': '1234567890abcdef#system_cpuload_15',
@@ -1502,6 +1562,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local CPU load last 1 minute',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1528,6 +1589,7 @@
     'original_name': 'CPU load last 1 minute',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_cpuload_1',
     'unique_id': '1234567890abcdef#system_cpuload_1',
@@ -1553,6 +1615,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local CPU load last 5 minutes',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1579,6 +1642,7 @@
     'original_name': 'CPU load last 5 minutes',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_cpuload_5',
     'unique_id': '1234567890abcdef#system_cpuload_5',
@@ -1604,6 +1668,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Database size',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1633,6 +1698,7 @@
     'original_name': 'Database size',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_database_size',
     'unique_id': '1234567890abcdef#database_size',
@@ -1659,6 +1725,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Database type',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1682,6 +1749,7 @@
     'original_name': 'Database type',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_database_type',
     'unique_id': '1234567890abcdef#database_type',
@@ -1706,6 +1774,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Database version',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1729,6 +1798,7 @@
     'original_name': 'Database version',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_database_version',
     'unique_id': '1234567890abcdef#database_version',
@@ -1753,6 +1823,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Free memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1782,6 +1853,7 @@
     'original_name': 'Free memory',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_mem_free',
     'unique_id': '1234567890abcdef#system_mem_free',
@@ -1808,6 +1880,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Free space',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1837,6 +1910,7 @@
     'original_name': 'Free space',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_freespace',
     'unique_id': '1234567890abcdef#system_freespace',
@@ -1863,6 +1937,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Free swap memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1892,6 +1967,7 @@
     'original_name': 'Free swap memory',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_swap_free',
     'unique_id': '1234567890abcdef#system_swap_free',
@@ -1918,6 +1994,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Interned buffer size',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1947,6 +2024,7 @@
     'original_name': 'Interned buffer size',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_interned_strings_usage_buffer_size',
     'unique_id': '1234567890abcdef#interned_strings_usage_buffer_size',
@@ -1973,6 +2051,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Interned free memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2002,6 +2081,7 @@
     'original_name': 'Interned free memory',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_interned_strings_usage_free_memory',
     'unique_id': '1234567890abcdef#interned_strings_usage_free_memory',
@@ -2028,6 +2108,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Interned number of strings',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2053,6 +2134,7 @@
     'original_name': 'Interned number of strings',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_interned_strings_usage_number_of_strings',
     'unique_id': '1234567890abcdef#interned_strings_usage_number_of_strings',
@@ -2078,6 +2160,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Interned used memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2107,6 +2190,7 @@
     'original_name': 'Interned used memory',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_interned_strings_usage_used_memory',
     'unique_id': '1234567890abcdef#interned_strings_usage_used_memory',
@@ -2133,6 +2217,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local JIT buffer free',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2162,6 +2247,7 @@
     'original_name': 'JIT buffer free',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_jit_buffer_free',
     'unique_id': '1234567890abcdef#jit_buffer_free',
@@ -2188,6 +2274,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local JIT buffer size',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2217,6 +2304,7 @@
     'original_name': 'JIT buffer size',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_jit_buffer_size',
     'unique_id': '1234567890abcdef#jit_buffer_size',
@@ -2243,6 +2331,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local JIT kind',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2266,6 +2355,7 @@
     'original_name': 'JIT kind',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_jit_kind',
     'unique_id': '1234567890abcdef#jit_kind',
@@ -2290,6 +2380,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local JIT opt flags',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2313,6 +2404,7 @@
     'original_name': 'JIT opt flags',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_jit_opt_flags',
     'unique_id': '1234567890abcdef#jit_opt_flags',
@@ -2337,6 +2429,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local JIT opt level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2360,6 +2453,7 @@
     'original_name': 'JIT opt level',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_jit_opt_level',
     'unique_id': '1234567890abcdef#jit_opt_level',
@@ -2384,6 +2478,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Opcache blacklist miss ratio',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2409,6 +2504,7 @@
     'original_name': 'Opcache blacklist miss ratio',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_blacklist_miss_ratio',
     'unique_id': '1234567890abcdef#opcache_statistics_blacklist_miss_ratio',
@@ -2435,6 +2531,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Opcache blacklist misses',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2460,6 +2557,7 @@
     'original_name': 'Opcache blacklist misses',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_blacklist_misses',
     'unique_id': '1234567890abcdef#opcache_statistics_blacklist_misses',
@@ -2485,6 +2583,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Opcache cached keys',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2510,6 +2609,7 @@
     'original_name': 'Opcache cached keys',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_num_cached_keys',
     'unique_id': '1234567890abcdef#opcache_statistics_num_cached_keys',
@@ -2535,6 +2635,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Opcache cached scripts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2560,6 +2661,7 @@
     'original_name': 'Opcache cached scripts',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_num_cached_scripts',
     'unique_id': '1234567890abcdef#opcache_statistics_num_cached_scripts',
@@ -2585,6 +2687,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Opcache current wasted percentage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2611,6 +2714,7 @@
     'original_name': 'Opcache current wasted percentage',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_server_php_opcache_memory_usage_current_wasted_percentage',
     'unique_id': '1234567890abcdef#server_php_opcache_memory_usage_current_wasted_percentage',
@@ -2636,6 +2740,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Opcache free memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2665,6 +2770,7 @@
     'original_name': 'Opcache free memory',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_server_php_opcache_memory_usage_free_memory',
     'unique_id': '1234567890abcdef#server_php_opcache_memory_usage_free_memory',
@@ -2691,6 +2797,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Opcache hash restarts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2716,6 +2823,7 @@
     'original_name': 'Opcache hash restarts',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_hash_restarts',
     'unique_id': '1234567890abcdef#opcache_statistics_hash_restarts',
@@ -2741,6 +2849,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Opcache hit rate',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2767,6 +2876,7 @@
     'original_name': 'Opcache hit rate',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_opcache_hit_rate',
     'unique_id': '1234567890abcdef#opcache_statistics_opcache_hit_rate',
@@ -2792,6 +2902,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Opcache hits',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2817,6 +2928,7 @@
     'original_name': 'Opcache hits',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_hits',
     'unique_id': '1234567890abcdef#opcache_statistics_hits',
@@ -2842,6 +2954,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Opcache last restart time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2865,6 +2978,7 @@
     'original_name': 'Opcache last restart time',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_last_restart_time',
     'unique_id': '1234567890abcdef#opcache_statistics_last_restart_time',
@@ -2890,6 +3004,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Opcache manual restarts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2915,6 +3030,7 @@
     'original_name': 'Opcache manual restarts',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_manual_restarts',
     'unique_id': '1234567890abcdef#opcache_statistics_manual_restarts',
@@ -2940,6 +3056,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Opcache max cached keys',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2965,6 +3082,7 @@
     'original_name': 'Opcache max cached keys',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_max_cached_keys',
     'unique_id': '1234567890abcdef#opcache_statistics_max_cached_keys',
@@ -2990,6 +3108,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Opcache misses',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3015,6 +3134,7 @@
     'original_name': 'Opcache misses',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_misses',
     'unique_id': '1234567890abcdef#opcache_statistics_misses',
@@ -3040,6 +3160,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Opcache out of memory restarts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3065,6 +3186,7 @@
     'original_name': 'Opcache out of memory restarts',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_oom_restarts',
     'unique_id': '1234567890abcdef#opcache_statistics_oom_restarts',
@@ -3090,6 +3212,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Opcache start time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3113,6 +3236,7 @@
     'original_name': 'Opcache start time',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_start_time',
     'unique_id': '1234567890abcdef#opcache_statistics_start_time',
@@ -3138,6 +3262,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Opcache used memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3167,6 +3292,7 @@
     'original_name': 'Opcache used memory',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_server_php_opcache_memory_usage_used_memory',
     'unique_id': '1234567890abcdef#server_php_opcache_memory_usage_used_memory',
@@ -3193,6 +3319,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Opcache wasted memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3222,6 +3349,7 @@
     'original_name': 'Opcache wasted memory',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_server_php_opcache_memory_usage_wasted_memory',
     'unique_id': '1234567890abcdef#server_php_opcache_memory_usage_wasted_memory',
@@ -3248,6 +3376,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local PHP max execution time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3271,6 +3400,7 @@
     'original_name': 'PHP max execution time',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_server_php_max_execution_time',
     'unique_id': '1234567890abcdef#server_php_max_execution_time',
@@ -3297,6 +3427,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local PHP memory limit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3326,6 +3457,7 @@
     'original_name': 'PHP memory limit',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_server_php_memory_limit',
     'unique_id': '1234567890abcdef#server_php_memory_limit',
@@ -3352,6 +3484,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local PHP upload maximum filesize',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3381,6 +3514,7 @@
     'original_name': 'PHP upload maximum filesize',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_server_php_upload_max_filesize',
     'unique_id': '1234567890abcdef#server_php_upload_max_filesize',
@@ -3407,6 +3541,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local PHP version',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3430,6 +3565,7 @@
     'original_name': 'PHP version',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_server_php_version',
     'unique_id': '1234567890abcdef#server_php_version',
@@ -3454,6 +3590,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local SMA available memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3483,6 +3620,7 @@
     'original_name': 'SMA available memory',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_sma_avail_mem',
     'unique_id': '1234567890abcdef#sma_avail_mem',
@@ -3509,6 +3647,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local SMA number of segments',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3534,6 +3673,7 @@
     'original_name': 'SMA number of segments',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_sma_num_seg',
     'unique_id': '1234567890abcdef#sma_num_seg',
@@ -3559,6 +3699,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local SMA segment size',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3588,6 +3729,7 @@
     'original_name': 'SMA segment size',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_sma_seg_size',
     'unique_id': '1234567890abcdef#sma_seg_size',
@@ -3614,6 +3756,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local System memcache distributed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3637,6 +3780,7 @@
     'original_name': 'System memcache distributed',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_memcache_distributed',
     'unique_id': '1234567890abcdef#system_memcache.distributed',
@@ -3661,6 +3805,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local System memcache local',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3684,6 +3829,7 @@
     'original_name': 'System memcache local',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_memcache_local',
     'unique_id': '1234567890abcdef#system_memcache.local',
@@ -3708,6 +3854,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local System memcache locking',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3731,6 +3878,7 @@
     'original_name': 'System memcache locking',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_memcache_locking',
     'unique_id': '1234567890abcdef#system_memcache.locking',
@@ -3755,6 +3903,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local System theme',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3778,6 +3927,7 @@
     'original_name': 'System theme',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_theme',
     'unique_id': '1234567890abcdef#system_theme',
@@ -3802,6 +3952,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local System version',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3825,6 +3976,7 @@
     'original_name': 'System version',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_version',
     'unique_id': '1234567890abcdef#system_version',
@@ -3849,6 +4001,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Total memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3878,6 +4031,7 @@
     'original_name': 'Total memory',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_mem_total',
     'unique_id': '1234567890abcdef#system_mem_total',
@@ -3904,6 +4058,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Total swap memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3933,6 +4088,7 @@
     'original_name': 'Total swap memory',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_swap_total',
     'unique_id': '1234567890abcdef#system_swap_total',
@@ -3959,6 +4115,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Updates available',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3984,6 +4141,7 @@
     'original_name': 'Updates available',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_apps_num_updates_available',
     'unique_id': '1234567890abcdef#system_apps_num_updates_available',
@@ -4009,6 +4167,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my.nc_url.local Webserver',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4032,6 +4191,7 @@
     'original_name': 'Webserver',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_server_webserver',
     'unique_id': '1234567890abcdef#server_webserver',

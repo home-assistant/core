@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Heater',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -40,6 +41,7 @@
     'original_name': None,
     'platform': 'eheimdigital',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': 'heater',
     'unique_id': '00:00:00:00:00:02',
@@ -81,6 +83,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Heater',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -117,6 +120,7 @@
     'original_name': None,
     'platform': 'eheimdigital',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': 'heater',
     'unique_id': '00:00:00:00:00:02',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Stove Combustion power',
     'capabilities': dict({
       'max': 5,
       'min': 1,
@@ -32,6 +33,7 @@
     'original_name': 'Combustion power',
     'platform': 'palazzetti',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'combustion_power',
     'unique_id': '11:22:33:44:55:66-combustion_power',
@@ -61,6 +63,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Stove Left fan speed',
     'capabilities': dict({
       'max': 5,
       'min': 0,
@@ -89,6 +92,7 @@
     'original_name': 'Left fan speed',
     'platform': 'palazzetti',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fan_left_speed',
     'unique_id': '11:22:33:44:55:66-fan_left_speed',
@@ -118,6 +122,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Stove Right fan speed',
     'capabilities': dict({
       'max': 5,
       'min': 0,
@@ -146,6 +151,7 @@
     'original_name': 'Right fan speed',
     'platform': 'palazzetti',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fan_right_speed',
     'unique_id': '11:22:33:44:55:66-fan_right_speed',

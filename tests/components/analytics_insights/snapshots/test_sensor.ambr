@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Homeassistant Analytics core_samba',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -29,6 +30,7 @@
     'original_name': 'core_samba',
     'platform': 'analytics_insights',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'addons',
     'unique_id': 'addon_core_samba_active_installations',
@@ -55,6 +57,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Homeassistant Analytics hacs (custom)',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -80,6 +83,7 @@
     'original_name': 'hacs (custom)',
     'platform': 'analytics_insights',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'custom_integrations',
     'unique_id': 'custom_hacs_active_installations',
@@ -106,6 +110,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Homeassistant Analytics myq',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -131,6 +136,7 @@
     'original_name': 'myq',
     'platform': 'analytics_insights',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'core_integrations',
     'unique_id': 'core_myq_active_installations',
@@ -157,6 +163,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Homeassistant Analytics spotify',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -182,6 +189,7 @@
     'original_name': 'spotify',
     'platform': 'analytics_insights',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'core_integrations',
     'unique_id': 'core_spotify_active_installations',
@@ -208,6 +216,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Homeassistant Analytics Total active installations',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -233,6 +242,7 @@
     'original_name': 'Total active installations',
     'platform': 'analytics_insights',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_active_installations',
     'unique_id': 'total_active_installations',
@@ -259,6 +269,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Homeassistant Analytics Total reported integrations',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -284,6 +295,7 @@
     'original_name': 'Total reported integrations',
     'platform': 'analytics_insights',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_reports_integrations',
     'unique_id': 'total_reports_integrations',
@@ -310,6 +322,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Homeassistant Analytics YouTube',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -335,6 +348,7 @@
     'original_name': 'YouTube',
     'platform': 'analytics_insights',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'core_integrations',
     'unique_id': 'core_youtube_active_installations',

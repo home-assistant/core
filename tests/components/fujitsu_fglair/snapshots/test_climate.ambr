@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'testserial123',
     'capabilities': dict({
       'fan_modes': list([
         'low',
@@ -49,6 +50,7 @@
     'original_name': None,
     'platform': 'fujitsu_fglair',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 425>,
     'translation_key': None,
     'unique_id': 'testserial123',
@@ -99,6 +101,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'testserial345',
     'capabilities': dict({
       'fan_modes': list([
         'low',
@@ -144,6 +147,7 @@
     'original_name': None,
     'platform': 'fujitsu_fglair',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 425>,
     'translation_key': None,
     'unique_id': 'testserial345',

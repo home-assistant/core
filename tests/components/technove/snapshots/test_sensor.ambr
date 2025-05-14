@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TechnoVE Station Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,6 +30,7 @@
     'original_name': 'Current',
     'platform': 'technove',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'AA:AA:AA:AA:AA:BB_current',
@@ -56,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TechnoVE Station Input voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -81,6 +84,7 @@
     'original_name': 'Input voltage',
     'platform': 'technove',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_in',
     'unique_id': 'AA:AA:AA:AA:AA:BB_voltage_in',
@@ -108,6 +112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TechnoVE Station Last session energy usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -133,6 +138,7 @@
     'original_name': 'Last session energy usage',
     'platform': 'technove',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_session',
     'unique_id': 'AA:AA:AA:AA:AA:BB_energy_session',
@@ -160,6 +166,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TechnoVE Station Max station current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -185,6 +192,7 @@
     'original_name': 'Max station current',
     'platform': 'technove',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'max_station_current',
     'unique_id': 'AA:AA:AA:AA:AA:BB_max_station_current',
@@ -212,6 +220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TechnoVE Station Output voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -237,6 +246,7 @@
     'original_name': 'Output voltage',
     'platform': 'technove',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_out',
     'unique_id': 'AA:AA:AA:AA:AA:BB_voltage_out',
@@ -264,6 +274,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TechnoVE Station Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -289,6 +300,7 @@
     'original_name': 'Signal strength',
     'platform': 'technove',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'AA:AA:AA:AA:AA:BB_rssi',
@@ -316,6 +328,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TechnoVE Station Status',
     'capabilities': dict({
       'options': list([
         'unplugged',
@@ -347,6 +360,7 @@
     'original_name': 'Status',
     'platform': 'technove',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
     'unique_id': 'AA:AA:AA:AA:AA:BB_status',
@@ -379,6 +393,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TechnoVE Station Total energy usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -404,6 +419,7 @@
     'original_name': 'Total energy usage',
     'platform': 'technove',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_total',
     'unique_id': 'AA:AA:AA:AA:AA:BB_energy_total',
@@ -431,6 +447,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TechnoVE Station Wi-Fi network name',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -454,6 +471,7 @@
     'original_name': 'Wi-Fi network name',
     'platform': 'technove',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ssid',
     'unique_id': 'AA:AA:AA:AA:AA:BB_ssid',

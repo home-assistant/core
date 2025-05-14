@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Allow export',
     'capabilities': dict({
       'options': list([
         <EnergyExportMode.NEVER: 'never'>,
@@ -33,6 +34,7 @@
     'original_name': 'Allow export',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'components_customer_preferred_export_rule',
     'unique_id': '123456-components_customer_preferred_export_rule',
@@ -62,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Operation mode',
     'capabilities': dict({
       'options': list([
         <EnergyOperationMode.AUTONOMOUS: 'autonomous'>,
@@ -91,6 +94,7 @@
     'original_name': 'Operation mode',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'default_real_mode',
     'unique_id': '123456-default_real_mode',
@@ -120,6 +124,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Seat heater front left',
     'capabilities': dict({
       'options': list([
         'off',
@@ -150,6 +155,7 @@
     'original_name': 'Seat heater front left',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_left',
     'unique_id': 'LRW3F7EK4NC700000-climate_state_seat_heater_left',
@@ -180,6 +186,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Seat heater front right',
     'capabilities': dict({
       'options': list([
         'off',
@@ -210,6 +217,7 @@
     'original_name': 'Seat heater front right',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_right',
     'unique_id': 'LRW3F7EK4NC700000-climate_state_seat_heater_right',
@@ -240,6 +248,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Seat heater rear center',
     'capabilities': dict({
       'options': list([
         'off',
@@ -270,6 +279,7 @@
     'original_name': 'Seat heater rear center',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_rear_center',
     'unique_id': 'LRW3F7EK4NC700000-climate_state_seat_heater_rear_center',
@@ -300,6 +310,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Seat heater rear left',
     'capabilities': dict({
       'options': list([
         'off',
@@ -330,6 +341,7 @@
     'original_name': 'Seat heater rear left',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_rear_left',
     'unique_id': 'LRW3F7EK4NC700000-climate_state_seat_heater_rear_left',
@@ -360,6 +372,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Seat heater rear right',
     'capabilities': dict({
       'options': list([
         'off',
@@ -390,6 +403,7 @@
     'original_name': 'Seat heater rear right',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_rear_right',
     'unique_id': 'LRW3F7EK4NC700000-climate_state_seat_heater_rear_right',
@@ -420,6 +434,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Steering wheel heater',
     'capabilities': dict({
       'options': list([
         'off',
@@ -449,6 +464,7 @@
     'original_name': 'Steering wheel heater',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_steering_wheel_heat_level',
     'unique_id': 'LRW3F7EK4NC700000-climate_state_steering_wheel_heat_level',

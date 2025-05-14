@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My water heater',
     'capabilities': dict({
       'max_temp': 130,
       'min_temp': 95,
@@ -30,6 +31,7 @@
     'original_name': None,
     'platform': 'aosmith',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <WaterHeaterEntityFeature: 5>,
     'translation_key': None,
     'unique_id': 'junctionId',
@@ -62,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My water heater',
     'capabilities': dict({
       'max_temp': 130,
       'min_temp': 95,
@@ -93,6 +96,7 @@
     'original_name': None,
     'platform': 'aosmith',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <WaterHeaterEntityFeature: 7>,
     'translation_key': None,
     'unique_id': 'junctionId',

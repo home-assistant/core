@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zen-01',
     'capabilities': dict({
       'fan_modes': list([
         'smart',
@@ -45,6 +46,7 @@
     'original_name': 'Zen-01',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 393>,
     'translation_key': None,
     'unique_id': '00:24:46:00:00:11:6f:56-01-0201',
@@ -92,6 +94,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zen-01',
     'capabilities': dict({
       'fan_modes': list([
         'smart',
@@ -133,6 +136,7 @@
     'original_name': 'Zen-01',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 393>,
     'translation_key': None,
     'unique_id': '00:24:46:00:00:11:6f:56-01-0201',
@@ -180,6 +184,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zen-01',
     'capabilities': dict({
       'fan_modes': list([
         'smart',
@@ -230,6 +235,7 @@
     'original_name': 'Zen-01',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 409>,
     'translation_key': None,
     'unique_id': '00:24:46:00:00:11:6f:56-01-0201',
@@ -287,6 +293,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Thermostat',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
@@ -318,6 +325,7 @@
     'original_name': 'Thermostat',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 385>,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:00-00',
@@ -355,6 +363,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CLIP thermostat',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
@@ -385,6 +394,7 @@
     'original_name': 'CLIP thermostat',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 385>,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:02-00',
@@ -420,6 +430,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Thermostat',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
@@ -451,6 +462,7 @@
     'original_name': 'Thermostat',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 385>,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:00-00',
@@ -488,6 +500,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'thermostat',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
@@ -518,6 +531,7 @@
     'original_name': 'thermostat',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 385>,
     'translation_key': None,
     'unique_id': '14:b4:57:ff:fe:d5:4e:77-01-0201',
