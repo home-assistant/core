@@ -10,7 +10,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -18,7 +17,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    DOMAIN as DOMAIN_RACHIO,
     KEY_BATTERY,
     KEY_DETECT_FLOW,
     KEY_DEVICE_ID,
@@ -33,7 +31,7 @@ from .const import (
     STATUS_ONLINE,
 )
 from .coordinator import RachioUpdateCoordinator
-from .device import RachioIro, RachioPerson
+from .device import RachioConfigEntry, RachioIro
 from .entity import RachioDevice, RachioHoseTimerEntity
 from .webhooks import (
     SUBTYPE_COLD_REBOOT,
@@ -109,7 +107,7 @@ HOSE_TIMER_BINARY_SENSOR_TYPES: tuple[RachioHoseTimerBinarySensorDescription, ..
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RachioConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Rachio binary sensors."""
@@ -117,9 +115,11 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-def _create_entities(hass: HomeAssistant, config_entry: ConfigEntry) -> list[Entity]:
+def _create_entities(
+    hass: HomeAssistant, config_entry: RachioConfigEntry
+) -> list[Entity]:
     entities: list[Entity] = []
-    person: RachioPerson = hass.data[DOMAIN_RACHIO][config_entry.entry_id]
+    person = config_entry.runtime_data
     entities.extend(
         RachioControllerBinarySensor(controller, description)
         for controller in person.controllers
