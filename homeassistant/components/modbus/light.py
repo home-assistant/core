@@ -133,13 +133,12 @@ class ModbusLight(BaseSwitch, LightEntity):
 
         conv_color_temp_kelvin = self._convert_color_temp_to_modbus(color_temp_kelvin)
 
-        if conv_color_temp_kelvin is not None:
-            await self._hub.async_pb_call(
-                unit=self._slave,
-                address=self._color_temp_address,
-                value=conv_color_temp_kelvin,
-                use_call=CALL_TYPE_WRITE_REGISTER,
-            )
+        await self._hub.async_pb_call(
+            unit=self._slave,
+            address=self._color_temp_address,
+            value=conv_color_temp_kelvin,
+            use_call=CALL_TYPE_WRITE_REGISTER,
+        )
         if not self._verify_active:
             self._attr_color_temp_kelvin = color_temp_kelvin
 
