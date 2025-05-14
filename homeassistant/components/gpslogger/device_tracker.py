@@ -1,7 +1,6 @@
 """Support for the GPSLogger device tracking."""
 
 from homeassistant.components.device_tracker import TrackerEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_GPS_ACCURACY,
@@ -15,19 +14,20 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import DOMAIN, TRACKER_UPDATE
+from . import TRACKER_UPDATE, GPSLoggerConfigEntry
 from .const import (
     ATTR_ACTIVITY,
     ATTR_ALTITUDE,
     ATTR_DIRECTION,
     ATTR_PROVIDER,
     ATTR_SPEED,
+    DOMAIN,
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: GPSLoggerConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Configure a dispatcher connection based on a config entry."""
@@ -35,10 +35,10 @@ async def async_setup_entry(
     @callback
     def _receive_data(device, gps, battery, accuracy, attrs):
         """Receive set location."""
-        if device in hass.data[DOMAIN]["devices"]:
+        if device in entry.runtime_data:
             return
 
-        hass.data[DOMAIN]["devices"].add(device)
+        entry.runtime_data.add(device)
 
         async_add_entities([GPSLoggerEntity(device, gps, battery, accuracy, attrs)])
 
@@ -56,7 +56,7 @@ async def async_setup_entry(
 
     entities = []
     for dev_id in dev_ids:
-        hass.data[DOMAIN]["devices"].add(dev_id)
+        entry.runtime_data.add(dev_id)
         entity = GPSLoggerEntity(dev_id, None, None, None, None)
         entities.append(entity)
 

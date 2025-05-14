@@ -24,6 +24,8 @@ from .const import (
     DOMAIN,
 )
 
+type GPSLoggerConfigEntry = ConfigEntry[set[str]]
+
 PLATFORMS = [Platform.DEVICE_TRACKER]
 
 TRACKER_UPDATE = f"{DOMAIN}_tracker_update"
@@ -88,9 +90,9 @@ async def handle_webhook(
     return web.Response(text=f"Setting location for {device}")
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GPSLoggerConfigEntry) -> bool:
     """Configure based on config entry."""
-    hass.data.setdefault(DOMAIN, {"devices": set()})
+    entry.runtime_data = set()
     webhook.async_register(
         hass, DOMAIN, "GPSLogger", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
