@@ -195,6 +195,7 @@
     dict({
       'can_expand': True,
       'can_play': False,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'directory',
       'media_content_id': 'S:',
@@ -256,10 +257,12 @@
   dict({
     'can_expand': False,
     'can_play': False,
+    'can_search': False,
     'children': list([
       dict({
         'can_expand': True,
         'can_play': True,
+        'can_search': False,
         'children_media_class': None,
         'media_class': 'directory',
         'media_content_id': 'S://192.168.1.1/music/beatles',
@@ -270,6 +273,7 @@
       dict({
         'can_expand': True,
         'can_play': True,
+        'can_search': False,
         'children_media_class': None,
         'media_class': 'directory',
         'media_content_id': 'S://192.168.1.1/music/elton%20john',
@@ -291,10 +295,12 @@
   dict({
     'can_expand': False,
     'can_play': False,
+    'can_search': False,
     'children': list([
       dict({
         'can_expand': True,
         'can_play': False,
+        'can_search': False,
         'children_media_class': None,
         'media_class': 'directory',
         'media_content_id': 'S://192.168.1.1/music',
