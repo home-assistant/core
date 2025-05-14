@@ -23,7 +23,6 @@ from zwave_js_server.model.node import Node, NodeDataType
 from zwave_js_server.model.version import VersionInfo
 
 from homeassistant.components.hassio import HassioAPIError
-from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN, SERVICE_SET_LEVEL
 from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id, get_device_id_ext
@@ -42,6 +41,7 @@ from .common import AIR_TEMPERATURE_SENSOR, EATON_RF9640_ENTITY
 
 from tests.common import (
     MockConfigEntry,
+    async_call_logger_set_level,
     async_fire_time_changed,
     async_get_persistent_notifications,
 )
@@ -2018,7 +2018,9 @@ async def test_identify_event(
     assert "network with the home ID `3245146787`" in notifications[msg_id]["message"]
 
 
-async def test_server_logging(hass: HomeAssistant, client: MagicMock) -> None:
+async def test_server_logging(
+    hass: HomeAssistant, client: MagicMock, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test automatic server logging functionality."""
 
     def _reset_mocks():
@@ -2037,83 +2039,82 @@ async def test_server_logging(hass: HomeAssistant, client: MagicMock) -> None:
 
     # Setup logger and set log level to debug to trigger event listener
     assert await async_setup_component(hass, "logger", {"logger": {}})
-    assert logging.getLogger("zwave_js_server").getEffectiveLevel() == logging.INFO
-    client.async_send_command.reset_mock()
-    await hass.services.async_call(
-        LOGGER_DOMAIN, SERVICE_SET_LEVEL, {"zwave_js_server": "debug"}, blocking=True
-    )
-    await hass.async_block_till_done()
     assert logging.getLogger("zwave_js_server").getEffectiveLevel() == logging.DEBUG
+    client.async_send_command.reset_mock()
+    async with async_call_logger_set_level(
+        "zwave_js_server", "DEBUG", hass=hass, caplog=caplog
+    ):
+        assert logging.getLogger("zwave_js_server").getEffectiveLevel() == logging.DEBUG
 
-    # Validate that the server logging was enabled
-    assert len(client.async_send_command.call_args_list) == 1
-    assert client.async_send_command.call_args[0][0] == {
-        "command": "driver.update_log_config",
-        "config": {"level": "debug"},
-    }
-    assert client.enable_server_logging.called
-    assert not client.disable_server_logging.called
+        # Validate that the server logging was enabled
+        assert len(client.async_send_command.call_args_list) == 1
+        assert client.async_send_command.call_args[0][0] == {
+            "command": "driver.update_log_config",
+            "config": {"level": "debug"},
+        }
+        assert client.enable_server_logging.called
+        assert not client.disable_server_logging.called
 
-    _reset_mocks()
+        _reset_mocks()
 
-    # Emulate server by setting log level to debug
-    event = Event(
-        type="log config updated",
-        data={
-            "source": "driver",
-            "event": "log config updated",
-            "config": {
-                "enabled": False,
-                "level": "debug",
-                "logToFile": True,
-                "filename": "test",
-                "forceConsole": True,
+        # Emulate server by setting log level to debug
+        event = Event(
+            type="log config updated",
+            data={
+                "source": "driver",
+                "event": "log config updated",
+                "config": {
+                    "enabled": False,
+                    "level": "debug",
+                    "logToFile": True,
+                    "filename": "test",
+                    "forceConsole": True,
+                },
             },
-        },
-    )
-    client.driver.receive_event(event)
+        )
+        client.driver.receive_event(event)
 
-    # "Enable" server logging and unload the entry
-    client.server_logging_enabled = True
-    await hass.config_entries.async_unload(entry.entry_id)
+        # "Enable" server logging and unload the entry
+        client.server_logging_enabled = True
+        await hass.config_entries.async_unload(entry.entry_id)
 
-    # Validate that the server logging was disabled
-    assert len(client.async_send_command.call_args_list) == 1
-    assert client.async_send_command.call_args[0][0] == {
-        "command": "driver.update_log_config",
-        "config": {"level": "info"},
-    }
-    assert not client.enable_server_logging.called
-    assert client.disable_server_logging.called
+        # Validate that the server logging was disabled
+        assert len(client.async_send_command.call_args_list) == 1
+        assert client.async_send_command.call_args[0][0] == {
+            "command": "driver.update_log_config",
+            "config": {"level": "info"},
+        }
+        assert not client.enable_server_logging.called
+        assert client.disable_server_logging.called
 
-    _reset_mocks()
+        _reset_mocks()
 
-    # Validate that the server logging doesn't get enabled because HA thinks it already
-    # is enabled
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert len(client.async_send_command.call_args_list) == 2
-    assert client.async_send_command.call_args_list[0][0][0] == {
-        "command": "controller.get_provisioning_entries",
-    }
-    assert client.async_send_command.call_args_list[1][0][0] == {
-        "command": "controller.get_provisioning_entry",
-        "dskOrNodeId": 1,
-    }
-    assert not client.enable_server_logging.called
-    assert not client.disable_server_logging.called
+        # Validate that the server logging doesn't get enabled because HA thinks it already
+        # is enabled
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert len(client.async_send_command.call_args_list) == 2
+        assert client.async_send_command.call_args_list[0][0][0] == {
+            "command": "controller.get_provisioning_entries",
+        }
+        assert client.async_send_command.call_args_list[1][0][0] == {
+            "command": "controller.get_provisioning_entry",
+            "dskOrNodeId": 1,
+        }
+        assert not client.enable_server_logging.called
+        assert not client.disable_server_logging.called
 
-    _reset_mocks()
+        _reset_mocks()
 
-    # "Disable" server logging and unload the entry
-    client.server_logging_enabled = False
-    await hass.config_entries.async_unload(entry.entry_id)
+        # "Disable" server logging and unload the entry
+        client.server_logging_enabled = False
+        await hass.config_entries.async_unload(entry.entry_id)
 
-    # Validate that the server logging was not disabled because HA thinks it is already
-    # is disabled
-    assert len(client.async_send_command.call_args_list) == 0
-    assert not client.enable_server_logging.called
-    assert not client.disable_server_logging.called
+        # Validate that the server logging was not disabled because HA thinks it is already
+        # is disabled
+        assert len(client.async_send_command.call_args_list) == 0
+        assert not client.enable_server_logging.called
+        assert not client.disable_server_logging.called
 
 
 async def test_factory_reset_node(

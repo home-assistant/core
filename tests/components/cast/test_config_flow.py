@@ -10,7 +10,7 @@ from homeassistant.components.cast.home_assistant_cast import CAST_USER_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 async def test_creating_entry_sets_up_media_player(hass: HomeAssistant) -> None:
@@ -141,16 +141,6 @@ async def test_zeroconf_setup_onboarding(hass: HomeAssistant) -> None:
     }
 
 
-def get_suggested(schema, key):
-    """Get suggested value for key in voluptuous schema."""
-    for k in schema:
-        if k == key:
-            if k.description is None or "suggested_value" not in k.description:
-                return None
-            return k.description["suggested_value"]
-    return None
-
-
 @pytest.mark.parametrize(
     ("parameter", "initial", "suggested", "user_input", "updated"),
     [
@@ -219,9 +209,9 @@ async def test_option_flow(
     for other_param in basic_parameters:
         if other_param == parameter:
             continue
-        assert get_suggested(data_schema, other_param) == []
+        assert get_schema_suggested_value(data_schema, other_param) == []
     if parameter in basic_parameters:
-        assert get_suggested(data_schema, parameter) == suggested
+        assert get_schema_suggested_value(data_schema, parameter) == suggested
 
     user_input_dict = {}
     if parameter in basic_parameters:
@@ -244,9 +234,9 @@ async def test_option_flow(
     for other_param in advanced_parameters:
         if other_param == parameter:
             continue
-        assert get_suggested(data_schema, other_param) == ""
+        assert get_schema_suggested_value(data_schema, other_param) == ""
     if parameter in advanced_parameters:
-        assert get_suggested(data_schema, parameter) == suggested
+        assert get_schema_suggested_value(data_schema, parameter) == suggested
 
     user_input_dict = {}
     if parameter in advanced_parameters:

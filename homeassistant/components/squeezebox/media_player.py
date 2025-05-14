@@ -75,6 +75,7 @@ ATTR_QUERY_RESULT = "query_result"
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
 
 ATTR_PARAMETERS = "parameters"
 ATTR_OTHER_PLAYER = "other_player"

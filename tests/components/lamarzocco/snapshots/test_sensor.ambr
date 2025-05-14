@@ -1,4 +1,52 @@
 # serializer version: 1
+# name: test_sensors[sensor.gs012345_brewing_start_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.gs012345_brewing_start_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Brewing start time',
+    'platform': 'lamarzocco',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'brewing_start_time',
+    'unique_id': 'GS012345_brewing_start_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.gs012345_brewing_start_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'GS012345 Brewing start time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gs012345_brewing_start_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-05-07T18:04:20+00:00',
+  })
+# ---
 # name: test_sensors[sensor.gs012345_coffee_boiler_ready_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -47,6 +95,54 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensors[sensor.gs012345_last_cleaning_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.gs012345_last_cleaning_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last cleaning time',
+    'platform': 'lamarzocco',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_cleaning_time',
+    'unique_id': 'GS012345_last_cleaning_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.gs012345_last_cleaning_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'GS012345 Last cleaning time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gs012345_last_cleaning_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-03-29T08:25:47+00:00',
+  })
+# ---
 # name: test_sensors[sensor.gs012345_steam_boiler_ready_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -93,5 +189,107 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.gs012345_total_coffees_made-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.gs012345_total_coffees_made',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total coffees made',
+    'platform': 'lamarzocco',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_coffees_made',
+    'unique_id': 'GS012345_drink_stats_coffee',
+    'unit_of_measurement': 'coffees',
+  })
+# ---
+# name: test_sensors[sensor.gs012345_total_coffees_made-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GS012345 Total coffees made',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'coffees',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gs012345_total_coffees_made',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1620',
+  })
+# ---
+# name: test_sensors[sensor.gs012345_total_flushes_done-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.gs012345_total_flushes_done',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total flushes done',
+    'platform': 'lamarzocco',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_flushes_done',
+    'unique_id': 'GS012345_drink_stats_flushing',
+    'unit_of_measurement': 'flushes',
+  })
+# ---
+# name: test_sensors[sensor.gs012345_total_flushes_done-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GS012345 Total flushes done',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'flushes',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gs012345_total_flushes_done',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1366',
   })
 # ---
