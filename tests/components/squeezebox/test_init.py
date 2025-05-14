@@ -3,6 +3,7 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -38,6 +39,7 @@ async def test_init_timeout_error(
         ),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_init_unauthorized(
@@ -59,6 +61,7 @@ async def test_init_unauthorized(
     ):
         mock_server_instance.return_value.http_status = HTTPStatus.UNAUTHORIZED
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_init_missing_uuid(
@@ -75,6 +78,7 @@ async def test_init_missing_uuid(
     ) as mock_async_query:
         # ConfigEntryError is raised, caught by setup, and returns False
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        assert config_entry.state is ConfigEntryState.SETUP_ERROR
         mock_async_query.assert_called_once_with(
             "serverstatus", "-", "-", "prefs:libraryname"
         )
