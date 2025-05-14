@@ -9,6 +9,7 @@
     "step": {
       "user": {
         "data": {
+          "device_config": "Fetch device config (may cause timeouts on older devices)",
           "id": "Installation",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
