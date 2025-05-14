@@ -13,15 +13,12 @@ rules:
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: done
+  docs-removal-instructions: todo
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
   runtime-data: todo
-  test-before-configure:
-    status: exempt
-    comment: |
-      Configuration is done via zeroconf
+  test-before-configure: done
   test-before-setup: todo
   unique-config-entry:
     status: exempt
@@ -43,16 +40,16 @@ rules:
   test-coverage: todo
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info: todo
   discovery: done
   docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
+  docs-examples: done
+  docs-known-limitations: done
   docs-supported-devices: todo
   docs-supported-functions: todo
   docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-use-cases: done
   dynamic-devices: done
   entity-category: done
   entity-device-class: done
