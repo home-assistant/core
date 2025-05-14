@@ -47,6 +47,7 @@ def classic_led_ctrl_mock():
     classic_led_ctrl_mock.sw_version = "1.0.0_1.0.0"
     classic_led_ctrl_mock.light_mode = LightMode.DAYCL_MODE
     classic_led_ctrl_mock.light_level = (10, 39)
+    classic_led_ctrl_mock.sys_led = 20
     return classic_led_ctrl_mock
 
 
@@ -69,6 +70,7 @@ def heater_mock():
     heater_mock.operation_mode = HeaterMode.MANUAL
     heater_mock.day_start_time = time(8, 0, tzinfo=timezone(timedelta(hours=1)))
     heater_mock.night_start_time = time(20, 0, tzinfo=timezone(timedelta(hours=1)))
+    heater_mock.sys_led = 20
     return heater_mock
 
 
