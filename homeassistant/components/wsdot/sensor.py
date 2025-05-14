@@ -91,7 +91,9 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     _attr_attribution = ATTRIBUTION
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
-    def __init__(self, name: str, hass: HomeAssistant, access_code: str, travel_time_id: str) -> None:
+    def __init__(
+        self, name: str, hass: HomeAssistant, access_code: str, travel_time_id: str
+    ) -> None:
         """Construct a travel time sensor."""
         super().__init__(name)
         self._data: wsdot.TravelTime | None = None
@@ -105,7 +107,9 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
         """Return a cached WsdotTravelTimes object."""
         if self._wsdot_travel is None:
             session = async_get_clientsession(self.hass)
-            self._wsdot_travel = wsdot.WsdotTravelTimes(api_key=self._access_code, session=session)
+            self._wsdot_travel = wsdot.WsdotTravelTimes(
+                api_key=self._access_code, session=session
+            )
         return self._wsdot_travel
 
     async def async_update(self) -> None:

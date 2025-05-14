@@ -31,12 +31,17 @@ def test_travel_time() -> wsdot.TravelTime:
     test_response = json.loads(test_data)
     return wsdot.TravelTime(**test_response)
 
+
 async def test_setup_with_config(hass: HomeAssistant) -> None:
     """Test the platform setup with configuration."""
     assert await async_setup_component(hass, "sensor", {"wsdot": config})
 
 
-async def test_setup(hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, test_travel_time: wsdot.TravelTime) -> None:
+async def test_setup(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+    test_travel_time: wsdot.TravelTime,
+) -> None:
     """Test for operational WSDOT sensor with proper attributes."""
     entities = []
 
@@ -53,7 +58,9 @@ async def test_setup(hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, test_
     for entity in entities:
         assert isinstance(entity.wsdot_travel, wsdot.WsdotTravelTimes)
         with monkeypatch.context() as external_api:
-            external_api.setattr(entity._wsdot_travel, "get_travel_time", fake_travel_time)
+            external_api.setattr(
+                entity._wsdot_travel, "get_travel_time", fake_travel_time
+            )
             await entity.async_update()
 
     assert len(entities) == 1
