@@ -545,7 +545,7 @@ def mock_browse_by_idstring(
 
 
 def mock_get_music_library_information(
-    search_type: str, search_term: str, full_album_art_uri: bool = True
+    search_type: str, search_term: str | None = None, full_album_art_uri: bool = True
 ) -> list[MockMusicServiceItem]:
     """Mock the call to get music library information."""
     if search_type == "albums" and search_term == "Abbey Road":
@@ -557,6 +557,10 @@ def mock_get_music_library_information(
                 "object.container.album.musicAlbum",
             )
         ]
+    if search_type == "sonos_playlists":
+        playlists = load_json_value_fixture("sonos_playlists.json", "sonos")
+        playlists_list = [DidlPlaylistContainer.from_dict(pl) for pl in playlists]
+        return SearchResult(playlists_list, "sonos_playlists", 1, 1, 0)
     return []
 
 

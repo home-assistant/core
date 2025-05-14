@@ -1,0 +1,29 @@
+{
+  "entity": {
+    "sensor": {
+      "faulting_points": {
+        "default": "mdi:alert-circle"
+      }
+    },
+    "switch": {
+      "locked": {
+        "default": "mdi:lock",
+        "state": {
+          "off": "mdi:lock-open"
+        }
+      },
+      "secured": {
+        "default": "mdi:lock",
+        "state": {
+          "off": "mdi:lock-open"
+        }
+      },
+      "cycling": {
+        "default": "mdi:lock",
+        "state": {
+          "on": "mdi:lock-open"
+        }
+      }
+    }
+  }
+}

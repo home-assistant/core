@@ -14,11 +14,15 @@ from homeassistant.components import blueprint
 from homeassistant.components.trace import TRACE_CONFIG_SCHEMA
 from homeassistant.config import config_per_platform, config_without_domain
 from homeassistant.const import (
+    CONF_ACTION,
+    CONF_ACTIONS,
     CONF_ALIAS,
     CONF_CONDITION,
     CONF_CONDITIONS,
     CONF_DESCRIPTION,
     CONF_ID,
+    CONF_TRIGGER,
+    CONF_TRIGGERS,
     CONF_VARIABLES,
 )
 from homeassistant.core import HomeAssistant
@@ -30,14 +34,10 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.yaml.input import UndefinedSubstitution
 
 from .const import (
-    CONF_ACTION,
-    CONF_ACTIONS,
     CONF_HIDE_ENTITY,
     CONF_INITIAL_STATE,
     CONF_TRACE,
-    CONF_TRIGGER,
     CONF_TRIGGER_VARIABLES,
-    CONF_TRIGGERS,
     DOMAIN,
     LOGGER,
 )
@@ -58,34 +58,9 @@ _MINIMAL_PLATFORM_SCHEMA = vol.Schema(
 def _backward_compat_schema(value: Any | None) -> Any:
     """Backward compatibility for automations."""
 
-    if not isinstance(value, dict):
-        return value
-
-    # `trigger` has been renamed to `triggers`
-    if CONF_TRIGGER in value:
-        if CONF_TRIGGERS in value:
-            raise vol.Invalid(
-                "Cannot specify both 'trigger' and 'triggers'. Please use 'triggers' only."
-            )
-        value[CONF_TRIGGERS] = value.pop(CONF_TRIGGER)
-
-    # `condition` has been renamed to `conditions`
-    if CONF_CONDITION in value:
-        if CONF_CONDITIONS in value:
-            raise vol.Invalid(
-                "Cannot specify both 'condition' and 'conditions'. Please use 'conditions' only."
-            )
-        value[CONF_CONDITIONS] = value.pop(CONF_CONDITION)
-
-    # `action` has been renamed to `actions`
-    if CONF_ACTION in value:
-        if CONF_ACTIONS in value:
-            raise vol.Invalid(
-                "Cannot specify both 'action' and 'actions'. Please use 'actions' only."
-            )
-        value[CONF_ACTIONS] = value.pop(CONF_ACTION)
-
-    return value
+    value = cv.renamed(CONF_TRIGGER, CONF_TRIGGERS)(value)
+    value = cv.renamed(CONF_ACTION, CONF_ACTIONS)(value)
+    return cv.renamed(CONF_CONDITION, CONF_CONDITIONS)(value)
 
 
 PLATFORM_SCHEMA = vol.All(

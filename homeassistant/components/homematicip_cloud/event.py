@@ -1,9 +1,12 @@
 """Support for HomematicIP Cloud events."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from homematicip.aio.device import Device
+from homematicip.base.channel_event import ChannelEvent
+from homematicip.base.functionalChannels import FunctionalChannel
+from homematicip.device import Device
 
 from homeassistant.components.event import (
     EventDeviceClass,
@@ -23,6 +26,9 @@ from .hap import HomematicipHAP
 class HmipEventEntityDescription(EventEntityDescription):
     """Description of a HomematicIP Cloud event."""
 
+    channel_event_types: list[str] | None = None
+    channel_selector_fn: Callable[[FunctionalChannel], bool] | None = None
+
 
 EVENT_DESCRIPTIONS = {
     "doorbell": HmipEventEntityDescription(
@@ -30,6 +36,8 @@ EVENT_DESCRIPTIONS = {
         translation_key="doorbell",
         device_class=EventDeviceClass.DOORBELL,
         event_types=["ring"],
+        channel_event_types=["DOOR_BELL_SENSOR_EVENT"],
+        channel_selector_fn=lambda channel: channel.channelRole == "DOOR_BELL_INPUT",
     ),
 }
 
@@ -41,24 +49,29 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomematicIP cover from a config entry."""
     hap = hass.data[DOMAIN][config_entry.unique_id]
+    entities: list[HomematicipGenericEntity] = []
 
-    async_add_entities(
+    entities.extend(
         HomematicipDoorBellEvent(
             hap,
             device,
             channel.index,
-            EVENT_DESCRIPTIONS["doorbell"],
+            description,
         )
+        for description in EVENT_DESCRIPTIONS.values()
         for device in hap.home.devices
         for channel in device.functionalChannels
-        if channel.channelRole == "DOOR_BELL_INPUT"
+        if description.channel_selector_fn and description.channel_selector_fn(channel)
     )
+
+    async_add_entities(entities)
 
 
 class HomematicipDoorBellEvent(HomematicipGenericEntity, EventEntity):
     """Event class for HomematicIP doorbell events."""
 
     _attr_device_class = EventDeviceClass.DOORBELL
+    entity_description: HmipEventEntityDescription
 
     def __init__(
         self,
@@ -86,9 +99,27 @@ class HomematicipDoorBellEvent(HomematicipGenericEntity, EventEntity):
     @callback
     def _async_handle_event(self, *args, **kwargs) -> None:
         """Handle the event fired by the functional channel."""
+        raised_channel_event = self._get_channel_event_from_args(*args)
+
+        if not self._should_raise(raised_channel_event):
+            return
+
         event_types = self.entity_description.event_types
         if TYPE_CHECKING:
             assert event_types is not None
 
         self._trigger_event(event_type=event_types[0])
         self.async_write_ha_state()
+
+    def _should_raise(self, event_type: str) -> bool:
+        """Check if the event should be raised."""
+        if self.entity_description.channel_event_types is None:
+            return False
+        return event_type in self.entity_description.channel_event_types
+
+    def _get_channel_event_from_args(self, *args) -> str:
+        """Get the channel event."""
+        if isinstance(args[0], ChannelEvent):
+            return args[0].channelEventType
+
+        return ""

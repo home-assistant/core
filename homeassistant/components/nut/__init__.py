@@ -23,14 +23,10 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    INTEGRATION_SUPPORTED_COMMANDS,
-    PLATFORMS,
-)
+from .const import DOMAIN, INTEGRATION_SUPPORTED_COMMANDS, PLATFORMS
 
 NUT_FAKE_SERIAL = ["unknown", "blank"]
 
@@ -68,7 +64,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
     alias = config.get(CONF_ALIAS)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    if CONF_SCAN_INTERVAL in entry.options:
+        current_options = {**entry.options}
+        current_options.pop(CONF_SCAN_INTERVAL)
+        hass.config_entries.async_update_entry(entry, options=current_options)
 
     data = PyNUTData(host, port, alias, username, password)
 
@@ -101,7 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
         config_entry=entry,
         name="NUT resource status",
         update_method=async_update_data,
-        update_interval=timedelta(seconds=scan_interval),
+        update_interval=timedelta(seconds=60),
         always_update=False,
     )
 
@@ -121,6 +120,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
     unique_id = _unique_id_from_status(status)
     if unique_id is None:
         unique_id = entry.entry_id
+
+    elif entry.unique_id is None:
+        hass.config_entries.async_update_entry(entry, unique_id=unique_id)
 
     if username is not None and password is not None:
         # Dynamically add outlet integration commands
@@ -155,10 +157,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
         coordinator, data, unique_id, user_available_commands
     )
 
+    connections: set[tuple[str, str]] | None = None
+    if data.device_info.mac_address is not None:
+        connections = {(CONNECTION_NETWORK_MAC, data.device_info.mac_address)}
+
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, unique_id)},
+        connections=connections,
         name=data.name.title(),
         manufacturer=data.device_info.manufacturer,
         model=data.device_info.model,
@@ -173,12 +180,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: NutConfigEntry,
+    device_entry: dr.DeviceEntry,
+) -> bool:
+    """Remove NUT config entry from a device."""
+    return not any(
+        identifier
+        for identifier in device_entry.identifiers
+        if identifier[0] == DOMAIN
+        and identifier[1] in config_entry.runtime_data.unique_id
+    )
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: NutConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
@@ -246,6 +267,7 @@ class NUTDeviceInfo:
     model_id: str | None = None
     firmware: str | None = None
     serial: str | None = None
+    mac_address: str | None = None
     device_location: str | None = None
 
 
@@ -309,9 +331,18 @@ class PyNUTData:
         model_id: str | None = self._status.get("device.part")
         firmware = _firmware_from_status(self._status)
         serial = _serial_from_status(self._status)
+        mac_address: str | None = self._status.get("device.macaddr")
+        if mac_address is not None:
+            mac_address = format_mac(mac_address.rstrip().replace(" ", ":"))
         device_location: str | None = self._status.get("device.location")
         return NUTDeviceInfo(
-            manufacturer, model, model_id, firmware, serial, device_location
+            manufacturer,
+            model,
+            model_id,
+            firmware,
+            serial,
+            mac_address,
+            device_location,
         )
 
     async def _async_get_status(self) -> dict[str, str]:

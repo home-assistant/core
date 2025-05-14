@@ -24,8 +24,8 @@
           "fix_menu": {
             "description": "Add-on {addon} is set to start at boot but failed to start. Usually this occurs when the configuration is incorrect or the same port is used in multiple add-ons. Check the configuration as well as logs for {addon} and Supervisor.\n\nUse Start to try again or Disable to turn off the start at boot option.",
             "menu_options": {
-              "addon_execute_start": "Start",
-              "addon_disable_boot": "Disable"
+              "addon_execute_start": "[%key:common::action::start%]",
+              "addon_disable_boot": "[%key:common::action::disable%]"
             }
           }
         },
@@ -225,10 +225,6 @@
     "unsupported_virtualization_image": {
       "title": "Unsupported system - Incorrect OS image for virtualization",
       "description": "System is unsupported because the Home Assistant OS image in use is not intended for use in a virtualized environment. Use the link to learn more and how to fix this."
-    },
-    "update_service_deprecated": {
-      "title": "Deprecated update add-on action",
-      "description": "The update add-on action has been deprecated and will be removed in 2025.5. Please use the update entity and the respective action to update the add-on instead."
     }
   },
   "entity": {
@@ -264,6 +260,11 @@
       },
       "version_latest": {
         "name": "Newest version"
+      }
+    },
+    "update": {
+      "update": {
+        "name": "[%key:component::update::title%]"
       }
     }
   },
@@ -305,16 +306,6 @@
         "addon": {
           "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
           "description": "The add-on to stop."
-        }
-      }
-    },
-    "addon_update": {
-      "name": "Update add-on",
-      "description": "Updates an add-on. This action should be used with caution since add-on updates can contain breaking changes. It is highly recommended that you review release notes/change logs before updating an add-on.",
-      "fields": {
-        "addon": {
-          "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
-          "description": "The add-on to update."
         }
       }
     },

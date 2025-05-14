@@ -42,7 +42,7 @@ async def test_all_entities(
     await snapshot_platform(
         hass,
         entity_registry,
-        snapshot(),
+        snapshot,
         mock_serial_bridge_config_entry.entry_id,
     )
 
@@ -112,7 +112,7 @@ async def test_climate_data_update(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
 
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == mode
@@ -149,7 +149,7 @@ async def test_climate_data_update_bad_data(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
 
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == HVACMode.HEAT

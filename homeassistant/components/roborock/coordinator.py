@@ -28,7 +28,7 @@ from roborock.version_a01_apis import RoborockClientA01
 from roborock.web_api import RoborockApiClient
 from vacuum_map_parser_base.config.color import ColorsPalette
 from vacuum_map_parser_base.config.image_config import ImageConfig
-from vacuum_map_parser_base.config.size import Sizes
+from vacuum_map_parser_base.config.size import Size, Sizes
 from vacuum_map_parser_base.map_data import MapData
 from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
 
@@ -148,11 +148,18 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         ]
         self.map_parser = RoborockMapDataParser(
             ColorsPalette(),
-            Sizes({k: v * MAP_SCALE for k, v in Sizes.SIZES.items()}),
+            Sizes(
+                {
+                    k: v * MAP_SCALE
+                    for k, v in Sizes.SIZES.items()
+                    if k != Size.MOP_PATH_WIDTH
+                }
+            ),
             drawables,
             ImageConfig(scale=MAP_SCALE),
             [],
         )
+        self.last_update_state: str | None = None
 
     @cached_property
     def dock_device_info(self) -> DeviceInfo:
@@ -225,7 +232,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         """Update the currently selected map."""
         # The current map was set in the props update, so these can be done without
         # worry of applying them to the wrong map.
-        if self.current_map is None:
+        if self.current_map is None or self.current_map not in self.maps:
             # This exists as a safeguard/ to keep mypy happy.
             return
         try:
@@ -291,7 +298,6 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
 
     async def _async_update_data(self) -> DeviceProp:
         """Update data via library."""
-        previous_state = self.roborock_device_info.props.status.state_name
         try:
             # Update device props and standard api information
             await self._update_device_prop()
@@ -302,13 +308,17 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             # If the vacuum is currently cleaning and it has been IMAGE_CACHE_INTERVAL
             # since the last map update, you can update the map.
             new_status = self.roborock_device_info.props.status
-            if self.current_map is not None and (
-                (
-                    new_status.in_cleaning
-                    and (dt_util.utcnow() - self.maps[self.current_map].last_updated)
-                    > IMAGE_CACHE_INTERVAL
+            if (
+                self.current_map is not None
+                and (current_map := self.maps.get(self.current_map))
+                and (
+                    (
+                        new_status.in_cleaning
+                        and (dt_util.utcnow() - current_map.last_updated)
+                        > IMAGE_CACHE_INTERVAL
+                    )
+                    or self.last_update_state != new_status.state_name
                 )
-                or previous_state != new_status.state_name
             ):
                 try:
                     await self.update_map()
@@ -330,6 +340,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             self.update_interval = V1_CLOUD_NOT_CLEANING_INTERVAL
         else:
             self.update_interval = V1_LOCAL_NOT_CLEANING_INTERVAL
+        self.last_update_state = self.roborock_device_info.props.status.state_name
         return self.roborock_device_info.props
 
     def _set_current_map(self) -> None:
