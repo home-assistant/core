@@ -53,9 +53,6 @@ DATA_PLUGGABLE_ACTIONS: HassKey[defaultdict[tuple, PluggableActionsEntry]] = Has
 class Trigger(abc.ABC):
     """Trigger class."""
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
-        """Initialize trigger."""
-
     @classmethod
     @abc.abstractmethod
     async def async_validate_trigger_config(
@@ -63,9 +60,12 @@ class Trigger(abc.ABC):
     ) -> ConfigType:
         """Validate config."""
 
+    @classmethod
     @abc.abstractmethod
     async def async_attach_trigger(
-        self,
+        cls,
+        hass: HomeAssistant,
+        config: ConfigType,
         action: TriggerActionType,
         trigger_info: TriggerInfo,
     ) -> CALLBACK_TYPE:
@@ -370,15 +370,17 @@ async def async_initialize_triggers(
             trigger_data=trigger_data,
         )
 
-        action_wrapper = _trigger_action_wrapper(hass, action, conf)
         if hasattr(platform, "async_get_triggers"):
             trigger_descriptors = await platform.async_get_triggers(hass)
-            trigger = trigger_descriptors[conf[CONF_PLATFORM]](hass, conf)
-            coro = trigger.async_attach_trigger(action_wrapper, info)
+            attach_fn = trigger_descriptors[conf[CONF_PLATFORM]].async_attach_trigger
         else:
-            coro = platform.async_attach_trigger(hass, conf, action_wrapper, info)
+            attach_fn = platform.async_attach_trigger
 
-        triggers.append(create_eager_task(coro))
+        triggers.append(
+            create_eager_task(
+                attach_fn(hass, conf, _trigger_action_wrapper(hass, action, conf), info)
+            )
+        )
 
     attach_results = await asyncio.gather(*triggers, return_exceptions=True)
     removes: list[Callable[[], None]] = []
