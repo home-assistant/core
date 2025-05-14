@@ -194,7 +194,7 @@ class ProgramPhaseWashingMachine(MieleEnum):
     hygiene = 279
     drying = 280
     disinfecting = 285
-    unknown = -9999
+    missing2none = -9999
 
 
 class ProgramPhaseTumbleDryer(MieleEnum):
@@ -224,7 +224,7 @@ class ProgramPhaseTumbleDryer(MieleEnum):
     smoothing = 534
     slightly_dry = 538
     safety_cooling = 539
-    unknown = -9999
+    missing2none = -9999
 
 
 class ProgramPhaseDishwasher(MieleEnum):
@@ -239,7 +239,7 @@ class ProgramPhaseDishwasher(MieleEnum):
     final_rinse = 1798
     drying = 1799
     finished = 1800
-    unknown = -9999
+    missing2none = -9999
 
 
 class ProgramPhaseOven(MieleEnum):
@@ -250,7 +250,7 @@ class ProgramPhaseOven(MieleEnum):
     process_running = 3074
     process_finished = 3078
     energy_save = 3084
-    unknown = -9999
+    missing2none = -9999
 
 
 class ProgramPhaseWarmingDrawer(MieleEnum):
@@ -261,7 +261,7 @@ class ProgramPhaseWarmingDrawer(MieleEnum):
     door_open = 3075
     keeping_warm = 3094
     cooling_down = 3088
-    unknown = -9999
+    missing2none = -9999
 
 
 class ProgramPhaseMicrowave(MieleEnum):
@@ -272,7 +272,7 @@ class ProgramPhaseMicrowave(MieleEnum):
     process_running = 3330
     process_finished = 3334
     energy_save = 3340
-    unknown = -9999
+    missing2none = -9999
 
 
 class ProgramPhaseCoffeeSystem(MieleEnum):
@@ -290,7 +290,7 @@ class ProgramPhaseCoffeeSystem(MieleEnum):
     z_2nd_pre_brewing = 4393
     z_2nd_grinding = 4401
     rinse = 4405
-    unknown = -9999
+    missing2none = -9999
 
 
 class ProgramPhaseRobotVacuumCleaner(MieleEnum):
@@ -311,7 +311,7 @@ class ProgramPhaseRobotVacuumCleaner(MieleEnum):
     blocked_front_wheel = 5900  # F8
     docked = 5903, 5904
     remote_controlled = 5910
-    unknown = -9999
+    missing2none = -9999
 
 
 class ProgramPhaseMicrowaveOvenCombo(MieleEnum):
@@ -323,7 +323,7 @@ class ProgramPhaseMicrowaveOvenCombo(MieleEnum):
     waiting_for_start = 7939
     heating_up_phase = 7940
     process_finished = 7942
-    unknown = -9999
+    missing2none = -9999
 
 
 PROGRAM_PHASE: dict[int, type[MieleEnum]] = {
@@ -354,7 +354,7 @@ class StateProgramType(MieleEnum):
     automatic_program = 2
     cleaning_care_program = 3
     maintenance_program = 4
-    unknown = -9999
+    missing2none = -9999
 
 
 class WashingMachineProgramId(MieleEnum):
@@ -394,7 +394,7 @@ class WashingMachineProgramId(MieleEnum):
     cottons_eco = 133
     quick_power_wash = 146
     eco_40_60 = 190
-    unknown = -9999
+    missing2none = -9999
 
 
 class DishWasherProgramId(MieleEnum):
@@ -415,7 +415,7 @@ class DishWasherProgramId(MieleEnum):
     glasses_warm = 19
     normal = 30
     power_wash = 44
-    unknown = -9999
+    missing2none = -9999
 
 
 class TumbleDryerProgramId(MieleEnum):
@@ -447,7 +447,7 @@ class TumbleDryerProgramId(MieleEnum):
     cottons_eco = 99003
     shirts = 99004
     large_pillows = 99005
-    unknown = -9999
+    missing2none = -9999
 
 
 class OvenProgramId(MieleEnum):
@@ -490,7 +490,7 @@ class OvenProgramId(MieleEnum):
     prove_30_min = 622
     prove_45_min = 623
     steam_bake = 99001
-    unknown = -9999
+    missing2none = -9999
 
 
 class DishWarmerProgramId(MieleEnum):
@@ -501,7 +501,7 @@ class DishWarmerProgramId(MieleEnum):
     warm_dishes_plates = 2
     keep_warm = 3
     slow_roasting = 4
-    unknown = -9999
+    missing2none = -9999
 
 
 class RobotVacuumCleanerProgramId(MieleEnum):
@@ -512,7 +512,7 @@ class RobotVacuumCleanerProgramId(MieleEnum):
     spot = 2
     turbo = 3
     silent = 4
-    unknown = -9999
+    missing2none = -9999
 
 
 class CoffeeSystemProgramId(MieleEnum):
@@ -648,7 +648,7 @@ class CoffeeSystemProgramId(MieleEnum):
     brewing_unit_degrease = 24753
     milk_pipework_rinse = 24754
     milk_pipework_clean = 24789
-    unknown = -9999
+    missing2none = -9999
 
 
 class SteamOvenMicroProgramId(MieleEnum):
@@ -1068,7 +1068,7 @@ class SteamOvenMicroProgramId(MieleEnum):
     sheyang_rapid_steam_cooking = 3408
     round_grain_rice_general_steam_cooking = 3410
     round_grain_rice_general_rapid_steam_cooking = 3411
-    unknown = -9999
+    missing2none = -9999
 
 
 PROGRAM_ID: dict[int, type[MieleEnum]] = {
