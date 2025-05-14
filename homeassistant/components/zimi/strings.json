@@ -47,12 +47,6 @@
     "sensor": {
       "door_temperature": {
         "name": "Outside temperature"
-      },
-      "garage_temperature": {
-        "name": "Temperature"
-      },
-      "garage_humidty": {
-        "name": "Humidity"
       }
     }
   }
