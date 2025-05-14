@@ -6,7 +6,6 @@
   "dependencies": ["hardware", "usb", "homeassistant_hardware"],
   "documentation": "https://www.home-assistant.io/integrations/homeassistant_sky_connect",
   "integration_type": "hardware",
-  "requirements": ["ha-silabs-firmware-client==0.2.0"],
   "usb": [
     {
       "vid": "10C4",
