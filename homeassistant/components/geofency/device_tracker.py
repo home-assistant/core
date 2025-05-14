@@ -30,7 +30,7 @@ async def async_setup_entry(
 
         async_add_entities([GeofencyEntity(device, gps, location_name, attributes)])
 
-    hass.data[DOMAIN]["unsub_device_tracker"][config_entry.entry_id] = (
+    config_entry.async_on_unload(
         async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
     )
 

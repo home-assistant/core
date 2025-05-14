@@ -229,7 +229,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==30.2.0
+aioesphomeapi==31.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1018,7 +1018,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==9.2.2
+ical==9.2.4
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -1045,7 +1045,7 @@ imgw_pib==1.0.10
 incomfort-client==0.6.8
 
 # homeassistant.components.influxdb
-influxdb-client==1.24.0
+influxdb-client==1.48.0
 
 # homeassistant.components.influxdb
 influxdb==5.3.1
@@ -1197,7 +1197,7 @@ microBeesPy==0.3.5
 mill-local==0.3.0
 
 # homeassistant.components.mill
-millheater==0.12.3
+millheater==0.12.5
 
 # homeassistant.components.minio
 minio==7.1.12
@@ -1269,7 +1269,7 @@ nextcord==2.6.0
 nextdns==4.0.0
 
 # homeassistant.components.niko_home_control
-nhc==0.4.10
+nhc==0.4.12
 
 # homeassistant.components.nibe_heatpump
 nibe==2.17.0
@@ -1488,7 +1488,7 @@ pyHomee==1.2.8
 pyRFXtrx==0.31.1
 
 # homeassistant.components.tibber
-pyTibber==0.30.8
+pyTibber==0.31.2
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1705,7 +1705,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.8
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.2
+pylamarzocco==2.0.3
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -1821,7 +1821,7 @@ pyownet==0.10.0.post1
 pypalazzetti==0.1.19
 
 # homeassistant.components.lcn
-pypck==0.8.5
+pypck==0.8.6
 
 # homeassistant.components.pglab
 pypglab==0.0.5
@@ -2023,7 +2023,7 @@ python-roborock==2.18.2
 python-smarttub==0.0.39
 
 # homeassistant.components.snoo
-python-snoo==0.6.5
+python-snoo==0.6.6
 
 # homeassistant.components.songpal
 python-songpal==0.16.2

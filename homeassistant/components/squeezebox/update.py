@@ -38,6 +38,9 @@ newplugins = UpdateEntityDescription(
 
 POLL_AFTER_INSTALL = 120
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 
 
