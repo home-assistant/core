@@ -2,7 +2,14 @@
   "common": {
     "unavailable": "Unavailable",
     "abort": "Abort",
-    "vehicle": "Vehicle"
+    "vehicle": "Vehicle",
+    "schedule_id": "Schedule ID",
+    "schedule_id_description": "The ID of an existing schedule to modify. Omit if creating a new schedule.",
+    "days_of_week": "Days of week",
+    "days_of_week_description": "Select which days this schedule should be enabled on. You can select multiple days.",
+    "one_time": "One time",
+    "one_time_description": "If this is a one-time schedule.",
+    "location_description": "The approximate location the vehicle must be at to use this schedule. Defaults to Home Assistant's configured location."
   },
   "config": {
     "abort": {
@@ -1078,15 +1085,6 @@
     "invalid_cop_temp": {
       "message": "Cabin overheat protection does not support that temperature"
     },
-    "set_scheduled_charging_time": {
-      "message": "Time required to complete the operation"
-    },
-    "set_scheduled_departure_preconditioning": {
-      "message": "Departure time required to enable preconditioning"
-    },
-    "set_scheduled_departure_off_peak": {
-      "message": "To enable scheduled departure, 'End off-peak time' is required."
-    },
     "invalid_device": {
       "message": "Invalid device ID: {device_id}"
     },
@@ -1245,6 +1243,114 @@
         }
       },
       "name": "Set valet mode"
+    },
+    "add_charge_schedule": {
+      "description": "Adds or modifies a charging schedule for a vehicle.",
+      "fields": {
+        "device_id": {
+          "description": "Vehicle to schedule.",
+          "name": "[%key:component::teslemetry::common::vehicle%]"
+        },
+        "days_of_week": {
+          "description": "[%key:component::teslemetry::common::days_of_week_description%]",
+          "name": "[%key:component::teslemetry::common::days_of_week%]"
+        },
+        "enable": {
+          "description": "If this schedule should be considered for execution.",
+          "name": "[%key:common::action::enable%]"
+        },
+        "location": {
+          "description": "[%key:component::teslemetry::common::location_description%]",
+          "name": "Location"
+        },
+        "start_time": {
+          "description": "The time this schedule begins, e.g. 01:05 for 1:05 AM.",
+          "name": "Start time"
+        },
+        "end_time": {
+          "description": "The time this schedule ends, e.g. 01:05 for 1:05 AM.",
+          "name": "End time"
+        },
+        "one_time": {
+          "description": "[%key:component::teslemetry::common::one_time_description%]",
+          "name": "[%key:component::teslemetry::common::one_time%]"
+        },
+        "id": {
+          "description": "[%key:component::teslemetry::common::schedule_id_description%]",
+          "name": "[%key:component::teslemetry::common::schedule_id%]"
+        },
+        "name": {
+          "description": "The name of the schedule.",
+          "name": "Name"
+        }
+      },
+      "name": "Add charge schedule"
+    },
+    "remove_charge_schedule": {
+      "description": "Removes a charging schedule for a vehicle.",
+      "fields": {
+        "device_id": {
+          "description": "Vehicle to remove schedule from.",
+          "name": "[%key:component::teslemetry::common::vehicle%]"
+        },
+        "id": {
+          "description": "The ID of the schedule to remove.",
+          "name": "[%key:component::teslemetry::common::schedule_id%]"
+        }
+      },
+      "name": "Remove charge schedule"
+    },
+    "add_precondition_schedule": {
+      "description": "Adds or modifies a preconditioning schedule for a vehicle.",
+      "fields": {
+        "device_id": {
+          "description": "Vehicle to schedule.",
+          "name": "[%key:component::teslemetry::common::vehicle%]"
+        },
+        "days_of_week": {
+          "description": "[%key:component::teslemetry::common::days_of_week_description%]",
+          "name": "[%key:component::teslemetry::common::days_of_week%]"
+        },
+        "enable": {
+          "description": "If this schedule should be considered for execution.",
+          "name": "[%key:common::action::enable%]"
+        },
+        "location": {
+          "description": "[%key:component::teslemetry::common::location_description%]",
+          "name": "Location"
+        },
+        "precondition_time": {
+          "description": "The time the vehicle should complete preconditioning, e.g. 01:05 for 1:05 AM.",
+          "name": "Precondition time"
+        },
+        "id": {
+          "description": "[%key:component::teslemetry::common::schedule_id_description%]",
+          "name": "[%key:component::teslemetry::common::schedule_id%]"
+        },
+        "one_time": {
+          "description": "[%key:component::teslemetry::common::one_time_description%]",
+          "name": "[%key:component::teslemetry::common::one_time%]"
+        },
+        "name": {
+          "description": "The name of this schedule.",
+          "name": "Name"
+        }
+      },
+      "name": "Add precondition schedule"
+    },
+    "remove_precondition_schedule": {
+      "description": "Removes a preconditioning schedule for a vehicle.",
+      "fields": {
+        "device_id": {
+          "description": "Vehicle to remove schedule from.",
+          "name": "[%key:component::teslemetry::common::vehicle%]"
+        },
+        "id": {
+          "description": "The ID of the schedule to remove.",
+          "name": "[%key:component::teslemetry::common::schedule_id%]"
+        }
+      },
+      "name": "Remove precondition schedule"
     }
   }
 }
