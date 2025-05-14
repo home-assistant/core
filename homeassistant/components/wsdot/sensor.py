@@ -2,44 +2,31 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from http import HTTPStatus
+from datetime import timedelta
 import logging
-import re
 from typing import Any
 
-import requests
 import voluptuous as vol
+import wsdot
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.const import ATTR_NAME, CONF_API_KEY, CONF_ID, CONF_NAME, UnitOfTime
+from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_ACCESS_CODE = "AccessCode"
-ATTR_AVG_TIME = "AverageTime"
-ATTR_CURRENT_TIME = "CurrentTime"
-ATTR_DESCRIPTION = "Description"
-ATTR_TIME_UPDATED = "TimeUpdated"
-ATTR_TRAVEL_TIME_ID = "TravelTimeID"
 
 ATTRIBUTION = "Data provided by WSDOT"
 
 CONF_TRAVEL_TIMES = "travel_time"
 
 ICON = "mdi:car"
-
-RESOURCE = (
-    "http://www.wsdot.wa.gov/Traffic/api/TravelTimes/"
-    "TravelTimesREST.svc/GetTravelTimeAsJson"
-)
 
 SCAN_INTERVAL = timedelta(minutes=3)
 
@@ -65,7 +52,7 @@ def setup_platform(
         name = travel_time.get(CONF_NAME) or travel_time.get(CONF_ID)
         sensors.append(
             WashingtonStateTravelTimeSensor(
-                name, config[CONF_API_KEY], travel_time.get(CONF_ID)
+                name, hass, config[CONF_API_KEY], travel_time.get(CONF_ID)
             )
         )
 
@@ -82,10 +69,8 @@ class WashingtonStateTransportSensor(SensorEntity):
 
     _attr_icon = ICON
 
-    def __init__(self, name: str, access_code: str) -> None:
+    def __init__(self, name: str) -> None:
         """Initialize the sensor."""
-        self._data: dict[str, str | int | None] = {}
-        self._access_code = access_code
         self._name = name
         self._state: int | None = None
 
@@ -106,57 +91,36 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     _attr_attribution = ATTRIBUTION
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
-    def __init__(self, name: str, access_code: str, travel_time_id: str) -> None:
+    def __init__(self, name: str, hass: HomeAssistant, access_code: str, travel_time_id: str) -> None:
         """Construct a travel time sensor."""
+        super().__init__(name)
+        self._data: wsdot.TravelTime | None = None
         self._travel_time_id = travel_time_id
-        WashingtonStateTransportSensor.__init__(self, name, access_code)
+        self._access_code = access_code
+        self.hass = hass
+        self._wsdot_travel: wsdot.WsdotTravelTimes | None = None
 
-    def update(self) -> None:
+    @property
+    def wsdot_travel(self) -> wsdot.WsdotTravelTimes:
+        """Return a cached WsdotTravelTimes object."""
+        if self._wsdot_travel is None:
+            session = async_get_clientsession(self.hass)
+            self._wsdot_travel = wsdot.WsdotTravelTimes(api_key=self._access_code, session=session)
+        return self._wsdot_travel
+
+    async def async_update(self) -> None:
         """Get the latest data from WSDOT."""
-        params = {
-            ATTR_ACCESS_CODE: self._access_code,
-            ATTR_TRAVEL_TIME_ID: self._travel_time_id,
-        }
-
-        response = requests.get(RESOURCE, params, timeout=10)
-        if response.status_code != HTTPStatus.OK:
+        try:
+            travel_time = await self.wsdot_travel.get_travel_time(self._travel_time_id)
+        except wsdot.WsdotTravelError:
             _LOGGER.warning("Invalid response from WSDOT API")
         else:
-            self._data = response.json()
-        _state = self._data.get(ATTR_CURRENT_TIME)
-        if not isinstance(_state, int):
-            self._state = None
-        else:
-            self._state = _state
+            self._data = travel_time
+            self._state = travel_time.CurrentTime
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return other details about the sensor state."""
         if self._data is not None:
-            attrs: dict[str, str | int | None | datetime] = {}
-            for key in (
-                ATTR_AVG_TIME,
-                ATTR_NAME,
-                ATTR_DESCRIPTION,
-                ATTR_TRAVEL_TIME_ID,
-            ):
-                attrs[key] = self._data.get(key)
-            attrs[ATTR_TIME_UPDATED] = _parse_wsdot_timestamp(
-                self._data.get(ATTR_TIME_UPDATED)
-            )
-            return attrs
+            return self._data.dict()
         return None
-
-
-def _parse_wsdot_timestamp(timestamp: Any) -> datetime | None:
-    """Convert WSDOT timestamp to datetime."""
-    if not isinstance(timestamp, str):
-        return None
-    # ex: Date(1485040200000-0800)
-    timestamp_parts = re.search(r"Date\((\d+)([+-]\d\d)\d\d\)", timestamp)
-    if timestamp_parts is None:
-        return None
-    milliseconds, tzone = timestamp_parts.groups()
-    return datetime.fromtimestamp(
-        int(milliseconds) / 1000, tz=timezone(timedelta(hours=int(tzone)))
-    )
