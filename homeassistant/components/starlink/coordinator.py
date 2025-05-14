@@ -66,6 +66,7 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
             config_entry=config_entry,
             name=config_entry.title,
             update_interval=timedelta(seconds=5),
+            always_update=False,
         )
 
     def _get_starlink_data(self) -> StarlinkData:
@@ -88,10 +89,9 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
     async def _async_update_data(self) -> StarlinkData:
         async with asyncio.timeout(4):
             try:
-                result = await self.hass.async_add_executor_job(self._get_starlink_data)
+                return await self.hass.async_add_executor_job(self._get_starlink_data)
             except GrpcError as exc:
                 raise UpdateFailed from exc
-            return result
 
     async def async_stow_starlink(self, stow: bool) -> None:
         """Set whether Starlink system tied to this coordinator should be stowed."""
