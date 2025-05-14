@@ -13,11 +13,14 @@ play_preset:
           min: 1
           mode: box
 audio_output_hw_mode_set:
-  target:
-    entity:
-      integration: linkplay
-      domain: media_player
   fields:
+    device_id:
+      required: true
+      selector: &device_selector
+        device:
+          filter:
+            - integration: linkplay
+              manufacturer: WiiM
     audio_output_hw_mode:
       example: Coaxial
       required: true

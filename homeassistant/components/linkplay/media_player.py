@@ -155,13 +155,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a media player from a config entry."""
-    device_registry = dr.async_get(hass)
 
     # register services
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_PLAY_PRESET, SERVICE_PLAY_PRESET_SCHEMA, "async_play_preset"
     )
+
+    device_registry = dr.async_get(hass)
     for dev_entry in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
         if dev_entry.manufacturer == "WiiM":
             platform.async_register_entity_service(

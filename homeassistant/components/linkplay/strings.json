@@ -49,6 +49,10 @@
     "audio_output_hw_mode_set": {
       "description": "Plays audio via the selected hardware channel.",
       "fields": {
+        "device_id": {
+          "description": "Select the device for which to change the output.",
+          "name": "WiiM Device"
+        },
         "audio_output_hw_mode": {
           "description": "The output channel on your hardware.",
           "name": "Audio Output Mode"
