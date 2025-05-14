@@ -23,7 +23,7 @@ from homeassistant.util.dt import as_timestamp, now, parse_datetime, utc_from_ti
 from .const import (
     CONF_MANUAL_RUN_MINS,
     DEFAULT_MANUAL_RUN_MINS,
-    DOMAIN as DOMAIN_RACHIO,
+    DOMAIN,
     KEY_CURRENT_STATUS,
     KEY_CUSTOM_CROP,
     KEY_CUSTOM_SHADE,
@@ -37,9 +37,7 @@ from .const import (
     KEY_ON,
     KEY_RAIN_DELAY,
     KEY_RAIN_DELAY_END,
-    KEY_REPORTED_STATE,
     KEY_SCHEDULE_ID,
-    KEY_STATE,
     KEY_SUBTYPE,
     KEY_SUMMARY,
     KEY_TYPE,
@@ -119,7 +117,7 @@ async def async_setup_entry(
     def start_multiple(service: ServiceCall) -> None:
         """Service to start multiple zones in sequence."""
         zones_list = []
-        person = hass.data[DOMAIN_RACHIO][config_entry.entry_id]
+        person = hass.data[DOMAIN][config_entry.entry_id]
         entity_id = service.data[ATTR_ENTITY_ID]
         duration = iter(service.data[ATTR_DURATION])
         default_time = service.data[ATTR_DURATION][0]
@@ -160,7 +158,7 @@ async def async_setup_entry(
         return
 
     hass.services.async_register(
-        DOMAIN_RACHIO,
+        DOMAIN,
         SERVICE_START_MULTIPLE_ZONES,
         start_multiple,
         schema=START_MULTIPLE_ZONES_SCHEMA,
@@ -177,7 +175,7 @@ async def async_setup_entry(
 
 def _create_entities(hass: HomeAssistant, config_entry: ConfigEntry) -> list[Entity]:
     entities: list[Entity] = []
-    person: RachioPerson = hass.data[DOMAIN_RACHIO][config_entry.entry_id]
+    person: RachioPerson = hass.data[DOMAIN][config_entry.entry_id]
     # Fetch the schedule once at startup
     # in order to avoid every zone doing it
     for controller in person.controllers:
@@ -548,6 +546,7 @@ class RachioValve(RachioHoseTimerEntity, SwitchEntity):
         self._person = person
         self._base = base
         self._attr_unique_id = f"{self.id}-valve"
+        self._update_attr()
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on this valve."""
@@ -575,7 +574,5 @@ class RachioValve(RachioHoseTimerEntity, SwitchEntity):
     @callback
     def _update_attr(self) -> None:
         """Handle updated coordinator data."""
-        data = self.coordinator.data[self.id]
-
-        self._static_attrs = data[KEY_STATE][KEY_REPORTED_STATE]
+        self._static_attrs = self.reported_state
         self._attr_is_on = KEY_CURRENT_STATUS in self._static_attrs

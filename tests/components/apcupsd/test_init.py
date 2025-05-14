@@ -5,6 +5,7 @@ from collections import OrderedDict
 from unittest.mock import patch
 
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.apcupsd.const import DOMAIN
 from homeassistant.components.apcupsd.coordinator import UPDATE_INTERVAL
@@ -12,6 +13,7 @@ from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.util import slugify, utcnow
 
 from . import CONF_DATA, MOCK_MINIMAL_STATUS, MOCK_STATUS, async_init_integration
@@ -28,71 +30,31 @@ from tests.common import MockConfigEntry, async_fire_time_changed
         # Contains "SERIALNO" but no "UPSNAME" field.
         # We should create devices for the entities and prefix their IDs with default "APC UPS".
         MOCK_MINIMAL_STATUS | {"SERIALNO": "XXXX"},
-        # Does not contain either "SERIALNO" field or "UPSNAME" field. Our integration should work
-        # fine without it by falling back to config entry ID as unique ID and "APC UPS" as default name.
+        # Does not contain either "SERIALNO" field or "UPSNAME" field.
+        # Our integration should work fine without it by falling back to config entry ID as unique
+        # ID and "APC UPS" as default name.
         MOCK_MINIMAL_STATUS,
         # Some models report "Blank" as SERIALNO, but we should treat it as not reported.
         MOCK_MINIMAL_STATUS | {"SERIALNO": "Blank"},
     ],
 )
-async def test_async_setup_entry(hass: HomeAssistant, status: OrderedDict) -> None:
-    """Test a successful setup entry."""
-    await async_init_integration(hass, status=status)
-
-    prefix = slugify(status.get("UPSNAME", "APC UPS")) + "_"
-
-    # Verify successful setup by querying the status sensor.
-    state = hass.states.get(f"binary_sensor.{prefix}online_status")
-    assert state
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == "on"
-
-
-@pytest.mark.parametrize(
-    "status",
-    [
-        # We should not create device entries if SERIALNO is not reported.
-        MOCK_MINIMAL_STATUS,
-        # Some models report "Blank" as SERIALNO, but we should treat it as not reported.
-        MOCK_MINIMAL_STATUS | {"SERIALNO": "Blank"},
-        # We should set the device name to be the friendly UPSNAME field if available.
-        MOCK_MINIMAL_STATUS | {"SERIALNO": "XXXX", "UPSNAME": "MyUPS"},
-        # Otherwise, we should fall back to default device name --- "APC UPS".
-        MOCK_MINIMAL_STATUS | {"SERIALNO": "XXXX"},
-        # We should create all fields of the device entry if they are available.
-        MOCK_STATUS,
-    ],
-)
-async def test_device_entry(
-    hass: HomeAssistant, status: OrderedDict, device_registry: dr.DeviceRegistry
+async def test_async_setup_entry(
+    hass: HomeAssistant,
+    status: OrderedDict,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test successful setup of device entries."""
+    """Test a successful setup entry."""
     config_entry = await async_init_integration(hass, status=status)
-
-    # Verify device info is properly set up.
-    assert len(device_registry.devices) == 1
-    entry = device_registry.async_get_device(
-        {(DOMAIN, config_entry.unique_id or config_entry.entry_id)}
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, config_entry.unique_id or config_entry.entry_id)}
     )
-    assert entry is not None
-    # Specify the mapping between field name and the expected fields in device entry.
-    fields = {
-        "UPSNAME": entry.name,
-        "MODEL": entry.model,
-        "VERSION": entry.sw_version,
-        "FIRMWARE": entry.hw_version,
-    }
+    name = f"device_{device_entry.name}_{status.get('SERIALNO', '<no serial>')}"
+    assert device_entry == snapshot(name=name)
 
-    for field, entry_value in fields.items():
-        if field in status:
-            assert entry_value == status[field]
-        # Even if UPSNAME is not available, we must fall back to default "APC UPS".
-        elif field == "UPSNAME":
-            assert entry_value == "APC UPS"
-        else:
-            assert not entry_value
-
-    assert entry.manufacturer == "APC"
+    platforms = async_get_platforms(hass, DOMAIN)
+    assert len(platforms) > 0
+    assert all(len(p.entities) > 0 for p in platforms)
 
 
 async def test_multiple_integrations(hass: HomeAssistant) -> None:
@@ -101,8 +63,12 @@ async def test_multiple_integrations(hass: HomeAssistant) -> None:
     status1 = MOCK_STATUS | {"LOADPCT": "15.0 Percent", "SERIALNO": "XXXXX1"}
     status2 = MOCK_STATUS | {"LOADPCT": "16.0 Percent", "SERIALNO": "XXXXX2"}
     entries = (
-        await async_init_integration(hass, host="test1", status=status1),
-        await async_init_integration(hass, host="test2", status=status2),
+        await async_init_integration(
+            hass, host="test1", status=status1, entry_id="entry-id-1"
+        ),
+        await async_init_integration(
+            hass, host="test2", status=status2, entry_id="entry-id-2"
+        ),
     )
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
@@ -121,8 +87,12 @@ async def test_multiple_integrations_different_devices(hass: HomeAssistant) -> N
     status1 = MOCK_STATUS | {"SERIALNO": "XXXXX1", "UPSNAME": "MyUPS1"}
     status2 = MOCK_STATUS | {"SERIALNO": "XXXXX2", "UPSNAME": "MyUPS2"}
     entries = (
-        await async_init_integration(hass, host="test1", status=status1),
-        await async_init_integration(hass, host="test2", status=status2),
+        await async_init_integration(
+            hass, host="test1", status=status1, entry_id="entry-id-1"
+        ),
+        await async_init_integration(
+            hass, host="test2", status=status2, entry_id="entry-id-2"
+        ),
     )
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
@@ -159,8 +129,12 @@ async def test_unload_remove_entry(hass: HomeAssistant) -> None:
     """Test successful unload and removal of an entry."""
     # Load two integrations from two mock hosts.
     entries = (
-        await async_init_integration(hass, host="test1", status=MOCK_STATUS),
-        await async_init_integration(hass, host="test2", status=MOCK_MINIMAL_STATUS),
+        await async_init_integration(
+            hass, host="test1", status=MOCK_STATUS, entry_id="entry-id-1"
+        ),
+        await async_init_integration(
+            hass, host="test2", status=MOCK_MINIMAL_STATUS, entry_id="entry-id-2"
+        ),
     )
 
     # Assert they are loaded.

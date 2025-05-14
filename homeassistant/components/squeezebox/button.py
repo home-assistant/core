@@ -18,6 +18,9 @@ from .entity import SqueezeboxEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 HARDWARE_MODELS_WITH_SCREEN = [
     "Squeezebox Boom",
     "Squeezebox Radio",
@@ -149,6 +152,11 @@ class SqueezeboxButtonEntity(SqueezeboxEntity, ButtonEntity):
         self._attr_unique_id = (
             f"{format_mac(self._player.player_id)}_{entity_description.key}"
         )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.coordinator.available and super().available
 
     async def async_press(self) -> None:
         """Execute the button action."""

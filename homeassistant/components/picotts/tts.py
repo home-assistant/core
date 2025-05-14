@@ -56,10 +56,15 @@ class PicoProvider(Provider):
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmpf:
             fname = tmpf.name
 
-        cmd = ["pico2wave", "--wave", fname, "-l", language, "--", message]
-        subprocess.call(cmd)
+        cmd = ["pico2wave", "--wave", fname, "-l", language]
+        result = subprocess.run(cmd, text=True, input=message, check=False)
         data = None
         try:
+            if result.returncode != 0:
+                _LOGGER.error(
+                    "Error running pico2wave, return code: %s", result.returncode
+                )
+                return (None, None)
             with open(fname, "rb") as voice:
                 data = voice.read()
         except OSError:
