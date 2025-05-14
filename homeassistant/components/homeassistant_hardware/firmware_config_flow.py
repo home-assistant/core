@@ -24,7 +24,6 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.hassio import is_hassio
 
-from . import silabs_multiprotocol_addon
 from .const import OTBR_DOMAIN, ZHA_DOMAIN
 from .util import (
     ApplicationType,
@@ -75,22 +74,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         self.context["title_placeholders"] = placeholders
 
         return placeholders
-
-    async def _async_set_addon_config(
-        self, config: dict, addon_manager: AddonManager
-    ) -> None:
-        """Set add-on config."""
-        try:
-            await addon_manager.async_set_addon_options(config)
-        except AddonError as err:
-            _LOGGER.error(err)
-            raise AbortFlow(
-                "addon_set_config_failed",
-                description_placeholders={
-                    **self._get_translation_placeholders(),
-                    "addon_name": addon_manager.addon_name,
-                },
-            ) from err
 
     async def _async_get_addon_info(self, addon_manager: AddonManager) -> AddonInfo:
         """Return add-on info."""
@@ -173,46 +156,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
     ) -> ConfigFlowResult:
         """Install Zigbee firmware."""
         raise NotImplementedError
-
-    async def _install_addon(
-        self,
-        addon_manager: silabs_multiprotocol_addon.WaitingAddonManager,
-        step_id: str,
-        next_step_id: str,
-    ) -> ConfigFlowResult:
-        """Show progress dialog for installing an addon."""
-        addon_info = await self._async_get_addon_info(addon_manager)
-
-        _LOGGER.debug("Flasher addon state: %s", addon_info)
-
-        if not self.addon_install_task:
-            self.addon_install_task = self.hass.async_create_task(
-                addon_manager.async_install_addon_waiting(),
-                "Addon install",
-            )
-
-        if not self.addon_install_task.done():
-            return self.async_show_progress(
-                step_id=step_id,
-                progress_action="install_addon",
-                description_placeholders={
-                    **self._get_translation_placeholders(),
-                    "addon_name": addon_manager.addon_name,
-                },
-                progress_task=self.addon_install_task,
-            )
-
-        try:
-            await self.addon_install_task
-        except AddonError as err:
-            _LOGGER.error(err)
-            self._failed_addon_name = addon_manager.addon_name
-            self._failed_addon_reason = "addon_install_failed"
-            return self.async_show_progress_done(next_step_id="addon_operation_failed")
-        finally:
-            self.addon_install_task = None
-
-        return self.async_show_progress_done(next_step_id=next_step_id)
 
     async def async_step_addon_operation_failed(
         self, user_input: dict[str, Any] | None = None
@@ -311,11 +254,39 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Show progress dialog for installing the OTBR addon."""
-        return await self._install_addon(
-            addon_manager=get_otbr_addon_manager(self.hass),
-            step_id="install_otbr_addon",
-            next_step_id="pick_firmware_thread",
-        )
+        addon_manager = get_otbr_addon_manager(self.hass)
+        addon_info = await self._async_get_addon_info(addon_manager)
+
+        _LOGGER.debug("OTBR addon info: %s", addon_info)
+
+        if not self.addon_install_task:
+            self.addon_install_task = self.hass.async_create_task(
+                addon_manager.async_install_addon_waiting(),
+                "OTBR addon install",
+            )
+
+        if not self.addon_install_task.done():
+            return self.async_show_progress(
+                step_id="install_otbr_addon",
+                progress_action="install_addon",
+                description_placeholders={
+                    **self._get_translation_placeholders(),
+                    "addon_name": addon_manager.addon_name,
+                },
+                progress_task=self.addon_install_task,
+            )
+
+        try:
+            await self.addon_install_task
+        except AddonError as err:
+            _LOGGER.error(err)
+            self._failed_addon_name = addon_manager.addon_name
+            self._failed_addon_reason = "addon_install_failed"
+            return self.async_show_progress_done(next_step_id="addon_operation_failed")
+        finally:
+            self.addon_install_task = None
+
+        return self.async_show_progress_done(next_step_id="pick_firmware_thread")
 
     async def async_step_start_otbr_addon(
         self, user_input: dict[str, Any] | None = None
@@ -334,7 +305,18 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         }
 
         _LOGGER.debug("Reconfiguring OTBR addon with %s", new_addon_config)
-        await self._async_set_addon_config(new_addon_config, otbr_manager)
+
+        try:
+            await otbr_manager.async_set_addon_options(new_addon_config)
+        except AddonError as err:
+            _LOGGER.error(err)
+            raise AbortFlow(
+                "addon_set_config_failed",
+                description_placeholders={
+                    **self._get_translation_placeholders(),
+                    "addon_name": otbr_manager.addon_name,
+                },
+            ) from err
 
         if not self.addon_start_task:
             self.addon_start_task = self.hass.async_create_task(
