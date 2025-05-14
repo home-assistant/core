@@ -210,11 +210,6 @@ async def async_attach_trigger(
 class ValueUpdatedTrigger(Trigger):
     """Z-Wave JS value updated trigger."""
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
-        """Initialize trigger."""
-        self._config = config
-        self._hass = hass
-
     @classmethod
     async def async_validate_trigger_config(
         cls, hass: HomeAssistant, config: ConfigType
@@ -222,12 +217,13 @@ class ValueUpdatedTrigger(Trigger):
         """Validate config."""
         return await async_validate_trigger_config(hass, config)
 
+    @classmethod
     async def async_attach_trigger(
-        self,
+        cls,
+        hass: HomeAssistant,
+        config: ConfigType,
         action: TriggerActionType,
         trigger_info: TriggerInfo,
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
-        return await async_attach_trigger(
-            self._hass, self._config, action, trigger_info
-        )
+        return await async_attach_trigger(hass, config, action, trigger_info)
