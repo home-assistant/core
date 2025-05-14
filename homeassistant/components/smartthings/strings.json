@@ -105,6 +105,9 @@
       "washer_rinse_cycles": {
         "name": "Rinse cycles",
         "unit_of_measurement": "cycles"
+      },
+      "hood_fan_speed": {
+        "name": "Fan speed"
       }
     },
     "select": {
