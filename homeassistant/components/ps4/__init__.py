@@ -1,9 +1,13 @@
 """Support for PlayStation 4 consoles."""
 
+from __future__ import annotations
+
+from dataclasses import dataclass
 import logging
 import os
+from typing import TYPE_CHECKING
 
-from pyps4_2ndscreen.ddp import async_create_ddp_endpoint
+from pyps4_2ndscreen.ddp import DDPProtocol, async_create_ddp_endpoint
 from pyps4_2ndscreen.media_art import COUNTRIES
 import voluptuous as vol
 
@@ -41,6 +45,9 @@ from .const import (
     PS4_DATA,
 )
 
+if TYPE_CHECKING:
+    from .media_player import PS4Device
+
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_COMMAND = "send_command"
@@ -57,21 +64,21 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
+@dataclass
 class PS4Data:
     """Init Data Class."""
 
-    def __init__(self):
-        """Init Class."""
-        self.devices = []
-        self.protocol = None
+    devices: list[PS4Device]
+    protocol: DDPProtocol
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the PS4 Component."""
-    hass.data[PS4_DATA] = PS4Data()
-
     transport, protocol = await async_create_ddp_endpoint()
-    hass.data[PS4_DATA].protocol = protocol
+    hass.data[PS4_DATA] = PS4Data(
+        devices=[],
+        protocol=protocol,
+    )
     _LOGGER.debug("PS4 DDP endpoint created: %s, %s", transport, protocol)
     service_handle(hass)
     return True
