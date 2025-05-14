@@ -32,6 +32,9 @@
       "core_target_temperature": {
         "default": "mdi:thermometer-probe"
       },
+      "target_temperature": {
+        "default": "mdi:thermometer-check"
+      },
       "drying_step": {
         "default": "mdi:water-outline"
       },
@@ -49,6 +52,35 @@
       },
       "spin_speed": {
         "default": "mdi:sync"
+      },
+      "plate": {
+        "default": "mdi:circle-outline",
+        "state": {
+          "0": "mdi:circle-outline",
+          "110": "mdi:alpha-w-circle-outline",
+          "220": "mdi:alpha-w-circle-outline",
+          "1": "mdi:circle-slice-1",
+          "2": "mdi:circle-slice-1",
+          "3": "mdi:circle-slice-2",
+          "4": "mdi:circle-slice-2",
+          "5": "mdi:circle-slice-3",
+          "6": "mdi:circle-slice-3",
+          "7": "mdi:circle-slice-4",
+          "8": "mdi:circle-slice-4",
+          "9": "mdi:circle-slice-5",
+          "10": "mdi:circle-slice-5",
+          "11": "mdi:circle-slice-5",
+          "12": "mdi:circle-slice-6",
+          "13": "mdi:circle-slice-6",
+          "14": "mdi:circle-slice-6",
+          "15": "mdi:circle-slice-7",
+          "16": "mdi:circle-slice-7",
+          "17": "mdi:circle-slice-8",
+          "18": "mdi:circle-slice-8",
+          "117": "mdi:alpha-b-circle-outline",
+          "118": "mdi:alpha-b-circle-outline",
+          "217": "mdi:alpha-b-circle-outline"
+        }
       },
       "program_type": {
         "default": "mdi:state-machine"
