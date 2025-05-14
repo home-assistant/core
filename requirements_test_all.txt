@@ -229,7 +229,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==30.2.0
+aioesphomeapi==31.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1705,7 +1705,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.8
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.2
+pylamarzocco==2.0.3
 
 # homeassistant.components.lastfm
 pylast==5.1.0

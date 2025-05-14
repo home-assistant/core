@@ -96,6 +96,7 @@ def _mac_is_same_with_incorrect_formatting(
     current_unformatted_mac: str, formatted_mac: str
 ) -> bool:
     """Check if two macs are the same but formatted incorrectly."""
+    # Incorrect MAC cleanup introduced in #110599, can be removed in 2026.3
     current_formatted_mac = format_mac(current_unformatted_mac)
     return (
         current_formatted_mac == formatted_mac

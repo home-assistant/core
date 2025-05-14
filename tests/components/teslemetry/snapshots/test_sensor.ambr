@@ -4978,7 +4978,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'disconnected',
   })
 # ---
 # name: test_sensors[sensor.wall_connector_vehicle-statealt]
@@ -4991,7 +4991,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'disconnected',
   })
 # ---
 # name: test_sensors[sensor.wall_connector_vehicle_2-entry]
@@ -5038,7 +5038,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'disconnected',
   })
 # ---
 # name: test_sensors[sensor.wall_connector_vehicle_2-statealt]
@@ -5051,7 +5051,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'disconnected',
   })
 # ---
 # name: test_sensors_streaming[sensor.test_battery_level-state]
