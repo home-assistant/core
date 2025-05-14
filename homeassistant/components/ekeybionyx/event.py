@@ -72,5 +72,4 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Ekey event."""
-    LOGGER.info(entry.data)
     async_add_entities(EkeyEvent(data) for data in entry.data["webhooks"])
