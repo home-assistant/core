@@ -12,7 +12,7 @@ from homeassistant.components.file import DOMAIN
 from homeassistant.components.notify import ATTR_TITLE_DEFAULT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 

@@ -17,7 +17,14 @@
           "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "https": "Connect over https (requires reverse proxy)"
+          "https": "Connect over HTTPS (requires reverse proxy)"
+        },
+        "data_description": {
+          "host": "[%key:component::squeezebox::config::step::user::data_description::host%]",
+          "port": "The web interface port on the LMS. The default is 9000.",
+          "username": "The username from LMS Advanced Security (if defined).",
+          "password": "The password from LMS Advanced Security (if defined).",
+          "https": "Connect to the LMS over HTTPS (requires reverse proxy)."
         }
       }
     },
@@ -29,7 +36,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_server_found": "No LMS server found."
+      "no_server_found": "No LMS found."
     }
   },
   "services": {
@@ -43,13 +50,13 @@
         },
         "parameters": {
           "name": "Parameters",
-          "description": "Array of additional parameters to pass to Lyrion Music Server (p1, ..., pN in the CLI documentation).\n."
+          "description": "Array of additional parameters to pass to Lyrion Music Server (p1, ..., pN in the CLI documentation)."
         }
       }
     },
     "call_query": {
       "name": "Call query",
-      "description": "Calls a custom Squeezebox JSONRPC API. Result will be stored in 'query_result' attribute of the Squeezebox entity.\n.",
+      "description": "Calls a custom Squeezebox JSONRPC API. Result will be stored in 'query_result' attribute of the Squeezebox entity.",
       "fields": {
         "command": {
           "name": "Command",
@@ -63,6 +70,29 @@
     }
   },
   "entity": {
+    "button": {
+      "preset": {
+        "name": "Preset {index}"
+      },
+      "brightness_up": {
+        "name": "Brightness up"
+      },
+      "brightness_down": {
+        "name": "Brightness down"
+      },
+      "bass_up": {
+        "name": "Bass up"
+      },
+      "bass_down": {
+        "name": "Bass down"
+      },
+      "treble_up": {
+        "name": "Treble up"
+      },
+      "treble_down": {
+        "name": "Treble down"
+      }
+    },
     "binary_sensor": {
       "rescan": {
         "name": "Library rescan"
@@ -101,6 +131,29 @@
       "other_player_count": {
         "name": "Player count off service",
         "unit_of_measurement": "[%key:component::squeezebox::entity::sensor::player_count::unit_of_measurement%]"
+      }
+    },
+    "update": {
+      "newversion": {
+        "name": "Lyrion Music Server"
+      },
+      "newplugins": {
+        "name": "Updated plugins"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "LMS Configuration",
+        "data": {
+          "browse_limit": "Browse limit",
+          "volume_step": "Volume step"
+        },
+        "data_description": {
+          "browse_limit": "Maximum number of items when browsing or in a playlist.",
+          "volume_step": "Amount to adjust the volume when turning volume up or down."
+        }
       }
     }
   }

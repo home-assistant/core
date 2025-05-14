@@ -15,7 +15,7 @@
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "id_exists": "Gateway id already exists",
+      "id_exists": "Gateway ID already exists",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
     }
@@ -172,8 +172,8 @@
           "vcc": "Vcc (5V)",
           "led_e": "LED E",
           "led_f": "LED F",
-          "home": "Home",
-          "away": "Away",
+          "home": "[%key:common::state::home%]",
+          "away": "[%key:common::state::not_home%]",
           "ds1820": "DS1820",
           "dhw_block": "Block hot water"
         }
@@ -354,12 +354,6 @@
       }
     }
   },
-  "issues": {
-    "deprecated_import_from_configuration_yaml": {
-      "title": "Deprecated configuration",
-      "description": "Configuration of the OpenTherm Gateway integration through configuration.yaml is deprecated. Your configuration has been migrated to config entries. Please remove any OpenTherm Gateway configuration from your configuration.yaml."
-    }
-  },
   "options": {
     "step": {
       "init": {
@@ -379,13 +373,13 @@
       "fields": {
         "gateway_id": {
           "name": "Gateway ID",
-          "description": "The gateway_id of the OpenTherm Gateway."
+          "description": "The ID of the OpenTherm Gateway."
         }
       }
     },
     "set_central_heating_ovrd": {
       "name": "Set central heating override",
-      "description": "Sets the central heating override option on the gateway. When overriding the control setpoint (via a set_control_setpoint action with a value other than 0), the gateway automatically enables the central heating override to start heating. This action can then be used to control the central heating override status. To return control of the central heating to the thermostat, use the set_control_setpoint action with temperature value 0. You will only need this if you are writing your own software thermostat.\n.",
+      "description": "Sets the central heating override option on the gateway. When overriding the control setpoint (via a 'Set control set point' action with a value other than 0), the gateway automatically enables the central heating override to start heating. This action can then be used to control the central heating override status. To return control of the central heating to the thermostat, use the 'Set control set point' action with temperature value 0. You will only need this if you are writing your own software thermostat.",
       "fields": {
         "gateway_id": {
           "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
@@ -393,7 +387,7 @@
         },
         "ch_override": {
           "name": "Central heating override",
-          "description": "The desired boolean value for the central heating override."
+          "description": "Whether to enable or disable the override."
         }
       }
     },
@@ -417,7 +411,7 @@
     },
     "set_control_setpoint": {
       "name": "Set control set point",
-      "description": "Sets the central heating control setpoint override on the gateway. You will only need this if you are writing your own software thermostat.\n.",
+      "description": "Sets the central heating control setpoint override on the gateway. You will only need this if you are writing your own software thermostat.",
       "fields": {
         "gateway_id": {
           "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
@@ -425,7 +419,7 @@
         },
         "temperature": {
           "name": "Temperature",
-          "description": "The central heating setpoint to set on the gateway. Values between 0 and 90 are accepted, but not all boilers support this range. A value of 0 disables the central heating setpoint override.\n."
+          "description": "The central heating setpoint to set on the gateway. Values between 0 and 90 are accepted, but not all boilers support this range. A value of 0 disables the central heating setpoint override."
         }
       }
     },
@@ -439,7 +433,7 @@
         },
         "dhw_override": {
           "name": "Domestic hot water override",
-          "description": "Control the domestic hot water enable option. If the boiler has been configured to let the room unit control when to keep a small amount of water preheated, this command can influence that. Value should be 0 or 1 to enable the override in off or on state, or \"A\" to disable the override.\n."
+          "description": "Control the domestic hot water enable option. If the boiler has been configured to let the room unit control when to keep a small amount of water preheated, this command can influence that. Value should be 0 or 1 to enable the override in off or on state, or \"A\" to disable the override."
         }
       }
     },
@@ -453,7 +447,7 @@
         },
         "temperature": {
           "name": "Temperature",
-          "description": "The domestic hot water setpoint to set on the gateway. Not all boilers support this feature. Values between 0 and 90 are accepted, but not all boilers support this range. Check the values of the slave_dhw_min_setp and slave_dhw_max_setp sensors to see the supported range on your boiler.\n."
+          "description": "The domestic hot water setpoint to set on the gateway. Not all boilers support this feature. Values between 0 and 90 are accepted, but not all boilers support this range. Check the values of the slave_dhw_min_setp and slave_dhw_max_setp sensors to see the supported range on your boiler."
         }
       }
     },
@@ -471,7 +465,7 @@
         },
         "mode": {
           "name": "[%key:common::config_flow::data::mode%]",
-          "description": "Mode to set on the GPIO pin. Values 0 through 6 are accepted for both GPIOs, 7 is only accepted for GPIO \"B\". See https://www.home-assistant.io/integrations/opentherm_gw/#gpio-modes for an explanation of the values.\n."
+          "description": "Mode to set on the GPIO pin. Values 0 through 6 are accepted for both GPIOs, 7 is only accepted for GPIO \"B\". See https://www.home-assistant.io/integrations/opentherm_gw/#gpio-modes for an explanation of the values."
         }
       }
     },
@@ -489,13 +483,13 @@
         },
         "mode": {
           "name": "[%key:common::config_flow::data::mode%]",
-          "description": "The function to assign to the LED. See https://www.home-assistant.io/integrations/opentherm_gw/#led-modes for an explanation of the values.\n."
+          "description": "The function to assign to the LED. See https://www.home-assistant.io/integrations/opentherm_gw/#led-modes for an explanation of the values."
         }
       }
     },
     "set_max_modulation": {
       "name": "Set max modulation",
-      "description": "Overrides the maximum relative modulation level. You will only need this if you are writing your own software thermostat.\n.",
+      "description": "Overrides the maximum relative modulation level. You will only need this if you are writing your own software thermostat.",
       "fields": {
         "gateway_id": {
           "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
@@ -503,13 +497,13 @@
         },
         "level": {
           "name": "Level",
-          "description": "The modulation level to provide to the gateway. Provide a value of -1 to clear the override and forward the value from the thermostat again.\n."
+          "description": "The modulation level to provide to the gateway. Provide a value of -1 to clear the override and forward the value from the thermostat again."
         }
       }
     },
     "set_outside_temperature": {
       "name": "Set outside temperature",
-      "description": "Provides an outside temperature to the thermostat. If your thermostat is unable to display an outside temperature and does not support OTC (Outside Temperature Correction), this has no effect.\n.",
+      "description": "Provides an outside temperature to the thermostat. If your thermostat is unable to display an outside temperature and does not support OTC (Outside Temperature Correction), this has no effect.",
       "fields": {
         "gateway_id": {
           "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
@@ -517,7 +511,7 @@
         },
         "temperature": {
           "name": "Temperature",
-          "description": "The temperature to provide to the thermostat. Values between -40.0 and 64.0 will be accepted, but not all thermostats can display the full range. Any value above 64.0 will clear a previously configured value (suggestion: 99)\n."
+          "description": "The temperature to provide to the thermostat. Values between -40.0 and 64.0 will be accepted, but not all thermostats can display the full range. Any value above 64.0 will clear a previously configured value (suggestion: 99)."
         }
       }
     },

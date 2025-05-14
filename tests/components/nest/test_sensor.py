@@ -5,8 +5,8 @@ pubsub subscriber.
 """
 
 from typing import Any
+from unittest.mock import AsyncMock
 
-from google_nest_sdm.event import EventMessage
 import pytest
 
 from homeassistant.components.sensor import (
@@ -25,7 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .common import DEVICE_ID, CreateDevice, FakeSubscriber, PlatformSetup
+from .common import DEVICE_ID, CreateDevice, PlatformSetup, create_nest_event
 
 
 @pytest.fixture
@@ -198,7 +198,7 @@ async def test_device_name_from_structure(
 
 async def test_event_updates_sensor(
     hass: HomeAssistant,
-    subscriber: FakeSubscriber,
+    subscriber: AsyncMock,
     create_device: CreateDevice,
     setup_platform: PlatformSetup,
 ) -> None:
@@ -217,7 +217,7 @@ async def test_event_updates_sensor(
     assert temperature.state == "25.1"
 
     # Simulate a pubsub message received by the subscriber with a trait update
-    event = EventMessage.create_event(
+    event = create_nest_event(
         {
             "eventId": "some-event-id",
             "timestamp": "2019-01-01T00:00:01Z",
@@ -230,7 +230,6 @@ async def test_event_updates_sensor(
                 },
             },
         },
-        auth=None,
     )
     await subscriber.async_receive_event(event)
     await hass.async_block_till_done()  # Process dispatch/update signal

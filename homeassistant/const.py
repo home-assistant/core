@@ -24,14 +24,14 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2025
-MINOR_VERSION: Final = 1
+MINOR_VERSION: Final = 6
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
-REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 12, 0)
-REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 13, 0)
+REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 13, 2)
+REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 13, 2)
 # Truthy date string triggers showing related deprecation warning messages.
-REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = "2025.2"
+REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
@@ -115,6 +115,7 @@ SUN_EVENT_SUNRISE: Final = "sunrise"
 CONF_ABOVE: Final = "above"
 CONF_ACCESS_TOKEN: Final = "access_token"
 CONF_ACTION: Final = "action"
+CONF_ACTIONS: Final = "actions"
 CONF_ADDRESS: Final = "address"
 CONF_AFTER: Final = "after"
 CONF_ALIAS: Final = "alias"
@@ -603,6 +604,7 @@ class UnitOfReactivePower(StrEnum):
     """Reactive power units."""
 
     VOLT_AMPERE_REACTIVE = "var"
+    KILO_VOLT_AMPERE_REACTIVE = "kvar"
 
 
 _DEPRECATED_POWER_VOLT_AMPERE_REACTIVE: Final = DeprecatedConstantEnum(
@@ -632,6 +634,15 @@ class UnitOfEnergy(StrEnum):
     GIGA_CALORIE = "Gcal"
 
 
+# Energy Distance units
+class UnitOfEnergyDistance(StrEnum):
+    """Energy Distance units."""
+
+    KILO_WATT_HOUR_PER_100_KM = "kWh/100km"
+    MILES_PER_KILO_WATT_HOUR = "mi/kWh"
+    KM_PER_KILO_WATT_HOUR = "km/kWh"
+
+
 # Electric_current units
 class UnitOfElectricCurrent(StrEnum):
     """Electric current units."""
@@ -647,6 +658,8 @@ class UnitOfElectricPotential(StrEnum):
     MICROVOLT = "µV"
     MILLIVOLT = "mV"
     VOLT = "V"
+    KILOVOLT = "kV"
+    MEGAVOLT = "MV"
 
 
 # Degree units
@@ -754,8 +767,11 @@ class UnitOfVolumeFlowRate(StrEnum):
     """Volume flow rate units."""
 
     CUBIC_METERS_PER_HOUR = "m³/h"
+    CUBIC_METERS_PER_SECOND = "m³/s"
     CUBIC_FEET_PER_MINUTE = "ft³/min"
+    LITERS_PER_HOUR = "L/h"
     LITERS_PER_MINUTE = "L/min"
+    LITERS_PER_SECOND = "L/s"
     GALLONS_PER_MINUTE = "gal/min"
     MILLILITERS_PER_SECOND = "mL/s"
 

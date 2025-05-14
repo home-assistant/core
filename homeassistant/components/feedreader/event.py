@@ -10,7 +10,7 @@ from feedparser import FeedParserDict
 from homeassistant.components.event import EventEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import FeedReaderConfigEntry
@@ -28,7 +28,7 @@ ATTR_TITLE = "title"
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FeedReaderConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up event entities for feedreader."""
     coordinator = entry.runtime_data

@@ -9,17 +9,18 @@ from datetime import datetime
 from functools import partial
 from ipaddress import IPv4Address
 import logging
-from typing import Self
+from typing import ClassVar, Self
 from urllib.parse import urlparse
 
 from async_upnp_client.search import SsdpSearchListener
 from async_upnp_client.utils import CaseInsensitiveDict
 
 from homeassistant import config_entries
-from homeassistant.components import network, ssdp
+from homeassistant.components import network
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.util.async_ import create_eager_task
 
 from .const import (
@@ -44,11 +45,11 @@ def _set_future_if_not_done(future: asyncio.Future[None]) -> None:
 class YeelightScanner:
     """Scan for Yeelight devices."""
 
-    _scanner: Self | None = None
+    _scanner: ClassVar[Self | None] = None
 
     @classmethod
     @callback
-    def async_get(cls, hass: HomeAssistant) -> YeelightScanner:
+    def async_get(cls, hass: HomeAssistant) -> Self:
         """Get scanner instance."""
         if cls._scanner is None:
             cls._scanner = cls(hass)
@@ -171,7 +172,7 @@ class YeelightScanner:
                 self._hass,
                 DOMAIN,
                 context={"source": config_entries.SOURCE_SSDP},
-                data=ssdp.SsdpServiceInfo(
+                data=SsdpServiceInfo(
                     ssdp_usn="",
                     ssdp_st=SSDP_ST,
                     ssdp_headers=response,

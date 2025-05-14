@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN: HassKey[RecorderData] = HassKey("recorder")
+DATA_RECORDER: HassKey[RecorderData] = HassKey("recorder")
 DATA_INSTANCE: HassKey[Recorder] = HassKey("recorder_instance")
 
 
@@ -52,22 +52,17 @@ def async_migration_is_live(hass: HomeAssistant) -> bool:
 
 @callback
 def async_initialize_recorder(hass: HomeAssistant) -> None:
-    """Initialize recorder data."""
+    """Initialize recorder data.
+
+    This creates the RecorderData instance stored in hass.data[DATA_RECORDER] and
+    registers the basic recorder websocket API which is used by frontend to determine
+    if the recorder is migrating the database.
+    """
     # pylint: disable-next=import-outside-toplevel
     from homeassistant.components.recorder.basic_websocket_api import async_setup
 
-    hass.data[DOMAIN] = RecorderData()
+    hass.data[DATA_RECORDER] = RecorderData()
     async_setup(hass)
-
-
-async def async_wait_recorder(hass: HomeAssistant) -> bool:
-    """Wait for recorder to initialize and return connection status.
-
-    Returns False immediately if the recorder is not enabled.
-    """
-    if DOMAIN not in hass.data:
-        return False
-    return await hass.data[DOMAIN].db_connected
 
 
 @functools.lru_cache(maxsize=1)

@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any
+from typing import Any
+
+from apyhiveapi import Hive
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -12,28 +14,26 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.color as color_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import color as color_util
 
-from . import refresh_system
-from .const import ATTR_MODE, DOMAIN
+from . import HiveConfigEntry, refresh_system
+from .const import ATTR_MODE
 from .entity import HiveEntity
-
-if TYPE_CHECKING:
-    from apyhiveapi import Hive
 
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: HiveConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Hive thermostat based on a config entry."""
 
-    hive: Hive = hass.data[DOMAIN][entry.entry_id]
+    hive = entry.runtime_data
     devices = hive.session.deviceList.get("light")
     if not devices:
         return
@@ -114,6 +114,7 @@ class HiveDeviceLight(HiveEntity, LightEntity):
                     self._attr_hs_color = color_util.color_RGB_to_hs(*rgb)
                     self._attr_color_mode = ColorMode.HS
                 else:
+                    color_temp = self.device["status"].get("color_temp")
                     self._attr_color_temp_kelvin = (
                         None
                         if color_temp is None

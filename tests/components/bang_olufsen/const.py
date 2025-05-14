@@ -31,28 +31,29 @@ from homeassistant.components.bang_olufsen.const import (
     CONF_BEOLINK_JID,
     BangOlufsenSource,
 )
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 TEST_HOST = "192.168.0.1"
 TEST_HOST_INVALID = "192.168.0"
 TEST_HOST_IPV6 = "1111:2222:3333:4444:5555:6666:7777:8888"
 TEST_MODEL_BALANCE = "Beosound Balance"
+TEST_MODEL_CORE = "Beoconnect Core"
 TEST_MODEL_THEATRE = "Beosound Theatre"
 TEST_MODEL_LEVEL = "Beosound Level"
 TEST_SERIAL_NUMBER = "11111111"
-TEST_SERIAL_NUMBER_2 = "22222222"
 TEST_NAME = f"{TEST_MODEL_BALANCE}-{TEST_SERIAL_NUMBER}"
-TEST_NAME_2 = f"{TEST_MODEL_BALANCE}-{TEST_SERIAL_NUMBER_2}"
 TEST_FRIENDLY_NAME = "Living room Balance"
 TEST_TYPE_NUMBER = "1111"
 TEST_ITEM_NUMBER = "1111111"
 TEST_JID_1 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.{TEST_SERIAL_NUMBER}@products.bang-olufsen.com"
 TEST_MEDIA_PLAYER_ENTITY_ID = "media_player.beosound_balance_11111111"
 
-TEST_FRIENDLY_NAME_2 = "Laundry room Balance"
-TEST_JID_2 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.22222222@products.bang-olufsen.com"
-TEST_MEDIA_PLAYER_ENTITY_ID_2 = "media_player.beosound_balance_22222222"
+TEST_FRIENDLY_NAME_2 = "Laundry room Core"
+TEST_SERIAL_NUMBER_2 = "22222222"
+TEST_NAME_2 = f"{TEST_MODEL_CORE}-{TEST_SERIAL_NUMBER_2}"
+TEST_JID_2 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.{TEST_SERIAL_NUMBER_2}@products.bang-olufsen.com"
+TEST_MEDIA_PLAYER_ENTITY_ID_2 = "media_player.beoconnect_core_22222222"
 TEST_HOST_2 = "192.168.0.2"
 
 TEST_FRIENDLY_NAME_3 = "Lego room Balance"
@@ -64,6 +65,9 @@ TEST_FRIENDLY_NAME_4 = "Lounge room Balance"
 TEST_JID_4 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.44444444@products.bang-olufsen.com"
 TEST_MEDIA_PLAYER_ENTITY_ID_4 = "media_player.beosound_balance_44444444"
 TEST_HOST_4 = "192.168.0.4"
+
+
+TEST_BUTTON_EVENT_ENTITY_ID = "event.beosound_balance_11111111_play_pause"
 
 TEST_HOSTNAME_ZEROCONF = TEST_NAME.replace(" ", "-") + ".local."
 TEST_TYPE_ZEROCONF = "_bangolufsen._tcp.local."
@@ -80,8 +84,8 @@ TEST_DATA_CREATE_ENTRY = {
     CONF_NAME: TEST_NAME,
 }
 TEST_DATA_CREATE_ENTRY_2 = {
-    CONF_HOST: TEST_HOST,
-    CONF_MODEL: TEST_MODEL_BALANCE,
+    CONF_HOST: TEST_HOST_2,
+    CONF_MODEL: TEST_MODEL_CORE,
     CONF_BEOLINK_JID: TEST_JID_2,
     CONF_NAME: TEST_NAME_2,
 }

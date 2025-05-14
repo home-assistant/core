@@ -3,6 +3,7 @@
 import asyncio
 import logging
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -15,12 +16,17 @@ _LOGGER = logging.getLogger(__name__)
 class VolvoUpdateCoordinator(DataUpdateCoordinator[None]):
     """Volvo coordinator."""
 
-    def __init__(self, hass: HomeAssistant, volvo_data: VolvoData) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, volvo_data: VolvoData
+    ) -> None:
         """Initialize the data update coordinator."""
 
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="volvooncall",
             update_interval=DEFAULT_UPDATE_INTERVAL,
         )

@@ -20,6 +20,7 @@ from dsmr_parser.objects import DSMRObject, MbusDevice, Telegram
 import serial
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -42,7 +43,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import Throttle
 
@@ -114,7 +115,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         key="electricity_active_tariff",
         translation_key="electricity_active_tariff",
         obis_reference="ELECTRICITY_ACTIVE_TARIFF",
-        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        dsmr_versions={"2.2", "4", "5", "5B", "5L", "5EONHU"},
         device_class=SensorDeviceClass.ENUM,
         options=["low", "normal"],
     ),
@@ -122,7 +123,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         key="electricity_used_tariff_1",
         translation_key="electricity_used_tariff_1",
         obis_reference="ELECTRICITY_USED_TARIFF_1",
-        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        dsmr_versions={"2.2", "4", "5", "5B", "5L", "5EONHU"},
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -130,7 +131,25 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         key="electricity_used_tariff_2",
         translation_key="electricity_used_tariff_2",
         obis_reference="ELECTRICITY_USED_TARIFF_2",
-        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        dsmr_versions={"2.2", "4", "5", "5B", "5L", "5EONHU"},
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    DSMRSensorEntityDescription(
+        key="electricity_used_tariff_3",
+        translation_key="electricity_used_tariff_3",
+        obis_reference="ELECTRICITY_USED_TARIFF_3",
+        dsmr_versions={"5EONHU"},
+        force_update=True,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    DSMRSensorEntityDescription(
+        key="electricity_used_tariff_4",
+        translation_key="electricity_used_tariff_4",
+        obis_reference="ELECTRICITY_USED_TARIFF_4",
+        dsmr_versions={"5EONHU"},
+        force_update=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -138,7 +157,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         key="electricity_delivered_tariff_1",
         translation_key="electricity_delivered_tariff_1",
         obis_reference="ELECTRICITY_DELIVERED_TARIFF_1",
-        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        dsmr_versions={"2.2", "4", "5", "5B", "5L", "5EONHU"},
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -146,7 +165,25 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         key="electricity_delivered_tariff_2",
         translation_key="electricity_delivered_tariff_2",
         obis_reference="ELECTRICITY_DELIVERED_TARIFF_2",
-        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        dsmr_versions={"2.2", "4", "5", "5B", "5L", "5EONHU"},
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    DSMRSensorEntityDescription(
+        key="electricity_delivered_tariff_3",
+        translation_key="electricity_delivered_tariff_3",
+        obis_reference="ELECTRICITY_DELIVERED_TARIFF_3",
+        dsmr_versions={"5EONHU"},
+        force_update=True,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    DSMRSensorEntityDescription(
+        key="electricity_delivered_tariff_4",
+        translation_key="electricity_delivered_tariff_4",
+        obis_reference="ELECTRICITY_DELIVERED_TARIFF_4",
+        dsmr_versions={"5EONHU"},
+        force_update=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -340,7 +377,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         key="electricity_imported_total",
         translation_key="electricity_imported_total",
         obis_reference="ELECTRICITY_IMPORTED_TOTAL",
-        dsmr_versions={"5L", "5S", "Q3D"},
+        dsmr_versions={"5L", "5S", "Q3D", "5EONHU"},
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -348,7 +385,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         key="electricity_exported_total",
         translation_key="electricity_exported_total",
         obis_reference="ELECTRICITY_EXPORTED_TOTAL",
-        dsmr_versions={"5L", "5S", "Q3D"},
+        dsmr_versions={"5L", "5S", "Q3D", "5EONHU"},
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -385,6 +422,113 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         is_gas=True,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    DSMRSensorEntityDescription(
+        key="actual_threshold_electricity",
+        translation_key="actual_threshold_electricity",
+        obis_reference="ACTUAL_TRESHOLD_ELECTRICITY",  # Misspelled in external tool
+        dsmr_versions={"5EONHU"},
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key="eon_hu_electricity_combined",
+        translation_key="electricity_combined",
+        obis_reference="EON_HU_ELECTRICITY_COMBINED",
+        dsmr_versions={"5EONHU"},
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+    ),
+    DSMRSensorEntityDescription(
+        key="eon_hu_instantaneous_power_factor_total",
+        translation_key="instantaneous_power_factor_total",
+        obis_reference="EON_HU_INSTANTANEOUS_POWER_FACTOR_TOTAL",
+        dsmr_versions={"5EONHU"},
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.POWER_FACTOR,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key="eon_hu_instantaneous_power_factor_l1",
+        translation_key="instantaneous_power_factor_l1",
+        obis_reference="EON_HU_INSTANTANEOUS_POWER_FACTOR_L1",
+        dsmr_versions={"5EONHU"},
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.POWER_FACTOR,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key="eon_hu_instantaneous_power_factor_l2",
+        translation_key="instantaneous_power_factor_l2",
+        obis_reference="EON_HU_INSTANTANEOUS_POWER_FACTOR_L2",
+        dsmr_versions={"5EONHU"},
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.POWER_FACTOR,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key="eon_hu_instantaneous_power_factor_l3",
+        translation_key="instantaneous_power_factor_l3",
+        obis_reference="EON_HU_INSTANTANEOUS_POWER_FACTOR_L3",
+        dsmr_versions={"5EONHU"},
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.POWER_FACTOR,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key="eon_hu_frequency",
+        translation_key="frequency",
+        obis_reference="EON_HU_FREQUENCY",
+        dsmr_versions={"5EONHU"},
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key="fuse_threshold_l1",
+        translation_key="fuse_threshold_l1",
+        obis_reference="FUSE_THRESHOLD_L1",
+        dsmr_versions={"5EONHU"},
+        device_class=SensorDeviceClass.CURRENT,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key="fuse_threshold_l2",
+        translation_key="fuse_threshold_l2",
+        obis_reference="FUSE_THRESHOLD_L2",
+        dsmr_versions={"5EONHU"},
+        device_class=SensorDeviceClass.CURRENT,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key="fuse_threshold_l3",
+        translation_key="fuse_threshold_l3",
+        obis_reference="FUSE_THRESHOLD_L3",
+        dsmr_versions={"5EONHU"},
+        device_class=SensorDeviceClass.CURRENT,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key="text_message",
+        translation_key="text_message",
+        obis_reference="TEXT_MESSAGE",
+        dsmr_versions={"5EONHU"},
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -456,24 +600,29 @@ def rename_old_gas_to_mbus(
                 if entity.unique_id.endswith(
                     "belgium_5min_gas_meter_reading"
                 ) or entity.unique_id.endswith("hourly_gas_meter_reading"):
-                    try:
-                        ent_reg.async_update_entity(
-                            entity.entity_id,
-                            new_unique_id=mbus_device_id,
-                            device_id=mbus_device_id,
-                        )
-                    except ValueError:
+                    if ent_reg.async_get_entity_id(
+                        SENSOR_DOMAIN, DOMAIN, mbus_device_id
+                    ):
                         LOGGER.debug(
                             "Skip migration of %s because it already exists",
                             entity.entity_id,
                         )
-                    else:
-                        LOGGER.debug(
-                            "Migrated entity %s from unique id %s to %s",
-                            entity.entity_id,
-                            entity.unique_id,
-                            mbus_device_id,
-                        )
+                        continue
+                    new_device = dev_reg.async_get_or_create(
+                        config_entry_id=entry.entry_id,
+                        identifiers={(DOMAIN, mbus_device_id)},
+                    )
+                    ent_reg.async_update_entity(
+                        entity.entity_id,
+                        new_unique_id=mbus_device_id,
+                        device_id=new_device.id,
+                    )
+                    LOGGER.debug(
+                        "Migrated entity %s from unique id %s to %s",
+                        entity.entity_id,
+                        entity.unique_id,
+                        mbus_device_id,
+                    )
             # Cleanup old device
             dev_entities = er.async_entries_for_device(
                 ent_reg, device_id, include_disabled_entities=True
@@ -543,7 +692,9 @@ def get_dsmr_object(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: DsmrConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DsmrConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the DSMR sensor."""
     dsmr_version = entry.data[CONF_DSMR_VERSION]
@@ -836,8 +987,9 @@ class DSMREntity(SensorEntity):
     def translate_tariff(value: str, dsmr_version: str) -> str | None:
         """Convert 2/1 to normal/low depending on DSMR version."""
         # DSMR V5B: Note: In Belgium values are swapped:
+        # DSMR V5EONHU: Note: In EON HUngary values are swapped:
         # Rate code 2 is used for low rate and rate code 1 is used for normal rate.
-        if dsmr_version == "5B":
+        if dsmr_version in ("5B", "5EONHU"):
             if value == "0001":
                 value = "0002"
             elif value == "0002":

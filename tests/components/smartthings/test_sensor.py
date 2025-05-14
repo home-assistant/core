@@ -1,307 +1,345 @@
-"""Test for the SmartThings sensors platform.
+"""Test for the SmartThings sensors platform."""
 
-The only mocking required is of the underlying SmartThings API object so
-real HTTP calls are not initiated during testing.
-"""
+from unittest.mock import AsyncMock
 
-from pysmartthings import ATTRIBUTES, CAPABILITIES, Attribute, Capability
+from pysmartthings import Attribute, Capability
+from pysmartthings.models import HealthStatus
+import pytest
+from syrupy import SnapshotAssertion
 
-from homeassistant.components.sensor import (
-    DEVICE_CLASSES,
-    DOMAIN as SENSOR_DOMAIN,
-    STATE_CLASSES,
-)
-from homeassistant.components.smartthings import sensor
-from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_FRIENDLY_NAME,
-    ATTR_UNIT_OF_MEASUREMENT,
-    PERCENTAGE,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    EntityCategory,
-)
+from homeassistant.components import automation, script
+from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.script import scripts_with_entity
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.smartthings.const import DOMAIN, MAIN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.setup import async_setup_component
 
-from .conftest import setup_platform
+from . import (
+    setup_integration,
+    snapshot_smartthings_entities,
+    trigger_health_update,
+    trigger_update,
+)
 
-
-async def test_mapping_integrity() -> None:
-    """Test ensures the map dicts have proper integrity."""
-    for capability, maps in sensor.CAPABILITY_TO_SENSORS.items():
-        assert capability in CAPABILITIES, capability
-        for sensor_map in maps:
-            assert sensor_map.attribute in ATTRIBUTES, sensor_map.attribute
-            if sensor_map.device_class:
-                assert (
-                    sensor_map.device_class in DEVICE_CLASSES
-                ), sensor_map.device_class
-            if sensor_map.state_class:
-                assert sensor_map.state_class in STATE_CLASSES, sensor_map.state_class
+from tests.common import MockConfigEntry
 
 
-async def test_entity_state(hass: HomeAssistant, device_factory) -> None:
-    """Tests the state attributes properly match the sensor types."""
-    device = device_factory("Sensor 1", [Capability.battery], {Attribute.battery: 100})
-    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
-    state = hass.states.get("sensor.sensor_1_battery")
-    assert state.state == "100"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
-    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{device.label} Battery"
-
-
-async def test_entity_three_axis_state(hass: HomeAssistant, device_factory) -> None:
-    """Tests the state attributes properly match the three axis types."""
-    device = device_factory(
-        "Three Axis", [Capability.three_axis], {Attribute.three_axis: [100, 75, 25]}
-    )
-    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
-    state = hass.states.get("sensor.three_axis_x_coordinate")
-    assert state.state == "100"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{device.label} X Coordinate"
-    state = hass.states.get("sensor.three_axis_y_coordinate")
-    assert state.state == "75"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{device.label} Y Coordinate"
-    state = hass.states.get("sensor.three_axis_z_coordinate")
-    assert state.state == "25"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{device.label} Z Coordinate"
-
-
-async def test_entity_three_axis_invalid_state(
-    hass: HomeAssistant, device_factory
-) -> None:
-    """Tests the state attributes properly match the three axis types."""
-    device = device_factory(
-        "Three Axis", [Capability.three_axis], {Attribute.three_axis: []}
-    )
-    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
-    state = hass.states.get("sensor.three_axis_x_coordinate")
-    assert state.state == STATE_UNKNOWN
-    state = hass.states.get("sensor.three_axis_y_coordinate")
-    assert state.state == STATE_UNKNOWN
-    state = hass.states.get("sensor.three_axis_z_coordinate")
-    assert state.state == STATE_UNKNOWN
-
-
-async def test_entity_and_device_attributes(
+async def test_all_entities(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    device_factory,
 ) -> None:
-    """Test the attributes of the entity are correct."""
-    # Arrange
-    device = device_factory(
-        "Sensor 1",
-        [Capability.battery],
-        {
-            Attribute.battery: 100,
-            Attribute.mnmo: "123",
-            Attribute.mnmn: "Generic manufacturer",
-            Attribute.mnhw: "v4.56",
-            Attribute.mnfv: "v7.89",
-        },
-    )
-    # Act
-    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
-    # Assert
-    entry = entity_registry.async_get("sensor.sensor_1_battery")
-    assert entry
-    assert entry.unique_id == f"{device.device_id}.{Attribute.battery}"
-    assert entry.entity_category is EntityCategory.DIAGNOSTIC
-    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
-    assert entry
-    assert entry.configuration_url == "https://account.smartthings.com"
-    assert entry.identifiers == {(DOMAIN, device.device_id)}
-    assert entry.name == device.label
-    assert entry.model == "123"
-    assert entry.manufacturer == "Generic manufacturer"
-    assert entry.hw_version == "v4.56"
-    assert entry.sw_version == "v7.89"
+    """Test all entities."""
+    await setup_integration(hass, mock_config_entry)
+
+    snapshot_smartthings_entities(hass, entity_registry, snapshot, Platform.SENSOR)
 
 
-async def test_energy_sensors_for_switch_device(
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_state_update(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    device_factory,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the attributes of the entity are correct."""
-    # Arrange
-    device = device_factory(
-        "Switch_1",
-        [Capability.switch, Capability.power_meter, Capability.energy_meter],
-        {
-            Attribute.switch: "off",
-            Attribute.power: 355,
-            Attribute.energy: 11.422,
-            Attribute.mnmo: "123",
-            Attribute.mnmn: "Generic manufacturer",
-            Attribute.mnhw: "v4.56",
-            Attribute.mnfv: "v7.89",
-        },
+    """Test state update."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.ac_office_granit_temperature").state == "25"
+
+    await trigger_update(
+        hass,
+        devices,
+        "96a5ef74-5832-a84b-f1f7-ca799957065d",
+        Capability.TEMPERATURE_MEASUREMENT,
+        Attribute.TEMPERATURE,
+        20,
     )
-    # Act
-    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
-    # Assert
-    state = hass.states.get("sensor.switch_1_energy_meter")
-    assert state
-    assert state.state == "11.422"
-    entry = entity_registry.async_get("sensor.switch_1_energy_meter")
-    assert entry
-    assert entry.unique_id == f"{device.device_id}.{Attribute.energy}"
-    assert entry.entity_category is None
-    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
-    assert entry
-    assert entry.configuration_url == "https://account.smartthings.com"
-    assert entry.identifiers == {(DOMAIN, device.device_id)}
-    assert entry.name == device.label
-    assert entry.model == "123"
-    assert entry.manufacturer == "Generic manufacturer"
-    assert entry.hw_version == "v4.56"
-    assert entry.sw_version == "v7.89"
 
-    state = hass.states.get("sensor.switch_1_power_meter")
-    assert state
-    assert state.state == "355"
-    entry = entity_registry.async_get("sensor.switch_1_power_meter")
-    assert entry
-    assert entry.unique_id == f"{device.device_id}.{Attribute.power}"
-    assert entry.entity_category is None
-    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
-    assert entry
-    assert entry.configuration_url == "https://account.smartthings.com"
-    assert entry.identifiers == {(DOMAIN, device.device_id)}
-    assert entry.name == device.label
-    assert entry.model == "123"
-    assert entry.manufacturer == "Generic manufacturer"
-    assert entry.hw_version == "v4.56"
-    assert entry.sw_version == "v7.89"
+    assert hass.states.get("sensor.ac_office_granit_temperature").state == "20"
 
 
-async def test_power_consumption_sensor(
+@pytest.mark.parametrize(
+    (
+        "device_fixture",
+        "unique_id",
+        "suggested_object_id",
+        "issue_string",
+        "entity_id",
+        "expected_state",
+    ),
+    [
+        (
+            "vd_stv_2017_k",
+            f"4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_{MAIN}_{Capability.MEDIA_PLAYBACK}_{Attribute.PLAYBACK_STATUS}_{Attribute.PLAYBACK_STATUS}",
+            "tv_samsung_8_series_49_media_playback_status",
+            "media_player",
+            "sensor.tv_samsung_8_series_49_media_playback_status",
+            STATE_UNKNOWN,
+        ),
+        (
+            "vd_stv_2017_k",
+            f"4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_{MAIN}_{Capability.AUDIO_VOLUME}_{Attribute.VOLUME}_{Attribute.VOLUME}",
+            "tv_samsung_8_series_49_volume",
+            "media_player",
+            "sensor.tv_samsung_8_series_49_volume",
+            "13",
+        ),
+        (
+            "vd_stv_2017_k",
+            f"4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_{MAIN}_{Capability.MEDIA_INPUT_SOURCE}_{Attribute.INPUT_SOURCE}_{Attribute.INPUT_SOURCE}",
+            "tv_samsung_8_series_49_media_input_source",
+            "media_player",
+            "sensor.tv_samsung_8_series_49_media_input_source",
+            "hdmi1",
+        ),
+        (
+            "im_speaker_ai_0001",
+            f"c9276e43-fe3c-88c3-1dcc-2eb79e292b8c_{MAIN}_{Capability.MEDIA_PLAYBACK_REPEAT}_{Attribute.PLAYBACK_REPEAT_MODE}_{Attribute.PLAYBACK_REPEAT_MODE}",
+            "galaxy_home_mini_media_playback_repeat",
+            "media_player",
+            "sensor.galaxy_home_mini_media_playback_repeat",
+            "off",
+        ),
+        (
+            "im_speaker_ai_0001",
+            f"c9276e43-fe3c-88c3-1dcc-2eb79e292b8c_{MAIN}_{Capability.MEDIA_PLAYBACK_SHUFFLE}_{Attribute.PLAYBACK_SHUFFLE}_{Attribute.PLAYBACK_SHUFFLE}",
+            "galaxy_home_mini_media_playback_shuffle",
+            "media_player",
+            "sensor.galaxy_home_mini_media_playback_shuffle",
+            "disabled",
+        ),
+    ],
+)
+async def test_create_issue_with_items(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    device_factory,
+    issue_registry: ir.IssueRegistry,
+    unique_id: str,
+    suggested_object_id: str,
+    issue_string: str,
+    entity_id: str,
+    expected_state: str,
 ) -> None:
-    """Test the attributes of the entity are correct."""
-    # Arrange
-    device = device_factory(
-        "refrigerator",
-        [Capability.power_consumption_report],
+    """Test we create an issue when an automation or script is using a deprecated entity."""
+    issue_id = f"deprecated_{issue_string}_{entity_id}"
+
+    entity_entry = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        unique_id,
+        suggested_object_id=suggested_object_id,
+        original_name=suggested_object_id,
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
         {
-            Attribute.power_consumption: {
-                "energy": 1412002,
-                "deltaEnergy": 25,
-                "power": 109,
-                "powerEnergy": 24.304498331745464,
-                "persistedEnergy": 0,
-                "energySaved": 0,
-                "start": "2021-07-30T16:45:25Z",
-                "end": "2021-07-30T16:58:33Z",
-            },
-            Attribute.mnmo: "123",
-            Attribute.mnmn: "Generic manufacturer",
-            Attribute.mnhw: "v4.56",
-            Attribute.mnfv: "v7.89",
+            automation.DOMAIN: {
+                "id": "test",
+                "alias": "test",
+                "trigger": {"platform": "state", "entity_id": entity_id},
+                "action": {
+                    "action": "automation.turn_on",
+                    "target": {
+                        "entity_id": "automation.test",
+                    },
+                },
+            }
         },
     )
-    # Act
-    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
-    # Assert
-    state = hass.states.get("sensor.refrigerator_energy")
-    assert state
-    assert state.state == "1412.002"
-    entry = entity_registry.async_get("sensor.refrigerator_energy")
-    assert entry
-    assert entry.unique_id == f"{device.device_id}.energy_meter"
-    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
-    assert entry
-    assert entry.configuration_url == "https://account.smartthings.com"
-    assert entry.identifiers == {(DOMAIN, device.device_id)}
-    assert entry.name == device.label
-    assert entry.model == "123"
-    assert entry.manufacturer == "Generic manufacturer"
-    assert entry.hw_version == "v4.56"
-    assert entry.sw_version == "v7.89"
-
-    state = hass.states.get("sensor.refrigerator_power")
-    assert state
-    assert state.state == "109"
-    assert state.attributes["power_consumption_start"] == "2021-07-30T16:45:25Z"
-    assert state.attributes["power_consumption_end"] == "2021-07-30T16:58:33Z"
-    entry = entity_registry.async_get("sensor.refrigerator_power")
-    assert entry
-    assert entry.unique_id == f"{device.device_id}.power_meter"
-    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
-    assert entry
-    assert entry.configuration_url == "https://account.smartthings.com"
-    assert entry.identifiers == {(DOMAIN, device.device_id)}
-    assert entry.name == device.label
-    assert entry.model == "123"
-    assert entry.manufacturer == "Generic manufacturer"
-    assert entry.hw_version == "v4.56"
-    assert entry.sw_version == "v7.89"
-
-    device = device_factory(
-        "vacuum",
-        [Capability.power_consumption_report],
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
         {
-            Attribute.power_consumption: {},
-            Attribute.mnmo: "123",
-            Attribute.mnmn: "Generic manufacturer",
-            Attribute.mnhw: "v4.56",
-            Attribute.mnfv: "v7.89",
+            script.DOMAIN: {
+                "test": {
+                    "sequence": [
+                        {
+                            "condition": "state",
+                            "entity_id": entity_id,
+                            "state": "on",
+                        },
+                    ],
+                }
+            }
         },
     )
-    # Act
-    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
-    # Assert
-    state = hass.states.get("sensor.vacuum_energy")
-    assert state
-    assert state.state == "unknown"
-    entry = entity_registry.async_get("sensor.vacuum_energy")
-    assert entry
-    assert entry.unique_id == f"{device.device_id}.energy_meter"
-    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
-    assert entry
-    assert entry.configuration_url == "https://account.smartthings.com"
-    assert entry.identifiers == {(DOMAIN, device.device_id)}
-    assert entry.name == device.label
-    assert entry.model == "123"
-    assert entry.manufacturer == "Generic manufacturer"
-    assert entry.hw_version == "v4.56"
-    assert entry.sw_version == "v7.89"
 
+    await setup_integration(hass, mock_config_entry)
 
-async def test_update_from_signal(hass: HomeAssistant, device_factory) -> None:
-    """Test the binary_sensor updates when receiving a signal."""
-    # Arrange
-    device = device_factory("Sensor 1", [Capability.battery], {Attribute.battery: 100})
-    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
-    device.status.apply_attribute_update(
-        "main", Capability.battery, Attribute.battery, 75
+    assert hass.states.get(entity_id).state == expected_state
+
+    assert automations_with_entity(hass, entity_id)[0] == "automation.test"
+    assert scripts_with_entity(hass, entity_id)[0] == "script.test"
+
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.translation_key == f"deprecated_{issue_string}_scripts"
+    assert issue.translation_placeholders == {
+        "entity_id": entity_id,
+        "entity_name": suggested_object_id,
+        "items": "- [test](/config/automation/edit/test)\n- [test](/config/script/edit/test)",
+    }
+
+    entity_registry.async_update_entity(
+        entity_entry.entity_id,
+        disabled_by=er.RegistryEntryDisabler.USER,
     )
-    # Act
-    async_dispatcher_send(hass, SIGNAL_SMARTTHINGS_UPDATE, [device.device_id])
-    # Assert
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.sensor_1_battery")
-    assert state is not None
-    assert state.state == "75"
+
+    # Assert the issue is no longer present
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 0
 
 
-async def test_unload_config_entry(hass: HomeAssistant, device_factory) -> None:
-    """Test the binary_sensor is removed when the config entry is unloaded."""
-    # Arrange
-    device = device_factory("Sensor 1", [Capability.battery], {Attribute.battery: 100})
-    config_entry = await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
-    config_entry.mock_state(hass, ConfigEntryState.LOADED)
-    # Act
-    await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
-    # Assert
-    assert hass.states.get("sensor.sensor_1_battery").state == STATE_UNAVAILABLE
+@pytest.mark.parametrize(
+    (
+        "device_fixture",
+        "unique_id",
+        "suggested_object_id",
+        "issue_string",
+        "entity_id",
+        "expected_state",
+    ),
+    [
+        (
+            "vd_stv_2017_k",
+            f"4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_{MAIN}_{Capability.MEDIA_PLAYBACK}_{Attribute.PLAYBACK_STATUS}_{Attribute.PLAYBACK_STATUS}",
+            "tv_samsung_8_series_49_media_playback_status",
+            "media_player",
+            "sensor.tv_samsung_8_series_49_media_playback_status",
+            STATE_UNKNOWN,
+        ),
+        (
+            "vd_stv_2017_k",
+            f"4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_{MAIN}_{Capability.AUDIO_VOLUME}_{Attribute.VOLUME}_{Attribute.VOLUME}",
+            "tv_samsung_8_series_49_volume",
+            "media_player",
+            "sensor.tv_samsung_8_series_49_volume",
+            "13",
+        ),
+        (
+            "vd_stv_2017_k",
+            f"4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_{MAIN}_{Capability.MEDIA_INPUT_SOURCE}_{Attribute.INPUT_SOURCE}_{Attribute.INPUT_SOURCE}",
+            "tv_samsung_8_series_49_media_input_source",
+            "media_player",
+            "sensor.tv_samsung_8_series_49_media_input_source",
+            "hdmi1",
+        ),
+        (
+            "im_speaker_ai_0001",
+            f"c9276e43-fe3c-88c3-1dcc-2eb79e292b8c_{MAIN}_{Capability.MEDIA_PLAYBACK_REPEAT}_{Attribute.PLAYBACK_REPEAT_MODE}_{Attribute.PLAYBACK_REPEAT_MODE}",
+            "galaxy_home_mini_media_playback_repeat",
+            "media_player",
+            "sensor.galaxy_home_mini_media_playback_repeat",
+            "off",
+        ),
+        (
+            "im_speaker_ai_0001",
+            f"c9276e43-fe3c-88c3-1dcc-2eb79e292b8c_{MAIN}_{Capability.MEDIA_PLAYBACK_SHUFFLE}_{Attribute.PLAYBACK_SHUFFLE}_{Attribute.PLAYBACK_SHUFFLE}",
+            "galaxy_home_mini_media_playback_shuffle",
+            "media_player",
+            "sensor.galaxy_home_mini_media_playback_shuffle",
+            "disabled",
+        ),
+    ],
+)
+async def test_create_issue(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    unique_id: str,
+    suggested_object_id: str,
+    issue_string: str,
+    entity_id: str,
+    expected_state: str,
+) -> None:
+    """Test we create an issue when an automation or script is using a deprecated entity."""
+    issue_id = f"deprecated_{issue_string}_{entity_id}"
+
+    entity_entry = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        unique_id,
+        suggested_object_id=suggested_object_id,
+        original_name=suggested_object_id,
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(entity_id).state == expected_state
+
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.translation_key == f"deprecated_{issue_string}"
+    assert issue.translation_placeholders == {
+        "entity_id": entity_id,
+        "entity_name": suggested_object_id,
+    }
+
+    entity_registry.async_update_entity(
+        entity_entry.entity_id,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Assert the issue is no longer present
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 0
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_availability(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test availability."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.ac_office_granit_temperature").state == "25"
+
+    await trigger_health_update(
+        hass, devices, "96a5ef74-5832-a84b-f1f7-ca799957065d", HealthStatus.OFFLINE
+    )
+
+    assert (
+        hass.states.get("sensor.ac_office_granit_temperature").state
+        == STATE_UNAVAILABLE
+    )
+
+    await trigger_health_update(
+        hass, devices, "96a5ef74-5832-a84b-f1f7-ca799957065d", HealthStatus.ONLINE
+    )
+
+    assert hass.states.get("sensor.ac_office_granit_temperature").state == "25"
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_availability_at_start(
+    hass: HomeAssistant,
+    unavailable_device: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unavailable at boot."""
+    await setup_integration(hass, mock_config_entry)
+    assert (
+        hass.states.get("sensor.ac_office_granit_temperature").state
+        == STATE_UNAVAILABLE
+    )

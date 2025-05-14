@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, NotRequired, TypedDict
 
 from homeassistant.util.signal_type import SignalType
 
@@ -46,3 +46,4 @@ class HomeAssistantControllerData(TypedDict):
     hass_uuid: str
     client_id: str | None
     refresh_token: str
+    app_id: NotRequired[str]

@@ -67,7 +67,7 @@ def short_address(address: str) -> str:
 
 def name_from_discovery(discovery: SwitchBotAdvertisement) -> str:
     """Get the name from a discovery."""
-    return f'{discovery.data["modelFriendlyName"]} {short_address(discovery.address)}'
+    return f"{discovery.data['modelFriendlyName']} {short_address(discovery.address)}"
 
 
 class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -272,7 +272,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @callback
     def _async_discover_devices(self) -> None:
-        current_addresses = self._async_current_ids()
+        current_addresses = self._async_current_ids(include_ignore=False)
         for connectable in (True, False):
             for discovery_info in async_discovered_service_info(self.hass, connectable):
                 address = discovery_info.address

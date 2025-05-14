@@ -32,6 +32,23 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "indoor_unit_water_pump_state": {
+        "name": "Indoor unit water pump"
+      },
+      "indoor_unit_auxiliary_pump_state": {
+        "name": "Indoor unit auxiliary water pump"
+      },
+      "indoor_unit_dhw_valve_or_pump_state": {
+        "name": "Indoor unit DHW valve or water pump"
+      },
+      "indoor_unit_gas_boiler_state": {
+        "name": "Indoor unit gas boiler heating allowed"
+      },
+      "indoor_unit_electric_heater_state": {
+        "name": "Indoor unit electric heater"
+      }
+    },
     "sensor": {
       "power_output": {
         "name": "Output power"
@@ -69,6 +86,12 @@
       "dhw_bottom_temperature": {
         "name": "DHW bottom temperature"
       },
+      "dhw_flow_volume": {
+        "name": "DHW pump flow"
+      },
+      "central_heating_flow_volume": {
+        "name": "Central heating pump flow"
+      },
       "heat_pump_state": {
         "state": {
           "standby": "[%key:common::state::standby%]",
@@ -78,12 +101,21 @@
           "dhw": "Heating DHW",
           "legionella_prevention": "Legionella prevention",
           "defrosting": "Defrosting",
-          "self_test": "Self test",
+          "self_test": "Self-test",
           "manual_control": "Manual control"
         }
       },
       "electricity_used": {
         "name": "Electricity used"
+      },
+      "energy_output": {
+        "name": "Total energy output"
+      },
+      "compressor_rpm": {
+        "name": "Compressor speed"
+      },
+      "compressor_percentage": {
+        "name": "Compressor usage"
       }
     }
   }

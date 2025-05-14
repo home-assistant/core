@@ -10,7 +10,7 @@ start_watering:
       selector:
         number:
           min: 0
-          max: 90
+          max: 1440
           unit_of_measurement: min
           mode: box
 suspend:

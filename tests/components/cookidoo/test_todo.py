@@ -50,7 +50,8 @@ async def test_todo(
 ) -> None:
     """Snapshot test states of todo platform."""
 
-    await setup_integration(hass, cookidoo_config_entry)
+    with patch("homeassistant.components.cookidoo.PLATFORMS", [Platform.TODO]):
+        await setup_integration(hass, cookidoo_config_entry)
 
     assert cookidoo_config_entry.state is ConfigEntryState.LOADED
 

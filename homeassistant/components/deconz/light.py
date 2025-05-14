@@ -28,17 +28,17 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.color import (
     color_hs_to_xy,
     color_temperature_kelvin_to_mired,
     color_temperature_mired_to_kelvin,
 )
 
-from .const import DOMAIN as DECONZ_DOMAIN, POWER_PLUGS
+from . import DeconzConfigEntry
+from .const import DOMAIN, POWER_PLUGS
 from .entity import DeconzDevice
 from .hub import DeconzHub
 
@@ -141,11 +141,11 @@ def update_color_state(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: DeconzConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the deCONZ lights and groups from a config entry."""
-    hub = DeconzHub.get_hub(hass, config_entry)
+    hub = config_entry.runtime_data
     hub.entities[LIGHT_DOMAIN] = set()
 
     @callback
@@ -266,7 +266,7 @@ class DeconzBaseLight[_LightDeviceT: Group | Light](
     @property
     def color_temp_kelvin(self) -> int | None:
         """Return the CT color value."""
-        if self._device.color_temp is None:
+        if self._device.color_temp is None or self._device.color_temp == 0:
             return None
         return color_temperature_mired_to_kelvin(self._device.color_temp)
 
@@ -395,11 +395,11 @@ class DeconzGroup(DeconzBaseLight[Group]):
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         return DeviceInfo(
-            identifiers={(DECONZ_DOMAIN, self.unique_id)},
+            identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Dresden Elektronik",
             model="deCONZ group",
             name=self._device.name,
-            via_device=(DECONZ_DOMAIN, self.hub.api.config.bridge_id),
+            via_device=(DOMAIN, self.hub.api.config.bridge_id),
         )
 
     @property

@@ -35,11 +35,11 @@
   "iot_class": "local_push",
   "loggers": ["samsungctl", "samsungtvws"],
   "requirements": [
-    "getmac==0.9.4",
+    "getmac==0.9.5",
     "samsungctl[websocket]==0.7.1",
     "samsungtvws[async,encrypted]==2.7.2",
     "wakeonlan==2.1.0",
-    "async-upnp-client==0.41.0"
+    "async-upnp-client==0.44.0"
   ],
   "ssdp": [
     {

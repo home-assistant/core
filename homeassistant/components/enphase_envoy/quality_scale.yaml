@@ -1,110 +1,62 @@
 rules:
   # Bronze
   action-setup:
-    status: done
+    status: exempt
     comment: only actions implemented are platform native ones.
-  appropriate-polling:
-    status: done
-    comment: fixed 1 minute cycle based on Enphase Envoy device characteristics
+  appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      - Let's have every test result in either CREATE_ENTRY or ABORT (like test_form_invalid_auth or test_form_cannot_connect, they can be parametrized)
-      - test_zeroconf_token_firmware and test_zeroconf_pre_token_firmware can also be parametrized I think
-      - test_zero_conf_malformed_serial_property - with pytest.raises(KeyError) as ex::
-      I don't believe this should be able to raise a KeyError Shouldn't we abort the flow?
-  config-flow:
-    status: todo
-    comment: |
-      - async_step_reaut L160: I believe that the unique is already set when starting a reauth flow
-      - The config flow is missing data descriptions for the other fields
+  config-flow-test-coverage: done
+  config-flow: done
   dependency-transparency: done
-  docs-actions:
-    status: done
-    comment: https://www.home-assistant.io/integrations/enphase_envoy/#actions
-  docs-high-level-description:
-    status: done
-    comment: https://www.home-assistant.io/integrations/enphase_envoy
-  docs-installation-instructions:
-    status: done
-    comment: https://www.home-assistant.io/integrations/enphase_envoy#prerequisites
-  docs-removal-instructions:
-    status: done
-    comment: https://www.home-assistant.io/integrations/enphase_envoy#removing-the-integration
-  entity-event-setup:
-    status: done
-    comment: no events used.
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
-  runtime-data:
-    status: done
-    comment: |
-      async_unload_entry- coordinator: EnphaseUpdateCoordinator = entry.runtime_data
-      You can remove the EnphaseUpdateCoordinator as the type can now be inferred thanks to the typed config entry
+  runtime-data: done
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: todo
-    comment: |
-      needs to raise appropriate error when exception occurs.
-      Pending https://github.com/pyenphase/pyenphase/pull/194
+  action-exceptions: done
   config-entry-unloading: done
-  docs-configuration-parameters:
-    status: done
-    comment: https://www.home-assistant.io/integrations/enphase_envoy#configuration
-  docs-installation-parameters:
-    status: done
-    comment: https://www.home-assistant.io/integrations/enphase_envoy#required-manual-input
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates:
-    status: done
-    comment: pending https://github.com/home-assistant/core/pull/132373
+  parallel-updates: done
   reauthentication-flow: done
-  test-coverage:
-    status: todo
-    comment: |
-      - test_config_different_unique_id -> unique_id set to the mock config entry is an int, not a str
-      - Apart from the coverage, test_option_change_reload does not verify that the config entry is reloaded
+  test-coverage: done
 
   # Gold
   devices: done
   diagnostics: done
   discovery-update-info: done
   discovery: done
-  docs-data-update:
-    status: done
-    comment: https://www.home-assistant.io/integrations/enphase_envoy#data-updates
-  docs-examples:
-    status: todo
-    comment: add blue-print examples, if any
-  docs-known-limitations: todo
-  docs-supported-devices:
-    status: done
-    comment: https://www.home-assistant.io/integrations/enphase_envoy#supported-devices
-  docs-supported-functions: todo
-  docs-troubleshooting:
-    status: done
-    comment: https://www.home-assistant.io/integrations/enphase_envoy#troubleshooting
-  docs-use-cases: todo
-  dynamic-devices: todo
-  entity-category: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices: done
+  entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
-  icon-translations: todo
+  icon-translations: done
   reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: no general issues or repair.py
-  stale-devices: todo
+  stale-devices: done
 
   # Platinum
   async-dependency: done

@@ -31,7 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
@@ -397,7 +397,7 @@ IF_ADDRS_FAMILY = {"ipv4_address": socket.AF_INET, "ipv6_address": socket.AF_INE
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SystemMonitorConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up System Monitor sensors based on a config entry."""
     entities: list[SystemMonitorSensor] = []
@@ -429,16 +429,17 @@ async def async_setup_entry(
                 is_enabled = check_legacy_resource(
                     f"{_type}_{argument}", legacy_resources
                 )
-                loaded_resources.add(slugify(f"{_type}_{argument}"))
-                entities.append(
-                    SystemMonitorSensor(
-                        coordinator,
-                        sensor_description,
-                        entry.entry_id,
-                        argument,
-                        is_enabled,
+                if (_add := slugify(f"{_type}_{argument}")) not in loaded_resources:
+                    loaded_resources.add(_add)
+                    entities.append(
+                        SystemMonitorSensor(
+                            coordinator,
+                            sensor_description,
+                            entry.entry_id,
+                            argument,
+                            is_enabled,
+                        )
                     )
-                )
             continue
 
         if _type.startswith("ipv"):

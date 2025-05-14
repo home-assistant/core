@@ -2,13 +2,20 @@
 
 from __future__ import annotations
 
+from collections.abc import Collection
 import logging
 from typing import Any, Protocol
 
 from aiohttp import web
 import voluptuous as vol
 
-from homeassistant.components import http
+from homeassistant.components import http, sensor
+from homeassistant.components.button import (
+    DOMAIN as BUTTON_DOMAIN,
+    SERVICE_PRESS as SERVICE_PRESS_BUTTON,
+    ButtonDeviceClass,
+)
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
@@ -18,6 +25,7 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
@@ -39,7 +47,12 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
-from homeassistant.helpers import config_validation as cv, integration_platform, intent
+from homeassistant.helpers import (
+    area_registry as ar,
+    config_validation as cv,
+    integration_platform,
+    intent,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -65,14 +78,15 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 __all__ = [
-    "async_register_timer_handler",
-    "async_device_supports_timers",
-    "TimerInfo",
-    "TimerEventType",
     "DOMAIN",
+    "TimerEventType",
+    "TimerInfo",
+    "async_device_supports_timers",
+    "async_register_timer_handler",
 ]
 
 ONOFF_DEVICE_CLASSES = {
+    ButtonDeviceClass,
     CoverDeviceClass,
     ValveDeviceClass,
     SwitchDeviceClass,
@@ -96,7 +110,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             intent.INTENT_TURN_ON,
             HOMEASSISTANT_DOMAIN,
             SERVICE_TURN_ON,
-            description="Turns on/opens a device or entity",
+            description="Turns on/opens/presses a device or entity. For locks, this performs a 'lock' action. Use for requests like 'turn on', 'activate', 'enable', or 'lock'.",
             device_classes=ONOFF_DEVICE_CLASSES,
         ),
     )
@@ -106,7 +120,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             intent.INTENT_TURN_OFF,
             HOMEASSISTANT_DOMAIN,
             SERVICE_TURN_OFF,
-            description="Turns off/closes a device or entity",
+            description="Turns off/closes a device or entity. For locks, this performs an 'unlock' action. Use for requests like 'turn off', 'deactivate', 'disable', or 'unlock'.",
             device_classes=ONOFF_DEVICE_CLASSES,
         ),
     )
@@ -140,6 +154,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     intent.async_register(hass, GetCurrentDateIntentHandler())
     intent.async_register(hass, GetCurrentTimeIntentHandler())
     intent.async_register(hass, RespondIntentHandler())
+    intent.async_register(hass, GetTemperatureIntent())
 
     return True
 
@@ -159,6 +174,25 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
     ) -> None:
         """Call service on entity with handling for special cases."""
         hass = intent_obj.hass
+
+        if state.domain in (BUTTON_DOMAIN, INPUT_BUTTON_DOMAIN):
+            if service != SERVICE_TURN_ON:
+                raise intent.IntentHandleError(
+                    f"Entity {state.entity_id} cannot be turned off"
+                )
+
+            await self._run_then_background(
+                hass.async_create_task(
+                    hass.services.async_call(
+                        state.domain,
+                        SERVICE_PRESS_BUTTON,
+                        {ATTR_ENTITY_ID: state.entity_id},
+                        context=intent_obj.context,
+                        blocking=True,
+                    )
+                )
+            )
+            return
 
         if state.domain == COVER_DOMAIN:
             # on = open
@@ -441,6 +475,109 @@ class RespondIntentHandler(intent.IntentHandler):
         if "response" in slots:
             response.async_set_speech(slots["response"]["value"])
 
+        return response
+
+
+class GetTemperatureIntent(intent.IntentHandler):
+    """Handle GetTemperature intents."""
+
+    intent_type = intent.INTENT_GET_TEMPERATURE
+    description = "Gets the current temperature of a climate device or entity"
+    slot_schema = {
+        vol.Optional("area"): intent.non_empty_string,
+        vol.Optional("name"): intent.non_empty_string,
+        vol.Optional("floor"): intent.non_empty_string,
+        vol.Optional("preferred_area_id"): cv.string,
+        vol.Optional("preferred_floor_id"): cv.string,
+    }
+    platforms = {CLIMATE_DOMAIN}
+
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
+        """Handle the intent."""
+        hass = intent_obj.hass
+        slots = self.async_validate_slots(intent_obj.slots)
+
+        name: str | None = None
+        if "name" in slots:
+            name = slots["name"]["value"]
+
+        area: str | None = None
+        if "area" in slots:
+            area = slots["area"]["value"]
+
+        floor_name: str | None = None
+        if "floor" in slots:
+            floor_name = slots["floor"]["value"]
+
+        match_preferences = intent.MatchTargetsPreferences(
+            area_id=slots.get("preferred_area_id", {}).get("value"),
+            floor_id=slots.get("preferred_floor_id", {}).get("value"),
+        )
+
+        if (not name) and (area or match_preferences.area_id):
+            # Look for temperature sensors assigned to an area
+            area_registry = ar.async_get(hass)
+            area_temperature_ids: dict[str, str] = {}
+
+            # Keep candidates that are registered as area temperature sensors
+            def area_candidate_filter(
+                candidate: intent.MatchTargetsCandidate,
+                possible_area_ids: Collection[str],
+            ) -> bool:
+                for area_id in possible_area_ids:
+                    temperature_id = area_temperature_ids.get(area_id)
+                    if (temperature_id is None) and (
+                        area_entry := area_registry.async_get_area(area_id)
+                    ):
+                        temperature_id = area_entry.temperature_entity_id or ""
+                        area_temperature_ids[area_id] = temperature_id
+
+                    if candidate.state.entity_id == temperature_id:
+                        return True
+
+                return False
+
+            match_constraints = intent.MatchTargetsConstraints(
+                area_name=area,
+                floor_name=floor_name,
+                domains=[sensor.DOMAIN],
+                device_classes=[sensor.SensorDeviceClass.TEMPERATURE],
+                assistant=intent_obj.assistant,
+                single_target=True,
+            )
+            match_result = intent.async_match_targets(
+                hass,
+                match_constraints,
+                match_preferences,
+                area_candidate_filter=area_candidate_filter,
+            )
+            if match_result.is_match:
+                # Found temperature sensor
+                response = intent_obj.create_response()
+                response.response_type = intent.IntentResponseType.QUERY_ANSWER
+                response.async_set_states(matched_states=match_result.states)
+                return response
+
+        # Look for climate devices
+        match_constraints = intent.MatchTargetsConstraints(
+            name=name,
+            area_name=area,
+            floor_name=floor_name,
+            domains=[CLIMATE_DOMAIN],
+            assistant=intent_obj.assistant,
+            single_target=True,
+        )
+        match_result = intent.async_match_targets(
+            hass, match_constraints, match_preferences
+        )
+        if not match_result.is_match:
+            raise intent.MatchFailedError(
+                result=match_result, constraints=match_constraints
+            )
+
+        response = intent_obj.create_response()
+        response.response_type = intent.IntentResponseType.QUERY_ANSWER
+        response.async_set_states(matched_states=match_result.states)
         return response
 
 

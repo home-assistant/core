@@ -25,6 +25,8 @@ from homeassistant.components.squeezebox.const import (
     STATUS_SENSOR_OTHER_PLAYER_COUNT,
     STATUS_SENSOR_PLAYER_COUNT,
     STATUS_SENSOR_RESCAN,
+    STATUS_UPDATE_NEWPLUGINS,
+    STATUS_UPDATE_NEWVERSION,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
@@ -32,6 +34,9 @@ from homeassistant.helpers.device_registry import format_mac
 
 # from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
+
+CONF_VOLUME_STEP = "volume_step"
+TEST_VOLUME_STEP = 10
 
 TEST_HOST = "1.2.3.4"
 TEST_PORT = "9000"
@@ -66,6 +71,9 @@ FAKE_QUERY_RESPONSE = {
     STATUS_SENSOR_INFO_TOTAL_SONGS: 42,
     STATUS_SENSOR_PLAYER_COUNT: 10,
     STATUS_SENSOR_OTHER_PLAYER_COUNT: 0,
+    STATUS_UPDATE_NEWVERSION: 'A new version of Logitech Media Server is available (8.5.2 - 0). <a href="updateinfo.html?installerFile=/var/lib/squeezeboxserver/cache/updates/logitechmediaserver_8.5.2_amd64.deb" target="update">Click here for further information</a>.',
+    STATUS_UPDATE_NEWPLUGINS: "Plugins have been updated - Restart Required (Big Sounds)",
+    "_can": 1,
     "players_loop": [
         {
             "isplaying": 0,
@@ -109,9 +117,17 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_PORT: TEST_PORT,
             const.CONF_HTTPS: TEST_USE_HTTPS,
         },
+        options={
+            CONF_VOLUME_STEP: TEST_VOLUME_STEP,
+        },
     )
     config_entry.add_to_hass(hass)
     return config_entry
+
+
+async def mock_async_play_announcement(media_id: str) -> bool:
+    """Mock the announcement."""
+    return True
 
 
 async def mock_async_browse(
@@ -121,6 +137,7 @@ async def mock_async_browse(
     child_types = {
         "favorites": "favorites",
         "new music": "album",
+        "album artists": "artists",
         "albums": "album",
         "album": "track",
         "genres": "genre",
@@ -131,30 +148,53 @@ async def mock_async_browse(
         "title": "title",
         "playlists": "playlist",
         "playlist": "title",
+        "apps": "app",
+        "radios": "app",
+        "app-fakecommand": "track",
     }
     fake_items = [
         {
             "title": "Fake Item 1",
             "id": FAKE_VALID_ITEM_ID,
             "hasitems": False,
+            "isaudio": True,
             "item_type": child_types[media_type],
             "artwork_track_id": "b35bb9e9",
             "url": "file:///var/lib/squeezeboxserver/music/track_1.mp3",
+            "cmd": "fakecommand",
+            "icon": "plugins/Qobuz/html/images/qobuz.png",
         },
         {
             "title": "Fake Item 2",
             "id": FAKE_VALID_ITEM_ID + "_2",
             "hasitems": media_type == "favorites",
+            "isaudio": False,
             "item_type": child_types[media_type],
             "image_url": "http://lms.internal:9000/html/images/favorites.png",
             "url": "file:///var/lib/squeezeboxserver/music/track_2.mp3",
+            "cmd": "fakecommand",
+            "icon": "plugins/Qobuz/html/images/qobuz.png",
         },
         {
             "title": "Fake Item 3",
             "id": FAKE_VALID_ITEM_ID + "_3",
             "hasitems": media_type == "favorites",
+            "isaudio": True,
             "album_id": FAKE_VALID_ITEM_ID if media_type == "favorites" else None,
             "url": "file:///var/lib/squeezeboxserver/music/track_3.mp3",
+            "cmd": "fakecommand",
+            "icon": "plugins/Qobuz/html/images/qobuz.png",
+        },
+        {
+            "title": "Fake Invalid Item 1",
+            "id": FAKE_VALID_ITEM_ID + "invalid_3",
+            "hasitems": media_type == "favorites",
+            "isaudio": True,
+            "album_id": FAKE_VALID_ITEM_ID if media_type == "favorites" else None,
+            "url": "file:///var/lib/squeezeboxserver/music/track_3.mp3",
+            "cmd": "fakecommand",
+            "icon": "plugins/Qobuz/html/images/qobuz.png",
+            "type": "text",
         },
     ]
 
@@ -184,7 +224,10 @@ async def mock_async_browse(
                 "items": fake_items,
             }
         return None
-    if media_type in MEDIA_TYPE_TO_SQUEEZEBOX.values():
+    if (
+        media_type in MEDIA_TYPE_TO_SQUEEZEBOX.values()
+        or media_type == "app-fakecommand"
+    ):
         return {
             "title": media_type,
             "items": fake_items,
@@ -213,6 +256,14 @@ def mock_pysqueezebox_player(uuid: str) -> MagicMock:
         mock_player.generate_image_url_from_track_id = MagicMock(
             return_value="http://lms.internal:9000/html/images/favorites.png"
         )
+        mock_player.set_announce_volume = MagicMock(return_value=True)
+        mock_player.set_announce_timeout = MagicMock(return_value=True)
+        mock_player.async_play_announcement = AsyncMock(
+            side_effect=mock_async_play_announcement
+        )
+        mock_player.generate_image_url = MagicMock(
+            return_value="http://lms.internal:9000/html/images/favorites.png"
+        )
         mock_player.name = TEST_PLAYER_NAME
         mock_player.player_id = uuid
         mock_player.mode = "stop"
@@ -223,6 +274,7 @@ def mock_pysqueezebox_player(uuid: str) -> MagicMock:
         mock_player.title = None
         mock_player.image_url = None
         mock_player.model = "SqueezeLite"
+        mock_player.creator = "Ralph Irving & Adrian Smith"
 
         return mock_player
 
@@ -252,7 +304,9 @@ def mock_pysqueezebox_server(
         mock_lms.uuid = uuid
         mock_lms.name = TEST_SERVER_NAME
         mock_lms.async_query = AsyncMock(return_value={"uuid": format_mac(uuid)})
-        mock_lms.async_status = AsyncMock(return_value={"uuid": format_mac(uuid)})
+        mock_lms.async_status = AsyncMock(
+            return_value={"uuid": format_mac(uuid), "version": FAKE_VERSION}
+        )
         return mock_lms
 
 
@@ -263,7 +317,27 @@ async def configure_squeezebox_media_player_platform(
 ) -> None:
     """Configure a squeezebox config entry with appropriate mocks for media_player."""
     with (
-        patch("homeassistant.components.squeezebox.PLATFORMS", [Platform.MEDIA_PLAYER]),
+        patch(
+            "homeassistant.components.squeezebox.PLATFORMS",
+            [Platform.MEDIA_PLAYER],
+        ),
+        patch("homeassistant.components.squeezebox.Server", return_value=lms),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def configure_squeezebox_media_player_button_platform(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    lms: MagicMock,
+) -> None:
+    """Configure a squeezebox config entry with appropriate mocks for media_player."""
+    with (
+        patch(
+            "homeassistant.components.squeezebox.PLATFORMS",
+            [Platform.BUTTON],
+        ),
         patch("homeassistant.components.squeezebox.Server", return_value=lms),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -276,6 +350,15 @@ async def configured_player(
 ) -> MagicMock:
     """Fixture mocking calls to pysqueezebox Player from a configured squeezebox."""
     await configure_squeezebox_media_player_platform(hass, config_entry, lms)
+    return (await lms.async_get_players())[0]
+
+
+@pytest.fixture
+async def configured_player_with_button(
+    hass: HomeAssistant, config_entry: MockConfigEntry, lms: MagicMock
+) -> MagicMock:
+    """Fixture mocking calls to pysqueezebox Player from a configured squeezebox."""
+    await configure_squeezebox_media_player_button_platform(hass, config_entry, lms)
     return (await lms.async_get_players())[0]
 
 

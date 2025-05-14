@@ -166,6 +166,7 @@ async def test_group_entity_migration_with_v1_id(
 ) -> None:
     """Test if entity schema for grouped_lights migrates from v1 to v2."""
     config_entry = mock_bridge_v2.config_entry = mock_config_entry_v2
+    config_entry.add_to_hass(hass)
 
     # create (deviceless) entity with V1 schema in registry
     # using the legacy style group id as unique id
@@ -201,6 +202,7 @@ async def test_group_entity_migration_with_v2_group_id(
 ) -> None:
     """Test if entity schema for grouped_lights migrates from v1 to v2."""
     config_entry = mock_bridge_v2.config_entry = mock_config_entry_v2
+    config_entry.add_to_hass(hass)
 
     # create (deviceless) entity with V1 schema in registry
     # using the V2 group id as unique id

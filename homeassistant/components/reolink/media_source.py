@@ -18,13 +18,12 @@ from homeassistant.components.media_source import (
     Unresolvable,
 )
 from homeassistant.components.stream import create_stream
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
-from .host import ReolinkHost
-from .util import ReolinkConfigEntry
+from .util import get_host
+from .views import async_generate_playback_proxy_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,15 +44,6 @@ def res_name(stream: str) -> str:
             return "Autotrack high res."
         case _:
             return "Low res."
-
-
-def get_host(hass: HomeAssistant, config_entry_id: str) -> ReolinkHost:
-    """Return the Reolink host from the config entry id."""
-    config_entry: ReolinkConfigEntry | None = hass.config_entries.async_get_entry(
-        config_entry_id
-    )
-    assert config_entry is not None
-    return config_entry.runtime_data.host
 
 
 class ReolinkVODMediaSource(MediaSource):
@@ -80,7 +70,9 @@ class ReolinkVODMediaSource(MediaSource):
         host = get_host(self.hass, config_entry_id)
 
         def get_vod_type() -> VodRequestType:
-            if filename.endswith(".mp4"):
+            if filename.endswith((".mp4", ".vref")) or host.api.is_hub:
+                if host.api.is_nvr:
+                    return VodRequestType.DOWNLOAD
                 return VodRequestType.PLAYBACK
             if host.api.is_nvr:
                 return VodRequestType.FLV
@@ -88,21 +80,21 @@ class ReolinkVODMediaSource(MediaSource):
 
         vod_type = get_vod_type()
 
+        if vod_type in [VodRequestType.DOWNLOAD, VodRequestType.PLAYBACK]:
+            proxy_url = async_generate_playback_proxy_url(
+                config_entry_id, channel, filename, stream_res, vod_type.value
+            )
+            return PlayMedia(proxy_url, "video/mp4")
+
         mime_type, url = await host.api.get_vod_source(
             channel, filename, stream_res, vod_type
         )
         if _LOGGER.isEnabledFor(logging.DEBUG):
-            url_log = url
-            if "&user=" in url_log:
-                url_log = f"{url_log.split('&user=')[0]}&user=xxxxx&password=xxxxx"
-            elif "&token=" in url_log:
-                url_log = f"{url_log.split('&token=')[0]}&token=xxxxx"
             _LOGGER.debug(
-                "Opening VOD stream from %s: %s", host.api.camera_name(channel), url_log
+                "Opening VOD stream from %s: %s",
+                host.api.camera_name(channel),
+                host.api.hide_password(url),
             )
-
-        if mime_type == "video/mp4":
-            return PlayMedia(url, mime_type)
 
         stream = create_stream(self.hass, url, {}, DynamicStreamSettings())
         stream.add_provider("hls", timeout=3600)
@@ -158,9 +150,7 @@ class ReolinkVODMediaSource(MediaSource):
 
         entity_reg = er.async_get(self.hass)
         device_reg = dr.async_get(self.hass)
-        for config_entry in self.hass.config_entries.async_entries(DOMAIN):
-            if config_entry.state != ConfigEntryState.LOADED:
-                continue
+        for config_entry in self.hass.config_entries.async_loaded_entries(DOMAIN):
             channels: list[str] = []
             host = config_entry.runtime_data.host
             entities = er.async_entries_for_config_entry(
@@ -229,7 +219,7 @@ class ReolinkVODMediaSource(MediaSource):
         if main_enc == "h265":
             _LOGGER.debug(
                 "Reolink camera %s uses h265 encoding for main stream,"
-                "playback only possible using sub stream",
+                "playback at high resolution may not work in all browsers/apps",
                 host.api.camera_name(channel),
             )
 
@@ -243,34 +233,29 @@ class ReolinkVODMediaSource(MediaSource):
                 can_play=False,
                 can_expand=True,
             ),
+            BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=f"RES|{config_entry_id}|{channel}|main",
+                media_class=MediaClass.CHANNEL,
+                media_content_type=MediaType.PLAYLIST,
+                title="High resolution",
+                can_play=False,
+                can_expand=True,
+            ),
         ]
-        if main_enc != "h265":
-            children.append(
-                BrowseMediaSource(
-                    domain=DOMAIN,
-                    identifier=f"RES|{config_entry_id}|{channel}|main",
-                    media_class=MediaClass.CHANNEL,
-                    media_content_type=MediaType.PLAYLIST,
-                    title="High resolution",
-                    can_play=False,
-                    can_expand=True,
-                ),
-            )
 
         if host.api.supported(channel, "autotrack_stream"):
-            children.append(
-                BrowseMediaSource(
-                    domain=DOMAIN,
-                    identifier=f"RES|{config_entry_id}|{channel}|autotrack_sub",
-                    media_class=MediaClass.CHANNEL,
-                    media_content_type=MediaType.PLAYLIST,
-                    title="Autotrack low resolution",
-                    can_play=False,
-                    can_expand=True,
-                ),
-            )
-            if main_enc != "h265":
-                children.append(
+            children.extend(
+                [
+                    BrowseMediaSource(
+                        domain=DOMAIN,
+                        identifier=f"RES|{config_entry_id}|{channel}|autotrack_sub",
+                        media_class=MediaClass.CHANNEL,
+                        media_content_type=MediaType.PLAYLIST,
+                        title="Autotrack low resolution",
+                        can_play=False,
+                        can_expand=True,
+                    ),
                     BrowseMediaSource(
                         domain=DOMAIN,
                         identifier=f"RES|{config_entry_id}|{channel}|autotrack_main",
@@ -280,11 +265,7 @@ class ReolinkVODMediaSource(MediaSource):
                         can_play=False,
                         can_expand=True,
                     ),
-                )
-
-        if len(children) == 1:
-            return await self._async_generate_camera_days(
-                config_entry_id, channel, "sub"
+                ]
             )
 
         title = host.api.camera_name(channel)

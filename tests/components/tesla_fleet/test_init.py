@@ -1,6 +1,7 @@
 """Test the Tesla Fleet init."""
 
 from copy import deepcopy
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from aiohttp import RequestInfo
@@ -21,6 +22,7 @@ from tesla_fleet_api.exceptions import (
 
 from homeassistant.components.tesla_fleet.const import AUTHORIZE_URL
 from homeassistant.components.tesla_fleet.coordinator import (
+    ENERGY_HISTORY_INTERVAL,
     ENERGY_INTERVAL,
     ENERGY_INTERVAL_SECONDS,
     VEHICLE_INTERVAL,
@@ -30,6 +32,7 @@ from homeassistant.components.tesla_fleet.coordinator import (
 from homeassistant.components.tesla_fleet.models import TeslaFleetData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_platform
@@ -154,14 +157,15 @@ async def test_vehicle_refresh_offline(
     mock_vehicle_state.reset_mock()
     mock_vehicle_data.reset_mock()
 
-    # Then the vehicle goes offline
+    # Then the vehicle goes offline despite saying its online
     mock_vehicle_data.side_effect = VehicleOffline
     freezer.tick(VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    mock_vehicle_state.assert_not_called()
+    mock_vehicle_state.assert_called_once()
     mock_vehicle_data.assert_called_once()
+    mock_vehicle_state.reset_mock()
     mock_vehicle_data.reset_mock()
 
     # And stays offline
@@ -210,20 +214,15 @@ async def test_vehicle_refresh_ratelimited(
 
     assert (state := hass.states.get("sensor.test_battery_level"))
     assert state.state == "unknown"
-    assert mock_vehicle_data.call_count == 1
+
+    mock_vehicle_data.reset_mock()
 
     freezer.tick(VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Should not call for another 10 seconds
-    assert mock_vehicle_data.call_count == 1
-
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert mock_vehicle_data.call_count == 2
+    assert (state := hass.states.get("sensor.test_battery_level"))
+    assert state.state == "unknown"
 
 
 async def test_vehicle_sleep(
@@ -233,57 +232,58 @@ async def test_vehicle_sleep(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator refresh with an error."""
-    await setup_platform(hass, normal_config_entry)
-    assert mock_vehicle_data.call_count == 1
 
-    freezer.tick(VEHICLE_WAIT + VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    # Let vehicle sleep, no updates for 15 minutes
-    await hass.async_block_till_done()
-    assert mock_vehicle_data.call_count == 2
+    TEST_INTERVAL = timedelta(seconds=120)
 
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    # No polling, call_count should not increase
-    await hass.async_block_till_done()
-    assert mock_vehicle_data.call_count == 2
+    with patch(
+        "homeassistant.components.tesla_fleet.coordinator.VEHICLE_INTERVAL",
+        TEST_INTERVAL,
+    ):
+        await setup_platform(hass, normal_config_entry)
+        assert mock_vehicle_data.call_count == 1
 
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    # No polling, call_count should not increase
-    await hass.async_block_till_done()
-    assert mock_vehicle_data.call_count == 2
+        freezer.tick(VEHICLE_WAIT + TEST_INTERVAL)
+        async_fire_time_changed(hass)
+        # Let vehicle sleep, no updates for 15 minutes
+        await hass.async_block_till_done()
+        assert mock_vehicle_data.call_count == 2
 
-    freezer.tick(VEHICLE_WAIT)
-    async_fire_time_changed(hass)
-    # Vehicle didn't sleep, go back to normal
-    await hass.async_block_till_done()
-    assert mock_vehicle_data.call_count == 3
+        freezer.tick(TEST_INTERVAL)
+        async_fire_time_changed(hass)
+        # No polling, call_count should not increase
+        await hass.async_block_till_done()
+        assert mock_vehicle_data.call_count == 2
 
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    # Regular polling
-    await hass.async_block_till_done()
-    assert mock_vehicle_data.call_count == 4
+        freezer.tick(VEHICLE_WAIT)
+        async_fire_time_changed(hass)
+        # Vehicle didn't sleep, go back to normal
+        await hass.async_block_till_done()
+        assert mock_vehicle_data.call_count == 3
 
-    mock_vehicle_data.return_value = VEHICLE_DATA_ALT
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    # Vehicle active
-    await hass.async_block_till_done()
-    assert mock_vehicle_data.call_count == 5
+        freezer.tick(TEST_INTERVAL)
+        async_fire_time_changed(hass)
+        # Regular polling
+        await hass.async_block_till_done()
+        assert mock_vehicle_data.call_count == 4
 
-    freezer.tick(VEHICLE_WAIT)
-    async_fire_time_changed(hass)
-    # Dont let sleep when active
-    await hass.async_block_till_done()
-    assert mock_vehicle_data.call_count == 6
+        mock_vehicle_data.return_value = VEHICLE_DATA_ALT
+        freezer.tick(TEST_INTERVAL)
+        async_fire_time_changed(hass)
+        # Vehicle active
+        await hass.async_block_till_done()
+        assert mock_vehicle_data.call_count == 5
 
-    freezer.tick(VEHICLE_WAIT)
-    async_fire_time_changed(hass)
-    # Dont let sleep when active
-    await hass.async_block_till_done()
-    assert mock_vehicle_data.call_count == 7
+        freezer.tick(TEST_INTERVAL)
+        async_fire_time_changed(hass)
+        # Dont let sleep when active
+        await hass.async_block_till_done()
+        assert mock_vehicle_data.call_count == 6
+
+        freezer.tick(TEST_INTERVAL)
+        async_fire_time_changed(hass)
+        # Dont let sleep when active
+        await hass.async_block_till_done()
+        assert mock_vehicle_data.call_count == 7
 
 
 # Test Energy Live Coordinator
@@ -312,6 +312,21 @@ async def test_energy_site_refresh_error(
 ) -> None:
     """Test coordinator refresh with an error."""
     mock_site_info.side_effect = side_effect
+    await setup_platform(hass, normal_config_entry)
+    assert normal_config_entry.state is state
+
+
+# Test Energy History Coordinator
+@pytest.mark.parametrize(("side_effect", "state"), ERRORS)
+async def test_energy_history_refresh_error(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_energy_history: AsyncMock,
+    side_effect: TeslaFleetError,
+    state: ConfigEntryState,
+) -> None:
+    """Test coordinator refresh with an error."""
+    mock_energy_history.side_effect = side_effect
     await setup_platform(hass, normal_config_entry)
     assert normal_config_entry.state is state
 
@@ -378,6 +393,39 @@ async def test_energy_info_refresh_ratelimited(
     assert mock_site_info.call_count == 3
 
 
+async def test_energy_history_refresh_ratelimited(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_energy_history: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator refresh handles 429."""
+
+    await setup_platform(hass, normal_config_entry)
+
+    mock_energy_history.side_effect = RateLimited(
+        {"after": int(ENERGY_HISTORY_INTERVAL.total_seconds() + 10)}
+    )
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_energy_history.call_count == 2
+
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Should not call for another 10 seconds
+    assert mock_energy_history.call_count == 2
+
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_energy_history.call_count == 3
+
+
 async def test_init_region_issue(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
@@ -424,3 +472,20 @@ async def test_signing(
     ) as mock_get_private_key:
         await setup_platform(hass, normal_config_entry)
         mock_get_private_key.assert_called_once()
+
+
+async def test_bad_implementation(
+    hass: HomeAssistant,
+    bad_config_entry: MockConfigEntry,
+) -> None:
+    """Test handling of a bad authentication implementation."""
+
+    await setup_platform(hass, bad_config_entry)
+    assert bad_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    # Ensure reauth flow starts
+    assert any(bad_config_entry.async_get_active_flows(hass, {"reauth"}))
+    result = await bad_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert not result["errors"]

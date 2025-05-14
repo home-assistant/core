@@ -17,10 +17,11 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaOptionsFlowHandler,
 )
 
-from .const import CONF_STATION_UPDATES, DEFAULT_NAME, DOMAIN
+from .const import CONF_RADAR_UPDATES, CONF_STATION_UPDATES, DEFAULT_NAME, DOMAIN
 
 OPTIONS_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_RADAR_UPDATES, default=False): bool,
         vol.Required(CONF_STATION_UPDATES, default=True): bool,
     }
 )

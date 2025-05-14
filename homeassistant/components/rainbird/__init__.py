@@ -79,14 +79,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> 
         return False
     if mac_address := entry.data.get(CONF_MAC):
         _async_fix_entity_unique_id(
-            hass,
             er.async_get(hass),
             entry.entry_id,
             format_mac(mac_address),
             str(entry.data[CONF_SERIAL_NUMBER]),
         )
         _async_fix_device_id(
-            hass,
             dr.async_get(hass),
             entry.entry_id,
             format_mac(mac_address),
@@ -103,18 +101,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> 
     data = RainbirdData(
         controller,
         model_info,
-        coordinator=RainbirdUpdateCoordinator(
-            hass,
-            name=entry.title,
-            controller=controller,
-            unique_id=entry.unique_id,
-            model_info=model_info,
-        ),
-        schedule_coordinator=RainbirdScheduleUpdateCoordinator(
-            hass,
-            name=f"{entry.title} Schedule",
-            controller=controller,
-        ),
+        coordinator=RainbirdUpdateCoordinator(hass, entry, controller, model_info),
+        schedule_coordinator=RainbirdScheduleUpdateCoordinator(hass, entry, controller),
     )
     await data.coordinator.async_config_entry_first_refresh()
 
@@ -170,7 +158,6 @@ async def _async_fix_unique_id(
 
 
 def _async_fix_entity_unique_id(
-    hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     config_entry_id: str,
     mac_address: str,
@@ -214,7 +201,6 @@ def _async_device_entry_to_keep(
 
 
 def _async_fix_device_id(
-    hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     config_entry_id: str,
     mac_address: str,

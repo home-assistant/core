@@ -11,13 +11,15 @@
         }
       },
       "discovery_confirm": {
-        "description": "Do you want to setup {model}?"
+        "description": "Do you want to set up {model}?"
       }
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "invalid_version": "This firmware version is unsupported. Please upgrade the firmware of the device to at least version 3.1.1."
+      "invalid_version": "This firmware version is unsupported. Please upgrade the firmware of the device to at least version 3.1.1.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "Please ensure you reconfigure against the same device."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -66,8 +68,8 @@
       "led_bar_mode": {
         "name": "LED bar mode",
         "state": {
-          "off": "Off",
-          "co2": "Carbon dioxide",
+          "off": "[%key:common::state::off%]",
+          "co2": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
           "pm": "Particulate matter"
         }
       },
@@ -119,6 +121,9 @@
       "raw_nitrogen": {
         "name": "Raw NOx"
       },
+      "raw_pm02": {
+        "name": "Raw PM2.5"
+      },
       "display_pm_standard": {
         "name": "[%key:component::airgradient::entity::select::display_pm_standard::name%]",
         "state": {
@@ -138,8 +143,8 @@
       "led_bar_mode": {
         "name": "[%key:component::airgradient::entity::select::led_bar_mode::name%]",
         "state": {
-          "off": "[%key:component::airgradient::entity::select::led_bar_mode::state::off%]",
-          "co2": "[%key:component::airgradient::entity::select::led_bar_mode::state::co2%]",
+          "off": "[%key:common::state::off%]",
+          "co2": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
           "pm": "[%key:component::airgradient::entity::select::led_bar_mode::state::pm%]"
         }
       },
@@ -161,6 +166,17 @@
       "post_data_to_airgradient": {
         "name": "Post data to Airgradient"
       }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the Airgradient device: {error}"
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred while communicating with the Airgradient device: {error}"
+    },
+    "update_error": {
+      "message": "An error occurred while communicating with the Airgradient device: {error}"
     }
   }
 }

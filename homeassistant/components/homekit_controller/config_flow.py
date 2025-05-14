@@ -19,11 +19,14 @@ from aiohomekit.model.status_flags import StatusFlags
 from aiohomekit.utils import domain_supported, domain_to_name, serialize_broadcast_key
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 from homeassistant.helpers.typing import VolDictType
 
 from .const import DOMAIN, KNOWN_DEVICES
@@ -189,7 +192,7 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
         return False
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered HomeKit accessory.
 
@@ -202,7 +205,7 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
             key.lower(): value for (key, value) in discovery_info.properties.items()
         }
 
-        if zeroconf.ATTR_PROPERTIES_ID not in properties:
+        if ATTR_PROPERTIES_ID not in properties:
             # This can happen if the TXT record is received after the PTR record
             # we will wait for the next update in this case
             _LOGGER.debug(
@@ -216,7 +219,7 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # The hkid is a unique random number that looks like a pairing code.
         # It changes if a device is factory reset.
-        hkid: str = properties[zeroconf.ATTR_PROPERTIES_ID]
+        hkid: str = properties[ATTR_PROPERTIES_ID]
         normalized_hkid = normalize_hkid(hkid)
         upper_case_hkid = hkid.upper()
         status_flags = int(properties["sf"])

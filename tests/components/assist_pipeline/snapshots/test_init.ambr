@@ -3,8 +3,14 @@
   list([
     dict({
       'data': dict({
+        'conversation_id': 'mock-ulid',
         'language': 'en',
         'pipeline': <ANY>,
+        'tts_output': dict({
+          'mime_type': 'audio/mpeg',
+          'token': 'test_token.mp3',
+          'url': '/api/tts_proxy/test_token.mp3',
+        }),
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,
     }),
@@ -32,7 +38,7 @@
     }),
     dict({
       'data': dict({
-        'conversation_id': None,
+        'conversation_id': 'mock-ulid',
         'device_id': None,
         'engine': 'conversation.home_assistant',
         'intent_input': 'test transcript',
@@ -44,7 +50,8 @@
     dict({
       'data': dict({
         'intent_output': dict({
-          'conversation_id': None,
+          'continue_conversation': False,
+          'conversation_id': <ANY>,
           'response': dict({
             'card': dict({
             }),
@@ -67,18 +74,19 @@
     }),
     dict({
       'data': dict({
-        'engine': 'test',
-        'language': 'en-US',
+        'engine': 'tts.test',
+        'language': 'en_US',
         'tts_input': "Sorry, I couldn't understand that",
-        'voice': 'james_earl_jones',
+        'voice': None,
       }),
       'type': <PipelineEventType.TTS_START: 'tts-start'>,
     }),
     dict({
       'data': dict({
         'tts_output': dict({
-          'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&tts_options=%7B%22voice%22:%22james_earl_jones%22%7D",
+          'media_id': "media-source://tts/tts.test?message=Sorry,+I+couldn't+understand+that&language=en_US&tts_options=%7B%7D",
           'mime_type': 'audio/mpeg',
+          'token': 'test_token.mp3',
           'url': '/api/tts_proxy/test_token.mp3',
         }),
       }),
@@ -94,8 +102,14 @@
   list([
     dict({
       'data': dict({
+        'conversation_id': 'mock-ulid',
         'language': 'en',
         'pipeline': <ANY>,
+        'tts_output': dict({
+          'mime_type': 'audio/mpeg',
+          'token': 'test_token.mp3',
+          'url': '/api/tts_proxy/test_token.mp3',
+        }),
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,
     }),
@@ -123,7 +137,7 @@
     }),
     dict({
       'data': dict({
-        'conversation_id': None,
+        'conversation_id': 'mock-ulid',
         'device_id': None,
         'engine': 'conversation.home_assistant',
         'intent_input': 'test transcript',
@@ -135,7 +149,8 @@
     dict({
       'data': dict({
         'intent_output': dict({
-          'conversation_id': None,
+          'continue_conversation': False,
+          'conversation_id': <ANY>,
           'response': dict({
             'card': dict({
             }),
@@ -170,6 +185,7 @@
         'tts_output': dict({
           'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&tts_options=%7B%22voice%22:%22Arnold+Schwarzenegger%22%7D",
           'mime_type': 'audio/mpeg',
+          'token': 'test_token.mp3',
           'url': '/api/tts_proxy/test_token.mp3',
         }),
       }),
@@ -185,8 +201,14 @@
   list([
     dict({
       'data': dict({
+        'conversation_id': 'mock-ulid',
         'language': 'en',
         'pipeline': <ANY>,
+        'tts_output': dict({
+          'mime_type': 'audio/mpeg',
+          'token': 'test_token.mp3',
+          'url': '/api/tts_proxy/test_token.mp3',
+        }),
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,
     }),
@@ -214,7 +236,7 @@
     }),
     dict({
       'data': dict({
-        'conversation_id': None,
+        'conversation_id': 'mock-ulid',
         'device_id': None,
         'engine': 'conversation.home_assistant',
         'intent_input': 'test transcript',
@@ -226,7 +248,8 @@
     dict({
       'data': dict({
         'intent_output': dict({
-          'conversation_id': None,
+          'continue_conversation': False,
+          'conversation_id': <ANY>,
           'response': dict({
             'card': dict({
             }),
@@ -261,6 +284,7 @@
         'tts_output': dict({
           'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&tts_options=%7B%22voice%22:%22Arnold+Schwarzenegger%22%7D",
           'mime_type': 'audio/mpeg',
+          'token': 'test_token.mp3',
           'url': '/api/tts_proxy/test_token.mp3',
         }),
       }),
@@ -276,8 +300,14 @@
   list([
     dict({
       'data': dict({
+        'conversation_id': 'mock-ulid',
         'language': 'en',
         'pipeline': <ANY>,
+        'tts_output': dict({
+          'mime_type': 'audio/mpeg',
+          'token': 'test_token.mp3',
+          'url': '/api/tts_proxy/test_token.mp3',
+        }),
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,
     }),
@@ -329,7 +359,7 @@
     }),
     dict({
       'data': dict({
-        'conversation_id': None,
+        'conversation_id': 'mock-ulid',
         'device_id': None,
         'engine': 'conversation.home_assistant',
         'intent_input': 'test transcript',
@@ -341,7 +371,8 @@
     dict({
       'data': dict({
         'intent_output': dict({
-          'conversation_id': None,
+          'continue_conversation': False,
+          'conversation_id': <ANY>,
           'response': dict({
             'card': dict({
             }),
@@ -364,18 +395,19 @@
     }),
     dict({
       'data': dict({
-        'engine': 'test',
-        'language': 'en-US',
+        'engine': 'tts.test',
+        'language': 'en_US',
         'tts_input': "Sorry, I couldn't understand that",
-        'voice': 'james_earl_jones',
+        'voice': None,
       }),
       'type': <PipelineEventType.TTS_START: 'tts-start'>,
     }),
     dict({
       'data': dict({
         'tts_output': dict({
-          'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&tts_options=%7B%22voice%22:%22james_earl_jones%22%7D",
+          'media_id': "media-source://tts/tts.test?message=Sorry,+I+couldn't+understand+that&language=en_US&tts_options=%7B%7D",
           'mime_type': 'audio/mpeg',
+          'token': 'test_token.mp3',
           'url': '/api/tts_proxy/test_token.mp3',
         }),
       }),
@@ -391,8 +423,14 @@
   list([
     dict({
       'data': dict({
+        'conversation_id': 'mock-ulid',
         'language': 'en',
         'pipeline': <ANY>,
+        'tts_output': dict({
+          'mime_type': 'audio/mpeg',
+          'token': 'mocked-token.mp3',
+          'url': '/api/tts_proxy/mocked-token.mp3',
+        }),
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,
     }),
@@ -414,93 +452,6 @@
       'data': dict({
         'code': 'cloud-auth-failed',
         'message': 'Home Assistant Cloud authentication failed',
-      }),
-      'type': <PipelineEventType.ERROR: 'error'>,
-    }),
-    dict({
-      'data': None,
-      'type': <PipelineEventType.RUN_END: 'run-end'>,
-    }),
-  ])
-# ---
-# name: test_pipeline_language_used_instead_of_conversation_language
-  list([
-    dict({
-      'data': dict({
-        'language': 'en',
-        'pipeline': <ANY>,
-      }),
-      'type': <PipelineEventType.RUN_START: 'run-start'>,
-    }),
-    dict({
-      'data': dict({
-        'conversation_id': None,
-        'device_id': None,
-        'engine': 'conversation.home_assistant',
-        'intent_input': 'test input',
-        'language': 'en',
-        'prefer_local_intents': False,
-      }),
-      'type': <PipelineEventType.INTENT_START: 'intent-start'>,
-    }),
-    dict({
-      'data': dict({
-        'intent_output': dict({
-          'conversation_id': None,
-          'response': dict({
-            'card': dict({
-            }),
-            'data': dict({
-              'failed': list([
-              ]),
-              'success': list([
-              ]),
-              'targets': list([
-              ]),
-            }),
-            'language': 'en',
-            'response_type': 'action_done',
-            'speech': dict({
-            }),
-          }),
-        }),
-        'processed_locally': True,
-      }),
-      'type': <PipelineEventType.INTENT_END: 'intent-end'>,
-    }),
-    dict({
-      'data': None,
-      'type': <PipelineEventType.RUN_END: 'run-end'>,
-    }),
-  ])
-# ---
-# name: test_wake_word_detection_aborted
-  list([
-    dict({
-      'data': dict({
-        'language': 'en',
-        'pipeline': <ANY>,
-      }),
-      'type': <PipelineEventType.RUN_START: 'run-start'>,
-    }),
-    dict({
-      'data': dict({
-        'entity_id': 'wake_word.test',
-        'metadata': dict({
-          'bit_rate': <AudioBitRates.BITRATE_16: 16>,
-          'channel': <AudioChannels.CHANNEL_MONO: 1>,
-          'codec': <AudioCodecs.PCM: 'pcm'>,
-          'format': <AudioFormats.WAV: 'wav'>,
-          'sample_rate': <AudioSampleRates.SAMPLERATE_16000: 16000>,
-        }),
-        'timeout': 0,
-      }),
-      'type': <PipelineEventType.WAKE_WORD_START: 'wake_word-start'>,
-    }),
-    dict({
-      'data': dict({
-        'code': 'wake_word_detection_aborted',
-        'message': '',
       }),
       'type': <PipelineEventType.ERROR: 'error'>,
     }),

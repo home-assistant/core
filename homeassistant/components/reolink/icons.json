@@ -38,15 +38,87 @@
         }
       },
       "person": {
-        "default": "mdi:motion-sensor-off",
+        "default": "mdi:account-off",
         "state": {
-          "on": "mdi:motion-sensor"
+          "on": "mdi:account"
+        }
+      },
+      "cry": {
+        "default": "mdi:emoticon-happy-outline",
+        "state": {
+          "on": "mdi:emoticon-cry-outline"
         }
       },
       "sleep": {
         "default": "mdi:sleep-off",
         "state": {
           "on": "mdi:sleep"
+        }
+      },
+      "crossline_person": {
+        "default": "mdi:fence",
+        "state": {
+          "on": "mdi:fence-electric"
+        }
+      },
+      "crossline_vehicle": {
+        "default": "mdi:fence",
+        "state": {
+          "on": "mdi:fence-electric"
+        }
+      },
+      "crossline_dog_cat": {
+        "default": "mdi:fence",
+        "state": {
+          "on": "mdi:fence-electric"
+        }
+      },
+      "intrusion_person": {
+        "default": "mdi:location-enter",
+        "state": {
+          "on": "mdi:alert-circle-outline"
+        }
+      },
+      "intrusion_vehicle": {
+        "default": "mdi:location-enter",
+        "state": {
+          "on": "mdi:alert-circle-outline"
+        }
+      },
+      "intrusion_dog_cat": {
+        "default": "mdi:location-enter",
+        "state": {
+          "on": "mdi:alert-circle-outline"
+        }
+      },
+      "linger_person": {
+        "default": "mdi:account-switch",
+        "state": {
+          "on": "mdi:account-alert"
+        }
+      },
+      "linger_vehicle": {
+        "default": "mdi:account-switch",
+        "state": {
+          "on": "mdi:account-alert"
+        }
+      },
+      "linger_dog_cat": {
+        "default": "mdi:account-switch",
+        "state": {
+          "on": "mdi:account-alert"
+        }
+      },
+      "forgotten_item": {
+        "default": "mdi:package-variant-closed-plus",
+        "state": {
+          "on": "mdi:package-variant-closed-check"
+        }
+      },
+      "taken_item": {
+        "default": "mdi:package-variant-closed-minus",
+        "state": {
+          "on": "mdi:package-variant-closed-check"
         }
       }
     },
@@ -145,6 +217,21 @@
       "ai_animal_sensitivity": {
         "default": "mdi:paw"
       },
+      "crossline_sensitivity": {
+        "default": "mdi:fence"
+      },
+      "intrusion_sensitivity": {
+        "default": "mdi:location-enter"
+      },
+      "linger_sensitivity": {
+        "default": "mdi:account-switch"
+      },
+      "forgotten_item_sensitivity": {
+        "default": "mdi:package-variant-closed-plus"
+      },
+      "taken_item_sensitivity": {
+        "default": "mdi:package-variant-closed-minus"
+      },
       "ai_face_delay": {
         "default": "mdi:face-recognition"
       },
@@ -162,6 +249,18 @@
       },
       "ai_animal_delay": {
         "default": "mdi:paw"
+      },
+      "intrusion_delay": {
+        "default": "mdi:location-enter"
+      },
+      "linger_delay": {
+        "default": "mdi:account-switch"
+      },
+      "forgotten_item_delay": {
+        "default": "mdi:package-variant-closed-plus"
+      },
+      "taken_item_delay": {
+        "default": "mdi:package-variant-closed-minus"
       },
       "auto_quick_reply_time": {
         "default": "mdi:message-reply-text-outline"
@@ -278,6 +377,12 @@
       },
       "sub_bit_rate": {
         "default": "mdi:play-speed"
+      },
+      "scene_mode": {
+        "default": "mdi:view-list"
+      },
+      "packing_time": {
+        "default": "mdi:record-rec"
       }
     },
     "sensor": {
@@ -292,6 +397,9 @@
       },
       "battery_state": {
         "default": "mdi:battery-charging"
+      },
+      "day_night_state": {
+        "default": "mdi:theme-light-dark"
       },
       "wifi_signal": {
         "default": "mdi:wifi"
@@ -365,6 +473,12 @@
       },
       "led": {
         "default": "mdi:lightning-bolt-circle"
+      },
+      "privacy_mode": {
+        "default": "mdi:eye",
+        "state": {
+          "on": "mdi:eye-off"
+        }
       }
     }
   },

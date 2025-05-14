@@ -9,7 +9,7 @@ import sqlite3
 import sys
 import threading
 from typing import Any, cast
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -77,6 +77,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
     recorder as recorder_helper,
 )
+from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -85,6 +86,7 @@ from homeassistant.util.json import json_loads
 from .common import (
     async_block_recorder,
     async_recorder_block_till_done,
+    async_wait_recorder,
     async_wait_recording_done,
     convert_pending_states_to_meta,
     corrupt_db_file,
@@ -98,12 +100,12 @@ from tests.common import (
     async_test_home_assistant,
     mock_platform,
 )
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager, RecorderInstanceGenerator
 
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 
@@ -155,7 +157,7 @@ async def test_shutdown_before_startup_finishes(
 
     recorder_helper.async_initialize_recorder(hass)
     hass.async_create_task(async_setup_recorder_instance(hass, config))
-    await recorder_helper.async_wait_recorder(hass)
+    await async_wait_recorder(hass)
     instance = get_instance(hass)
 
     session = await instance.async_add_executor_job(instance.get_session)
@@ -188,7 +190,7 @@ async def test_canceled_before_startup_finishes(
     hass.set_state(CoreState.not_running)
     recorder_helper.async_initialize_recorder(hass)
     hass.async_create_task(async_setup_recorder_instance(hass))
-    await recorder_helper.async_wait_recorder(hass)
+    await async_wait_recorder(hass)
 
     instance = get_instance(hass)
     instance._hass_started.cancel()
@@ -240,7 +242,7 @@ async def test_state_gets_saved_when_set_before_start_event(
 
     recorder_helper.async_initialize_recorder(hass)
     hass.async_create_task(async_setup_recorder_instance(hass))
-    await recorder_helper.async_wait_recorder(hass)
+    await async_wait_recorder(hass)
 
     entity_id = "test.recorder"
     state = "restoring_from_db"
@@ -1373,7 +1375,7 @@ async def test_statistics_runs_initiated(
 @pytest.mark.parametrize("enable_missing_statistics", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_compile_missing_statistics(
-    async_test_recorder: RecorderInstanceGenerator, freezer: FrozenDateTimeFactory
+    async_test_recorder: RecorderInstanceContextManager, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test missing statistics are compiled on startup."""
     now = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
@@ -1632,7 +1634,7 @@ async def test_service_disable_states_not_recording(
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_service_disable_run_information_recorded(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Test that runs are still recorded when recorder is disabled."""
 
@@ -2575,23 +2577,25 @@ async def test_clean_shutdown_when_recorder_thread_raises_during_validate_db_sch
 
 @pytest.mark.parametrize(
     ("func_to_patch", "expected_setup_result"),
-    [("migrate_schema_non_live", False), ("migrate_schema_live", False)],
+    [
+        ("migrate_schema_non_live", False),
+        ("migrate_schema_live", True),
+    ],
 )
 async def test_clean_shutdown_when_schema_migration_fails(
-    hass: HomeAssistant, func_to_patch: str, expected_setup_result: bool
+    hass: HomeAssistant,
+    func_to_patch: str,
+    expected_setup_result: bool,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test we still shutdown cleanly when schema migration fails."""
     with (
-        patch.object(
-            migration,
-            "validate_db_schema",
-            return_value=MagicMock(valid=False, current_version=1),
-        ),
+        patch.object(migration, "_get_current_schema_version", side_effect=[None, 1]),
         patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True),
         patch.object(
             migration,
             func_to_patch,
-            side_effect=Exception,
+            side_effect=Exception("Boom!"),
         ),
     ):
         if recorder.DOMAIN not in hass.data:
@@ -2610,9 +2614,53 @@ async def test_clean_shutdown_when_schema_migration_fails(
         assert setup_result == expected_setup_result
         await hass.async_block_till_done()
 
+        instance = recorder.get_instance(hass)
+        await hass.async_stop()
+        assert instance.engine is None
+
+        assert "Error during schema migration" in caplog.text
+        # Check the injected exception was logged
+        assert "Boom!" in caplog.text
+
+
+async def test_setup_fails_after_downgrade(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we fail to setup after a downgrade.
+
+    Also test we shutdown cleanly.
+    """
+    with (
+        patch.object(
+            migration,
+            "_get_current_schema_version",
+            side_effect=[None, SCHEMA_VERSION + 1],
+        ),
+        patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True),
+    ):
+        if recorder.DOMAIN not in hass.data:
+            recorder_helper.async_initialize_recorder(hass)
+        assert not await async_setup_component(
+            hass,
+            recorder.DOMAIN,
+            {
+                recorder.DOMAIN: {
+                    CONF_DB_URL: "sqlite://",
+                    CONF_DB_RETRY_WAIT: 0,
+                    CONF_DB_MAX_RETRIES: 1,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
     instance = recorder.get_instance(hass)
     await hass.async_stop()
     assert instance.engine is None
+    assert (
+        f"The database schema version {SCHEMA_VERSION + 1} is newer "
+        f"than {SCHEMA_VERSION} which is the maximum database schema "
+        "version supported by the installed version of Home Assistant Core"
+    ) in caplog.text
 
 
 async def test_events_are_recorded_until_final_write(
@@ -2678,7 +2726,7 @@ async def test_commit_before_commits_pending_writes(
 
     recorder_helper.async_initialize_recorder(hass)
     hass.async_create_task(async_setup_recorder_instance(hass, config))
-    await recorder_helper.async_wait_recorder(hass)
+    await async_wait_recorder(hass)
     instance = get_instance(hass)
     assert instance.commit_interval == 60
     verify_states_in_queue_future = hass.loop.create_future()
@@ -2751,3 +2799,22 @@ async def test_empty_entity_id(
     hass.bus.async_fire("hello", {"entity_id": ""})
     await async_wait_recording_done(hass)
     assert "Invalid entity ID" not in caplog.text
+
+
+async def test_setting_up_recorder_fails_entity_registry_listener(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test recorder setup fails if an entity registry listener is in place."""
+    async_track_entity_registry_updated_event(hass, "test.test", lambda x: x)
+    recorder_helper.async_initialize_recorder(hass)
+    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True):
+        assert not await async_setup_component(
+            hass,
+            recorder.DOMAIN,
+            {recorder.DOMAIN: {recorder.CONF_DB_URL: "sqlite://"}},
+        )
+        await hass.async_block_till_done()
+    assert (
+        "The recorder entity registry listener must be installed before "
+        "async_track_entity_registry_updated_event is called" in caplog.text
+    )

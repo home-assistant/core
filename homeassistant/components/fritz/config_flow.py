@@ -13,17 +13,11 @@ from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import FritzConnectionException
 import voluptuous as vol
 
-from homeassistant.components import ssdp
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -32,10 +26,18 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
+    CONF_FEATURE_DEVICE_TRACKING,
     CONF_OLD_DISCOVERY,
+    DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
     DEFAULT_CONF_OLD_DISCOVERY,
     DEFAULT_HOST,
     DEFAULT_HTTP_PORT,
@@ -48,6 +50,7 @@ from .const import (
     ERROR_UPNP_NOT_CONFIGURED,
     FRITZ_AUTH_EXCEPTIONS,
 )
+from .coordinator import FritzConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +65,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: FritzConfigEntry,
     ) -> FritzBoxToolsOptionsFlowHandler:
         """Get the options flow for this handler."""
         return FritzBoxToolsOptionsFlowHandler()
@@ -71,7 +74,8 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize FRITZ!Box Tools flow."""
         self._name: str = ""
         self._password: str = ""
-        self._use_tls: bool = False
+        self._use_tls: bool = DEFAULT_SSL
+        self._feature_device_discovery: bool = DEFAULT_CONF_FEATURE_DEVICE_TRACKING
         self._port: int | None = None
         self._username: str = ""
         self._model: str = ""
@@ -111,7 +115,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return None
 
-    async def async_check_configured_entry(self) -> ConfigEntry | None:
+    async def async_check_configured_entry(self) -> FritzConfigEntry | None:
         """Check if entry is configured."""
         current_host = await self.hass.async_add_executor_job(
             socket.gethostbyname, self._host
@@ -140,6 +144,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             options={
                 CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.total_seconds(),
                 CONF_OLD_DISCOVERY: DEFAULT_CONF_OLD_DISCOVERY,
+                CONF_FEATURE_DEVICE_TRACKING: self._feature_device_discovery,
             },
         )
 
@@ -150,7 +155,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         return DEFAULT_HTTPS_PORT if user_input[CONF_SSL] else DEFAULT_HTTP_PORT
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
         ssdp_location: ParseResult = urlparse(discovery_info.ssdp_location or "")
@@ -160,14 +165,13 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._host = host
         self._name = (
-            discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
-            or discovery_info.upnp[ssdp.ATTR_UPNP_MODEL_NAME]
+            discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME)
+            or discovery_info.upnp[ATTR_UPNP_MODEL_NAME]
         )
 
         uuid: str | None
-        if uuid := discovery_info.upnp.get(ssdp.ATTR_UPNP_UDN):
-            if uuid.startswith("uuid:"):
-                uuid = uuid[5:]
+        if uuid := discovery_info.upnp.get(ATTR_UPNP_UDN):
+            uuid = uuid.removeprefix("uuid:")
             await self.async_set_unique_id(uuid)
             self._abort_if_unique_id_configured({CONF_HOST: self._host})
 
@@ -204,6 +208,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
         self._use_tls = user_input[CONF_SSL]
+        self._feature_device_discovery = user_input[CONF_FEATURE_DEVICE_TRACKING]
         self._port = self._determine_port(user_input)
 
         error = await self.async_fritz_tools_init()
@@ -234,6 +239,10 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
                     vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
+                    vol.Required(
+                        CONF_FEATURE_DEVICE_TRACKING,
+                        default=DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
+                    ): bool,
                 }
             ),
             errors=errors or {},
@@ -250,6 +259,10 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
                     vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
+                    vol.Required(
+                        CONF_FEATURE_DEVICE_TRACKING,
+                        default=DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
+                    ): bool,
                 }
             ),
             description_placeholders={"name": self._name},
@@ -405,7 +418,7 @@ class FritzBoxToolsOptionsFlowHandler(OptionsFlow):
         """Handle options flow."""
 
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(data=user_input)
 
         options = self.config_entry.options
         data_schema = vol.Schema(
@@ -419,6 +432,13 @@ class FritzBoxToolsOptionsFlowHandler(OptionsFlow):
                 vol.Optional(
                     CONF_OLD_DISCOVERY,
                     default=options.get(CONF_OLD_DISCOVERY, DEFAULT_CONF_OLD_DISCOVERY),
+                ): bool,
+                vol.Optional(
+                    CONF_FEATURE_DEVICE_TRACKING,
+                    default=options.get(
+                        CONF_FEATURE_DEVICE_TRACKING,
+                        DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
+                    ),
                 ): bool,
             }
         )

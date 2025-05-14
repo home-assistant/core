@@ -34,12 +34,16 @@
       "needs_poll": false,
       "poll_interval": 30,
       "enabled": true,
-      "hidden": false,
       "icon": "mdi-speaker",
       "group_volume": 20,
       "display_name": "Test Player 1",
-      "extra_data": {},
-      "announcement_in_progress": false
+      "power_control": "native",
+      "volume_control": "native",
+      "mute_control": "native",
+      "hide_player_in_ui": ["when_unavailable"],
+      "expose_to_ha": true,
+      "can_group_with": ["00:00:00:00:00:02"],
+      "source_list": []
     },
     {
       "player_id": "00:00:00:00:00:02",
@@ -83,15 +87,27 @@
       },
       "synced_to": null,
       "enabled_by_default": true,
-      "needs_poll": false,
-      "poll_interval": 30,
       "enabled": true,
       "hidden": false,
       "icon": "mdi-speaker",
       "group_volume": 20,
       "display_name": "My Super Test Player 2",
-      "extra_data": {},
-      "announcement_in_progress": false
+      "power_control": "native",
+      "volume_control": "native",
+      "mute_control": "native",
+      "hide_player_in_ui": ["when_unavailable"],
+      "expose_to_ha": true,
+      "can_group_with": ["00:00:00:00:00:01"],
+      "source_list": [
+        {
+          "id": "spotify",
+          "name": "Spotify Connect",
+          "passive": true,
+          "can_play_pause": false,
+          "can_seek": false,
+          "can_next_previous": false
+        }
+      ]
     },
     {
       "player_id": "test_group_player_1",
@@ -135,15 +151,17 @@
       },
       "synced_to": null,
       "enabled_by_default": true,
-      "needs_poll": true,
-      "poll_interval": 30,
       "enabled": true,
-      "hidden": false,
       "icon": "mdi-speaker-multiple",
       "group_volume": 6,
       "display_name": "Test Group Player 1",
-      "extra_data": {},
-      "announcement_in_progress": false
+      "power_control": "native",
+      "volume_control": "native",
+      "mute_control": "native",
+      "hide_player_in_ui": ["when_unavailable"],
+      "expose_to_ha": true,
+      "can_group_with": [],
+      "source_list": []
     }
   ]
 }

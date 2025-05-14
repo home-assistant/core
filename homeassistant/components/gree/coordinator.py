@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 from datetime import datetime, timedelta
 import logging
 from typing import Any
@@ -11,6 +12,7 @@ from greeclimate.discovery import Discovery, Listener
 from greeclimate.exceptions import DeviceNotBoundError, DeviceTimeoutError
 from greeclimate.network import Response
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.json import json_dumps
@@ -23,6 +25,7 @@ from .const import (
     DISPATCH_DEVICE_DISCOVERED,
     DOMAIN,
     MAX_ERRORS,
+    MAX_EXPECTED_RESPONSE_TIME_INTERVAL,
     UPDATE_INTERVAL,
 )
 
@@ -32,18 +35,21 @@ _LOGGER = logging.getLogger(__name__)
 class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Manages polling for state changes from the device."""
 
-    def __init__(self, hass: HomeAssistant, device: Device) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, device: Device
+    ) -> None:
         """Initialize the data update coordinator."""
-        DataUpdateCoordinator.__init__(
-            self,
+        super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=f"{DOMAIN}-{device.device_info.name}",
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
             always_update=False,
         )
         self.device = device
-        self.device.add_handler(Response.DATA, self.device_state_updated)
         self.device.add_handler(Response.RESULT, self.device_state_updated)
 
         self._error_count: int = 0
@@ -83,7 +89,9 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # raise update failed if time for more than MAX_ERRORS has passed since last update
             now = utcnow()
             elapsed_success = now - self._last_response_time
-            if self.update_interval and elapsed_success >= self.update_interval:
+            if self.update_interval and elapsed_success >= timedelta(
+                seconds=MAX_EXPECTED_RESPONSE_TIME_INTERVAL
+            ):
                 if not self._last_error_time or (
                     (now - self.update_interval) >= self._last_error_time
                 ):
@@ -91,16 +99,19 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     self._error_count += 1
 
                 _LOGGER.warning(
-                    "Device %s is unresponsive for %s seconds",
+                    "Device %s took an unusually long time to respond, %s seconds",
                     self.name,
                     elapsed_success,
                 )
+            else:
+                self._error_count = 0
             if self.last_update_success and self._error_count >= MAX_ERRORS:
                 raise UpdateFailed(
                     f"Device {self.name} is unresponsive for too long and now unavailable"
                 )
 
-        return self.device.raw_properties
+        self._last_response_time = utcnow()
+        return copy.deepcopy(self.device.raw_properties)
 
     async def push_state_update(self):
         """Send state updates to the physical device."""
@@ -117,10 +128,11 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 class DiscoveryService(Listener):
     """Discovery event handler for gree devices."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize discovery service."""
         super().__init__()
         self.hass = hass
+        self.entry = entry
 
         self.discovery = Discovery(DISCOVERY_TIMEOUT)
         self.discovery.add_listener(self)
@@ -144,7 +156,7 @@ class DiscoveryService(Listener):
             device.device_info.ip,
             device.device_info.port,
         )
-        coordo = DeviceDataUpdateCoordinator(self.hass, device)
+        coordo = DeviceDataUpdateCoordinator(self.hass, self.entry, device)
         self.hass.data[DOMAIN][COORDINATORS].append(coordo)
         await coordo.async_refresh()
 

@@ -15,6 +15,7 @@ from homeassistant.helpers.trigger import async_initialize_triggers
 from .accessories import TYPES, HomeAccessory
 from .aidmanager import get_system_unique_id
 from .const import (
+    CHAR_CONFIGURED_NAME,
     CHAR_NAME,
     CHAR_PROGRAMMABLE_SWITCH_EVENT,
     CHAR_SERVICE_LABEL_INDEX,
@@ -48,7 +49,7 @@ class DeviceTriggerAccessory(HomeAccessory):
         for idx, trigger in enumerate(device_triggers):
             type_: str = trigger["type"]
             subtype: str | None = trigger.get("subtype")
-            unique_id = f'{type_}-{subtype or ""}'
+            unique_id = f"{type_}-{subtype or ''}"
             entity_id: str | None = None
             if (entity_id_or_uuid := trigger.get("entity_id")) and (
                 entry := ent_reg.async_get(entity_id_or_uuid)
@@ -66,7 +67,7 @@ class DeviceTriggerAccessory(HomeAccessory):
             trigger_name = cleanup_name_for_homekit(" ".join(trigger_name_parts))
             serv_stateless_switch = self.add_preload_service(
                 SERV_STATELESS_PROGRAMMABLE_SWITCH,
-                [CHAR_NAME, CHAR_SERVICE_LABEL_INDEX],
+                [CHAR_NAME, CHAR_CONFIGURED_NAME, CHAR_SERVICE_LABEL_INDEX],
                 unique_id=unique_id,
             )
             self.triggers.append(
@@ -77,6 +78,9 @@ class DeviceTriggerAccessory(HomeAccessory):
                 )
             )
             serv_stateless_switch.configure_char(CHAR_NAME, value=trigger_name)
+            serv_stateless_switch.configure_char(
+                CHAR_CONFIGURED_NAME, value=trigger_name
+            )
             serv_stateless_switch.configure_char(
                 CHAR_SERVICE_LABEL_INDEX, value=idx + 1
             )
@@ -122,7 +126,7 @@ class DeviceTriggerAccessory(HomeAccessory):
         """
         reason = ""
         if "trigger" in run_variables and "description" in run_variables["trigger"]:
-            reason = f' by {run_variables["trigger"]["description"]}'
+            reason = f" by {run_variables['trigger']['description']}"
         _LOGGER.debug("Button triggered%s - %s", reason, run_variables)
         idx = int(run_variables["trigger"]["idx"])
         self.triggers[idx].set_value(0)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from functools import partial
+from math import isfinite
 from typing import Any, cast
 
 from aioesphomeapi import (
@@ -63,6 +64,8 @@ from .entity import (
     platform_async_setup_entry,
 )
 from .enum_mapper import EsphomeEnumMapper
+
+PARALLEL_UPDATES = 0
 
 FAN_QUIET = "quiet"
 
@@ -177,13 +180,13 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
 
     def _get_precision(self) -> float:
         """Return the precision of the climate device."""
-        precicions = [PRECISION_WHOLE, PRECISION_HALVES, PRECISION_TENTHS]
+        precisions = [PRECISION_WHOLE, PRECISION_HALVES, PRECISION_TENTHS]
         static_info = self._static_info
         if static_info.visual_current_temperature_step != 0:
             step = static_info.visual_current_temperature_step
         else:
             step = static_info.visual_target_temperature_step
-        for prec in precicions:
+        for prec in precisions:
             if step >= prec:
                 return prec
         # Fall back to highest precision, tenths
@@ -230,15 +233,21 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     @esphome_float_state_property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
+        if not self._static_info.supports_current_temperature:
+            return None
         return self._state.current_temperature
 
     @property
     @esphome_state_property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
-        if not self._static_info.supports_current_humidity:
+        if (
+            not self._static_info.supports_current_humidity
+            or (val := self._state.current_humidity) is None
+            or not isfinite(val)
+        ):
             return None
-        return round(self._state.current_humidity)
+        return round(val)
 
     @property
     @esphome_float_state_property

@@ -7,7 +7,7 @@ from typing import Any
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from . import AOSmithConfigEntry
+from .coordinator import AOSmithConfigEntry
 
 TO_REDACT = {
     "address",

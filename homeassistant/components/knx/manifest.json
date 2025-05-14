@@ -10,9 +10,9 @@
   "iot_class": "local_push",
   "loggers": ["xknx", "xknxproject"],
   "requirements": [
-    "xknx==3.4.0",
-    "xknxproject==3.8.1",
-    "knx-frontend==2024.11.16.205004"
+    "xknx==3.8.0",
+    "xknxproject==3.8.2",
+    "knx-frontend==2025.4.1.91934"
   ],
   "single_config_entry": true
 }

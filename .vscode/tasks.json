@@ -4,7 +4,7 @@
     {
       "label": "Run Home Assistant Core",
       "type": "shell",
-      "command": "hass -c ./config",
+      "command": "${command:python.interpreterPath} -m homeassistant -c ./config",
       "group": "test",
       "presentation": {
         "reveal": "always",
@@ -148,7 +148,7 @@
     {
       "label": "Install all Test Requirements",
       "type": "shell",
-      "command": "uv pip install -r requirements_test_all.txt",
+      "command": "uv pip install -r requirements.txt -r requirements_test_all.txt",
       "group": {
         "kind": "build",
         "isDefault": true

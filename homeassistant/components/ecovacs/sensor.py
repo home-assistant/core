@@ -16,6 +16,7 @@ from deebot_client.events import (
     NetworkInfoEvent,
     StatsEvent,
     TotalStatsEvent,
+    station,
 )
 from sucks import VacBot
 
@@ -34,7 +35,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import EcovacsConfigEntry
@@ -46,7 +47,7 @@ from .entity import (
     EcovacsLegacyEntity,
     EventT,
 )
-from .util import get_supported_entitites
+from .util import get_name_key, get_options, get_supported_entitites
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -136,6 +137,15 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    # Station
+    EcovacsSensorEntityDescription[station.StationEvent](
+        capability_fn=lambda caps: caps.station.state if caps.station else None,
+        value_fn=lambda e: get_name_key(e.state),
+        key="station_state",
+        translation_key="station_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=get_options(station.State),
+    ),
 )
 
 
@@ -182,7 +192,7 @@ LEGACY_LIFESPAN_SENSORS = tuple(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EcovacsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add entities for passed config_entry in HA."""
     controller = config_entry.runtime_data

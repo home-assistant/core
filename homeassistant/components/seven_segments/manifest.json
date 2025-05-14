@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/seven_segments",
   "iot_class": "local_polling",
   "quality_scale": "legacy",
-  "requirements": ["Pillow==11.0.0"]
+  "requirements": ["Pillow==11.2.1"]
 }

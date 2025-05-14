@@ -88,6 +88,20 @@
       'uid': '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
     }),
     dict({
+      'description': 'Klicke um den Namen Deines aktuellen Projekts anzugeben & setze einen Terminplan!',
+      'end': dict({
+        'date': '2024-09-23',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=MONTHLY;BYSETPOS=4;BYDAY=SU',
+      'start': dict({
+        'date': '2024-09-22',
+      }),
+      'summary': 'Arbeite an einem kreativen Projekt',
+      'uid': '6e53f1f5-a315-4edd-984d-8d762e4a08ef',
+    }),
+    dict({
       'description': 'Klicke um Änderungen zu machen!',
       'end': dict({
         'date': '2024-09-24',
@@ -562,6 +576,20 @@
       }),
       'summary': 'Fitnessstudio besuchen',
       'uid': '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
+    }),
+    dict({
+      'description': 'Setze dich einmal im Monat hin, um deine Einnahmen und Ausgaben zu überprüfen und dein Budget zu planen.',
+      'end': dict({
+        'date': '2024-10-07',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=MONTHLY;BYSETPOS=1;BYDAY=SU',
+      'start': dict({
+        'date': '2024-10-06',
+      }),
+      'summary': 'Monatliche Finanzübersicht erstellen',
+      'uid': '369afeed-61e3-4bf7-9747-66e05807134c',
     }),
     dict({
       'description': 'Klicke um Änderungen zu machen!',
@@ -906,6 +934,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -928,7 +957,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaCalendar.DAILIES: 'dailys'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_dailys',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_dailys',
     'unit_of_measurement': None,
   })
 # ---
@@ -959,6 +988,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -981,7 +1011,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaCalendar.DAILY_REMINDERS: 'daily_reminders'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_daily_reminders',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_daily_reminders',
     'unit_of_measurement': None,
   })
 # ---
@@ -1011,6 +1041,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1033,7 +1064,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaCalendar.TODO_REMINDERS: 'todo_reminders'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_todo_reminders',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_todo_reminders',
     'unit_of_measurement': None,
   })
 # ---
@@ -1063,6 +1094,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1085,7 +1117,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaCalendar.TODOS: 'todos'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_todos',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_todos',
     'unit_of_measurement': None,
   })
 # ---

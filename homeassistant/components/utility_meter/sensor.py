@@ -41,7 +41,10 @@ from homeassistant.core import (
 from homeassistant.helpers import entity_platform, entity_registry as er
 from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
@@ -49,8 +52,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.template import is_number
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import slugify
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 from homeassistant.util.enum import try_parse_enum
 
 from .const import (
@@ -117,7 +119,7 @@ def validate_is_number(value):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Utility Meter config entry."""
     entry_id = config_entry.entry_id
@@ -575,9 +577,9 @@ class UtilityMeterSensor(RestoreSensor):
     async def _async_reset_meter(self, event):
         """Reset the utility meter status."""
 
-        await self._program_reset()
-
         await self.async_reset_meter(self._tariff_entity)
+
+        await self._program_reset()
 
     async def async_reset_meter(self, entity_id):
         """Reset meter."""

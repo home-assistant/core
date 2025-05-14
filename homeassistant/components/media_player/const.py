@@ -26,6 +26,8 @@ ATTR_MEDIA_ARTIST = "media_artist"
 ATTR_MEDIA_CHANNEL = "media_channel"
 ATTR_MEDIA_CONTENT_ID = "media_content_id"
 ATTR_MEDIA_CONTENT_TYPE = "media_content_type"
+ATTR_MEDIA_SEARCH_QUERY = "search_query"
+ATTR_MEDIA_FILTER_CLASSES = "media_filter_classes"
 ATTR_MEDIA_DURATION = "media_duration"
 ATTR_MEDIA_ENQUEUE = "enqueue"
 ATTR_MEDIA_EXTRA = "extra"
@@ -173,6 +175,8 @@ _DEPRECATED_MEDIA_TYPE_VIDEO = DeprecatedConstantEnum(MediaType.VIDEO, "2025.10"
 SERVICE_CLEAR_PLAYLIST = "clear_playlist"
 SERVICE_JOIN = "join"
 SERVICE_PLAY_MEDIA = "play_media"
+SERVICE_BROWSE_MEDIA = "browse_media"
+SERVICE_SEARCH_MEDIA = "search_media"
 SERVICE_SELECT_SOUND_MODE = "select_sound_mode"
 SERVICE_SELECT_SOURCE = "select_source"
 SERVICE_UNJOIN = "unjoin"
@@ -219,6 +223,7 @@ class MediaPlayerEntityFeature(IntFlag):
     GROUPING = 524288
     MEDIA_ANNOUNCE = 1048576
     MEDIA_ENQUEUE = 2097152
+    SEARCH_MEDIA = 4194304
 
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.

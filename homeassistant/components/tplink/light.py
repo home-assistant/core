@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass
 import logging
 from typing import Any
 
-from kasa import Device, DeviceType, LightState, Module
-from kasa.interfaces import Light, LightEffect
+from kasa import Device, DeviceType, KasaException, LightState, Module
+from kasa.interfaces import LightEffect
 from kasa.iot import IotDevice
 import voluptuous as vol
 
@@ -17,21 +18,32 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
+    DOMAIN as LIGHT_DOMAIN,
     EFFECT_OFF,
     ColorMode,
     LightEntity,
+    LightEntityDescription,
     LightEntityFeature,
     filter_supported_color_modes,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
 from . import TPLinkConfigEntry, legacy_device_id
+from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
-from .entity import CoordinatedTPLinkEntity, async_refresh_after
+from .entity import (
+    CoordinatedTPLinkModuleEntity,
+    TPLinkModuleEntityDescription,
+    async_refresh_after,
+)
+
+# Coordinator is used to centralize the data updates
+# For actions the integration handles locking of concurrent device request
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -130,114 +142,135 @@ def _async_build_base_effect(
     }
 
 
+def _get_backwards_compatible_light_unique_id(
+    device: Device, entity_description: TPLinkModuleEntityDescription
+) -> str:
+    """Return unique ID for the entity."""
+    # For historical reasons the light platform uses the mac address as
+    # the unique id whereas all other platforms use device_id.
+
+    # For backwards compat with pyHS100
+    if device.device_type is DeviceType.Dimmer and isinstance(device, IotDevice):
+        # Dimmers used to use the switch format since
+        # pyHS100 treated them as SmartPlug but the old code
+        # created them as lights
+        # https://github.com/home-assistant/core/blob/2021.9.7/ \
+        # homeassistant/components/tplink/common.py#L86
+        return legacy_device_id(device)
+
+    # Newer devices can have child lights. While there isn't currently
+    # an example of a device with more than one light we use the device_id
+    # for consistency and future proofing
+    if device.parent or device.children:
+        return legacy_device_id(device)
+
+    return device.mac.replace(":", "").upper()
+
+
+@dataclass(frozen=True, kw_only=True)
+class TPLinkLightEntityDescription(
+    LightEntityDescription, TPLinkModuleEntityDescription
+):
+    """Base class for tplink light entity description."""
+
+    unique_id_fn = _get_backwards_compatible_light_unique_id
+
+
+LIGHT_DESCRIPTIONS: tuple[TPLinkLightEntityDescription, ...] = (
+    TPLinkLightEntityDescription(
+        key="light",
+        exists_fn=lambda dev, _: Module.Light in dev.modules
+        and Module.LightEffect not in dev.modules,
+    ),
+)
+
+LIGHT_EFFECT_DESCRIPTIONS: tuple[TPLinkLightEntityDescription, ...] = (
+    TPLinkLightEntityDescription(
+        key="light_effect",
+        exists_fn=lambda dev, _: Module.Light in dev.modules
+        and Module.LightEffect in dev.modules,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: TPLinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up switches."""
+    """Set up lights."""
     data = config_entry.runtime_data
     parent_coordinator = data.parent_coordinator
     device = parent_coordinator.device
-    entities: list[TPLinkLightEntity | TPLinkLightEffectEntity] = []
-    if effect_module := device.modules.get(Module.LightEffect):
-        entities.append(
-            TPLinkLightEffectEntity(
-                device,
-                parent_coordinator,
-                light_module=device.modules[Module.Light],
-                effect_module=effect_module,
+
+    known_child_device_ids_light: set[str] = set()
+    known_child_device_ids_light_effect: set[str] = set()
+    first_check = True
+
+    def _check_device() -> None:
+        entities = CoordinatedTPLinkModuleEntity.entities_for_device_and_its_children(
+            hass=hass,
+            device=device,
+            coordinator=parent_coordinator,
+            entity_class=TPLinkLightEntity,
+            descriptions=LIGHT_DESCRIPTIONS,
+            platform_domain=LIGHT_DOMAIN,
+            known_child_device_ids=known_child_device_ids_light,
+            first_check=first_check,
+        )
+        entities.extend(
+            CoordinatedTPLinkModuleEntity.entities_for_device_and_its_children(
+                hass=hass,
+                device=device,
+                coordinator=parent_coordinator,
+                entity_class=TPLinkLightEffectEntity,
+                descriptions=LIGHT_EFFECT_DESCRIPTIONS,
+                platform_domain=LIGHT_DOMAIN,
+                known_child_device_ids=known_child_device_ids_light_effect,
+                first_check=first_check,
             )
         )
-        if effect_module.has_custom_effects:
-            platform = entity_platform.async_get_current_platform()
-            platform.async_register_entity_service(
-                SERVICE_RANDOM_EFFECT,
-                RANDOM_EFFECT_DICT,
-                "async_set_random_effect",
-            )
-            platform.async_register_entity_service(
-                SERVICE_SEQUENCE_EFFECT,
-                SEQUENCE_EFFECT_DICT,
-                "async_set_sequence_effect",
-            )
-    elif Module.Light in device.modules:
-        entities.append(
-            TPLinkLightEntity(
-                device, parent_coordinator, light_module=device.modules[Module.Light]
-            )
-        )
-    entities.extend(
-        TPLinkLightEntity(
-            child,
-            parent_coordinator,
-            light_module=child.modules[Module.Light],
-            parent=device,
-        )
-        for child in device.children
-        if Module.Light in child.modules
-    )
-    async_add_entities(entities)
+        async_add_entities(entities)
+
+    _check_device()
+    first_check = False
+    config_entry.async_on_unload(parent_coordinator.async_add_listener(_check_device))
 
 
-class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
+class TPLinkLightEntity(CoordinatedTPLinkModuleEntity, LightEntity):
     """Representation of a TPLink Smart Bulb."""
 
     _attr_supported_features = LightEntityFeature.TRANSITION
     _fixed_color_mode: ColorMode | None = None
 
+    entity_description: TPLinkLightEntityDescription
+
     def __init__(
         self,
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
+        description: TPLinkLightEntityDescription,
         *,
-        light_module: Light,
         parent: Device | None = None,
     ) -> None:
         """Initialize the light."""
-        self._parent = parent
+        super().__init__(device, coordinator, description, parent=parent)
+
+        light_module = device.modules[Module.Light]
         self._light_module = light_module
-        # If _attr_name is None the entity name will be the device name
-        self._attr_name = None if parent is None else device.alias
         modes: set[ColorMode] = {ColorMode.ONOFF}
-        if light_module.is_variable_color_temp:
+        if color_temp_feat := light_module.get_feature("color_temp"):
             modes.add(ColorMode.COLOR_TEMP)
-            temp_range = light_module.valid_temperature_range
-            self._attr_min_color_temp_kelvin = temp_range.min
-            self._attr_max_color_temp_kelvin = temp_range.max
-        if light_module.is_color:
+            self._attr_min_color_temp_kelvin = color_temp_feat.minimum_value
+            self._attr_max_color_temp_kelvin = color_temp_feat.maximum_value
+        if light_module.has_feature("hsv"):
             modes.add(ColorMode.HS)
-        if light_module.is_dimmable:
+        if light_module.has_feature("brightness"):
             modes.add(ColorMode.BRIGHTNESS)
         self._attr_supported_color_modes = filter_supported_color_modes(modes)
         if len(self._attr_supported_color_modes) == 1:
             # If the light supports only a single color mode, set it now
             self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
-
-        super().__init__(device, coordinator, parent=parent)
-
-    def _get_unique_id(self) -> str:
-        """Return unique ID for the entity."""
-        # For historical reasons the light platform uses the mac address as
-        # the unique id whereas all other platforms use device_id.
-        device = self._device
-
-        # For backwards compat with pyHS100
-        if device.device_type is DeviceType.Dimmer and isinstance(device, IotDevice):
-            # Dimmers used to use the switch format since
-            # pyHS100 treated them as SmartPlug but the old code
-            # created them as lights
-            # https://github.com/home-assistant/core/blob/2021.9.7/ \
-            # homeassistant/components/tplink/common.py#L86
-            return legacy_device_id(device)
-
-        # Newer devices can have child lights. While there isn't currently
-        # an example of a device with more than one light we use the device_id
-        # for consistency and future proofing
-        if self._parent or device.children:
-            return legacy_device_id(device)
-
-        return device.mac.replace(":", "").upper()
 
     @callback
     def _async_extract_brightness_transition(
@@ -270,15 +303,17 @@ class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
         self, color_temp: float, brightness: int | None, transition: int | None
     ) -> None:
         light_module = self._light_module
-        valid_temperature_range = light_module.valid_temperature_range
+        color_temp_feat = light_module.get_feature("color_temp")
+        assert color_temp_feat
+
         requested_color_temp = round(color_temp)
         # Clamp color temp to valid range
         # since if the light in a group we will
         # get requests for color temps for the range
         # of the group and not the light
         clamped_color_temp = min(
-            valid_temperature_range.max,
-            max(valid_temperature_range.min, requested_color_temp),
+            color_temp_feat.maximum_value,
+            max(color_temp_feat.minimum_value, requested_color_temp),
         )
         await light_module.set_color_temp(
             clamped_color_temp,
@@ -325,17 +360,20 @@ class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
             # The light supports only a single color mode, return it
             return self._fixed_color_mode
 
-        # The light supports both color temp and color, determine which on is active
-        if self._light_module.is_variable_color_temp and self._light_module.color_temp:
+        # The light supports both color temp and color, determine which one is active
+        if (
+            self._light_module.has_feature("color_temp")
+            and self._light_module.color_temp
+        ):
             return ColorMode.COLOR_TEMP
         return ColorMode.HS
 
     @callback
-    def _async_update_attrs(self) -> None:
+    def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         light_module = self._light_module
         self._attr_is_on = light_module.state.light_on is True
-        if light_module.is_dimmable:
+        if light_module.has_feature("brightness"):
             self._attr_brightness = round((light_module.brightness * 255.0) / 100.0)
         color_mode = self._determine_color_mode()
         self._attr_color_mode = color_mode
@@ -345,26 +383,48 @@ class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
             hue, saturation, _ = light_module.hsv
             self._attr_hs_color = hue, saturation
 
+        return True
+
 
 class TPLinkLightEffectEntity(TPLinkLightEntity):
     """Representation of a TPLink Smart Light Strip."""
+
+    _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
 
     def __init__(
         self,
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
+        description: TPLinkLightEntityDescription,
         *,
-        light_module: Light,
-        effect_module: LightEffect,
+        parent: Device | None = None,
     ) -> None:
         """Initialize the light strip."""
-        self._effect_module = effect_module
-        super().__init__(device, coordinator, light_module=light_module)
+        super().__init__(device, coordinator, description, parent=parent)
 
-    _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
+        self._effect_module = device.modules[Module.LightEffect]
+
+    async def async_added_to_hass(self) -> None:
+        """Call update attributes after the device is added to the platform."""
+        await super().async_added_to_hass()
+
+        self._register_effects_services()
+
+    def _register_effects_services(self) -> None:
+        if self._effect_module.has_custom_effects:
+            self.platform.async_register_entity_service(
+                SERVICE_RANDOM_EFFECT,
+                RANDOM_EFFECT_DICT,
+                "async_set_random_effect",
+            )
+            self.platform.async_register_entity_service(
+                SERVICE_SEQUENCE_EFFECT,
+                SEQUENCE_EFFECT_DICT,
+                "async_set_sequence_effect",
+            )
 
     @callback
-    def _async_update_attrs(self) -> None:
+    def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         super()._async_update_attrs()
         effect_module = self._effect_module
@@ -377,6 +437,7 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
             self._attr_effect_list = effect_list
         else:
             self._attr_effect_list = None
+        return True
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -451,7 +512,17 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
         if transition_range:
             effect["transition_range"] = transition_range
             effect["transition"] = 0
-        await self._effect_module.set_custom_effect(effect)
+        try:
+            await self._effect_module.set_custom_effect(effect)
+        except KasaException as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_custom_effect",
+                translation_placeholders={
+                    "effect": str(effect),
+                    "exc": str(ex),
+                },
+            ) from ex
 
     async def async_set_sequence_effect(
         self,
@@ -473,4 +544,14 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
             "spread": spread,
             "direction": direction,
         }
-        await self._effect_module.set_custom_effect(effect)
+        try:
+            await self._effect_module.set_custom_effect(effect)
+        except KasaException as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_custom_effect",
+                translation_placeholders={
+                    "effect": str(effect),
+                    "exc": str(ex),
+                },
+            ) from ex

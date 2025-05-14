@@ -29,7 +29,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.util.enum import try_parse_enum
 
@@ -112,7 +112,7 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensor(s) for KNX platform."""
     knx_module = hass.data[KNX_MODULE_KEY]
@@ -211,7 +211,7 @@ class KNXSystemSensor(SensorEntity):
             return True
         return self.knx.xknx.connection_manager.state is XknxConnectionState.CONNECTED
 
-    def after_update_callback(self, _: XknxConnectionState) -> None:
+    def after_update_callback(self, device: XknxConnectionState) -> None:
         """Call after device was updated."""
         self.async_write_ha_state()
 

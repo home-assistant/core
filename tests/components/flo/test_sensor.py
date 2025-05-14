@@ -2,14 +2,11 @@
 
 import pytest
 
-from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
-from homeassistant.const import ATTR_ENTITY_ID, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
-
-from .common import TEST_PASSWORD, TEST_USER_ID
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -20,12 +17,8 @@ async def test_sensors(hass: HomeAssistant, config_entry: MockConfigEntry) -> No
     """Test Flo by Moen sensors."""
     hass.config.units = US_CUSTOMARY_SYSTEM
     config_entry.add_to_hass(hass)
-    assert await async_setup_component(
-        hass, FLO_DOMAIN, {CONF_USERNAME: TEST_USER_ID, CONF_PASSWORD: TEST_PASSWORD}
-    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-
-    assert len(hass.data[FLO_DOMAIN][config_entry.entry_id]["devices"]) == 2
 
     # we should have 5 entities for the valve
     assert (
@@ -95,12 +88,8 @@ async def test_manual_update_entity(
 ) -> None:
     """Test manual update entity via service homeasasistant/update_entity."""
     config_entry.add_to_hass(hass)
-    assert await async_setup_component(
-        hass, FLO_DOMAIN, {CONF_USERNAME: TEST_USER_ID, CONF_PASSWORD: TEST_PASSWORD}
-    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-
-    assert len(hass.data[FLO_DOMAIN][config_entry.entry_id]["devices"]) == 2
 
     await async_setup_component(hass, "homeassistant", {})
 

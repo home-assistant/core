@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, cast
 
 from google.api_core.exceptions import GoogleAPIError, Unauthenticated
+from google.api_core.retry import AsyncRetry
 from google.cloud import texttospeech
 import voluptuous as vol
 
@@ -21,7 +22,7 @@ from homeassistant.components.tts import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -35,7 +36,10 @@ from .const import (
     CONF_SPEED,
     CONF_TEXT_TYPE,
     CONF_VOICE,
+    DEFAULT_GAIN,
     DEFAULT_LANG,
+    DEFAULT_PITCH,
+    DEFAULT_SPEED,
     DOMAIN,
 )
 from .helpers import async_tts_voices, tts_options_schema, tts_platform_schema
@@ -85,7 +89,7 @@ async def async_get_engine(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Google Cloud text-to-speech."""
     service_account_info = config_entry.data[CONF_SERVICE_ACCOUNT_INFO]
@@ -191,16 +195,32 @@ class BaseGoogleCloudProvider:
                 ssml_gender=gender,
                 name=voice,
             ),
+            # Avoid: "This voice does not support speaking rate or pitch parameters at this time."
+            # by not specifying the fields unless they differ from the defaults
             audio_config=texttospeech.AudioConfig(
                 audio_encoding=encoding,
-                speaking_rate=options[CONF_SPEED],
-                pitch=options[CONF_PITCH],
-                volume_gain_db=options[CONF_GAIN],
+                speaking_rate=(
+                    options[CONF_SPEED]
+                    if options[CONF_SPEED] != DEFAULT_SPEED
+                    else None
+                ),
+                pitch=(
+                    options[CONF_PITCH]
+                    if options[CONF_PITCH] != DEFAULT_PITCH
+                    else None
+                ),
+                volume_gain_db=(
+                    options[CONF_GAIN] if options[CONF_GAIN] != DEFAULT_GAIN else None
+                ),
                 effects_profile_id=options[CONF_PROFILES],
             ),
         )
 
-        response = await self._client.synthesize_speech(request, timeout=10)
+        response = await self._client.synthesize_speech(
+            request,
+            timeout=10,
+            retry=AsyncRetry(initial=0.1, maximum=2.0, multiplier=2.0),
+        )
 
         if encoding == texttospeech.AudioEncoding.MP3:
             extension = "mp3"

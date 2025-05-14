@@ -280,7 +280,7 @@ class PersonStorageCollection(collection.DictStorageCollection):
         return data
 
     @callback
-    def _get_suggested_id(self, info: dict) -> str:
+    def _get_suggested_id(self, info: dict[str, str]) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
 

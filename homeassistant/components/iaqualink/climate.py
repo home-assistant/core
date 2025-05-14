@@ -18,10 +18,10 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import refresh_system
-from .const import DOMAIN as AQUALINK_DOMAIN
+from .const import DOMAIN
 from .entity import AqualinkEntity
 from .utils import await_or_reraise
 
@@ -33,14 +33,11 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up discovered switches."""
     async_add_entities(
-        (
-            HassAqualinkThermostat(dev)
-            for dev in hass.data[AQUALINK_DOMAIN][CLIMATE_DOMAIN]
-        ),
+        (HassAqualinkThermostat(dev) for dev in hass.data[DOMAIN][CLIMATE_DOMAIN]),
         True,
     )
 

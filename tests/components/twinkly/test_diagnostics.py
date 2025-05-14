@@ -1,32 +1,28 @@
 """Tests for the diagnostics of the twinkly component."""
 
-from collections.abc import Awaitable, Callable
-
+import pytest
 from syrupy import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
 
-from . import ClientMock
+from . import setup_integration
 
+from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
-type ComponentSetup = Callable[[], Awaitable[ClientMock]]
 
-DOMAIN = "twinkly"
-
-
+@pytest.mark.usefixtures("mock_twinkly_client")
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    setup_integration: ComponentSetup,
+    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
-    await setup_integration()
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await setup_integration(hass, mock_config_entry)
 
-    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot(
-        exclude=props("created_at", "modified_at")
-    )
+    assert await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
+    ) == snapshot(exclude=props("created_at", "modified_at"))

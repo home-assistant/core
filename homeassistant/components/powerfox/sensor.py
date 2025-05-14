@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from powerfox import Device, PowerMeter, WaterMeter
+from powerfox import Device, HeatMeter, PowerMeter, WaterMeter
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -15,15 +15,14 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfVolume
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PowerfoxConfigEntry
-from .coordinator import PowerfoxDataUpdateCoordinator
+from .coordinator import PowerfoxConfigEntry, PowerfoxDataUpdateCoordinator
 from .entity import PowerfoxEntity
 
 
 @dataclass(frozen=True, kw_only=True)
-class PowerfoxSensorEntityDescription[T: (PowerMeter, WaterMeter)](
+class PowerfoxSensorEntityDescription[T: (PowerMeter, WaterMeter, HeatMeter)](
     SensorEntityDescription
 ):
     """Describes Poweropti sensor entity."""
@@ -93,11 +92,45 @@ SENSORS_WATER: tuple[PowerfoxSensorEntityDescription[WaterMeter], ...] = (
     ),
 )
 
+SENSORS_HEAT: tuple[PowerfoxSensorEntityDescription[HeatMeter], ...] = (
+    PowerfoxSensorEntityDescription[HeatMeter](
+        key="heat_total_energy",
+        translation_key="heat_total_energy",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda meter: meter.total_energy,
+    ),
+    PowerfoxSensorEntityDescription[HeatMeter](
+        key="heat_delta_energy",
+        translation_key="heat_delta_energy",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        value_fn=lambda meter: meter.delta_energy,
+    ),
+    PowerfoxSensorEntityDescription[HeatMeter](
+        key="heat_total_volume",
+        translation_key="heat_total_volume",
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        device_class=SensorDeviceClass.WATER,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda meter: meter.total_volume,
+    ),
+    PowerfoxSensorEntityDescription[HeatMeter](
+        key="heat_delta_volume",
+        translation_key="heat_delta_volume",
+        suggested_display_precision=2,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        device_class=SensorDeviceClass.WATER,
+        value_fn=lambda meter: meter.delta_volume,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PowerfoxConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Powerfox sensors based on a config entry."""
     entities: list[SensorEntity] = []
@@ -120,6 +153,15 @@ async def async_setup_entry(
                     device=coordinator.device,
                 )
                 for description in SENSORS_WATER
+            )
+        if isinstance(coordinator.data, HeatMeter):
+            entities.extend(
+                PowerfoxSensorEntity(
+                    coordinator=coordinator,
+                    description=description,
+                    device=coordinator.device,
+                )
+                for description in SENSORS_HEAT
             )
     async_add_entities(entities)
 

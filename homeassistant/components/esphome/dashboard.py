@@ -6,12 +6,13 @@ import asyncio
 import logging
 from typing import Any
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
+from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
 from .coordinator import ESPHomeDashboardCoordinator
@@ -19,7 +20,9 @@ from .coordinator import ESPHomeDashboardCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-KEY_DASHBOARD_MANAGER = "esphome_dashboard_manager"
+KEY_DASHBOARD_MANAGER: HassKey[ESPHomeDashboardManager] = HassKey(
+    "esphome_dashboard_manager"
+)
 
 STORAGE_KEY = "esphome.dashboard"
 STORAGE_VERSION = 1
@@ -33,7 +36,7 @@ async def async_setup(hass: HomeAssistant) -> None:
     await async_get_or_create_dashboard_manager(hass)
 
 
-@singleton(KEY_DASHBOARD_MANAGER)
+@singleton(KEY_DASHBOARD_MANAGER, async_=True)
 async def async_get_or_create_dashboard_manager(
     hass: HomeAssistant,
 ) -> ESPHomeDashboardManager:
@@ -57,10 +60,25 @@ class ESPHomeDashboardManager:
     async def async_setup(self) -> None:
         """Restore the dashboard from storage."""
         self._data = await self._store.async_load()
-        if (data := self._data) and (info := data.get("info")):
-            await self.async_set_dashboard_info(
-                info["addon_slug"], info["host"], info["port"]
+        if not (data := self._data) or not (info := data.get("info")):
+            return
+        if is_hassio(self._hass):
+            from homeassistant.components.hassio import (  # pylint: disable=import-outside-toplevel
+                get_addons_info,
             )
+
+            if (addons := get_addons_info(self._hass)) is not None and info[
+                "addon_slug"
+            ] not in addons:
+                # The addon is not installed anymore, but it make come back
+                # so we don't want to remove the dashboard, but for now
+                # we don't want to use it.
+                _LOGGER.debug("Addon %s is no longer installed", info["addon_slug"])
+                return
+
+        await self.async_set_dashboard_info(
+            info["addon_slug"], info["host"], info["port"]
+        )
 
     @callback
     def async_get(self) -> ESPHomeDashboardCoordinator | None:
@@ -85,9 +103,7 @@ class ESPHomeDashboardManager:
                 self._cancel_shutdown = None
             self._current_dashboard = None
 
-        dashboard = ESPHomeDashboardCoordinator(
-            hass, addon_slug, url, async_get_clientsession(hass)
-        )
+        dashboard = ESPHomeDashboardCoordinator(hass, addon_slug, url)
         await dashboard.async_request_refresh()
 
         self._current_dashboard = dashboard
@@ -105,8 +121,7 @@ class ESPHomeDashboardManager:
 
         reloads = [
             hass.config_entries.async_reload(entry.entry_id)
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.state is ConfigEntryState.LOADED
+            for entry in hass.config_entries.async_loaded_entries(DOMAIN)
         ]
         # Re-auth flows will check the dashboard for encryption key when the form is requested
         # but we only trigger reauth if the dashboard is available.
@@ -140,7 +155,7 @@ def async_get_dashboard(hass: HomeAssistant) -> ESPHomeDashboardCoordinator | No
     where manager can be an asyncio.Event instead of the actual manager
     because the singleton decorator is not yet done.
     """
-    manager: ESPHomeDashboardManager | None = hass.data.get(KEY_DASHBOARD_MANAGER)
+    manager = hass.data.get(KEY_DASHBOARD_MANAGER)
     return manager.async_get() if manager else None
 
 

@@ -21,6 +21,16 @@
           'warm_water': 0.0,
         }),
       }),
+      dict({
+        'heat_meter': dict({
+          'delta_energy': 111,
+          'delta_volume': 0.111,
+          'outdated': False,
+          'timestamp': '2024-11-26 10:48:51',
+          'total_energy': 1111.111,
+          'total_volume': 1111.111,
+        }),
+      }),
     ]),
   })
 # ---

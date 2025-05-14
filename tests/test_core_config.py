@@ -5,7 +5,6 @@ from collections import OrderedDict
 import copy
 import os
 from pathlib import Path
-import re
 from tempfile import TemporaryDirectory
 from typing import Any
 from unittest.mock import Mock, PropertyMock, patch
@@ -46,7 +45,7 @@ from homeassistant.util.unit_system import (
     UnitSystem,
 )
 
-from .common import MockUser, async_capture_events
+from .common import MockEntityPlatform, MockUser, async_capture_events
 
 
 def test_core_config_schema() -> None:
@@ -181,7 +180,8 @@ def test_validate_stun_or_turn_url() -> None:
     invalid_urls = (
         "custom_stun_server",
         "custom_stun_server:3478",
-        "bum:custom_stun_server:3478" "http://blah.com:80",
+        "bum:custom_stun_server:3478",
+        "http://blah.com:80",
     )
 
     valid_urls = (
@@ -221,6 +221,7 @@ async def _compute_state(hass: HomeAssistant, config: dict[str, Any]) -> State |
     entity = Entity()
     entity.entity_id = "test.test"
     entity.hass = hass
+    entity.platform = MockEntityPlatform(hass)
     entity.schedule_update_ha_state()
 
     await hass.async_block_till_done()
@@ -1068,18 +1069,6 @@ async def test_top_level_components(hass: HomeAssistant) -> None:
 async def test_debug_mode_defaults_to_off(hass: HomeAssistant) -> None:
     """Test debug mode defaults to off."""
     assert not hass.config.debug
-
-
-async def test_set_time_zone_deprecated(hass: HomeAssistant) -> None:
-    """Test set_time_zone is deprecated."""
-    with pytest.raises(
-        RuntimeError,
-        match=re.escape(
-            "Detected code that sets the time zone using set_time_zone instead of "
-            "async_set_time_zone. Please report this issue"
-        ),
-    ):
-        await hass.config.set_time_zone("America/New_York")
 
 
 async def test_core_config_schema_imperial_unit(

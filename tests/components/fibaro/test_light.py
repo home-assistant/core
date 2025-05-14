@@ -2,7 +2,8 @@
 
 from unittest.mock import Mock, patch
 
-from homeassistant.const import Platform
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -55,3 +56,28 @@ async def test_light_brightness(
         state = hass.states.get("light.room_1_test_light_3")
         assert state.attributes["brightness"] == 51
         assert state.state == "on"
+
+
+async def test_light_turn_off(
+    hass: HomeAssistant,
+    mock_fibaro_client: Mock,
+    mock_config_entry: MockConfigEntry,
+    mock_light: Mock,
+    mock_room: Mock,
+) -> None:
+    """Test activate scene is called."""
+    # Arrange
+    mock_fibaro_client.read_rooms.return_value = [mock_room]
+    mock_fibaro_client.read_devices.return_value = [mock_light]
+
+    with patch("homeassistant.components.fibaro.PLATFORMS", [Platform.LIGHT]):
+        await init_integration(hass, mock_config_entry)
+        # Act
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "light.room_1_test_light_3"},
+            blocking=True,
+        )
+        # Assert
+        assert mock_light.execute_action.call_count == 1

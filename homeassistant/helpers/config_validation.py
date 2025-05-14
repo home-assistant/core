@@ -1,8 +1,6 @@
 """Helpers for config validation using voluptuous."""
 
-# PEP 563 seems to break typing.get_type_hints when used
-# with PEP 695 syntax. Fixed in Python 3.13.
-# from __future__ import annotations
+from __future__ import annotations
 
 from collections.abc import Callable, Hashable, Mapping
 import contextlib
@@ -23,7 +21,7 @@ from socket import (  # type: ignore[attr-defined]  # private, not in typeshed
     _GLOBAL_DEFAULT_TIMEOUT,
 )
 import threading
-from typing import Any, cast, overload
+from typing import TYPE_CHECKING, Any, cast, overload
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -109,8 +107,11 @@ from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.generated import currencies
 from homeassistant.generated.countries import COUNTRIES
 from homeassistant.generated.languages import LANGUAGES
-from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
-import homeassistant.util.dt as dt_util
+from homeassistant.util import (
+    dt as dt_util,
+    raise_if_invalid_path,
+    slugify as util_slugify,
+)
 from homeassistant.util.yaml.objects import NodeStrClass
 
 from . import script_variables as script_variables_helper, template as template_helper
@@ -354,7 +355,13 @@ def ensure_list[_T](value: _T | None) -> list[_T] | list[Any]:
     """Wrap value in list if it is not one."""
     if value is None:
         return []
-    return cast("list[_T]", value) if isinstance(value, list) else [value]
+    if isinstance(value, list):
+        if TYPE_CHECKING:
+            # https://github.com/home-assistant/core/pull/71960
+            # cast with a type variable is still slow.
+            return cast(list[_T], value)
+        return value  # type: ignore[unreachable]
+    return [value]
 
 
 def entity_id(value: Any) -> str:
@@ -676,11 +683,7 @@ def string(value: Any) -> str:
         raise vol.Invalid("string value is None")
 
     # This is expected to be the most common case, so check it first.
-    if (
-        type(value) is str  # noqa: E721
-        or type(value) is NodeStrClass
-        or isinstance(value, str)
-    ):
+    if type(value) is str or type(value) is NodeStrClass or isinstance(value, str):
         return value
 
     if isinstance(value, template_helper.ResultWrapper):
@@ -1056,10 +1059,38 @@ def removed(
     )
 
 
+def renamed(
+    old_key: str,
+    new_key: str,
+) -> Callable[[Any], Any]:
+    """Replace key with a new key.
+
+    Fails if both the new and old key are present.
+    """
+
+    def validator(value: Any) -> Any:
+        if not isinstance(value, dict):
+            return value
+
+        if old_key in value:
+            if new_key in value:
+                raise vol.Invalid(
+                    f"Cannot specify both '{old_key}' and '{new_key}'. Please use '{new_key}' only."
+                )
+            value[new_key] = value.pop(old_key)
+
+        return value
+
+    return validator
+
+
+type ValueSchemas = dict[Hashable, VolSchemaType | Callable[[Any], dict[str, Any]]]
+
+
 def key_value_schemas(
     key: str,
-    value_schemas: dict[Hashable, VolSchemaType | Callable[[Any], dict[str, Any]]],
-    default_schema: VolSchemaType | None = None,
+    value_schemas: ValueSchemas,
+    default_schema: VolSchemaType | Callable[[Any], dict[str, Any]] | None = None,
     default_description: str | None = None,
 ) -> Callable[[Any], dict[Hashable, Any]]:
     """Create a validator that validates based on a value for specific key.
@@ -1154,41 +1185,6 @@ def _custom_serializer(schema: Any, *, allow_section: bool) -> Any:
         return schema.serialize()
 
     return voluptuous_serialize.UNSUPPORTED
-
-
-def expand_condition_shorthand(value: Any | None) -> Any:
-    """Expand boolean condition shorthand notations."""
-
-    if not isinstance(value, dict) or CONF_CONDITIONS in value:
-        return value
-
-    for key, schema in (
-        ("and", AND_CONDITION_SHORTHAND_SCHEMA),
-        ("or", OR_CONDITION_SHORTHAND_SCHEMA),
-        ("not", NOT_CONDITION_SHORTHAND_SCHEMA),
-    ):
-        try:
-            schema(value)
-            return {
-                CONF_CONDITION: key,
-                CONF_CONDITIONS: value[key],
-                **{k: value[k] for k in value if k != key},
-            }
-        except vol.MultipleInvalid:
-            pass
-
-    if isinstance(value.get(CONF_CONDITION), list):
-        try:
-            CONDITION_SHORTHAND_SCHEMA(value)
-            return {
-                CONF_CONDITION: "and",
-                CONF_CONDITIONS: value[CONF_CONDITION],
-                **{k: value[k] for k in value if k != CONF_CONDITION},
-            }
-        except vol.MultipleInvalid:
-            pass
-
-    return value
 
 
 # Schemas
@@ -1686,7 +1682,43 @@ DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
 
 DEVICE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
-dynamic_template_condition_action = vol.All(
+
+def expand_condition_shorthand(value: Any | None) -> Any:
+    """Expand boolean condition shorthand notations."""
+
+    if not isinstance(value, dict) or CONF_CONDITIONS in value:
+        return value
+
+    for key, schema in (
+        ("and", AND_CONDITION_SHORTHAND_SCHEMA),
+        ("or", OR_CONDITION_SHORTHAND_SCHEMA),
+        ("not", NOT_CONDITION_SHORTHAND_SCHEMA),
+    ):
+        try:
+            schema(value)
+            return {
+                CONF_CONDITION: key,
+                CONF_CONDITIONS: value[key],
+                **{k: value[k] for k in value if k != key},
+            }
+        except vol.MultipleInvalid:
+            pass
+
+    if isinstance(value.get(CONF_CONDITION), list):
+        try:
+            CONDITION_SHORTHAND_SCHEMA(value)
+            return {
+                CONF_CONDITION: "and",
+                CONF_CONDITIONS: value[CONF_CONDITION],
+                **{k: value[k] for k in value if k != CONF_CONDITION},
+            }
+        except vol.MultipleInvalid:
+            pass
+
+    return value
+
+
+dynamic_template_condition = vol.All(
     # Wrap a shorthand template condition in a template condition
     dynamic_template,
     lambda config: {
@@ -1706,28 +1738,44 @@ CONDITION_SHORTHAND_SCHEMA = vol.Schema(
     }
 )
 
+BUILT_IN_CONDITIONS: ValueSchemas = {
+    "and": AND_CONDITION_SCHEMA,
+    "device": DEVICE_CONDITION_SCHEMA,
+    "not": NOT_CONDITION_SCHEMA,
+    "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+    "or": OR_CONDITION_SCHEMA,
+    "state": STATE_CONDITION_SCHEMA,
+    "template": TEMPLATE_CONDITION_SCHEMA,
+    "time": TIME_CONDITION_SCHEMA,
+    "trigger": TRIGGER_CONDITION_SCHEMA,
+    "zone": ZONE_CONDITION_SCHEMA,
+}
+
+
+# This is first round of validation, we don't want to mutate the config here already,
+# just ensure basics as condition type and alias are there.
+def _base_condition_validator(value: Any) -> Any:
+    vol.Schema(
+        {
+            **CONDITION_BASE_SCHEMA,
+            CONF_CONDITION: vol.NotIn(BUILT_IN_CONDITIONS),
+        },
+        extra=vol.ALLOW_EXTRA,
+    )(value)
+    return value
+
+
 CONDITION_SCHEMA: vol.Schema = vol.Schema(
     vol.Any(
         vol.All(
             expand_condition_shorthand,
             key_value_schemas(
                 CONF_CONDITION,
-                {
-                    "and": AND_CONDITION_SCHEMA,
-                    "device": DEVICE_CONDITION_SCHEMA,
-                    "not": NOT_CONDITION_SCHEMA,
-                    "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
-                    "or": OR_CONDITION_SCHEMA,
-                    "state": STATE_CONDITION_SCHEMA,
-                    "sun": SUN_CONDITION_SCHEMA,
-                    "template": TEMPLATE_CONDITION_SCHEMA,
-                    "time": TIME_CONDITION_SCHEMA,
-                    "trigger": TRIGGER_CONDITION_SCHEMA,
-                    "zone": ZONE_CONDITION_SCHEMA,
-                },
+                BUILT_IN_CONDITIONS,
+                _base_condition_validator,
             ),
         ),
-        dynamic_template_condition_action,
+        dynamic_template_condition,
     )
 )
 
@@ -1751,20 +1799,11 @@ CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
         expand_condition_shorthand,
         key_value_schemas(
             CONF_CONDITION,
-            {
-                "and": AND_CONDITION_SCHEMA,
-                "device": DEVICE_CONDITION_SCHEMA,
-                "not": NOT_CONDITION_SCHEMA,
-                "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
-                "or": OR_CONDITION_SCHEMA,
-                "state": STATE_CONDITION_SCHEMA,
-                "sun": SUN_CONDITION_SCHEMA,
-                "template": TEMPLATE_CONDITION_SCHEMA,
-                "time": TIME_CONDITION_SCHEMA,
-                "trigger": TRIGGER_CONDITION_SCHEMA,
-                "zone": ZONE_CONDITION_SCHEMA,
-            },
-            dynamic_template_condition_action,
+            BUILT_IN_CONDITIONS,
+            vol.Any(
+                dynamic_template_condition_action,
+                _base_condition_validator,
+            ),
             "a list of conditions or a valid template",
         ),
     )
@@ -1823,7 +1862,7 @@ def _base_trigger_list_flatten(triggers: list[Any]) -> list[Any]:
     return flatlist
 
 
-# This is first round of validation, we don't want to process the config here already,
+# This is first round of validation, we don't want to mutate the config here already,
 # just ensure basics as platform and ID are there.
 def _base_trigger_validator(value: Any) -> Any:
     _base_trigger_validator_schema(value)
@@ -1876,12 +1915,8 @@ _SCRIPT_REPEAT_SCHEMA = vol.Schema(
                 vol.Exclusive(CONF_FOR_EACH, "repeat"): vol.Any(
                     dynamic_template, vol.All(list, template_complex)
                 ),
-                vol.Exclusive(CONF_WHILE, "repeat"): vol.All(
-                    ensure_list, [CONDITION_SCHEMA]
-                ),
-                vol.Exclusive(CONF_UNTIL, "repeat"): vol.All(
-                    ensure_list, [CONDITION_SCHEMA]
-                ),
+                vol.Exclusive(CONF_WHILE, "repeat"): CONDITIONS_SCHEMA,
+                vol.Exclusive(CONF_UNTIL, "repeat"): CONDITIONS_SCHEMA,
                 vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
             },
             has_at_least_one_key(CONF_COUNT, CONF_FOR_EACH, CONF_WHILE, CONF_UNTIL),
@@ -1897,9 +1932,7 @@ _SCRIPT_CHOOSE_SCHEMA = vol.Schema(
             [
                 {
                     vol.Optional(CONF_ALIAS): string,
-                    vol.Required(CONF_CONDITIONS): vol.All(
-                        ensure_list, [CONDITION_SCHEMA]
-                    ),
+                    vol.Required(CONF_CONDITIONS): CONDITIONS_SCHEMA,
                     vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
                 }
             ],
@@ -1920,7 +1953,7 @@ _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA = vol.Schema(
 _SCRIPT_IF_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
-        vol.Required(CONF_IF): vol.All(ensure_list, [CONDITION_SCHEMA]),
+        vol.Required(CONF_IF): CONDITIONS_SCHEMA,
         vol.Required(CONF_THEN): SCRIPT_SCHEMA,
         vol.Optional(CONF_ELSE): SCRIPT_SCHEMA,
     }

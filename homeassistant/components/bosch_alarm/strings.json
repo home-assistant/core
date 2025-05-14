@@ -1,0 +1,81 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Bosch alarm panel",
+          "port": "The port used to connect to your Bosch alarm panel. This is usually 7700"
+        }
+      },
+      "auth": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "installer_code": "Installer code",
+          "user_code": "User code"
+        },
+        "data_description": {
+          "password": "The Mode 2 automation code from your panel",
+          "installer_code": "The installer code from your panel",
+          "user_code": "The user code from your panel"
+        }
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "installer_code": "[%key:component::bosch_alarm::config::step::auth::data::installer_code%]",
+          "user_code": "[%key:component::bosch_alarm::config::step::auth::data::user_code%]"
+        },
+        "data_description": {
+          "password": "[%key:component::bosch_alarm::config::step::auth::data_description::password%]",
+          "installer_code": "[%key:component::bosch_alarm::config::step::auth::data_description::installer_code%]",
+          "user_code": "[%key:component::bosch_alarm::config::step::auth::data_description::user_code%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "device_mismatch": "Please ensure you reconfigure against the same device."
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Could not connect to panel."
+    },
+    "authentication_failed": {
+      "message": "Incorrect credentials for panel."
+    },
+    "incorrect_door_state": {
+      "message": "Door cannot be manipulated while it is being cycled."
+    }
+  },
+  "entity": {
+    "switch": {
+      "secured": {
+        "name": "Secured"
+      },
+      "cycling": {
+        "name": "Cycling"
+      },
+      "locked": {
+        "name": "Locked"
+      }
+    },
+    "sensor": {
+      "faulting_points": {
+        "name": "Faulting points",
+        "unit_of_measurement": "points"
+      }
+    }
+  }
+}

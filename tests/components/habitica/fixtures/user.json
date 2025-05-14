@@ -2,8 +2,18 @@
   "success": true,
   "data": {
     "api_user": "test-api-user",
-    "profile": { "name": "test-user" },
-    "auth": { "local": { "username": "test-username" } },
+    "profile": {
+      "name": "test-user",
+      "blurb": "My mind is a swirling miasma of scintillating thoughts and turgid ideas.",
+      "imageUrl": "https://pbs.twimg.com/profile_images/378800000771780608/a32e71fe6a64eba6773c20d289eddc8e.png"
+    },
+    "auth": {
+      "local": { "username": "test-username" },
+      "timestamps": {
+        "created": "2013-12-02T22:23:29.249Z",
+        "loggedin": "2025-02-02T03:14:33.864Z"
+      }
+    },
     "stats": {
       "buffs": {
         "str": 26,
@@ -56,7 +66,8 @@
         "564b9ac9-c53d-4638-9e7f-1cd96fe19baa",
         "f2c85972-1a19-4426-bc6d-ce3337b9d99f",
         "2c6d136c-a1c3-4bef-b7c4-fa980784b1e1",
-        "6e53f1f5-a315-4edd-984d-8d762e4a08ef"
+        "6e53f1f5-a315-4edd-984d-8d762e4a08ef",
+        "369afeed-61e3-4bf7-9747-66e05807134c"
       ],
       "habits": ["1d147de6-5c02-4740-8e2f-71d3015a37f4"]
     },
@@ -67,6 +78,36 @@
       },
       "_id": "94cd398c-2240-4320-956e-6d345cf2c0de"
     },
+    "tags": [
+      {
+        "id": "8515e4ae-2f4b-455a-b4a4-8939e04b1bfd",
+        "name": "Arbeit"
+      },
+      {
+        "id": "6aa65cbb-dc08-4fdd-9a66-7dedb7ba4cab",
+        "name": "Training"
+      },
+      {
+        "id": "20409521-c096-447f-9a90-23e8da615710",
+        "name": "Gesundheit + Wohlbefinden"
+      },
+      {
+        "id": "2ac458af-0833-4f3f-bf04-98a0c33ef60b",
+        "name": "Schule"
+      },
+      {
+        "id": "1bcb1a0f-4d05-4087-8223-5ea779e258b0",
+        "name": "Teams"
+      },
+      {
+        "id": "b2780f82-b3b5-49a3-a677-48f2c8c7e3bb",
+        "name": "Hausarbeiten"
+      },
+      {
+        "id": "3450351f-1323-4c7e-9fd2-0cdff25b3ce0",
+        "name": "Kreativität"
+      }
+    ],
     "needsCron": true,
     "lastCron": "2024-09-21T22:01:55.586Z",
     "id": "a380546a-94be-4b8e-8a0b-23e0d5c03303",
@@ -82,7 +123,57 @@
           "eyewear": "eyewear_armoire_plagueDoctorMask",
           "body": "body_special_aetherAmulet"
         }
+      },
+      "quests": {
+        "atom1": 1,
+        "goldenknight1": 0,
+        "dustbunnies": 1,
+        "basilist": 0
+      },
+      "food": {
+        "Saddle": 2,
+        "Meat": 0,
+        "Milk": 1,
+        "Potatoe": 2
+      },
+      "hatchingPotions": {
+        "Base": 2,
+        "White": 0,
+        "Desert": 1
+      },
+      "eggs": {
+        "Wolf": 1,
+        "TigerCub": 0,
+        "PandaCub": 2
       }
-    }
+    },
+    "balance": 10,
+    "purchased": {
+      "plan": {
+        "consecutive": {
+          "trinkets": 0
+        }
+      }
+    },
+    "webhooks": [
+      {
+        "id": "43a67e37-1bae-4b11-8d3d-6c4b1b480231",
+        "type": "taskActivity",
+        "label": "My Webhook",
+        "url": "https://some-webhook-url.com",
+        "enabled": true,
+        "failures": 0,
+        "options": {
+          "created": false,
+          "updated": false,
+          "deleted": false,
+          "checklistScored": false,
+          "scored": true
+        },
+        "createdAt": "2025-02-08T22:06:08.894Z",
+        "updatedAt": "2025-02-08T22:06:17.195Z"
+      }
+    ],
+    "loginIncentives": 241
   }
 }

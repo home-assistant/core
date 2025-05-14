@@ -43,7 +43,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
@@ -111,6 +111,7 @@ from .discovery import (
 from .models import (
     DATA_MQTT,
     MessageCallbackType,
+    MqttSubentryData,
     MqttValueTemplate,
     MqttValueTemplateException,
     PublishPayloadType,
@@ -122,7 +123,7 @@ from .subscription import (
     async_subscribe_topics_internal,
     async_unsubscribe_topics,
 )
-from .util import mqtt_config_entry_enabled
+from .util import learn_more_url, mqtt_config_entry_enabled
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -238,7 +239,7 @@ def async_setup_entity_entry_helper(
     entry: ConfigEntry,
     entity_class: type[MqttEntity] | None,
     domain: str,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     discovery_schema: VolSchemaType,
     platform_schema_modern: VolSchemaType,
     schema_class_mapping: dict[str, type[MqttEntity]] | None = None,
@@ -282,11 +283,10 @@ def async_setup_entity_entry_helper(
 
     @callback
     def _async_setup_entities() -> None:
-        """Set up MQTT items from configuration.yaml."""
+        """Set up MQTT items from subentries and configuration.yaml."""
         nonlocal entity_class
         mqtt_data = hass.data[DATA_MQTT]
-        if not (config_yaml := mqtt_data.config):
-            return
+        config_yaml = mqtt_data.config
         yaml_configs: list[ConfigType] = [
             config
             for config_item in config_yaml
@@ -294,6 +294,45 @@ def async_setup_entity_entry_helper(
             for config in configs
             if config_domain == domain
         ]
+        # process subentry entity setup
+        for config_subentry_id, subentry in entry.subentries.items():
+            subentry_data = cast(MqttSubentryData, subentry.data)
+            availability_config = subentry_data.get("availability", {})
+            subentry_entities: list[Entity] = []
+            device_config = subentry_data["device"].copy()
+            device_mqtt_options = device_config.pop("mqtt_settings", {})
+            device_config["identifiers"] = config_subentry_id
+            for component_id, component_data in subentry_data["components"].items():
+                if component_data["platform"] != domain:
+                    continue
+                component_config: dict[str, Any] = component_data.copy()
+                component_config[CONF_UNIQUE_ID] = (
+                    f"{config_subentry_id}_{component_id}"
+                )
+                component_config[CONF_DEVICE] = device_config
+                component_config.pop("platform")
+                component_config.update(availability_config)
+                component_config.update(device_mqtt_options)
+
+                try:
+                    config = platform_schema_modern(component_config)
+                    if schema_class_mapping is not None:
+                        entity_class = schema_class_mapping[config[CONF_SCHEMA]]
+                    if TYPE_CHECKING:
+                        assert entity_class is not None
+                    subentry_entities.append(entity_class(hass, config, entry, None))
+                except vol.Invalid as exc:
+                    _LOGGER.error(
+                        "Schema violation occurred when trying to set up "
+                        "entity from subentry %s %s %s: %s",
+                        config_subentry_id,
+                        subentry.title,
+                        subentry.data,
+                        exc,
+                    )
+
+            async_add_entities(subentry_entities, config_subentry_id=config_subentry_id)
+
         entities: list[Entity] = []
         for yaml_config in yaml_configs:
             try:
@@ -309,9 +348,6 @@ def async_setup_entity_entry_helper(
                 line = getattr(yaml_config, "__line__", "?")
                 issue_id = hex(hash(frozenset(yaml_config)))
                 yaml_config_str = yaml_dump(yaml_config)
-                learn_more_url = (
-                    f"https://www.home-assistant.io/integrations/{domain}.mqtt/"
-                )
                 async_create_issue(
                     hass,
                     DOMAIN,
@@ -319,7 +355,7 @@ def async_setup_entity_entry_helper(
                     issue_domain=domain,
                     is_fixable=False,
                     severity=IssueSeverity.ERROR,
-                    learn_more_url=learn_more_url,
+                    learn_more_url=learn_more_url(domain),
                     translation_placeholders={
                         "domain": domain,
                         "config_file": config_file,
@@ -363,6 +399,10 @@ class MqttAttributesMixin(Entity):
 
     _attributes_extra_blocked: frozenset[str] = frozenset()
     _attr_tpl: Callable[[ReceivePayloadType], ReceivePayloadType] | None = None
+    _message_callback: Callable[
+        [MessageCallbackType, set[str] | None, ReceiveMessage], None
+    ]
+    _process_update_extra_state_attributes: Callable[[dict[str, Any]], None]
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the JSON attributes mixin."""
@@ -397,9 +437,15 @@ class MqttAttributesMixin(Entity):
                 CONF_JSON_ATTRS_TOPIC: {
                     "topic": self._attributes_config.get(CONF_JSON_ATTRS_TOPIC),
                     "msg_callback": partial(
-                        self._message_callback,  # type: ignore[attr-defined]
+                        self._message_callback,
                         self._attributes_message_received,
-                        {"_attr_extra_state_attributes"},
+                        {
+                            "_attr_extra_state_attributes",
+                            "_attr_gps_accuracy",
+                            "_attr_latitude",
+                            "_attr_location_name",
+                            "_attr_longitude",
+                        },
                     ),
                     "entity_id": self.entity_id,
                     "qos": self._attributes_config.get(CONF_QOS),
@@ -438,13 +484,21 @@ class MqttAttributesMixin(Entity):
                     if k not in MQTT_ATTRIBUTES_BLOCKED
                     and k not in self._attributes_extra_blocked
                 }
-                self._attr_extra_state_attributes = filtered_dict
+                if hasattr(self, "_process_update_extra_state_attributes"):
+                    self._process_update_extra_state_attributes(filtered_dict)
+                else:
+                    self._attr_extra_state_attributes = filtered_dict
+
             else:
                 _LOGGER.warning("JSON result was not a dictionary")
 
 
 class MqttAvailabilityMixin(Entity):
     """Mixin used for platforms that report availability."""
+
+    _message_callback: Callable[
+        [MessageCallbackType, set[str] | None, ReceiveMessage], None
+    ]
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the availability mixin."""
@@ -511,7 +565,7 @@ class MqttAvailabilityMixin(Entity):
             f"availability_{topic}": {
                 "topic": topic,
                 "msg_callback": partial(
-                    self._message_callback,  # type: ignore[attr-defined]
+                    self._message_callback,
                     self._availability_message_received,
                     {"available"},
                 ),

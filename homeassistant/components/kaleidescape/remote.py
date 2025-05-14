@@ -9,7 +9,7 @@ from kaleidescape import const as kaleidescape_const
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN as KALEIDESCAPE_DOMAIN
+from .const import DOMAIN
 from .entity import KaleidescapeEntity
 
 if TYPE_CHECKING:
@@ -18,14 +18,16 @@ if TYPE_CHECKING:
 
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
-    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the platform from a config entry."""
-    entities = [KaleidescapeRemote(hass.data[KALEIDESCAPE_DOMAIN][entry.entry_id])]
+    entities = [KaleidescapeRemote(hass.data[DOMAIN][entry.entry_id])]
     async_add_entities(entities)
 
 

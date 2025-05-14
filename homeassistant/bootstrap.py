@@ -53,6 +53,7 @@ from .components import (
     logbook as logbook_pre_import,  # noqa: F401
     lovelace as lovelace_pre_import,  # noqa: F401
     onboarding as onboarding_pre_import,  # noqa: F401
+    person as person_pre_import,  # noqa: F401
     recorder as recorder_import,  # noqa: F401 - not named pre_import since it has requirements
     repairs as repairs_pre_import,  # noqa: F401
     search as search_pre_import,  # noqa: F401
@@ -74,12 +75,14 @@ from .core_config import async_process_ha_core_config
 from .exceptions import HomeAssistantError
 from .helpers import (
     area_registry,
+    backup,
     category_registry,
     config_validation as cv,
     device_registry,
     entity,
     entity_registry,
     floor_registry,
+    frame,
     issue_registry,
     label_registry,
     recorder,
@@ -89,8 +92,9 @@ from .helpers import (
 )
 from .helpers.dispatcher import async_dispatcher_send_internal
 from .helpers.storage import get_internal_store_manager
-from .helpers.system_info import async_get_system_info, is_official_image
+from .helpers.system_info import async_get_system_info
 from .helpers.typing import ConfigType
+from .loader import Integration
 from .setup import (
     # _setup_started is marked as protected to make it clear
     # that it is not part of the public API and should not be used
@@ -106,10 +110,16 @@ from .util.async_ import create_eager_task
 from .util.hass_dict import HassKey
 from .util.logging import async_activate_log_queue_handler
 from .util.package import async_get_user_site, is_docker_env, is_virtual_env
+from .util.system_info import is_official_image
 
 with contextlib.suppress(ImportError):
     # Ensure anyio backend is imported to avoid it being imported in the event loop
     from anyio._backends import _asyncio  # noqa: F401
+
+with contextlib.suppress(ImportError):
+    # httpx will import trio if it is installed which does
+    # blocking I/O in the event loop. We want to avoid that.
+    import trio  # noqa: F401
 
 
 if TYPE_CHECKING:
@@ -128,13 +138,11 @@ DATA_REGISTRIES_LOADED: HassKey[None] = HassKey("bootstrap_registries_loaded")
 LOG_SLOW_STARTUP_INTERVAL = 60
 SLOW_STARTUP_CHECK_INTERVAL = 1
 
+STAGE_0_SUBSTAGE_TIMEOUT = 60
 STAGE_1_TIMEOUT = 120
 STAGE_2_TIMEOUT = 300
 WRAP_UP_TIMEOUT = 300
 COOLDOWN_TIME = 60
-
-
-DEBUGGER_INTEGRATIONS = {"debugpy"}
 
 # Core integrations are unconditionally loaded
 CORE_INTEGRATIONS = {"homeassistant", "persistent_notification"}
@@ -146,6 +154,10 @@ LOGGING_AND_HTTP_DEPS_INTEGRATIONS = {
     "isal",
     # Set log levels
     "logger",
+    # Ensure network config is available
+    # before hassio or any other integration is
+    # loaded that might create an aiohttp client session
+    "network",
     # Error logging
     "system_log",
     "sentry",
@@ -156,12 +168,27 @@ FRONTEND_INTEGRATIONS = {
     # visible in frontend
     "frontend",
 }
-RECORDER_INTEGRATIONS = {
-    # Setup after frontend
-    # To record data
-    "recorder",
-}
-DISCOVERY_INTEGRATIONS = ("bluetooth", "dhcp", "ssdp", "usb", "zeroconf")
+# Stage 0 is divided into substages. Each substage has a name, a set of integrations and a timeout.
+# The substage containing recorder should have no timeout, as it could cancel a database migration.
+# Recorder freezes "recorder" timeout during a migration, but it does not freeze other timeouts.
+# The substages preceding it should also have no timeout, until we ensure that the recorder
+# is not accidentally promoted as a dependency of any of the integrations in them.
+# If we add timeouts to the frontend substages, we should make sure they don't apply in recovery mode.
+STAGE_0_INTEGRATIONS = (
+    # Load logging and http deps as soon as possible
+    ("logging, http deps", LOGGING_AND_HTTP_DEPS_INTEGRATIONS, None),
+    # Setup frontend
+    ("frontend", FRONTEND_INTEGRATIONS, None),
+    # Setup recorder
+    ("recorder", {"recorder"}, None),
+    # Start up debuggers. Start these first in case they want to wait.
+    ("debugger", {"debugpy"}, STAGE_0_SUBSTAGE_TIMEOUT),
+    # Zeroconf is used for mdns resolution in aiohttp client helper.
+    ("zeroconf", {"zeroconf"}, STAGE_0_SUBSTAGE_TIMEOUT),
+)
+
+DISCOVERY_INTEGRATIONS = ("bluetooth", "dhcp", "ssdp", "usb")
+# Stage 1 integrations are not to be preimported in bootstrap.
 STAGE_1_INTEGRATIONS = {
     # We need to make sure discovery integrations
     # update their deps before stage 2 integrations
@@ -176,6 +203,7 @@ STAGE_1_INTEGRATIONS = {
     # Ensure supervisor is available
     "hassio",
 }
+
 DEFAULT_INTEGRATIONS = {
     # These integrations are set up unless recovery mode is activated.
     #
@@ -216,21 +244,11 @@ DEFAULT_INTEGRATIONS_SUPERVISOR = {
     # These integrations are set up if using the Supervisor
     "hassio",
 }
+
 CRITICAL_INTEGRATIONS = {
     # Recovery mode is activated if these integrations fail to set up
     "frontend",
 }
-
-SETUP_ORDER = (
-    # Load logging and http deps as soon as possible
-    ("logging, http deps", LOGGING_AND_HTTP_DEPS_INTEGRATIONS),
-    # Setup frontend
-    ("frontend", FRONTEND_INTEGRATIONS),
-    # Setup recorder
-    ("recorder", RECORDER_INTEGRATIONS),
-    # Start up debuggers. Start these first in case they want to wait.
-    ("debugger", DEBUGGER_INTEGRATIONS),
-)
 
 #
 # Storage keys we are likely to load during startup
@@ -252,6 +270,7 @@ PRELOAD_STORAGE = [
     "assist_pipeline.pipelines",
     "core.analytics",
     "auth_module.totp",
+    "backup",
 ]
 
 
@@ -282,14 +301,6 @@ async def async_setup_hass(
 
         return hass
 
-    async def stop_hass(hass: core.HomeAssistant) -> None:
-        """Stop hass."""
-        # Ask integrations to shut down. It's messy but we can't
-        # do a clean stop without knowing what is broken
-        with contextlib.suppress(TimeoutError):
-            async with hass.timeout.async_timeout(10):
-                await hass.async_stop()
-
     hass = await create_hass()
 
     if runtime_config.skip_pip or runtime_config.skip_pip_packages:
@@ -305,10 +316,10 @@ async def async_setup_hass(
 
     block_async_io.enable()
 
-    config_dict = None
-    basic_setup_success = False
-
     if not (recovery_mode := runtime_config.recovery_mode):
+        config_dict = None
+        basic_setup_success = False
+
         await hass.async_add_executor_job(conf_util.process_ha_config_upgrade, hass)
 
         try:
@@ -326,39 +337,43 @@ async def async_setup_hass(
                 await async_from_config_dict(config_dict, hass) is not None
             )
 
-    if config_dict is None:
-        recovery_mode = True
-        await stop_hass(hass)
-        hass = await create_hass()
+        if config_dict is None:
+            recovery_mode = True
+            await hass.async_stop(force=True)
+            hass = await create_hass()
 
-    elif not basic_setup_success:
-        _LOGGER.warning("Unable to set up core integrations. Activating recovery mode")
-        recovery_mode = True
-        await stop_hass(hass)
-        hass = await create_hass()
+        elif not basic_setup_success:
+            _LOGGER.warning(
+                "Unable to set up core integrations. Activating recovery mode"
+            )
+            recovery_mode = True
+            await hass.async_stop(force=True)
+            hass = await create_hass()
 
-    elif any(domain not in hass.config.components for domain in CRITICAL_INTEGRATIONS):
-        _LOGGER.warning(
-            "Detected that %s did not load. Activating recovery mode",
-            ",".join(CRITICAL_INTEGRATIONS),
-        )
+        elif any(
+            domain not in hass.config.components for domain in CRITICAL_INTEGRATIONS
+        ):
+            _LOGGER.warning(
+                "Detected that %s did not load. Activating recovery mode",
+                ",".join(CRITICAL_INTEGRATIONS),
+            )
 
-        old_config = hass.config
-        old_logging = hass.data.get(DATA_LOGGING)
+            old_config = hass.config
+            old_logging = hass.data.get(DATA_LOGGING)
 
-        recovery_mode = True
-        await stop_hass(hass)
-        hass = await create_hass()
+            recovery_mode = True
+            await hass.async_stop(force=True)
+            hass = await create_hass()
 
-        if old_logging:
-            hass.data[DATA_LOGGING] = old_logging
-        hass.config.debug = old_config.debug
-        hass.config.skip_pip = old_config.skip_pip
-        hass.config.skip_pip_packages = old_config.skip_pip_packages
-        hass.config.internal_url = old_config.internal_url
-        hass.config.external_url = old_config.external_url
-        # Setup loader cache after the config dir has been set
-        loader.async_setup(hass)
+            if old_logging:
+                hass.data[DATA_LOGGING] = old_logging
+            hass.config.debug = old_config.debug
+            hass.config.skip_pip = old_config.skip_pip
+            hass.config.skip_pip_packages = old_config.skip_pip_packages
+            hass.config.internal_url = old_config.internal_url
+            hass.config.external_url = old_config.external_url
+            # Setup loader cache after the config dir has been set
+            loader.async_setup(hass)
 
     if recovery_mode:
         _LOGGER.info("Starting in recovery mode")
@@ -421,9 +436,10 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
     if DATA_REGISTRIES_LOADED in hass.data:
         return
     hass.data[DATA_REGISTRIES_LOADED] = None
-    translation.async_setup(hass)
     entity.async_setup(hass)
+    frame.async_setup(hass)
     template.async_setup(hass)
+    translation.async_setup(hass)
     await asyncio.gather(
         create_eager_task(get_internal_store_manager(hass).async_initialize()),
         create_eager_task(area_registry.async_load(hass)),
@@ -644,11 +660,10 @@ def _create_log_file(
         err_handler = _RotatingFileHandlerWithoutShouldRollOver(
             err_log_path, backupCount=1
         )
-
-    try:
-        err_handler.doRollover()
-    except OSError as err:
-        _LOGGER.error("Error rolling over log file: %s", err)
+        try:
+            err_handler.doRollover()
+        except OSError as err:
+            _LOGGER.error("Error rolling over log file: %s", err)
 
     return err_handler
 
@@ -677,7 +692,6 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
     return deps_dir
 
 
-@core.callback
 def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
     """Get domains of components to set up."""
     # Filter out the repeating and common config section [homeassistant]
@@ -697,6 +711,252 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
         domains.update(DEFAULT_INTEGRATIONS_SUPERVISOR)
 
     return domains
+
+
+async def _async_resolve_domains_and_preload(
+    hass: core.HomeAssistant, config: dict[str, Any]
+) -> tuple[dict[str, Integration], dict[str, Integration]]:
+    """Resolve all dependencies and return integrations to set up.
+
+    The return value is a tuple of two dictionaries:
+    - The first dictionary contains integrations
+      specified by the configuration (including config entries).
+    - The second dictionary contains the same integrations as the first dictionary
+      together with all their dependencies.
+    """
+    domains_to_setup = _get_domains(hass, config)
+    platform_integrations = conf_util.extract_platform_integrations(
+        config, BASE_PLATFORMS
+    )
+    # Ensure base platforms that have platform integrations are added to `domains`,
+    # so they can be setup first instead of discovering them later when a config
+    # entry setup task notices that it's needed and there is already a long line
+    # to use the import executor.
+    #
+    # For example if we have
+    # sensor:
+    #   - platform: template
+    #
+    # `template` has to be loaded to validate the config for sensor
+    # so we want to start loading `sensor` as soon as we know
+    # it will be needed. The more platforms under `sensor:`, the longer
+    # it will take to finish setup for `sensor` because each of these
+    # platforms has to be imported before we can validate the config.
+    #
+    # Thankfully we are migrating away from the platform pattern
+    # so this will be less of a problem in the future.
+    domains_to_setup.update(platform_integrations)
+
+    # Additionally process base platforms since we do not require the manifest
+    # to list them as dependencies.
+    # We want to later avoid lock contention when multiple integrations try to load
+    # their manifests at once.
+    # Also process integrations that are defined under base platforms
+    # to speed things up.
+    additional_domains_to_process = {
+        *BASE_PLATFORMS,
+        *chain.from_iterable(platform_integrations.values()),
+    }
+
+    # Resolve all dependencies so we know all integrations
+    # that will have to be loaded and start right-away
+    integrations_or_excs = await loader.async_get_integrations(
+        hass, {*domains_to_setup, *additional_domains_to_process}
+    )
+    # Eliminate those missing or with invalid manifest
+    integrations_to_process = {
+        domain: itg
+        for domain, itg in integrations_or_excs.items()
+        if isinstance(itg, Integration)
+    }
+    integrations_dependencies = await loader.resolve_integrations_dependencies(
+        hass, integrations_to_process.values()
+    )
+    # Eliminate those without valid dependencies
+    integrations_to_process = {
+        domain: integrations_to_process[domain] for domain in integrations_dependencies
+    }
+
+    integrations_to_setup = {
+        domain: itg
+        for domain, itg in integrations_to_process.items()
+        if domain in domains_to_setup
+    }
+    all_integrations_to_setup = integrations_to_setup.copy()
+    all_integrations_to_setup.update(
+        (dep, loader.async_get_loaded_integration(hass, dep))
+        for domain in integrations_to_setup
+        for dep in integrations_dependencies[domain].difference(
+            all_integrations_to_setup
+        )
+    )
+
+    # Gather requirements for all integrations,
+    # their dependencies and after dependencies.
+    # To gather all the requirements we must ignore exceptions here.
+    # The exceptions will be detected and handled later in the bootstrap process.
+    integrations_after_dependencies = (
+        await loader.resolve_integrations_after_dependencies(
+            hass, integrations_to_process.values(), ignore_exceptions=True
+        )
+    )
+    integrations_requirements = {
+        domain: itg.requirements for domain, itg in integrations_to_process.items()
+    }
+    integrations_requirements.update(
+        (dep, loader.async_get_loaded_integration(hass, dep).requirements)
+        for deps in integrations_after_dependencies.values()
+        for dep in deps.difference(integrations_requirements)
+    )
+    all_requirements = set(chain.from_iterable(integrations_requirements.values()))
+
+    # Optimistically check if requirements are already installed
+    # ahead of setting up the integrations so we can prime the cache
+    # We do not wait for this since it's an optimization only
+    hass.async_create_background_task(
+        requirements.async_load_installed_versions(hass, all_requirements),
+        "check installed requirements",
+        eager_start=True,
+    )
+
+    # Start loading translations for all integrations we are going to set up
+    # in the background so they are ready when we need them. This avoids a
+    # lot of waiting for the translation load lock and a thundering herd of
+    # tasks trying to load the same translations at the same time as each
+    # integration is loaded.
+    #
+    # We do not wait for this since as soon as the task runs it will
+    # hold the translation load lock and if anything is fast enough to
+    # wait for the translation load lock, loading will be done by the
+    # time it gets to it.
+    translations_to_load = {*all_integrations_to_setup, *additional_domains_to_process}
+    hass.async_create_background_task(
+        translation.async_load_integrations(hass, translations_to_load),
+        "load translations",
+        eager_start=True,
+    )
+
+    # Preload storage for all integrations we are going to set up
+    # so we do not have to wait for it to be loaded when we need it
+    # in the setup process.
+    hass.async_create_background_task(
+        get_internal_store_manager(hass).async_preload(
+            [*PRELOAD_STORAGE, *all_integrations_to_setup]
+        ),
+        "preload storage",
+        eager_start=True,
+    )
+
+    return integrations_to_setup, all_integrations_to_setup
+
+
+async def _async_set_up_integrations(
+    hass: core.HomeAssistant, config: dict[str, Any]
+) -> None:
+    """Set up all the integrations."""
+    watcher = _WatchPendingSetups(hass, _setup_started(hass))
+    watcher.async_start()
+
+    integrations, all_integrations = await _async_resolve_domains_and_preload(
+        hass, config
+    )
+    # Detect all cycles
+    integrations_after_dependencies = (
+        await loader.resolve_integrations_after_dependencies(
+            hass, all_integrations.values(), set(all_integrations)
+        )
+    )
+    all_domains = set(integrations_after_dependencies)
+    domains = set(integrations) & all_domains
+
+    _LOGGER.info(
+        "Domains to be set up: %s | %s",
+        domains,
+        all_domains - domains,
+    )
+
+    async_set_domains_to_be_loaded(hass, all_domains)
+
+    # Initialize recorder
+    if "recorder" in all_domains:
+        recorder.async_initialize_recorder(hass)
+
+    # Initialize backup
+    if "backup" in all_domains:
+        backup.async_initialize_backup(hass)
+
+    stages: list[tuple[str, set[str], int | None]] = [
+        *(
+            (name, domain_group, timeout)
+            for name, domain_group, timeout in STAGE_0_INTEGRATIONS
+        ),
+        ("1", STAGE_1_INTEGRATIONS, STAGE_1_TIMEOUT),
+        ("2", domains, STAGE_2_TIMEOUT),
+    ]
+
+    _LOGGER.info("Setting up stage 0")
+    for name, domain_group, timeout in stages:
+        stage_domains_unfiltered = domain_group & all_domains
+        if not stage_domains_unfiltered:
+            _LOGGER.info("Nothing to set up in stage %s: %s", name, domain_group)
+            continue
+
+        stage_domains = stage_domains_unfiltered - hass.config.components
+        if not stage_domains:
+            _LOGGER.info("Already set up stage %s: %s", name, stage_domains_unfiltered)
+            continue
+
+        stage_dep_domains_unfiltered = {
+            dep
+            for domain in stage_domains
+            for dep in integrations_after_dependencies[domain]
+            if dep not in stage_domains
+        }
+        stage_dep_domains = stage_dep_domains_unfiltered - hass.config.components
+
+        stage_all_domains = stage_domains | stage_dep_domains
+
+        _LOGGER.info(
+            "Setting up stage %s: %s | %s\nDependencies: %s | %s",
+            name,
+            stage_domains,
+            stage_domains_unfiltered - stage_domains,
+            stage_dep_domains,
+            stage_dep_domains_unfiltered - stage_dep_domains,
+        )
+
+        if timeout is None:
+            await _async_setup_multi_components(hass, stage_all_domains, config)
+            continue
+        try:
+            async with hass.timeout.async_timeout(timeout, cool_down=COOLDOWN_TIME):
+                await _async_setup_multi_components(hass, stage_all_domains, config)
+        except TimeoutError:
+            _LOGGER.warning(
+                "Setup timed out for stage %s waiting on %s - moving forward",
+                name,
+                hass._active_tasks,  # noqa: SLF001
+            )
+
+    # Wrap up startup
+    _LOGGER.debug("Waiting for startup to wrap up")
+    try:
+        async with hass.timeout.async_timeout(WRAP_UP_TIMEOUT, cool_down=COOLDOWN_TIME):
+            await hass.async_block_till_done()
+    except TimeoutError:
+        _LOGGER.warning(
+            "Setup timed out for bootstrap waiting on %s - moving forward",
+            hass._active_tasks,  # noqa: SLF001
+        )
+
+    watcher.async_stop()
+
+    if _LOGGER.isEnabledFor(logging.DEBUG):
+        setup_time = async_get_setup_timings(hass)
+        _LOGGER.debug(
+            "Integration setup times: %s",
+            dict(sorted(setup_time.items(), key=itemgetter(1), reverse=True)),
+        )
 
 
 class _WatchPendingSetups:
@@ -770,14 +1030,12 @@ class _WatchPendingSetups:
             self._handle = None
 
 
-async def async_setup_multi_components(
+async def _async_setup_multi_components(
     hass: core.HomeAssistant,
     domains: set[str],
     config: dict[str, Any],
 ) -> None:
     """Set up multiple domains. Log on failure."""
-    # Avoid creating tasks for domains that were setup in a previous stage
-    domains_not_yet_setup = domains - hass.config.components
     # Create setup tasks for base platforms first since everything will have
     # to wait to be imported, and the sooner we can get the base platforms
     # loaded the sooner we can start loading the rest of the integrations.
@@ -787,9 +1045,7 @@ async def async_setup_multi_components(
             f"setup component {domain}",
             eager_start=True,
         )
-        for domain in sorted(
-            domains_not_yet_setup, key=SETUP_ORDER_SORT_KEY, reverse=True
-        )
+        for domain in sorted(domains, key=SETUP_ORDER_SORT_KEY, reverse=True)
     }
     results = await asyncio.gather(*futures.values(), return_exceptions=True)
     for idx, domain in enumerate(futures):
@@ -800,278 +1056,3 @@ async def async_setup_multi_components(
                 domain,
                 exc_info=(type(result), result, result.__traceback__),
             )
-
-
-async def _async_resolve_domains_to_setup(
-    hass: core.HomeAssistant, config: dict[str, Any]
-) -> tuple[set[str], dict[str, loader.Integration]]:
-    """Resolve all dependencies and return list of domains to set up."""
-    domains_to_setup = _get_domains(hass, config)
-    needed_requirements: set[str] = set()
-    platform_integrations = conf_util.extract_platform_integrations(
-        config, BASE_PLATFORMS
-    )
-    # Ensure base platforms that have platform integrations are added to
-    # to `domains_to_setup so they can be setup first instead of
-    # discovering them when later when a config entry setup task
-    # notices its needed and there is already a long line to use
-    # the import executor.
-    #
-    # For example if we have
-    # sensor:
-    #   - platform: template
-    #
-    # `template` has to be loaded to validate the config for sensor
-    # so we want to start loading `sensor` as soon as we know
-    # it will be needed. The more platforms under `sensor:`, the longer
-    # it will take to finish setup for `sensor` because each of these
-    # platforms has to be imported before we can validate the config.
-    #
-    # Thankfully we are migrating away from the platform pattern
-    # so this will be less of a problem in the future.
-    domains_to_setup.update(platform_integrations)
-
-    # Load manifests for base platforms and platform based integrations
-    # that are defined under base platforms right away since we do not require
-    # the manifest to list them as dependencies and we want to avoid the lock
-    # contention when multiple integrations try to load them at once
-    additional_manifests_to_load = {
-        *BASE_PLATFORMS,
-        *chain.from_iterable(platform_integrations.values()),
-    }
-
-    translations_to_load = additional_manifests_to_load.copy()
-
-    # Resolve all dependencies so we know all integrations
-    # that will have to be loaded and start right-away
-    integration_cache: dict[str, loader.Integration] = {}
-    to_resolve: set[str] = domains_to_setup
-    while to_resolve or additional_manifests_to_load:
-        old_to_resolve: set[str] = to_resolve
-        to_resolve = set()
-
-        if additional_manifests_to_load:
-            to_get = {*old_to_resolve, *additional_manifests_to_load}
-            additional_manifests_to_load.clear()
-        else:
-            to_get = old_to_resolve
-
-        manifest_deps: set[str] = set()
-        resolve_dependencies_tasks: list[asyncio.Task[bool]] = []
-        integrations_to_process: list[loader.Integration] = []
-
-        for domain, itg in (await loader.async_get_integrations(hass, to_get)).items():
-            if not isinstance(itg, loader.Integration):
-                continue
-            integration_cache[domain] = itg
-            needed_requirements.update(itg.requirements)
-
-            # Make sure manifests for dependencies are loaded in the next
-            # loop to try to group as many as manifest loads in a single
-            # call to avoid the creating one-off executor jobs later in
-            # the setup process
-            additional_manifests_to_load.update(
-                dep
-                for dep in chain(itg.dependencies, itg.after_dependencies)
-                if dep not in integration_cache
-            )
-
-            if domain not in old_to_resolve:
-                continue
-
-            integrations_to_process.append(itg)
-            manifest_deps.update(itg.dependencies)
-            manifest_deps.update(itg.after_dependencies)
-            if not itg.all_dependencies_resolved:
-                resolve_dependencies_tasks.append(
-                    create_eager_task(
-                        itg.resolve_dependencies(),
-                        name=f"resolve dependencies {domain}",
-                        loop=hass.loop,
-                    )
-                )
-
-        if unseen_deps := manifest_deps - integration_cache.keys():
-            # If there are dependencies, try to preload all
-            # the integrations manifest at once and add them
-            # to the list of requirements we need to install
-            # so we can try to check if they are already installed
-            # in a single call below which avoids each integration
-            # having to wait for the lock to do it individually
-            deps = await loader.async_get_integrations(hass, unseen_deps)
-            for dependant_domain, dependant_itg in deps.items():
-                if isinstance(dependant_itg, loader.Integration):
-                    integration_cache[dependant_domain] = dependant_itg
-                    needed_requirements.update(dependant_itg.requirements)
-
-        if resolve_dependencies_tasks:
-            await asyncio.gather(*resolve_dependencies_tasks)
-
-        for itg in integrations_to_process:
-            try:
-                all_deps = itg.all_dependencies
-            except RuntimeError:
-                # Integration.all_dependencies raises RuntimeError if
-                # dependencies could not be resolved
-                continue
-            for dep in all_deps:
-                if dep in domains_to_setup:
-                    continue
-                domains_to_setup.add(dep)
-                to_resolve.add(dep)
-
-    _LOGGER.info("Domains to be set up: %s", domains_to_setup)
-
-    # Optimistically check if requirements are already installed
-    # ahead of setting up the integrations so we can prime the cache
-    # We do not wait for this since its an optimization only
-    hass.async_create_background_task(
-        requirements.async_load_installed_versions(hass, needed_requirements),
-        "check installed requirements",
-        eager_start=True,
-    )
-
-    #
-    # Only add the domains_to_setup after we finish resolving
-    # as new domains are likely to added in the process
-    #
-    translations_to_load.update(domains_to_setup)
-    # Start loading translations for all integrations we are going to set up
-    # in the background so they are ready when we need them. This avoids a
-    # lot of waiting for the translation load lock and a thundering herd of
-    # tasks trying to load the same translations at the same time as each
-    # integration is loaded.
-    #
-    # We do not wait for this since as soon as the task runs it will
-    # hold the translation load lock and if anything is fast enough to
-    # wait for the translation load lock, loading will be done by the
-    # time it gets to it.
-    hass.async_create_background_task(
-        translation.async_load_integrations(hass, translations_to_load),
-        "load translations",
-        eager_start=True,
-    )
-
-    # Preload storage for all integrations we are going to set up
-    # so we do not have to wait for it to be loaded when we need it
-    # in the setup process.
-    hass.async_create_background_task(
-        get_internal_store_manager(hass).async_preload(
-            [*PRELOAD_STORAGE, *domains_to_setup]
-        ),
-        "preload storage",
-        eager_start=True,
-    )
-
-    return domains_to_setup, integration_cache
-
-
-async def _async_set_up_integrations(
-    hass: core.HomeAssistant, config: dict[str, Any]
-) -> None:
-    """Set up all the integrations."""
-    watcher = _WatchPendingSetups(hass, _setup_started(hass))
-    watcher.async_start()
-
-    domains_to_setup, integration_cache = await _async_resolve_domains_to_setup(
-        hass, config
-    )
-
-    # Initialize recorder
-    if "recorder" in domains_to_setup:
-        recorder.async_initialize_recorder(hass)
-
-    pre_stage_domains = [
-        (name, domains_to_setup & domain_group) for name, domain_group in SETUP_ORDER
-    ]
-
-    # calculate what components to setup in what stage
-    stage_1_domains: set[str] = set()
-
-    # Find all dependencies of any dependency of any stage 1 integration that
-    # we plan on loading and promote them to stage 1. This is done only to not
-    # get misleading log messages
-    deps_promotion: set[str] = STAGE_1_INTEGRATIONS
-    while deps_promotion:
-        old_deps_promotion = deps_promotion
-        deps_promotion = set()
-
-        for domain in old_deps_promotion:
-            if domain not in domains_to_setup or domain in stage_1_domains:
-                continue
-
-            stage_1_domains.add(domain)
-
-            if (dep_itg := integration_cache.get(domain)) is None:
-                continue
-
-            deps_promotion.update(dep_itg.all_dependencies)
-
-    stage_2_domains = domains_to_setup - stage_1_domains
-
-    for name, domain_group in pre_stage_domains:
-        if domain_group:
-            stage_2_domains -= domain_group
-            _LOGGER.info("Setting up %s: %s", name, domain_group)
-            to_be_loaded = domain_group.copy()
-            to_be_loaded.update(
-                dep
-                for domain in domain_group
-                if (integration := integration_cache.get(domain)) is not None
-                for dep in integration.all_dependencies
-            )
-            async_set_domains_to_be_loaded(hass, to_be_loaded)
-            await async_setup_multi_components(hass, domain_group, config)
-
-    # Enables after dependencies when setting up stage 1 domains
-    async_set_domains_to_be_loaded(hass, stage_1_domains)
-
-    # Start setup
-    if stage_1_domains:
-        _LOGGER.info("Setting up stage 1: %s", stage_1_domains)
-        try:
-            async with hass.timeout.async_timeout(
-                STAGE_1_TIMEOUT, cool_down=COOLDOWN_TIME
-            ):
-                await async_setup_multi_components(hass, stage_1_domains, config)
-        except TimeoutError:
-            _LOGGER.warning(
-                "Setup timed out for stage 1 waiting on %s - moving forward",
-                hass._active_tasks,  # noqa: SLF001
-            )
-
-    # Add after dependencies when setting up stage 2 domains
-    async_set_domains_to_be_loaded(hass, stage_2_domains)
-
-    if stage_2_domains:
-        _LOGGER.info("Setting up stage 2: %s", stage_2_domains)
-        try:
-            async with hass.timeout.async_timeout(
-                STAGE_2_TIMEOUT, cool_down=COOLDOWN_TIME
-            ):
-                await async_setup_multi_components(hass, stage_2_domains, config)
-        except TimeoutError:
-            _LOGGER.warning(
-                "Setup timed out for stage 2 waiting on %s - moving forward",
-                hass._active_tasks,  # noqa: SLF001
-            )
-
-    # Wrap up startup
-    _LOGGER.debug("Waiting for startup to wrap up")
-    try:
-        async with hass.timeout.async_timeout(WRAP_UP_TIMEOUT, cool_down=COOLDOWN_TIME):
-            await hass.async_block_till_done()
-    except TimeoutError:
-        _LOGGER.warning(
-            "Setup timed out for bootstrap waiting on %s - moving forward",
-            hass._active_tasks,  # noqa: SLF001
-        )
-
-    watcher.async_stop()
-
-    if _LOGGER.isEnabledFor(logging.DEBUG):
-        setup_time = async_get_setup_timings(hass)
-        _LOGGER.debug(
-            "Integration setup times: %s",
-            dict(sorted(setup_time.items(), key=itemgetter(1), reverse=True)),
-        )

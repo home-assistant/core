@@ -45,8 +45,8 @@ from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import dt as dt_util
 from homeassistant.util.aiohttp import MockRequest
-import homeassistant.util.dt as dt_util
 
 from . import (
     TEST_CAMERA,

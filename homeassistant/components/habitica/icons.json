@@ -121,12 +121,6 @@
           "rogue": "mdi:ninja"
         }
       },
-      "todos": {
-        "default": "mdi:checkbox-outline"
-      },
-      "dailys": {
-        "default": "mdi:calendar-month"
-      },
       "habits": {
         "default": "mdi:contrast-box"
       },
@@ -144,6 +138,27 @@
       },
       "constitution": {
         "default": "mdi:run-fast"
+      },
+      "food_total": {
+        "default": "mdi:candy",
+        "state": {
+          "0": "mdi:candy-off"
+        }
+      },
+      "eggs_total": {
+        "default": "mdi:egg",
+        "state": {
+          "0": "mdi:egg-off"
+        }
+      },
+      "hatching_potions_total": {
+        "default": "mdi:flask-round-bottom"
+      },
+      "saddle": {
+        "default": "mdi:horse"
+      },
+      "quest_scrolls": {
+        "default": "mdi:script-text-outline"
       }
     },
     "switch": {
@@ -196,6 +211,73 @@
     },
     "transformation": {
       "service": "mdi:flask-round-bottom"
+    },
+    "get_tasks": {
+      "service": "mdi:calendar-export",
+      "sections": {
+        "filter": "mdi:calendar-filter"
+      }
+    },
+    "update_reward": {
+      "service": "mdi:treasure-chest",
+      "sections": {
+        "tag_options": "mdi:tag",
+        "developer_options": "mdi:test-tube"
+      }
+    },
+    "create_reward": {
+      "service": "mdi:treasure-chest-outline",
+      "sections": {
+        "developer_options": "mdi:test-tube"
+      }
+    },
+    "update_habit": {
+      "service": "mdi:contrast-box",
+      "sections": {
+        "tag_options": "mdi:tag",
+        "developer_options": "mdi:test-tube"
+      }
+    },
+    "create_habit": {
+      "service": "mdi:contrast-box",
+      "sections": {
+        "developer_options": "mdi:test-tube"
+      }
+    },
+    "update_todo": {
+      "service": "mdi:pencil-box-outline",
+      "sections": {
+        "checklist_options": "mdi:format-list-checks",
+        "tag_options": "mdi:tag",
+        "developer_options": "mdi:test-tube",
+        "duedate_options": "mdi:calendar-blank",
+        "reminder_options": "mdi:reminder"
+      }
+    },
+    "create_todo": {
+      "service": "mdi:pencil-box-outline",
+      "sections": {
+        "developer_options": "mdi:test-tube"
+      }
+    },
+    "update_daily": {
+      "service": "mdi:calendar-month",
+      "sections": {
+        "checklist_options": "mdi:format-list-checks",
+        "tag_options": "mdi:tag",
+        "developer_options": "mdi:test-tube",
+        "reminder_options": "mdi:reminder",
+        "repeat_weekly_options": "mdi:calendar-refresh",
+        "repeat_monthly_options": "mdi:calendar-refresh"
+      }
+    },
+    "create_daily": {
+      "service": "mdi:calendar-month",
+      "sections": {
+        "developer_options": "mdi:test-tube",
+        "repeat_weekly_options": "mdi:calendar-refresh",
+        "repeat_monthly_options": "mdi:calendar-refresh"
+      }
     }
   }
 }

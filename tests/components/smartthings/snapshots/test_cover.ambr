@@ -1,0 +1,102 @@
+# serializer version: 1
+# name: test_all_entities[c2c_shade][cover.curtain_1a-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.curtain_1a',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHADE: 'shade'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 7>,
+    'translation_key': None,
+    'unique_id': '571af102-15db-4030-b76b-245a691f74a5_main',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[c2c_shade][cover.curtain_1a-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'shade',
+      'friendly_name': 'Curtain 1A',
+      'supported_features': <CoverEntityFeature: 7>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.curtain_1a',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_all_entities[ikea_kadrilj][cover.kitchen_ikea_kadrilj_window_blind-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.kitchen_ikea_kadrilj_window_blind',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHADE: 'shade'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 7>,
+    'translation_key': None,
+    'unique_id': '71afed1c-006d-4e48-b16e-e7f88f9fd638_main',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[ikea_kadrilj][cover.kitchen_ikea_kadrilj_window_blind-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'battery_level': 37,
+      'current_position': 32,
+      'device_class': 'shade',
+      'friendly_name': 'Kitchen IKEA KADRILJ Window blind',
+      'supported_features': <CoverEntityFeature: 7>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.kitchen_ikea_kadrilj_window_blind',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---

@@ -2,7 +2,7 @@
 
 import uuid
 
-import homeassistant.util.ulid as ulid_util
+from homeassistant.util import ulid as ulid_util
 
 
 async def test_ulid_util_uuid_hex() -> None:

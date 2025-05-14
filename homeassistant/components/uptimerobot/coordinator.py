@@ -17,28 +17,29 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import API_ATTR_OK, COORDINATOR_UPDATE_INTERVAL, DOMAIN, LOGGER
 
+type UptimeRobotConfigEntry = ConfigEntry[UptimeRobotDataUpdateCoordinator]
+
 
 class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator[list[UptimeRobotMonitor]]):
     """Data update coordinator for UptimeRobot."""
 
-    config_entry: ConfigEntry
+    config_entry: UptimeRobotConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry_id: str,
-        dev_reg: dr.DeviceRegistry,
+        config_entry: UptimeRobotConfigEntry,
         api: UptimeRobot,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=COORDINATOR_UPDATE_INTERVAL,
         )
-        self._config_entry_id = config_entry_id
-        self._device_registry = dev_reg
+        self._device_registry = dr.async_get(hass)
         self.api = api
 
     async def _async_update_data(self) -> list[UptimeRobotMonitor]:
@@ -58,7 +59,7 @@ class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator[list[UptimeRobotMon
         current_monitors = {
             list(device.identifiers)[0][1]
             for device in dr.async_entries_for_config_entry(
-                self._device_registry, self._config_entry_id
+                self._device_registry, self.config_entry.entry_id
             )
         }
         new_monitors = {str(monitor.id) for monitor in monitors}
@@ -73,7 +74,7 @@ class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator[list[UptimeRobotMon
         # create new devices and entities.
         if self.data and new_monitors - {str(monitor.id) for monitor in self.data}:
             self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self._config_entry_id)
+                self.hass.config_entries.async_reload(self.config_entry.entry_id)
             )
 
         return monitors
