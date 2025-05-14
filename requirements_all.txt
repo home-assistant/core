@@ -211,10 +211,10 @@ aiobafi6==0.9.0
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
-aiocomelit==0.12.0
+aiocomelit==0.12.1
 
 # homeassistant.components.dhcp
-aiodhcpwatcher==1.1.1
+aiodhcpwatcher==1.2.0
 
 # homeassistant.components.dhcp
 aiodiscover==2.7.0
@@ -241,7 +241,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==30.2.0
+aioesphomeapi==31.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -542,7 +542,7 @@ aurorapy==0.2.7
 autarco==3.1.0
 
 # homeassistant.components.husqvarna_automower_ble
-automower-ble==0.2.0
+automower-ble==0.2.1
 
 # homeassistant.components.generic
 # homeassistant.components.stream
@@ -750,7 +750,7 @@ datapoint==0.9.9
 dbus-fast==2.43.0
 
 # homeassistant.components.debugpy
-debugpy==1.8.13
+debugpy==1.8.14
 
 # homeassistant.components.decora_wifi
 # decora-wifi==1.4
@@ -983,7 +983,7 @@ gardena-bluetooth==1.6.0
 gassist-text==0.0.12
 
 # homeassistant.components.google
-gcal-sync==7.0.0
+gcal-sync==7.0.1
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
@@ -1197,7 +1197,7 @@ ibmiotf==0.3.4
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==9.2.1
+ical==9.2.4
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -1230,7 +1230,7 @@ imgw_pib==1.0.10
 incomfort-client==0.6.8
 
 # homeassistant.components.influxdb
-influxdb-client==1.24.0
+influxdb-client==1.48.0
 
 # homeassistant.components.influxdb
 influxdb==5.3.1
@@ -1505,7 +1505,7 @@ nextcord==2.6.0
 nextdns==4.0.0
 
 # homeassistant.components.niko_home_control
-nhc==0.4.10
+nhc==0.4.12
 
 # homeassistant.components.nibe_heatpump
 nibe==2.17.0
@@ -1801,7 +1801,7 @@ pyRFXtrx==0.31.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.30.8
+pyTibber==0.31.2
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -2090,7 +2090,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.2
+pylamarzocco==2.0.3
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2132,7 +2132,7 @@ pymeteoclimatic==0.1.0
 pymicro-vad==1.0.1
 
 # homeassistant.components.miele
-pymiele==0.4.3
+pymiele==0.5.2
 
 # homeassistant.components.xiaomi_tv
 pymitv==1.4.3
@@ -2227,7 +2227,7 @@ pypalazzetti==0.1.19
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.8.5
+pypck==0.8.6
 
 # homeassistant.components.pglab
 pypglab==0.0.5
@@ -2486,7 +2486,7 @@ python-roborock==2.18.2
 python-smarttub==0.0.39
 
 # homeassistant.components.snoo
-python-snoo==0.6.5
+python-snoo==0.6.6
 
 # homeassistant.components.songpal
 python-songpal==0.16.2
@@ -2637,7 +2637,7 @@ renault-api==0.3.1
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.13.2
+reolink-aio==0.13.3
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -3101,7 +3101,7 @@ xbox-webapi==2.1.0
 xiaomi-ble==0.38.0
 
 # homeassistant.components.knx
-xknx==3.6.0
+xknx==3.8.0
 
 # homeassistant.components.knx
 xknxproject==3.8.2

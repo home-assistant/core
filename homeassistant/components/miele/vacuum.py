@@ -24,6 +24,8 @@ from .const import DOMAIN, PROCESS_ACTION, PROGRAM_ID, MieleActions, MieleApplia
 from .coordinator import MieleConfigEntry
 from .entity import MieleEntity
 
+PARALLEL_UPDATES = 1
+
 _LOGGER = logging.getLogger(__name__)
 
 # The following const classes define program speeds and programs for the vacuum cleaner.
@@ -80,7 +82,7 @@ class MieleVacuumStateCode(MieleEnum):
     blocked_front_wheel = 5900
     docked = 5903, 5904
     remote_controlled = 5910
-    unknown = -9999
+    missing2none = -9999
 
 
 SUPPORTED_FEATURES = (
