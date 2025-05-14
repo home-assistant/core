@@ -932,7 +932,7 @@ async def test_usb_discovery_migration(
     assert result["type"] == FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch("pathlib.Path.write_bytes", MagicMock()) as mock_file:
+    with patch("pathlib.Path.write_bytes") as mock_file:
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
         assert mock_file.call_count == 1
@@ -1066,7 +1066,7 @@ async def test_usb_discovery_migration_driver_ready_timeout(
     assert result["type"] == FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch("pathlib.Path.write_bytes", MagicMock()) as mock_file:
+    with patch("pathlib.Path.write_bytes") as mock_file:
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
         assert mock_file.call_count == 1
@@ -3733,7 +3733,7 @@ async def test_reconfigure_migrate_with_addon(
     assert result["type"] == FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch("pathlib.Path.write_bytes", MagicMock()) as mock_file:
+    with patch("pathlib.Path.write_bytes") as mock_file:
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
         assert mock_file.call_count == 1
@@ -3875,7 +3875,7 @@ async def test_reconfigure_migrate_driver_ready_timeout(
     assert result["type"] == FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch("pathlib.Path.write_bytes", MagicMock()) as mock_file:
+    with patch("pathlib.Path.write_bytes") as mock_file:
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
         assert mock_file.call_count == 1
@@ -4000,9 +4000,7 @@ async def test_reconfigure_migrate_backup_file_failure(
     assert result["type"] == FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch(
-        "pathlib.Path.write_bytes", MagicMock(side_effect=OSError("test_error"))
-    ):
+    with patch("pathlib.Path.write_bytes", side_effect=OSError("test_error")):
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
 
@@ -4068,7 +4066,7 @@ async def test_reconfigure_migrate_start_addon_failure(
     assert result["type"] == FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch("pathlib.Path.write_bytes", MagicMock()) as mock_file:
+    with patch("pathlib.Path.write_bytes") as mock_file:
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
         assert mock_file.call_count == 1
@@ -4163,7 +4161,7 @@ async def test_reconfigure_migrate_restore_failure(
     assert result["type"] == FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch("pathlib.Path.write_bytes", MagicMock()) as mock_file:
+    with patch("pathlib.Path.write_bytes") as mock_file:
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
         assert mock_file.call_count == 1
@@ -4224,8 +4222,46 @@ async def test_reconfigure_migrate_restore_failure(
     assert len(hass.config_entries.flow.async_progress()) == 0
 
 
-async def test_get_driver_failure(hass: HomeAssistant, integration, client) -> None:
-    """Test get driver failure."""
+async def test_get_driver_failure_intent_migrate(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+) -> None:
+    """Test get driver failure in intent migrate step."""
+    entry = integration
+    hass.config_entries.async_update_entry(
+        integration, unique_id="1234", data={**integration.data, "use_addon": True}
+    )
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "reconfigure"
+
+    await hass.config_entries.async_unload(integration.entry_id)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "config_entry_not_loaded"
+
+
+async def test_get_driver_failure_instruct_unplug(
+    hass: HomeAssistant,
+    client: MagicMock,
+    integration: MockConfigEntry,
+) -> None:
+    """Test get driver failure in instruct unplug step."""
+
+    async def mock_backup_nvm_raw():
+        await asyncio.sleep(0)
+        client.driver.controller.emit(
+            "nvm backup progress", {"bytesRead": 100, "total": 200}
+        )
+        return b"test_nvm_data"
+
+    client.driver.controller.async_backup_nvm_raw = AsyncMock(
+        side_effect=mock_backup_nvm_raw
+    )
     entry = integration
     hass.config_entries.async_update_entry(
         integration, unique_id="1234", data={**integration.data, "use_addon": True}
@@ -4241,9 +4277,19 @@ async def test_get_driver_failure(hass: HomeAssistant, integration, client) -> N
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "intent_migrate"
 
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "backup_nvm"
+
+    with patch("pathlib.Path.write_bytes") as mock_file:
+        await hass.async_block_till_done()
+        assert client.driver.controller.async_backup_nvm_raw.call_count == 1
+        assert mock_file.call_count == 1
+
     await hass.config_entries.async_unload(integration.entry_id)
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "config_entry_not_loaded"
@@ -4284,7 +4330,7 @@ async def test_hard_reset_failure(hass: HomeAssistant, integration, client) -> N
     assert result["type"] == FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch("pathlib.Path.write_bytes", MagicMock()) as mock_file:
+    with patch("pathlib.Path.write_bytes") as mock_file:
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
         assert mock_file.call_count == 1
@@ -4329,7 +4375,7 @@ async def test_choose_serial_port_usb_ports_failure(
     assert result["type"] == FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch("pathlib.Path.write_bytes", MagicMock()) as mock_file:
+    with patch("pathlib.Path.write_bytes") as mock_file:
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
         assert mock_file.call_count == 1
