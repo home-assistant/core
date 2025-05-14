@@ -485,7 +485,6 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
         description=MieleSensorDescription(
             key="state_core_temperature",
             translation_key="core_temperature",
-            zone=1,
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,
