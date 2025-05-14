@@ -878,6 +878,9 @@
       "core_temperature": {
         "name": "Core temperature"
       },
+      "target_temperature": {
+        "name": "Target temperature"
+      },
       "core_target_temperature": {
         "name": "Core target temperature"
       }
