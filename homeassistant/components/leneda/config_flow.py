@@ -122,7 +122,6 @@ class LenedaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(
                         "existing_energy_id",
-                        description="config.step.select_existing.data.existing_energy_id",
                     ): vol.In(energy_id_options)
                 }
             ),
@@ -149,7 +148,6 @@ class LenedaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(
                         CONF_API_TOKEN,
-                        description="config.step.new_credentials.data.api_token",
                     ): selector.TextSelector(
                         selector.TextSelectorConfig(
                             type=selector.TextSelectorType.PASSWORD,
@@ -158,7 +156,6 @@ class LenedaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ),
                     vol.Required(
                         CONF_ENERGY_ID,
-                        description="config.step.new_credentials.data.energy_id",
                     ): selector.TextSelector(
                         selector.TextSelectorConfig(
                             type=selector.TextSelectorType.TEXT,
@@ -206,7 +203,6 @@ class LenedaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(
                         "metering_point",
-                        description="config.step.metering_points.data.metering_point",
                     ): selector.TextSelector(
                         selector.TextSelectorConfig(
                             type=selector.TextSelectorType.TEXT,
@@ -364,7 +360,6 @@ class LenedaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(
                     "sensors",
                     default=default_sensors or [],
-                    description="config.step.manual.data.sensors",
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         options=list(SENSOR_TYPES.keys()),
@@ -542,7 +537,6 @@ class LenedaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(
                         CONF_API_TOKEN,
-                        description="config.step.reauth_confirm.data.api_token",
                     ): selector.TextSelector(
                         selector.TextSelectorConfig(
                             type=selector.TextSelectorType.PASSWORD,
@@ -599,7 +593,6 @@ class LenedaOptionsFlow(config_entries.OptionsFlow):
                     vol.Required(
                         "metering_point",
                         default=None,
-                        description="config.step.options.data.metering_point",
                     ): vol.In(metering_point_options)
                 }
             ),
@@ -660,7 +653,6 @@ class LenedaOptionsFlow(config_entries.OptionsFlow):
                     vol.Required(
                         "sensors",
                         default=current_sensors,
-                        description="config.step.manage_sensors.data.sensors",
                     ): selector.SelectSelector(
                         selector.SelectSelectorConfig(
                             options=list(SENSOR_TYPES.keys()),
