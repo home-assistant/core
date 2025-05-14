@@ -2447,7 +2447,7 @@ vilfo-api-client==0.5.0
 voip-utils==0.3.1
 
 # homeassistant.components.volvo
-volvocarsapi==0.1.1
+volvocarsapi==0.2.0
 
 # homeassistant.components.volvooncall
 volvooncall==0.10.3
