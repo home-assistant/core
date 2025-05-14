@@ -754,7 +754,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         item = media_browser.get_media(self.media.library, media_id, media_type)
         if not item:
             raise ServiceValidationError(
-                translation_domain=SONOS_DOMAIN,
+                translation_domain=DOMAIN,
                 translation_key="invalid_media",
                 translation_placeholders={
                     "media_id": media_id,
