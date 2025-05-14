@@ -18,7 +18,6 @@ from homeassistant.const import (
     PERCENTAGE,
     UV_INDEX,
     UnitOfLength,
-    UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
 )
