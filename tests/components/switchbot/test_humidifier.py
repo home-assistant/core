@@ -4,6 +4,7 @@ from collections.abc import Callable
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from switchbot.devices.device import SwitchbotOperationError
 
 from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
@@ -18,6 +19,7 @@ from homeassistant.components.humidifier import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from . import HUMIDIFIER_SERVICE_INFO
 
@@ -121,3 +123,53 @@ async def test_humidifier_services(
         }
         mock_instance = mock_map[mock_method]
         mock_instance.assert_awaited_once_with(*expected_args)
+
+
+@pytest.mark.parametrize(
+    ("exception", "error_message"),
+    [
+        (
+            SwitchbotOperationError("Operation failed"),
+            "An error occurred while performing the action: Operation failed",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("service", "service_data", "mock_method"),
+    [
+        (SERVICE_TURN_ON, {}, "turn_on"),
+        (SERVICE_TURN_OFF, {}, "turn_off"),
+        (SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 60}, "set_level"),
+        (SERVICE_SET_MODE, {ATTR_MODE: MODE_AUTO}, "async_set_auto"),
+        (SERVICE_SET_MODE, {ATTR_MODE: MODE_NORMAL}, "async_set_manual"),
+    ],
+)
+async def test_exception_handling_humidifier_service(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    service_data: dict,
+    mock_method: str,
+    exception: Exception,
+    error_message: str,
+) -> None:
+    """Test exception handling for humidifier service with exception."""
+    inject_bluetooth_service_info(hass, HUMIDIFIER_SERVICE_INFO)
+
+    entry = mock_entry_factory(sensor_type="humidifier")
+    entry.add_to_hass(hass)
+    entity_id = "humidifier.test_name"
+
+    patch_target = f"homeassistant.components.switchbot.humidifier.switchbot.SwitchbotHumidifier.{mock_method}"
+
+    with patch(patch_target, new=AsyncMock(side_effect=exception)):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        with pytest.raises(HomeAssistantError, match=error_message):
+            await hass.services.async_call(
+                HUMIDIFIER_DOMAIN,
+                service,
+                {**service_data, ATTR_ENTITY_ID: entity_id},
+                blocking=True,
+            )

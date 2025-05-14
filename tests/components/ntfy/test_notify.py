@@ -4,7 +4,11 @@ from collections.abc import AsyncGenerator
 from unittest.mock import patch
 
 from aiontfy import Message
-from aiontfy.exceptions import NtfyException, NtfyHTTPError
+from aiontfy.exceptions import (
+    NtfyException,
+    NtfyHTTPError,
+    NtfyUnauthorizedAuthenticationError,
+)
 from freezegun.api import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -15,7 +19,8 @@ from homeassistant.components.notify import (
     DOMAIN as NOTIFY_DOMAIN,
     SERVICE_SEND_MESSAGE,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.ntfy.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -101,6 +106,10 @@ async def test_send_message(
             NtfyException,
             "Failed to publish notification due to a connection error",
         ),
+        (
+            NtfyUnauthorizedAuthenticationError(40101, 401, "unauthorized"),
+            "Failed to authenticate with ntfy service. Please verify your credentials",
+        ),
     ],
 )
 async def test_send_message_exception(
@@ -135,3 +144,44 @@ async def test_send_message_exception(
     mock_aiontfy.publish.assert_called_once_with(
         Message(topic="mytopic", message="triggered", title="test")
     )
+
+
+async def test_send_message_reauth_flow(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_aiontfy: AsyncMock,
+) -> None:
+    """Test unauthorized exception initiates reauth flow."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    mock_aiontfy.publish.side_effect = (
+        NtfyUnauthorizedAuthenticationError(40101, 401, "unauthorized"),
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_ENTITY_ID: "notify.mytopic",
+                ATTR_MESSAGE: "triggered",
+                ATTR_TITLE: "test",
+            },
+            blocking=True,
+        )
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == config_entry.entry_id

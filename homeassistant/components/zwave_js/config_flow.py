@@ -3,19 +3,19 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 from datetime import datetime
 import logging
 from pathlib import Path
 from typing import Any
 
-import aiohttp
 from awesomeversion import AwesomeVersion
 from serial.tools import list_ports
 import voluptuous as vol
 from zwave_js_server.client import Client
 from zwave_js_server.exceptions import FailedCommand
 from zwave_js_server.model.driver import Driver
-from zwave_js_server.version import VersionInfo, get_server_version
+from zwave_js_server.version import VersionInfo
 
 from homeassistant.components import usb
 from homeassistant.components.hassio import (
@@ -35,7 +35,6 @@ from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
@@ -66,7 +65,9 @@ from .const import (
     CONF_USE_ADDON,
     DATA_CLIENT,
     DOMAIN,
+    RESTORE_NVM_DRIVER_READY_TIMEOUT,
 )
+from .helpers import CannotConnect, async_get_version_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +78,6 @@ ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 40
 CONF_EMULATE_HARDWARE = "emulate_hardware"
 CONF_LOG_LEVEL = "log_level"
-SERVER_VERSION_TIMEOUT = 10
 
 ADDON_LOG_LEVELS = {
     "error": "Error",
@@ -126,22 +126,6 @@ async def validate_input(hass: HomeAssistant, user_input: dict) -> VersionInfo:
         return await async_get_version_info(hass, ws_address)
     except CannotConnect as err:
         raise InvalidInput("cannot_connect") from err
-
-
-async def async_get_version_info(hass: HomeAssistant, ws_address: str) -> VersionInfo:
-    """Return Z-Wave JS version info."""
-    try:
-        async with asyncio.timeout(SERVER_VERSION_TIMEOUT):
-            version_info: VersionInfo = await get_server_version(
-                ws_address, async_get_clientsession(hass)
-            )
-    except (TimeoutError, aiohttp.ClientError) as err:
-        # We don't want to spam the log if the add-on isn't started
-        # or takes a long time to start.
-        _LOGGER.debug("Failed to connect to Z-Wave JS server: %s", err)
-        raise CannotConnect from err
-
-    return version_info
 
 
 def get_usb_ports() -> dict[str, str]:
@@ -461,10 +445,18 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if vid == "10C4" and pid == "EA60" and description and "2652" in description:
             return self.async_abort(reason="not_zwave_device")
 
+        discovery_info.device = await self.hass.async_add_executor_job(
+            usb.get_serial_by_id, discovery_info.device
+        )
+
         addon_info = await self._async_get_addon_info()
         if (
             addon_info.state not in (AddonState.NOT_INSTALLED, AddonState.INSTALLING)
-            and addon_info.options.get(CONF_ADDON_DEVICE) == discovery_info.device
+            and (addon_device := addon_info.options.get(CONF_ADDON_DEVICE)) is not None
+            and await self.hass.async_add_executor_job(
+                usb.get_serial_by_id, addon_device
+            )
+            == discovery_info.device
         ):
             return self.async_abort(reason="already_configured")
 
@@ -717,7 +709,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(schema)
 
-        return self.async_show_form(step_id="configure_addon", data_schema=data_schema)
+        return self.async_show_form(
+            step_id="configure_addon_user", data_schema=data_schema
+        )
 
     async def async_step_finish_addon_setup_user(
         self, user_input: dict[str, Any] | None = None
@@ -895,10 +889,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Reset the current controller, and instruct the user to unplug it."""
 
         if user_input is not None:
-            config_entry = self._reconfigure_config_entry
-            assert config_entry is not None
-            # Unload the config entry before stopping the add-on.
-            await self.hass.config_entries.async_unload(config_entry.entry_id)
             if self.usb_path:
                 # USB discovery was used, so the device is already known.
                 await self._async_set_addon_config({CONF_ADDON_DEVICE: self.usb_path})
@@ -912,6 +902,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         except (AbortFlow, FailedCommand) as err:
             _LOGGER.error("Failed to reset controller: %s", err)
             return self.async_abort(reason="reset_failed")
+
+        config_entry = self._reconfigure_config_entry
+        assert config_entry is not None
+        # Unload the config entry before asking the user to unplug the controller.
+        await self.hass.config_entries.async_unload(config_entry.entry_id)
 
         return self.async_show_form(
             step_id="instruct_unplug",
@@ -1097,7 +1092,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
-        return self.async_show_form(step_id="configure_addon", data_schema=data_schema)
+        return self.async_show_form(
+            step_id="configure_addon_reconfigure", data_schema=data_schema
+        )
 
     async def async_step_choose_serial_port(
         self, user_input: dict[str, Any] | None = None
@@ -1305,15 +1302,28 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     event["bytesWritten"] / event["total"] * 0.5 + 0.5
                 )
 
-        controller = self._get_driver().controller
+        @callback
+        def set_driver_ready(event: dict) -> None:
+            "Set the driver ready event."
+            wait_driver_ready.set()
+
+        driver = self._get_driver()
+        controller = driver.controller
+        wait_driver_ready = asyncio.Event()
         unsubs = [
             controller.on("nvm convert progress", forward_progress),
             controller.on("nvm restore progress", forward_progress),
+            driver.once("driver ready", set_driver_ready),
         ]
         try:
             await controller.async_restore_nvm(self.backup_data)
         except FailedCommand as err:
             raise AbortFlow(f"Failed to restore network: {err}") from err
+        else:
+            with suppress(TimeoutError):
+                async with asyncio.timeout(RESTORE_NVM_DRIVER_READY_TIMEOUT):
+                    await wait_driver_ready.wait()
+            await self.hass.config_entries.async_reload(config_entry.entry_id)
         finally:
             for unsub in unsubs:
                 unsub()
@@ -1327,10 +1337,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         client: Client = config_entry.runtime_data[DATA_CLIENT]
         assert client.driver is not None
         return client.driver
-
-
-class CannotConnect(HomeAssistantError):
-    """Indicate connection error."""
 
 
 class InvalidInput(HomeAssistantError):

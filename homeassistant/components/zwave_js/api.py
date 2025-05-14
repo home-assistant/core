@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Coroutine
+from contextlib import suppress
 import dataclasses
 from functools import partial, wraps
 from typing import Any, Concatenate, Literal, cast
@@ -69,6 +71,7 @@ from homeassistant.components.websocket_api import (
     ActiveConnection,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -86,12 +89,16 @@ from .const import (
     DATA_CLIENT,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
+    LOGGER,
+    RESTORE_NVM_DRIVER_READY_TIMEOUT,
     USER_AGENT,
 )
 from .helpers import (
+    CannotConnect,
     async_enable_statistics,
     async_get_node_from_device_id,
     async_get_provisioning_entry_from_device_id,
+    async_get_version_info,
     get_device_id,
 )
 
@@ -181,6 +188,8 @@ STRATEGY = "strategy"
 
 # https://github.com/zwave-js/node-zwave-js/blob/master/packages/core/src/security/QR.ts#L41
 MINIMUM_QR_STRING_LENGTH = 52
+
+HARD_RESET_CONTROLLER_DRIVER_READY_TIMEOUT = 60
 
 
 # Helper schemas
@@ -669,10 +678,18 @@ async def websocket_node_alerts(
             connection.send_error(msg[ID], ERR_NOT_LOADED, str(err))
         return
 
+    comments = node.device_config.metadata.comments
+    if node.in_interview:
+        comments.append(
+            {
+                "level": "warning",
+                "text": "This device is currently being interviewed and may not be fully operational.",
+            }
+        )
     connection.send_result(
         msg[ID],
         {
-            "comments": node.device_config.metadata.comments,
+            "comments": comments,
             "is_embedded": node.device_config.is_embedded,
         },
     )
@@ -2816,6 +2833,7 @@ async def websocket_hard_reset_controller(
     driver: Driver,
 ) -> None:
     """Hard reset controller."""
+    unsubs: list[Callable[[], None]]
 
     @callback
     def async_cleanup() -> None:
@@ -2831,12 +2849,46 @@ async def websocket_hard_reset_controller(
             connection.send_result(msg[ID], device.id)
             async_cleanup()
 
+    @callback
+    def set_driver_ready(event: dict) -> None:
+        "Set the driver ready event."
+        wait_driver_ready.set()
+
+    wait_driver_ready = asyncio.Event()
+
     msg[DATA_UNSUBSCRIBE] = unsubs = [
         async_dispatcher_connect(
             hass, EVENT_DEVICE_ADDED_TO_REGISTRY, _handle_device_added
-        )
+        ),
+        driver.once("driver ready", set_driver_ready),
     ]
+
     await driver.async_hard_reset()
+
+    with suppress(TimeoutError):
+        async with asyncio.timeout(HARD_RESET_CONTROLLER_DRIVER_READY_TIMEOUT):
+            await wait_driver_ready.wait()
+
+    # When resetting the controller, the controller home id is also changed.
+    # The controller state in the client is stale after resetting the controller,
+    # so get the new home id with a new client using the helper function.
+    # The client state will be refreshed by reloading the config entry,
+    # after the unique id of the config entry has been updated.
+    try:
+        version_info = await async_get_version_info(hass, entry.data[CONF_URL])
+    except CannotConnect:
+        # Just log this error, as there's nothing to do about it here.
+        # The stale unique id needs to be handled by a repair flow,
+        # after the config entry has been reloaded.
+        LOGGER.error(
+            "Failed to get server version, cannot update config entry"
+            "unique id with new home id, after controller reset"
+        )
+    else:
+        hass.config_entries.async_update_entry(
+            entry, unique_id=str(version_info.home_id)
+        )
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 @websocket_api.websocket_command(
@@ -3043,14 +3095,28 @@ async def websocket_restore_nvm(
             )
         )
 
+    @callback
+    def set_driver_ready(event: dict) -> None:
+        "Set the driver ready event."
+        wait_driver_ready.set()
+
+    wait_driver_ready = asyncio.Event()
+
     # Set up subscription for progress events
     connection.subscriptions[msg["id"]] = async_cleanup
     msg[DATA_UNSUBSCRIBE] = unsubs = [
         controller.on("nvm convert progress", forward_progress),
         controller.on("nvm restore progress", forward_progress),
+        driver.once("driver ready", set_driver_ready),
     ]
 
     await controller.async_restore_nvm_base64(msg["data"])
+
+    with suppress(TimeoutError):
+        async with asyncio.timeout(RESTORE_NVM_DRIVER_READY_TIMEOUT):
+            await wait_driver_ready.wait()
+    await hass.config_entries.async_reload(entry.entry_id)
+
     connection.send_message(
         websocket_api.event_message(
             msg[ID],

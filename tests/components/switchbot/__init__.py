@@ -555,3 +555,128 @@ CIRCULATOR_FAN_SERVICE_INFO = BluetoothServiceInfoBleak(
     connectable=True,
     tx_power=-127,
 )
+
+
+K20_VACUUM_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="K20 Vacuum",
+    manufacturer_data={
+        2409: b"\xb0\xe9\xfe\x01\xf3\x8f'\x01\x11S\x00\x10d\x0f",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b".\x00d"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="K20 Vacuum",
+        manufacturer_data={
+            2409: b"\xb0\xe9\xfe\x01\xf3\x8f'\x01\x11S\x00\x10d\x0f",
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b".\x00d"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "K20 Vacuum"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+K10_PRO_VACUUM_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="K10 Pro Vacuum",
+    manufacturer_data={
+        2409: b"\xb0\xe9\xfeP\x8d\x8d\x02 d",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"(\x00"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="K10 Pro Vacuum",
+        manufacturer_data={
+            2409: b"\xb0\xe9\xfeP\x8d\x8d\x02 d",
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"(\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "K10 Pro Vacuum"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+K10_VACUUM_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="K10 Vacuum",
+    manufacturer_data={
+        2409: b"\xca8\x06\xa9_\xf1\x02 d",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"}\x00"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="K10 Vacuum",
+        manufacturer_data={
+            2409: b"\xca8\x06\xa9_\xf1\x02 d",
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"}\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "K10 Vacuum"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+K10_POR_COMBO_VACUUM_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="K10 Pro Combo Vacuum",
+    manufacturer_data={
+        2409: b"\xb0\xe9\xfe\x01\xf4\x1d\x0b\x01\x01\xb1\x03\x118\x01",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"3\x00\x00"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="K10 Pro Combo Vacuum",
+        manufacturer_data={
+            2409: b"\xb0\xe9\xfe\x01\xf4\x1d\x0b\x01\x01\xb1\x03\x118\x01",
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"3\x00\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "K10 Pro Combo Vacuum"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+S10_VACUUM_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="S10 Vacuum",
+    manufacturer_data={
+        2409: b"\xb0\xe9\xfe\x00\x08|\n\x01\x11\x05\x00\x10M\x02",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"z\x00\x00"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="S10 Vacuum",
+        manufacturer_data={
+            2409: b"\xb0\xe9\xfe\x00\x08|\n\x01\x11\x05\x00\x10M\x02",
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"z\x00\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "S10 Vacuum"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)

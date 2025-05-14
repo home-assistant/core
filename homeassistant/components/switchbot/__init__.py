@@ -73,6 +73,11 @@ PLATFORMS_BY_TYPE = {
     ],
     SupportedModels.HUBMINI_MATTER.value: [Platform.SENSOR],
     SupportedModels.CIRCULATOR_FAN.value: [Platform.FAN, Platform.SENSOR],
+    SupportedModels.K20_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
+    SupportedModels.S10_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
+    SupportedModels.K10_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
+    SupportedModels.K10_PRO_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
+    SupportedModels.K10_PRO_COMBO_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -89,6 +94,11 @@ CLASS_BY_DEVICE = {
     SupportedModels.RELAY_SWITCH_1.value: switchbot.SwitchbotRelaySwitch,
     SupportedModels.ROLLER_SHADE.value: switchbot.SwitchbotRollerShade,
     SupportedModels.CIRCULATOR_FAN.value: switchbot.SwitchbotFan,
+    SupportedModels.K20_VACUUM.value: switchbot.SwitchbotVacuum,
+    SupportedModels.S10_VACUUM.value: switchbot.SwitchbotVacuum,
+    SupportedModels.K10_VACUUM.value: switchbot.SwitchbotVacuum,
+    SupportedModels.K10_PRO_VACUUM.value: switchbot.SwitchbotVacuum,
+    SupportedModels.K10_PRO_COMBO_VACUUM.value: switchbot.SwitchbotVacuum,
 }
 
 

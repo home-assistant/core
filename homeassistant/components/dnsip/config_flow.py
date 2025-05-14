@@ -68,7 +68,7 @@ async def async_validate_hostname(
         result = False
         with contextlib.suppress(DNSError):
             result = bool(
-                await aiodns.DNSResolver(
+                await aiodns.DNSResolver(  # type: ignore[call-overload]
                     nameservers=[resolver], udp_port=port, tcp_port=port
                 ).query(hostname, qtype)
             )

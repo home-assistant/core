@@ -1078,3 +1078,21 @@ async def test_xmod_model_lookup(
     )
     assert device
     assert device.model == xmod_model
+
+
+async def test_device_entry_bt_address(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_rpc_device: Mock,
+) -> None:
+    """Check if BT address is added to device entry connections."""
+    entry = await init_integration(hass, 2)
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, entry.entry_id)},
+        connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
+    )
+
+    assert device
+    assert len(device.connections) == 2
+    assert (dr.CONNECTION_BLUETOOTH, "12:34:56:78:9A:BE") in device.connections

@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN
+from . import ACTUATORS, DOMAIN
 from .entity import XS1DeviceEntity
 
 
@@ -22,7 +22,7 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the XS1 switch platform."""
-    actuators = hass.data[COMPONENT_DOMAIN][ACTUATORS]
+    actuators = hass.data[DOMAIN][ACTUATORS]
 
     add_entities(
         XS1SwitchEntity(actuator)

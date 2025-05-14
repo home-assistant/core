@@ -278,6 +278,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # and we'll handle the clean up below.
         await driver_events.setup(driver)
 
+    if (old_unique_id := entry.unique_id) is not None and old_unique_id != (
+        new_unique_id := str(driver.controller.home_id)
+    ):
+        device_registry = dr.async_get(hass)
+        controller_model = "Unknown model"
+        if (
+            (own_node := driver.controller.own_node)
+            and (
+                controller_device_entry := device_registry.async_get_device(
+                    identifiers={get_device_id(driver, own_node)}
+                )
+            )
+            and (model := controller_device_entry.model)
+        ):
+            controller_model = model
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"migrate_unique_id.{entry.entry_id}",
+            data={
+                "config_entry_id": entry.entry_id,
+                "config_entry_title": entry.title,
+                "controller_model": controller_model,
+                "new_unique_id": new_unique_id,
+                "old_unique_id": old_unique_id,
+            },
+            is_fixable=True,
+            severity=IssueSeverity.ERROR,
+            translation_key="migrate_unique_id",
+        )
+    else:
+        async_delete_issue(hass, DOMAIN, f"migrate_unique_id.{entry.entry_id}")
+
     # If the listen task is already failed, we need to raise ConfigEntryNotReady
     if listen_task.done():
         listen_error, error_message = _get_listen_task_error(listen_task)

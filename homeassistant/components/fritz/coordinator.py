@@ -39,6 +39,7 @@ from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     CONF_OLD_DISCOVERY,
+    DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
     DEFAULT_CONF_OLD_DISCOVERY,
     DEFAULT_HOST,
     DEFAULT_SSL,
@@ -175,6 +176,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         username: str = DEFAULT_USERNAME,
         host: str = DEFAULT_HOST,
         use_tls: bool = DEFAULT_SSL,
+        device_discovery_enabled: bool = DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
     ) -> None:
         """Initialize FritzboxTools class."""
         super().__init__(
@@ -202,6 +204,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self.port = port
         self.username = username
         self.use_tls = use_tls
+        self.device_discovery_enabled = device_discovery_enabled
         self.has_call_deflections: bool = False
         self._model: str | None = None
         self._current_firmware: str | None = None
@@ -332,10 +335,15 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             "entity_states": {},
         }
         try:
-            await self.async_scan_devices()
+            await self.async_update_device_info()
+
+            if self.device_discovery_enabled:
+                await self.async_scan_devices()
+
             entity_data["entity_states"] = await self.hass.async_add_executor_job(
                 self._entity_states_update
             )
+
             if self.has_call_deflections:
                 entity_data[
                     "call_deflections"
@@ -551,12 +559,8 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         if new_device:
             async_dispatcher_send(self.hass, self.signal_device_new)
 
-    async def async_scan_devices(self, now: datetime | None = None) -> None:
-        """Scan for new devices and return a list of found device ids."""
-
-        if self.hass.is_stopping:
-            _ha_is_stopping("scan devices")
-            return
+    async def async_update_device_info(self, now: datetime | None = None) -> None:
+        """Update own device information."""
 
         _LOGGER.debug("Checking host info for FRITZ!Box device %s", self.host)
         (
@@ -564,6 +568,13 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             self._latest_firmware,
             self._release_url,
         ) = await self._async_update_device_info()
+
+    async def async_scan_devices(self, now: datetime | None = None) -> None:
+        """Scan for new network devices."""
+
+        if self.hass.is_stopping:
+            _ha_is_stopping("scan devices")
+            return
 
         _LOGGER.debug("Checking devices for FRITZ!Box device %s", self.host)
         _default_consider_home = DEFAULT_CONSIDER_HOME.total_seconds()
@@ -683,7 +694,10 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
     async def async_trigger_cleanup(self) -> None:
         """Trigger device trackers cleanup."""
-        device_hosts = await self._async_update_hosts_info()
+        _LOGGER.debug("Device tracker cleanup triggered")
+        device_hosts = {self.mac: Device(True, "", "", "", "", None)}
+        if self.device_discovery_enabled:
+            device_hosts = await self._async_update_hosts_info()
         entity_reg: er.EntityRegistry = er.async_get(self.hass)
         config_entry = self.config_entry
 

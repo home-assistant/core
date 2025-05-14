@@ -106,7 +106,7 @@ class WanIpSensor(SensorEntity):
     async def async_update(self) -> None:
         """Get the current DNS IP address for hostname."""
         try:
-            response = await self.resolver.query(self.hostname, self.querytype)
+            response = await self.resolver.query(self.hostname, self.querytype)  # type: ignore[call-overload]
         except DNSError as err:
             _LOGGER.warning("Exception while resolving host: %s", err)
             response = None
