@@ -7,6 +7,7 @@ from typing import Any
 from pysmartthings import Attribute, Capability, Command, SmartThings
 
 from homeassistant.components.water_heater import (
+    STATE_ECO,
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
@@ -19,7 +20,7 @@ from .const import MAIN
 from .entity import SmartThingsEntity
 
 OPERATION_MAP_TO_HA: dict[str, str] = {
-    "eco": "eco",
+    "eco": STATE_ECO,
     "std": "standard",
     "force": "force",
     "power": "power",
@@ -46,6 +47,7 @@ async def async_setup_entry(
                 Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL,
                 Capability.THERMOSTAT_COOLING_SETPOINT,
                 Capability.SAMSUNG_CE_EHS_THERMOSTAT,
+                Capability.CUSTOM_OUTING_MODE,
             )
         )
     )
@@ -58,6 +60,7 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
     _attr_supported_features = (
         WaterHeaterEntityFeature.OPERATION_MODE
         | WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        | WaterHeaterEntityFeature.AWAY_MODE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
@@ -71,6 +74,7 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
                 Capability.TEMPERATURE_MEASUREMENT,
                 Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL,
                 Capability.THERMOSTAT_COOLING_SETPOINT,
+                Capability.CUSTOM_OUTING_MODE,
             },
         )
 
@@ -114,6 +118,16 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
             Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL, Attribute.MAXIMUM_SETPOINT
         )
 
+    @property
+    def is_away_mode_on(self) -> bool:
+        """Return if away mode is on."""
+        return (
+            self.get_attribute_value(
+                Capability.CUSTOM_OUTING_MODE, Attribute.OUTING_MODE
+            )
+            == "on"
+        )
+
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
         await self.execute_device_command(
@@ -128,4 +142,20 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
             Capability.THERMOSTAT_COOLING_SETPOINT,
             Command.SET_COOLING_SETPOINT,
             argument=kwargs[ATTR_TEMPERATURE],
+        )
+
+    async def async_turn_away_mode_on(self) -> None:
+        """Turn away mode on."""
+        await self.execute_device_command(
+            Capability.CUSTOM_OUTING_MODE,
+            Command.SET_OUTING_MODE,
+            argument="on",
+        )
+
+    async def async_turn_away_mode_off(self) -> None:
+        """Turn away mode off."""
+        await self.execute_device_command(
+            Capability.CUSTOM_OUTING_MODE,
+            Command.SET_OUTING_MODE,
+            argument="off",
         )
