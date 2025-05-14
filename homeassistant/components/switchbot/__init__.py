@@ -15,7 +15,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import (
@@ -153,7 +153,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
                 model=switchbot_model,
             )
         except ValueError as error:
-            raise HomeAssistantError(
+            raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="value_error",
                 translation_placeholders={"error": str(error)},
