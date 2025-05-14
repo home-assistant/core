@@ -490,6 +490,10 @@
       "climate_state_passenger_temp_setting": {
         "name": "Passenger temperature setting"
       },
+      "credit_balance": {
+        "name": "Teslemetry credits",
+        "unit_of_measurement": "credits"
+      },
       "drive_state_active_route_destination": {
         "name": "Destination"
       },
