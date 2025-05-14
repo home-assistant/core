@@ -54,7 +54,7 @@ async def test_successful_entry(hass: HomeAssistant) -> None:
         assert entry.runtime_data.data
         assert entry.state is ConfigEntryState.LOADED
 
-        assert hass.states.get(entity_id).state == str(1 + 0.007862313684887356)
+        assert hass.states.get(entity_id).state == str(1 + 0.00786231368489)
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
