@@ -7,5 +7,6 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["aiocomelit"],
-  "requirements": ["aiocomelit==0.11.3"]
+  "quality_scale": "bronze",
+  "requirements": ["aiocomelit==0.12.1"]
 }
