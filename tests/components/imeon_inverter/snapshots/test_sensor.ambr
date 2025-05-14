@@ -300,7 +300,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy_storage',
       'friendly_name': 'Imeon inverter Battery stored',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
