@@ -484,6 +484,66 @@ async def test_fan_speed_template(hass: HomeAssistant, expected: str | None) -> 
     _verify(hass, STATE_UNKNOWN, None, expected)
 
 
+@pytest.mark.parametrize(
+    ("count", "state_template", "attribute_template", "extra_config"),
+    [
+        (
+            1,
+            "{{ 'on' }}",
+            "{% if states.switch.test_state.state %}mdi:check{% endif %}",
+            {},
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.MODERN, "icon"),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
+async def test_icon_template(hass: HomeAssistant) -> None:
+    """Test icon template."""
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.attributes.get("icon") in ("", None)
+
+    hass.states.async_set("switch.test_state", STATE_ON)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.attributes["icon"] == "mdi:check"
+
+
+@pytest.mark.parametrize(
+    ("count", "state_template", "attribute_template", "extra_config"),
+    [
+        (
+            1,
+            "{{ 'on' }}",
+            "{% if states.switch.test_state.state %}local/vacuum.png{% endif %}",
+            {},
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.MODERN, "picture"),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
+async def test_picture_template(hass: HomeAssistant) -> None:
+    """Test picture template."""
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.attributes.get("entity_picture") in ("", None)
+
+    hass.states.async_set("switch.test_state", STATE_ON)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.attributes["entity_picture"] == "local/vacuum.png"
+
+
 @pytest.mark.parametrize("extra_config", [{}])
 @pytest.mark.parametrize(
     ("count", "state_template", "attribute_template"),

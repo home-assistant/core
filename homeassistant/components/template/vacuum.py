@@ -69,9 +69,9 @@ _VALID_STATES = [
 ]
 
 LEGACY_FIELDS = TEMPLATE_ENTITY_LEGACY_FIELDS | {
-    CONF_VALUE_TEMPLATE: CONF_STATE,
     CONF_BATTERY_LEVEL_TEMPLATE: CONF_BATTERY_LEVEL,
     CONF_FAN_SPEED_TEMPLATE: CONF_FAN_SPEED,
+    CONF_VALUE_TEMPLATE: CONF_STATE,
 }
 
 VACUUM_SCHEMA = vol.All(
@@ -90,12 +90,12 @@ VACUUM_SCHEMA = vol.All(
             vol.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
             vol.Optional(SERVICE_RETURN_TO_BASE): cv.SCRIPT_SCHEMA,
             vol.Optional(SERVICE_SET_FAN_SPEED): cv.SCRIPT_SCHEMA,
-            vol.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
             vol.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
+            vol.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
         }
     )
-    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
     .extend(TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA.schema)
+    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
     .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema),
 )
 
@@ -103,20 +103,20 @@ LEGACY_VACUUM_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
     vol.Schema(
         {
-            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_BATTERY_LEVEL_TEMPLATE): cv.template,
+            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
+            vol.Optional(CONF_FAN_SPEED_LIST, default=[]): cv.ensure_list,
             vol.Optional(CONF_FAN_SPEED_TEMPLATE): cv.template,
-            vol.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
-            vol.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
-            vol.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
-            vol.Optional(SERVICE_RETURN_TO_BASE): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
             vol.Optional(SERVICE_CLEAN_SPOT): cv.SCRIPT_SCHEMA,
             vol.Optional(SERVICE_LOCATE): cv.SCRIPT_SCHEMA,
+            vol.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
+            vol.Optional(SERVICE_RETURN_TO_BASE): cv.SCRIPT_SCHEMA,
             vol.Optional(SERVICE_SET_FAN_SPEED): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_FAN_SPEED_LIST, default=[]): cv.ensure_list,
-            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
+            vol.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
+            vol.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
         }
     )
     .extend(TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY.schema)
