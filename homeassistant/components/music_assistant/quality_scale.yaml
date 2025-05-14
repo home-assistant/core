@@ -45,9 +45,7 @@ rules:
     comment: Integration is local push
   docs-examples: done
   docs-known-limitations: done
-  docs-supported-devices:
-    status: exempt
-    comment: The integration doesn't support devices directly. It presents devices that are players on the MA server so any support or limitation is on the server not the integration
+  docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
