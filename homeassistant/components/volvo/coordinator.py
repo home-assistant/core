@@ -13,7 +13,7 @@ from volvocarsapi.models import (
     VolvoApiException,
     VolvoAuthException,
     VolvoCarsApiBaseModel,
-    VolvoCarsValueField,
+    VolvoCarsValue,
     VolvoCarsVehicle,
 )
 
@@ -69,8 +69,6 @@ class VolvoDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
         This method is called automatically during
         coordinator.async_config_entry_first_refresh.
         """
-        _LOGGER.debug("%s - Setting up", self.config_entry.entry_id)
-
         try:
             vehicle = await self.api.async_get_vehicle_details()
         except VolvoAuthException as ex:
@@ -88,23 +86,18 @@ class VolvoDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self.vehicle = vehicle
         self.data = {}
 
-        device_name = (
-            f"{MANUFACTURER} {vehicle.description.model} {vehicle.model_year}"
+        model = (
+            f"{vehicle.description.model} ({vehicle.model_year})"
             if vehicle.fuel_type == "NONE"
-            else f"{MANUFACTURER} {vehicle.description.model} {vehicle.fuel_type} {vehicle.model_year}"
+            else f"{vehicle.description.model} {vehicle.fuel_type} ({vehicle.model_year})"
         )
 
         self.device = DeviceInfo(
             identifiers={(DOMAIN, vehicle.vin)},
             manufacturer=MANUFACTURER,
-            model=f"{vehicle.description.model} ({vehicle.model_year})",
-            name=device_name,
+            model=model,
+            name=f"{MANUFACTURER} {vehicle.description.model}",
             serial_number=vehicle.vin,
-        )
-
-        self.hass.config_entries.async_update_entry(
-            self.config_entry,
-            title=f"{MANUFACTURER} {vehicle.description.model} ({vehicle.vin})",
         )
 
         self._refresh_conditions = {
@@ -124,7 +117,6 @@ class VolvoDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
 
     async def _async_update_data(self) -> CoordinatorData:
         """Fetch data from API."""
-        _LOGGER.debug("%s - Updating data", self.config_entry.entry_id)
 
         api_calls = self._get_api_calls()
         data: CoordinatorData = {}
@@ -165,7 +157,10 @@ class VolvoDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
 
             if isinstance(result, Exception):
                 # Something bad happened, raise immediately.
-                raise result
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="update_failed",
+                ) from result
 
             data |= cast(CoordinatorData, result)
             valid += 1
@@ -184,10 +179,9 @@ class VolvoDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
             )
 
         # Add static values
-        data[DATA_BATTERY_CAPACITY] = VolvoCarsValueField.from_dict(
+        data[DATA_BATTERY_CAPACITY] = VolvoCarsValue.from_dict(
             {
                 "value": self.vehicle.battery_capacity_kwh,
-                "timestamp": self.config_entry.modified_at,
             }
         )
 
