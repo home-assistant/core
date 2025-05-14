@@ -11,7 +11,8 @@ from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry, MockDhcpServiceInfo
+from tests.common import MockConfigEntry
+from tests.service_info import MockDhcpServiceInfo
 
 TEST_DATA = {
     CONF_ID: "client_id",

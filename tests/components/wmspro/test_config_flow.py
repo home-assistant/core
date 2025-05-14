@@ -12,7 +12,8 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_config_entry
 
-from tests.common import MockConfigEntry, MockDhcpServiceInfo
+from tests.common import MockConfigEntry
+from tests.service_info import MockDhcpServiceInfo
 
 
 async def test_config_flow(

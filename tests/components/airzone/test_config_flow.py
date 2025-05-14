@@ -28,7 +28,8 @@ from .util import (
     USER_INPUT,
 )
 
-from tests.common import MockConfigEntry, MockDhcpServiceInfo
+from tests.common import MockConfigEntry
+from tests.service_info import MockDhcpServiceInfo
 
 DHCP_SERVICE_INFO = MockDhcpServiceInfo(
     hostname="airzone",

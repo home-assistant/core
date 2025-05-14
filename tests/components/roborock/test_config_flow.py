@@ -22,7 +22,8 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .mock_data import MOCK_CONFIG, NETWORK_INFO, ROBOROCK_RRUID, USER_DATA, USER_EMAIL
 
-from tests.common import MockConfigEntry, MockDhcpServiceInfo
+from tests.common import MockConfigEntry
+from tests.service_info import MockDhcpServiceInfo
 
 DNCP_SERVICE_INFO = MockDhcpServiceInfo(
     ip=NETWORK_INFO.ip,
