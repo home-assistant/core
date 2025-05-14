@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
-from .entity import SwitchbotEntity
+from .entity import SwitchbotEntity, exception_handler
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
@@ -153,6 +153,7 @@ class SwitchBotAirPurifierEntity(SwitchbotEntity, FanEntity):
         """Return the current preset mode."""
         return self._device.get_current_mode()
 
+    @exception_handler
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the air purifier."""
 
@@ -164,6 +165,7 @@ class SwitchBotAirPurifierEntity(SwitchbotEntity, FanEntity):
         self._last_run_success = bool(await self._device.set_preset_mode(preset_mode))
         self.async_write_ha_state()
 
+    @exception_handler
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -181,6 +183,7 @@ class SwitchBotAirPurifierEntity(SwitchbotEntity, FanEntity):
         self._last_run_success = bool(await self._device.turn_on())
         self.async_write_ha_state()
 
+    @exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the air purifier."""
 
