@@ -101,7 +101,7 @@
     'supported_features': 0,
     'translation_key': 'c6h6',
     'unique_id': '123-c6h6',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.home_benzene-state]
@@ -110,7 +110,7 @@
       'attribution': 'Data provided by GIOŚ',
       'friendly_name': 'Home Benzene',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_benzene',
@@ -156,7 +156,7 @@
     'supported_features': 0,
     'translation_key': 'co',
     'unique_id': '123-co',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.home_carbon_monoxide-state]
@@ -165,7 +165,7 @@
       'attribution': 'Data provided by GIOŚ',
       'friendly_name': 'Home Carbon monoxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_carbon_monoxide',
@@ -211,7 +211,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-no2',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.home_nitrogen_dioxide-state]
@@ -221,7 +221,7 @@
       'device_class': 'nitrogen_dioxide',
       'friendly_name': 'Home Nitrogen dioxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_nitrogen_dioxide',
@@ -333,7 +333,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-o3',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.home_ozone-state]
@@ -343,7 +343,7 @@
       'device_class': 'ozone',
       'friendly_name': 'Home Ozone',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_ozone',
@@ -455,7 +455,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-pm10',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.home_pm10-state]
@@ -465,7 +465,7 @@
       'device_class': 'pm10',
       'friendly_name': 'Home PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_pm10',
@@ -577,7 +577,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-pm25',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.home_pm2_5-state]
@@ -587,7 +587,7 @@
       'device_class': 'pm25',
       'friendly_name': 'Home PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_pm2_5',
@@ -699,7 +699,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-so2',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.home_sulphur_dioxide-state]
@@ -709,7 +709,7 @@
       'device_class': 'sulphur_dioxide',
       'friendly_name': 'Home Sulphur dioxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_sulphur_dioxide',
