@@ -355,7 +355,7 @@
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '400s-purifier-pm25',
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
   ])
 # ---
@@ -393,7 +393,7 @@
       'device_class': 'pm25',
       'friendly_name': 'Air Purifier 400s PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_400s_pm2_5',
@@ -539,7 +539,7 @@
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '600s-purifier-pm25',
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
   ])
 # ---
@@ -577,7 +577,7 @@
       'device_class': 'pm25',
       'friendly_name': 'Air Purifier 600s PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_600s_pm2_5',
