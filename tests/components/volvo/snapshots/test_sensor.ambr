@@ -5,11 +5,11 @@
     ReadOnlyDict({
       'api_timestamp': datetime.datetime(2024, 12, 30, 14, 30, 8, tzinfo=datetime.timezone.utc),
       'device_class': 'battery',
-      'friendly_name': 'Volvo XC40 ELECTRIC 2024 Battery charge level',
+      'friendly_name': 'Volvo XC40 Battery charge level',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
-    'volvo_yv1abcdefg1234567_battery_charge_level',
+    'yv1abcdefg1234567_battery_charge_level',
   )
 # ---
 # name: test_sensor[keys0].1
@@ -18,7 +18,7 @@
     ReadOnlyDict({
       'api_timestamp': datetime.datetime(2024, 12, 30, 14, 32, 26, 169000, tzinfo=datetime.timezone.utc),
       'device_class': 'enum',
-      'friendly_name': 'Volvo XC40 ELECTRIC 2024 Car connection',
+      'friendly_name': 'Volvo XC40 Car connection',
       'options': list([
         'available',
         'car_in_use',
@@ -27,7 +27,7 @@
         'unspecified',
       ]),
     }),
-    'volvo_yv1abcdefg1234567_availability',
+    'yv1abcdefg1234567_availability',
   )
 # ---
 # name: test_sensor[keys0].10
@@ -36,11 +36,11 @@
     ReadOnlyDict({
       'api_timestamp': datetime.datetime(2024, 12, 30, 14, 18, 56, 849000, tzinfo=datetime.timezone.utc),
       'device_class': 'speed',
-      'friendly_name': 'Volvo XC40 ELECTRIC 2024 TM avg. speed',
+      'friendly_name': 'Volvo XC40 TM avg. speed',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
-    'volvo_yv1abcdefg1234567_average_speed',
+    'yv1abcdefg1234567_average_speed',
   )
 # ---
 # name: test_sensor[keys0].11
@@ -49,11 +49,11 @@
     ReadOnlyDict({
       'api_timestamp': datetime.datetime(2024, 12, 30, 14, 18, 56, 849000, tzinfo=datetime.timezone.utc),
       'device_class': 'distance',
-      'friendly_name': 'Volvo XC40 ELECTRIC 2024 TM distance',
+      'friendly_name': 'Volvo XC40 TM distance',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
-    'volvo_yv1abcdefg1234567_trip_meter_manual',
+    'yv1abcdefg1234567_trip_meter_manual',
   )
 # ---
 # name: test_sensor[keys0].2
@@ -62,7 +62,7 @@
     ReadOnlyDict({
       'api_timestamp': datetime.datetime(2024, 12, 30, 14, 30, 8, tzinfo=datetime.timezone.utc),
       'device_class': 'enum',
-      'friendly_name': 'Volvo XC40 ELECTRIC 2024 Charging connection status',
+      'friendly_name': 'Volvo XC40 Charging connection status',
       'options': list([
         'connection_status_connected_ac',
         'connection_status_connected_dc',
@@ -71,7 +71,7 @@
         'connection_status_unspecified',
       ]),
     }),
-    'volvo_yv1abcdefg1234567_charging_connection_status',
+    'yv1abcdefg1234567_charging_connection_status',
   )
 # ---
 # name: test_sensor[keys0].3
@@ -80,11 +80,11 @@
     ReadOnlyDict({
       'api_timestamp': datetime.datetime(2024, 12, 30, 14, 30, 8, 338000, tzinfo=datetime.timezone.utc),
       'device_class': 'distance',
-      'friendly_name': 'Volvo XC40 ELECTRIC 2024 Distance to empty battery',
+      'friendly_name': 'Volvo XC40 Distance to empty battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
-    'volvo_yv1abcdefg1234567_distance_to_empty_battery',
+    'yv1abcdefg1234567_distance_to_empty_battery',
   )
 # ---
 # name: test_sensor[keys0].4
@@ -93,11 +93,11 @@
     ReadOnlyDict({
       'api_timestamp': datetime.datetime(2024, 12, 30, 14, 18, 56, 849000, tzinfo=datetime.timezone.utc),
       'device_class': 'distance',
-      'friendly_name': 'Volvo XC40 ELECTRIC 2024 Distance to service',
+      'friendly_name': 'Volvo XC40 Distance to service',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
-    'volvo_yv1abcdefg1234567_distance_to_service',
+    'yv1abcdefg1234567_distance_to_service',
   )
 # ---
 # name: test_sensor[keys0].5
@@ -105,10 +105,10 @@
     '1266',
     ReadOnlyDict({
       'api_timestamp': datetime.datetime(2024, 12, 30, 14, 18, 56, 849000, tzinfo=datetime.timezone.utc),
-      'friendly_name': 'Volvo XC40 ELECTRIC 2024 Engine time to service',
+      'friendly_name': 'Volvo XC40 Engine time to service',
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
-    'volvo_yv1abcdefg1234567_engine_time_to_service',
+    'yv1abcdefg1234567_engine_time_to_service',
   )
 # ---
 # name: test_sensor[keys0].6
@@ -117,11 +117,11 @@
     ReadOnlyDict({
       'api_timestamp': datetime.datetime(2024, 12, 30, 14, 30, 8, tzinfo=datetime.timezone.utc),
       'device_class': 'duration',
-      'friendly_name': 'Volvo XC40 ELECTRIC 2024 Est. charging time',
+      'friendly_name': 'Volvo XC40 Est. charging time',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
-    'volvo_yv1abcdefg1234567_estimated_charging_time',
+    'yv1abcdefg1234567_estimated_charging_time',
   )
 # ---
 # name: test_sensor[keys0].7
@@ -130,22 +130,22 @@
     ReadOnlyDict({
       'api_timestamp': datetime.datetime(2024, 12, 30, 14, 18, 56, 849000, tzinfo=datetime.timezone.utc),
       'device_class': 'distance',
-      'friendly_name': 'Volvo XC40 ELECTRIC 2024 Odometer',
+      'friendly_name': 'Volvo XC40 Odometer',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
-    'volvo_yv1abcdefg1234567_odometer',
+    'yv1abcdefg1234567_odometer',
   )
 # ---
 # name: test_sensor[keys0].8
   tuple(
-    '690',
+    '2027-04-04',
     ReadOnlyDict({
       'api_timestamp': datetime.datetime(2024, 12, 30, 14, 18, 56, 849000, tzinfo=datetime.timezone.utc),
-      'friendly_name': 'Volvo XC40 ELECTRIC 2024 Time to service',
-      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+      'device_class': 'date',
+      'friendly_name': 'Volvo XC40 Time to service',
     }),
-    'volvo_yv1abcdefg1234567_time_to_service',
+    'yv1abcdefg1234567_time_to_service',
   )
 # ---
 # name: test_sensor[keys0].9
@@ -153,11 +153,11 @@
     '22.6',
     ReadOnlyDict({
       'api_timestamp': datetime.datetime(2024, 12, 30, 14, 53, 44, 785000, tzinfo=datetime.timezone.utc),
-      'friendly_name': 'Volvo XC40 ELECTRIC 2024 TM avg. energy consumption',
+      'friendly_name': 'Volvo XC40 TM avg. energy consumption',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM: 'kWh/100km'>,
     }),
-    'volvo_yv1abcdefg1234567_average_energy_consumption',
+    'yv1abcdefg1234567_average_energy_consumption',
   )
 # ---
 # name: test_sensor[keys1]
@@ -166,7 +166,7 @@
     ReadOnlyDict({
       'api_timestamp': datetime.datetime(2024, 12, 30, 14, 32, 26, 169000, tzinfo=datetime.timezone.utc),
       'device_class': 'enum',
-      'friendly_name': 'Volvo S90 DIESEL 2018 Car connection',
+      'friendly_name': 'Volvo S90 Car connection',
       'options': list([
         'available',
         'car_in_use',
@@ -175,7 +175,7 @@
         'unspecified',
       ]),
     }),
-    'volvo_yv1abcdefg1234567_availability',
+    'yv1abcdefg1234567_availability',
   )
 # ---
 # name: test_sensor[keys1].1
@@ -184,11 +184,11 @@
     ReadOnlyDict({
       'api_timestamp': datetime.datetime(2024, 12, 30, 14, 30, 8, 338000, tzinfo=datetime.timezone.utc),
       'device_class': 'distance',
-      'friendly_name': 'Volvo S90 DIESEL 2018 Distance to empty tank',
+      'friendly_name': 'Volvo S90 Distance to empty tank',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
-    'volvo_yv1abcdefg1234567_distance_to_empty_tank',
+    'yv1abcdefg1234567_distance_to_empty_tank',
   )
 # ---
 # name: test_sensor[keys1].2
@@ -197,11 +197,11 @@
     ReadOnlyDict({
       'api_timestamp': datetime.datetime(2024, 12, 30, 14, 18, 56, 849000, tzinfo=datetime.timezone.utc),
       'device_class': 'distance',
-      'friendly_name': 'Volvo S90 DIESEL 2018 Distance to service',
+      'friendly_name': 'Volvo S90 Distance to service',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
-    'volvo_yv1abcdefg1234567_distance_to_service',
+    'yv1abcdefg1234567_distance_to_service',
   )
 # ---
 # name: test_sensor[keys1].3
@@ -209,10 +209,10 @@
     '1266',
     ReadOnlyDict({
       'api_timestamp': datetime.datetime(2024, 12, 30, 14, 18, 56, 849000, tzinfo=datetime.timezone.utc),
-      'friendly_name': 'Volvo S90 DIESEL 2018 Engine time to service',
+      'friendly_name': 'Volvo S90 Engine time to service',
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
-    'volvo_yv1abcdefg1234567_engine_time_to_service',
+    'yv1abcdefg1234567_engine_time_to_service',
   )
 # ---
 # name: test_sensor[keys1].4
@@ -221,11 +221,11 @@
     ReadOnlyDict({
       'api_timestamp': datetime.datetime(2020, 11, 19, 21, 23, 24, 123000, tzinfo=datetime.timezone.utc),
       'device_class': 'volume_storage',
-      'friendly_name': 'Volvo S90 DIESEL 2018 Fuel amount',
+      'friendly_name': 'Volvo S90 Fuel amount',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
-    'volvo_yv1abcdefg1234567_fuel_amount',
+    'yv1abcdefg1234567_fuel_amount',
   )
 # ---
 # name: test_sensor[keys1].5
@@ -234,22 +234,22 @@
     ReadOnlyDict({
       'api_timestamp': datetime.datetime(2024, 12, 30, 14, 18, 56, 849000, tzinfo=datetime.timezone.utc),
       'device_class': 'distance',
-      'friendly_name': 'Volvo S90 DIESEL 2018 Odometer',
+      'friendly_name': 'Volvo S90 Odometer',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
-    'volvo_yv1abcdefg1234567_odometer',
+    'yv1abcdefg1234567_odometer',
   )
 # ---
 # name: test_sensor[keys1].6
   tuple(
-    '17',
+    '2025-05-31',
     ReadOnlyDict({
       'api_timestamp': datetime.datetime(2024, 12, 30, 14, 18, 56, 849000, tzinfo=datetime.timezone.utc),
-      'friendly_name': 'Volvo S90 DIESEL 2018 Time to service',
-      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+      'device_class': 'date',
+      'friendly_name': 'Volvo S90 Time to service',
     }),
-    'volvo_yv1abcdefg1234567_time_to_service',
+    'yv1abcdefg1234567_time_to_service',
   )
 # ---
 # name: test_sensor[keys1].7
@@ -257,11 +257,11 @@
     '7.23',
     ReadOnlyDict({
       'api_timestamp': datetime.datetime(2024, 12, 30, 14, 53, 44, 785000, tzinfo=datetime.timezone.utc),
-      'friendly_name': 'Volvo S90 DIESEL 2018 TM avg. fuel consumption',
+      'friendly_name': 'Volvo S90 TM avg. fuel consumption',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'l/100 km',
     }),
-    'volvo_yv1abcdefg1234567_average_fuel_consumption',
+    'yv1abcdefg1234567_average_fuel_consumption',
   )
 # ---
 # name: test_sensor[keys1].8
@@ -270,11 +270,11 @@
     ReadOnlyDict({
       'api_timestamp': datetime.datetime(2024, 12, 30, 14, 18, 56, 849000, tzinfo=datetime.timezone.utc),
       'device_class': 'speed',
-      'friendly_name': 'Volvo S90 DIESEL 2018 TM avg. speed',
+      'friendly_name': 'Volvo S90 TM avg. speed',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
-    'volvo_yv1abcdefg1234567_average_speed',
+    'yv1abcdefg1234567_average_speed',
   )
 # ---
 # name: test_sensor[keys1].9
@@ -283,10 +283,10 @@
     ReadOnlyDict({
       'api_timestamp': datetime.datetime(2024, 12, 30, 14, 18, 56, 849000, tzinfo=datetime.timezone.utc),
       'device_class': 'distance',
-      'friendly_name': 'Volvo S90 DIESEL 2018 TM distance',
+      'friendly_name': 'Volvo S90 TM distance',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
-    'volvo_yv1abcdefg1234567_trip_meter_manual',
+    'yv1abcdefg1234567_trip_meter_manual',
   )
 # ---

@@ -14,6 +14,7 @@ from volvocarsapi.models import (
     VolvoCarsValueField,
     VolvoCarsVehicle,
 )
+from volvocarsapi.scopes import DEFAULT_SCOPES
 from yarl import URL
 
 from homeassistant import config_entries
@@ -21,8 +22,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.volvo.const import CONF_VIN, DOMAIN, SCOPES
-from homeassistant.components.volvo.coordinator import VolvoData
+from homeassistant.components.volvo.const import CONF_VIN, DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -53,8 +53,14 @@ def model(name: str):
 
 
 @pytest.fixture
-def model_from_marker(request: SubRequest) -> str:  # pylint: disable=hass-argument-type
+def model_from_marker(full_model_from_marker: str) -> str:  # pylint: disable=hass-argument-type
     """Get model from marker."""
+    return full_model_from_marker[: full_model_from_marker.index("_")]
+
+
+@pytest.fixture
+def full_model_from_marker(request: SubRequest) -> str:  # pylint: disable=hass-argument-type
+    """Get full model from marker."""
     marker = request.node.get_closest_marker("use_model")
     return marker.args[0] if marker is not None else "xc40_electric_2024"
 
@@ -77,16 +83,16 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         },
     )
 
-    config_entry.runtime_data = VolvoData(Mock())
+    config_entry.runtime_data = Mock()
     config_entry.add_to_hass(hass)
 
     return config_entry
 
 
 @pytest.fixture(autouse=True)
-async def mock_api(model_from_marker: str) -> AsyncGenerator[AsyncMock]:
+async def mock_api(full_model_from_marker: str) -> AsyncGenerator[AsyncMock]:
     """Mock the Volvo API."""
-    model = model_from_marker
+    model = full_model_from_marker
 
     with patch(
         "homeassistant.components.volvo.VolvoCarsApi",
@@ -137,9 +143,9 @@ async def mock_api(model_from_marker: str) -> AsyncGenerator[AsyncMock]:
 
 
 @pytest.fixture
-async def mock_api_failure(model_from_marker: str) -> AsyncGenerator[AsyncMock]:
+async def mock_api_failure(full_model_from_marker: str) -> AsyncGenerator[AsyncMock]:
     """Mock the Volvo API so that it raises an exception for all calls during coordinator update."""
-    model = model_from_marker
+    model = full_model_from_marker
     vehicle_data = load_json_object_fixture("vehicle", model)
     vehicle = VolvoCarsVehicle.from_dict(vehicle_data)
 
@@ -206,7 +212,7 @@ async def config_flow(
     assert result_url.query["state"] == state
     assert result_url.query["code_challenge"]
     assert result_url.query["code_challenge_method"] == "S256"
-    assert result_url.query["scope"] == " ".join(SCOPES)
+    assert result_url.query["scope"] == " ".join(DEFAULT_SCOPES)
 
     client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
