@@ -42,9 +42,7 @@ async def async_setup_entry(
 
         async_add_entities([GPSLoggerEntity(device, gps, battery, accuracy, attrs)])
 
-    hass.data[DOMAIN]["unsub_device_tracker"][entry.entry_id] = (
-        async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
-    )
+    entry.async_on_unload(async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data))
 
     # Restore previously loaded devices
     dev_reg = dr.async_get(hass)
