@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock, patch
 
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.button import SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from . import setup_config_entry
@@ -32,15 +32,29 @@ async def test_button_update(
     assert entity is not None
     assert entity == snapshot
 
+
+async def test_button_press(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hub_ping: AsyncMock,
+    mock_hub_configuration_prod_awning_dimmer: AsyncMock,
+    mock_hub_status_prod_awning: AsyncMock,
+    mock_action_call: AsyncMock,
+) -> None:
+    """Test that a button entity is pressed correctly."""
+
+    assert await setup_config_entry(hass, mock_config_entry)
+
     with patch(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
         before = len(mock_hub_status_prod_awning.mock_calls)
+        entity = hass.states.get("button.markise_identify")
         before_state = entity.state
 
         await hass.services.async_call(
-            Platform.BUTTON,
+            BUTTON_DOMAIN,
             SERVICE_PRESS,
             {ATTR_ENTITY_ID: entity.entity_id},
             blocking=True,
