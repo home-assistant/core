@@ -17,7 +17,14 @@
           "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "https": "Connect over https (requires reverse proxy)"
+          "https": "Connect over HTTPS (requires reverse proxy)"
+        },
+        "data_description": {
+          "host": "[%key:component::squeezebox::config::step::user::data_description::host%]",
+          "port": "The web interface port on the LMS. The default is 9000.",
+          "username": "The username from LMS Advanced Security (if defined).",
+          "password": "The password from LMS Advanced Security (if defined).",
+          "https": "Connect to the LMS over HTTPS (requires reverse proxy)."
         }
       }
     },
@@ -29,7 +36,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_server_found": "No LMS server found."
+      "no_server_found": "No LMS found."
     }
   },
   "services": {
@@ -124,6 +131,14 @@
       "other_player_count": {
         "name": "Player count off service",
         "unit_of_measurement": "[%key:component::squeezebox::entity::sensor::player_count::unit_of_measurement%]"
+      }
+    },
+    "update": {
+      "newversion": {
+        "name": "Lyrion Music Server"
+      },
+      "newplugins": {
+        "name": "Updated plugins"
       }
     }
   },

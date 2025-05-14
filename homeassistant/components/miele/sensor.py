@@ -39,6 +39,8 @@ from .const import (
 from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
 from .entity import MieleEntity
 
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 
 DISABLED_TEMPERATURE = -32768
@@ -382,6 +384,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             MieleAppliance.OVEN,
             MieleAppliance.OVEN_MICROWAVE,
             MieleAppliance.STEAM_OVEN_COMBI,
+            MieleAppliance.STEAM_OVEN_MK2,
         ),
         description=MieleSensorDescription(
             key="state_core_target_temperature",
@@ -394,6 +397,29 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
                 lambda value: cast(
                     int, value.state_core_target_temperature[0].temperature
                 )
+                / 100.0
+            ),
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.WASHER_DRYER,
+            MieleAppliance.OVEN,
+            MieleAppliance.OVEN_MICROWAVE,
+            MieleAppliance.STEAM_OVEN_MICRO,
+            MieleAppliance.STEAM_OVEN_COMBI,
+            MieleAppliance.STEAM_OVEN_MK2,
+        ),
+        description=MieleSensorDescription(
+            key="state_target_temperature",
+            translation_key="target_temperature",
+            zone=1,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=(
+                lambda value: cast(int, value.state_target_temperature[0].temperature)
                 / 100.0
             ),
         ),
@@ -455,7 +481,10 @@ async def async_setup_entry(
 
         for device_id, device in coordinator.data.devices.items():
             for definition in SENSOR_TYPES:
-                if device.device_type in definition.types:
+                if (
+                    device_id in new_devices_set
+                    and device.device_type in definition.types
+                ):
                     match definition.description.key:
                         case "state_status":
                             entity_class = MieleStatusSensor
@@ -466,8 +495,7 @@ async def async_setup_entry(
                         case _:
                             entity_class = MieleSensor
                     if (
-                        device_id in new_devices_set
-                        and definition.description.device_class
+                        definition.description.device_class
                         == SensorDeviceClass.TEMPERATURE
                         and definition.description.value_fn(device)
                         == DISABLED_TEMPERATURE / 100

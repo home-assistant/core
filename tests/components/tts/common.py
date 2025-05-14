@@ -281,6 +281,7 @@ class MockResultStream(ResultStream):
             content_type=f"audio/mock-{extension}",
             engine="test-engine",
             use_file_cache=True,
+            supports_streaming_input=True,
             language="en",
             options={},
             _manager=hass.data[DATA_TTS_MANAGER],

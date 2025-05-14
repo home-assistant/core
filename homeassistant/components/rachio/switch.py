@@ -23,7 +23,7 @@ from homeassistant.util.dt import as_timestamp, now, parse_datetime, utc_from_ti
 from .const import (
     CONF_MANUAL_RUN_MINS,
     DEFAULT_MANUAL_RUN_MINS,
-    DOMAIN as DOMAIN_RACHIO,
+    DOMAIN,
     KEY_CURRENT_STATUS,
     KEY_CUSTOM_CROP,
     KEY_CUSTOM_SHADE,
@@ -119,7 +119,7 @@ async def async_setup_entry(
     def start_multiple(service: ServiceCall) -> None:
         """Service to start multiple zones in sequence."""
         zones_list = []
-        person = hass.data[DOMAIN_RACHIO][config_entry.entry_id]
+        person = hass.data[DOMAIN][config_entry.entry_id]
         entity_id = service.data[ATTR_ENTITY_ID]
         duration = iter(service.data[ATTR_DURATION])
         default_time = service.data[ATTR_DURATION][0]
@@ -160,7 +160,7 @@ async def async_setup_entry(
         return
 
     hass.services.async_register(
-        DOMAIN_RACHIO,
+        DOMAIN,
         SERVICE_START_MULTIPLE_ZONES,
         start_multiple,
         schema=START_MULTIPLE_ZONES_SCHEMA,
@@ -177,7 +177,7 @@ async def async_setup_entry(
 
 def _create_entities(hass: HomeAssistant, config_entry: ConfigEntry) -> list[Entity]:
     entities: list[Entity] = []
-    person: RachioPerson = hass.data[DOMAIN_RACHIO][config_entry.entry_id]
+    person: RachioPerson = hass.data[DOMAIN][config_entry.entry_id]
     # Fetch the schedule once at startup
     # in order to avoid every zone doing it
     for controller in person.controllers:

@@ -2529,9 +2529,8 @@ async def test_validate_config_works(
                 "state": "paulus",
             },
             (
-                "Unexpected value for condition: 'non_existing'. Expected and, device,"
-                " not, numeric_state, or, state, sun, template, time, trigger, zone "
-                "@ data[0]"
+                "Invalid condition \"non_existing\" specified {'condition': "
+                "'non_existing', 'entity_id': 'hello.world', 'state': 'paulus'}"
             ),
         ),
         # Raises HomeAssistantError
