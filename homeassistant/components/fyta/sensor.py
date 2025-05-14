@@ -105,7 +105,7 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
     FytaSensorEntityDescription(
         key="light",
         translation_key="light",
-        native_unit_of_measurement="μmol/s⋅m²",  # b'\xc2\xb5'
+        native_unit_of_measurement="μmol/s⋅m²",  # b'\xce\xbc'
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda plant: plant.light,
     ),
