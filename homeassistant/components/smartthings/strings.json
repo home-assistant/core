@@ -529,6 +529,9 @@
       },
       "sabbath_mode": {
         "name": "Sabbath mode"
+      },
+      "outing_mode": {
+        "name": "Away mode"
       }
     }
   },

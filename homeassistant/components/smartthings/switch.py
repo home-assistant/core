@@ -71,7 +71,14 @@ CAPABILITY_TO_COMMAND_SWITCHES: dict[
         status_attribute=Attribute.DRYER_WRINKLE_PREVENT,
         command=Command.SET_DRYER_WRINKLE_PREVENT,
         entity_category=EntityCategory.CONFIG,
-    )
+    ),
+    Capability.CUSTOM_OUTING_MODE: SmartThingsCommandSwitchEntityDescription(
+        key=Capability.CUSTOM_OUTING_MODE,
+        translation_key="outing_mode",
+        status_attribute=Attribute.OUTING_MODE,
+        command=Command.SET_OUTING_MODE,
+        entity_category=EntityCategory.CONFIG,
+    ),
 }
 CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescription] = {
     Capability.SAMSUNG_CE_WASHER_BUBBLE_SOAK: SmartThingsSwitchEntityDescription(
