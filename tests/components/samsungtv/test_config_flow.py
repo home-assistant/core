@@ -1301,15 +1301,15 @@ async def test_update_old_entry(hass: HomeAssistant) -> None:
     assert entry2.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures(
-    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
-)
+@pytest.mark.usefixtures("remote_websocket", "rest_api")
 async def test_update_missing_mac_unique_id_added_from_dhcp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test missing mac and unique id added."""
     # Incorrect MAC cleanup introduced in #110599, can be removed in 2026.3
-    entry = MockConfigEntry(domain=DOMAIN, data=ENTRYDATA_LEGACY, unique_id=None)
+    entry_data = deepcopy(ENTRYDATA_WEBSOCKET)
+    del entry_data[CONF_MAC]
+    entry = MockConfigEntry(domain=DOMAIN, data=entry_data, unique_id=None)
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
