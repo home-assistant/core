@@ -266,7 +266,8 @@ class MediaSearchAndPlayHandler(intent.IntentHandler):
             floor_name=floor_id,
             domains={DOMAIN},
             assistant=intent_obj.assistant,
-            features=MediaPlayerEntityFeature.SEARCH_MEDIA,
+            features=MediaPlayerEntityFeature.SEARCH_MEDIA
+            | MediaPlayerEntityFeature.PLAY_MEDIA,
             single_target=True,
         )
         match_result = intent.async_match_targets(
@@ -315,9 +316,7 @@ class MediaSearchAndPlayHandler(intent.IntentHandler):
             or not (results := entity_response.result)
         ):
             # No results found
-            response = intent_obj.create_response()
-            response.async_set_speech("I couldn't find anything matching that search.")
-            return response
+            return intent_obj.create_response()
 
         # 2. Play Media (first result)
         first_result = results[0]
@@ -339,6 +338,6 @@ class MediaSearchAndPlayHandler(intent.IntentHandler):
 
         # Success
         response = intent_obj.create_response()
-        response.async_set_speech(f"Playing {first_result.title}")
+        response.async_set_speech_slots({"media": first_result})
         response.response_type = intent.IntentResponseType.ACTION_DONE
         return response

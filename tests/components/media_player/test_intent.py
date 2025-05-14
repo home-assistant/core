@@ -673,7 +673,10 @@ async def test_search_and_play_media_player_intent(hass: HomeAssistant) -> None:
     await media_player_intent.async_setup_intents(hass)
 
     entity_id = f"{DOMAIN}.test_media_player"
-    attributes = {ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.SEARCH_MEDIA}
+    attributes = {
+        ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.SEARCH_MEDIA
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+    }
     hass.states.async_set(entity_id, STATE_IDLE, attributes=attributes)
 
     # Test successful search and play
@@ -705,7 +708,12 @@ async def test_search_and_play_media_player_intent(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert response.speech["plain"]["speech"] == "Playing Test Track"
+
+    # Response should contain a "media" slot with the matched item.
+    assert not response.speech
+    media = response.speech_slots.get("media")
+    assert isinstance(media, BrowseMedia)
+    assert media.title == "Test Track"
 
     assert len(search_calls) == 1
     search_call = search_calls[0]
@@ -737,10 +745,10 @@ async def test_search_and_play_media_player_intent(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert (
-        response.speech["plain"]["speech"]
-        == "I couldn't find anything matching that search."
-    )
+
+    # A search failure is indicated by no "media" slot in the response.
+    assert not response.speech
+    assert "media" not in response.speech_slots
     assert len(search_calls) == 2  # Search was called again
     assert len(play_calls) == 1  # Play was not called again
 
@@ -786,7 +794,7 @@ async def test_search_and_play_media_player_intent(hass: HomeAssistant) -> None:
         SERVICE_PLAY_MEDIA,
         raise_exception=HomeAssistantError("Play failed"),
     )
-    with pytest.raises(intent.IntentHandleError, match="Error playing media"):
+    with pytest.raises(intent.MatchFailedError):
         await intent.async_handle(
             hass,
             "test",
