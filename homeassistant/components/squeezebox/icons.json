@@ -19,6 +19,22 @@
       "other_player_count": {
         "default": "mdi:folder-play-outline"
       }
+    },
+    "switch": {
+      "alarms_enabled": {
+        "default": "mdi:alarm-check",
+        "state": {
+          "on": "mdi:alarm-check",
+          "off": "mdi:alarm-off"
+        }
+      },
+      "alarm": {
+        "default": "mdi:alarm",
+        "state": {
+          "on": "mdi:alarm",
+          "off": "mdi:alarm-off"
+        }
+      }
     }
   },
   "services": {

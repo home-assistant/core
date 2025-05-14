@@ -63,7 +63,6 @@ async def async_setup_entry(
 class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
     """Representation of a Squeezebox alarm switch."""
 
-    _attr_icon = "mdi:alarm"
     _attr_translation_key = "alarm"
     _attr_entity_category = EntityCategory.CONFIG
 
@@ -163,7 +162,6 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
 class SqueezeBoxAlarmsEnabledEntity(SqueezeboxEntity, SwitchEntity):
     """Representation of a Squeezebox players alarms enabled master switch."""
 
-    _attr_icon = "mdi:alarm"
     _attr_translation_key = "alarms_enabled"
     _attr_entity_category = EntityCategory.CONFIG
 
