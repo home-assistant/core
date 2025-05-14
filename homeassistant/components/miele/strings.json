@@ -196,7 +196,7 @@
         "state": {
           "0": "0",
           "110": "Warming",
-          "220": "%key::component::miele::sensor::plate::state::110%",
+          "220": "[%key:component::miele::entity::sensor::plate::state::110%]",
           "1": "1",
           "2": "1\u2022",
           "3": "2",
@@ -216,8 +216,8 @@
           "17": "9",
           "18": "9\u2022",
           "117": "Boost",
-          "118": "%key::component::miele::sensor::plate::state::117%",
-          "217": "%key::component::miele::sensor::plate::state::117%"
+          "118": "[%key:component::miele::entity::sensor::plate::state::117%]",
+          "217": "[%key:component::miele::entity::sensor::plate::state::117%]"
         }
       },
       "drying_step": {
