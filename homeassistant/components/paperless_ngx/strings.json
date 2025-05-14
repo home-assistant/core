@@ -15,7 +15,6 @@
     },
     "error": {
       "cannot_connect": "Failed to connect. Invalid URL or authentication token.",
-      "cannot_connect_host": "Failed to connect to host.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
@@ -51,6 +50,14 @@
       "status_classifier": {
         "name": "Status classifier"
       }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Failed to connect. Invalid URL or authentication token."
+    },
+    "unknown": {
+      "message": "[%key:common::config_flow::error::unknown%]"
     }
   }
 }

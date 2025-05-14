@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Generic, TypeVar
 
-from pypaperless.exceptions import BadJsonResponseError
+from pypaperless import Paperless
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -13,8 +13,8 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import PaperlessConfigEntry, PaperlessData
-from .const import DOMAIN, LOGGER
+from . import PaperlessConfigEntry
+from .const import DOMAIN
 from .sensor import SensorEntityDescription
 
 
@@ -26,45 +26,17 @@ class PaperlessEntity(Entity):
 
     def __init__(
         self,
-        data: PaperlessData,
+        data: Paperless,
         entry: PaperlessConfigEntry,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the Paperless-ngx entity."""
-        self.client = data.client
-        self.inbox_tags = data.inbox_tags
+        self.client = data
         self.entry = entry
         self.entity_description = description
-        self._attr_unique_id = f"{DOMAIN}_{self}_{data.client.base_url}_sensor_{description.key}_{entry.entry_id}"
-
-    async def async_update(self) -> None:
-        """Update Paperless-ngx entity."""
-        if not self.enabled:
-            return
-
-        try:
-            await self._paperless_update()
-            self._attr_available = True
-        except BadJsonResponseError as err:
-            response = err.args[0]
-            status_code = response.status
-            if status_code == 403 and self._attr_available:
-                self._attr_available = False
-                LOGGER.debug(
-                    "Paperless-ngx API returned 403 Forbidden. "
-                    "Check if the access token is valid and the user has the required permissions",
-                )
-        except Exception:  # noqa: BLE001
-            if self._attr_available:
-                LOGGER.debug(
-                    "An error occurred while updating the Paperless-ngx sensor",
-                    exc_info=True,
-                )
-            self._attr_available = False
-
-    async def _paperless_update(self) -> None:
-        """Update Paperless-ngx entity."""
-        raise NotImplementedError
+        self._attr_unique_id = (
+            f"{DOMAIN}_{self}_{data.base_url}_sensor_{description.key}_{entry.entry_id}"
+        )
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -92,7 +64,7 @@ class PaperlessCoordinatorEntity(
 
     def __init__(
         self,
-        data: PaperlessData,
+        data: Paperless,
         entry: PaperlessConfigEntry,
         description: SensorEntityDescription,
         coordinator: TCoordinator,

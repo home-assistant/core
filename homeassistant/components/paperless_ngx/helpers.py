@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, TypeVar
 
-from pypaperless.models import Status
+from .coordinator import PaperlessData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -22,14 +22,14 @@ TTransformed = TypeVar("TTransformed")
 
 
 def get_paperless_status_entry(
-    get_state: Callable[[Status], TState | None],
-    get_error: Callable[[Status], str | None] | None = None,
-    get_last_run: Callable[[Status], datetime | None] | None = None,
+    get_state: Callable[[PaperlessData], TState | None],
+    get_error: Callable[[PaperlessData], str | None] | None = None,
+    get_last_run: Callable[[PaperlessData], datetime | None] | None = None,
     transform: Callable[[TState], TTransformed] | None = None,
-) -> Callable[[Status], PaperlessStatusEntry]:
+) -> Callable[[PaperlessData], PaperlessStatusEntry]:
     """Create a function to extract and transform state and error from the status object."""
 
-    def extractor(status: Status) -> PaperlessStatusEntry:
+    def extractor(status: PaperlessData) -> PaperlessStatusEntry:
         state = get_state(status) if get_state is not None else None
         last_run = get_last_run(status) if get_last_run is not None else None
         error = get_error(status) if get_error is not None else None
