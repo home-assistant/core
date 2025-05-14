@@ -147,7 +147,7 @@ async def test_reauth_triggered_encrypted(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("remote_websocket", "rest_api")
 async def test_incorrectly_formatted_mac_fixed(hass: HomeAssistant) -> None:
     """Test incorrectly formatted mac is corrected."""
-    # Introduced in #110599, can be removed in 2026.3
+    # Incorrect MAC cleanup introduced in #110599, can be removed in 2026.3
     await setup_samsungtv_entry(
         hass,
         {**ENTRYDATA_WEBSOCKET, CONF_MAC: "aabbaaaaaaaa"},

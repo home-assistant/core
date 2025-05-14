@@ -1308,7 +1308,7 @@ async def test_update_missing_mac_unique_id_added_from_dhcp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test missing mac and unique id added."""
-    # Introduced in #110599, can be removed in 2026.3
+    # Incorrect MAC cleanup introduced in #110599, can be removed in 2026.3
     entry = MockConfigEntry(domain=DOMAIN, data=ENTRYDATA_LEGACY, unique_id=None)
     entry.add_to_hass(hass)
 
