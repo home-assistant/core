@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import random
-import re
 from typing import Any
 
 from automower_ble.mower import Mower
@@ -14,6 +13,7 @@ from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN, LOGGER
 
@@ -40,14 +40,11 @@ def _is_supported(discovery_info: BluetoothServiceInfo):
     return manufacturer and service_husqvarna and service_generic
 
 
-def _check_mac(mac: str) -> str:
-    """Verify MAC address format."""
-    mac = re.sub("[.:-]", "", mac)
-    mac = mac.lower()
-    mac = "".join(mac.split())
-    assert len(mac) == 12
-    assert mac.isalnum()
-    return ":".join([f"{mac[i : i + 2]}" for i in range(0, 12, 2)])
+USER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ADDRESS): str,
+    }
+)
 
 
 class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -57,7 +54,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self.address: str | None
+        self.address: str | None = None
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
@@ -79,8 +76,6 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         assert self.address
 
-        self.address = _check_mac(self.address)
-
         device = bluetooth.async_ble_device_from_address(
             self.hass, self.address, connectable=True
         )
@@ -92,7 +87,13 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             ).probe_gatts(device)
         except (BleakError, TimeoutError) as exception:
             LOGGER.exception("Failed to connect to device: %s", exception)
-            return self.async_abort(reason="cannot_connect")
+            return self.async_show_form(
+                step_id="user",
+                data_schema=self.add_suggested_values_to_schema(
+                    USER_SCHEMA, {CONF_ADDRESS: self.address}
+                ),
+                errors={"base": "cannot_connect"},
+            )
 
         title = manufacturer + " " + device_type
 
@@ -119,16 +120,12 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
-            self.address = user_input[CONF_ADDRESS]
+            self.address = format_mac(user_input[CONF_ADDRESS]).upper()
             await self.async_set_unique_id(self.address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             return await self.async_step_confirm()
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_ADDRESS): str,
-                },
-            ),
+            data_schema=USER_SCHEMA,
         )
