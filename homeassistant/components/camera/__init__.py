@@ -126,6 +126,7 @@ class CameraEntityFeature(IntFlag):
 
     ON_OFF = 1
     STREAM = 2
+    TWO_WAY_AUDIO = 4
 
 
 DEFAULT_CONTENT_TYPE: Final = "image/jpeg"
@@ -167,6 +168,7 @@ class CameraCapabilities:
     """Camera capabilities."""
 
     frontend_stream_types: set[StreamType]
+    two_way_audio: bool
 
 
 @bind_hass
@@ -791,7 +793,10 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 if self._webrtc_provider:
                     frontend_stream_types.add(StreamType.WEB_RTC)
 
-        return CameraCapabilities(frontend_stream_types)
+        return CameraCapabilities(
+            frontend_stream_types,
+            CameraEntityFeature.TWO_WAY_AUDIO in self.supported_features,
+        )
 
     @callback
     def async_write_ha_state(self) -> None:

@@ -242,6 +242,7 @@ def require_webrtc_support(
         vol.Required("type"): "camera/webrtc/offer",
         vol.Required("entity_id"): cv.entity_id,
         vol.Required("offer"): str,
+        vol.Optional("session_id"): str,
     }
 )
 @websocket_api.async_response
@@ -260,7 +261,7 @@ async def ws_webrtc_offer(
     Async friendly.
     """
     offer = msg["offer"]
-    session_id = ulid()
+    session_id = session_id if (session_id := msg.get("session_id")) else ulid()
     connection.subscriptions[msg["id"]] = partial(
         camera.close_webrtc_session, session_id
     )
