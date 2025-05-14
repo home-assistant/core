@@ -10,9 +10,8 @@ from homeassistant.components.airthings.const import CONF_SECRET, DOMAIN
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockDhcpServiceInfo
 
 TEST_DATA = {
     CONF_ID: "client_id",
@@ -20,17 +19,17 @@ TEST_DATA = {
 }
 
 DHCP_SERVICE_INFO = [
-    DhcpServiceInfo(
+    MockDhcpServiceInfo(
         hostname="airthings-view",
         ip="192.168.1.100",
         macaddress="00:00:00:00:00:00",
     ),
-    DhcpServiceInfo(
+    MockDhcpServiceInfo(
         hostname="airthings-hub",
         ip="192.168.1.101",
         macaddress="D0:14:11:90:00:00",
     ),
-    DhcpServiceInfo(
+    MockDhcpServiceInfo(
         hostname="airthings-hub",
         ip="192.168.1.102",
         macaddress="70:B3:D5:2A:00:00",
@@ -147,15 +146,11 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize("dhcp_service_info", DHCP_SERVICE_INFO)
 async def test_dhcp_flow(
-    hass: HomeAssistant, dhcp_service_info: DhcpServiceInfo
+    hass: HomeAssistant, dhcp_service_info: MockDhcpServiceInfo
 ) -> None:
     """Test the DHCP discovery flow."""
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        data=dhcp_service_info,
-        context={"source": config_entries.SOURCE_DHCP},
-    )
+    result = await dhcp_service_info.start_discovery_flow(hass, DOMAIN)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"

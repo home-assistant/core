@@ -98,6 +98,7 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder, json_dumps
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, ulid as ulid_util, uuid as uuid_util
 from homeassistant.util.async_ import (
@@ -1953,3 +1954,26 @@ def get_schema_suggested_value(schema: vol.Schema, key: str) -> Any | None:
                 return None
             return schema_key.description["suggested_value"]
     return None
+
+
+class MockDhcpServiceInfo(DhcpServiceInfo):
+    """Mocked DHCP service info."""
+
+    def __init__(self, ip: str, hostname: str, macaddress: str) -> None:
+        """Initialize the mock service info."""
+        # Historically, the MAC address was formatted without colons
+        # and since all consumers of this data are expecting it to be
+        # formatted without colons we will continue to do so
+        super().__init__(
+            ip=ip,
+            hostname=hostname,
+            macaddress=dr.format_mac(macaddress).replace(":", ""),
+        )
+
+    async def start_discovery_flow(
+        self, hass: HomeAssistant, domain: str
+    ) -> ConfigFlowResult:
+        """Start a reauthentication flow."""
+        return await hass.config_entries.flow.async_init(
+            domain, context={"source": config_entries.SOURCE_DHCP}, data=self
+        )
