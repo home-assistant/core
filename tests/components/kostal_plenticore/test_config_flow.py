@@ -538,7 +538,7 @@ async def test_reconfigure_already_configured(
     mock_config_entry.add_to_hass(hass)
     MockConfigEntry(
         domain="kostal_plenticore",
-        data={"host": "1.1.1.1", "password": "foobar"},
+        data={CONF_HOST: "1.1.1.1", CONF_PASSWORD: "foobar"},
         unique_id="112233445566",
     ).add_to_hass(hass)
 
@@ -547,8 +547,8 @@ async def test_reconfigure_already_configured(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "host": "1.1.1.1",
-            "password": "test-password",
+            CONF_HOST: "1.1.1.1",
+            CONF_PASSWORD: "test-password",
         },
     )
 

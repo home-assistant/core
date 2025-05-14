@@ -81,6 +81,7 @@ class KostalPlenticoreConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             try:
                 hostname = await test_connection(self.hass, user_input)
             except AuthenticationException as ex:
