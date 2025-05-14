@@ -15,7 +15,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    DOMAIN as DOMAIN_RACHIO,
+    DOMAIN,
     KEY_BATTERY_STATUS,
     KEY_DEVICE_ID,
     KEY_LOW,
@@ -55,7 +55,7 @@ async def async_setup_entry(
 
 def _create_entities(hass: HomeAssistant, config_entry: ConfigEntry) -> list[Entity]:
     entities: list[Entity] = []
-    person: RachioPerson = hass.data[DOMAIN_RACHIO][config_entry.entry_id]
+    person: RachioPerson = hass.data[DOMAIN][config_entry.entry_id]
     for controller in person.controllers:
         entities.append(RachioControllerOnlineBinarySensor(controller))
         entities.append(RachioRainSensor(controller))
