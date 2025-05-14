@@ -37,9 +37,7 @@ from .const import (
     KEY_ON,
     KEY_RAIN_DELAY,
     KEY_RAIN_DELAY_END,
-    KEY_REPORTED_STATE,
     KEY_SCHEDULE_ID,
-    KEY_STATE,
     KEY_SUBTYPE,
     KEY_SUMMARY,
     KEY_TYPE,
@@ -548,6 +546,7 @@ class RachioValve(RachioHoseTimerEntity, SwitchEntity):
         self._person = person
         self._base = base
         self._attr_unique_id = f"{self.id}-valve"
+        self._update_attr()
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on this valve."""
@@ -575,7 +574,5 @@ class RachioValve(RachioHoseTimerEntity, SwitchEntity):
     @callback
     def _update_attr(self) -> None:
         """Handle updated coordinator data."""
-        data = self.coordinator.data[self.id]
-
-        self._static_attrs = data[KEY_STATE][KEY_REPORTED_STATE]
+        self._static_attrs = self.reported_state
         self._attr_is_on = KEY_CURRENT_STATUS in self._static_attrs
