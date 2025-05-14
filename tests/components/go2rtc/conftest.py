@@ -18,7 +18,7 @@ def rest_client() -> Generator[AsyncMock]:
     """Mock a go2rtc rest client."""
     with (
         patch(
-            "homeassistant.components.go2rtc.Go2RtcRestClient",
+            "go2rtc_client.Go2RtcRestClient",
         ) as mock_client,
         patch("homeassistant.components.go2rtc.server.Go2RtcRestClient", mock_client),
     ):
@@ -36,7 +36,7 @@ def rest_client() -> Generator[AsyncMock]:
 def ws_client() -> Generator[Mock]:
     """Mock a go2rtc websocket client."""
     with patch(
-        "homeassistant.components.go2rtc.Go2RtcWsClient", autospec=True
+        "homeassistant.components.go2rtc.client.Go2RtcWsClient", autospec=True
     ) as ws_client_mock:
         yield ws_client_mock.return_value
 

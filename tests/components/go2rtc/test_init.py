@@ -32,7 +32,6 @@ from homeassistant.components.camera import (
     WebRTCSendMessage,
 )
 from homeassistant.components.default_config import DOMAIN as DEFAULT_CONFIG_DOMAIN
-from homeassistant.components.go2rtc import WebRTCProvider
 from homeassistant.components.go2rtc.const import (
     CONF_DEBUG_UI,
     DEBUG_UI_URL_MESSAGE,
@@ -247,6 +246,7 @@ async def _test_setup_and_signaling(
         [
             "rtsp://stream",
             f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+            f"ffmpeg:{camera.entity_id}#video=mjpeg",
         ],
     )
 
@@ -265,6 +265,7 @@ async def _test_setup_and_signaling(
         [
             "rtsp://stream",
             f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+            f"ffmpeg:{camera.entity_id}#video=mjpeg",
         ],
     )
 
@@ -279,7 +280,7 @@ async def _test_setup_and_signaling(
     await test()
 
     rest_client.streams.add.assert_not_called()
-    assert isinstance(camera._webrtc_provider, WebRTCProvider)
+    assert camera.go2rtc_client
 
     # Set stream source to None and provider should be skipped
     rest_client.streams.list.return_value = {}
@@ -461,7 +462,7 @@ async def test_on_candidate(
     # Session doesn't exist
     await camera.async_on_webrtc_candidate(session_id, RTCIceCandidateInit("candidate"))
     assert (
-        "homeassistant.components.go2rtc",
+        "homeassistant.components.go2rtc.client",
         logging.DEBUG,
         f"Unknown session {session_id}. Ignoring candidate",
     ) in caplog.record_tuples

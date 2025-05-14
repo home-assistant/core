@@ -1,37 +1,23 @@
 """The go2rtc component."""
 
+from __future__ import annotations
+
+import asyncio
+from collections.abc import Callable
+from dataclasses import dataclass, field
 import logging
 import shutil
+from typing import TYPE_CHECKING
 
+from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
 from awesomeversion import AwesomeVersion
-from go2rtc_client import Go2RtcRestClient
-from go2rtc_client.exceptions import Go2RtcClientError, Go2RtcVersionError
-from go2rtc_client.ws import (
-    Go2RtcWsClient,
-    ReceiveMessages,
-    WebRTCAnswer,
-    WebRTCCandidate,
-    WebRTCOffer,
-    WsError,
-)
 import voluptuous as vol
-from webrtc_models import RTCIceCandidateInit
 
-from homeassistant.components.camera import (
-    Camera,
-    CameraWebRTCProvider,
-    WebRTCAnswer as HAWebRTCAnswer,
-    WebRTCCandidate as HAWebRTCCandidate,
-    WebRTCError,
-    WebRTCMessage,
-    WebRTCSendMessage,
-    async_register_webrtc_provider,
-)
 from homeassistant.components.default_config import DOMAIN as DEFAULT_CONFIG_DOMAIN
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
@@ -51,6 +37,13 @@ from .const import (
     RECOMMENDED_VERSION,
 )
 from .server import Server
+
+if TYPE_CHECKING:
+    from go2rtc_client import Go2RtcRestClient
+
+    from homeassistant.components.camera import Camera
+
+    from .client import Go2RtcClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,8 +89,20 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+
+@dataclass(frozen=True)
+class Go2RtcData:
+    """Go2rtc data class."""
+
+    url: str
+    session: ClientSession
+    rest_client: Go2RtcRestClient
+    ha_clients: list[Go2RtcClient] = field(default_factory=list, init=False)
+
+
 _DATA_GO2RTC: HassKey[str] = HassKey(DOMAIN)
 _RETRYABLE_ERRORS = (ClientConnectionError, ServerConnectionError)
+type Go2RtcConfigEntry = ConfigEntry[Go2RtcData]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -151,13 +156,21 @@ async def _remove_go2rtc_entries(hass: HomeAssistant) -> None:
         await hass.config_entries.async_remove(entry.entry_id)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bool:
     """Set up go2rtc from a config entry."""
-    url = hass.data[_DATA_GO2RTC]
 
+    # Keep import here so that we can import go2rtc integration without installing reqs
+    # pylint: disable-next=import-outside-toplevel
+    from go2rtc_client import Go2RtcRestClient
+
+    # pylint: disable-next=import-outside-toplevel
+    from go2rtc_client.exceptions import Go2RtcClientError, Go2RtcVersionError
+
+    url = hass.data[_DATA_GO2RTC]
+    session = async_get_clientsession(hass)
+    client = Go2RtcRestClient(session, url)
     # Validate the server URL
     try:
-        client = Go2RtcRestClient(async_get_clientsession(hass), url)
         version = await client.validate_server_version()
         if version < AwesomeVersion(RECOMMENDED_VERSION):
             ir.async_create_issue(
@@ -188,13 +201,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.warning("Could not connect to go2rtc instance on %s (%s)", url, err)
         return False
 
-    provider = WebRTCProvider(hass, url)
-    async_register_webrtc_provider(hass, provider)
+    entry.runtime_data = Go2RtcData(url, session, client)
+
+    async def inform_cameras() -> None:
+        """Inform camera that go2rtc is available."""
+        # To avoid circular import, we import the camera helper here
+        # pylint: disable-next=import-outside-toplevel
+        from homeassistant.components.camera.helper import get_camera_entities
+
+        await asyncio.gather(
+            *(
+                camera.async_create_go2rtc_client_if_needed()
+                for camera in get_camera_entities(hass)
+            )
+        )
+
+    hass.async_create_background_task(
+        inform_cameras(), "go2rtc_inform_cameras", eager_start=False
+    )
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bool:
     """Unload a go2rtc config entry."""
+    for client in entry.runtime_data.ha_clients:
+        await client.teardown()
+    entry.runtime_data.ha_clients.clear()
     return True
 
 
@@ -203,91 +235,22 @@ async def _get_binary(hass: HomeAssistant) -> str | None:
     return await hass.async_add_executor_job(shutil.which, "go2rtc")
 
 
-class WebRTCProvider(CameraWebRTCProvider):
-    """WebRTC provider."""
+async def create_go2rtc_client(
+    camera: Camera, client_remove_fn: Callable[[], None]
+) -> Go2RtcClient | None:
+    """Create a Go2rtc client."""
+    hass = camera.hass
+    entries: list[Go2RtcConfigEntry] = hass.config_entries.async_loaded_entries(DOMAIN)
+    if not entries:
+        return None
 
-    def __init__(self, hass: HomeAssistant, url: str) -> None:
-        """Initialize the WebRTC provider."""
-        self._hass = hass
-        self._url = url
-        self._session = async_get_clientsession(hass)
-        self._rest_client = Go2RtcRestClient(self._session, url)
-        self._sessions: dict[str, Go2RtcWsClient] = {}
+    stream_source = await camera.stream_source()
+    if not stream_source or stream_source.partition(":")[0] not in _SUPPORTED_STREAMS:
+        # Not supported by go2rtc
+        return None
 
-    @property
-    def domain(self) -> str:
-        """Return the integration domain of the provider."""
-        return DOMAIN
+    # Keep import here so that we can import stream integration without installing reqs
+    # pylint: disable-next=import-outside-toplevel
+    from .client import Go2RtcClient
 
-    @callback
-    def async_is_supported(self, stream_source: str) -> bool:
-        """Return if this provider is supports the Camera as source."""
-        return stream_source.partition(":")[0] in _SUPPORTED_STREAMS
-
-    async def async_handle_async_webrtc_offer(
-        self,
-        camera: Camera,
-        offer_sdp: str,
-        session_id: str,
-        send_message: WebRTCSendMessage,
-    ) -> None:
-        """Handle the WebRTC offer and return the answer via the provided callback."""
-        self._sessions[session_id] = ws_client = Go2RtcWsClient(
-            self._session, self._url, source=camera.entity_id
-        )
-
-        if not (stream_source := await camera.stream_source()):
-            send_message(
-                WebRTCError("go2rtc_webrtc_offer_failed", "Camera has no stream source")
-            )
-            return
-
-        streams = await self._rest_client.streams.list()
-
-        if (stream := streams.get(camera.entity_id)) is None or not any(
-            stream_source == producer.url for producer in stream.producers
-        ):
-            await self._rest_client.streams.add(
-                camera.entity_id,
-                [
-                    stream_source,
-                    # We are setting any ffmpeg rtsp related logs to debug
-                    # Connection problems to the camera will be logged by the first stream
-                    # Therefore setting it to debug will not hide any important logs
-                    f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
-                ],
-            )
-
-        @callback
-        def on_messages(message: ReceiveMessages) -> None:
-            """Handle messages."""
-            value: WebRTCMessage
-            match message:
-                case WebRTCCandidate():
-                    value = HAWebRTCCandidate(RTCIceCandidateInit(message.candidate))
-                case WebRTCAnswer():
-                    value = HAWebRTCAnswer(message.sdp)
-                case WsError():
-                    value = WebRTCError("go2rtc_webrtc_offer_failed", message.error)
-
-            send_message(value)
-
-        ws_client.subscribe(on_messages)
-        config = camera.async_get_webrtc_client_configuration()
-        await ws_client.send(WebRTCOffer(offer_sdp, config.configuration.ice_servers))
-
-    async def async_on_webrtc_candidate(
-        self, session_id: str, candidate: RTCIceCandidateInit
-    ) -> None:
-        """Handle the WebRTC candidate."""
-
-        if ws_client := self._sessions.get(session_id):
-            await ws_client.send(WebRTCCandidate(candidate.candidate))
-        else:
-            _LOGGER.debug("Unknown session %s. Ignoring candidate", session_id)
-
-    @callback
-    def async_close_session(self, session_id: str) -> None:
-        """Close the session."""
-        ws_client = self._sessions.pop(session_id)
-        self._hass.async_create_task(ws_client.close())
+    return Go2RtcClient(hass, entries[0].runtime_data, camera, client_remove_fn)
