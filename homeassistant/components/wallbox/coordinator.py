@@ -26,6 +26,7 @@ from .const import (
     CHARGER_MAX_ICP_CURRENT_KEY,
     CHARGER_PLAN_KEY,
     CHARGER_POWER_BOOST_KEY,
+    CHARGER_SOFTWARE_KEY,
     CHARGER_STATUS_DESCRIPTION_KEY,
     CHARGER_STATUS_ID_KEY,
     CODE_KEY,
@@ -160,6 +161,10 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         data[CHARGER_STATUS_DESCRIPTION_KEY] = CHARGER_STATUS.get(
             data[CHARGER_STATUS_ID_KEY], ChargerStatus.UNKNOWN
         )
+
+        data[CHARGER_SOFTWARE_KEY] = data[CHARGER_DATA_KEY][CHARGER_SOFTWARE_KEY]
+
+        # _LOGGER.error(data)
         return data
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -239,6 +244,16 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def async_pause_charger(self, pause: bool) -> None:
         """Set wallbox to pause or resume."""
         await self.hass.async_add_executor_job(self._pause_charger, pause)
+        await self.async_request_refresh()
+
+    @_require_authentication
+    def _firmware_update(self) -> None:
+        """Update Wallbox firmware."""
+        self._wallbox.updateFirmware(self._station)
+
+    async def async_trigger_firmware_update(self) -> None:
+        """Update Wallbox firmware."""
+        await self.hass.async_add_executor_job(self._firmware_update)
         await self.async_request_refresh()
 
 
