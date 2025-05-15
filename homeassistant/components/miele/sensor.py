@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 import logging
-from typing import Final, cast
+from typing import Any, Final, cast
 
 from pymiele import MieleDevice
 
@@ -106,6 +106,7 @@ class MieleSensorDescription(SensorEntityDescription):
     """Class describing Miele sensor entities."""
 
     value_fn: Callable[[MieleDevice], StateType]
+    extra_attributes: dict[str, Callable[[MieleDevice], StateType]] | None = None
     zone: int = 1
 
 
@@ -182,6 +183,9 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             translation_key="program_id",
             device_class=SensorDeviceClass.ENUM,
             value_fn=lambda value: value.state_program_id,
+            extra_attributes={
+                "raw_value": lambda value: value.state_program_id,
+            },
         ),
     ),
     MieleSensorDefinition(
@@ -622,6 +626,16 @@ class MieleSensor(MieleEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.device)
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return extra_state_attributes."""
+        if self.entity_description.extra_attributes is None:
+            return None
+        attr = {}
+        for key, value in self.entity_description.extra_attributes.items():
+            attr[key] = value(self.device)
+        return attr
 
 
 class MielePlateSensor(MieleSensor):
