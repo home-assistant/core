@@ -13,7 +13,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -45,6 +45,7 @@ async def async_setup_entry(
         if all(
             capability in device.status[MAIN]
             for capability in (
+                Capability.SWITCH,
                 Capability.AIR_CONDITIONER_MODE,
                 Capability.TEMPERATURE_MEASUREMENT,
                 Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL,
@@ -65,6 +66,7 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
         WaterHeaterEntityFeature.OPERATION_MODE
         | WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.AWAY_MODE
+        | WaterHeaterEntityFeature.ON_OFF
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
@@ -74,6 +76,7 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
             client,
             device,
             {
+                Capability.SWITCH,
                 Capability.AIR_CONDITIONER_MODE,
                 Capability.TEMPERATURE_MEASUREMENT,
                 Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL,
@@ -103,6 +106,20 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
         )
         return max(max_temperature, self.target_temperature_high)
 
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the water heater on."""
+        await self.execute_device_command(
+            Capability.SWITCH,
+            Command.ON,
+        )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the water heater off."""
+        await self.execute_device_command(
+            Capability.SWITCH,
+            Command.OFF,
+        )
+
     @property
     def operation_list(self) -> list[str]:
         """Return the list of available operation modes."""
@@ -117,6 +134,8 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
     @property
     def current_operation(self) -> str | None:
         """Return the current operation mode."""
+        if self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "off":
+            return STATE_OFF
         return OPERATION_MAP_TO_HA.get(
             self.get_attribute_value(
                 Capability.AIR_CONDITIONER_MODE, Attribute.AIR_CONDITIONER_MODE
