@@ -619,7 +619,12 @@ class MielePlateSensor(MieleSensor):
 
         return (
             PlatePowerStep(
-                self.device.state_plate_step[self.entity_description.zone - 1].value_raw
+                cast(
+                    int,
+                    self.device.state_plate_step[
+                        self.entity_description.zone - 1
+                    ].value_raw,
+                )
             ).name
             if self.device.state_plate_step
             else PlatePowerStep.plate_step_0
