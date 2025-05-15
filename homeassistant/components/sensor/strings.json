@@ -38,6 +38,7 @@
       "is_precipitation": "Current {entity_name} precipitation",
       "is_precipitation_intensity": "Current {entity_name} precipitation intensity",
       "is_pressure": "Current {entity_name} pressure",
+      "is_reactive_energy": "Current {entity_name} reactive energy",
       "is_reactive_power": "Current {entity_name} reactive power",
       "is_signal_strength": "Current {entity_name} signal strength",
       "is_sound_pressure": "Current {entity_name} sound pressure",
@@ -92,6 +93,7 @@
       "precipitation": "{entity_name} precipitation changes",
       "precipitation_intensity": "{entity_name} precipitation intensity changes",
       "pressure": "{entity_name} pressure changes",
+      "reactive_energy": "{entity_name} reactive energy changes",
       "reactive_power": "{entity_name} reactive power changes",
       "signal_strength": "{entity_name} signal strength changes",
       "sound_pressure": "{entity_name} sound pressure changes",
@@ -255,6 +257,9 @@
     },
     "pressure": {
       "name": "Pressure"
+    },
+    "reactive_energy": {
+      "name": "Reactive energy"
     },
     "reactive_power": {
       "name": "Reactive power"

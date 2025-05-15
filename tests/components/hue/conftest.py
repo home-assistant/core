@@ -254,6 +254,8 @@ async def setup_bridge(
         with patch("homeassistant.components.hue.HueBridge", return_value=mock_bridge):
             await hass.config_entries.async_setup(config_entry.entry_id)
 
+    assert config_entry.state == ConfigEntryState.LOADED
+
 
 async def setup_platform(
     hass: HomeAssistant,

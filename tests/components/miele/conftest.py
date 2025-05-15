@@ -70,7 +70,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 @pytest.fixture(scope="package")
 def load_device_file() -> str:
     """Fixture for loading device file."""
-    return "3_devices.json"
+    return "4_devices.json"
 
 
 @pytest.fixture
@@ -141,7 +141,7 @@ async def setup_platform(
     with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        yield
+        yield mock_config_entry
 
 
 @pytest.fixture

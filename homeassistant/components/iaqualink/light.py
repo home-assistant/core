@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import refresh_system
-from .const import DOMAIN as AQUALINK_DOMAIN
+from .const import DOMAIN
 from .entity import AqualinkEntity
 from .utils import await_or_reraise
 
@@ -33,7 +33,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up discovered lights."""
     async_add_entities(
-        (HassAqualinkLight(dev) for dev in hass.data[AQUALINK_DOMAIN][LIGHT_DOMAIN]),
+        (HassAqualinkLight(dev) for dev in hass.data[DOMAIN][LIGHT_DOMAIN]),
         True,
     )
 
