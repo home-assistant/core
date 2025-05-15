@@ -137,7 +137,6 @@ async def test_wallbox_select_class_authentication_error(
         ),
         pytest.raises(HomeAssistantError, match="Error communicating with Wallbox API"),
     ):
-        # Test behavior when a connection error occurs
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
