@@ -24,6 +24,7 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfReactiveEnergy,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
@@ -151,8 +152,8 @@ class BaseUnitConverter:
         cls, from_unit: str | None, to_unit: str | None
     ) -> float:
         """Get floored base10 log ratio between units of measurement."""
-        from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
-        return floor(max(0, log10(from_ratio / to_ratio)))
+        ratio = cls.get_unit_ratio(from_unit, to_unit)
+        return floor(max(0, log10(ratio)))
 
     @classmethod
     @lru_cache
@@ -427,6 +428,17 @@ class PressureConverter(BaseUnitConverter):
         UnitOfPressure.PSI,
         UnitOfPressure.MMHG,
     }
+
+
+class ReactiveEnergyConverter(BaseUnitConverter):
+    """Utility to convert reactive energy values."""
+
+    UNIT_CLASS = "reactive_energy"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR: 1,
+        UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR: 1 / 1e3,
+    }
+    VALID_UNITS = set(UnitOfReactiveEnergy)
 
 
 class SpeedConverter(BaseUnitConverter):

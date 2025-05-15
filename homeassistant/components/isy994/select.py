@@ -23,7 +23,6 @@ from pyisy.helpers import EventListener, NodeProperty
 from pyisy.nodes import Node, NodeChangedEvent
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -37,9 +36,9 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import _LOGGER, DOMAIN, UOM_INDEX
+from .const import _LOGGER, UOM_INDEX
 from .entity import ISYAuxControlEntity
-from .models import IsyData
+from .models import IsyConfigEntry
 
 
 def time_string(i: int) -> str:
@@ -55,11 +54,11 @@ BACKLIGHT_MEMORY_FILTER = {"memory": DEV_BL_ADDR, "cmd1": DEV_CMD_MEMORY_WRITE}
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: IsyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ISY/IoX select entities from config entry."""
-    isy_data: IsyData = hass.data[DOMAIN][config_entry.entry_id]
+    isy_data = config_entry.runtime_data
     device_info = isy_data.devices
     entities: list[
         ISYAuxControlIndexSelectEntity

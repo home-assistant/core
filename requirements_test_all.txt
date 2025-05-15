@@ -229,7 +229,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==31.0.0
+aioesphomeapi==31.0.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -650,7 +650,7 @@ dbus-fast==2.43.0
 debugpy==1.8.14
 
 # homeassistant.components.ecovacs
-deebot-client==13.1.0
+deebot-client==13.2.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1875,7 +1875,7 @@ pysabnzbd==1.1.1
 pyschlage==2025.4.0
 
 # homeassistant.components.sensibo
-pysensibo==1.1.0
+pysensibo==1.2.1
 
 # homeassistant.components.acer_projector
 # homeassistant.components.crownstone
