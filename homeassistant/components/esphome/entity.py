@@ -223,7 +223,6 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
         self._states = cast(dict[int, _StateT], entry_data.state[state_type])
         assert entry_data.device_info is not None
         device_info = entry_data.device_info
-        self._device_info = device_info
         self._on_entry_data_changed()
         self._key = entity_info.key
         self._state_type = state_type
@@ -311,6 +310,11 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
     @callback
     def _on_entry_data_changed(self) -> None:
         entry_data = self._entry_data
+        # Update the device info since it can change
+        # when the device is reconnected
+        if TYPE_CHECKING:
+            assert entry_data.device_info is not None
+        self._device_info = entry_data.device_info
         self._api_version = entry_data.api_version
         self._client = entry_data.client
         if self._device_info.has_deep_sleep:
