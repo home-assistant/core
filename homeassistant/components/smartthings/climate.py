@@ -25,10 +25,11 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
-from .const import MAIN, UNIT_MAP
+from .const import DOMAIN, MAIN, UNIT_MAP
 from .entity import SmartThingsEntity
 
 ATTR_OPERATION_STATE = "operation_state"
@@ -637,6 +638,11 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
                 Capability.TEMPERATURE_MEASUREMENT,
             },
             component=component,
+        )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{device.device.device_id}_{component}")},
+            via_device=(DOMAIN, device.device.device_id),
+            name=f"{device.device.name} {component}",
         )
 
     @property
