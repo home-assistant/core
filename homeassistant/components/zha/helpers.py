@@ -419,11 +419,22 @@ class ZHADeviceProxy(EventBase):
     @callback
     def handle_zha_event(self, zha_event: ZHAEvent) -> None:
         """Handle a ZHA event."""
+        if ATTR_UNIQUE_ID in zha_event.data:
+            unique_id = zha_event.data.pop(ATTR_UNIQUE_ID)
+
+            # Client cluster handler unique IDs in the ZHA lib were disambiguated by
+            # adding a suffix of `_CLIENT`. Unfortunately, this breaks existing
+            # automations that match the `unique_id` key. This can be removed in a
+            # future release with proper notice of a breaking change.
+            unique_id = unique_id.removesuffix("_CLIENT")
+        else:
+            unique_id = zha_event.unique_id
+
         self.gateway_proxy.hass.bus.async_fire(
             ZHA_EVENT,
             {
                 ATTR_DEVICE_IEEE: str(zha_event.device_ieee),
-                ATTR_UNIQUE_ID: zha_event.unique_id,
+                ATTR_UNIQUE_ID: unique_id,
                 ATTR_DEVICE_ID: self.device_id,
                 **zha_event.data,
             },
