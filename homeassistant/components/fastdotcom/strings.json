@@ -22,6 +22,9 @@
       },
       "unloaded_ping": {
         "name": "Unloaded ping"
+      },
+      "success": {
+        "name": "Success"
       }
     }
   }
