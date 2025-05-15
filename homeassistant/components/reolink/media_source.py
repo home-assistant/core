@@ -27,6 +27,8 @@ from .views import async_generate_playback_proxy_url
 
 _LOGGER = logging.getLogger(__name__)
 
+VOD_SPLIT_TIME = dt.timedelta(minutes=5)
+
 
 async def async_get_media_source(hass: HomeAssistant) -> ReolinkVODMediaSource:
     """Set up camera media source."""
@@ -60,11 +62,13 @@ class ReolinkVODMediaSource(MediaSource):
         """Resolve media to a url."""
         identifier = ["UNKNOWN"]
         if item.identifier is not None:
-            identifier = item.identifier.split("|", 5)
+            identifier = item.identifier.split("|", 6)
         if identifier[0] != "FILE":
             raise Unresolvable(f"Unknown media item '{item.identifier}'.")
 
-        _, config_entry_id, channel_str, stream_res, filename = identifier
+        _, config_entry_id, channel_str, stream_res, filename, start_time, end_time = (
+            identifier
+        )
         channel = int(channel_str)
 
         host = get_host(self.hass, config_entry_id)
@@ -75,12 +79,19 @@ class ReolinkVODMediaSource(MediaSource):
                     return VodRequestType.DOWNLOAD
                 return VodRequestType.PLAYBACK
             if host.api.is_nvr:
-                return VodRequestType.FLV
+                return VodRequestType.NVR_DOWNLOAD
             return VodRequestType.RTMP
 
         vod_type = get_vod_type()
 
-        if vod_type in [VodRequestType.DOWNLOAD, VodRequestType.PLAYBACK]:
+        if vod_type == VodRequestType.NVR_DOWNLOAD:
+            filename = f"{start_time}_{end_time}"
+
+        if vod_type in {
+            VodRequestType.DOWNLOAD,
+            VodRequestType.NVR_DOWNLOAD,
+            VodRequestType.PLAYBACK,
+        }:
             proxy_url = async_generate_playback_proxy_url(
                 config_entry_id, channel, filename, stream_res, vod_type.value
             )
@@ -358,7 +369,7 @@ class ReolinkVODMediaSource(MediaSource):
                 day,
             )
         _, vod_files = await host.api.request_vod_files(
-            channel, start, end, stream=stream
+            channel, start, end, stream=stream, split_time=VOD_SPLIT_TIME
         )
         for file in vod_files:
             file_name = f"{file.start_time.time()} {file.duration}"
@@ -372,7 +383,7 @@ class ReolinkVODMediaSource(MediaSource):
             children.append(
                 BrowseMediaSource(
                     domain=DOMAIN,
-                    identifier=f"FILE|{config_entry_id}|{channel}|{stream}|{file.file_name}",
+                    identifier=f"FILE|{config_entry_id}|{channel}|{stream}|{file.file_name}|{file.start_time_id}|{file.end_time_id}",
                     media_class=MediaClass.VIDEO,
                     media_content_type=MediaType.VIDEO,
                     title=file_name,

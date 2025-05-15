@@ -51,8 +51,10 @@ TEST_DAY = 14
 TEST_DAY2 = 15
 TEST_HOUR = 13
 TEST_MINUTE = 12
-TEST_FILE_NAME = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}{TEST_HOUR}{TEST_MINUTE}00"
-TEST_FILE_NAME_MP4 = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}{TEST_HOUR}{TEST_MINUTE}00.mp4"
+TEST_START = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}{TEST_HOUR}{TEST_MINUTE}"
+TEST_END = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}{TEST_HOUR}{TEST_MINUTE + 5}"
+TEST_FILE_NAME = f"{TEST_START}00"
+TEST_FILE_NAME_MP4 = f"{TEST_START}00.mp4"
 TEST_STREAM = "main"
 TEST_CHANNEL = "0"
 TEST_CAM_NAME = "Cam new name"
@@ -92,17 +94,15 @@ async def test_resolve(
     await hass.async_block_till_done()
     caplog.set_level(logging.DEBUG)
 
-    file_id = (
-        f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}"
-    )
-    reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE, TEST_URL)
+    file_id = f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}|{TEST_START}|{TEST_END}"
+    reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE_MP4, TEST_URL)
 
     play_media = await async_resolve_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
     )
-    assert play_media.mime_type == TEST_MIME_TYPE
+    assert play_media.mime_type == TEST_MIME_TYPE_MP4
 
-    file_id = f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME_MP4}"
+    file_id = f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME_MP4}|{TEST_START}|{TEST_END}"
     reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE_MP4, TEST_URL2)
 
     play_media = await async_resolve_media(
@@ -117,9 +117,7 @@ async def test_resolve(
     )
     assert play_media.mime_type == TEST_MIME_TYPE_MP4
 
-    file_id = (
-        f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}"
-    )
+    file_id = f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}|{TEST_START}|{TEST_END}"
     reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE, TEST_URL)
 
     play_media = await async_resolve_media(
@@ -217,6 +215,8 @@ async def test_browsing(
     mock_vod_file.start_time = datetime(
         TEST_YEAR, TEST_MONTH, TEST_DAY, TEST_HOUR, TEST_MINUTE
     )
+    mock_vod_file.start_time_id = TEST_START
+    mock_vod_file.end_time_id = TEST_END
     mock_vod_file.duration = timedelta(minutes=15)
     mock_vod_file.file_name = TEST_FILE_NAME
     reolink_connect.request_vod_files.return_value = ([mock_status], [mock_vod_file])
@@ -224,7 +224,7 @@ async def test_browsing(
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_day_0_id}")
 
     browse_files_id = f"FILES|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
-    browse_file_id = f"FILE|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}"
+    browse_file_id = f"FILE|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}|{TEST_START}|{TEST_END}"
     assert browse.domain == DOMAIN
     assert (
         browse.title
