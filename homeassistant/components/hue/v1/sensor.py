@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import LIGHT_LUX, PERCENTAGE, EntityCategory, UnitOfTemperature
 
-from ..const import DOMAIN as HUE_DOMAIN
 from .sensor_base import SENSOR_CONFIG_MAP, GenericHueSensor, GenericZLLSensor
 
 LIGHT_LEVEL_NAME_FORMAT = "{} light level"
@@ -24,7 +23,7 @@ TEMPERATURE_NAME_FORMAT = "{} temperature"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer sensor setup to the shared sensor module."""
-    bridge = hass.data[HUE_DOMAIN][config_entry.entry_id]
+    bridge = config_entry.runtime_data
 
     if not bridge.sensor_manager:
         return

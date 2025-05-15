@@ -7,7 +7,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 
-from ..const import DOMAIN as HUE_DOMAIN
 from .sensor_base import SENSOR_CONFIG_MAP, GenericZLLSensor
 
 PRESENCE_NAME_FORMAT = "{} motion"
@@ -15,7 +14,7 @@ PRESENCE_NAME_FORMAT = "{} motion"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer binary sensor setup to the shared sensor module."""
-    bridge = hass.data[HUE_DOMAIN][config_entry.entry_id]
+    bridge = config_entry.runtime_data
 
     if not bridge.sensor_manager:
         return
