@@ -202,7 +202,7 @@ async def async_setup_platform(
     )
 
 
-class AbstractTemplateLight(StateVacuumEntity):
+class AbstractTemplateVacuum(StateVacuumEntity):
     """Representation of a template vacuum features."""
 
     def __init__(self, config: dict[str, Any]) -> None:
@@ -355,7 +355,7 @@ class AbstractTemplateLight(StateVacuumEntity):
             self._attr_fan_speed = None
 
 
-class TemplateVacuum(TemplateEntity, AbstractTemplateLight):
+class TemplateVacuum(TemplateEntity, AbstractTemplateVacuum):
     """A template vacuum component."""
 
     _attr_should_poll = False
@@ -370,7 +370,7 @@ class TemplateVacuum(TemplateEntity, AbstractTemplateLight):
         TemplateEntity.__init__(
             self, hass, config=config, fallback_name=None, unique_id=unique_id
         )
-        AbstractTemplateLight.__init__(self, config)
+        AbstractTemplateVacuum.__init__(self, config)
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, object_id, hass=hass
