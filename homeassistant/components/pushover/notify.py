@@ -55,26 +55,9 @@ class PushoverNotificationService(BaseNotificationService):
     """Implement the notification service for Pushover."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: Any, creds: Any = None, platform: Any = None
+        self, hass: HomeAssistant, pushover: PushoverAPI, user_key: str
     ) -> None:
-        """Initialize the service.
-
-        Supports new-style (hass, PushoverAPI, user_key)
-        and legacy (hass, entry, creds, platform) signatures.
-        """
-        # New vs legacy: creds is a dict in legacy mode
-        if not isinstance(creds, dict):
-            # New (config-entry) style: entry is PushoverAPI, creds is user_key
-            pushover = entry
-            user_key = creds
-        else:
-            # Legacy style: entry is ignored, creds is the dict of credentials
-            creds_dict = creds or {}
-            app_token = creds_dict.get("app_token")
-            user_key = creds_dict.get("user_key")
-            pushover = PushoverAPI(app_token) if app_token is not None else None
-        # After determining pushover and user_key, save them for send_message
-        self.hass = hass
+        """Initialize the service."""
         self._hass = hass
         self._user_key = user_key
         self.pushover = pushover
