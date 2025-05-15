@@ -1136,3 +1136,30 @@ STATE_PROGRAM_ID: dict[int, dict[int, str]] = {
     MieleAppliance.ROBOT_VACUUM_CLEANER: ROBOT_VACUUM_CLEANER_PROGRAM_ID,
     MieleAppliance.COFFEE_SYSTEM: COFFEE_SYSTEM_PROGRAM_ID,
 }
+
+
+class PlatePowerStep(MieleEnum):
+    """Plate power settings."""
+
+    plate_step_0 = 0
+    plate_step_warming = 110, 220
+    plate_step_1 = 1
+    plate_step_2 = 2
+    plate_step_3 = 3
+    plate_step_4 = 4
+    plate_step_5 = 5
+    plate_step_6 = 6
+    plate_step_7 = 7
+    plate_step_8 = 8
+    plate_step_9 = 9
+    plate_step_10 = 10
+    plate_step_11 = 11
+    plate_step_12 = 12
+    plate_step_13 = 13
+    plate_step_14 = 4
+    plate_step_15 = 15
+    plate_step_16 = 16
+    plate_step_17 = 17
+    plate_step_18 = 18
+    plate_step_boost = 117, 118, 218
+    missing2none = -9999

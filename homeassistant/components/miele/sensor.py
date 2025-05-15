@@ -32,6 +32,7 @@ from .const import (
     STATE_PROGRAM_PHASE,
     STATE_STATUS_TAGS,
     MieleAppliance,
+    PlatePowerStep,
     StateDryingStep,
     StateProgramType,
     StateStatus,
@@ -44,34 +45,6 @@ PARALLEL_UPDATES = 0
 _LOGGER = logging.getLogger(__name__)
 
 DISABLED_TEMPERATURE = -32768
-
-PLATE_POWERS = [
-    "0",
-    "110",
-    "220",
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "11",
-    "12",
-    "13",
-    "14",
-    "15",
-    "16",
-    "17",
-    "18",
-    "117",
-    "118",
-    "217",
-]
-
 
 DEFAULT_PLATE_COUNT = 4
 
@@ -503,8 +476,8 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
                 translation_placeholders={"plate_no": str(i)},
                 zone=i,
                 device_class=SensorDeviceClass.ENUM,
-                options=PLATE_POWERS,
-                value_fn=lambda value: value.state_plate_step[0].value_raw,
+                options=sorted(PlatePowerStep.keys()),
+                value_fn=lambda value: None,
             ),
         )
         for i in range(1, 7)
@@ -643,12 +616,14 @@ class MielePlateSensor(MieleSensor):
     def native_value(self) -> StateType:
         """Return the state of the plate sensor."""
         # state_plate_step is [] if all zones are off
-        plate_power = (
-            self.device.state_plate_step[self.entity_description.zone - 1].value_raw
+
+        return (
+            PlatePowerStep(
+                self.device.state_plate_step[self.entity_description.zone - 1].value_raw
+            ).name
             if self.device.state_plate_step
-            else 0
+            else PlatePowerStep.plate_step_0
         )
-        return str(plate_power)
 
 
 class MieleStatusSensor(MieleSensor):
