@@ -240,7 +240,7 @@ async def test_rpc_binary_sensor(
     entity_registry: EntityRegistry,
 ) -> None:
     """Test RPC binary sensor."""
-    entity_id = f"{BINARY_SENSOR_DOMAIN}.test_cover_0_overpowering"
+    entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_test_cover_0_overpowering"
     await init_integration(hass, 2)
 
     assert (state := hass.states.get(entity_id))
