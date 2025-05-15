@@ -9,10 +9,10 @@ from typing import Any
 
 from homematicip.async_home import AsyncHome
 from homematicip.auth import Auth
-from homematicip.base.base_connection import HmipConnectionError
 from homematicip.base.enums import EventType
 from homematicip.connection.connection_context import ConnectionContextBuilder
 from homematicip.connection.rest_connection import RestConnection
+from homematicip.exceptions.connection_exceptions import HmipConnectionError
 
 import homeassistant
 from homeassistant.config_entries import ConfigEntry
@@ -24,6 +24,8 @@ from .const import HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME, HMIPC_PIN, PLATFORM
 from .errors import HmipcConnectionError
 
 _LOGGER = logging.getLogger(__name__)
+
+type HomematicIPConfigEntry = ConfigEntry[HomematicipHAP]
 
 
 async def build_context_async(
@@ -102,7 +104,9 @@ class HomematicipHAP:
 
     home: AsyncHome
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: HomematicIPConfigEntry
+    ) -> None:
         """Initialize HomematicIP Cloud connection."""
         self.hass = hass
         self.config_entry = config_entry
