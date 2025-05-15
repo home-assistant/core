@@ -327,6 +327,7 @@ FLOWS = {
         "kraken",
         "kulersky",
         "lacrosse_view",
+        "laith_switch",
         "lamarzocco",
         "lametric",
         "landisgyr_heat_meter",
