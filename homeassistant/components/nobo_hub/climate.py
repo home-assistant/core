@@ -34,11 +34,6 @@ from .const import (
     OVERRIDE_TYPE_NOW,
 )
 
-
-SUPPORT_FLAGS = (
-    ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-)
-
 PRESET_MODES = [PRESET_NONE, PRESET_COMFORT, PRESET_ECO, PRESET_AWAY]
 
 MIN_TEMPERATURE = 7
@@ -82,7 +77,6 @@ class NoboZone(ClimateEntity):
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.AUTO]
     _attr_hvac_mode = HVACMode.AUTO
     _attr_preset_modes = PRESET_MODES
-    _attr_supported_features = SUPPORT_FLAGS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 1
     # Need to poll to get preset change when in HVACMode.AUTO, so can't set _attr_should_poll = False
@@ -100,6 +94,11 @@ class NoboZone(ClimateEntity):
             via_device=(DOMAIN, hub.hub_info[ATTR_SERIAL]),
             suggested_area=hub.zones[zone_id][ATTR_NAME],
         )
+        self._attr_supported_features = (ClimateEntityFeature.PRESET_MODE)
+        if disable_comfort_control:
+            self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
+        else:
+            self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         self._read_state()
 
     async def async_added_to_hass(self) -> None:
