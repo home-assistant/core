@@ -7,7 +7,6 @@ import pytest
 from homeassistant.components.fastdotcom.coordinator import (
     FastdotcomDataUpdateCoordinator,
 )
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
 
@@ -27,24 +26,28 @@ async def test_coordinator_success(hass, dummy_config_entry):
         "loaded_ping": 20.2,
     }
 
-    # Patch the fast_com2 function (used by the coordinator) to return fake_data.
+    # Patch the fast_com function (used by the coordinator) to return fake_data.
     with patch(
-        "homeassistant.components.fastdotcom.coordinator.fast_com2",
+        "homeassistant.components.fastdotcom.coordinator.fast_com",
         return_value=fake_data,
     ):
         coordinator = FastdotcomDataUpdateCoordinator(hass, dummy_config_entry)
         await coordinator.async_refresh()
+        # Wait for background tasks to complete
+        await hass.async_block_till_done()
         assert coordinator.data == fake_data
 
 
 async def test_coordinator_failure(hass, dummy_config_entry):
-    """Test that the coordinator raises an UpdateFailed error when fast_com2 fails."""
-    # Patch fast_com2 to raise an exception.
+    """Test that the coordinator handles failure by setting last_update_success to False and clearing data."""
+    # Patch fast_com to raise an exception.
     with patch(
-        "homeassistant.components.fastdotcom.coordinator.fast_com2",
+        "homeassistant.components.fastdotcom.coordinator.fast_com",
         side_effect=Exception("Test error"),
     ):
         coordinator = FastdotcomDataUpdateCoordinator(hass, dummy_config_entry)
-        with pytest.raises(UpdateFailed) as excinfo:
-            await coordinator.async_refresh()
-        assert "Error communicating with Fast.com" in str(excinfo.value)
+        await coordinator.async_refresh()
+        # Wait for background tasks to complete
+        await hass.async_block_till_done()
+        assert coordinator.last_update_success is False
+        assert coordinator.data == {} or coordinator.data is None
