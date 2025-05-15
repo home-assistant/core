@@ -1,7 +1,7 @@
 rules:
   # Bronze
   action-setup: done
-  appropriate-polling: todo
+  appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
@@ -37,7 +37,7 @@ rules:
   log-when-unavailable:
     status: exempt
     comment: This integration cannot be unavailable since it's a local calculation.
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: This integration does not require reauthentication, since it is a local calculation.
