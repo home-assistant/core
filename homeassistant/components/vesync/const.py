@@ -1,7 +1,5 @@
 """Constants for VeSync Component."""
 
-from pyvesync.vesyncfan import VeSyncHumid200300S, VeSyncSuperior6000S
-
 DOMAIN = "vesync"
 VS_DISCOVERY = "vesync_discovery_{}"
 SERVICE_UPDATE_DEVS = "update_devices"
@@ -38,8 +36,6 @@ HUMIDIFIER_NIGHT_LIGHT_LEVEL_BRIGHT = "bright"
 HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM = "dim"
 HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF = "off"
 
-VeSyncHumidifierDevice = VeSyncHumid200300S | VeSyncSuperior6000S
-"""Humidifier device types"""
 
 DEV_TYPE_TO_HA = {
     "wifi-switch-1.3": "outlet",

@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -36,6 +36,7 @@ from .const import (
     VS_COORDINATOR,
     VS_DEVICES,
     VS_DISCOVERY,
+    VS_MANAGER,
 )
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -103,13 +104,13 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda device: device.filter_life,
+        value_fn=lambda device: device.state.filter_life,
         exists_fn=lambda device: sku_supported(device, FILTER_LIFE_SUPPORTED),
     ),
     VeSyncSensorEntityDescription(
         key="air-quality",
         translation_key="air_quality",
-        value_fn=lambda device: device.details["air_quality"],
+        value_fn=lambda device: device.state.air_quality,
         exists_fn=lambda device: sku_supported(device, AIR_QUALITY_SUPPORTED),
     ),
     VeSyncSensorEntityDescription(
@@ -117,7 +118,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda device: device.details["air_quality_value"],
+        value_fn=lambda device: device.state.air_quality_value,
         exists_fn=lambda device: sku_supported(device, PM25_SUPPORTED),
     ),
     VeSyncSensorEntityDescription(
@@ -126,7 +127,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda device: device.details["power"],
+        value_fn=lambda device: device.state.details["power"],
         update_fn=update_energy,
         exists_fn=lambda device: ha_dev_type(device) == "outlet",
     ),
@@ -136,7 +137,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda device: device.energy_today,
+        value_fn=lambda device: device.state.energy_today,
         update_fn=update_energy,
         exists_fn=lambda device: ha_dev_type(device) == "outlet",
     ),
@@ -146,7 +147,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda device: device.weekly_energy_total,
+        value_fn=lambda device: device.state.weekly_energy_total,
         update_fn=update_energy,
         exists_fn=lambda device: ha_dev_type(device) == "outlet",
     ),
@@ -156,7 +157,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda device: device.monthly_energy_total,
+        value_fn=lambda device: device.state.monthly_energy_total,
         update_fn=update_energy,
         exists_fn=lambda device: ha_dev_type(device) == "outlet",
     ),
@@ -166,7 +167,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda device: device.yearly_energy_total,
+        value_fn=lambda device: device.state.yearly_energy_total,
         update_fn=update_energy,
         exists_fn=lambda device: ha_dev_type(device) == "outlet",
     ),
@@ -176,7 +177,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda device: device.details["voltage"],
+        value_fn=lambda device: device.state.details["voltage"],
         update_fn=update_energy,
         exists_fn=lambda device: ha_dev_type(device) == "outlet",
     ),
@@ -185,7 +186,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda device: device.details["humidity"],
+        value_fn=lambda device: device.state.humidity,
         exists_fn=is_humidifier,
     ),
 )
@@ -209,7 +210,9 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
     )
 
-    _setup_entities(hass.data[DOMAIN][VS_DEVICES], async_add_entities, coordinator)
+    _setup_entities(
+        hass.data[DOMAIN][VS_MANAGER].devices, async_add_entities, coordinator
+    )
 
 
 @callback
@@ -252,6 +255,9 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.device)
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Run the update function defined for the sensor."""
-        return self.entity_description.update_fn(self.device)
+        # I think this section can be removed since energy updates are now auto called?
+        # if self.entity_description.update_fn:
+        # return await self.entity_description.update_fn(self.device)
+        return

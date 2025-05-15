@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -17,7 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import is_humidifier
-from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY
+from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY, VS_MANAGER
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
@@ -43,7 +43,7 @@ NUMBER_DESCRIPTIONS: list[VeSyncNumberEntityDescription] = [
         mode=NumberMode.SLIDER,
         exists_fn=is_humidifier,
         set_value_fn=lambda device, value: device.set_mist_level(value),
-        value_fn=lambda device: device.mist_level,
+        value_fn=lambda device: device.state.mist_level,
     )
 ]
 
@@ -66,7 +66,9 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
     )
 
-    _setup_entities(hass.data[DOMAIN][VS_DEVICES], async_add_entities, coordinator)
+    _setup_entities(
+        hass.data[DOMAIN][VS_MANAGER].devices, async_add_entities, coordinator
+    )
 
 
 @callback
@@ -108,7 +110,5 @@ class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        if await self.hass.async_add_executor_job(
-            self.entity_description.set_value_fn, self.device, value
-        ):
+        if self.entity_description.set_value_fn(self.device, value):
             await self.coordinator.async_request_refresh()

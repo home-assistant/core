@@ -18,6 +18,7 @@ from .entity import VeSyncBaseDevice
 KEYS_TO_REDACT = {"manager", "uuid", "mac_id"}
 
 
+# This file needs lots of work.
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
@@ -33,7 +34,9 @@ async def async_get_config_entry_diagnostics(
             "timezone": manager.time_zone,
         },
         "devices": {
-            "bulbs": [_redact_device_values(device) for device in manager.bulbs],
+            "bulbs": [
+                _redact_device_values(device) for device in manager.devices.bulbs
+            ],
             "fans": [_redact_device_values(device) for device in manager.fans],
             "outlets": [_redact_device_values(device) for device in manager.outlets],
             "switches": [_redact_device_values(device) for device in manager.switches],
