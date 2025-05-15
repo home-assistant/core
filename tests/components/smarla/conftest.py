@@ -27,11 +27,17 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_cf_connection():
-    """Patch config_flow Connection object."""
-    with patch(
-        "homeassistant.components.smarla.config_flow.Connection"
-    ) as mock_connection:
+def mock_connection():
+    """Patch Connection object."""
+    with (
+        patch(
+            "homeassistant.components.smarla.config_flow.Connection"
+        ) as mock_connection,
+        patch(
+            "homeassistant.components.smarla.Connection",
+            mock_connection,
+        ),
+    ):
         connection = MagicMock()
         connection.token = AuthToken.from_json(MOCK_ACCESS_TOKEN_JSON)
         connection.refresh_token = AsyncMock(return_value=True)
