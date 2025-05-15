@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator, Sequence
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -205,48 +206,19 @@ async def async_setup_platform(
     )
 
 
-class TemplateFan(TemplateEntity, FanEntity):
-    """A template fan component."""
+class AbstractTemplateFan(FanEntity):
+    """Representation of a template fan features."""
 
-    _attr_should_poll = False
+    def __init__(self, config: dict[str, Any]) -> None:
+        """Initialize the features."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: dict[str, Any],
-        unique_id,
-    ) -> None:
-        """Initialize the fan."""
-        super().__init__(hass, config=config, fallback_name=None, unique_id=unique_id)
-        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
-            self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, object_id, hass=hass
-            )
-        name = self._attr_name
-        if TYPE_CHECKING:
-            assert name is not None
+        self._registered_scripts: list[str] = []
 
         self._template = config.get(CONF_STATE)
         self._percentage_template = config.get(CONF_PERCENTAGE)
         self._preset_mode_template = config.get(CONF_PRESET_MODE)
         self._oscillating_template = config.get(CONF_OSCILLATING)
         self._direction_template = config.get(CONF_DIRECTION)
-
-        self._attr_supported_features |= (
-            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
-        )
-        for action_id, supported_feature in (
-            (CONF_ON_ACTION, 0),
-            (CONF_OFF_ACTION, 0),
-            (CONF_SET_PERCENTAGE_ACTION, FanEntityFeature.SET_SPEED),
-            (CONF_SET_PRESET_MODE_ACTION, FanEntityFeature.PRESET_MODE),
-            (CONF_SET_OSCILLATING_ACTION, FanEntityFeature.OSCILLATE),
-            (CONF_SET_DIRECTION_ACTION, FanEntityFeature.DIRECTION),
-        ):
-            # Scripts can be an empty list, therefore we need to check for None
-            if (action_config := config.get(action_id)) is not None:
-                self.add_script(action_id, action_config, name, DOMAIN)
-                self._attr_supported_features |= supported_feature
 
         self._state: bool | None = False
         self._percentage: int | None = None
@@ -260,6 +232,21 @@ class TemplateFan(TemplateEntity, FanEntity):
         # List of valid preset modes
         self._preset_modes: list[str] | None = config.get(CONF_PRESET_MODES)
         self._attr_assumed_state = self._template is None
+
+    def _register_scripts(
+        self, config: dict[str, Any]
+    ) -> Generator[tuple[str, Sequence[dict[str, Any]], FanEntityFeature | int]]:
+        for action_id, supported_feature in (
+            (CONF_ON_ACTION, 0),
+            (CONF_OFF_ACTION, 0),
+            (CONF_SET_PERCENTAGE_ACTION, FanEntityFeature.SET_SPEED),
+            (CONF_SET_PRESET_MODE_ACTION, FanEntityFeature.PRESET_MODE),
+            (CONF_SET_OSCILLATING_ACTION, FanEntityFeature.OSCILLATE),
+            (CONF_SET_DIRECTION_ACTION, FanEntityFeature.DIRECTION),
+        ):
+            if (action_config := config.get(action_id)) is not None:
+                self._registered_scripts.append(action_id)
+                yield (action_id, action_config, supported_feature)
 
     @property
     def speed_count(self) -> int:
@@ -296,119 +283,7 @@ class TemplateFan(TemplateEntity, FanEntity):
         """Return the oscillation state."""
         return self._direction
 
-    async def async_turn_on(
-        self,
-        percentage: int | None = None,
-        preset_mode: str | None = None,
-        **kwargs: Any,
-    ) -> None:
-        """Turn on the fan."""
-        await self.async_run_script(
-            self._action_scripts[CONF_ON_ACTION],
-            run_variables={
-                ATTR_PERCENTAGE: percentage,
-                ATTR_PRESET_MODE: preset_mode,
-            },
-            context=self._context,
-        )
-
-        if preset_mode is not None:
-            await self.async_set_preset_mode(preset_mode)
-        if percentage is not None:
-            await self.async_set_percentage(percentage)
-
-        if self._template is None:
-            self._state = True
-            self.async_write_ha_state()
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off the fan."""
-        await self.async_run_script(
-            self._action_scripts[CONF_OFF_ACTION], context=self._context
-        )
-
-        if self._template is None:
-            self._state = False
-            self.async_write_ha_state()
-
-    async def async_set_percentage(self, percentage: int) -> None:
-        """Set the percentage speed of the fan."""
-        self._percentage = percentage
-
-        if script := self._action_scripts.get(CONF_SET_PERCENTAGE_ACTION):
-            await self.async_run_script(
-                script,
-                run_variables={ATTR_PERCENTAGE: self._percentage},
-                context=self._context,
-            )
-
-        if self._template is None:
-            self._state = percentage != 0
-
-        if self._template is None or self._percentage_template is None:
-            self.async_write_ha_state()
-
-    async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set the preset_mode of the fan."""
-        self._preset_mode = preset_mode
-
-        if script := self._action_scripts.get(CONF_SET_PRESET_MODE_ACTION):
-            await self.async_run_script(
-                script,
-                run_variables={ATTR_PRESET_MODE: self._preset_mode},
-                context=self._context,
-            )
-
-        if self._template is None:
-            self._state = True
-
-        if self._template is None or self._preset_mode_template is None:
-            self.async_write_ha_state()
-
-    async def async_oscillate(self, oscillating: bool) -> None:
-        """Set oscillation of the fan."""
-        self._oscillating = oscillating
-        if (
-            script := self._action_scripts.get(CONF_SET_OSCILLATING_ACTION)
-        ) is not None:
-            await self.async_run_script(
-                script,
-                run_variables={ATTR_OSCILLATING: self.oscillating},
-                context=self._context,
-            )
-
-        if self._oscillating_template is None:
-            self.async_write_ha_state()
-
-    async def async_set_direction(self, direction: str) -> None:
-        """Set the direction of the fan."""
-        if direction in _VALID_DIRECTIONS:
-            self._direction = direction
-            if (
-                script := self._action_scripts.get(CONF_SET_DIRECTION_ACTION)
-            ) is not None:
-                await self.async_run_script(
-                    script,
-                    run_variables={ATTR_DIRECTION: direction},
-                    context=self._context,
-                )
-            if self._direction_template is None:
-                self.async_write_ha_state()
-        else:
-            _LOGGER.error(
-                "Received invalid direction: %s for entity %s. Expected: %s",
-                direction,
-                self.entity_id,
-                ", ".join(_VALID_DIRECTIONS),
-            )
-
-    @callback
-    def _update_state(self, result):
-        super()._update_state(result)
-        if isinstance(result, TemplateError):
-            self._state = None
-            return
-
+    def _handle_state(self, result) -> None:
         if isinstance(result, bool):
             self._state = result
             return
@@ -418,48 +293,6 @@ class TemplateFan(TemplateEntity, FanEntity):
             return
 
         self._state = False
-
-    @callback
-    def _async_setup_templates(self) -> None:
-        """Set up templates."""
-        if self._template:
-            self.add_template_attribute(
-                "_state", self._template, None, self._update_state
-            )
-
-        if self._preset_mode_template is not None:
-            self.add_template_attribute(
-                "_preset_mode",
-                self._preset_mode_template,
-                None,
-                self._update_preset_mode,
-                none_on_template_error=True,
-            )
-        if self._percentage_template is not None:
-            self.add_template_attribute(
-                "_percentage",
-                self._percentage_template,
-                None,
-                self._update_percentage,
-                none_on_template_error=True,
-            )
-        if self._oscillating_template is not None:
-            self.add_template_attribute(
-                "_oscillating",
-                self._oscillating_template,
-                None,
-                self._update_oscillating,
-                none_on_template_error=True,
-            )
-        if self._direction_template is not None:
-            self.add_template_attribute(
-                "_direction",
-                self._direction_template,
-                None,
-                self._update_direction,
-                none_on_template_error=True,
-            )
-        super()._async_setup_templates()
 
     @callback
     def _update_percentage(self, percentage):
@@ -535,3 +368,200 @@ class TemplateFan(TemplateEntity, FanEntity):
                 ", ".join(_VALID_DIRECTIONS),
             )
             self._direction = None
+
+    async def async_turn_on(
+        self,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Turn on the fan."""
+        run_script = getattr(self, "async_run_script")
+        scripts = getattr(self, "_action_scripts")
+        await run_script(
+            scripts[CONF_ON_ACTION],
+            run_variables={
+                ATTR_PERCENTAGE: percentage,
+                ATTR_PRESET_MODE: preset_mode,
+            },
+            context=self._context,
+        )
+
+        if preset_mode is not None:
+            await self.async_set_preset_mode(preset_mode)
+        if percentage is not None:
+            await self.async_set_percentage(percentage)
+
+        if self._template is None:
+            self._state = True
+            self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the fan."""
+        run_script = getattr(self, "async_run_script")
+        scripts = getattr(self, "_action_scripts")
+        await run_script(scripts[CONF_OFF_ACTION], context=self._context)
+
+        if self._template is None:
+            self._state = False
+            self.async_write_ha_state()
+
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the percentage speed of the fan."""
+        self._percentage = percentage
+        run_script = getattr(self, "async_run_script")
+        scripts = getattr(self, "_action_scripts")
+
+        if script := scripts.get(CONF_SET_PERCENTAGE_ACTION):
+            await run_script(
+                script,
+                run_variables={ATTR_PERCENTAGE: self._percentage},
+                context=self._context,
+            )
+
+        if self._template is None:
+            self._state = percentage != 0
+
+        if self._template is None or self._percentage_template is None:
+            self.async_write_ha_state()
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset_mode of the fan."""
+        self._preset_mode = preset_mode
+        run_script = getattr(self, "async_run_script")
+        scripts = getattr(self, "_action_scripts")
+
+        if script := scripts.get(CONF_SET_PRESET_MODE_ACTION):
+            await run_script(
+                script,
+                run_variables={ATTR_PRESET_MODE: self._preset_mode},
+                context=self._context,
+            )
+
+        if self._template is None:
+            self._state = True
+
+        if self._template is None or self._preset_mode_template is None:
+            self.async_write_ha_state()
+
+    async def async_oscillate(self, oscillating: bool) -> None:
+        """Set oscillation of the fan."""
+        self._oscillating = oscillating
+        run_script = getattr(self, "async_run_script")
+        scripts = getattr(self, "_action_scripts")
+        if (script := scripts.get(CONF_SET_OSCILLATING_ACTION)) is not None:
+            await run_script(
+                script,
+                run_variables={ATTR_OSCILLATING: self.oscillating},
+                context=self._context,
+            )
+
+        if self._oscillating_template is None:
+            self.async_write_ha_state()
+
+    async def async_set_direction(self, direction: str) -> None:
+        """Set the direction of the fan."""
+        run_script = getattr(self, "async_run_script")
+        scripts = getattr(self, "_action_scripts")
+        if direction in _VALID_DIRECTIONS:
+            self._direction = direction
+            if (script := scripts.get(CONF_SET_DIRECTION_ACTION)) is not None:
+                await run_script(
+                    script,
+                    run_variables={ATTR_DIRECTION: direction},
+                    context=self._context,
+                )
+            if self._direction_template is None:
+                self.async_write_ha_state()
+        else:
+            _LOGGER.error(
+                "Received invalid direction: %s for entity %s. Expected: %s",
+                direction,
+                self.entity_id,
+                ", ".join(_VALID_DIRECTIONS),
+            )
+
+
+class TemplateFan(TemplateEntity, AbstractTemplateFan):
+    """A template fan component."""
+
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: dict[str, Any],
+        unique_id,
+    ) -> None:
+        """Initialize the fan."""
+        TemplateEntity.__init__(
+            self, hass, config=config, fallback_name=None, unique_id=unique_id
+        )
+        AbstractTemplateFan.__init__(self, config)
+        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
+            self.entity_id = async_generate_entity_id(
+                ENTITY_ID_FORMAT, object_id, hass=hass
+            )
+        name = self._attr_name
+        if TYPE_CHECKING:
+            assert name is not None
+
+        self._attr_supported_features |= (
+            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
+        )
+        for action_id, action_config, supported_feature in self._register_scripts(
+            config
+        ):
+            self.add_script(action_id, action_config, name, DOMAIN)
+            self._attr_supported_features |= supported_feature
+
+    @callback
+    def _update_state(self, result):
+        super()._update_state(result)
+        if isinstance(result, TemplateError):
+            self._state = None
+            return
+
+        self._handle_state(result)
+
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
+        if self._template:
+            self.add_template_attribute(
+                "_state", self._template, None, self._update_state
+            )
+
+        if self._preset_mode_template is not None:
+            self.add_template_attribute(
+                "_preset_mode",
+                self._preset_mode_template,
+                None,
+                self._update_preset_mode,
+                none_on_template_error=True,
+            )
+        if self._percentage_template is not None:
+            self.add_template_attribute(
+                "_percentage",
+                self._percentage_template,
+                None,
+                self._update_percentage,
+                none_on_template_error=True,
+            )
+        if self._oscillating_template is not None:
+            self.add_template_attribute(
+                "_oscillating",
+                self._oscillating_template,
+                None,
+                self._update_oscillating,
+                none_on_template_error=True,
+            )
+        if self._direction_template is not None:
+            self.add_template_attribute(
+                "_direction",
+                self._direction_template,
+                None,
+                self._update_direction,
+                none_on_template_error=True,
+            )
+        super()._async_setup_templates()
