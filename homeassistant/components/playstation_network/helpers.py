@@ -9,6 +9,7 @@ from psnawp_api import PSNAWP
 from psnawp_api.core.psnawp_exceptions import PSNAWPNotFoundError
 from psnawp_api.models.trophies import PlatformType as PSNAWPPlatformType
 from psnawp_api.models.user import User
+from pyrate_limiter import Duration, Rate
 
 from .const import PlatformType
 
@@ -45,7 +46,8 @@ class PlaystationNetwork:
 
     def __init__(self, npsso: str) -> None:
         """Initialize the class with the npsso token."""
-        self.psn = PSNAWP(npsso)
+        rate = Rate(300, Duration.MINUTE * 15)
+        self.psn = PSNAWP(npsso, rate_limit=rate)
         self.client = self.psn.me()
         self.user: User | None = None
         self.legacy_profile: dict[str, Any] | None = None
