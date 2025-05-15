@@ -465,10 +465,11 @@ class ReolinkHost:
             wake = True
             self.last_wake = time()
 
+        for channel in self._api.channels:
+            if self._api.baichuan.privacy_mode(channel):
+                await self._api.baichuan.get_privacy_mode(channel)
         if self._api.baichuan.privacy_mode():
-            await self._api.baichuan.get_privacy_mode()
-            if self._api.baichuan.privacy_mode():
-                return  # API is shutdown, no need to check states
+            return  # API is shutdown, no need to check states
 
         await self._api.get_states(cmd_list=self.update_cmd, wake=wake)
 
@@ -580,7 +581,12 @@ class ReolinkHost:
             )
             return
 
-        await self._api.subscribe(self._webhook_url)
+        try:
+            await self._api.subscribe(self._webhook_url)
+        except NotSupportedError as err:
+            self._onvif_push_supported = False
+            _LOGGER.debug(err)
+            return
 
         _LOGGER.debug(
             "Host %s: subscribed successfully to webhook %s",
@@ -601,7 +607,11 @@ class ReolinkHost:
             return  # API is shutdown, no need to subscribe
 
         try:
-            if self._onvif_push_supported and not self._api.baichuan.events_active:
+            if (
+                self._onvif_push_supported
+                and not self._api.baichuan.events_active
+                and self._cancel_tcp_push_check is None
+            ):
                 await self._renew(SubType.push)
 
             if self._onvif_long_poll_supported and self._long_poll_task is not None:
