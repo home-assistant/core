@@ -466,3 +466,79 @@ async def test_webhook_endpoint_invalid_secret_token_is_denied(
         headers={"X-Telegram-Bot-Api-Secret-Token": incorrect_secret_token},
     )
     assert response.status == 401
+
+
+async def test_send_file_handles_none_response(
+    hass: HomeAssistant, webhook_platform
+) -> None:
+    """Test the send_file service correctly handles None responses from _send_msg."""
+    context = Context()
+    events = async_capture_events(hass, "telegram_sent")
+
+    # Mock the file handler read with our base64 encoded dummy file
+    with (
+        patch(
+            "homeassistant.components.telegram_bot._read_file_as_bytesio",
+            _read_file_as_bytesio_mock,
+        ),
+        # Simulate an API error by making send_photo return None
+        patch(
+            "homeassistant.components.telegram_bot.TelegramNotificationService._send_msg",
+            return_value=None,
+        ),
+    ):
+        # This should not raise an AttributeError
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_PHOTO,
+            {ATTR_FILE: "/media/dummy"},
+            blocking=True,
+            context=context,
+        )
+        await hass.async_block_till_done()
+
+    # No events should be fired since the API call failed
+    assert len(events) == 0
+
+
+@pytest.mark.parametrize(
+    "service",
+    [
+        SERVICE_SEND_STICKER,
+        SERVICE_SEND_LOCATION,
+        SERVICE_SEND_POLL,
+    ],
+)
+async def test_other_send_methods_handle_none_response(
+    hass: HomeAssistant, webhook_platform, service: str
+) -> None:
+    """Test that other send methods also handle None responses correctly."""
+    context = Context()
+    events = async_capture_events(hass, "telegram_sent")
+
+    # Prepare service_data based on the service type
+    service_data = {}
+    if service == SERVICE_SEND_STICKER:
+        service_data = {ATTR_STICKER_ID: "test_sticker_id"}
+    elif service == SERVICE_SEND_LOCATION:
+        service_data = {ATTR_LONGITUDE: "1.123", ATTR_LATITUDE: "1.123"}
+    elif service == SERVICE_SEND_POLL:
+        service_data = {ATTR_QUESTION: "Question", ATTR_OPTIONS: ["Yes", "No"]}
+
+    # Simulate an API error by making _send_msg return None
+    with patch(
+        "homeassistant.components.telegram_bot.TelegramNotificationService._send_msg",
+        return_value=None,
+    ):
+        # This should not raise an AttributeError
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            service_data,
+            blocking=True,
+            context=context,
+        )
+        await hass.async_block_till_done()
+
+    # No events should be fired since the API call failed
+    assert len(events) == 0
