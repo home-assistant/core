@@ -6,7 +6,6 @@ from collections.abc import Callable, Coroutine
 from datetime import timedelta
 from typing import Any
 
-from pyiqvia import Client
 from pyiqvia.errors import IQVIAError
 
 from homeassistant.config_entries import ConfigEntry
@@ -26,7 +25,6 @@ class IqviaUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def __init__(
         self,
         hass: HomeAssistant,
-        client: Client,
         config_entry: ConfigEntry,
         name: str,
         update_method: Callable[[], Coroutine[Any, Any, dict[str, Any]]],
@@ -39,7 +37,6 @@ class IqviaUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=config_entry,
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
-        self._client = client
         self._update_method = update_method
 
     async def _async_update_data(self) -> dict[str, Any]:

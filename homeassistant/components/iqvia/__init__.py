@@ -59,7 +59,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ):
         coordinator = coordinators[sensor_type] = IqviaUpdateCoordinator(
             hass,
-            client=client,
             config_entry=entry,
             name=f"{entry.data[CONF_ZIP_CODE]} {sensor_type}",
             update_method=api_coro,
