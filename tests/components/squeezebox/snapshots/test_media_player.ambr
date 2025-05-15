@@ -78,12 +78,8 @@
       'group_members': list([
       ]),
       'is_volume_muted': True,
-      'media_album_name': 'None',
-      'media_artist': 'None',
-      'media_channel': 'None',
       'media_duration': 1,
       'media_position': 1,
-      'media_title': 'None',
       'query_result': dict({
       }),
       'repeat': <RepeatMode.OFF: 'off'>,
