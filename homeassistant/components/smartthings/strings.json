@@ -575,7 +575,7 @@
       "description": "The switch `{entity_id}` is deprecated and a media player entity has been added to replace it.\n\nThe switch was used in the following automations or scripts:\n{items}\n\nPlease use the new media player entity in the above automations or scripts and disable the entity to fix this issue."
     },
     "deprecated_switch_dhw": {
-      "title": "DHW switch deprecated",
+      "title": "Heat pump switch deprecated",
       "description": "The switch `{entity_id}` is deprecated and a water heater entity has been added to replace it.\n\nPlease use the new water heater entity in the above automations or scripts and disable the entity to fix this issue."
     },
     "deprecated_switch_dhw_scripts": {
