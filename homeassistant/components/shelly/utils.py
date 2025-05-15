@@ -11,6 +11,8 @@ from aiohttp.web import Request, WebSocketResponse
 from aioshelly.block_device import COAP, Block, BlockDevice
 from aioshelly.const import (
     BLOCK_GENERATIONS,
+    BLU_TRV_IDENTIFIER,
+    BLU_TRV_MODEL_NAME,
     DEFAULT_COAP_PORT,
     DEFAULT_HTTP_PORT,
     MODEL_1L,
@@ -40,7 +42,11 @@ from homeassistant.helpers import (
     issue_registry as ir,
     singleton,
 )
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_BLUETOOTH,
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+)
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.util.dt import utcnow
 
@@ -386,6 +392,9 @@ def get_shelly_model_name(
 
 def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     """Get name based on device and channel name."""
+    if BLU_TRV_IDENTIFIER in key:
+        return None
+
     instances = len(
         get_rpc_key_instances(device.status, key.split(":")[0], all_lights=True)
     )
@@ -762,6 +771,22 @@ def get_rpc_device_info(
         name=get_rpc_sub_device_name(device, key),
         manufacturer="Shelly",
         via_device=(DOMAIN, mac),
+    )
+
+
+def get_blu_trv_device_info(
+    config: dict[str, Any], ble_addr: str, parent_mac: str
+) -> DeviceInfo:
+    """Return device info for RPC device."""
+    model_id = config.get("local_name")
+    return DeviceInfo(
+        connections={(CONNECTION_BLUETOOTH, ble_addr)},
+        identifiers={(DOMAIN, ble_addr)},
+        via_device=(DOMAIN, parent_mac),
+        manufacturer="Shelly",
+        model=BLU_TRV_MODEL_NAME.get(model_id) if model_id else None,
+        model_id=config.get("local_name"),
+        name=config["name"] or f"shellyblutrv-{ble_addr.replace(':', '')}",
     )
 
 
