@@ -10,13 +10,12 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import IntellifireDataUpdateCoordinator
-from .const import DEFAULT_THERMOSTAT_TEMP, DOMAIN, LOGGER
+from .const import DEFAULT_THERMOSTAT_TEMP, LOGGER
+from .coordinator import IntellifireConfigEntry, IntellifireDataUpdateCoordinator
 from .entity import IntellifireEntity
 
 INTELLIFIRE_CLIMATES: tuple[ClimateEntityDescription, ...] = (
@@ -26,11 +25,11 @@ INTELLIFIRE_CLIMATES: tuple[ClimateEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: IntellifireConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Configure the fan entry.."""
-    coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     if coordinator.data.has_thermostat:
         async_add_entities(

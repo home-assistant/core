@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from pysmartthings import Attribute, Capability, Command, Status
+from pysmartthings.models import HealthStatus
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -34,12 +35,18 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
     STATE_OFF,
     STATE_PLAYING,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration, snapshot_smartthings_entities, trigger_update
+from . import (
+    setup_integration,
+    snapshot_smartthings_entities,
+    trigger_health_update,
+    trigger_update,
+)
 
 from tests.common import MockConfigEntry
 
@@ -430,3 +437,38 @@ async def test_state_update(
     )
 
     assert hass.states.get("media_player.soundbar").state == STATE_OFF
+
+
+@pytest.mark.parametrize("device_fixture", ["hw_q80r_soundbar"])
+async def test_availability(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test availability."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("media_player.soundbar").state == STATE_PLAYING
+
+    await trigger_health_update(
+        hass, devices, "afcf3b91-0000-1111-2222-ddff2a0a6577", HealthStatus.OFFLINE
+    )
+
+    assert hass.states.get("media_player.soundbar").state == STATE_UNAVAILABLE
+
+    await trigger_health_update(
+        hass, devices, "afcf3b91-0000-1111-2222-ddff2a0a6577", HealthStatus.ONLINE
+    )
+
+    assert hass.states.get("media_player.soundbar").state == STATE_PLAYING
+
+
+@pytest.mark.parametrize("device_fixture", ["hw_q80r_soundbar"])
+async def test_availability_at_start(
+    hass: HomeAssistant,
+    unavailable_device: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unavailable at boot."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("media_player.soundbar").state == STATE_UNAVAILABLE

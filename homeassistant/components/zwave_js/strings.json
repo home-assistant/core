@@ -12,14 +12,15 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "backup_failed": "Failed to back up network.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "config_entry_not_loaded": "The Z-Wave configuration entry is not loaded. Please try again when the configuration entry is loaded.",
       "different_device": "The connected USB device is not the same as previously configured for this config entry. Please instead create a new config entry for the new device.",
       "discovery_requires_supervisor": "Discovery requires the supervisor.",
+      "migration_low_sdk_version": "The SDK version of the old controller is lower than {ok_sdk_version}. This means it's not possible to migrate the Non Volatile Memory (NVM) of the old controller to another controller.\n\nCheck the documentation on the manufacturer support pages of the old controller, if it's possible to upgrade the firmware of the old controller to a version that is build with SDK version {ok_sdk_version} or higher.",
       "migration_successful": "Migration successful.",
       "not_zwave_device": "Discovered device is not a Z-Wave device.",
       "not_zwave_js_addon": "Discovered add-on is not the official Z-Wave add-on.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "reset_failed": "Failed to reset controller.",
-      "restore_failed": "Failed to restore network.",
       "usb_ports_failed": "Failed to get USB devices."
     },
     "error": {
@@ -36,8 +37,10 @@
       "restore_nvm": "Please wait while the network restore completes."
     },
     "step": {
-      "configure_addon": {
+      "configure_addon_user": {
         "data": {
+          "lr_s2_access_control_key": "Long Range S2 Access Control Key",
+          "lr_s2_authenticated_key": "Long Range S2 Authenticated Key",
           "s0_legacy_key": "S0 Key (Legacy)",
           "s2_access_control_key": "S2 Access Control Key",
           "s2_authenticated_key": "S2 Authenticated Key",
@@ -51,17 +54,19 @@
         "data": {
           "emulate_hardware": "Emulate Hardware",
           "log_level": "Log level",
-          "s0_legacy_key": "[%key:component::zwave_js::config::step::configure_addon::data::s0_legacy_key%]",
-          "s2_access_control_key": "[%key:component::zwave_js::config::step::configure_addon::data::s2_access_control_key%]",
-          "s2_authenticated_key": "[%key:component::zwave_js::config::step::configure_addon::data::s2_authenticated_key%]",
-          "s2_unauthenticated_key": "[%key:component::zwave_js::config::step::configure_addon::data::s2_unauthenticated_key%]",
+          "lr_s2_access_control_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::lr_s2_access_control_key%]",
+          "lr_s2_authenticated_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::lr_s2_authenticated_key%]",
+          "s0_legacy_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::s0_legacy_key%]",
+          "s2_access_control_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::s2_access_control_key%]",
+          "s2_authenticated_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::s2_authenticated_key%]",
+          "s2_unauthenticated_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::s2_unauthenticated_key%]",
           "usb_path": "[%key:common::config_flow::data::usb_path%]"
         },
-        "description": "[%key:component::zwave_js::config::step::configure_addon::description%]",
-        "title": "[%key:component::zwave_js::config::step::configure_addon::title%]"
+        "description": "[%key:component::zwave_js::config::step::configure_addon_user::description%]",
+        "title": "[%key:component::zwave_js::config::step::configure_addon_user::title%]"
       },
       "hassio_confirm": {
-        "title": "Set up Z-Wave integration with the Z-Wave add-on"
+        "description": "Do you want to set up the Z-Wave integration with the Z-Wave add-on?"
       },
       "install_addon": {
         "title": "The Z-Wave add-on installation has started"
@@ -115,6 +120,11 @@
       "instruct_unplug": {
         "title": "Unplug your old controller",
         "description": "Backup saved to \"{file_path}\"\n\nYour old controller has been reset. If the hardware is no longer needed, you can now unplug it.\n\nPlease make sure your new controller is plugged in before continuing."
+      },
+      "restore_failed": {
+        "title": "Restoring unsuccessful",
+        "description": "Your Z-Wave network could not be restored to the new controller. This means that your Z-Wave devices are not connected to Home Assistant.\n\nThe backup is saved to ”{file_path}”",
+        "submit": "Try again"
       },
       "choose_serial_port": {
         "data": {
@@ -263,6 +273,17 @@
     "invalid_server_version": {
       "description": "The version of Z-Wave Server you are currently running is too old for this version of Home Assistant. Please update the Z-Wave Server to the latest version to fix this issue.",
       "title": "Newer version of Z-Wave Server needed"
+    },
+    "migrate_unique_id": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "A Z-Wave controller of model {controller_model} with a different ID ({new_unique_id}) than the previously connected controller ({old_unique_id}) was connected to the {config_entry_title} configuration entry.\n\nReasons for a different controller ID could be:\n\n1. The controller was factory reset, with a 3rd party application.\n2. A controller Non Volatile Memory (NVM) backup was restored to the controller, with a 3rd party application.\n3. A different controller was connected to this configuration entry.\n\nIf a different controller was connected, you should instead set up a new configuration entry for the new controller.\n\nIf you are sure that the current controller is the correct controller you can confirm this by pressing Submit, and the configuration entry will remember the new controller ID.",
+            "title": "An unknown controller was detected"
+          }
+        }
+      },
+      "title": "An unknown controller was detected"
     }
   },
   "services": {

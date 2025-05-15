@@ -418,9 +418,11 @@ class CloudTTSEntity(TextToSpeechEntity):
                     language=language,
                     voice=options.get(
                         ATTR_VOICE,
-                        self._voice
-                        if language == self._language
-                        else DEFAULT_VOICES[language],
+                        (
+                            self._voice
+                            if language == self._language
+                            else DEFAULT_VOICES[language]
+                        ),
                     ),
                     gender=options.get(ATTR_GENDER),
                 ),
@@ -434,6 +436,8 @@ class CloudTTSEntity(TextToSpeechEntity):
 
 class CloudProvider(Provider):
     """Home Assistant Cloud speech API provider."""
+
+    has_entity = True
 
     def __init__(self, cloud: Cloud[CloudClient]) -> None:
         """Initialize cloud provider."""
