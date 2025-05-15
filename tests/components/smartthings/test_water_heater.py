@@ -1,6 +1,6 @@
 """Test for the SmartThings water heater platform."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, call
 
 from pysmartthings import Attribute, Capability, Command
 from pysmartthings.models import HealthStatus
@@ -93,6 +93,69 @@ async def test_set_operation_mode(
         MAIN,
         argument=argument,
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
+async def test_set_operation_mode_off(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test set operation mode to off."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        SERVICE_SET_OPERATION_MODE,
+        {
+            ATTR_ENTITY_ID: "water_heater.warmepumpe",
+            ATTR_OPERATION_MODE: STATE_OFF,
+        },
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "3810e5ad-5351-d9f9-12ff-000001200000",
+        Capability.SWITCH,
+        Command.OFF,
+        MAIN,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000001_sub"])
+async def test_set_operation_mode_from_off(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test set operation mode."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("water_heater.eco_heating_system").state == STATE_OFF
+
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        SERVICE_SET_OPERATION_MODE,
+        {
+            ATTR_ENTITY_ID: "water_heater.eco_heating_system",
+            ATTR_OPERATION_MODE: STATE_ECO,
+        },
+        blocking=True,
+    )
+    assert devices.execute_device_command.mock_calls == [
+        call(
+            "1f98ebd0-ac48-d802-7f62-000001200100",
+            Capability.SWITCH,
+            Command.ON,
+            MAIN,
+        ),
+        call(
+            "1f98ebd0-ac48-d802-7f62-000001200100",
+            Capability.AIR_CONDITIONER_MODE,
+            Command.SET_AIR_CONDITIONER_MODE,
+            MAIN,
+            argument="eco",
+        ),
+    ]
 
 
 @pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])

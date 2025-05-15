@@ -106,20 +106,6 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
         )
         return max(max_temperature, self.target_temperature_high)
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the water heater on."""
-        await self.execute_device_command(
-            Capability.SWITCH,
-            Command.ON,
-        )
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the water heater off."""
-        await self.execute_device_command(
-            Capability.SWITCH,
-            Command.OFF,
-        )
-
     @property
     def operation_list(self) -> list[str]:
         """Return the list of available operation modes."""
@@ -202,6 +188,20 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
             Capability.THERMOSTAT_COOLING_SETPOINT,
             Command.SET_COOLING_SETPOINT,
             argument=kwargs[ATTR_TEMPERATURE],
+        )
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the water heater on."""
+        await self.execute_device_command(
+            Capability.SWITCH,
+            Command.ON,
+        )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the water heater off."""
+        await self.execute_device_command(
+            Capability.SWITCH,
+            Command.OFF,
         )
 
     async def async_turn_away_mode_on(self) -> None:
