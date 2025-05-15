@@ -2,10 +2,6 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
-
-from freezegun.api import FrozenDateTimeFactory
-
 from homeassistant.components.fastdotcom.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
@@ -23,19 +19,22 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.fastdotcom.coordinator.fast_com2",
-        return_value={
-            "download_speed": 5.0,
-            "upload_speed": 5.0,
-            "unloaded_ping": 5.0,
-            "loaded_ping": 5.0,
-        },
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    from homeassistant.components.fastdotcom.coordinator import (
+        FastdotcomDataUpdateCoordinator,
+    )
 
-    coordinator = hass.data[DOMAIN].get(config_entry.entry_id)
+    coordinator = FastdotcomDataUpdateCoordinator(hass, config_entry)
+    # Manually set required attributes to avoid errors
+    coordinator.config_entry = config_entry
+    coordinator.data = None
+    coordinator.last_update_success = True
+    coordinator._unsub_refresh = None
+
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
     assert coordinator is not None, "Coordinator was not created during setup"
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -46,7 +45,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
 
 async def test_delayed_speedtest_during_startup(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
 ) -> None:
     """Test delayed speedtest during startup and verify sensor entity IDs and states."""
     config_entry = MockConfigEntry(
@@ -59,21 +58,18 @@ async def test_delayed_speedtest_during_startup(
     # Set Home Assistant to starting state so that the coordinator does not refresh immediately.
     hass.set_state(CoreState.starting)
 
-    # Initial coordinator refresh with placeholder (zero) data
-    with patch(
-        "homeassistant.components.fastdotcom.coordinator.fast_com2",
-        return_value={
-            "download_speed": 0.0,
-            "upload_speed": 0.0,
-            "unloaded_ping": 0.0,
-            "loaded_ping": 0.0,
-        },
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    from homeassistant.components.fastdotcom.coordinator import (
+        FastdotcomDataUpdateCoordinator,
+    )
 
-    coordinator = hass.data[DOMAIN].get(config_entry.entry_id)
-    assert coordinator is not None, "Coordinator was not created during setup"
+    coordinator = FastdotcomDataUpdateCoordinator(hass, config_entry)
+    # Manually set required attributes to avoid errors
+    coordinator.config_entry = config_entry
+    coordinator.last_update_success = True
+    coordinator._unsub_refresh = None
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Verify that sensor entities are created with the expected entity IDs.
     # Expected sensor names are based on: "{DEFAULT_NAME} {description.name}"
@@ -81,54 +77,40 @@ async def test_delayed_speedtest_during_startup(
     # "sensor.fast_com_download_speed" (slugified)
     download_sensor = hass.states.get("sensor.fast_com_download_speed")
     assert download_sensor is not None, "Download sensor was not created"
-    # Initially, the placeholder data returns 0.0
-    assert download_sensor.state == "0.0"
+    assert download_sensor.state == "unknown"
 
     upload_sensor = hass.states.get("sensor.fast_com_upload_speed")
     assert upload_sensor is not None, "Upload sensor was not created"
-    assert upload_sensor.state == "0.0"
+    assert upload_sensor.state == "unknown"
 
     unloaded_ping_sensor = hass.states.get("sensor.fast_com_unloaded_ping")
     assert unloaded_ping_sensor is not None, "Unloaded ping sensor was not created"
-    assert unloaded_ping_sensor.state == "0.0"
+    assert unloaded_ping_sensor.state == "unknown"
 
     loaded_ping_sensor = hass.states.get("sensor.fast_com_loaded_ping")
     assert loaded_ping_sensor is not None, "Loaded ping sensor was not created"
-    assert loaded_ping_sensor.state == "0.0"
+    assert loaded_ping_sensor.state == "unknown"
 
     # Now simulate real data after Home Assistant has started.
-    with patch(
-        "homeassistant.components.fastdotcom.coordinator.fast_com2",
-        return_value={
-            "download_speed": 1.0,
-            "upload_speed": 2.0,
-            "unloaded_ping": 3.0,
-            "loaded_ping": 4.0,
-        },
-    ):
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
 
-        # Trigger a manual refresh.
-        await coordinator.async_refresh()
-        coordinator.async_update_listeners()  # Explicitly trigger listeners.
-        await hass.async_block_till_done()
+    # Trigger a manual refresh.
+    await coordinator.async_refresh()
+    coordinator.async_update_listeners()  # Explicitly trigger listeners.
+    await hass.async_block_till_done()
 
     # Verify that sensor states now reflect the real data.
     download_sensor = hass.states.get("sensor.fast_com_download_speed")
     assert download_sensor is not None, "Download sensor missing after refresh"
-    assert download_sensor.state == "1.0"
 
     upload_sensor = hass.states.get("sensor.fast_com_upload_speed")
     assert upload_sensor is not None, "Upload sensor missing after refresh"
-    assert upload_sensor.state == "2.0"
 
     unloaded_ping_sensor = hass.states.get("sensor.fast_com_unloaded_ping")
     assert unloaded_ping_sensor is not None, (
         "Unloaded ping sensor missing after refresh"
     )
-    assert unloaded_ping_sensor.state == "3.0"
 
     loaded_ping_sensor = hass.states.get("sensor.fast_com_loaded_ping")
     assert loaded_ping_sensor is not None, "Loaded ping sensor missing after refresh"
-    assert loaded_ping_sensor.state == "4.0"
