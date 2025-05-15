@@ -16,9 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DevoloHomeNetworkConfigEntry
 from .const import DOMAIN, SWITCH_GUEST_WIFI, SWITCH_LEDS
-from .coordinator import DevoloDataUpdateCoordinator
+from .coordinator import DevoloDataUpdateCoordinator, DevoloHomeNetworkConfigEntry
 from .entity import DevoloCoordinatorEntity
 
 PARALLEL_UPDATES = 0
