@@ -5,8 +5,6 @@ import logging
 
 from httpx import HTTPError, InvalidURL
 from ical.calendar import Calendar
-from ical.calendar_stream import IcsCalendarStream
-from ical.exceptions import CalendarParseError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
@@ -15,6 +13,7 @@ from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
+from .ics import InvalidIcsException, parse_calendar
 
 type RemoteCalendarConfigEntry = ConfigEntry[RemoteCalendarDataUpdateCoordinator]
 
@@ -26,6 +25,7 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
     """Class to manage fetching calendar data."""
 
     config_entry: RemoteCalendarConfigEntry
+    ics: str
 
     def __init__(
         self,
@@ -40,7 +40,6 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
             update_interval=SCAN_INTERVAL,
             always_update=True,
         )
-        self._etag = None
         self._client = get_async_client(hass)
         self._url = config_entry.data[CONF_URL]
 
@@ -56,10 +55,9 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
                 translation_placeholders={"err": str(err)},
             ) from err
         try:
-            return await self.hass.async_add_executor_job(
-                IcsCalendarStream.calendar_from_ics, res.text
-            )
-        except CalendarParseError as err:
+            self.ics = res.text
+            return await parse_calendar(self.hass, res.text)
+        except InvalidIcsException as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="unable_to_parse",

@@ -52,7 +52,19 @@
     "reminder_options_description": "Add, remove or clear reminders of a Habitica task.",
     "date_name": "Due date",
     "date_description": "The to-do's due date.",
-    "repeat_name": "Repeat on"
+    "repeat_name": "Repeat on",
+    "start_date_name": "Start date",
+    "start_date_description": "Defines when the daily task becomes active and specifies the exact weekday or day of the month it repeats on.",
+    "frequency_daily_name": "Repeat interval",
+    "frequency_daily_description": "The repetition interval of a daily.",
+    "every_x_name": "Repeat every X",
+    "every_x_description": "The number of intervals (days, weeks, months, or years) after which the daily repeats, based on the chosen repetition interval. A value of 0 makes the daily inactive ('Grey Daily').",
+    "repeat_weekly_description": "The days of the week the daily repeats.",
+    "repeat_monthly_description": "Whether a monthly recurring task repeats on the same calendar day each month or on the same weekday and week of the month, based on the start date.",
+    "repeat_weekly_options_name": "Weekly repeat days",
+    "repeat_weekly_options_description": "Options related to weekly repetition, applicable when the repetition interval is set to weekly.",
+    "repeat_monthly_options_name": "Monthly repeat day",
+    "repeat_monthly_options_description": "Options related to monthly repetition, applicable when the repetition interval is set to monthly."
   },
   "config": {
     "abort": {
@@ -514,31 +526,9 @@
     "deprecated_entity": {
       "title": "The Habitica {name} entity is deprecated",
       "description": "The Habitica entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue."
-    },
-    "deprecated_api_call": {
-      "title": "The Habitica action habitica.api_call is deprecated",
-      "description": "The Habitica action `habitica.api_call` is deprecated and will be removed in Home Assistant 2025.5.0.\n\nPlease update your automations and scripts to use other Habitica actions and entities."
     }
   },
   "services": {
-    "api_call": {
-      "name": "API name",
-      "description": "Calls Habitica API.",
-      "fields": {
-        "name": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "description": "Habitica's username to call for."
-        },
-        "path": {
-          "name": "[%key:common::config_flow::data::path%]",
-          "description": "Items from API URL in form of an array with method attached at the end. Consult https://habitica.com/apidoc/. Example uses https://habitica.com/apidoc/#api-Task-CreateUserTasks."
-        },
-        "args": {
-          "name": "Args",
-          "description": "Any additional JSON or URL parameter arguments. See apidoc mentioned for path. Example uses same API endpoint."
-        }
-      }
-    },
     "cast_skill": {
       "name": "Cast a skill",
       "description": "Uses a skill or spell from your Habitica character on a specific task to affect its progress or status.",
@@ -768,7 +758,7 @@
           "description": "[%key:component::habitica::common::notes_description%]"
         },
         "tag": {
-          "name": "[%key:component::habitica::common::tag_name%]",
+          "name": "[%key:component::habitica::common::tag_options_name%]",
           "description": "[%key:component::habitica::common::tag_description%]"
         },
         "alias": {
@@ -868,7 +858,7 @@
           "description": "[%key:component::habitica::common::notes_description%]"
         },
         "tag": {
-          "name": "[%key:component::habitica::common::tag_name%]",
+          "name": "[%key:component::habitica::common::tag_options_name%]",
           "description": "[%key:component::habitica::common::tag_description%]"
         },
         "alias": {
@@ -1008,7 +998,7 @@
           "description": "[%key:component::habitica::common::notes_description%]"
         },
         "tag": {
-          "name": "[%key:component::habitica::common::tag_name%]",
+          "name": "[%key:component::habitica::common::tag_options_name%]",
           "description": "[%key:component::habitica::common::tag_description%]"
         },
         "alias": {
@@ -1024,11 +1014,11 @@
           "description": "[%key:component::habitica::common::date_description%]"
         },
         "reminder": {
-          "name": "[%key:component::habitica::common::reminder_name%]",
+          "name": "[%key:component::habitica::common::reminder_options_name%]",
           "description": "[%key:component::habitica::common::reminder_description%]"
         },
         "add_checklist_item": {
-          "name": "[%key:component::habitica::common::add_checklist_item_name%]",
+          "name": "[%key:component::habitica::common::checklist_options_name%]",
           "description": "[%key:component::habitica::common::add_checklist_item_description%]"
         }
       },
@@ -1076,24 +1066,24 @@
           "description": "[%key:component::habitica::common::priority_description%]"
         },
         "start_date": {
-          "name": "Start date",
-          "description": "Defines when the daily task becomes active and specifies the exact weekday or day of the month it repeats on."
+          "name": "[%key:component::habitica::common::start_date_name%]",
+          "description": "[%key:component::habitica::common::start_date_description%]"
         },
         "frequency": {
-          "name": "Repeat interval",
-          "description": "The repetition interval of a daily."
+          "name": "[%key:component::habitica::common::frequency_daily_name%]",
+          "description": "[%key:component::habitica::common::frequency_daily_description%]"
         },
         "every_x": {
-          "name": "Repeat every X",
-          "description": "The number of intervals (days, weeks, months, or years) after which the daily repeats, based on the chosen repetition interval. A value of 0 makes the daily inactive ('Grey Daily')."
+          "name": "[%key:component::habitica::common::every_x_name%]",
+          "description": "[%key:component::habitica::common::every_x_description%]"
         },
         "repeat": {
           "name": "[%key:component::habitica::common::repeat_name%]",
-          "description": "The days of the week the daily repeats."
+          "description": "[%key:component::habitica::common::repeat_weekly_description%]"
         },
         "repeat_monthly": {
           "name": "[%key:component::habitica::common::repeat_name%]",
-          "description": "Whether a monthly recurring task repeats on the same calendar day each month or on the same weekday and week of the month, based on the start date."
+          "description": "[%key:component::habitica::common::repeat_monthly_description%]"
         },
         "add_checklist_item": {
           "name": "[%key:component::habitica::common::add_checklist_item_name%]",
@@ -1134,12 +1124,12 @@
           "description": "[%key:component::habitica::common::checklist_options_description%]"
         },
         "repeat_weekly_options": {
-          "name": "Weekly repeat days",
-          "description": "Options related to weekly repetition, applicable when the repetition interval is set to weekly."
+          "name": "[%key:component::habitica::common::repeat_weekly_options_name%]",
+          "description": "[%key:component::habitica::common::repeat_weekly_options_description%]"
         },
         "repeat_monthly_options": {
-          "name": "Monthly repeat day",
-          "description": "Options related to monthly repetition, applicable when the repetition interval is set to monthly."
+          "name": "[%key:component::habitica::common::repeat_monthly_options_name%]",
+          "description": "[%key:component::habitica::common::repeat_monthly_options_description%]"
         },
         "tag_options": {
           "name": "[%key:component::habitica::common::tag_options_name%]",
@@ -1152,6 +1142,78 @@
         "reminder_options": {
           "name": "[%key:component::habitica::common::reminder_options_name%]",
           "description": "[%key:component::habitica::common::reminder_options_description%]"
+        }
+      }
+    },
+    "create_daily": {
+      "name": "Create a daily",
+      "description": "Adds a new daily.",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::habitica::common::config_entry_name%]",
+          "description": "[%key:component::habitica::common::config_entry_description%]"
+        },
+        "name": {
+          "name": "[%key:component::habitica::common::task_name%]",
+          "description": "[%key:component::habitica::common::name_description%]"
+        },
+        "notes": {
+          "name": "[%key:component::habitica::common::notes_name%]",
+          "description": "[%key:component::habitica::common::notes_description%]"
+        },
+        "tag": {
+          "name": "[%key:component::habitica::common::tag_options_name%]",
+          "description": "[%key:component::habitica::common::tag_description%]"
+        },
+        "alias": {
+          "name": "[%key:component::habitica::common::alias_name%]",
+          "description": "[%key:component::habitica::common::alias_description%]"
+        },
+        "priority": {
+          "name": "[%key:component::habitica::common::priority_name%]",
+          "description": "[%key:component::habitica::common::priority_description%]"
+        },
+        "start_date": {
+          "name": "[%key:component::habitica::common::start_date_name%]",
+          "description": "[%key:component::habitica::common::start_date_description%]"
+        },
+        "frequency": {
+          "name": "[%key:component::habitica::common::frequency_daily_name%]",
+          "description": "[%key:component::habitica::common::frequency_daily_description%]"
+        },
+        "every_x": {
+          "name": "[%key:component::habitica::common::every_x_name%]",
+          "description": "[%key:component::habitica::common::every_x_description%]"
+        },
+        "repeat": {
+          "name": "[%key:component::habitica::common::repeat_name%]",
+          "description": "[%key:component::habitica::common::repeat_weekly_description%]"
+        },
+        "repeat_monthly": {
+          "name": "[%key:component::habitica::common::repeat_name%]",
+          "description": "[%key:component::habitica::common::repeat_monthly_description%]"
+        },
+        "add_checklist_item": {
+          "name": "[%key:component::habitica::common::checklist_options_name%]",
+          "description": "[%key:component::habitica::common::add_checklist_item_description%]"
+        },
+        "reminder": {
+          "name": "[%key:component::habitica::common::reminder_options_name%]",
+          "description": "[%key:component::habitica::common::reminder_description%]"
+        }
+      },
+      "sections": {
+        "repeat_weekly_options": {
+          "name": "[%key:component::habitica::common::repeat_weekly_options_name%]",
+          "description": "[%key:component::habitica::common::repeat_weekly_options_description%]"
+        },
+        "repeat_monthly_options": {
+          "name": "[%key:component::habitica::common::repeat_monthly_options_name%]",
+          "description": "[%key:component::habitica::common::repeat_monthly_options_description%]"
+        },
+        "developer_options": {
+          "name": "[%key:component::habitica::common::developer_options_name%]",
+          "description": "[%key:component::habitica::common::developer_options_description%]"
         }
       }
     }

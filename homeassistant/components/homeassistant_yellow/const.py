@@ -2,8 +2,9 @@
 
 DOMAIN = "homeassistant_yellow"
 
-RADIO_MODEL = "Home Assistant Yellow"
-RADIO_MANUFACTURER = "Nabu Casa"
+MODEL = "Home Assistant Yellow"
+MANUFACTURER = "Nabu Casa"
+
 RADIO_DEVICE = "/dev/ttyAMA1"
 
 ZHA_HW_DISCOVERY_DATA = {

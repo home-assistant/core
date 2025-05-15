@@ -3,10 +3,12 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': list([
       dict({
         'can_expand': True,
         'can_play': False,
+        'can_search': False,
         'children_media_class': None,
         'media_class': 'album',
         'media_content_id': 'object.container.album.musicAlbum',
@@ -17,6 +19,18 @@
       dict({
         'can_expand': True,
         'can_play': False,
+        'can_search': False,
+        'children_media_class': None,
+        'media_class': 'playlist',
+        'media_content_id': 'object.container.playlistContainer',
+        'media_content_type': 'favorites_folder',
+        'thumbnail': None,
+        'title': 'Playlists',
+      }),
+      dict({
+        'can_expand': True,
+        'can_play': False,
+        'can_search': False,
         'children_media_class': None,
         'media_class': 'track',
         'media_content_id': 'object.item.audioItem.audioBook',
@@ -27,6 +41,7 @@
       dict({
         'can_expand': True,
         'can_play': False,
+        'can_search': False,
         'children_media_class': None,
         'media_class': 'genre',
         'media_content_id': 'object.item.audioItem.audioBroadcast',
@@ -44,14 +59,43 @@
     'title': 'Favorites',
   })
 # ---
-# name: test_browse_media_favorites[object.item.audioItem.audioBook-favorites_folder]
+# name: test_browse_media_favorites[object.container.album.musicAlbum-favorites_folder]
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': list([
       dict({
         'can_expand': False,
         'can_play': True,
+        'can_search': False,
+        'children_media_class': None,
+        'media_class': 'album',
+        'media_content_id': 'FV:2/8',
+        'media_content_type': 'favorite_item_id',
+        'thumbnail': 'http://192.168.42.2:1400/getaa?u=x-file-cifs://192.168.42.2/music/iTunes%20Music/Aerosmith/1984&v=742',
+        'title': '1984',
+      }),
+    ]),
+    'children_media_class': 'album',
+    'media_class': 'directory',
+    'media_content_id': '',
+    'media_content_type': 'favorites',
+    'not_shown': 0,
+    'thumbnail': None,
+    'title': 'Albums',
+  })
+# ---
+# name: test_browse_media_favorites[object.item.audioItem.audioBook-favorites_folder]
+  dict({
+    'can_expand': True,
+    'can_play': False,
+    'can_search': False,
+    'children': list([
+      dict({
+        'can_expand': False,
+        'can_play': True,
+        'can_search': False,
         'children_media_class': None,
         'media_class': 'track',
         'media_content_id': 'FV:2/66',
@@ -74,6 +118,7 @@
     dict({
       'can_expand': True,
       'can_play': False,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'contributing_artist',
       'media_content_id': 'A:ARTIST',
@@ -84,6 +129,7 @@
     dict({
       'can_expand': True,
       'can_play': False,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'artist',
       'media_content_id': 'A:ALBUMARTIST',
@@ -94,6 +140,7 @@
     dict({
       'can_expand': True,
       'can_play': False,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'album',
       'media_content_id': 'A:ALBUM',
@@ -104,6 +151,7 @@
     dict({
       'can_expand': True,
       'can_play': False,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'genre',
       'media_content_id': 'A:GENRE',
@@ -114,6 +162,7 @@
     dict({
       'can_expand': True,
       'can_play': False,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'composer',
       'media_content_id': 'A:COMPOSER',
@@ -124,6 +173,7 @@
     dict({
       'can_expand': True,
       'can_play': True,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'track',
       'media_content_id': 'A:TRACKS',
@@ -134,6 +184,7 @@
     dict({
       'can_expand': True,
       'can_play': False,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'playlist',
       'media_content_id': 'A:PLAYLISTS',
@@ -148,6 +199,7 @@
     dict({
       'can_expand': True,
       'can_play': True,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'album',
       'media_content_id': "A:ALBUM/A%20Hard%20Day's%20Night",
@@ -158,6 +210,7 @@
     dict({
       'can_expand': True,
       'can_play': True,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'album',
       'media_content_id': 'A:ALBUM/Abbey%20Road',
@@ -168,6 +221,7 @@
     dict({
       'can_expand': True,
       'can_play': True,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'album',
       'media_content_id': 'A:ALBUM/Between%20Good%20And%20Evil',
@@ -178,6 +232,7 @@
     dict({
       'can_expand': True,
       'can_play': True,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'album',
       'media_content_id': "A:ALBUM/Special%20Characters,'()+",
@@ -192,6 +247,7 @@
     dict({
       'can_expand': True,
       'can_play': False,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'directory',
       'media_content_id': '',
@@ -202,6 +258,7 @@
     dict({
       'can_expand': True,
       'can_play': False,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'directory',
       'media_content_id': '',

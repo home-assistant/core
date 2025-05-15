@@ -57,7 +57,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
-from .const import DOMAIN, EVENT_SUPERVISOR_EVENT
+from .const import DATA_CONFIG_STORE, DOMAIN, EVENT_SUPERVISOR_EVENT
 from .handler import get_supervisor_client
 
 MOUNT_JOBS = ("mount_manager_create_mount", "mount_manager_remove_mount")
@@ -729,6 +729,18 @@ async def backup_addon_before_update(
             if backup.extra_metadata.get(TAG_ADDON_UPDATE) == addon
         }
 
+    def _delete_filter(
+        backups: dict[str, ManagerBackup],
+    ) -> dict[str, ManagerBackup]:
+        """Return oldest backups more numerous than copies to delete."""
+        update_config = hass.data[DATA_CONFIG_STORE].data.update_config
+        return dict(
+            sorted(
+                backups.items(),
+                key=lambda backup_item: backup_item[1].date,
+            )[: max(len(backups) - update_config.add_on_backup_retain_copies, 0)]
+        )
+
     try:
         await backup_manager.async_create_backup(
             agent_ids=[await _default_agent(client)],
@@ -747,7 +759,7 @@ async def backup_addon_before_update(
         try:
             await backup_manager.async_delete_filtered_backups(
                 include_filter=addon_update_backup_filter,
-                delete_filter=lambda backups: backups,
+                delete_filter=_delete_filter,
             )
         except BackupManagerError as err:
             raise HomeAssistantError(f"Error deleting old backups: {err}") from err

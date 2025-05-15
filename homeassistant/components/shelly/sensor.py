@@ -39,7 +39,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
 
-from .const import CONF_SLEEP_PERIOD, ROLE_TO_DEVICE_CLASS_MAP, SHAIR_MAX_WORK_HOURS
+from .const import CONF_SLEEP_PERIOD, ROLE_TO_DEVICE_CLASS_MAP
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -58,9 +58,12 @@ from .utils import (
     async_remove_orphaned_entities,
     get_device_entry_gen,
     get_device_uptime,
+    get_shelly_air_lamp_life,
     get_virtual_component_ids,
     is_rpc_wifi_stations_disabled,
 )
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -355,8 +358,9 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         name="Lamp life",
         native_unit_of_measurement=PERCENTAGE,
         translation_key="lamp_life",
-        value=lambda value: 100 - (value / 3600 / SHAIR_MAX_WORK_HOURS),
+        value=get_shelly_air_lamp_life,
         suggested_display_precision=1,
+        # Deprecated, remove in 2025.10
         extra_state_attributes=lambda block: {
             "Operational hours": round(cast(int, block.totalWorkTime) / 3600, 1)
         },
@@ -377,6 +381,7 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         options=["warmup", "normal", "fault"],
         translation_key="operation",
         value=lambda value: None if value == "unknown" else value,
+        # Deprecated, remove in 2025.10
         extra_state_attributes=lambda block: {"self_test": block.selfTest},
     ),
     ("valve", "valve"): BlockSensorDescription(
@@ -395,6 +400,28 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         value=lambda value: None if value == "unknown" else value,
         entity_category=EntityCategory.DIAGNOSTIC,
         removal_condition=lambda _, block: block.valve == "not_connected",
+    ),
+    ("sensor", "gas"): BlockSensorDescription(
+        key="sensor|gas",
+        name="Gas detected",
+        translation_key="gas_detected",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "none",
+            "mild",
+            "heavy",
+            "test",
+        ],
+        value=lambda value: None if value == "unknown" else value,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    ("sensor", "selfTest"): BlockSensorDescription(
+        key="sensor|selfTest",
+        name="Self test",
+        translation_key="self_test",
+        device_class=SensorDeviceClass.ENUM,
+        options=["not_completed", "completed", "running", "pending"],
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
 

@@ -3,26 +3,35 @@
 from collections.abc import Callable
 from contextlib import suppress
 import logging
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.blueprint import (
-    BLUEPRINT_INSTANCE_FIELDS,
     is_blueprint_instance_config,
+    schemas as blueprint_schemas,
 )
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config import async_log_schema_error, config_without_domain
 from homeassistant.const import (
+    CONF_ACTION,
+    CONF_ACTIONS,
     CONF_BINARY_SENSORS,
+    CONF_CONDITION,
+    CONF_CONDITIONS,
     CONF_NAME,
     CONF_SENSORS,
+    CONF_TRIGGER,
+    CONF_TRIGGERS,
     CONF_UNIQUE_ID,
     CONF_VARIABLES,
 )
@@ -36,21 +45,16 @@ from homeassistant.setup import async_notify_setup_error
 from . import (
     binary_sensor as binary_sensor_platform,
     button as button_platform,
+    cover as cover_platform,
     image as image_platform,
     light as light_platform,
     number as number_platform,
     select as select_platform,
     sensor as sensor_platform,
+    switch as switch_platform,
     weather as weather_platform,
 )
-from .const import (
-    CONF_ACTION,
-    CONF_CONDITION,
-    CONF_TRIGGER,
-    DOMAIN,
-    PLATFORMS,
-    TemplateConfig,
-)
+from .const import DOMAIN, PLATFORMS, TemplateConfig
 from .helpers import async_get_blueprints
 
 PACKAGE_MERGE_HINT = "list"
@@ -63,7 +67,7 @@ def ensure_domains_do_not_have_trigger_or_action(*keys: str) -> Callable[[dict],
     def validate(obj: dict):
         options = set(obj.keys())
         if found_domains := domains.intersection(options):
-            invalid = {CONF_TRIGGER, CONF_ACTION}
+            invalid = {CONF_TRIGGERS, CONF_ACTIONS}
             if found_invalid := invalid.intersection(set(obj.keys())):
                 raise vol.Invalid(
                     f"Unsupported option(s) found for domain {found_domains.pop()}, please remove ({', '.join(found_invalid)}) from your configuration",
@@ -74,13 +78,22 @@ def ensure_domains_do_not_have_trigger_or_action(*keys: str) -> Callable[[dict],
     return validate
 
 
-CONFIG_SECTION_SCHEMA = vol.Schema(
-    vol.All(
+def _backward_compat_schema(value: Any | None) -> Any:
+    """Backward compatibility for automations."""
+
+    value = cv.renamed(CONF_TRIGGER, CONF_TRIGGERS)(value)
+    value = cv.renamed(CONF_ACTION, CONF_ACTIONS)(value)
+    return cv.renamed(CONF_CONDITION, CONF_CONDITIONS)(value)
+
+
+CONFIG_SECTION_SCHEMA = vol.All(
+    _backward_compat_schema,
+    vol.Schema(
         {
             vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Optional(CONF_TRIGGER): cv.TRIGGER_SCHEMA,
-            vol.Optional(CONF_CONDITION): cv.CONDITIONS_SCHEMA,
-            vol.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_TRIGGERS): cv.TRIGGER_SCHEMA,
+            vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
+            vol.Optional(CONF_ACTIONS): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
             vol.Optional(NUMBER_DOMAIN): vol.All(
                 cv.ensure_list, [number_platform.NUMBER_SCHEMA]
@@ -112,17 +125,20 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
             vol.Optional(WEATHER_DOMAIN): vol.All(
                 cv.ensure_list, [weather_platform.WEATHER_SCHEMA]
             ),
+            vol.Optional(SWITCH_DOMAIN): vol.All(
+                cv.ensure_list, [switch_platform.SWITCH_SCHEMA]
+            ),
+            vol.Optional(COVER_DOMAIN): vol.All(
+                cv.ensure_list, [cover_platform.COVER_SCHEMA]
+            ),
         },
-        ensure_domains_do_not_have_trigger_or_action(BUTTON_DOMAIN, LIGHT_DOMAIN),
-    )
+    ),
+    ensure_domains_do_not_have_trigger_or_action(BUTTON_DOMAIN, COVER_DOMAIN),
 )
 
-TEMPLATE_BLUEPRINT_INSTANCE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-    }
-).extend(BLUEPRINT_INSTANCE_FIELDS.schema)
+TEMPLATE_BLUEPRINT_SCHEMA = vol.All(
+    _backward_compat_schema, blueprint_schemas.BLUEPRINT_SCHEMA
+)
 
 
 async def _async_resolve_blueprints(
@@ -137,10 +153,11 @@ async def _async_resolve_blueprints(
         raw_config = dict(config)
 
     if is_blueprint_instance_config(config):
-        config = TEMPLATE_BLUEPRINT_INSTANCE_SCHEMA(config)
         blueprints = async_get_blueprints(hass)
 
-        blueprint_inputs = await blueprints.async_inputs_from_config(config)
+        blueprint_inputs = await blueprints.async_inputs_from_config(
+            _backward_compat_schema(config)
+        )
         raw_blueprint_inputs = blueprint_inputs.config_with_inputs
 
         config = blueprint_inputs.async_substitute()
@@ -157,7 +174,7 @@ async def _async_resolve_blueprints(
             # house input results for template entities.  For Trigger based template entities
             # CONF_VARIABLES should not be removed because the variables are always
             # executed between the trigger and action.
-            if CONF_TRIGGER not in config and CONF_VARIABLES in config:
+            if CONF_TRIGGERS not in config and CONF_VARIABLES in config:
                 config[platform][CONF_VARIABLES] = config.pop(CONF_VARIABLES)
         raw_config = dict(config)
 
@@ -175,14 +192,14 @@ async def async_validate_config_section(
 
     validated_config = await _async_resolve_blueprints(hass, config)
 
-    if CONF_TRIGGER in validated_config:
-        validated_config[CONF_TRIGGER] = await async_validate_trigger_config(
-            hass, validated_config[CONF_TRIGGER]
+    if CONF_TRIGGERS in validated_config:
+        validated_config[CONF_TRIGGERS] = await async_validate_trigger_config(
+            hass, validated_config[CONF_TRIGGERS]
         )
 
-    if CONF_CONDITION in validated_config:
-        validated_config[CONF_CONDITION] = await async_validate_conditions_config(
-            hass, validated_config[CONF_CONDITION]
+    if CONF_CONDITIONS in validated_config:
+        validated_config[CONF_CONDITIONS] = await async_validate_conditions_config(
+            hass, validated_config[CONF_CONDITIONS]
         )
 
     return validated_config
