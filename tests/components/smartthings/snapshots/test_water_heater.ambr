@@ -8,6 +8,7 @@
       'max_temp': 69,
       'min_temp': 38,
       'operation_list': list([
+        'off',
         'eco',
         'standard',
         'power',
@@ -51,6 +52,7 @@
       'max_temp': 69,
       'min_temp': 38,
       'operation_list': list([
+        'off',
         'eco',
         'standard',
         'power',
@@ -79,6 +81,7 @@
       'max_temp': 60.0,
       'min_temp': 40,
       'operation_list': list([
+        'off',
         'eco',
         'standard',
         'force',
@@ -121,6 +124,7 @@
       'max_temp': 60.0,
       'min_temp': 40,
       'operation_list': list([
+        'off',
         'eco',
         'standard',
         'force',
@@ -148,6 +152,7 @@
       'max_temp': 60.0,
       'min_temp': 40,
       'operation_list': list([
+        'off',
         'eco',
         'standard',
         'power',
@@ -191,6 +196,7 @@
       'max_temp': 60.0,
       'min_temp': 40,
       'operation_list': list([
+        'off',
         'eco',
         'standard',
         'power',

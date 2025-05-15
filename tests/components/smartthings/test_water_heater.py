@@ -163,6 +163,7 @@ async def test_operation_list_update(
     assert hass.states.get("water_heater.warmepumpe").attributes[
         ATTR_OPERATION_LIST
     ] == [
+        STATE_OFF,
         STATE_ECO,
         "standard",
         "power",
@@ -181,6 +182,7 @@ async def test_operation_list_update(
     assert hass.states.get("water_heater.warmepumpe").attributes[
         ATTR_OPERATION_LIST
     ] == [
+        STATE_OFF,
         STATE_ECO,
         "force",
         "power",
