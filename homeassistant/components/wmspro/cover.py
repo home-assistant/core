@@ -12,9 +12,18 @@ from wmspro.const import (
 )
 from wmspro.destination import Destination
 
-from homeassistant.components.cover import ATTR_POSITION, CoverDeviceClass, CoverEntity
+from homeassistant.components.cover import (
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
+    CoverDeviceClass,
+    CoverEntity,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.percentage import (
+    percentage_to_ranged_value,
+    ranged_value_to_percentage,
+)
 
 from . import WebControlProConfigEntry
 from .entity import WebControlProGenericEntity
@@ -39,6 +48,10 @@ async def async_setup_entry(
             entities.append(WebControlProValance(config_entry.entry_id, dest))
         if dest.hasAction(ACTION_DESC.RollerShutterBlindDrive):
             entities.append(WebControlProRollerShutter(config_entry.entry_id, dest))
+        elif dest.hasAction(ACTION_DESC.SlatDrive) and dest.hasAction(ACTION_DESC.SlatRotate):
+            entities.append(WebControlProSlatRotate(config_entry.entry_id, dest))
+        elif dest.hasAction(ACTION_DESC.SlatDrive):
+            entities.append(WebControlProSlat(config_entry.entry_id, dest))
 
     async_add_entities(entities)
 
@@ -112,3 +125,42 @@ class WebControlProRollerShutter(WebControlProCover):
 
     _attr_device_class = CoverDeviceClass.SHUTTER
     _drive_action_desc = ACTION_DESC.RollerShutterBlindDrive
+
+
+class WebControlProSlat(WebControlProCover):
+    """Representation of a WMS based blind using a slat drive."""
+
+    _attr_device_class = CoverDeviceClass.BLIND
+    _drive_action_desc = ACTION_DESC.SlatDrive
+
+
+class WebControlProSlatRotate(WebControlProSlat):
+    """Representation of a WMS based blind which supports tilting."""
+
+    _tilt_action_desc = ACTION_DESC.SlatRotate
+
+    @property
+    def current_cover_tilt_position(self) -> int | None:
+        """Return current position of cover tilt."""
+        action = self._dest.action(self._tilt_action_desc)
+        return ranged_value_to_percentage(
+            (action.minValue, action.maxValue), action["rotation"]
+        )
+
+    async def async_set_cover_tilt_position(self, **kwargs):
+        """Set the cover tilt position."""
+        action = self._dest.action(self._tilt_action_desc)
+        rotation = percentage_to_ranged_value(
+            (action.minValue, action.maxValue), kwargs[ATTR_TILT_POSITION]
+        )
+        await action(rotation=rotation)
+
+    async def async_open_cover_tilt(self, **kwargs):
+        """Open the cover tilt."""
+        action = self._dest.action(self._tilt_action_desc)
+        await action(rotation=action.maxValue)
+
+    async def async_close_cover_tilt(self, **kwargs):
+        """Close the cover tilt."""
+        action = self._dest.action(self._tilt_action_desc)
+        await action(rotation=action.minValue)
