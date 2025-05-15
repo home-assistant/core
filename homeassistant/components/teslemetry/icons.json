@@ -415,6 +415,9 @@
       "brick_voltage_min": {
         "default": "mdi:battery-low"
       },
+      "credit_balance": {
+        "default": "mdi:credit-card"
+      },
       "cruise_follow_distance": {
         "default": "mdi:car-cruise-control"
       },
@@ -582,6 +585,12 @@
       },
       "hvac_fan_status": {
         "default": "mdi:fan"
+      },
+      "hvac_left_temperature_request": {
+        "default": "mdi:thermometer"
+      },
+      "hvac_right_temperature_request": {
+        "default": "mdi:thermometer"
       },
       "isolation_resistance": {
         "default": "mdi:resistor"
