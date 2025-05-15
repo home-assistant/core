@@ -16,6 +16,7 @@ class AgentInfo:
 
     id: str
     name: str
+    supports_streaming: bool
 
 
 @dataclass(slots=True)
