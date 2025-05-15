@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator, Sequence
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -35,6 +36,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_OBJECT_ID, CONF_PICTURE, DOMAIN
@@ -200,34 +202,28 @@ async def async_setup_platform(
     )
 
 
-class TemplateVacuum(TemplateEntity, StateVacuumEntity):
-    """A template vacuum component."""
+class AbstractTemplateLight(StateVacuumEntity):
+    """Representation of a template vacuum features."""
 
-    _attr_should_poll = False
+    def __init__(self, config: dict[str, Any]) -> None:
+        """Initialize the features."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        unique_id,
-    ) -> None:
-        """Initialize the vacuum."""
-        super().__init__(hass, config=config, fallback_name=None, unique_id=unique_id)
-        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
-            self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, object_id, hass=hass
-            )
-        name = self._attr_name
-        if TYPE_CHECKING:
-            assert name is not None
+        self._registered_scripts: list[str] = []
 
         self._template = config.get(CONF_STATE)
         self._battery_level_template = config.get(CONF_BATTERY_LEVEL)
         self._fan_speed_template = config.get(CONF_FAN_SPEED)
-        self._attr_supported_features = (
-            VacuumEntityFeature.START | VacuumEntityFeature.STATE
-        )
 
+        self._state = None
+        self._battery_level = None
+        self._attr_fan_speed = None
+
+        # List of valid fan speeds
+        self._attr_fan_speed_list = config[CONF_FAN_SPEED_LIST]
+
+    def _register_scripts(
+        self, config: dict[str, Any]
+    ) -> Generator[tuple[str, Sequence[dict[str, Any]], VacuumEntityFeature | int]]:
         for action_id, supported_feature in (
             (SERVICE_START, 0),
             (SERVICE_PAUSE, VacuumEntityFeature.PAUSE),
@@ -237,107 +233,16 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
             (SERVICE_LOCATE, VacuumEntityFeature.LOCATE),
             (SERVICE_SET_FAN_SPEED, VacuumEntityFeature.FAN_SPEED),
         ):
-            # Scripts can be an empty list, therefore we need to check for None
             if (action_config := config.get(action_id)) is not None:
-                self.add_script(action_id, action_config, name, DOMAIN)
-                self._attr_supported_features |= supported_feature
-
-        self._state = None
-        self._battery_level = None
-        self._attr_fan_speed = None
-
-        if self._battery_level_template:
-            self._attr_supported_features |= VacuumEntityFeature.BATTERY
-
-        # List of valid fan speeds
-        self._attr_fan_speed_list = config[CONF_FAN_SPEED_LIST]
+                self._registered_scripts.append(action_id)
+                yield (action_id, action_config, supported_feature)
 
     @property
     def activity(self) -> VacuumActivity | None:
         """Return the status of the vacuum cleaner."""
         return self._state
 
-    async def async_start(self) -> None:
-        """Start or resume the cleaning task."""
-        await self.async_run_script(
-            self._action_scripts[SERVICE_START], context=self._context
-        )
-
-    async def async_pause(self) -> None:
-        """Pause the cleaning task."""
-        if script := self._action_scripts.get(SERVICE_PAUSE):
-            await self.async_run_script(script, context=self._context)
-
-    async def async_stop(self, **kwargs: Any) -> None:
-        """Stop the cleaning task."""
-        if script := self._action_scripts.get(SERVICE_STOP):
-            await self.async_run_script(script, context=self._context)
-
-    async def async_return_to_base(self, **kwargs: Any) -> None:
-        """Set the vacuum cleaner to return to the dock."""
-        if script := self._action_scripts.get(SERVICE_RETURN_TO_BASE):
-            await self.async_run_script(script, context=self._context)
-
-    async def async_clean_spot(self, **kwargs: Any) -> None:
-        """Perform a spot clean-up."""
-        if script := self._action_scripts.get(SERVICE_CLEAN_SPOT):
-            await self.async_run_script(script, context=self._context)
-
-    async def async_locate(self, **kwargs: Any) -> None:
-        """Locate the vacuum cleaner."""
-        if script := self._action_scripts.get(SERVICE_LOCATE):
-            await self.async_run_script(script, context=self._context)
-
-    async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
-        """Set fan speed."""
-        if fan_speed not in self._attr_fan_speed_list:
-            _LOGGER.error(
-                "Received invalid fan speed: %s for entity %s. Expected: %s",
-                fan_speed,
-                self.entity_id,
-                self._attr_fan_speed_list,
-            )
-            return
-
-        if script := self._action_scripts.get(SERVICE_SET_FAN_SPEED):
-            await self.async_run_script(
-                script, run_variables={ATTR_FAN_SPEED: fan_speed}, context=self._context
-            )
-
-    @callback
-    def _async_setup_templates(self) -> None:
-        """Set up templates."""
-        if self._template is not None:
-            self.add_template_attribute(
-                "_state", self._template, None, self._update_state
-            )
-        if self._fan_speed_template is not None:
-            self.add_template_attribute(
-                "_fan_speed",
-                self._fan_speed_template,
-                None,
-                self._update_fan_speed,
-            )
-        if self._battery_level_template is not None:
-            self.add_template_attribute(
-                "_battery_level",
-                self._battery_level_template,
-                None,
-                self._update_battery_level,
-                none_on_template_error=True,
-            )
-        super()._async_setup_templates()
-
-    @callback
-    def _update_state(self, result):
-        super()._update_state(result)
-        if isinstance(result, TemplateError):
-            # This is legacy behavior
-            self._state = STATE_UNKNOWN
-            if not self._availability_template:
-                self._attr_available = True
-            return
-
+    def _handle_state(self, result: Any) -> None:
         # Validate state
         if result in _VALID_STATES:
             self._state = result
@@ -351,6 +256,65 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
                 ", ".join(_VALID_STATES),
             )
             self._state = None
+
+    async def async_start(self) -> None:
+        """Start or resume the cleaning task."""
+        run_script = getattr(self, "async_run_script")
+        scripts: dict[str, Script] = getattr(self, "_action_scripts")
+        await run_script(scripts[SERVICE_START], context=self._context)
+
+    async def async_pause(self) -> None:
+        """Pause the cleaning task."""
+        run_script = getattr(self, "async_run_script")
+        scripts: dict[str, Script] = getattr(self, "_action_scripts")
+        if script := scripts.get(SERVICE_PAUSE):
+            await run_script(script, context=self._context)
+
+    async def async_stop(self, **kwargs: Any) -> None:
+        """Stop the cleaning task."""
+        run_script = getattr(self, "async_run_script")
+        scripts: dict[str, Script] = getattr(self, "_action_scripts")
+        if script := scripts.get(SERVICE_STOP):
+            await run_script(script, context=self._context)
+
+    async def async_return_to_base(self, **kwargs: Any) -> None:
+        """Set the vacuum cleaner to return to the dock."""
+        run_script = getattr(self, "async_run_script")
+        scripts: dict[str, Script] = getattr(self, "_action_scripts")
+        if script := scripts.get(SERVICE_RETURN_TO_BASE):
+            await run_script(script, context=self._context)
+
+    async def async_clean_spot(self, **kwargs: Any) -> None:
+        """Perform a spot clean-up."""
+        run_script = getattr(self, "async_run_script")
+        scripts: dict[str, Script] = getattr(self, "_action_scripts")
+        if script := scripts.get(SERVICE_CLEAN_SPOT):
+            await run_script(script, context=self._context)
+
+    async def async_locate(self, **kwargs: Any) -> None:
+        """Locate the vacuum cleaner."""
+        run_script = getattr(self, "async_run_script")
+        scripts: dict[str, Script] = getattr(self, "_action_scripts")
+        if script := scripts.get(SERVICE_LOCATE):
+            await run_script(script, context=self._context)
+
+    async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
+        """Set fan speed."""
+        run_script = getattr(self, "async_run_script")
+        scripts: dict[str, Script] = getattr(self, "_action_scripts")
+        if fan_speed not in self._attr_fan_speed_list:
+            _LOGGER.error(
+                "Received invalid fan speed: %s for entity %s. Expected: %s",
+                fan_speed,
+                self.entity_id,
+                self._attr_fan_speed_list,
+            )
+            return
+
+        if script := scripts.get(SERVICE_SET_FAN_SPEED):
+            await run_script(
+                script, run_variables={ATTR_FAN_SPEED: fan_speed}, context=self._context
+            )
 
     @callback
     def _update_battery_level(self, battery_level):
@@ -389,3 +353,76 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
                 self._attr_fan_speed_list,
             )
             self._attr_fan_speed = None
+
+
+class TemplateVacuum(TemplateEntity, AbstractTemplateLight):
+    """A template vacuum component."""
+
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        unique_id,
+    ) -> None:
+        """Initialize the vacuum."""
+        TemplateEntity.__init__(
+            self, hass, config=config, fallback_name=None, unique_id=unique_id
+        )
+        AbstractTemplateLight.__init__(self, config)
+        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
+            self.entity_id = async_generate_entity_id(
+                ENTITY_ID_FORMAT, object_id, hass=hass
+            )
+        name = self._attr_name
+        if TYPE_CHECKING:
+            assert name is not None
+
+        self._attr_supported_features = (
+            VacuumEntityFeature.START | VacuumEntityFeature.STATE
+        )
+        for action_id, action_config, supported_feature in self._register_scripts(
+            config
+        ):
+            self.add_script(action_id, action_config, name, DOMAIN)
+            self._attr_supported_features |= supported_feature
+
+        if self._battery_level_template:
+            self._attr_supported_features |= VacuumEntityFeature.BATTERY
+
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
+        if self._template is not None:
+            self.add_template_attribute(
+                "_state", self._template, None, self._update_state
+            )
+        if self._fan_speed_template is not None:
+            self.add_template_attribute(
+                "_fan_speed",
+                self._fan_speed_template,
+                None,
+                self._update_fan_speed,
+            )
+        if self._battery_level_template is not None:
+            self.add_template_attribute(
+                "_battery_level",
+                self._battery_level_template,
+                None,
+                self._update_battery_level,
+                none_on_template_error=True,
+            )
+        super()._async_setup_templates()
+
+    @callback
+    def _update_state(self, result):
+        super()._update_state(result)
+        if isinstance(result, TemplateError):
+            # This is legacy behavior
+            self._state = STATE_UNKNOWN
+            if not self._availability_template:
+                self._attr_available = True
+            return
+
+        self._handle_state(result)
