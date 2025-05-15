@@ -39,11 +39,7 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info:
-    status: exempt
-    comment: |
-      The integration does not talk directly to the devices, so there's no
-      information that can be updated.
+  discovery-update-info: done
   discovery: done
   docs-data-update: done
   docs-examples: done

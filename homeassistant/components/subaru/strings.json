@@ -12,7 +12,7 @@
       },
       "two_factor": {
         "title": "[%key:component::subaru::config::step::user::title%]",
-        "description": "Two factor authentication required",
+        "description": "Two-factor authentication required",
         "data": {
           "contact_method": "Please select a contact method:"
         }

@@ -41,16 +41,20 @@ BACKOFF_MULTIPLIER = 1.1
 
 _LOGGER = logging.getLogger(__name__)
 
+type HereConfigEntry = ConfigEntry[
+    HERETransitDataUpdateCoordinator | HERERoutingDataUpdateCoordinator
+]
+
 
 class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator[HERETravelTimeData]):
     """here_routing DataUpdateCoordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: HereConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: HereConfigEntry,
         api_key: str,
         config: HERETravelTimeConfig,
     ) -> None:
@@ -173,12 +177,12 @@ class HERETransitDataUpdateCoordinator(
 ):
     """HERETravelTime DataUpdateCoordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: HereConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: HereConfigEntry,
         api_key: str,
         config: HERETravelTimeConfig,
     ) -> None:

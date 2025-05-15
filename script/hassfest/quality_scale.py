@@ -964,7 +964,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "switch_as_x",
     "switchbee",
     "switchbot_cloud",
-    "switcher_kis",
     "switchmate",
     "syncthing",
     "synology_chat",

@@ -15,7 +15,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from . import TeslemetryConfigEntry
 from .entity import (
     TeslemetryRootEntity,
-    TeslemetryVehicleEntity,
+    TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
 from .helpers import handle_vehicle_command
@@ -38,7 +38,7 @@ async def async_setup_entry(
     """Set up the Teslemetry update platform from a config entry."""
 
     async_add_entities(
-        TeslemetryPollingUpdateEntity(vehicle, entry.runtime_data.scopes)
+        TeslemetryVehiclePollingUpdateEntity(vehicle, entry.runtime_data.scopes)
         if vehicle.api.pre2021 or vehicle.firmware < "2024.44.25"
         else TeslemetryStreamingUpdateEntity(vehicle, entry.runtime_data.scopes)
         for vehicle in entry.runtime_data.vehicles
@@ -62,7 +62,9 @@ class TeslemetryUpdateEntity(TeslemetryRootEntity, UpdateEntity):
         self.async_write_ha_state()
 
 
-class TeslemetryPollingUpdateEntity(TeslemetryVehicleEntity, TeslemetryUpdateEntity):
+class TeslemetryVehiclePollingUpdateEntity(
+    TeslemetryVehiclePollingEntity, TeslemetryUpdateEntity
+):
     """Teslemetry Updates entity."""
 
     def __init__(

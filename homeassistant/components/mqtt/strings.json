@@ -57,7 +57,7 @@
           "set_ca_cert": "Select **Auto** for automatic CA validation, or **Custom** and select **Next** to set a custom CA certificate, to allow validating your MQTT brokers certificate.",
           "set_client_cert": "Enable and select **Next** to set a client certificate and private key to authenticate against your MQTT broker.",
           "transport": "The transport to be used for the connection to your MQTT broker.",
-          "ws_headers": "The WebSocket headers to pass through the WebSocket based connection to your MQTT broker.",
+          "ws_headers": "The WebSocket headers to pass through the WebSocket-based connection to your MQTT broker.",
           "ws_path": "The WebSocket path to be used for the connection to your MQTT broker."
         }
       },
@@ -244,7 +244,6 @@
           "title": "Configure MQTT device \"{mqtt_device}\"",
           "description": "Please configure MQTT specific details for {platform} entity \"{entity}\":",
           "data": {
-            "on_command_type": "ON command type",
             "blue_template": "Blue template",
             "brightness_template": "Brightness template",
             "command_template": "Command template",
@@ -255,9 +254,11 @@
             "force_update": "Force update",
             "green_template": "Green template",
             "last_reset_value_template": "Last reset value template",
+            "on_command_type": "ON command type",
             "optimistic": "Optimistic",
-            "payload_off": "Payload off",
-            "payload_on": "Payload on",
+            "payload_off": "Payload \"off\"",
+            "payload_on": "Payload \"on\"",
+            "payload_press": "Payload \"press\"",
             "qos": "QoS",
             "red_template": "Red template",
             "retain": "Retain",
@@ -275,19 +276,20 @@
             "command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be published at the command topic.",
             "command_topic": "The publishing topic that will be used to control the {platform} entity. [Learn more.]({url}#command_topic)",
             "color_temp_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract color temperature in Kelvin from the state payload value. Expected result of the template is an integer.",
+            "force_update": "Sends update events even if the value hasn’t changed. Useful if you want to have meaningful value graphs in history. [Learn more.]({url}#force_update)",
             "green_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract green color from the state payload value. Expected result of the template is an integer from 0-255 range.",
             "last_reset_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the last reset. When Last reset template is set, the State class option must be Total. [Learn more.]({url}#last_reset_value_template)",
-            "force_update": "Sends update events even if the value hasn’t changed. Useful if you want to have meaningful value graphs in history. [Learn more.]({url}#force_update)",
-            "on_command_type": "Defines when the `payload on` is sent. Using `last` (the default) will send any style (brightness, color, etc) topics first and then a `payload on` to the command_topic. Using `first` will send the `payload on` and then any style topics. Using `brightness` will only send brightness commands instead of the `Payload on` to turn the light on.",
+            "on_command_type": "Defines when the payload \"on\" is sent. Using \"Last\" (the default) will send any style (brightness, color, etc) topics first and then a payload \"on\" to the command topic. Using \"First\" will send the payload \"on\" and then any style topics. Using \"Brightness\" will only send brightness commands instead of the payload \"on\" to turn the light on.",
             "optimistic": "Flag that defines if the {platform} entity works in optimistic mode. [Learn more.]({url}#optimistic)",
-            "payload_off": "The payload that represents the off state.",
-            "payload_on": "The payload that represents the on state.",
+            "payload_off": "The payload that represents the \"off\" state.",
+            "payload_on": "The payload that represents the \"on\" state.",
+            "payload_press": "The payload to send when the button is triggered.",
             "qos": "The QoS value a {platform} entity should use.",
             "red_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract red color from the state payload value. Expected result of the template is an integer from 0-255 range.",
             "retain": "Select if values published by the {platform} entity should be retained at the MQTT broker.",
             "state_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract state from the state payload value.",
             "state_topic": "The MQTT topic subscribed to receive {platform} state values. [Learn more.]({url}#state_topic)",
-            "supported_color_modes": "A list of color modes supported by the list. Possible color modes are On/Off, Brightness, Color temperature, HS, XY, RGB, RGBW, RGBWW, WHITE. Note that if onoff or brightness are used, that must be the only value in the list. [Learn more.]({url}#supported_color_modes)",
+            "supported_color_modes": "A list of color modes supported by the light. Possible color modes are On/Off, Brightness, Color temperature, HS, XY, RGB, RGBW, RGBWW, White. Note that if On/Off or Brightness are used, that must be the only value in the list. [Learn more.]({url}#supported_color_modes)",
             "value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the {platform} entity value. [Learn more.]({url}#value_template)"
           },
           "sections": {
@@ -300,6 +302,7 @@
                 "flash_time_short": "Flash time short",
                 "max_kelvin": "Max Kelvin",
                 "min_kelvin": "Min Kelvin",
+                "off_delay": "OFF delay",
                 "transition": "Transition support"
               },
               "data_description": {
@@ -309,6 +312,7 @@
                 "flash_time_short": "The duration, in seconds, of a \"short\" flash.",
                 "max_kelvin": "The maximum color temperature in Kelvin.",
                 "min_kelvin": "The minimum color temperature in Kelvin.",
+                "off_delay": "For sensors that only send \"on\" state updates (like PIRs), this variable sets a delay in seconds after which the sensor’s state will be updated back to \"off\".",
                 "transition": "Enable the transition feature for this light"
               }
             },
@@ -325,7 +329,7 @@
               "data_description": {
                 "brightness": "Flag that defines if light supports brightness when the RGB, RGBW, or RGBWW color mode is supported.",
                 "brightness_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the brightness command topic.",
-                "brightness_command_topic": "The publishing topic that will be used to control the brigthness. [Learn more.]({url}#brightness_command_topic)",
+                "brightness_command_topic": "The publishing topic that will be used to control the brightness. [Learn more.]({url}#brightness_command_topic)",
                 "brightness_scale": "Defines the maximum brightness value (i.e., 100%) of the maximum brightness.",
                 "brightness_state_topic": "The MQTT topic subscribed to receive brightness state values. [Learn more.]({url}#brightness_state_topic)",
                 "brightness_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the brightness value."
@@ -385,7 +389,7 @@
                 "hs_value_template": "HS value template"
               },
               "data_description": {
-                "hs_command_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose message which will be sent to hs_command_topic. Available variables: `hue` and `sat`.",
+                "hs_command_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose message which will be sent to HS command topic. Available variables: `hue` and `sat`.",
                 "hs_command_topic": "The MQTT topic to publish commands to change the light’s color state in HS format (Hue Saturation). Range for Hue: 0° .. 360°, Range of Saturation: 0..100. Note: Brightness is sent separately in the brightness command topic. [Learn more.]({url}#hs_command_topic)",
                 "hs_state_topic": "The MQTT topic subscribed to receive color state updates in HS format. The expected payload is the hue and saturation values separated by commas, for example, `359.5,100.0`. Note: Brightness is received separately in the brightness state topic. [Learn more.]({url}#hs_state_topic)",
                 "hs_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the HS value."
@@ -402,7 +406,7 @@
               "data_description": {
                 "rgb_command_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose message which will be sent to RGB command topic. Available variables: `red`, `green` and `blue`.",
                 "rgb_command_topic": "The MQTT topic to publish commands to change the light’s RGB state. [Learn more.]({url}#rgb_command_topic)",
-                "rgb_state_topic": "The MQTT topic subscribed to receive RGB state updates. The expected payload is the RGB values separated by commas, for example, `255,0,127`. [Learn more.]({url}rgb_state_topic)",
+                "rgb_state_topic": "The MQTT topic subscribed to receive RGB state updates. The expected payload is the RGB values separated by commas, for example, `255,0,127`. [Learn more.]({url}#rgb_state_topic)",
                 "rgb_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the RGB value."
               }
             },
@@ -574,15 +578,15 @@
           "discovery": "Option to enable MQTT automatic discovery.",
           "discovery_prefix": "The prefix of configuration topics the MQTT integration will subscribe to.",
           "birth_enable": "When set, Home Assistant will publish an online message to your MQTT broker when MQTT is ready.",
-          "birth_topic": "The MQTT topic where Home Assistant will publish a `birth` message.",
-          "birth_payload": "The `birth` message that is published when MQTT is ready and connected.",
-          "birth_qos": "The quality of service of the `birth` message that is published when MQTT is ready and connected",
-          "birth_retain": "When set, Home Assistant will retain the `birth` message published to your MQTT broker.",
-          "will_enable": "When set, Home Assistant will ask your broker to publish a `will` message when MQTT is stopped or when it loses the connection to your broker.",
-          "will_topic": "The MQTT topic your MQTT broker will publish a `will` message to.",
-          "will_payload": "The message your MQTT broker `will` publish when the MQTT integration is stopped or when the connection is lost.",
-          "will_qos": "The quality of service of the `will` message that is published by your MQTT broker.",
-          "will_retain": "When set, your MQTT broker will retain the `will` message."
+          "birth_topic": "The MQTT topic where Home Assistant will publish a \"birth\" message.",
+          "birth_payload": "The \"birth\" message that is published when MQTT is ready and connected.",
+          "birth_qos": "The quality of service of the \"birth\" message that is published when MQTT is ready and connected",
+          "birth_retain": "When set, Home Assistant will retain the \"birth\" message published to your MQTT broker.",
+          "will_enable": "When set, Home Assistant will ask your broker to publish a \"will\" message when MQTT is stopped or when it loses the connection to your broker.",
+          "will_topic": "The MQTT topic your MQTT broker will publish a \"will\" message to.",
+          "will_payload": "The message your MQTT broker \"will\" publish when the MQTT integration is stopped or when the connection is lost.",
+          "will_qos": "The quality of service of the \"will\" message that is published by your MQTT broker.",
+          "will_retain": "When set, your MQTT broker will retain the \"will\" message."
         }
       }
     },
@@ -600,6 +604,45 @@
     }
   },
   "selector": {
+    "device_class_binary_sensor": {
+      "options": {
+        "battery": "[%key:component::binary_sensor::entity_component::battery::name%]",
+        "battery_charging": "[%key:component::binary_sensor::entity_component::battery_charging::name%]",
+        "carbon_monoxide": "[%key:component::binary_sensor::entity_component::carbon_monoxide::name%]",
+        "cold": "[%key:component::binary_sensor::entity_component::cold::name%]",
+        "connectivity": "[%key:component::binary_sensor::entity_component::connectivity::name%]",
+        "door": "[%key:component::binary_sensor::entity_component::door::name%]",
+        "garage_door": "[%key:component::binary_sensor::entity_component::garage_door::name%]",
+        "gas": "[%key:component::binary_sensor::entity_component::gas::name%]",
+        "heat": "[%key:component::binary_sensor::entity_component::heat::name%]",
+        "light": "[%key:component::binary_sensor::entity_component::light::name%]",
+        "lock": "[%key:component::binary_sensor::entity_component::lock::name%]",
+        "moisture": "[%key:component::binary_sensor::entity_component::moisture::name%]",
+        "motion": "[%key:component::binary_sensor::entity_component::motion::name%]",
+        "moving": "[%key:component::binary_sensor::entity_component::moving::name%]",
+        "occupancy": "[%key:component::binary_sensor::entity_component::occupancy::name%]",
+        "opening": "[%key:component::binary_sensor::entity_component::opening::name%]",
+        "plug": "[%key:component::binary_sensor::entity_component::plug::name%]",
+        "power": "[%key:component::binary_sensor::entity_component::power::name%]",
+        "presence": "[%key:component::binary_sensor::entity_component::presence::name%]",
+        "problem": "[%key:component::binary_sensor::entity_component::problem::name%]",
+        "running": "[%key:component::binary_sensor::entity_component::running::name%]",
+        "safety": "[%key:component::binary_sensor::entity_component::safety::name%]",
+        "smoke": "[%key:component::binary_sensor::entity_component::smoke::name%]",
+        "sound": "[%key:component::binary_sensor::entity_component::sound::name%]",
+        "tamper": "[%key:component::binary_sensor::entity_component::tamper::name%]",
+        "update": "[%key:component::binary_sensor::entity_component::update::name%]",
+        "vibration": "[%key:component::binary_sensor::entity_component::vibration::name%]",
+        "window": "[%key:component::binary_sensor::entity_component::window::name%]"
+      }
+    },
+    "device_class_button": {
+      "options": {
+        "identify": "[%key:component::button::entity_component::identify::name%]",
+        "restart": "[%key:common::action::restart%]",
+        "update": "[%key:component::button::entity_component::update::name%]"
+      }
+    },
     "device_class_sensor": {
       "options": {
         "apparent_power": "[%key:component::sensor::entity_component::apparent_power::name%]",
@@ -682,6 +725,8 @@
     },
     "platform": {
       "options": {
+        "binary_sensor": "[%key:component::binary_sensor::title%]",
+        "button": "[%key:component::button::title%]",
         "light": "[%key:component::light::title%]",
         "notify": "[%key:component::notify::title%]",
         "sensor": "[%key:component::sensor::title%]",
