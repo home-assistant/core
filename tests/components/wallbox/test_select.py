@@ -101,9 +101,8 @@ async def test_wallbox_select_class_connection_error(
             "homeassistant.components.wallbox.Wallbox.enableEcoSmart",
             new=Mock(side_effect=http_404_error),
         ),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError, match="Error communicating with Wallbox API"),
     ):
-        # Test behavior when a connection error occurs
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
@@ -136,7 +135,7 @@ async def test_wallbox_select_class_authentication_error(
             "homeassistant.components.wallbox.Wallbox.enableEcoSmart",
             new=Mock(side_effect=ConnectionError),
         ),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError, match="Error communicating with Wallbox API"),
     ):
         # Test behavior when a connection error occurs
         await hass.services.async_call(
