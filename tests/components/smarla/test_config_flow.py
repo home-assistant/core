@@ -14,7 +14,7 @@ from . import MOCK_SERIAL_NUMBER, MOCK_USER_INPUT
 from tests.common import MockConfigEntry
 
 
-async def test_config_flow(hass: HomeAssistant, mock_cf_connection) -> None:
+async def test_config_flow(hass: HomeAssistant, mock_connection) -> None:
     """Test creating a config entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -34,7 +34,7 @@ async def test_config_flow(hass: HomeAssistant, mock_cf_connection) -> None:
 
 
 @pytest.mark.parametrize("error", ["malformed_token", "invalid_auth"])
-async def test_form_error(hass: HomeAssistant, error: str, mock_cf_connection) -> None:
+async def test_form_error(hass: HomeAssistant, error: str, mock_connection) -> None:
     """Test we show user form on invalid auth."""
     match error:
         case "malformed_token":
@@ -44,7 +44,7 @@ async def test_form_error(hass: HomeAssistant, error: str, mock_cf_connection) -
             )
         case "invalid_auth":
             error_patch = patch.object(
-                mock_cf_connection,
+                mock_connection,
                 "refresh_token",
                 new=AsyncMock(return_value=False),
             )
@@ -68,7 +68,7 @@ async def test_form_error(hass: HomeAssistant, error: str, mock_cf_connection) -
 
 
 async def test_device_exists_abort(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_cf_connection
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_connection
 ) -> None:
     """Test we abort config flow if Smarla device already configured."""
     mock_config_entry.add_to_hass(hass)
