@@ -647,7 +647,10 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
             )
             != "auto"
         ):
-            features |= ClimateEntityFeature.TARGET_TEMPERATURE
+            features |= (
+                ClimateEntityFeature.TARGET_TEMPERATURE
+                | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            )
         return features
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -709,6 +712,20 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
         """Return the temperature we try to reach."""
         return self.get_attribute_value(
             Capability.THERMOSTAT_COOLING_SETPOINT, Attribute.COOLING_SETPOINT
+        )
+
+    @property
+    def target_temperature_low(self) -> float | None:
+        """Return the lowbound target temperature we try to reach."""
+        return self.get_attribute_value(
+            Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL, Attribute.MINIMUM_SETPOINT
+        )
+
+    @property
+    def target_temperature_high(self) -> float | None:
+        """Return the highbound target temperature we try to reach."""
+        return self.get_attribute_value(
+            Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL, Attribute.MAXIMUM_SETPOINT
         )
 
     @property
