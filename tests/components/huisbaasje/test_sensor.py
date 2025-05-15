@@ -40,7 +40,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             return_value=MOCK_CURRENT_MEASUREMENTS,
         ) as mock_current_measurements,
     ):
-        hass.config.components.add(DOMAIN)
         config_entry = MockConfigEntry(
             version=1,
             domain=DOMAIN,
@@ -331,7 +330,6 @@ async def test_setup_entry_absent_measurement(hass: HomeAssistant) -> None:
             return_value=MOCK_LIMITED_CURRENT_MEASUREMENTS,
         ) as mock_current_measurements,
     ):
-        hass.config.components.add(DOMAIN)
         config_entry = MockConfigEntry(
             version=1,
             domain=DOMAIN,
