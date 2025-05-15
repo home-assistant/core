@@ -128,7 +128,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][climate.samsung_ehs_indoor1-entry]
+# name: test_all_entities[da_ac_ehs_01001][climate.heat_pump_indoor1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -150,7 +150,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.samsung_ehs_indoor1',
+    'entity_id': 'climate.heat_pump_indoor1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -165,17 +165,17 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'supported_features': <ClimateEntityFeature: 387>,
+    'supported_features': <ClimateEntityFeature: 385>,
     'translation_key': None,
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_INDOOR1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][climate.samsung_ehs_indoor1-state]
+# name: test_all_entities[da_ac_ehs_01001][climate.heat_pump_indoor1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 18.5,
-      'friendly_name': 'Samsung EHS INDOOR1',
+      'friendly_name': 'Heat pump INDOOR1',
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
@@ -184,13 +184,11 @@
       ]),
       'max_temp': 65,
       'min_temp': 7,
-      'supported_features': <ClimateEntityFeature: 387>,
-      'target_temp_high': 65,
-      'target_temp_low': 26,
+      'supported_features': <ClimateEntityFeature: 385>,
       'temperature': 35,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.samsung_ehs_indoor1',
+    'entity_id': 'climate.heat_pump_indoor1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -634,7 +632,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'supported_features': <ClimateEntityFeature: 387>,
+    'supported_features': <ClimateEntityFeature: 385>,
     'translation_key': None,
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_INDOOR',
     'unit_of_measurement': None,
@@ -653,9 +651,7 @@
       ]),
       'max_temp': 65,
       'min_temp': 7,
-      'supported_features': <ClimateEntityFeature: 387>,
-      'target_temp_high': 65,
-      'target_temp_low': 25,
+      'supported_features': <ClimateEntityFeature: 385>,
       'temperature': 25,
     }),
     'context': <ANY>,
@@ -666,7 +662,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][climate.eco_heating_system_indoor1-entry]
+# name: test_all_entities[da_sac_ehs_000002_sub][climate.warmepumpe_indoor1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -688,7 +684,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.eco_heating_system_indoor1',
+    'entity_id': 'climate.warmepumpe_indoor1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -709,11 +705,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][climate.eco_heating_system_indoor1-state]
+# name: test_all_entities[da_sac_ehs_000002_sub][climate.warmepumpe_indoor1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 31.2,
-      'friendly_name': 'Eco Heating System INDOOR1',
+      'friendly_name': 'Wärmepumpe INDOOR1',
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
@@ -725,14 +721,14 @@
       'supported_features': <ClimateEntityFeature: 384>,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.eco_heating_system_indoor1',
+    'entity_id': 'climate.warmepumpe_indoor1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'heat_cool',
+    'state': 'auto',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][climate.eco_heating_system_indoor2-entry]
+# name: test_all_entities[da_sac_ehs_000002_sub][climate.warmepumpe_indoor2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -754,7 +750,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.eco_heating_system_indoor2',
+    'entity_id': 'climate.warmepumpe_indoor2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -775,11 +771,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][climate.eco_heating_system_indoor2-state]
+# name: test_all_entities[da_sac_ehs_000002_sub][climate.warmepumpe_indoor2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 29.1,
-      'friendly_name': 'Eco Heating System INDOOR2',
+      'friendly_name': 'Wärmepumpe INDOOR2',
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
@@ -791,7 +787,7 @@
       'supported_features': <ClimateEntityFeature: 384>,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.eco_heating_system_indoor2',
+    'entity_id': 'climate.warmepumpe_indoor2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

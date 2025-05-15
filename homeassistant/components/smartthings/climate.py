@@ -639,10 +639,11 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
             },
             component=component,
         )
+        self._attr_hvac_modes = self._determine_hvac_modes()
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{device.device.device_id}_{component}")},
             via_device=(DOMAIN, device.device.device_id),
-            name=f"{device.device.name} {component}",
+            name=f"{device.device.label} {component}",
         )
 
     @property
@@ -655,10 +656,7 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
             )
             != "auto"
         ):
-            features |= (
-                ClimateEntityFeature.TARGET_TEMPERATURE
-                | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-            )
+            features |= ClimateEntityFeature.TARGET_TEMPERATURE
         return features
 
     @property
@@ -725,7 +723,7 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
         """Return current operation ie. heat, cool, idle."""
         if self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "off":
             return HVACMode.OFF
-        return AC_MODE_TO_STATE.get(
+        return HEAT_PUMP_AC_MODE_TO_HA.get(
             self.get_attribute_value(
                 Capability.AIR_CONDITIONER_MODE, Attribute.AIR_CONDITIONER_MODE
             )
@@ -739,20 +737,6 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
         )
 
     @property
-    def target_temperature_low(self) -> float | None:
-        """Return the lowbound target temperature we try to reach."""
-        return self.get_attribute_value(
-            Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL, Attribute.MINIMUM_SETPOINT
-        )
-
-    @property
-    def target_temperature_high(self) -> float | None:
-        """Return the highbound target temperature we try to reach."""
-        return self.get_attribute_value(
-            Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL, Attribute.MAXIMUM_SETPOINT
-        )
-
-    @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         unit = self._internal_state[Capability.TEMPERATURE_MEASUREMENT][
@@ -761,8 +745,7 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
         assert unit
         return UNIT_MAP[unit]
 
-    @property
-    def hvac_modes(self) -> list[HVACMode]:
+    def _determine_hvac_modes(self) -> list[HVACMode]:
         """Determine the supported HVAC modes."""
         modes = [HVACMode.OFF]
         if (
