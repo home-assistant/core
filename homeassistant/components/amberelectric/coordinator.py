@@ -10,6 +10,7 @@ from amberelectric.models.actual_interval import ActualInterval
 from amberelectric.models.channel import ChannelType
 from amberelectric.models.current_interval import CurrentInterval
 from amberelectric.models.forecast_interval import ForecastInterval
+from amberelectric.models.price_descriptor import PriceDescriptor
 from amberelectric.rest import ApiException
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,7 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
-from .services import PriceDescriptor
 
 type AmberConfigEntry = ConfigEntry[AmberUpdateCoordinator]
 
