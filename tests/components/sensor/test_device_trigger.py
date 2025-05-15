@@ -121,7 +121,7 @@ async def test_get_triggers(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert len(triggers) == 27
+    assert len(triggers) == 28
     assert triggers == unordered(expected_triggers)
 
 
