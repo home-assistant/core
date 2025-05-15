@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any
 
 from pysmarlaapi import Connection
-from pysmarlaapi.classes import AuthToken
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -21,7 +20,7 @@ class SmarlaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def _handle_token(self, token: str) -> tuple[dict[str, str], AuthToken]:
+    async def _handle_token(self, token: str) -> tuple[dict[str, str], str]:
         """Handle the token input."""
         errors: dict[str, str] = {}
 
@@ -29,13 +28,13 @@ class SmarlaConfigFlow(ConfigFlow, domain=DOMAIN):
             conn = Connection(url=HOST, token_b64=token)
         except ValueError:
             errors["base"] = "malformed_token"
-            return (errors, None)
+            return (errors, "")
 
         if not await conn.refresh_token():
             errors["base"] = "invalid_auth"
-            return (errors, None)
+            return (errors, "")
 
-        return (errors, conn.token)
+        return (errors, conn.token.serialNumber)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -45,14 +44,14 @@ class SmarlaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             raw_token = user_input[CONF_ACCESS_TOKEN]
-            errors, token = await self._handle_token(token=raw_token)
+            errors, serial_number = await self._handle_token(token=raw_token)
 
             if not errors:
-                await self.async_set_unique_id(token.serialNumber)
+                await self.async_set_unique_id(serial_number)
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=token.serialNumber,
+                    title=serial_number,
                     data={CONF_ACCESS_TOKEN: raw_token},
                 )
 
