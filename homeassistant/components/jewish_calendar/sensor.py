@@ -270,7 +270,11 @@ class JewishCalendarBaseSensor(JewishCalendarEntity, SensorEntity):
         """Update the sensor data."""
         self._update_unsub = None
         self._schedule_update()
+        self.create_results(now)
+        self.async_write_ha_state()
 
+    def create_results(self, now: dt.datetime | None = None) -> None:
+        """Create the results for the sensor."""
         if now is None:
             now = dt_util.now()
 
@@ -286,7 +290,6 @@ class JewishCalendarBaseSensor(JewishCalendarEntity, SensorEntity):
         _LOGGER.debug("Today: %s, update: %s", today, update)
         dateinfo = HDateInfo(today, diaspora=self.data.diaspora)
         self.data.results = JewishCalendarDataResults(dateinfo, zmanim)
-        self.async_write_ha_state()
 
 
 class JewishCalendarSensor(JewishCalendarBaseSensor):
@@ -309,7 +312,7 @@ class JewishCalendarSensor(JewishCalendarBaseSensor):
     def native_value(self) -> str | int | dt.datetime | None:
         """Return the state of the sensor."""
         if self.data.results is None:
-            self._update_data()
+            self.create_results()
         assert self.data.results is not None, "Results should be available"
         return self.entity_description.value_fn(self.data.results.dateinfo)
 
@@ -319,7 +322,7 @@ class JewishCalendarSensor(JewishCalendarBaseSensor):
         if self.entity_description.attr_fn is None:
             return {}
         if self.data.results is None:
-            self._update_data()
+            self.create_results()
         assert self.data.results is not None, "Results should be available"
         return self.entity_description.attr_fn(self.data.results.dateinfo)
 
@@ -334,7 +337,7 @@ class JewishCalendarTimeSensor(JewishCalendarBaseSensor):
     def native_value(self) -> dt.datetime | None:
         """Return the state of the sensor."""
         if self.data.results is None:
-            self._update_data()
+            self.create_results()
         assert self.data.results is not None, "Results should be available"
         if self.entity_description.value_fn is None:
             return self.data.results.zmanim.zmanim[self.entity_description.key].local
