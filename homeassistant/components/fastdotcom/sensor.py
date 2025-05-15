@@ -31,35 +31,44 @@ class FastdotcomSensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: tuple[FastdotcomSensorEntityDescription, ...] = (
     FastdotcomSensorEntityDescription(
         key="download_speed",
+        name="Download Speed",
         translation_key="download_speed",
-        name="download speed",
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     FastdotcomSensorEntityDescription(
         key="upload_speed",
+        name="Upload Speed",
         translation_key="upload_speed",
-        name="upload speed",
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     FastdotcomSensorEntityDescription(
         key="unloaded_ping",
+        name="Unloaded Ping",
         translation_key="unloaded_ping",
-        name="unloaded ping",
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     FastdotcomSensorEntityDescription(
         key="loaded_ping",
+        name="Loaded Ping",
         translation_key="loaded_ping",
-        name="loaded ping",
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    FastdotcomSensorEntityDescription(
+        key="success",
+        name="Success",
+        translation_key="success",
+        native_unit_of_measurement=None,
+        device_class=None,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda val: val,
     ),
 )
 
@@ -72,9 +81,6 @@ async def async_setup_entry(
     """Set up Fast.com sensors from a config entry."""
     coordinator = entry.runtime_data
     entry_id = entry.entry_id
-
-    # Ensure coordinator has data immediately
-    await coordinator.async_config_entry_first_refresh()
 
     device_info = DeviceInfo(
         identifiers={(DOMAIN, entry_id)},
@@ -117,7 +123,11 @@ class FastdotcomSensor(
     @property
     def native_value(self) -> float | None:
         """Return native value for entity."""
+        if not self.coordinator.data:
+            return None
+
         data = self.coordinator.data.get(self.entity_description.key)
         if data is None:
             return None
+
         return self.entity_description.value(data)
