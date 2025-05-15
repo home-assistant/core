@@ -21,13 +21,11 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .entity import HomematicipGenericEntity
-from .hap import HomematicipHAP
+from .hap import HomematicIPConfigEntry, HomematicipHAP
 
 HMIP_COVER_OPEN = 0
 HMIP_COVER_CLOSED = 1
@@ -37,11 +35,11 @@ HMIP_SLATS_CLOSED = 1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HomematicIPConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP cover from a config entry."""
-    hap = hass.data[DOMAIN][config_entry.unique_id]
+    hap = config_entry.runtime_data
     entities: list[HomematicipGenericEntity] = [
         HomematicipCoverShutterGroup(hap, group)
         for group in hap.home.groups

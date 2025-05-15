@@ -147,6 +147,19 @@
         }
       }
     },
+    "fan": {
+      "homee": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "manual": "[%key:common::state::manual%]",
+              "auto": "[%key:common::state::auto%]",
+              "summer": "Summer"
+            }
+          }
+        }
+      }
+    },
     "light": {
       "light_instance": {
         "name": "Light {instance}"
@@ -194,6 +207,9 @@
       },
       "wake_up_interval": {
         "name": "Wake-up interval"
+      },
+      "wind_monitoring_state": {
+        "name": "Threshold for wind trigger"
       }
     },
     "select": {
@@ -358,6 +374,15 @@
   "exceptions": {
     "connection_closed": {
       "message": "Could not connect to homee while setting attribute."
+    },
+    "invalid_preset_mode": {
+      "message": "Invalid preset mode: {preset_mode}. Turning on is only supported with preset mode 'Manual'."
+    }
+  },
+  "issues": {
+    "deprecated_entity": {
+      "title": "The Homee {name} entity is deprecated",
+      "description": "The Homee entity `{entity}` is deprecated and will be removed in release 2025.12.\nThe valve is available directly in the respective climate entity.\nPlease update your automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue."
     }
   }
 }

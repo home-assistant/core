@@ -63,7 +63,7 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
             if self._supports_speed_levels:
                 data["speed_level"] = math.ceil(
                     percentage_to_ranged_value(
-                        (1, self._static_info.supported_speed_levels), percentage
+                        (1, self._static_info.supported_speed_count), percentage
                     )
                 )
             else:
@@ -106,7 +106,7 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
 
     @property
     @esphome_state_property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if the entity is on."""
         return self._state.state
 
@@ -121,12 +121,12 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
             )
 
         return ranged_value_to_percentage(
-            (1, self._static_info.supported_speed_levels), self._state.speed_level
+            (1, self._static_info.supported_speed_count), self._state.speed_level
         )
 
     @property
     @esphome_state_property
-    def oscillating(self) -> bool | None:
+    def oscillating(self) -> bool:
         """Return the oscillation state."""
         return self._state.oscillating
 
@@ -138,7 +138,7 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
 
     @property
     @esphome_state_property
-    def preset_mode(self) -> str | None:
+    def preset_mode(self) -> str:
         """Return the current fan preset mode."""
         return self._state.preset_mode
 
@@ -164,7 +164,7 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
         if not supports_speed_levels:
             self._attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
         else:
-            self._attr_speed_count = static_info.supported_speed_levels
+            self._attr_speed_count = static_info.supported_speed_count
 
 
 async_setup_entry = partial(

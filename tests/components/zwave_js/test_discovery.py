@@ -431,10 +431,11 @@ async def test_rediscovery(
 
 async def test_aeotec_smart_switch_7(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     aeotec_smart_switch_7: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Test that Smart Switch 7 has a light and a switch entity."""
+    """Test Smart Switch 7 discovery."""
     state = hass.states.get("light.smart_switch_7")
     assert state
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
@@ -443,3 +444,9 @@ async def test_aeotec_smart_switch_7(
 
     state = hass.states.get("switch.smart_switch_7")
     assert state
+
+    state = hass.states.get("button.smart_switch_7_reset_accumulated_values")
+    assert state
+    entity_entry = entity_registry.async_get(state.entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.CONFIG

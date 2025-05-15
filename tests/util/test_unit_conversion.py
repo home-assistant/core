@@ -24,6 +24,7 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfReactiveEnergy,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
@@ -49,6 +50,7 @@ from homeassistant.util.unit_conversion import (
     MassConverter,
     PowerConverter,
     PressureConverter,
+    ReactiveEnergyConverter,
     SpeedConverter,
     TemperatureConverter,
     UnitlessRatioConverter,
@@ -78,6 +80,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         MassConverter,
         PowerConverter,
         PressureConverter,
+        ReactiveEnergyConverter,
         SpeedConverter,
         TemperatureConverter,
         UnitlessRatioConverter,
@@ -127,6 +130,11 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     MassConverter: (UnitOfMass.STONES, UnitOfMass.KILOGRAMS, 0.157473),
     PowerConverter: (UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
     PressureConverter: (UnitOfPressure.HPA, UnitOfPressure.INHG, 33.86389),
+    ReactiveEnergyConverter: (
+        UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
+        UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
+        1000,
+    ),
     SpeedConverter: (
         UnitOfSpeed.KILOMETERS_PER_HOUR,
         UnitOfSpeed.MILES_PER_HOUR,
@@ -622,6 +630,20 @@ _CONVERTED_VALUE: dict[
         (30, UnitOfPressure.MMHG, 1.181102, UnitOfPressure.INHG),
         (5, UnitOfPressure.BAR, 72.51887, UnitOfPressure.PSI),
     ],
+    ReactiveEnergyConverter: [
+        (
+            5,
+            UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
+            5000,
+            UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
+        ),
+        (
+            5,
+            UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
+            0.005,
+            UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
+        ),
+    ],
     SpeedConverter: [
         # 5 km/h / 1.609 km/mi = 3.10686 mi/h
         (5, UnitOfSpeed.KILOMETERS_PER_HOUR, 3.106856, UnitOfSpeed.MILES_PER_HOUR),
@@ -807,10 +829,28 @@ _CONVERTED_VALUE: dict[
             UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
         ),
         (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND,
+            3600,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND,
+            3600000,
+            UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+        ),
+        (
             3,
             UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
             50,
             UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
+        ),
+        (
+            3.6,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            1,
+            UnitOfVolumeFlowRate.LITERS_PER_SECOND,
         ),
     ],
 }
