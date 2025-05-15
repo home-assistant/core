@@ -293,7 +293,7 @@ async def test_sensor_incorrect_state_with_ignore_non_numeric(
 async def test_sensor_incorrect_state_with_not_ignore_non_numeric(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test that non numeric values cause a group to be unknown."""
+    """Test that non numeric values cause a group to be unavailable."""
     config = {
         SENSOR_DOMAIN: {
             "platform": GROUP_DOMAIN,
@@ -317,7 +317,7 @@ async def test_sensor_incorrect_state_with_not_ignore_non_numeric(
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_failure")
-    assert state.state == "unknown"
+    assert state.state == STATE_UNAVAILABLE
     assert "Unable to use state. Only numerical states are supported" in caplog.text
 
     # Check that the final sensor value is correct with all numeric inputs
@@ -354,7 +354,7 @@ async def test_sensor_require_all_states(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.test_sum")
 
-    assert state.state == STATE_UNKNOWN
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_sensor_calculated_properties(hass: HomeAssistant) -> None:
@@ -497,7 +497,7 @@ async def test_sensor_with_uoms_but_no_device_class(
     assert state.attributes.get("device_class") is None
     assert state.attributes.get("state_class") is None
     assert state.attributes.get("unit_of_measurement") is None
-    assert state.state == STATE_UNKNOWN
+    assert state.state == STATE_UNAVAILABLE
 
     assert (
         "Unable to use state. Only entities with correct unit of measurement is supported"
@@ -727,7 +727,7 @@ async def test_sensor_calculated_properties_not_convertible_device_class(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_sum")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == STATE_UNAVAILABLE
     assert state.attributes.get("device_class") == "humidity"
     assert state.attributes.get("state_class") == "measurement"
     assert state.attributes.get("unit_of_measurement") is None
@@ -786,8 +786,8 @@ async def test_sensors_attributes_added_when_entity_info_available(
 
     state = hass.states.get("sensor.sensor_group_sum")
 
-    assert state.state == STATE_UNAVAILABLE
-    assert state.attributes.get(ATTR_ENTITY_ID) is None
+    assert state.state == "0.0"
+    assert ATTR_ENTITY_ID in state.attributes
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
@@ -870,7 +870,7 @@ async def test_sensor_state_class_no_uom_not_available(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_sum")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == STATE_UNAVAILABLE
     assert state.attributes.get("state_class") == "measurement"
     assert state.attributes.get("unit_of_measurement") is None
 
@@ -1006,3 +1006,245 @@ async def test_sensor_different_attributes_ignore_non_numeric(
             state.attributes.get("unit_of_measurement")
             == test_case["expected_unit_of_measurement"]
         )
+
+
+async def test_sensor_unavailable_state_with_not_ignore_non_numeric(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that unavailable values cause a group to be unavailable when ignore_non_numeric is False."""
+    config = {
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
+            "name": "test_unavailable",
+            "type": "sum",
+            "ignore_non_numeric": False,
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id_unavailable_test",
+            "state_class": SensorStateClass.MEASUREMENT,
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    entity_ids = config["sensor"]["entities"]
+
+    # Set all sensors to numeric values first
+    for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
+        hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+
+    # Give Home Assistant time to process the state updates
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_unavailable")
+    assert state
+    assert state.state == str(float(sum(VALUES)))
+
+    # Set one sensor to unavailable, should make the group unavailable
+    hass.states.async_set(entity_ids[1], STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_unavailable")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    # Test with ignore_non_numeric = True for comparison
+    config2 = {
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
+            "name": "test_ignore_unavailable",
+            "type": "sum",
+            "ignore_non_numeric": True,
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id_ignore_unavailable_test",
+            "state_class": SensorStateClass.MEASUREMENT,
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config2)
+    await hass.async_block_till_done()
+
+    # Set all sensors to numeric values first except one
+    for i, (entity_id, value) in enumerate(dict(zip(entity_ids, VALUES, strict=False)).items()):
+        if i == 1:  # Make the middle sensor unavailable
+            hass.states.async_set(entity_id, STATE_UNAVAILABLE)
+        else:
+            hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+
+    # Give Home Assistant time to process the state updates
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_ignore_unavailable")
+    assert state
+    expected_sum = float(VALUES[0]) + float(VALUES[2])
+    assert state.state == str(expected_sum)
+
+
+async def test_sensor_changing_to_unavailable_with_not_ignore_non_numeric(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that a sensor changing to unavailable makes the group unavailable when ignore_non_numeric is False."""
+    config = {
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
+            "name": "test_changing_unavailable",
+            "type": "sum",
+            "ignore_non_numeric": False,
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id_changing_unavailable_test",
+            "state_class": SensorStateClass.MEASUREMENT,
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    entity_ids = config["sensor"]["entities"]
+
+    # Set all sensors to numeric values first
+    for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
+        hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+
+    # Give Home Assistant time to process the state updates
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_changing_unavailable")
+    assert state
+    assert state.state == str(float(sum(VALUES)))
+
+    # Now change one sensor to unavailable
+    hass.states.async_set(entity_ids[0], STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_changing_unavailable")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    # Now change it back to a numeric value
+    hass.states.async_set(entity_ids[0], VALUES[0])
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_changing_unavailable")
+    assert state
+    assert state.state == str(float(sum(VALUES)))
+
+    # Compare with ignore_non_numeric = True for contrast
+    config2 = {
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
+            "name": "test_changing_ignore_unavailable",
+            "type": "sum",
+            "ignore_non_numeric": True,
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id_changing_ignore_unavailable_test",
+            "state_class": SensorStateClass.MEASUREMENT,
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config2)
+    await hass.async_block_till_done()
+
+    # Set all sensors to numeric values
+    for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
+        hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+
+    # Give Home Assistant time to process the state updates
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_changing_ignore_unavailable")
+    assert state
+    assert state.state == str(float(sum(VALUES)))
+
+    # Now change one sensor to unavailable
+    hass.states.async_set(entity_ids[0], STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    # Give Home Assistant time to process the state updates
+    await hass.async_block_till_done()
+
+    # With ignore_non_numeric = True, the group should still work despite one unavailable sensor
+    state = hass.states.get("sensor.test_changing_ignore_unavailable")
+    assert state
+    expected_sum = float(VALUES[1]) + float(VALUES[2])
+    assert state.state == str(expected_sum)
+
+
+async def test_sensor_unavailable_with_not_ignore_non_numeric_simple(
+    hass: HomeAssistant
+) -> None:
+    """Test that when ignore_non_numeric=False, group becomes unavailable when a sensor is unavailable."""
+    config = {
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
+            "name": "test_simple",
+            "type": "sum",
+            "ignore_non_numeric": False,
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    # Set all sensors to numeric values
+    hass.states.async_set("sensor.test_1", "10.0")
+    hass.states.async_set("sensor.test_2", "20.0")
+    hass.states.async_set("sensor.test_3", "30.0")
+    await hass.async_block_till_done()
+
+    # Make sure the group is available
+    state = hass.states.get("sensor.test_simple")
+    assert state is not None
+    assert state.state == "60.0"
+
+    # Make one sensor unavailable
+    hass.states.async_set("sensor.test_2", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    # Group should now be unavailable with ignore_non_numeric=False
+    state = hass.states.get("sensor.test_simple")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_sensor_unavailable_with_ignore_non_numeric_simple(
+    hass: HomeAssistant
+) -> None:
+    """Test that when ignore_non_numeric=True, group stays available when a sensor is unavailable."""
+    config = {
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
+            "name": "test_simple_ignore",
+            "type": "sum",
+            "ignore_non_numeric": True,
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    # Set all sensors to numeric values
+    hass.states.async_set("sensor.test_1", "10.0")
+    hass.states.async_set("sensor.test_2", "20.0")
+    hass.states.async_set("sensor.test_3", "30.0")
+    await hass.async_block_till_done()
+
+    # Make sure the group is available
+    state = hass.states.get("sensor.test_simple_ignore")
+    assert state is not None
+    assert state.state == "60.0"
+
+    # Make one sensor unavailable
+    hass.states.async_set("sensor.test_2", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    # Group should still be available with ignore_non_numeric=True
+    # and should calculate based on remaining sensors
+    state = hass.states.get("sensor.test_simple_ignore")
+    assert state is not None
+    assert state.state == "40.0"  # 10.0 + 30.0

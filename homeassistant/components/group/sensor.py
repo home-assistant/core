@@ -437,7 +437,16 @@ class SensorGroup(GroupEntity, SensorEntity):
                         )
 
         # Set group as unavailable if all members do not have numeric values
-        self._attr_available = any(numeric_state for numeric_state in valid_states)
+        # When ignore_non_numeric is False, all sensors must have numeric values to be available
+        if self._ignore_non_numeric:
+            self._attr_available = any(numeric_state for numeric_state in valid_states)
+        else:
+            self._attr_available = all(numeric_state for numeric_state in valid_states)
+
+        # If the group is not available, don't calculate any values
+        if not self._attr_available:
+            self._attr_native_value = None
+            return
 
         valid_state = self.mode(
             state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in states
