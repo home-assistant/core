@@ -24,6 +24,7 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfReactiveEnergy,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
@@ -49,6 +50,7 @@ from homeassistant.util.unit_conversion import (
     MassConverter,
     PowerConverter,
     PressureConverter,
+    ReactiveEnergyConverter,
     SpeedConverter,
     TemperatureConverter,
     UnitlessRatioConverter,
@@ -78,6 +80,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         MassConverter,
         PowerConverter,
         PressureConverter,
+        ReactiveEnergyConverter,
         SpeedConverter,
         TemperatureConverter,
         UnitlessRatioConverter,
@@ -127,6 +130,11 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     MassConverter: (UnitOfMass.STONES, UnitOfMass.KILOGRAMS, 0.157473),
     PowerConverter: (UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
     PressureConverter: (UnitOfPressure.HPA, UnitOfPressure.INHG, 33.86389),
+    ReactiveEnergyConverter: (
+        UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
+        UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
+        1000,
+    ),
     SpeedConverter: (
         UnitOfSpeed.KILOMETERS_PER_HOUR,
         UnitOfSpeed.MILES_PER_HOUR,
@@ -622,6 +630,20 @@ _CONVERTED_VALUE: dict[
         (30, UnitOfPressure.MMHG, 1.181102, UnitOfPressure.INHG),
         (5, UnitOfPressure.BAR, 72.51887, UnitOfPressure.PSI),
     ],
+    ReactiveEnergyConverter: [
+        (
+            5,
+            UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
+            5000,
+            UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
+        ),
+        (
+            5,
+            UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
+            0.005,
+            UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
+        ),
+    ],
     SpeedConverter: [
         # 5 km/h / 1.609 km/mi = 3.10686 mi/h
         (5, UnitOfSpeed.KILOMETERS_PER_HOUR, 3.106856, UnitOfSpeed.MILES_PER_HOUR),
@@ -807,10 +829,28 @@ _CONVERTED_VALUE: dict[
             UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
         ),
         (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND,
+            3600,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND,
+            3600000,
+            UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+        ),
+        (
             3,
             UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
             50,
             UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
+        ),
+        (
+            3.6,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            1,
+            UnitOfVolumeFlowRate.LITERS_PER_SECOND,
         ),
     ],
 }
@@ -902,8 +942,8 @@ def test_convert_nonnumeric_value(
     ("converter", "from_unit", "to_unit", "expected"),
     [
         # Process all items in _GET_UNIT_RATIO
-        (converter, item[0], item[1], item[2])
-        for converter, item in _GET_UNIT_RATIO.items()
+        (converter, from_unit, to_unit, expected)
+        for converter, (from_unit, to_unit, expected) in _GET_UNIT_RATIO.items()
     ],
 )
 def test_get_unit_ratio(
@@ -916,12 +956,33 @@ def test_get_unit_ratio(
 
 
 @pytest.mark.parametrize(
+    ("converter", "from_unit", "to_unit", "expected"),
+    [
+        # Process all items in _GET_UNIT_RATIO
+        (converter, from_unit, to_unit, expected)
+        for converter, (from_unit, to_unit, expected) in _GET_UNIT_RATIO.items()
+    ],
+)
+def get_unit_floored_log_ratio(
+    converter: type[BaseUnitConverter], from_unit: str, to_unit: str, expected: float
+) -> None:
+    """Test floored log unit ratio.
+
+    Should not use pytest.approx since we are checking these
+    values are exact.
+    """
+    ratio = converter.get_unit_floored_log_ratio(from_unit, to_unit)
+    assert ratio == expected
+    assert converter.get_unit_floored_log_ratio(to_unit, from_unit) == 1 / ratio
+
+
+@pytest.mark.parametrize(
     ("converter", "value", "from_unit", "expected", "to_unit"),
     [
         # Process all items in _CONVERTED_VALUE
-        (converter, list_item[0], list_item[1], list_item[2], list_item[3])
+        (converter, value, from_unit, expected, to_unit)
         for converter, item in _CONVERTED_VALUE.items()
-        for list_item in item
+        for value, from_unit, expected, to_unit in item
     ],
 )
 def test_unit_conversion(

@@ -12,6 +12,8 @@ from homeassistant.util import dt as dt_util
 
 from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 
+PARALLEL_UPDATES = 0
+
 
 class EsphomeDateTime(EsphomeEntity[DateTimeInfo, DateTimeState], DateTimeEntity):
     """A datetime implementation for esphome."""

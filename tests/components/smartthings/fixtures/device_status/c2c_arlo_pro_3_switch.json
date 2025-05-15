@@ -58,6 +58,15 @@
           "timestamp": "2025-02-08T21:56:09.761Z"
         }
       },
+      "powerConsumptionReport": {
+        "powerConsumption": {
+          "value": {
+            "start": "2025-02-09T15:45:29Z",
+            "end": "2025-02-09T16:15:33Z"
+          },
+          "timestamp": "2025-02-09T16:15:33.639Z"
+        }
+      },
       "battery": {
         "quantity": {
           "value": null

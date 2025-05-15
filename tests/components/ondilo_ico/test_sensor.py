@@ -45,7 +45,9 @@ async def test_no_ico_for_one_pool(
     # Only the second pool is created
     assert len(hass.states.async_all()) == 7
     assert hass.states.get("sensor.pool_1_temperature") is None
-    assert hass.states.get("sensor.pool_2_rssi").state == next(
+    state = hass.states.get("sensor.pool_2_rssi")
+    assert state is not None
+    assert state.state == next(
         str(item["value"]) for item in last_measures if item["data_type"] == "rssi"
     )
 
