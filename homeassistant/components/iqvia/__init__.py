@@ -6,7 +6,6 @@ import asyncio
 
 from pyiqvia import Client
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -14,7 +13,6 @@ from homeassistant.helpers import aiohttp_client
 
 from .const import (
     CONF_ZIP_CODE,
-    DOMAIN,
     TYPE_ALLERGY_FORECAST,
     TYPE_ALLERGY_INDEX,
     TYPE_ALLERGY_OUTLOOK,
@@ -23,14 +21,14 @@ from .const import (
     TYPE_DISEASE_FORECAST,
     TYPE_DISEASE_INDEX,
 )
-from .coordinator import IqviaUpdateCoordinator
+from .coordinator import IqviaConfigEntry, IqviaUpdateCoordinator
 
 DEFAULT_ATTRIBUTION = "Data provided by IQVIA™"
 
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IqviaConfigEntry) -> bool:
     """Set up IQVIA as config entry."""
     if not entry.unique_id:
         # If the config entry doesn't already have a unique ID, set one:
@@ -75,18 +73,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Once we've successfully authenticated, we re-enable client request retries:
     client.enable_request_retries()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinators
+    entry.runtime_data = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IqviaConfigEntry) -> bool:
     """Unload an OpenUV config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
