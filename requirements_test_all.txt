@@ -229,7 +229,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==31.0.0
+aioesphomeapi==31.0.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1197,7 +1197,7 @@ microBeesPy==0.3.5
 mill-local==0.3.0
 
 # homeassistant.components.mill
-millheater==0.12.3
+millheater==0.12.5
 
 # homeassistant.components.minio
 minio==7.1.12
@@ -1488,7 +1488,7 @@ pyHomee==1.2.8
 pyRFXtrx==0.31.1
 
 # homeassistant.components.tibber
-pyTibber==0.30.8
+pyTibber==0.31.2
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1875,7 +1875,7 @@ pysabnzbd==1.1.1
 pyschlage==2025.4.0
 
 # homeassistant.components.sensibo
-pysensibo==1.1.0
+pysensibo==1.2.1
 
 # homeassistant.components.acer_projector
 # homeassistant.components.crownstone
