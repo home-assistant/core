@@ -562,13 +562,15 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
             _LOGGER.debug("Invalid Media Content Type: %s", query.media_content_type)
 
             raise ServiceValidationError(
-                f"Media Content Type must be specified and must be one of {
-                    ', '.join(
+                translation_domain=DOMAIN,
+                translation_key="invalid_search_media_content_type",
+                translation_placeholders={
+                    "media_content_type": ", ".join(
                         str(key)
                         for key in self._browse_data.content_type_media_class
-                        if key not in ['apps', 'app', 'radios', 'radio']
+                        if key not in ["apps", "app", "radios", "radio"]
                     )
-                }"
+                },
             )
 
         payload = {

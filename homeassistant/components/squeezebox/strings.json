@@ -184,6 +184,9 @@
     },
     "update_restart_failed": {
       "message": "Error trying to update LMS Plugins: Restart failed."
+    },
+    "invalid_search_media_content_type": {
+      "message": "Media Content Type must be specified and must be one of {media_content_type}"
     }
   }
 }
