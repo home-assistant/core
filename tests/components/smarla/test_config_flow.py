@@ -1,5 +1,7 @@
 """Test config flow for Swing2Sleep Smarla integration."""
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
 
 from homeassistant.components.smarla.const import DOMAIN
@@ -12,7 +14,7 @@ from . import MOCK_SERIAL_NUMBER, MOCK_USER_INPUT
 from tests.common import MockConfigEntry
 
 
-async def test_config_flow(hass: HomeAssistant, mock_refresh_token_success) -> None:
+async def test_config_flow(hass: HomeAssistant, mock_cf_connection) -> None:
     """Test creating a config entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -21,8 +23,8 @@ async def test_config_flow(hass: HomeAssistant, mock_refresh_token_success) -> N
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_INPUT
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_INPUT
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -32,11 +34,21 @@ async def test_config_flow(hass: HomeAssistant, mock_refresh_token_success) -> N
 
 
 @pytest.mark.parametrize("error", ["malformed_token", "invalid_auth"])
-async def test_form_error(
-    hass: HomeAssistant, request: pytest.FixtureRequest, error: str
-) -> None:
+async def test_form_error(hass: HomeAssistant, error: str, mock_cf_connection) -> None:
     """Test we show user form on invalid auth."""
-    error_patch = request.getfixturevalue(f"{error}_patch")
+    match error:
+        case "malformed_token":
+            error_patch = patch(
+                "homeassistant.components.smarla.config_flow.Connection",
+                side_effect=ValueError,
+            )
+        case "invalid_auth":
+            error_patch = patch.object(
+                mock_cf_connection,
+                "refresh_token",
+                new=AsyncMock(return_value=False),
+            )
+
     with error_patch:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -45,18 +57,18 @@ async def test_form_error(
         )
 
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"] == {"base": error}
 
-    request.getfixturevalue("mock_refresh_token_success")
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_INPUT
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_INPUT
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_device_exists_abort(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_refresh_token_success
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_cf_connection
 ) -> None:
     """Test we abort config flow if Smarla device already configured."""
     mock_config_entry.add_to_hass(hass)

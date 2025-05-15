@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from pysmarlaapi.classes import AuthToken
 import pytest
 
-from homeassistant.components.smarla.config_flow import Connection
 from homeassistant.components.smarla.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 
-from . import MOCK_SERIAL_NUMBER
+from . import MOCK_ACCESS_TOKEN_JSON, MOCK_SERIAL_NUMBER, MOCK_USER_INPUT
 
 from tests.common import MockConfigEntry
 
@@ -22,23 +22,18 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         unique_id=MOCK_SERIAL_NUMBER,
         source=SOURCE_USER,
+        data=MOCK_USER_INPUT,
     )
 
 
 @pytest.fixture
-def mock_refresh_token_success():
-    """Patch Connection.refresh_token to return True."""
-    with patch.object(Connection, "refresh_token", new=AsyncMock(return_value=True)):
-        yield
-
-
-@pytest.fixture
-def malformed_token_patch():
-    """Patch Connection to raise exception."""
-    return patch.object(Connection, "__init__", side_effect=ValueError)
-
-
-@pytest.fixture
-def invalid_auth_patch():
-    """Patch Connection.refresh_token to return False."""
-    return patch.object(Connection, "refresh_token", new=AsyncMock(return_value=False))
+def mock_cf_connection():
+    """Patch config_flow Connection object."""
+    with patch(
+        "homeassistant.components.smarla.config_flow.Connection"
+    ) as mock_connection:
+        connection = MagicMock()
+        connection.token = AuthToken.from_json(MOCK_ACCESS_TOKEN_JSON)
+        connection.refresh_token = AsyncMock(return_value=True)
+        mock_connection.return_value = connection
+        yield connection
