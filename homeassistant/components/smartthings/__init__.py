@@ -102,6 +102,7 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.UPDATE,
     Platform.VALVE,
+    Platform.WATER_HEATER,
 ]
 
 

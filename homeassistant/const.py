@@ -634,6 +634,14 @@ class UnitOfEnergy(StrEnum):
     GIGA_CALORIE = "Gcal"
 
 
+# Reactive energy units
+class UnitOfReactiveEnergy(StrEnum):
+    """Reactive energy units."""
+
+    VOLT_AMPERE_REACTIVE_HOUR = "varh"
+    KILO_VOLT_AMPERE_REACTIVE_HOUR = "kvarh"
+
+
 # Energy Distance units
 class UnitOfEnergyDistance(StrEnum):
     """Energy Distance units."""
