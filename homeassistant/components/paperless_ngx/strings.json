@@ -36,19 +36,44 @@
         "name": "Storage available"
       },
       "status_database": {
-        "name": "Status database"
+        "name": "Status database",
+        "state": {
+          "ok": "OK",
+          "error": "ERROR",
+          "unknown": "UNKNOWN"
+        }
       },
       "status_redis": {
-        "name": "Status Redis"
+        "name": "Status Redis",
+        "state": {
+          "ok": "OK",
+          "error": "ERROR",
+          "unknown": "UNKNOWN"
+        }
       },
       "status_celery": {
-        "name": "Status Celery"
+        "name": "Status Celery",
+        "state": {
+          "ok": "OK",
+          "error": "ERROR",
+          "unknown": "UNKNOWN"
+        }
       },
       "status_index": {
-        "name": "Status index"
+        "name": "Status index",
+        "state": {
+          "ok": "OK",
+          "error": "ERROR",
+          "unknown": "UNKNOWN"
+        }
       },
       "status_classifier": {
-        "name": "Status classifier"
+        "name": "Status classifier",
+        "state": {
+          "ok": "OK",
+          "error": "ERROR",
+          "unknown": "UNKNOWN"
+        }
       }
     }
   },

@@ -1,6 +1,7 @@
 """Helper function for Paperless-ngx sensors."""
 
 from collections.abc import Callable
+from enum import Enum
 from typing import Any, TypeVar
 
 from homeassistant.const import UnitOfInformation
@@ -47,6 +48,11 @@ def build_attributes_fn(
         return result
 
     return attributes
+
+
+def enum_values_lower(enum_cls: type[Enum]) -> list[str]:
+    """Return a list of lowercase .value strings from an Enum class."""
+    return [e.value.lower() for e in enum_cls]
 
 
 def bytes_to_gb_converter(value: int) -> float:

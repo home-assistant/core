@@ -35,7 +35,7 @@ from .const import (
 )
 from .coordinator import PaperlessConfigEntry, PaperlessCoordinator, PaperlessData
 from .entity import PaperlessCoordinatorEntity
-from .helpers import build_state_fn, bytes_to_gb_converter
+from .helpers import build_state_fn, bytes_to_gb_converter, enum_values_lower
 
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 2
@@ -98,7 +98,7 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
         icon="mdi:check-circle-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
-        options=[status.value for status in StatusType],
+        options=enum_values_lower(StatusType),
         value_fn=build_state_fn(
             lambda data: data.status.database.status
             if data.status and data.status.database
@@ -116,7 +116,7 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
         icon="mdi:check-circle-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
-        options=[status.value for status in StatusType],
+        options=enum_values_lower(StatusType),
         value_fn=build_state_fn(
             lambda data: data.status.tasks.redis_status
             if data.status and data.status.tasks
@@ -134,7 +134,7 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
         icon="mdi:check-circle-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
-        options=[status.value for status in StatusType],
+        options=enum_values_lower(StatusType),
         value_fn=build_state_fn(
             lambda data: data.status.tasks.celery_status
             if data.status and data.status.tasks
@@ -147,7 +147,7 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
         icon="mdi:check-circle-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
-        options=[status.value for status in StatusType],
+        options=enum_values_lower(StatusType),
         value_fn=build_state_fn(
             lambda data: data.status.tasks.index_status
             if data.status and data.status.tasks
@@ -168,7 +168,7 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
         icon="mdi:check-circle-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
-        options=[status.value for status in StatusType],
+        options=enum_values_lower(StatusType),
         value_fn=build_state_fn(
             lambda data: data.status.tasks.classifier_status
             if data.status and data.status.tasks
@@ -226,7 +226,9 @@ class PaperlessSensor(
             self._attr_native_value = None
             self._attr_available = False
         else:
-            self._attr_native_value = state.value if isinstance(state, Enum) else state
+            self._attr_native_value = (
+                state.value.lower() if isinstance(state, Enum) else state
+            )
             self._attr_available = True
 
         self._attr_extra_state_attributes = {}
