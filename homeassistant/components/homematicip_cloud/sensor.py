@@ -12,6 +12,7 @@ from homematicip.base.functionalChannels import (
 )
 from homematicip.device import (
     BrandSwitchMeasuring,
+    Device,
     EnergySensorsInterface,
     FloorTerminalBlock6,
     FloorTerminalBlock10,
@@ -205,9 +206,11 @@ def get_device_handlers(hap: HomematicipHAP) -> dict[type, Callable]:
     }
 
 
-def _handle_energy_sensor_interface(hap: HomematicipHAP, device) -> list[SensorEntity]:
+def _handle_energy_sensor_interface(
+    hap: HomematicipHAP, device: Device
+) -> list[HomematicipGenericEntity]:
     """Handle energy sensor interface devices."""
-    result: list[SensorEntity] = []
+    result: list[HomematicipGenericEntity] = []
     for ch in get_channels_from_device(
         device, FunctionalChannelType.ENERGY_SENSORS_INTERFACE_CHANNEL
     ):
@@ -287,15 +290,7 @@ class HomematicipTiltAngleSensor(HomematicipGenericEntity, SensorEntity):
     @property
     def native_value(self) -> int | None:
         """Return the state."""
-
-        if hasattr(self.functional_channel, "absoluteAngle"):
-            return (
-                self.functional_channel.absoluteAngle
-                if self.functional_channel.absoluteAngle is not None
-                else None
-            )
-
-        return None
+        return getattr(self.functional_channel, "absoluteAngle", None)
 
 
 class HomematicipTiltStateSensor(HomematicipGenericEntity, SensorEntity):
