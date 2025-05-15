@@ -1,6 +1,6 @@
 {
   "application_credentials": {
-    "description": "Follow the [instructions]({more_info_url}) for [OAuth consent screen]({oauth_consent_url}) to give Home Assistant access to your Google Photos. You also need to create Application Credentials linked to your account:\n1. Go to [Credentials]({oauth_creds_url}) and select **Create Credentials**.\n1. From the drop-down list select **OAuth client ID**.\n1. Select **Web application** for the Application Type."
+    "description": "Follow the [instructions]({more_info_url}) for [OAuth consent screen]({oauth_consent_url}) to give Home Assistant access to Google Air Quality. You also need to create Application Credentials linked to your account:\n1. Go to [Credentials]({oauth_creds_url}) and select **Create Credentials**.\n1. From the drop-down list select **OAuth client ID**.\n1. Select **Web application** for the Application Type."
   },
   "config": {
     "step": {
@@ -11,11 +11,17 @@
         "title": "Link Google Account"
       },
       "coordinates": {
-        "description": "Select a location to get the closest measuring station.",
+        "description": "Select a location for the air quality data.",
         "data": {
           "location": "[%key:common::config_flow::data::location%]"
+        },
+        "data_description": {
+          "location": "Test"
         }
       }
+    },
+    "error": {
+      "no_data_for_location": "Information is unavailable for this location. Please try a different location."
     },
     "abort": {
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",

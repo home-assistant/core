@@ -1,4 +1,4 @@
-"""application_credentials platform the Google Photos integration."""
+"""application_credentials platform the Google integration."""
 
 from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.core import HomeAssistant
@@ -18,6 +18,6 @@ async def async_get_description_placeholders(hass: HomeAssistant) -> dict[str, s
     """Return description placeholders for the credentials dialog."""
     return {
         "oauth_consent_url": "https://console.cloud.google.com/apis/credentials/consent",
-        "more_info_url": "https://www.home-assistant.io/integrations/google_photos/",
+        "more_info_url": "https://www.home-assistant.io/integrations/google_air_quality/",
         "oauth_creds_url": "https://console.cloud.google.com/apis/credentials",
     }

@@ -1,4 +1,4 @@
-"""API for Google Photos bound to Home Assistant OAuth."""
+"""API for Google bound to Home Assistant OAuth."""
 
 from typing import cast
 
@@ -10,7 +10,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 
 class AsyncConfigEntryAuth(api.AbstractAuth):
-    """Provide Google Photos authentication tied to an OAuth2 based config entry."""
+    """Provide Google authentication tied to an OAuth2 based config entry."""
 
     def __init__(
         self,

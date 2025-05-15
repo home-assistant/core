@@ -1,4 +1,4 @@
-"""The Google Photos integration."""
+"""The Google Air Quality integration."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import api
 from .const import DOMAIN
-from .coordinator import GooglePhotosConfigEntry, GooglePhotosUpdateCoordinator
+from .coordinator import GoogleAirQualityConfigEntry, GoogleAirQualityUpdateCoordinator
 
 __all__ = [
     "DOMAIN",
@@ -25,9 +25,9 @@ PLATFORMS: list[Platform] = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: GooglePhotosConfigEntry
+    hass: HomeAssistant, entry: GoogleAirQualityConfigEntry
 ) -> bool:
-    """Set up Google Photos from a config entry."""
+    """Set up Google Air Quality from a config entry."""
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry
@@ -46,7 +46,9 @@ async def async_setup_entry(
         raise ConfigEntryNotReady from err
     except ClientError as err:
         raise ConfigEntryNotReady from err
-    coordinator = GooglePhotosUpdateCoordinator(hass, entry, GoogleAirQualityApi(auth))
+    coordinator = GoogleAirQualityUpdateCoordinator(
+        hass, entry, GoogleAirQualityApi(auth)
+    )
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
@@ -56,7 +58,7 @@ async def async_setup_entry(
 
 
 async def async_unload_entry(
-    hass: HomeAssistant, entry: GooglePhotosConfigEntry
+    hass: HomeAssistant, entry: GoogleAirQualityConfigEntry
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

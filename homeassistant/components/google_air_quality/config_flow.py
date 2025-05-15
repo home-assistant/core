@@ -1,4 +1,4 @@
-"""Config flow for Google Photos."""
+"""Config flow for Google Air Quality."""
 
 import logging
 from typing import Any
@@ -36,6 +36,8 @@ class OAuth2FlowHandler(
 
     _oauth_data: dict[str, Any] | None = None
 
+    schema = vol.Schema({vol.Required(CONF_LOCATION): LocationSelector()})
+
     @property
     def logger(self) -> logging.Logger:
         """Return logger."""
@@ -51,74 +53,12 @@ class OAuth2FlowHandler(
             "prompt": "consent",
         }
 
-        # async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
-        # """Create an entry for the flow."""
-        # session = aiohttp_client.async_get_clientsession(self.hass)
-        # auth = api.AsyncConfigFlowAuth(session, data[CONF_TOKEN][CONF_ACCESS_TOKEN])
-        # self.logger.error("Creating Google Photos API client")
-        # self.logger.error("data: %s", data)
-        # client = GooglePhotosLibraryApi(auth)
-        # self.logger.error("data: %s", data)
-
-        # lat = self.hass.config.latitude
-        # long = self.hass.config.longitude
-        # try:
-        #     self.logger.debug("jetzt gehts los")
-        #     user_resource_info = await client.get_media_item(lat, long)
-        #     self.logger.debug("user_resource_info: %s", user_resource_info)
-        # except GooglePhotosApiError as ex:
-        #     return self.async_abort(
-        #         reason="access_not_configured",
-        #         description_placeholders={"message": str(ex)},
-        #     )
-        # except Exception:
-        #     self.logger.exception("Unknown error occurred")
-        #     return self.async_abort(reason="unknown")
-
-        # await self.async_set_unique_id(f"{long}_{lat}")
-
-        # self._abort_if_unique_id_configured()
-        # return self.async_create_entry(title=f"{long}_{lat}", data=data)
-
-    # async def async_step_coordinates(
-    #     self, user_input: dict[str, str] | None = None
-    # ) -> ConfigFlowResult:
-    #     """Handle the start of the config flow."""
-    #     errors: dict[str, str] = {}
-
-    #     if user_input is not None:
-    #         # Speichere Standortdaten temporär
-    #         self.user_input = user_input
-    #         # Wechsle in den OAuth2-Flow
-    #         return await self.async_step_auth()
-
-    #     return self.async_show_form(
-    #         step_id="user",
-    #         data_schema=self.add_suggested_values_to_schema(
-    #             vol.Schema(
-    #                 {
-    #                     vol.Required(
-    #                         CONF_LOCATION,
-    #                     ): LocationSelector(),
-    #                 }
-    #             ),
-    #             {
-    #                 CONF_LOCATION: {
-    #                     CONF_LATITUDE: round(self.hass.config.latitude, 6),
-    #                     CONF_LONGITUDE: round(self.hass.config.longitude, 6),
-    #                 }
-    #             },
-    #         ),
-    #         errors=errors,
-    #     )
-
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Store OAuth token data and prompt user to confirm or change coordinates."""
         # Store OAuth token data for the next step
         self._oauth_data = data
 
         # Show form to ask/confirm coordinates with suggested defaults
-        schema = vol.Schema({vol.Required(CONF_LOCATION): LocationSelector()})
         suggested = {
             CONF_LOCATION: {
                 CONF_LATITUDE: self.hass.config.latitude,
@@ -127,7 +67,7 @@ class OAuth2FlowHandler(
         }
         return self.async_show_form(
             step_id="coordinates",
-            data_schema=self.add_suggested_values_to_schema(schema, suggested),
+            data_schema=self.add_suggested_values_to_schema(self.schema, suggested),
             errors={},
         )
 
@@ -154,16 +94,20 @@ class OAuth2FlowHandler(
         location = user_input[CONF_LOCATION]
         lat = location[CONF_LATITUDE]
         lon = location[CONF_LONGITUDE]
-
-        home = False
-        if lat is self.hass.config.latitude and lon is self.hass.config.longitude:
-            home = True
+        suggested = {
+            CONF_LOCATION: {
+                CONF_LATITUDE: lat,
+                CONF_LONGITUDE: lon,
+            }
+        }
 
         try:
             user_resource_info = await client.async_air_quality(lat, lon)
         except NoDataForLocationError:
-            return self.async_abort(
-                reason="no_data_for_location",
+            return self.async_show_form(
+                step_id="coordinates",
+                data_schema=self.add_suggested_values_to_schema(self.schema, suggested),
+                errors={"base": "no_data_for_location"},
             )
         except GooglePhotosApiError as ex:
             return self.async_abort(
@@ -174,10 +118,7 @@ class OAuth2FlowHandler(
             self.logger.exception("Unknown error occurred")
             return self.async_abort(reason="unknown")
 
-        if home is True:
-            unique_id = "home"
-        else:
-            unique_id = f"{lat}_{lon}"
+        unique_id = f"{lat}_{lon}"
 
         await self.async_set_unique_id(unique_id)
         self._oauth_data.update(

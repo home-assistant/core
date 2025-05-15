@@ -1,10 +1,4 @@
-"""Coordinator for fetching data from Google Photos API.
-
-This coordinator fetches the list of Google Photos albums that were created by
-Home Assistant, which for large libraries may take some time. The list of album
-ids and titles is cached and this provides a method to refresh urls since they
-are short lived.
-"""
+"""Coordinator for fetching data from Google Air Quality API."""
 
 import datetime
 import logging
@@ -26,24 +20,21 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL: Final = datetime.timedelta(hours=1)
 ALBUM_PAGE_SIZE = 50
 
-type GooglePhotosConfigEntry = ConfigEntry[GooglePhotosUpdateCoordinator]
+type GoogleAirQualityConfigEntry = ConfigEntry[GoogleAirQualityUpdateCoordinator]
 
 
-class GooglePhotosUpdateCoordinator(DataUpdateCoordinator[AirQualityData]):
-    """Coordinator for fetching Google Photos albums.
+class GoogleAirQualityUpdateCoordinator(DataUpdateCoordinator[AirQualityData]):
+    """Coordinator for fetching Google AirQuality data."""
 
-    The `data` object is a dict from Album ID to Album title.
-    """
-
-    config_entry: GooglePhotosConfigEntry
+    config_entry: GoogleAirQualityConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: GooglePhotosConfigEntry,
+        config_entry: GoogleAirQualityConfigEntry,
         client: GoogleAirQualityApi,
     ) -> None:
-        """Initialize TaskUpdateCoordinator."""
+        """Initialize DataUpdateCoordinator."""
         super().__init__(
             hass,
             _LOGGER,
