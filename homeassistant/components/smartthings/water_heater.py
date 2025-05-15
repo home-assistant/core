@@ -124,11 +124,14 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
     def operation_list(self) -> list[str]:
         """Return the list of available operation modes."""
         return [
-            OPERATION_MAP_TO_HA[mode]
-            for mode in self.get_attribute_value(
-                Capability.AIR_CONDITIONER_MODE, Attribute.SUPPORTED_AC_MODES
-            )
-            if mode in OPERATION_MAP_TO_HA
+            STATE_OFF,
+            *(
+                OPERATION_MAP_TO_HA[mode]
+                for mode in self.get_attribute_value(
+                    Capability.AIR_CONDITIONER_MODE, Attribute.SUPPORTED_AC_MODES
+                )
+                if mode in OPERATION_MAP_TO_HA
+            ),
         ]
 
     @property
@@ -182,6 +185,11 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
+        if operation_mode == STATE_OFF:
+            await self.async_turn_off()
+            return
+        if self.current_operation == STATE_OFF:
+            await self.async_turn_on()
         await self.execute_device_command(
             Capability.AIR_CONDITIONER_MODE,
             Command.SET_AIR_CONDITIONER_MODE,
