@@ -42,11 +42,11 @@ async def test_entities(
 @pytest.mark.parametrize(
     ("light_id", "data", "set_brightness"),
     [
-        (0, {ATTR_ENTITY_ID: "light.light"}, 100),
+        (0, {ATTR_ENTITY_ID: "light.light"}, 255),
         (
             1,
             {ATTR_ENTITY_ID: "light.dimmable_light", ATTR_BRIGHTNESS: 50},
-            20,
+            50,
         ),
     ],
 )
@@ -121,8 +121,8 @@ async def test_updating(
     assert hass.states.get("light.dimmable_light").state == STATE_ON
     assert hass.states.get("light.dimmable_light").attributes[ATTR_BRIGHTNESS] == 255
 
-    dimmable_light.state = 80
-    await find_update_callback(mock_niko_home_control_connection, 2)(80)
+    dimmable_light.state = 204
+    await find_update_callback(mock_niko_home_control_connection, 2)(204)
     await hass.async_block_till_done()
 
     assert hass.states.get("light.dimmable_light").state == STATE_ON

@@ -2,25 +2,35 @@
 
 from collections.abc import AsyncGenerator, Callable
 import json
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import openai
 from openai._streaming import AsyncStream
 from openai.types.responses import (
     EasyInputMessageParam,
     FunctionToolParam,
+    ResponseCompletedEvent,
+    ResponseErrorEvent,
+    ResponseFailedEvent,
     ResponseFunctionCallArgumentsDeltaEvent,
     ResponseFunctionCallArgumentsDoneEvent,
     ResponseFunctionToolCall,
     ResponseFunctionToolCallParam,
+    ResponseIncompleteEvent,
     ResponseInputParam,
     ResponseOutputItemAddedEvent,
+    ResponseOutputItemDoneEvent,
     ResponseOutputMessage,
+    ResponseOutputMessageParam,
+    ResponseReasoningItem,
+    ResponseReasoningItemParam,
     ResponseStreamEvent,
     ResponseTextDeltaEvent,
     ToolParam,
+    WebSearchToolParam,
 )
 from openai.types.responses.response_input_param import FunctionCallOutput
+from openai.types.responses.web_search_tool_param import UserLocation
 from voluptuous_openapi import convert
 
 from homeassistant.components import assist_pipeline, conversation
@@ -39,6 +49,13 @@ from .const import (
     CONF_REASONING_EFFORT,
     CONF_TEMPERATURE,
     CONF_TOP_P,
+    CONF_WEB_SEARCH,
+    CONF_WEB_SEARCH_CITY,
+    CONF_WEB_SEARCH_CONTEXT_SIZE,
+    CONF_WEB_SEARCH_COUNTRY,
+    CONF_WEB_SEARCH_REGION,
+    CONF_WEB_SEARCH_TIMEZONE,
+    CONF_WEB_SEARCH_USER_LOCATION,
     DOMAIN,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
@@ -46,6 +63,7 @@ from .const import (
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
+    RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
 )
 
 # Max number of back and forth with the LLM to generate a response
@@ -99,8 +117,7 @@ def _convert_content_to_param(
 
     if isinstance(content, conversation.AssistantContent) and content.tool_calls:
         messages.extend(
-            # https://github.com/openai/openai-python/issues/2205
-            ResponseFunctionToolCallParam(  # type: ignore[typeddict-item]
+            ResponseFunctionToolCallParam(
                 type="function_call",
                 name=tool_call.tool_name,
                 arguments=json.dumps(tool_call.tool_args),
@@ -112,7 +129,9 @@ def _convert_content_to_param(
 
 
 async def _transform_stream(
+    chat_log: conversation.ChatLog,
     result: AsyncStream[ResponseStreamEvent],
+    messages: ResponseInputParam,
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     """Transform an OpenAI delta stream into HA format."""
     async for event in result:
@@ -123,6 +142,15 @@ async def _transform_stream(
                 yield {"role": event.item.role}
             elif isinstance(event.item, ResponseFunctionToolCall):
                 current_tool_call = event.item
+        elif isinstance(event, ResponseOutputItemDoneEvent):
+            item = event.item.model_dump()
+            item.pop("status", None)
+            if isinstance(event.item, ResponseReasoningItem):
+                messages.append(cast(ResponseReasoningItemParam, item))
+            elif isinstance(event.item, ResponseOutputMessage):
+                messages.append(cast(ResponseOutputMessageParam, item))
+            elif isinstance(event.item, ResponseFunctionToolCall):
+                messages.append(cast(ResponseFunctionToolCallParam, item))
         elif isinstance(event, ResponseTextDeltaEvent):
             yield {"content": event.delta}
         elif isinstance(event, ResponseFunctionCallArgumentsDeltaEvent):
@@ -138,6 +166,57 @@ async def _transform_stream(
                     )
                 ]
             }
+        elif isinstance(event, ResponseCompletedEvent):
+            if event.response.usage is not None:
+                chat_log.async_trace(
+                    {
+                        "stats": {
+                            "input_tokens": event.response.usage.input_tokens,
+                            "output_tokens": event.response.usage.output_tokens,
+                        }
+                    }
+                )
+        elif isinstance(event, ResponseIncompleteEvent):
+            if event.response.usage is not None:
+                chat_log.async_trace(
+                    {
+                        "stats": {
+                            "input_tokens": event.response.usage.input_tokens,
+                            "output_tokens": event.response.usage.output_tokens,
+                        }
+                    }
+                )
+
+            if (
+                event.response.incomplete_details
+                and event.response.incomplete_details.reason
+            ):
+                reason: str = event.response.incomplete_details.reason
+            else:
+                reason = "unknown reason"
+
+            if reason == "max_output_tokens":
+                reason = "max output tokens reached"
+            elif reason == "content_filter":
+                reason = "content filter triggered"
+
+            raise HomeAssistantError(f"OpenAI response incomplete: {reason}")
+        elif isinstance(event, ResponseFailedEvent):
+            if event.response.usage is not None:
+                chat_log.async_trace(
+                    {
+                        "stats": {
+                            "input_tokens": event.response.usage.input_tokens,
+                            "output_tokens": event.response.usage.output_tokens,
+                        }
+                    }
+                )
+            reason = "unknown reason"
+            if event.response.error is not None:
+                reason = event.response.error.message
+            raise HomeAssistantError(f"OpenAI response failed: {reason}")
+        elif isinstance(event, ResponseErrorEvent):
+            raise HomeAssistantError(f"OpenAI response error: {event.message}")
 
 
 class OpenAIConversationEntity(
@@ -210,6 +289,25 @@ class OpenAIConversationEntity(
                 for tool in chat_log.llm_api.tools
             ]
 
+        if options.get(CONF_WEB_SEARCH):
+            web_search = WebSearchToolParam(
+                type="web_search_preview",
+                search_context_size=options.get(
+                    CONF_WEB_SEARCH_CONTEXT_SIZE, RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE
+                ),
+            )
+            if options.get(CONF_WEB_SEARCH_USER_LOCATION):
+                web_search["user_location"] = UserLocation(
+                    type="approximate",
+                    city=options.get(CONF_WEB_SEARCH_CITY, ""),
+                    region=options.get(CONF_WEB_SEARCH_REGION, ""),
+                    country=options.get(CONF_WEB_SEARCH_COUNTRY, ""),
+                    timezone=options.get(CONF_WEB_SEARCH_TIMEZONE, ""),
+                )
+            if tools is None:
+                tools = []
+            tools.append(web_search)
+
         model = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
         messages = [
             m
@@ -230,7 +328,6 @@ class OpenAIConversationEntity(
                 "top_p": options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
                 "temperature": options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
                 "user": chat_log.conversation_id,
-                "store": False,
                 "stream": True,
             }
             if tools:
@@ -242,6 +339,8 @@ class OpenAIConversationEntity(
                         CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
                     )
                 }
+            else:
+                model_args["store"] = False
 
             try:
                 result = await client.responses.create(**model_args)
@@ -253,9 +352,10 @@ class OpenAIConversationEntity(
                 raise HomeAssistantError("Error talking to OpenAI") from err
 
             async for content in chat_log.async_add_delta_content_stream(
-                user_input.agent_id, _transform_stream(result)
+                user_input.agent_id, _transform_stream(chat_log, result, messages)
             ):
-                messages.extend(_convert_content_to_param(content))
+                if not isinstance(content, conversation.AssistantContent):
+                    messages.extend(_convert_content_to_param(content))
 
             if not chat_log.unresponded_tool_results:
                 break

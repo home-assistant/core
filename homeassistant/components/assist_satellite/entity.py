@@ -28,7 +28,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session, entity
 from homeassistant.helpers.entity import EntityDescription
 
-from .const import AssistSatelliteEntityFeature
+from .const import PREANNOUNCE_URL, AssistSatelliteEntityFeature
 from .errors import AssistSatelliteError, SatelliteBusyError
 
 _LOGGER = logging.getLogger(__name__)
@@ -100,6 +100,9 @@ class AssistSatelliteAnnouncement:
 
     media_id_source: Literal["url", "media_id", "tts"]
     """Source of the media ID."""
+
+    preannounce_media_id: str | None = None
+    """Media ID to be played before announcement."""
 
 
 class AssistSatelliteEntity(entity.Entity):
@@ -177,6 +180,8 @@ class AssistSatelliteEntity(entity.Entity):
         self,
         message: str | None = None,
         media_id: str | None = None,
+        preannounce: bool = True,
+        preannounce_media_id: str = PREANNOUNCE_URL,
     ) -> None:
         """Play and show an announcement on the satellite.
 
@@ -186,6 +191,9 @@ class AssistSatelliteEntity(entity.Entity):
         If media_id is provided, it is played directly. It is possible
         to omit the message and the satellite will not show any text.
 
+        If preannounce is True, a sound is played before the announcement.
+        If preannounce_media_id is provided, it overrides the default sound.
+
         Calls async_announce with message and media id.
         """
         await self._cancel_running_pipeline()
@@ -193,7 +201,11 @@ class AssistSatelliteEntity(entity.Entity):
         if message is None:
             message = ""
 
-        announcement = await self._resolve_announcement_media_id(message, media_id)
+        announcement = await self._resolve_announcement_media_id(
+            message,
+            media_id,
+            preannounce_media_id=preannounce_media_id if preannounce else None,
+        )
 
         if self._is_announcing:
             raise SatelliteBusyError
@@ -220,6 +232,8 @@ class AssistSatelliteEntity(entity.Entity):
         start_message: str | None = None,
         start_media_id: str | None = None,
         extra_system_prompt: str | None = None,
+        preannounce: bool = True,
+        preannounce_media_id: str = PREANNOUNCE_URL,
     ) -> None:
         """Start a conversation from the satellite.
 
@@ -228,6 +242,9 @@ class AssistSatelliteEntity(entity.Entity):
 
         If start_media_id is provided, it is played directly. It is possible
         to omit the message and the satellite will not show any text.
+
+        If preannounce is True, a sound is played before the start message or media.
+        If preannounce_media_id is provided, it overrides the default sound.
 
         Calls async_start_conversation.
         """
@@ -244,13 +261,17 @@ class AssistSatelliteEntity(entity.Entity):
             start_message = ""
 
         announcement = await self._resolve_announcement_media_id(
-            start_message, start_media_id
+            start_message,
+            start_media_id,
+            preannounce_media_id=preannounce_media_id if preannounce else None,
         )
 
         if self._is_announcing:
             raise SatelliteBusyError
 
         self._is_announcing = True
+        self._set_state(AssistSatelliteState.RESPONDING)
+
         # Provide our start info to the LLM so it understands context of incoming message
         if extra_system_prompt is not None:
             self._extra_system_prompt = extra_system_prompt
@@ -280,6 +301,7 @@ class AssistSatelliteEntity(entity.Entity):
             raise
         finally:
             self._is_announcing = False
+            self._set_state(AssistSatelliteState.IDLE)
 
     async def async_start_conversation(
         self, start_announcement: AssistSatelliteAnnouncement
@@ -470,7 +492,10 @@ class AssistSatelliteEntity(entity.Entity):
         return vad.VadSensitivity.to_seconds(vad_sensitivity)
 
     async def _resolve_announcement_media_id(
-        self, message: str, media_id: str | None
+        self,
+        message: str,
+        media_id: str | None,
+        preannounce_media_id: str | None = None,
     ) -> AssistSatelliteAnnouncement:
         """Resolve the media ID."""
         media_id_source: Literal["url", "media_id", "tts"] | None = None
@@ -478,7 +503,6 @@ class AssistSatelliteEntity(entity.Entity):
 
         if media_id:
             original_media_id = media_id
-
         else:
             media_id_source = "tts"
             # Synthesize audio and get URL
@@ -530,10 +554,26 @@ class AssistSatelliteEntity(entity.Entity):
         # Resolve to full URL
         media_id = async_process_play_media_url(self.hass, media_id)
 
+        # Resolve preannounce media id
+        if preannounce_media_id:
+            if media_source.is_media_source_id(preannounce_media_id):
+                preannounce_media = await media_source.async_resolve_media(
+                    self.hass,
+                    preannounce_media_id,
+                    None,
+                )
+                preannounce_media_id = preannounce_media.url
+
+            # Resolve to full URL
+            preannounce_media_id = async_process_play_media_url(
+                self.hass, preannounce_media_id
+            )
+
         return AssistSatelliteAnnouncement(
             message=message,
             media_id=media_id,
             original_media_id=original_media_id,
             tts_token=tts_token,
             media_id_source=media_id_source,
+            preannounce_media_id=preannounce_media_id,
         )

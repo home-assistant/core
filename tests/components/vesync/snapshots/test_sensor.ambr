@@ -114,7 +114,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'excellent',
   })
 # ---
 # name: test_sensor_state[Air Purifier 131s][sensor.air_purifier_131s_filter_lifetime]
@@ -129,7 +129,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '25',
   })
 # ---
 # name: test_sensor_state[Air Purifier 200s][devices]

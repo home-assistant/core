@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from tesla_fleet_api import VehicleSpecific
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.teslemetry import Vehicle
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -18,7 +18,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from . import TeslemetryConfigEntry
 from .entity import (
     TeslemetryRootEntity,
-    TeslemetryVehicleEntity,
+    TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
 from .helpers import handle_vehicle_command
@@ -52,7 +52,7 @@ async def async_setup_entry(
     """Set up the Teslemetry Media platform from a config entry."""
 
     async_add_entities(
-        TeslemetryPollingMediaEntity(vehicle, entry.runtime_data.scopes)
+        TeslemetryVehiclePollingMediaEntity(vehicle, entry.runtime_data.scopes)
         if vehicle.api.pre2021 or vehicle.firmware < "2025.2.6"
         else TeslemetryStreamingMediaEntity(vehicle, entry.runtime_data.scopes)
         for vehicle in entry.runtime_data.vehicles
@@ -62,8 +62,7 @@ async def async_setup_entry(
 class TeslemetryMediaEntity(TeslemetryRootEntity, MediaPlayerEntity):
     """Base vehicle media player class."""
 
-    api: VehicleSpecific
-
+    api: Vehicle
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_volume_step = VOLUME_STEP
 
@@ -107,7 +106,9 @@ class TeslemetryMediaEntity(TeslemetryRootEntity, MediaPlayerEntity):
         await handle_vehicle_command(self.api.media_prev_track())
 
 
-class TeslemetryPollingMediaEntity(TeslemetryVehicleEntity, TeslemetryMediaEntity):
+class TeslemetryVehiclePollingMediaEntity(
+    TeslemetryVehiclePollingEntity, TeslemetryMediaEntity
+):
     """Polling vehicle media player class."""
 
     def __init__(

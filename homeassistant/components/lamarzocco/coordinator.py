@@ -3,28 +3,26 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any
 
-from pylamarzocco.clients.local import LaMarzoccoLocalClient
-from pylamarzocco.devices.machine import LaMarzoccoMachine
+from pylamarzocco import LaMarzoccoMachine
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
-SCAN_INTERVAL = timedelta(seconds=30)
-FIRMWARE_UPDATE_INTERVAL = timedelta(hours=1)
-STATISTICS_UPDATE_INTERVAL = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(seconds=15)
+SETTINGS_UPDATE_INTERVAL = timedelta(hours=1)
+SCHEDULE_UPDATE_INTERVAL = timedelta(minutes=5)
+STATISTICS_UPDATE_INTERVAL = timedelta(minutes=15)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -33,7 +31,8 @@ class LaMarzoccoRuntimeData:
     """Runtime data for La Marzocco."""
 
     config_coordinator: LaMarzoccoConfigUpdateCoordinator
-    firmware_coordinator: LaMarzoccoFirmwareUpdateCoordinator
+    settings_coordinator: LaMarzoccoSettingsUpdateCoordinator
+    schedule_coordinator: LaMarzoccoScheduleUpdateCoordinator
     statistics_coordinator: LaMarzoccoStatisticsUpdateCoordinator
 
 
@@ -45,13 +44,13 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 
     _default_update_interval = SCAN_INTERVAL
     config_entry: LaMarzoccoConfigEntry
+    websocket_terminated = True
 
     def __init__(
         self,
         hass: HomeAssistant,
         entry: LaMarzoccoConfigEntry,
         device: LaMarzoccoMachine,
-        local_client: LaMarzoccoLocalClient | None = None,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
@@ -62,9 +61,6 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             update_interval=self._default_update_interval,
         )
         self.device = device
-        self.local_connection_configured = local_client is not None
-        self._local_client = local_client
-        self.new_device_callback: list[Callable] = []
 
     async def _async_update_data(self) -> None:
         """Do the data update."""
@@ -89,73 +85,66 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     """Class to handle fetching data from the La Marzocco API centrally."""
 
-    _scale_address: str | None = None
+    async def _internal_async_update_data(self) -> None:
+        """Fetch data from API endpoint."""
 
-    async def _async_connect_websocket(self) -> None:
-        """Set up the coordinator."""
-        if self._local_client is not None and (
-            self._local_client.websocket is None or self._local_client.websocket.closed
-        ):
-            _LOGGER.debug("Init WebSocket in background task")
+        if self.device.websocket.connected:
+            return
+        await self.device.get_dashboard()
+        _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
 
-            self.config_entry.async_create_background_task(
-                hass=self.hass,
-                target=self.device.websocket_connect(
-                    notify_callback=lambda: self.async_set_updated_data(None)
-                ),
-                name="lm_websocket_task",
-            )
+        self.config_entry.async_create_background_task(
+            hass=self.hass,
+            target=self.connect_websocket(),
+            name="lm_websocket_task",
+        )
 
-            async def websocket_close(_: Any | None = None) -> None:
-                if (
-                    self._local_client is not None
-                    and self._local_client.websocket is not None
-                    and not self._local_client.websocket.closed
-                ):
-                    await self._local_client.websocket.close()
+        async def websocket_close(_: Any | None = None) -> None:
+            await self.device.websocket.disconnect()
 
-            self.config_entry.async_on_unload(
-                self.hass.bus.async_listen_once(
-                    EVENT_HOMEASSISTANT_STOP, websocket_close
-                )
-            )
-            self.config_entry.async_on_unload(websocket_close)
+        self.config_entry.async_on_unload(
+            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, websocket_close)
+        )
+        self.config_entry.async_on_unload(websocket_close)
+
+    async def connect_websocket(self) -> None:
+        """Connect to the websocket."""
+
+        _LOGGER.debug("Init WebSocket in background task")
+
+        self.websocket_terminated = False
+        self.async_update_listeners()
+
+        await self.device.connect_dashboard_websocket(
+            update_callback=lambda _: self.async_set_updated_data(None),
+            connect_callback=self.async_update_listeners,
+            disconnect_callback=self.async_update_listeners,
+        )
+
+        self.websocket_terminated = True
+        self.async_update_listeners()
+
+
+class LaMarzoccoSettingsUpdateCoordinator(LaMarzoccoUpdateCoordinator):
+    """Coordinator for La Marzocco settings."""
+
+    _default_update_interval = SETTINGS_UPDATE_INTERVAL
 
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
-        await self.device.get_config()
-        _LOGGER.debug("Current status: %s", str(self.device.config))
-        await self._async_connect_websocket()
-        self._async_add_remove_scale()
-
-    @callback
-    def _async_add_remove_scale(self) -> None:
-        """Add or remove a scale when added or removed."""
-        if self.device.config.scale and not self._scale_address:
-            self._scale_address = self.device.config.scale.address
-            for scale_callback in self.new_device_callback:
-                scale_callback()
-        elif not self.device.config.scale and self._scale_address:
-            device_registry = dr.async_get(self.hass)
-            if device := device_registry.async_get_device(
-                identifiers={(DOMAIN, self._scale_address)}
-            ):
-                device_registry.async_update_device(
-                    device_id=device.id,
-                    remove_config_entry_id=self.config_entry.entry_id,
-                )
-            self._scale_address = None
+        await self.device.get_settings()
+        _LOGGER.debug("Current settings: %s", self.device.settings.to_dict())
 
 
-class LaMarzoccoFirmwareUpdateCoordinator(LaMarzoccoUpdateCoordinator):
-    """Coordinator for La Marzocco firmware."""
+class LaMarzoccoScheduleUpdateCoordinator(LaMarzoccoUpdateCoordinator):
+    """Coordinator for La Marzocco schedule."""
 
-    _default_update_interval = FIRMWARE_UPDATE_INTERVAL
+    _default_update_interval = SCHEDULE_UPDATE_INTERVAL
 
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
-        await self.device.get_firmware()
-        _LOGGER.debug("Current firmware: %s", str(self.device.firmware))
+        await self.device.get_schedule()
+        _LOGGER.debug("Current schedule: %s", self.device.schedule.to_dict())
 
 
 class LaMarzoccoStatisticsUpdateCoordinator(LaMarzoccoUpdateCoordinator):
@@ -165,5 +154,5 @@ class LaMarzoccoStatisticsUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
-        await self.device.get_statistics()
-        _LOGGER.debug("Current statistics: %s", str(self.device.statistics))
+        await self.device.get_coffee_and_flush_counter()
+        _LOGGER.debug("Current statistics: %s", self.device.statistics.to_dict())

@@ -54,7 +54,7 @@
       "init": {
         "data": {
           "timeout": "Request timeout (seconds)",
-          "ffmpeg_arguments": "Arguments passed to ffmpeg for cameras"
+          "ffmpeg_arguments": "Arguments passed to FFmpeg for cameras"
         }
       }
     }
