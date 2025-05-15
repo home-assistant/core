@@ -26,6 +26,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -158,6 +160,66 @@ async def test_set_operation_mode_from_off(
             argument="eco",
         ),
     ]
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
+async def test_set_operation_to_off(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test set operation mode to off."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        SERVICE_SET_OPERATION_MODE,
+        {
+            ATTR_ENTITY_ID: "water_heater.warmepumpe",
+            ATTR_OPERATION_MODE: STATE_OFF,
+        },
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "3810e5ad-5351-d9f9-12ff-000001200000",
+        Capability.SWITCH,
+        Command.OFF,
+        MAIN,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
+@pytest.mark.parametrize(
+    ("service", "command"),
+    [
+        (SERVICE_TURN_ON, Command.ON),
+        (SERVICE_TURN_OFF, Command.OFF),
+    ],
+)
+async def test_turn_on_off(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    command: Command,
+) -> None:
+    """Test turn on and off."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        service,
+        {
+            ATTR_ENTITY_ID: "water_heater.warmepumpe",
+        },
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "3810e5ad-5351-d9f9-12ff-000001200000",
+        Capability.SWITCH,
+        command,
+        MAIN,
+    )
 
 
 @pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
