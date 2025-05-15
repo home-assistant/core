@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.paperless_ngx.const import DOMAIN
 
-from .const import MOCK_CONFIG
+from .const import USER_INPUT
 
 from tests.common import MockConfigEntry
 
@@ -28,5 +28,5 @@ def mock_config_entry() -> MockConfigEntry:
         entry_id="test",
         title="Paperless-ngx",
         domain=DOMAIN,
-        data=MOCK_CONFIG,
+        data=USER_INPUT,
     )

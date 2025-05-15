@@ -2,7 +2,7 @@
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 
-MOCK_CONFIG = {
-    CONF_HOST: "http://paperless.example.com",
+USER_INPUT = {
+    CONF_HOST: "192.168.69.16",
     CONF_ACCESS_TOKEN: "test_token",
 }
