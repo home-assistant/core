@@ -14,6 +14,7 @@ from homeassistant.components.influxdb import (
     ApiException,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     BASE_V1_CONFIG,
@@ -36,6 +37,167 @@ def mock_client_fixture(
 
     with patch(client_target) as client:
         yield client
+
+
+@pytest.mark.parametrize(
+    ("mock_client", "config_base", "config_url", "get_write_api"),
+    [
+        (
+            DEFAULT_API_VERSION,
+            {
+                "url": "http://localhost:8086",
+                "verify_ssl": False,
+                "database": "home_assistant",
+                "username": "user",
+                "password": "pass",
+            },
+            {
+                "host": "localhost",
+                "port": 8086,
+                "ssl": False,
+                "path": "/",
+            },
+            _get_write_api_mock_v1,
+        ),
+        (
+            DEFAULT_API_VERSION,
+            {
+                "url": "http://localhost:8086",
+                "verify_ssl": False,
+                "database": "home_assistant",
+            },
+            {
+                "host": "localhost",
+                "port": 8086,
+                "ssl": False,
+                "path": "/",
+            },
+            _get_write_api_mock_v1,
+        ),
+        (
+            DEFAULT_API_VERSION,
+            {
+                "url": "https://influxdb.mydomain.com",
+                "verify_ssl": True,
+                "database": "home_assistant",
+                "username": "user",
+                "password": "pass",
+            },
+            {
+                "host": "influxdb.mydomain.com",
+                "port": 443,
+                "ssl": True,
+                "path": "/",
+            },
+            _get_write_api_mock_v1,
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_setup_v1(
+    hass: HomeAssistant, mock_client, config_base, config_url, get_write_api
+) -> None:
+    """Test we can setup an InfluxDB v1."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] is None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"api_version": "1.x"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_v1"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.influxdb.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            config_base,
+        )
+
+    data = {
+        "api_version": "1",
+        "host": config_url["host"],
+        "port": config_url["port"],
+        "username": config_base.get("username"),
+        "password": config_base.get("password"),
+        "database": config_base["database"],
+        "ssl": config_url["ssl"],
+        "path": config_url["path"],
+        "verify_ssl": config_base["verify_ssl"],
+    }
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"{config_base['database']} ({config_url['host']})"
+    assert result["data"] == data
+
+
+@pytest.mark.parametrize(
+    ("mock_client", "config_base", "get_write_api"),
+    [
+        (
+            API_VERSION_2,
+            {
+                "url": "http://localhost:8086",
+                "verify_ssl": True,
+                "organization": "my_org",
+                "bucket": "home_assistant",
+                "token": "token",
+            },
+            _get_write_api_mock_v2,
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_setup_v2(
+    hass: HomeAssistant, mock_client, config_base, get_write_api
+) -> None:
+    """Test we can setup an InfluxDB v1."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] is None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"api_version": "2.x"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_v2"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.influxdb.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            config_base,
+        )
+
+    data = {
+        "api_version": "2",
+        "url": config_base["url"],
+        "organization": config_base["organization"],
+        "bucket": config_base.get("bucket"),
+        "token": config_base.get("token"),
+        "verify_ssl": config_base["verify_ssl"],
+    }
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"{config_base['bucket']} ({config_base['url']})"
+    assert result["data"] == data
 
 
 @pytest.mark.parametrize(
