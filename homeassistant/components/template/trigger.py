@@ -48,7 +48,7 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     trigger_data = trigger_info["trigger_data"]
-    _variables = trigger_info["variables"] or {}
+    variables = trigger_info["variables"] or {}
     value_template: Template = config[CONF_VALUE_TEMPLATE]
     time_delta = config.get(CONF_FOR)
     delay_cancel = None
@@ -57,7 +57,7 @@ async def async_attach_trigger(
 
     # Arm at setup if the template is already false.
     try:
-        if not result_as_boolean(value_template.async_render(_variables)):
+        if not result_as_boolean(value_template.async_render(variables)):
             armed = True
     except exceptions.TemplateError as ex:
         _LOGGER.warning(
@@ -134,11 +134,11 @@ async def async_attach_trigger(
             return
 
         data = {"trigger": template_variables}
-        variables = {**_variables, **data}
+        period_variables = {**variables, **data}
 
         try:
             period: timedelta = cv.positive_time_period(
-                template.render_complex(time_delta, variables)
+                template.render_complex(time_delta, period_variables)
             )
         except (exceptions.TemplateError, vol.Invalid) as ex:
             _LOGGER.error(
@@ -152,7 +152,7 @@ async def async_attach_trigger(
 
     info = async_track_template_result(
         hass,
-        [TrackTemplate(value_template, _variables)],
+        [TrackTemplate(value_template, variables)],
         template_listener,
     )
     unsub = info.async_remove
