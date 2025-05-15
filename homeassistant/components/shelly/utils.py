@@ -390,13 +390,13 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     )
 
     if key in device.config:
-        if entity_name := device.config[key].get("name"):
+        if component_name := device.config[key].get("name"):
             if key.startswith(
                 ("boolean:", "enum:", "input:", "number:", "text:", "script:")
             ):
-                return cast(str, entity_name)
+                return cast(str, component_name)
 
-            return cast(str, entity_name) if instances == 1 else None
+            return cast(str, component_name) if instances == 1 else None
 
     # main function of the device
     if (
