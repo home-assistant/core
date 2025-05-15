@@ -530,6 +530,15 @@
       "sabbath_mode": {
         "name": "Sabbath mode"
       }
+    },
+    "water_heater": {
+      "water_heater": {
+        "state": {
+          "standard": "Standard",
+          "force": "Forced",
+          "power": "Power"
+        }
+      }
     }
   },
   "issues": {
