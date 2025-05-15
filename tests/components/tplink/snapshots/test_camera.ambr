@@ -39,7 +39,6 @@
       'access_token': '1caab5c3b3',
       'entity_picture': '/api/camera_proxy/camera.my_camera_live_view?token=1caab5c3b3',
       'friendly_name': 'my_camera Live view',
-      'frontend_stream_type': <StreamType.HLS: 'hls'>,
       'supported_features': <CameraEntityFeature: 3>,
     }),
     'context': <ANY>,

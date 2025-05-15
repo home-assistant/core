@@ -20,6 +20,7 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.FAN,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,
