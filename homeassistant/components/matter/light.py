@@ -476,6 +476,7 @@ DISCOVERY_SCHEMAS = [
             device_types.OnOffLight,
             device_types.DimmerSwitch,
             device_types.ColorDimmerSwitch,
+            device_types.Pump,
         ),
     ),
     # Additional schema to match (HS Color) lights with incorrect/missing device type
