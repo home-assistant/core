@@ -90,7 +90,7 @@ FAN_OSCILLATION_TO_SWING = {
 }
 
 HEAT_PUMP_AC_MODE_TO_HA = {
-    "auto": HVACMode.HEAT_COOL,
+    "auto": HVACMode.AUTO,
     "cool": HVACMode.COOL,
     "heat": HVACMode.HEAT,
 }
