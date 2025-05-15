@@ -20,15 +20,14 @@ async def test_ttl_passed_to_send_message(
     hass: HomeAssistant, pushover_api_mock
 ) -> None:
     """When you pass ttl in data, it ends up in the correct position."""
-    # 1) Construct the service
-    #    The constructor args are: (hass, entry, creds, platform)
-    #    We only care that it wires self.pushover = PushoverAPI(...)
+    # 1) Construct the service using the original 3-arg constructor
     service = PushoverNotificationService(
         hass,
-        entry={},
-        creds={"user_key": "USER123", "app_token": "APP456"},
-        platform=None,
+        pushover_api_mock,
+        "USER123",
     )
+    # Inject the real hass so async_send_message can use async_add_executor_job
+    service.hass = hass
 
     # 2) Call async_send_message with a ttl of 300 seconds
     await service.async_send_message(
