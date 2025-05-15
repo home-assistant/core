@@ -12,9 +12,10 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HomeeConfigEntry
+from . import DOMAIN, HomeeConfigEntry
 from .entity import HomeeEntity
 from .helpers import get_name_for_enum
 
@@ -93,7 +94,7 @@ class HomeeAlarmPanel(HomeeEntity, AlarmControlPanelEntity):
         self._attr_translation_key = description.key
 
     @property
-    def alarm_state(self) -> AlarmControlPanelState | None:
+    def alarm_state(self) -> AlarmControlPanelState:
         """Return current state."""
         return self.entity_description.state_list[int(self._attribute.current_value)]
 
@@ -103,7 +104,7 @@ class HomeeAlarmPanel(HomeeEntity, AlarmControlPanelEntity):
         changed_by_name = get_name_for_enum(
             AttributeChangedBy, self._attribute.changed_by
         )
-        return f"{changed_by_name}-{self._attribute.changed_by_id}"
+        return f"{changed_by_name} - {self._attribute.changed_by_id}"
 
     async def _async_set_alarm_state(self, state: AlarmControlPanelState) -> None:
         """Set the alarm state."""
@@ -114,8 +115,11 @@ class HomeeAlarmPanel(HomeeEntity, AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        # Homee does not offer a disarm command. However, we cannot get
-        # rid of this function, so we do nothing.
+        # Since disarm is always present in the UI, we raise an error.
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="disarm_not_supported",
+        )
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""

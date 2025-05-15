@@ -358,6 +358,9 @@
   "exceptions": {
     "connection_closed": {
       "message": "Could not connect to homee while setting attribute."
+    },
+    "disarm_not_supported": {
+      "message": "Disarm is not supported by homee."
     }
   }
 }

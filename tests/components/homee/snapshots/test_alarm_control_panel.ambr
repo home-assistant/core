@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_valve_snapshot[alarm_control_panel.testhomee_status-entry]
+# name: test_alarm_control_panel_snapshot[alarm_control_panel.testhomee_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -33,10 +33,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_valve_snapshot[alarm_control_panel.testhomee_status-state]
+# name: test_alarm_control_panel_snapshot[alarm_control_panel.testhomee_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'changed_by': 'user-4',
+      'changed_by': 'user - 4',
       'code_arm_required': False,
       'code_format': None,
       'friendly_name': 'TestHomee Status',
