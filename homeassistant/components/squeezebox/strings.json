@@ -168,7 +168,8 @@
       "message": "Failed to get status from LMS {host} (HTTP status: {http_status}). Will retry."
     },
     "init_missing_uuid": {
-      "message": "LMS {host} status response missing essential data (UUID).",
+      "message": "LMS {host} status response missing essential data (UUID)."
+    },
     "invalid_announce_media_type": {
       "message": "Only type 'music' can be played as announcement (received type {media_type})."
     },
