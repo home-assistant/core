@@ -17,6 +17,7 @@ from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -50,6 +51,7 @@ from . import (
     fan as fan_platform,
     image as image_platform,
     light as light_platform,
+    lock as lock_platform,
     number as number_platform,
     select as select_platform,
     sensor as sensor_platform,
@@ -124,6 +126,9 @@ CONFIG_SECTION_SCHEMA = vol.All(
             vol.Optional(LIGHT_DOMAIN): vol.All(
                 cv.ensure_list, [light_platform.LIGHT_SCHEMA]
             ),
+            vol.Optional(LOCK_DOMAIN): vol.All(
+                cv.ensure_list, [lock_platform.LOCK_SCHEMA]
+            ),
             vol.Optional(WEATHER_DOMAIN): vol.All(
                 cv.ensure_list, [weather_platform.WEATHER_SCHEMA]
             ),
@@ -139,7 +144,7 @@ CONFIG_SECTION_SCHEMA = vol.All(
         },
     ),
     ensure_domains_do_not_have_trigger_or_action(
-        BUTTON_DOMAIN, COVER_DOMAIN, FAN_DOMAIN
+        BUTTON_DOMAIN, COVER_DOMAIN, FAN_DOMAIN, LOCK_DOMAIN
     ),
 )
 
