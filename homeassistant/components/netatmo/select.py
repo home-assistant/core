@@ -77,6 +77,14 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
             schedule.name for schedule in self.home.schedules.values() if schedule.name
         ]
 
+    @property
+    def extra_state_attributes(self) -> dict[str, str | None]:
+        """Return additional attributes for the entity."""
+        selected_schedule = self.home.get_selected_schedule()
+        return {
+            "schedule_id": selected_schedule.entity_id if selected_schedule else None,
+        }
+
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
