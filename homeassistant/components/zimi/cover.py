@@ -28,7 +28,7 @@ async def async_setup_entry(
 
     api = config_entry.runtime_data
 
-    doors: list[ZimiCover] = [ZimiCover(device, api) for device in api.doors]
+    doors = [ZimiCover(device, api) for device in api.doors]
 
     async_add_entities(doors)
 
