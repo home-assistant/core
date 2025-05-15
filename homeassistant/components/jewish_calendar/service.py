@@ -16,6 +16,7 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import LanguageSelector, LanguageSelectorConfig
 from homeassistant.helpers.sun import get_astral_event_date
@@ -64,15 +65,34 @@ def async_setup_services(hass: HomeAssistant) -> None:
         hebrew_date = HebrewDate.from_gdate(
             date + datetime.timedelta(days=int(after_sunset))
         )
-        nusach = Nusach[call.data[ATTR_NUSACH].upper()]
         set_language(call.data[CONF_LANGUAGE])
-        omer = Omer(date=hebrew_date, nusach=nusach)
-        return {
-            "message": str(omer.count_str()),
-            "weeks": omer.week,
-            "days": omer.day,
-            "total_days": omer.total_days,
-        }
+
+        try:
+            nusach = Nusach[call.data[ATTR_NUSACH].upper()]
+        except KeyError:
+            raise ServiceValidationError(
+                f"Nusach {call.data[ATTR_NUSACH]} is not supported"
+            ) from None
+
+        try:
+            omer = Omer(date=hebrew_date, nusach=nusach)
+        except ValueError as err:
+            raise HomeAssistantError(
+                f"Unable to calculate the omer for {hebrew_date}"
+            ) from err
+
+        try:
+            return {
+                "message": str(omer.count_str()),
+                "weeks": omer.week,
+                "days": omer.day,
+                "total_days": omer.total_days,
+            }
+        except LookupError as err:
+            raise HomeAssistantError(
+                f"Unable to get the omer count message for {hebrew_date} with language "
+                f"{call.data[CONF_LANGUAGE]}"
+            ) from err
 
     hass.services.async_register(
         DOMAIN,
