@@ -277,12 +277,6 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
         )
         self._update_state_from_entry_data()
 
-    @property
-    def _device_info(self) -> EsphomeDeviceInfo:
-        """Return the device info."""
-        assert self._entry_data.device_info is not None
-        return self._entry_data.device_info
-
     @callback
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Save the static info for this entity when it changes.
@@ -290,12 +284,13 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
         This method can be overridden in child classes to know
         when the static info changes.
         """
-        device_info = self._entry_data.device_info
         if TYPE_CHECKING:
             static_info = cast(_InfoT, static_info)
-            assert device_info
+            assert self._device_info
         self._static_info = static_info
-        self._attr_unique_id = build_unique_id(device_info.mac_address, static_info)
+        self._attr_unique_id = build_unique_id(
+            self._device_info.mac_address, static_info
+        )
         self._attr_entity_registry_enabled_default = not static_info.disabled_by_default
         # https://github.com/home-assistant/core/issues/132532
         # If the name is "", we need to set it to None since otherwise
@@ -332,6 +327,11 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
     @callback
     def _on_entry_data_changed(self) -> None:
         entry_data = self._entry_data
+        # Update the device info since it can change
+        # when the device is reconnected
+        if TYPE_CHECKING:
+            assert entry_data.device_info is not None
+        self._device_info = entry_data.device_info
         self._api_version = entry_data.api_version
         self._client = entry_data.client
         if self._device_info.has_deep_sleep:
