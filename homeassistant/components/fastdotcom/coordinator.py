@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 from functools import partial
 
-from fastdotcom2 import fast_com2
+from fastdotcom import fast_com
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -17,10 +17,10 @@ type FastdotcomConfigEntry = ConfigEntry["FastdotcomDataUpdateCoordinator"]
 
 
 class FastdotcomDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
-    """Class to manage fetching Fast.com data API."""
+    """Data update coordinator for Fast.com integration."""
 
     def __init__(self, hass: HomeAssistant, entry: FastdotcomConfigEntry) -> None:
-        """Initialize the coordinator for Fast.com."""
+        """Initialize the Fast.com data update coordinator."""
         super().__init__(
             hass,
             LOGGER,
@@ -30,14 +30,9 @@ class FastdotcomDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
         )
 
     async def _async_update_data(self) -> dict[str, float]:
-        """Run an executor job to retrieve Fast.com data."""
         try:
             return await self.hass.async_add_executor_job(
-                partial(fast_com2, max_time=10)
+                partial(fast_com, max_time=10)
             )
         except Exception as exc:
             raise UpdateFailed(f"Error communicating with Fast.com: {exc}") from exc
-
-    async def async_refresh(self) -> None:
-        """Override async_refresh to let UpdateFailed propagate."""
-        self.data = await self._async_update_data()
