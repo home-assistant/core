@@ -14,6 +14,7 @@ from homeassistant.components.blueprint import (
 )
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
@@ -46,6 +47,7 @@ from . import (
     binary_sensor as binary_sensor_platform,
     button as button_platform,
     cover as cover_platform,
+    fan as fan_platform,
     image as image_platform,
     light as light_platform,
     number as number_platform,
@@ -131,9 +133,14 @@ CONFIG_SECTION_SCHEMA = vol.All(
             vol.Optional(COVER_DOMAIN): vol.All(
                 cv.ensure_list, [cover_platform.COVER_SCHEMA]
             ),
+            vol.Optional(FAN_DOMAIN): vol.All(
+                cv.ensure_list, [fan_platform.FAN_SCHEMA]
+            ),
         },
     ),
-    ensure_domains_do_not_have_trigger_or_action(BUTTON_DOMAIN, COVER_DOMAIN),
+    ensure_domains_do_not_have_trigger_or_action(
+        BUTTON_DOMAIN, COVER_DOMAIN, FAN_DOMAIN
+    ),
 )
 
 TEMPLATE_BLUEPRINT_SCHEMA = vol.All(
