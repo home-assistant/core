@@ -6,6 +6,7 @@ import shutil
 from typing import Any
 
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -39,9 +40,45 @@ from .const import (
     CONF_ORG,
     CONF_SSL_CA_CERT,
     DEFAULT_API_VERSION,
+    DEFAULT_HOST,
+    DEFAULT_PORT,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+INFLUXDB_V1_SCHEMA = vol.Schema(
+    {
+        vol.Required(
+            CONF_URL, default=f"http://{DEFAULT_HOST}:{DEFAULT_PORT}"
+        ): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.URL,
+                autocomplete="url",
+            ),
+        ),
+        vol.Required(CONF_VERIFY_SSL, default=False): bool,
+        vol.Required(CONF_DB_NAME): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+            ),
+        ),
+        vol.Optional(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                autocomplete="username",
+            ),
+        ),
+        vol.Optional(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            ),
+        ),
+        vol.Optional(CONF_SSL_CA_CERT): FileSelector(
+            FileSelectorConfig(accept=".pem,.crt,.cer,.der")
+        ),
+    }
+)
 
 INFLUXDB_V2_SCHEMA = vol.Schema(
     {
@@ -55,19 +92,16 @@ INFLUXDB_V2_SCHEMA = vol.Schema(
         vol.Required(CONF_ORG): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
-                autocomplete="username",
             ),
         ),
         vol.Required(CONF_BUCKET): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
-                autocomplete="current-password",
             ),
         ),
         vol.Required(CONF_TOKEN): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
-                autocomplete="database",
             ),
         ),
         vol.Optional(CONF_SSL_CA_CERT): FileSelector(
@@ -90,8 +124,12 @@ async def _validate_influxdb_connection(
         _LOGGER.error(ex)
         if "SSLError" in ex.args[0]:
             errors = {"base": "ssl_error"}
-        elif "token" in ex.args[0]:
+        elif "database not found" in ex.args[0]:
+            errors = {"base": "invalid_database"}
+        elif "authorization failed" in ex.args[0]:
             errors = {"base": "invalid_auth"}
+        elif "token" in ex.args[0]:
+            errors = {"base": "invalid_auth_v2"}
         else:
             errors = {"base": "cannot_connect"}
     except Exception:
@@ -146,47 +184,39 @@ class InfluxDBConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Step when user configures InfluxDB v1."""
-        # url = URL("http://10.2.160.115:8086/custom_path")
+        errors: dict[str, str] = {}
 
-        # if user_input is not None:
-        #     path = await _save_uploaded_cert_file(
-        #         self.hass, user_input[CONF_SSL_CA_CERT]
-        #     )
+        if user_input is not None:
+            try:
+                url = URL(user_input[CONF_URL])
+                data = {
+                    CONF_API_VERSION: DEFAULT_API_VERSION,
+                    CONF_HOST: url.host,
+                    CONF_PORT: url.port,
+                    CONF_USERNAME: user_input[CONF_USERNAME],
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    CONF_DB_NAME: user_input[CONF_DB_NAME],
+                    CONF_SSL: url.scheme == "https",
+                    CONF_PATH: url.path,
+                    CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                }
+                if (cert := user_input.get(CONF_SSL_CA_CERT)) is not None:
+                    data[CONF_SSL_CA_CERT] = await _save_uploaded_cert_file(
+                        self.hass, cert
+                    )
+                errors = await _validate_influxdb_connection(self.hass, data)
+            except ValueError:
+                errors = {"base": "invalid_url"}
 
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_URL, default="http://localhost:8086"): TextSelector(
-                    TextSelectorConfig(
-                        type=TextSelectorType.URL,
-                        autocomplete="url",
-                    ),
-                ),
-                vol.Required(CONF_VERIFY_SSL, default=False): bool,
-                vol.Required(CONF_USERNAME): TextSelector(
-                    TextSelectorConfig(
-                        type=TextSelectorType.TEXT,
-                        autocomplete="username",
-                    ),
-                ),
-                vol.Required(CONF_PASSWORD): TextSelector(
-                    TextSelectorConfig(
-                        type=TextSelectorType.PASSWORD,
-                        autocomplete="current-password",
-                    ),
-                ),
-                vol.Required(CONF_USERNAME): TextSelector(
-                    TextSelectorConfig(
-                        type=TextSelectorType.TEXT,
-                        autocomplete="database",
-                    ),
-                ),
-                vol.Optional(CONF_SSL_CA_CERT): FileSelector(
-                    FileSelectorConfig(accept=".pem,.crt,.cer,.der")
-                ),
-            }
+            if not errors:
+                title = f"{data[CONF_DB_NAME]} ({data[CONF_HOST]})"
+                return self.async_create_entry(title=title, data=data)
+
+        schema = INFLUXDB_V1_SCHEMA
+
+        return self.async_show_form(
+            step_id="configure_v1", data_schema=schema, errors=errors
         )
-
-        return self.async_show_form(step_id="configure_v1", data_schema=schema)
 
     async def async_step_configure_v2(
         self, user_input: dict[str, Any] | None = None
@@ -208,7 +238,7 @@ class InfluxDBConfigFlow(ConfigFlow, domain=DOMAIN):
             errors = await _validate_influxdb_connection(self.hass, data)
 
             if not errors:
-                title = f"{user_input[CONF_BUCKET]} ({user_input[CONF_URL]})"
+                title = f"{data[CONF_BUCKET]} ({data[CONF_URL]})"
                 return self.async_create_entry(title=title, data=data)
 
         schema = INFLUXDB_V2_SCHEMA
