@@ -722,12 +722,14 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def _get_adjusted_display_precision(self) -> int | None:
         device_class = self.device_class
-        if device_class is None or device_class not in UNIT_CONVERTERS:
+        if device_class is None:
             return None
 
-        def _calculate_precision(
+        def _calculate_precision_from_ratio(
             from_unit: str, to_unit: str, base_precision: int
-        ) -> int:
+        ) -> int | None:
+            if device_class not in UNIT_CONVERTERS:
+                return None
             converter = UNIT_CONVERTERS[device_class]
 
             # Scale the precision when converting to a larger or smaller unit
@@ -749,41 +751,38 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         display_precision = self.suggested_display_precision
         if display_precision is not None:
             if default_unit_of_measurement != unit_of_measurement:
-                return _calculate_precision(
+                return _calculate_precision_from_ratio(
                     default_unit_of_measurement, unit_of_measurement, display_precision
                 )
             return display_precision
 
-        device_class_units = DEVICE_CLASS_UNITS.get(device_class)
-        if not device_class_units:
-            return None
-
-        # Get the base unit and precision for the device class so we can use it to derive
+        # Get the base unit and precision for the device class so we can use it to infer
         # the display precision for the current unit
-        base_precision_info = next(
-            (
-                (unit, precision)
-                for unit, precision in UNITS_PRECISION.items()
-                if unit in device_class_units
-            ),
-            None,
+        if device_class not in UNITS_PRECISION:
+            return None
+        device_class_base_unit, device_class_base_precision = UNITS_PRECISION[
+            device_class
+        ]
+
+        precision = (
+            _calculate_precision_from_ratio(
+                device_class_base_unit, unit_of_measurement, device_class_base_precision
+            )
+            if device_class_base_unit != unit_of_measurement
+            else device_class_base_precision
         )
-        if base_precision_info is None:
+        if precision is None:
             return None
 
-        device_class_base_unit, device_class_base_precision = base_precision_info
-        precision = _calculate_precision(
-            device_class_base_unit, unit_of_measurement, device_class_base_precision
-        )
-        # Since we are deducing the precision, cap it to 2
+        # Since we are inferring the precision, cap it to 2
         return min(precision, 2)
 
     def _update_suggested_precision(self) -> None:
         """Update suggested display precision stored in registry."""
-        assert self.registry_entry
 
         display_precision = self._get_adjusted_display_precision()
 
+        assert self.registry_entry
         sensor_options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
         if "suggested_display_precision" not in sensor_options:
             if display_precision is None:
@@ -957,7 +956,6 @@ def async_rounded_state(hass: HomeAssistant, entity_id: str, state: State) -> st
     value = state.state
     if (precision := _display_precision(hass, entity_id)) is None:
         return value
-
     with suppress(TypeError, ValueError):
         numerical_value = float(value)
         value = f"{numerical_value:z.{precision}f}"

@@ -629,12 +629,48 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.WIND_SPEED: set(UnitOfSpeed),
 }
 
-# Map one unit of each device class to its precision.
-# The smallest unit with the lowest precision should be used. For example, if MWh should
-# have 0 decimals, that one should be used and not GWh, even though GWh also has 0 decimals.
+# Map one unit for each device class to its default precision.
+# The biggest unit with the lowest precision should be used. For example, if W should
+# have 0 decimals, that one should be used and not mW, even though mW also should have
+# 0 decimals.
 UNITS_PRECISION = {
-    UnitOfPressure.PA: 0,
-    UnitOfEnergy.WATT_HOUR: 1,
+    SensorDeviceClass.APPARENT_POWER: (UnitOfApparentPower.VOLT_AMPERE, 0),
+    SensorDeviceClass.AREA: (UnitOfArea.SQUARE_CENTIMETERS, 0),
+    SensorDeviceClass.ATMOSPHERIC_PRESSURE: (UnitOfPressure.PA, 0),
+    SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: (
+        UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
+        0,
+    ),
+    SensorDeviceClass.CONDUCTIVITY: (UnitOfConductivity.MICROSIEMENS, 1),
+    SensorDeviceClass.CURRENT: (UnitOfElectricCurrent.MILLIAMPERE, 0),
+    SensorDeviceClass.DATA_RATE: (UnitOfDataRate.KILOBITS_PER_SECOND, 0),
+    SensorDeviceClass.DATA_SIZE: (UnitOfInformation.KILOBITS, 0),
+    SensorDeviceClass.DISTANCE: (UnitOfLength.CENTIMETERS, 0),
+    SensorDeviceClass.DURATION: (UnitOfTime.MILLISECONDS, 0),
+    SensorDeviceClass.ENERGY: (UnitOfEnergy.WATT_HOUR, 0),
+    SensorDeviceClass.ENERGY_DISTANCE: (UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR, 0),
+    SensorDeviceClass.ENERGY_STORAGE: (UnitOfEnergy.WATT_HOUR, 0),
+    SensorDeviceClass.FREQUENCY: (UnitOfFrequency.HERTZ, 0),
+    SensorDeviceClass.GAS: (UnitOfVolume.MILLILITERS, 0),
+    SensorDeviceClass.IRRADIANCE: (UnitOfIrradiance.WATTS_PER_SQUARE_METER, 0),
+    SensorDeviceClass.POWER: (UnitOfPower.WATT, 0),
+    SensorDeviceClass.PRECIPITATION: (UnitOfPrecipitationDepth.CENTIMETERS, 0),
+    SensorDeviceClass.PRECIPITATION_INTENSITY: (
+        UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        0,
+    ),
+    SensorDeviceClass.PRESSURE: (UnitOfPressure.PA, 0),
+    SensorDeviceClass.REACTIVE_POWER: (UnitOfReactivePower.VOLT_AMPERE_REACTIVE, 0),
+    SensorDeviceClass.SOUND_PRESSURE: (UnitOfSoundPressure.DECIBEL, 0),
+    SensorDeviceClass.SPEED: (UnitOfSpeed.MILLIMETERS_PER_SECOND, 0),
+    SensorDeviceClass.TEMPERATURE: (UnitOfTemperature.KELVIN, 1),
+    SensorDeviceClass.VOLTAGE: (UnitOfElectricPotential.VOLT, 0),
+    SensorDeviceClass.VOLUME: (UnitOfVolume.MILLILITERS, 0),
+    SensorDeviceClass.VOLUME_FLOW_RATE: (UnitOfVolumeFlowRate.LITERS_PER_SECOND, 0),
+    SensorDeviceClass.VOLUME_STORAGE: (UnitOfVolume.MILLILITERS, 0),
+    SensorDeviceClass.WATER: (UnitOfVolume.MILLILITERS, 0),
+    SensorDeviceClass.WEIGHT: (UnitOfMass.GRAMS, 0),
+    SensorDeviceClass.WIND_SPEED: (UnitOfSpeed.MILLIMETERS_PER_SECOND, 0),
 }
 
 DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
