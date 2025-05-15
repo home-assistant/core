@@ -97,7 +97,7 @@ class ZimiSensor(ZimiEntity, SensorEntity):
         self._attr_unique_id = device.identifier + "." + self.entity_description.key
 
     @property
-    def native_value(self) -> str | int | float | None:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
 
         return self.entity_description.value_fn(self._device)
