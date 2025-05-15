@@ -26,7 +26,9 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "ssl_error": "SSL certificate error",
-      "invalid_auth": "Invalid organization, bucket or token",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_auth_v2": "Invalid organization, bucket or token",
+      "invalid_database": "Invalid database",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
