@@ -33,6 +33,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfReactiveEnergy,
     UnitOfReactivePower,
     UnitOfSoundPressure,
     UnitOfSpeed,
@@ -44,6 +45,7 @@ from homeassistant.const import (
 )
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    ReactiveEnergyConverter,
     TemperatureConverter,
     VolumeFlowRateConverter,
 )
@@ -320,6 +322,12 @@ class NumberDeviceClass(StrEnum):
     - `psi`
     """
 
+    REACTIVE_ENERGY = "reactive_energy"
+    """Reactive energy.
+
+    Unit of measurement: `varh`, `kvarh`
+    """
+
     REACTIVE_POWER = "reactive_power"
     """Reactive power.
 
@@ -498,6 +506,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
     NumberDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
     NumberDeviceClass.PRESSURE: set(UnitOfPressure),
+    NumberDeviceClass.REACTIVE_ENERGY: set(UnitOfReactiveEnergy),
     NumberDeviceClass.REACTIVE_POWER: set(UnitOfReactivePower),
     NumberDeviceClass.SIGNAL_STRENGTH: {
         SIGNAL_STRENGTH_DECIBELS,
@@ -531,6 +540,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
 }
 
 UNIT_CONVERTERS: dict[NumberDeviceClass, type[BaseUnitConverter]] = {
+    NumberDeviceClass.REACTIVE_ENERGY: ReactiveEnergyConverter,
     NumberDeviceClass.TEMPERATURE: TemperatureConverter,
     NumberDeviceClass.VOLUME_FLOW_RATE: VolumeFlowRateConverter,
 }

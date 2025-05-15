@@ -26,7 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
-from .const import MAIN
+from .const import MAIN, UNIT_MAP
 from .entity import SmartThingsEntity
 
 ATTR_OPERATION_STATE = "operation_state"
@@ -90,7 +90,6 @@ FAN_OSCILLATION_TO_SWING = {
 WIND = "wind"
 WINDFREE = "windFree"
 
-UNIT_MAP = {"C": UnitOfTemperature.CELSIUS, "F": UnitOfTemperature.FAHRENHEIT}
 
 _LOGGER = logging.getLogger(__name__)
 

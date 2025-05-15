@@ -62,6 +62,9 @@
       },
       "night_temperature_offset": {
         "name": "Night temperature offset"
+      },
+      "system_led": {
+        "name": "System LED brightness"
       }
     },
     "sensor": {

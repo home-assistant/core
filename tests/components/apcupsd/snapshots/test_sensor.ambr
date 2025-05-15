@@ -707,7 +707,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Last self test',
+    'original_name': 'Last self-test',
     'platform': 'apcupsd',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -719,7 +719,7 @@
 # name: test_sensor[sensor.myups_last_self_test-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'MyUPS Last self test',
+      'friendly_name': 'MyUPS Last self-test',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.myups_last_self_test',
@@ -1192,7 +1192,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Self test interval',
+    'original_name': 'Self-test interval',
     'platform': 'apcupsd',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1204,7 +1204,7 @@
 # name: test_sensor[sensor.myups_self_test_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'MyUPS Self test interval',
+      'friendly_name': 'MyUPS Self-test interval',
       'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
     }),
     'context': <ANY>,
@@ -1240,7 +1240,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Self test result',
+    'original_name': 'Self-test result',
     'platform': 'apcupsd',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1252,7 +1252,7 @@
 # name: test_sensor[sensor.myups_self_test_result-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'MyUPS Self test result',
+      'friendly_name': 'MyUPS Self-test result',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.myups_self_test_result',

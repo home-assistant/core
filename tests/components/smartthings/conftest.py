@@ -118,6 +118,8 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "vd_sensor_light_2023",
         "iphone",
         "da_sac_ehs_000001_sub",
+        "da_sac_ehs_000002_sub",
+        "da_ac_ehs_01001",
         "da_wm_dw_000001",
         "da_wm_wd_000001",
         "da_wm_wd_000001_1",

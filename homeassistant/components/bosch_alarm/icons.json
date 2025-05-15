@@ -1,6 +1,15 @@
 {
   "entity": {
     "sensor": {
+      "alarms_gas": {
+        "default": "mdi:alert-circle"
+      },
+      "alarms_fire": {
+        "default": "mdi:alert-circle"
+      },
+      "alarms_burglary": {
+        "default": "mdi:alert-circle"
+      },
       "faulting_points": {
         "default": "mdi:alert-circle"
       }
@@ -22,6 +31,44 @@
         "default": "mdi:lock",
         "state": {
           "on": "mdi:lock-open"
+        }
+      }
+    },
+    "binary_sensor": {
+      "panel_fault_parameter_crc_fail_in_pif": {
+        "default": "mdi:alert-circle"
+      },
+      "panel_fault_phone_line_failure": {
+        "default": "mdi:alert-circle"
+      },
+      "panel_fault_sdi_fail_since_rps_hang_up": {
+        "default": "mdi:alert-circle"
+      },
+      "panel_fault_user_code_tamper_since_rps_hang_up": {
+        "default": "mdi:alert-circle"
+      },
+      "panel_fault_fail_to_call_rps_since_rps_hang_up": {
+        "default": "mdi:alert-circle"
+      },
+      "panel_fault_point_bus_fail_since_rps_hang_up": {
+        "default": "mdi:alert-circle"
+      },
+      "panel_fault_log_overflow": {
+        "default": "mdi:alert-circle"
+      },
+      "panel_fault_log_threshold": {
+        "default": "mdi:alert-circle"
+      },
+      "area_ready_to_arm_away": {
+        "default": "mdi:shield",
+        "state": {
+          "on": "mdi:shield-lock"
+        }
+      },
+      "area_ready_to_arm_home": {
+        "default": "mdi:shield",
+        "state": {
+          "on": "mdi:shield-home"
         }
       }
     }

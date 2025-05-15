@@ -9,7 +9,6 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_ID
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -57,7 +56,7 @@ from .const import (
     SLOPE_SLIGHT,
     SLOPE_STEEP,
 )
-from .device import RachioPerson
+from .device import RachioConfigEntry
 from .entity import RachioDevice, RachioHoseTimerEntity
 from .webhooks import (
     SUBTYPE_RAIN_DELAY_OFF,
@@ -99,7 +98,7 @@ START_MULTIPLE_ZONES_SCHEMA = vol.Schema(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RachioConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Rachio switches."""
@@ -117,7 +116,7 @@ async def async_setup_entry(
     def start_multiple(service: ServiceCall) -> None:
         """Service to start multiple zones in sequence."""
         zones_list = []
-        person = hass.data[DOMAIN][config_entry.entry_id]
+        person = config_entry.runtime_data
         entity_id = service.data[ATTR_ENTITY_ID]
         duration = iter(service.data[ATTR_DURATION])
         default_time = service.data[ATTR_DURATION][0]
@@ -173,9 +172,11 @@ async def async_setup_entry(
         )
 
 
-def _create_entities(hass: HomeAssistant, config_entry: ConfigEntry) -> list[Entity]:
+def _create_entities(
+    hass: HomeAssistant, config_entry: RachioConfigEntry
+) -> list[Entity]:
     entities: list[Entity] = []
-    person: RachioPerson = hass.data[DOMAIN][config_entry.entry_id]
+    person = config_entry.runtime_data
     # Fetch the schedule once at startup
     # in order to avoid every zone doing it
     for controller in person.controllers:

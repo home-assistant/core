@@ -60,6 +60,52 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "panel_fault_battery_mising": {
+        "name": "Battery missing"
+      },
+      "panel_fault_ac_fail": {
+        "name": "AC Failure"
+      },
+      "panel_fault_parameter_crc_fail_in_pif": {
+        "name": "CRC failure in panel configuration"
+      },
+      "panel_fault_phone_line_failure": {
+        "name": "Phone line failure"
+      },
+      "panel_fault_sdi_fail_since_rps_hang_up": {
+        "name": "SDI failure since RPS hang up"
+      },
+      "panel_fault_user_code_tamper_since_rps_hang_up": {
+        "name": "User code tamper since RPS hang up"
+      },
+      "panel_fault_fail_to_call_rps_since_rps_hang_up": {
+        "name": "Failure to call RPS since RPS hang up"
+      },
+      "panel_fault_point_bus_fail_since_rps_hang_up": {
+        "name": "Point bus failure since RPS hang up"
+      },
+      "panel_fault_log_overflow": {
+        "name": "Log overflow"
+      },
+      "panel_fault_log_threshold": {
+        "name": "Log threshold reached"
+      },
+      "area_ready_to_arm_away": {
+        "name": "Area ready to arm away",
+        "state": {
+          "on": "Ready",
+          "off": "Not ready"
+        }
+      },
+      "area_ready_to_arm_home": {
+        "name": "Area ready to arm home",
+        "state": {
+          "on": "Ready",
+          "off": "Not ready"
+        }
+      }
+    },
     "switch": {
       "secured": {
         "name": "Secured"
@@ -72,6 +118,33 @@
       }
     },
     "sensor": {
+      "alarms_gas": {
+        "name": "Gas alarm issues",
+        "state": {
+          "supervisory": "Supervisory",
+          "trouble": "Trouble",
+          "alarm": "Alarm",
+          "no_issues": "No issues"
+        }
+      },
+      "alarms_fire": {
+        "name": "Fire alarm issues",
+        "state": {
+          "supervisory": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::supervisory%]",
+          "trouble": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::trouble%]",
+          "alarm": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::alarm%]",
+          "no_issues": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::no_issues%]"
+        }
+      },
+      "alarms_burglary": {
+        "name": "Burglary alarm issues",
+        "state": {
+          "supervisory": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::supervisory%]",
+          "trouble": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::trouble%]",
+          "alarm": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::alarm%]",
+          "no_issues": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::no_issues%]"
+        }
+      },
       "faulting_points": {
         "name": "Faulting points",
         "unit_of_measurement": "points"
