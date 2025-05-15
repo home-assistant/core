@@ -424,6 +424,13 @@
           "back": "Back"
         }
       },
+       "control_back_mode": {
+        "name": "Motor mode",
+        "state": {
+          "forward": "Forward",
+          "back": "Back"
+        }
+      },
       "countdown": {
         "name": "Countdown",
         "state": {

@@ -36,6 +36,7 @@ class TuyaCoverEntityDescription(CoverEntityDescription):
     open_instruction_value: str = "open"
     close_instruction_value: str = "close"
     stop_instruction_value: str = "stop"
+    motor_mode: DPCode | None = None
 
 
 COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
@@ -118,6 +119,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             translation_key="curtain",
             current_position=DPCode.PERCENT_CONTROL,
             set_position=DPCode.PERCENT_CONTROL,
+            motor_mode=DPCode.CONTROL_BACK,
             device_class=CoverDeviceClass.CURTAIN,
         ),
         TuyaCoverEntityDescription(
@@ -125,6 +127,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             translation_key="curtain_2",
             current_position=DPCode.PERCENT_CONTROL_2,
             set_position=DPCode.PERCENT_CONTROL_2,
+            motor_mode=DPCode.CONTROL_BACK,
             device_class=CoverDeviceClass.CURTAIN,
         ),
     ),
@@ -245,7 +248,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             return None
 
         return round(
-            self._current_position.remap_value_to(position, 0, 100, reverse=True)
+            self._current_position.remap_value_to(
+                position, 0, 100, reverse=self.is_reverse()
+            )
         )
 
     @property
@@ -300,7 +305,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
                 {
                     "code": self._set_position.dpcode,
                     "value": round(
-                        self._set_position.remap_value_from(100, 0, 100, reverse=True),
+                        self._set_position.remap_value_from(
+                            100, 0, 100, reverse=self.is_reverse()
+                        ),
                     ),
                 }
             )
@@ -324,7 +331,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
                 {
                     "code": self._set_position.dpcode,
                     "value": round(
-                        self._set_position.remap_value_from(0, 0, 100, reverse=True),
+                        self._set_position.remap_value_from(
+                            0, 0, 100, reverse=self.is_reverse()
+                        ),
                     ),
                 }
             )
@@ -344,7 +353,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
                     "code": self._set_position.dpcode,
                     "value": round(
                         self._set_position.remap_value_from(
-                            kwargs[ATTR_POSITION], 0, 100, reverse=True
+                            kwargs[ATTR_POSITION], 0, 100, reverse=self.is_reverse()
                         )
                     ),
                 }
@@ -375,9 +384,23 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
                     "code": self._tilt.dpcode,
                     "value": round(
                         self._tilt.remap_value_from(
-                            kwargs[ATTR_TILT_POSITION], 0, 100, reverse=True
+                            kwargs[ATTR_TILT_POSITION],
+                            0,
+                            100,
+                            reverse=self.is_reverse(),
                         )
                     ),
                 }
             ]
         )
+
+    def is_reverse(self):
+        if (
+            self.find_dpcode(
+                self.motor_mode, dptype=DPType.STRING, prefer_function=True
+            )
+            == "forward"
+        ):
+            return True
+        else:
+            return False

@@ -347,6 +347,146 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             translation_key="led_type_2",
         ),
     ),
+    # Fingerbot
+    "szjqr": (
+        SelectEntityDescription(
+            key=DPCode.MODE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="fingerbot_mode",
+        ),
+    ),
+    # Robot Vacuum
+    # https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
+    "sd": (
+        SelectEntityDescription(
+            key=DPCode.CISTERN,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="vacuum_cistern",
+        ),
+        SelectEntityDescription(
+            key=DPCode.COLLECTION_MODE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="vacuum_collection",
+        ),
+        SelectEntityDescription(
+            key=DPCode.MODE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="vacuum_mode",
+        ),
+    ),
+    # Fan
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf45vs7vkge
+    "fs": (
+        SelectEntityDescription(
+            key=DPCode.FAN_VERTICAL,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="vertical_fan_angle",
+        ),
+        SelectEntityDescription(
+            key=DPCode.FAN_HORIZONTAL,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="horizontal_fan_angle",
+        ),
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="countdown",
+        ),
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN_SET,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="countdown",
+        ),
+    ),
+    # Curtain
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46o5mtfyc
+    "cl": (
+        SelectEntityDescription(
+            key=DPCode.CONTROL_BACK_MODE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="curtain_motor_mode",
+        ),
+        SelectEntityDescription(
+            key=DPCode.MODE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="curtain_mode",
+        ),
+    ),
+    # Humidifier
+    # https://developer.tuya.com/en/docs/iot/categoryjsq?id=Kaiuz1smr440b
+    "jsq": (
+        SelectEntityDescription(
+            key=DPCode.SPRAY_MODE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="humidifier_spray_mode",
+        ),
+        SelectEntityDescription(
+            key=DPCode.LEVEL,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="humidifier_level",
+        ),
+        SelectEntityDescription(
+            key=DPCode.MOODLIGHTING,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="humidifier_moodlighting",
+        ),
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="countdown",
+        ),
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN_SET,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="countdown",
+        ),
+    ),
+    # Air Purifier
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46h2s6dzm
+    "kj": (
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="countdown",
+        ),
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN_SET,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="countdown",
+        ),
+    ),
+    # Dehumidifier
+    # https://developer.tuya.com/en/docs/iot/categorycs?id=Kaiuz1vcz4dha
+    "cs": (
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN_SET,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="countdown",
+        ),
+        SelectEntityDescription(
+            key=DPCode.DEHUMIDITY_SET_ENUM,
+            translation_key="target_humidity",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # CO2 Detector
+    # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
+    "co2bj": (
+        SelectEntityDescription(
+            key=DPCode.ALARM_VOLUME,
+            translation_key="volume",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Curtain Switch
+    # https://developer.tuya.com/en/docs/iot/category-clkg?id=Kaiuz0gitil39
+    "clkg": (
+        SelectEntityDescription(
+            key=DPCode.CONTROL_BACK_MODE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="control_back_mode",
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)
