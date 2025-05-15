@@ -433,7 +433,7 @@ class PressureConverter(BaseUnitConverter):
 class ReactiveEnergyConverter(BaseUnitConverter):
     """Utility to convert reactive energy values."""
 
-    UNIT_CLASS = "energy"
+    UNIT_CLASS = "reactive_energy"
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR: 1,
         UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR: 1 / 1e3,
