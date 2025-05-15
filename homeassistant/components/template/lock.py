@@ -16,6 +16,7 @@ from homeassistant.const import (
     ATTR_CODE,
     CONF_NAME,
     CONF_OPTIMISTIC,
+    CONF_STATE,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
@@ -25,14 +26,18 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
+from .const import CONF_PICTURE, DOMAIN
 from .template_entity import (
+    LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
+    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_ICON_SCHEMA,
     TemplateEntity,
     rewrite_common_legacy_to_modern_conf,
 )
 
 CONF_CODE_FORMAT_TEMPLATE = "code_format_template"
+CONF_CODE_FORMAT = "code_format"
 CONF_LOCK = "lock"
 CONF_UNLOCK = "unlock"
 CONF_OPEN = "open"
@@ -40,26 +45,69 @@ CONF_OPEN = "open"
 DEFAULT_NAME = "Template Lock"
 DEFAULT_OPTIMISTIC = False
 
+LEGACY_FIELDS = TEMPLATE_ENTITY_LEGACY_FIELDS | {
+    CONF_CODE_FORMAT_TEMPLATE: CONF_CODE_FORMAT,
+    CONF_VALUE_TEMPLATE: CONF_STATE,
+}
+
+LOCK_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Optional(CONF_CODE_FORMAT): cv.template,
+            vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_NAME): cv.template,
+            vol.Optional(CONF_OPEN): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+            vol.Optional(CONF_PICTURE): cv.template,
+            vol.Required(CONF_STATE): cv.template,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+            vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
+        }
+    )
+    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
+    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema),
+)
+
+
 PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_OPEN): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_CODE_FORMAT_TEMPLATE): cv.template,
+        vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_OPEN): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
+        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
     }
 ).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema)
 
 
-async def _async_create_entities(
-    hass: HomeAssistant, config: dict[str, Any]
-) -> list[TemplateLock]:
-    """Create the Template lock."""
-    config = rewrite_common_legacy_to_modern_conf(hass, config)
-    return [TemplateLock(hass, config, config.get(CONF_UNIQUE_ID))]
+@callback
+def _async_create_template_tracking_entities(
+    async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant,
+    definitions: list[dict],
+    unique_id_prefix: str | None,
+) -> None:
+    """Create the template fans."""
+    fans = []
+
+    for entity_conf in definitions:
+        unique_id = entity_conf.get(CONF_UNIQUE_ID)
+
+        if unique_id and unique_id_prefix:
+            unique_id = f"{unique_id_prefix}-{unique_id}"
+
+        fans.append(
+            TemplateLock(
+                hass,
+                entity_conf,
+                unique_id,
+            )
+        )
+
+    async_add_entities(fans)
 
 
 async def async_setup_platform(
@@ -68,8 +116,22 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the template lock."""
-    async_add_entities(await _async_create_entities(hass, config))
+    """Set up the template fans."""
+    if discovery_info is None:
+        _async_create_template_tracking_entities(
+            async_add_entities,
+            hass,
+            [rewrite_common_legacy_to_modern_conf(hass, config, LEGACY_FIELDS)],
+            None,
+        )
+        return
+
+    _async_create_template_tracking_entities(
+        async_add_entities,
+        hass,
+        discovery_info["entities"],
+        discovery_info["unique_id"],
+    )
 
 
 class TemplateLock(TemplateEntity, LockEntity):
@@ -92,7 +154,7 @@ class TemplateLock(TemplateEntity, LockEntity):
         if TYPE_CHECKING:
             assert name is not None
 
-        self._state_template = config.get(CONF_VALUE_TEMPLATE)
+        self._state_template = config.get(CONF_STATE)
         for action_id, supported_feature in (
             (CONF_LOCK, 0),
             (CONF_UNLOCK, 0),
@@ -102,7 +164,7 @@ class TemplateLock(TemplateEntity, LockEntity):
             if (action_config := config.get(action_id)) is not None:
                 self.add_script(action_id, action_config, name, DOMAIN)
                 self._attr_supported_features |= supported_feature
-        self._code_format_template = config.get(CONF_CODE_FORMAT_TEMPLATE)
+        self._code_format_template = config.get(CONF_CODE_FORMAT)
         self._code_format: str | None = None
         self._code_format_template_error: TemplateError | None = None
         self._optimistic = config.get(CONF_OPTIMISTIC)

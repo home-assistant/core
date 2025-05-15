@@ -241,7 +241,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         )
 
     # Setup Platforms
-    entry.runtime_data = TeslemetryData(vehicles, energysites, scopes)
+    entry.runtime_data = TeslemetryData(vehicles, energysites, scopes, stream)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     if stream:

@@ -45,7 +45,7 @@ from ..const import (
     CONF_ALLOW_UNREACHABLE,
     DEFAULT_ALLOW_HUE_GROUPS,
     DEFAULT_ALLOW_UNREACHABLE,
-    DOMAIN as HUE_DOMAIN,
+    DOMAIN,
     GROUP_TYPE_ENTERTAINMENT,
     GROUP_TYPE_LIGHT_GROUP,
     GROUP_TYPE_LIGHT_SOURCE,
@@ -141,7 +141,7 @@ def create_light(item_class, coordinator, bridge, is_group, rooms, api, item_id)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Hue lights from a config entry."""
-    bridge: HueBridge = hass.data[HUE_DOMAIN][config_entry.entry_id]
+    bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
     api_version = tuple(int(v) for v in bridge.api.config.apiversion.split("."))
     rooms = {}
 
@@ -518,7 +518,7 @@ class HueLight(CoordinatorEntity, LightEntity):
             suggested_area = self._rooms[self.light.id]
 
         return DeviceInfo(
-            identifiers={(HUE_DOMAIN, self.device_id)},
+            identifiers={(DOMAIN, self.device_id)},
             manufacturer=self.light.manufacturername,
             # productname added in Hue Bridge API 1.24
             # (published 03/05/2018)
@@ -526,7 +526,7 @@ class HueLight(CoordinatorEntity, LightEntity):
             name=self.name,
             sw_version=self.light.swversion,
             suggested_area=suggested_area,
-            via_device=(HUE_DOMAIN, self.bridge.api.config.bridgeid),
+            via_device=(DOMAIN, self.bridge.api.config.bridgeid),
         )
 
     async def async_turn_on(self, **kwargs):

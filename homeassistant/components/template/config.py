@@ -7,6 +7,9 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+)
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.blueprint import (
     is_blueprint_instance_config,
@@ -14,8 +17,10 @@ from homeassistant.components.blueprint import (
 )
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -43,11 +48,14 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_notify_setup_error
 
 from . import (
+    alarm_control_panel as alarm_control_panel_platform,
     binary_sensor as binary_sensor_platform,
     button as button_platform,
     cover as cover_platform,
+    fan as fan_platform,
     image as image_platform,
     light as light_platform,
+    lock as lock_platform,
     number as number_platform,
     select as select_platform,
     sensor as sensor_platform,
@@ -110,6 +118,10 @@ CONFIG_SECTION_SCHEMA = vol.All(
             vol.Optional(CONF_BINARY_SENSORS): cv.schema_with_slug_keys(
                 binary_sensor_platform.LEGACY_BINARY_SENSOR_SCHEMA
             ),
+            vol.Optional(ALARM_CONTROL_PANEL_DOMAIN): vol.All(
+                cv.ensure_list,
+                [alarm_control_panel_platform.ALARM_CONTROL_PANEL_SCHEMA],
+            ),
             vol.Optional(SELECT_DOMAIN): vol.All(
                 cv.ensure_list, [select_platform.SELECT_SCHEMA]
             ),
@@ -122,6 +134,9 @@ CONFIG_SECTION_SCHEMA = vol.All(
             vol.Optional(LIGHT_DOMAIN): vol.All(
                 cv.ensure_list, [light_platform.LIGHT_SCHEMA]
             ),
+            vol.Optional(LOCK_DOMAIN): vol.All(
+                cv.ensure_list, [lock_platform.LOCK_SCHEMA]
+            ),
             vol.Optional(WEATHER_DOMAIN): vol.All(
                 cv.ensure_list, [weather_platform.WEATHER_SCHEMA]
             ),
@@ -131,9 +146,14 @@ CONFIG_SECTION_SCHEMA = vol.All(
             vol.Optional(COVER_DOMAIN): vol.All(
                 cv.ensure_list, [cover_platform.COVER_SCHEMA]
             ),
+            vol.Optional(FAN_DOMAIN): vol.All(
+                cv.ensure_list, [fan_platform.FAN_SCHEMA]
+            ),
         },
     ),
-    ensure_domains_do_not_have_trigger_or_action(BUTTON_DOMAIN, COVER_DOMAIN),
+    ensure_domains_do_not_have_trigger_or_action(
+        ALARM_CONTROL_PANEL_DOMAIN, BUTTON_DOMAIN, COVER_DOMAIN, FAN_DOMAIN, LOCK_DOMAIN
+    ),
 )
 
 TEMPLATE_BLUEPRINT_SCHEMA = vol.All(
