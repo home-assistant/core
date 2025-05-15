@@ -2293,7 +2293,7 @@ pysaj==0.0.16
 pyschlage==2025.4.0
 
 # homeassistant.components.sensibo
-pysensibo==1.1.0
+pysensibo==1.2.1
 
 # homeassistant.components.serial
 pyserial-asyncio-fast==0.16
