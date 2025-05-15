@@ -20,9 +20,11 @@ from homeassistant.components.water_heater import (
     SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_TEMPERATURE,
     STATE_ECO,
+    WaterHeaterEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     STATE_OFF,
     STATE_ON,
@@ -280,6 +282,44 @@ async def test_current_operation_update(
     )
 
     assert hass.states.get("water_heater.warmepumpe").state == STATE_ECO
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
+async def test_switch_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state update."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("water_heater.warmepumpe")
+    assert state.state == "standard"
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        == WaterHeaterEntityFeature.ON_OFF
+        | WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        | WaterHeaterEntityFeature.OPERATION_MODE
+        | WaterHeaterEntityFeature.AWAY_MODE
+    )
+
+    await trigger_update(
+        hass,
+        devices,
+        "3810e5ad-5351-d9f9-12ff-000001200000",
+        Capability.SWITCH,
+        Attribute.SWITCH,
+        "off",
+    )
+
+    state = hass.states.get("water_heater.warmepumpe")
+    assert state.state == STATE_OFF
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        == WaterHeaterEntityFeature.ON_OFF
+        | WaterHeaterEntityFeature.OPERATION_MODE
+        | WaterHeaterEntityFeature.AWAY_MODE
+    )
 
 
 @pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
