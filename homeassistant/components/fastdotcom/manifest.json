@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/fastdotcom",
   "iot_class": "cloud_polling",
   "loggers": ["fastdotcom"],
-  "requirements": ["fastdotcom2>=0.0.10"],
+  "requirements": ["fastdotcom==0.0.5"],
   "single_config_entry": true
 }
