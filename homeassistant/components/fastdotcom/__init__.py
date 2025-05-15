@@ -4,9 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.start import async_at_started
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import FastdotcomConfigEntry, FastdotcomDataUpdateCoordinator
@@ -18,22 +16,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: FastdotcomConfigEntry) -
     """Set up Fast.com from a config entry."""
     coordinator = FastdotcomDataUpdateCoordinator(hass, entry)
     entry.runtime_data = coordinator
-    await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    await hass.config_entries.async_forward_entry_setups(
-        entry,
-        PLATFORMS,
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    async def _async_finish_startup(hass: HomeAssistant) -> None:
-        """Run this only when HA has finished its startup."""
-        if entry.state == ConfigEntryState.LOADED:
-            await coordinator.async_refresh()
-        else:
-            await coordinator.async_config_entry_first_refresh()
+    hass.loop.create_task(coordinator.async_refresh())
 
-    async_at_started(hass, _async_finish_startup)
     return True
 
 
