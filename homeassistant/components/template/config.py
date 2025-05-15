@@ -8,24 +8,25 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+    DOMAIN as DOMAIN_ALARM_CONTROL_PANEL,
 )
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.binary_sensor import DOMAIN as DOMAIN_BINARY_SENSOR
 from homeassistant.components.blueprint import (
     is_blueprint_instance_config,
     schemas as blueprint_schemas,
 )
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
-from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
-from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
+from homeassistant.components.button import DOMAIN as DOMAIN_BUTTON
+from homeassistant.components.cover import DOMAIN as DOMAIN_COVER
+from homeassistant.components.fan import DOMAIN as DOMAIN_FAN
+from homeassistant.components.image import DOMAIN as DOMAIN_IMAGE
+from homeassistant.components.light import DOMAIN as DOMAIN_LIGHT
+from homeassistant.components.lock import DOMAIN as DOMAIN_LOCK
+from homeassistant.components.number import DOMAIN as DOMAIN_NUMBER
+from homeassistant.components.select import DOMAIN as DOMAIN_SELECT
+from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
+from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH
+from homeassistant.components.vacuum import DOMAIN as DOMAIN_VACUUM
+from homeassistant.components.weather import DOMAIN as DOMAIN_WEATHER
 from homeassistant.config import async_log_schema_error, config_without_domain
 from homeassistant.const import (
     CONF_ACTION,
@@ -60,6 +61,7 @@ from . import (
     select as select_platform,
     sensor as sensor_platform,
     switch as switch_platform,
+    vacuum as vacuum_platform,
     weather as weather_platform,
 )
 from .const import DOMAIN, PLATFORMS, TemplateConfig
@@ -98,61 +100,69 @@ CONFIG_SECTION_SCHEMA = vol.All(
     _backward_compat_schema,
     vol.Schema(
         {
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Optional(CONF_TRIGGERS): cv.TRIGGER_SCHEMA,
-            vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
             vol.Optional(CONF_ACTIONS): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
-            vol.Optional(NUMBER_DOMAIN): vol.All(
-                cv.ensure_list, [number_platform.NUMBER_SCHEMA]
-            ),
-            vol.Optional(SENSOR_DOMAIN): vol.All(
-                cv.ensure_list, [sensor_platform.SENSOR_SCHEMA]
-            ),
-            vol.Optional(CONF_SENSORS): cv.schema_with_slug_keys(
-                sensor_platform.LEGACY_SENSOR_SCHEMA
-            ),
-            vol.Optional(BINARY_SENSOR_DOMAIN): vol.All(
-                cv.ensure_list, [binary_sensor_platform.BINARY_SENSOR_SCHEMA]
-            ),
             vol.Optional(CONF_BINARY_SENSORS): cv.schema_with_slug_keys(
                 binary_sensor_platform.LEGACY_BINARY_SENSOR_SCHEMA
             ),
-            vol.Optional(ALARM_CONTROL_PANEL_DOMAIN): vol.All(
+            vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
+            vol.Optional(CONF_SENSORS): cv.schema_with_slug_keys(
+                sensor_platform.LEGACY_SENSOR_SCHEMA
+            ),
+            vol.Optional(CONF_TRIGGERS): cv.TRIGGER_SCHEMA,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+            vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
+            vol.Optional(DOMAIN_ALARM_CONTROL_PANEL): vol.All(
                 cv.ensure_list,
                 [alarm_control_panel_platform.ALARM_CONTROL_PANEL_SCHEMA],
             ),
-            vol.Optional(SELECT_DOMAIN): vol.All(
-                cv.ensure_list, [select_platform.SELECT_SCHEMA]
+            vol.Optional(DOMAIN_BINARY_SENSOR): vol.All(
+                cv.ensure_list, [binary_sensor_platform.BINARY_SENSOR_SCHEMA]
             ),
-            vol.Optional(BUTTON_DOMAIN): vol.All(
+            vol.Optional(DOMAIN_BUTTON): vol.All(
                 cv.ensure_list, [button_platform.BUTTON_SCHEMA]
             ),
-            vol.Optional(IMAGE_DOMAIN): vol.All(
-                cv.ensure_list, [image_platform.IMAGE_SCHEMA]
-            ),
-            vol.Optional(LIGHT_DOMAIN): vol.All(
-                cv.ensure_list, [light_platform.LIGHT_SCHEMA]
-            ),
-            vol.Optional(LOCK_DOMAIN): vol.All(
-                cv.ensure_list, [lock_platform.LOCK_SCHEMA]
-            ),
-            vol.Optional(WEATHER_DOMAIN): vol.All(
-                cv.ensure_list, [weather_platform.WEATHER_SCHEMA]
-            ),
-            vol.Optional(SWITCH_DOMAIN): vol.All(
-                cv.ensure_list, [switch_platform.SWITCH_SCHEMA]
-            ),
-            vol.Optional(COVER_DOMAIN): vol.All(
+            vol.Optional(DOMAIN_COVER): vol.All(
                 cv.ensure_list, [cover_platform.COVER_SCHEMA]
             ),
-            vol.Optional(FAN_DOMAIN): vol.All(
+            vol.Optional(DOMAIN_FAN): vol.All(
                 cv.ensure_list, [fan_platform.FAN_SCHEMA]
+            ),
+            vol.Optional(DOMAIN_IMAGE): vol.All(
+                cv.ensure_list, [image_platform.IMAGE_SCHEMA]
+            ),
+            vol.Optional(DOMAIN_LIGHT): vol.All(
+                cv.ensure_list, [light_platform.LIGHT_SCHEMA]
+            ),
+            vol.Optional(DOMAIN_LOCK): vol.All(
+                cv.ensure_list, [lock_platform.LOCK_SCHEMA]
+            ),
+            vol.Optional(DOMAIN_NUMBER): vol.All(
+                cv.ensure_list, [number_platform.NUMBER_SCHEMA]
+            ),
+            vol.Optional(DOMAIN_SELECT): vol.All(
+                cv.ensure_list, [select_platform.SELECT_SCHEMA]
+            ),
+            vol.Optional(DOMAIN_SENSOR): vol.All(
+                cv.ensure_list, [sensor_platform.SENSOR_SCHEMA]
+            ),
+            vol.Optional(DOMAIN_SWITCH): vol.All(
+                cv.ensure_list, [switch_platform.SWITCH_SCHEMA]
+            ),
+            vol.Optional(DOMAIN_VACUUM): vol.All(
+                cv.ensure_list, [vacuum_platform.VACUUM_SCHEMA]
+            ),
+            vol.Optional(DOMAIN_WEATHER): vol.All(
+                cv.ensure_list, [weather_platform.WEATHER_SCHEMA]
             ),
         },
     ),
     ensure_domains_do_not_have_trigger_or_action(
-        ALARM_CONTROL_PANEL_DOMAIN, BUTTON_DOMAIN, COVER_DOMAIN, FAN_DOMAIN, LOCK_DOMAIN
+        DOMAIN_ALARM_CONTROL_PANEL,
+        DOMAIN_BUTTON,
+        DOMAIN_COVER,
+        DOMAIN_FAN,
+        DOMAIN_LOCK,
+        DOMAIN_VACUUM,
     ),
 )
 
@@ -247,12 +257,12 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
         for old_key, new_key, transform in (
             (
                 CONF_SENSORS,
-                SENSOR_DOMAIN,
+                DOMAIN_SENSOR,
                 sensor_platform.rewrite_legacy_to_modern_conf,
             ),
             (
                 CONF_BINARY_SENSORS,
-                BINARY_SENSOR_DOMAIN,
+                DOMAIN_BINARY_SENSOR,
                 binary_sensor_platform.rewrite_legacy_to_modern_conf,
             ),
         ):
