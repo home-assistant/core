@@ -40,9 +40,3 @@ class WebControlProGenericEntity(Entity):
     def available(self) -> bool:
         """Return if entity is available."""
         return self._dest.available
-
-    async def async_schedule_update(self) -> None:
-        """Schedule an update."""
-        self.hass.async_create_task(
-            self.async_update_ha_state(force_refresh=True),
-        )

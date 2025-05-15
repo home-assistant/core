@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 from typing import Any
 
@@ -17,6 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import WebControlProConfigEntry
 from .entity import WebControlProGenericEntity
 
+ACTION_DELAY = 0.5
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 1
 
@@ -57,7 +59,7 @@ class WebControlProCover(WebControlProGenericEntity, CoverEntity):
         """Move the cover to a specific position."""
         action = self._dest.action(self._drive_action_desc)
         await action(percentage=100 - kwargs[ATTR_POSITION])
-        await self.async_schedule_update()
+        await asyncio.sleep(ACTION_DELAY)
 
     @property
     def is_closed(self) -> bool | None:
@@ -68,13 +70,13 @@ class WebControlProCover(WebControlProGenericEntity, CoverEntity):
         """Open the cover."""
         action = self._dest.action(self._drive_action_desc)
         await action(percentage=0)
-        await self.async_schedule_update()
+        await asyncio.sleep(ACTION_DELAY)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         action = self._dest.action(self._drive_action_desc)
         await action(percentage=100)
-        await self.async_schedule_update()
+        await asyncio.sleep(ACTION_DELAY)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the device if in motion."""
@@ -83,7 +85,7 @@ class WebControlProCover(WebControlProGenericEntity, CoverEntity):
             WMS_WebControl_pro_API_actionType.Stop,
         )
         await action()
-        await self.async_schedule_update()
+        await asyncio.sleep(ACTION_DELAY)
 
 
 class WebControlProAwning(WebControlProCover):
