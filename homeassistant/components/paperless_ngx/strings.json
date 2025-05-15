@@ -15,6 +15,7 @@
     },
     "error": {
       "cannot_connect": "Failed to connect. Invalid URL or authentication token.",
+      "invalid_auth": "Authentication failed. Check if access token is correct.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
@@ -80,6 +81,9 @@
   "exceptions": {
     "cannot_connect": {
       "message": "Failed to connect. Invalid URL or authentication token."
+    },
+    "invalid_auth": {
+      "message": "Authentication failed. Check if access token is correct."
     },
     "unknown": {
       "message": "[%key:common::config_flow::error::unknown%]"

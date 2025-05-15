@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from typing import cast
 
+from aiohttp import ClientConnectionError, ClientConnectorError, ClientResponseError
 from pypaperless import Paperless
-from pypaperless.exceptions import PaperlessError
+from pypaperless.exceptions import InitializationError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
@@ -28,7 +29,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) ->
         )
         await client.initialize()
 
-    except PaperlessError as err:
+    except (InitializationError, ClientConnectorError, ClientConnectionError) as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from err
+    except ClientResponseError as err:
+        if err.status == 401:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",

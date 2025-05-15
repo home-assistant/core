@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from aiohttp import ClientConnectionError, ClientConnectorError, ClientResponseError
 from pypaperless import Paperless
 from pypaperless.exceptions import InitializationError
 import voluptuous as vol
@@ -51,10 +52,17 @@ class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
                     session=aiohttp_session,
                 )
                 await client.initialize()
-            except InitializationError:
-                errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
-                LOGGER.exception("Unexpected exception")
+                await client.tags.all()
+            except (InitializationError, ClientConnectorError, ClientConnectionError):
+                errors[CONF_HOST] = "cannot_connect"
+            except ClientResponseError as err:
+                if err.status == 401:
+                    errors[CONF_ACCESS_TOKEN] = "invalid_auth"
+                else:
+                    LOGGER.debug("Unexpected error: %s", err)
+                    errors["base"] = "cannot_connect"
+            except Exception as err:  # noqa: BLE001
+                LOGGER.exception("Unexpected exception: %s", err)
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(title="Paperless-ngx", data=user_input)
