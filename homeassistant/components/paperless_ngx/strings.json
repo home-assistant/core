@@ -4,11 +4,13 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "access_token": "[%key:common::config_flow::data::access_token%]"
+          "access_token": "[%key:common::config_flow::data::access_token%]",
+          "scan_interval": "Scan interval (seconds)"
         },
         "data_description": {
           "host": "Host to connect to Paperless-ngx API",
-          "access_token": "Access token to connect to Paperless-ngx API"
+          "access_token": "Access token to connect to Paperless-ngx API",
+          "scan_interval": "Interval in seconds to update the data from Paperless-ngx API"
         },
         "title": "Add Paperless-ngx instance"
       }
@@ -24,11 +26,17 @@
   },
   "entity": {
     "sensor": {
-      "document_count": {
-        "name": "Document count"
+      "documents_total": {
+        "name": "Document total"
       },
-      "document_inbox_count": {
-        "name": "Inbox count"
+      "documents_inbox": {
+        "name": "Documents inbox"
+      },
+      "characters_count": {
+        "name": "Characters count"
+      },
+      "update_available": {
+        "name": "Update available"
       },
       "storage_total": {
         "name": "Storage total"

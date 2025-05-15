@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Generic, TypeVar
 
-from pypaperless import Paperless
-
+from homeassistant.components.sensor import EntityDescription
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import (
@@ -15,7 +14,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import PaperlessConfigEntry
 from .const import DOMAIN
-from .sensor import SensorEntityDescription
+from .coordinator import PaperlessRuntimeData
 
 
 class PaperlessEntity(Entity):
@@ -26,17 +25,15 @@ class PaperlessEntity(Entity):
 
     def __init__(
         self,
-        data: Paperless,
+        data: PaperlessRuntimeData,
         entry: PaperlessConfigEntry,
-        description: SensorEntityDescription,
+        description: EntityDescription,
     ) -> None:
         """Initialize the Paperless-ngx entity."""
-        self.client = data
+        self.data = data
         self.entry = entry
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{DOMAIN}_{self}_{data.base_url}_sensor_{description.key}_{entry.entry_id}"
-        )
+        self._attr_unique_id = f"{DOMAIN}_{self}_{data.client.base_url}_sensor_{description.key}_{entry.entry_id}"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -47,8 +44,8 @@ class PaperlessEntity(Entity):
             identifiers={(DOMAIN, self.entry.entry_id)},
             manufacturer="Paperless-ngx",
             name="Paperless-ngx",
-            sw_version=self.client.host_version,
-            configuration_url=self.client.base_url,
+            sw_version=self.data.client.host_version,
+            configuration_url=self.data.client.base_url,
         )
 
 
@@ -64,9 +61,9 @@ class PaperlessCoordinatorEntity(
 
     def __init__(
         self,
-        data: Paperless,
+        data: PaperlessRuntimeData,
         entry: PaperlessConfigEntry,
-        description: SensorEntityDescription,
+        description: EntityDescription,
         coordinator: TCoordinator,
     ) -> None:
         """Initialize the Paperless-ngx coordinator entity."""

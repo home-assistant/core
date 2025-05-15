@@ -33,7 +33,9 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: todo
-  parallel-updates: done
+  parallel-updates:
+    status: exempt
+    comment: Integration uses a coordinator to fetch data
   reauthentication-flow: todo
   test-coverage: todo
 

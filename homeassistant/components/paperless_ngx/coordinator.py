@@ -6,23 +6,26 @@ from datetime import timedelta
 from aiohttp import ClientConnectionError, ClientConnectorError, ClientResponseError
 from pypaperless import Paperless
 from pypaperless.exceptions import BadJsonResponseError, InitializationError
-from pypaperless.models import Tag
+from pypaperless.models import RemoteVersion, Statistic
 from pypaperless.models.status import Status
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import PaperlessConfigEntry
 from .const import LOGGER
+
+type PaperlessConfigEntry = ConfigEntry[PaperlessRuntimeData]
 
 
 @dataclass(kw_only=True)
 class PaperlessData:
     """Describes Paperless-ngx sensor entity."""
 
+    remote_version: RemoteVersion | None = None
     status: Status | None = None
-    document_count: int | None = None
-    inbox_count: int | None = None
+    statistics: Statistic | None = None
 
 
 class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
@@ -35,25 +38,22 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
         super().__init__(
             hass,
             LOGGER,
-            name="Paperless-ngx Status",
+            name="Paperless-ngx Coordinator",
             config_entry=entry,
-            update_interval=timedelta(seconds=10),
+            update_interval=timedelta(seconds=entry.data[CONF_SCAN_INTERVAL]),
             always_update=True,
         )
         self.api = api
-        self._inbox_tags: list[Tag] | None = None
-
-    async def _async_setup(self):
-        LOGGER.debug("Setting up Paperless-ngx coordinator")
-        self._inbox_tags = [tag async for tag in self.api.tags if tag.is_inbox_tag]
 
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
         try:
             fetched_data = PaperlessData()
+            fetched_data.remote_version = await self.get_paperless_remote_version(
+                self.api
+            )
             fetched_data.status = await self.get_paperless_status(self.api)
-            fetched_data.document_count = await self.get_document_count(self.api)
-            fetched_data.inbox_count = await self.get_inbox_count(self.api)
+            fetched_data.statistics = await self.get_paperless_statistics(self.api)
 
         except (
             InitializationError,
@@ -89,6 +89,19 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
 
         return fetched_data
 
+    async def get_paperless_remote_version(
+        self, api: Paperless
+    ) -> RemoteVersion | None:
+        """Get the status of Paperless-ngx."""
+        try:
+            return await api.remote_version()
+        except (ClientResponseError, BadJsonResponseError) as err:
+            if (
+                isinstance(err, ClientResponseError) and err.status == 403
+            ) or isinstance(err, BadJsonResponseError):
+                return None
+            raise
+
     async def get_paperless_status(self, api: Paperless) -> Status | None:
         """Get the status of Paperless-ngx."""
         try:
@@ -100,20 +113,21 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
                 return None
             raise
 
-    async def get_document_count(self, api: Paperless) -> int | None:
-        """Get the number of documents in the system."""
-        documents = await api.documents.all()
-        return len(documents)
+    async def get_paperless_statistics(self, api: Paperless) -> Statistic | None:
+        """Get the status of Paperless-ngx."""
+        try:
+            return await api.statistics()
+        except (ClientResponseError, BadJsonResponseError) as err:
+            if (
+                isinstance(err, ClientResponseError) and err.status == 403
+            ) or isinstance(err, BadJsonResponseError):
+                return None
+            raise
 
-    async def get_inbox_count(self, api: Paperless) -> int | None:
-        """Get the number of documents in the inbox."""
-        if not self._inbox_tags:
-            return 0
 
-        tag_ids = ",".join(
-            [str(tag.id) for tag in self._inbox_tags if tag.id is not None]
-        )
-        async with api.documents.reduce(tags__id__in=tag_ids) as docs:
-            inbox_docs = await docs.all()
+@dataclass(kw_only=True)
+class PaperlessRuntimeData:
+    """Describes Paperless-ngx sensor entity."""
 
-        return len(inbox_docs)
+    client: Paperless
+    coordinator: PaperlessCoordinator

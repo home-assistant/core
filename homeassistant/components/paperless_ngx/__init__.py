@@ -8,15 +8,17 @@ from aiohttp import ClientConnectionError, ClientConnectorError, ClientResponseE
 from pypaperless import Paperless
 from pypaperless.exceptions import InitializationError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, PLATFORMS
-
-type PaperlessConfigEntry = ConfigEntry[Paperless]
+from .coordinator import (
+    PaperlessConfigEntry,
+    PaperlessCoordinator,
+    PaperlessRuntimeData,
+)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) -> bool:
@@ -27,7 +29,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) ->
         client = Paperless(
             url=data[CONF_HOST], token=data[CONF_ACCESS_TOKEN], session=aiohttp_session
         )
+
         await client.initialize()
+
+        coordinator = PaperlessCoordinator(hass, entry, client)
+        await coordinator.async_config_entry_first_refresh()
 
     except (InitializationError, ClientConnectorError, ClientConnectionError) as err:
         raise ConfigEntryNotReady(
@@ -50,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) ->
             translation_key="unknown",
         ) from err
 
-    entry.runtime_data = client
+    entry.runtime_data = PaperlessRuntimeData(client=client, coordinator=coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

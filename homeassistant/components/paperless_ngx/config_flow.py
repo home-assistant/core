@@ -10,7 +10,7 @@ from pypaperless.exceptions import InitializationError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_SCAN_INTERVAL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
@@ -19,6 +19,10 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_ACCESS_TOKEN): str,
+        vol.Required(CONF_SCAN_INTERVAL, default=180): vol.All(
+            int,
+            vol.Range(min=10, max=3600),
+        ),
     }
 )
 
