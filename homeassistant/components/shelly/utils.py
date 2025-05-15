@@ -65,6 +65,7 @@ from .const import (
     SHELLY_EMIT_EVENT_PATTERN,
     SHIX3_1_INPUTS_EVENTS_TYPES,
     UPTIME_DEVIATION,
+    VIRTUAL_COMPONENTS,
     VIRTUAL_COMPONENTS_MAP,
     All_LIGHT_TYPES,
 )
@@ -388,49 +389,18 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     instances = len(
         get_rpc_key_instances(device.status, key.split(":")[0], all_lights=True)
     )
+    component = key.split(":")[0]
+    component_id = key.split(":")[-1]
 
     if key in device.config:
         if component_name := device.config[key].get("name"):
-            if key.startswith(
-                ("boolean:", "enum:", "input:", "number:", "text:", "script:")
-            ):
+            if component in (*VIRTUAL_COMPONENTS, "script"):
                 return cast(str, component_name)
 
             return cast(str, component_name) if instances == 1 else None
 
-    # main function of the device
-    if (
-        key.startswith(
-            ("switch:", "light:", "cct:", "rgb:", "rgbw:", "em1", "thermostat:")
-        )
-        and instances == 1
-    ):
-        return None
-
-    key = key.replace("emdata", "em")
-    key = key.replace("em1data", "em1")
-
-    channel = key.split(":")[0]
-    channel_id = key.split(":")[-1]
-
-    if key.startswith(
-        (
-            "cover:",
-            "input:",
-            "light:",
-            "switch:",
-            "thermostat:",
-            "boolean:",
-            "enum:",
-            "number:",
-            "text:",
-        )
-    ):
-        return f"{channel.title()} {channel_id}"
-    if key.startswith(("cct:", "rgb:", "rgbw:")):
-        return f"{channel.upper()} light {channel_id}"
-    if key.startswith("em1:"):
-        return f"Energy Meter {channel_id}"
+    if component in VIRTUAL_COMPONENTS:
+        return f"{component.title()} {component_id}"
 
     return None
 
@@ -444,15 +414,15 @@ def get_rpc_sub_device_name(device: RpcDevice, key: str) -> str:
     key = key.replace("emdata", "em")
     key = key.replace("em1data", "em1")
 
-    channel = key.split(":")[0]
-    channel_id = key.split(":")[-1]
+    component = key.split(":")[0]
+    component_id = key.split(":")[-1]
 
-    if key.startswith(("cct:", "rgb:", "rgbw:")):
-        return f"{channel.upper()} light {channel_id}"
-    if key.startswith("em1:"):
-        return f"Energy Meter {channel_id}"
+    if component in ("cct", "rgb", "rgbw"):
+        return f"{component.upper()} light {component_id}"
+    if component == "em1":
+        return f"Energy Meter {component_id}"
 
-    return f"{channel.title()} {channel_id}"
+    return f"{component.title()} {component_id}"
 
 
 def get_rpc_entity_name(
