@@ -640,6 +640,15 @@
           "level_5": "Level 5",
           "level_6": "Level 6"
         }
+      },
+      "water_time":{
+        "name": "Water time"
+      },
+      "pump_time":{
+        "name": "Pump time"
+      },
+      "uv_runtime":{
+        "name": "UV runtime"
       }
     },
     "switch": {
