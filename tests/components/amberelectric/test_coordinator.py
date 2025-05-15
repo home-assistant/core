@@ -23,7 +23,7 @@ from homeassistant.components.amberelectric.coordinator import (
 )
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed, normalize_descriptor
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .helpers import (
     CONTROLLED_LOAD_CHANNEL,
@@ -120,7 +120,7 @@ async def test_fetch_general_site(hass: HomeAssistant, current_price_api: Mock) 
     result = await data_service._async_update_data()
 
     current_price_api.get_current_prices.assert_called_with(
-        GENERAL_ONLY_SITE_ID, next=48
+        GENERAL_ONLY_SITE_ID, next=288
     )
 
     assert result["current"].get("general") == GENERAL_CHANNEL[0].actual_instance
@@ -152,7 +152,7 @@ async def test_fetch_no_general_site(
         await data_service._async_update_data()
 
     current_price_api.get_current_prices.assert_called_with(
-        GENERAL_ONLY_SITE_ID, next=48
+        GENERAL_ONLY_SITE_ID, next=288
     )
 
 
@@ -166,7 +166,7 @@ async def test_fetch_api_error(hass: HomeAssistant, current_price_api: Mock) -> 
     result = await data_service._async_update_data()
 
     current_price_api.get_current_prices.assert_called_with(
-        GENERAL_ONLY_SITE_ID, next=48
+        GENERAL_ONLY_SITE_ID, next=288
     )
 
     assert result["current"].get("general") == GENERAL_CHANNEL[0].actual_instance
@@ -217,7 +217,7 @@ async def test_fetch_general_and_controlled_load_site(
     result = await data_service._async_update_data()
 
     current_price_api.get_current_prices.assert_called_with(
-        GENERAL_AND_CONTROLLED_SITE_ID, next=48
+        GENERAL_AND_CONTROLLED_SITE_ID, next=288
     )
 
     assert result["current"].get("general") == GENERAL_CHANNEL[0].actual_instance
@@ -257,7 +257,7 @@ async def test_fetch_general_and_feed_in_site(
     result = await data_service._async_update_data()
 
     current_price_api.get_current_prices.assert_called_with(
-        GENERAL_AND_FEED_IN_SITE_ID, next=48
+        GENERAL_AND_FEED_IN_SITE_ID, next=288
     )
 
     assert result["current"].get("general") == GENERAL_CHANNEL[0].actual_instance
