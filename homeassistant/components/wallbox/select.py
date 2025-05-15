@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
+from requests import HTTPError
+
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -96,7 +98,7 @@ class WallboxSelect(WallboxEntity, SelectEntity):
         """Handle the selection of an option."""
         try:
             await self.entity_description.select_option_fn(self.coordinator, option)
-        except ConnectionError as e:
+        except (ConnectionError, HTTPError) as e:
             raise HomeAssistantError(
                 translation_key="api_failed", translation_domain=DOMAIN
             ) from e
