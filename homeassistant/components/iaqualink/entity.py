@@ -11,7 +11,7 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 
 
-class AqualinkEntity(Entity):
+class AqualinkEntity[TAqualinkDevice: AqualinkDevice](Entity):
     """Abstract class for all Aqualink platforms.
 
     Entity state is updated via the interval timer within the integration.
@@ -23,7 +23,7 @@ class AqualinkEntity(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, dev: AqualinkDevice) -> None:
+    def __init__(self, dev: TAqualinkDevice) -> None:
         """Initialize the entity."""
         self.dev = dev
         self._attr_unique_id = f"{dev.system.serial}_{dev.name}"
