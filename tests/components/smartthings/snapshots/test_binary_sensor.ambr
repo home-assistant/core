@@ -761,6 +761,150 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_cooler_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.refrigerator_cooler_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Cooler door',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cooler_door',
+    'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_cooler_contactSensor_contact_contact',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_cooler_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Refrigerator Cooler door',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.refrigerator_cooler_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_coolselect_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.refrigerator_coolselect_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'CoolSelect+ door',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cool_select_plus_door',
+    'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_cvroom_contactSensor_contact_contact',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_coolselect_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Refrigerator CoolSelect+ door',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.refrigerator_coolselect_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_freezer_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.refrigerator_freezer_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Freezer door',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'freezer_door',
+    'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_freezer_contactSensor_contact_contact',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_freezer_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Refrigerator Freezer door',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.refrigerator_freezer_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_ref_normal_01011][binary_sensor.frigo_cooler_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1801,6 +1945,243 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][binary_sensor.machine_a_laver_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.machine_a_laver_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_samsungce.kidsLock_lockState_lockState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][binary_sensor.machine_a_laver_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Machine à Laver Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.machine_a_laver_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][binary_sensor.machine_a_laver_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.machine_a_laver_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_switch_switch_switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][binary_sensor.machine_a_laver_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Machine à Laver Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.machine_a_laver_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][binary_sensor.machine_a_laver_remote_control-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.machine_a_laver_remote_control',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Remote control',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'remote_control',
+    'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_remoteControlStatus_remoteControlEnabled_remoteControlEnabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][binary_sensor.machine_a_laver_remote_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Machine à Laver Remote control',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.machine_a_laver_remote_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_100001][binary_sensor.washer_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.washer_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee_main_switch_switch_switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_100001][binary_sensor.washer_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Washer Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.washer_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_100001][binary_sensor.washer_remote_control-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.washer_remote_control',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Remote control',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'remote_control',
+    'unique_id': 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee_main_remoteControlStatus_remoteControlEnabled_remoteControlEnabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_100001][binary_sensor.washer_remote_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Washer Remote control',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.washer_remote_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[ecobee_sensor][binary_sensor.child_bedroom_motion-entry]

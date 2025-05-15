@@ -5,9 +5,7 @@ rules:
     comment: no actions
   appropriate-polling: done
   brands: done
-  common-modules:
-    status: todo
-    comment: PR in progress
+  common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
@@ -67,14 +65,12 @@ rules:
     status: todo
     comment: missing implementation
   entity-category:
-    status: todo
-    comment: PR in progress
+    status: exempt
+    comment: no config or diagnostic entities
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations:
-    status: todo
-    comment: PR in progress
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow:
     status: todo
@@ -88,7 +84,5 @@ rules:
 
   # Platinum
   async-dependency: done
-  inject-websession:
-    status: todo
-    comment: implement aiohttp_client.async_create_clientsession
+  inject-websession: done
   strict-typing: done
