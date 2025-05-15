@@ -725,12 +725,14 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if device_class is None or device_class not in UNIT_CONVERTERS:
             return None
 
-        def _get_ratio(base_unit: str, base_precision: int) -> int:
+        def _calculate_precision(
+            from_unit: str, to_unit: str, base_precision: int
+        ) -> int:
             converter = UNIT_CONVERTERS[device_class]
 
             # Scale the precision when converting to a larger or smaller unit
             # For example 1.1 Wh should be rendered as 0.0011 kWh, not 0.0 kWh
-            ratio_log = log10(converter.get_unit_ratio(base_unit, unit_of_measurement))
+            ratio_log = log10(converter.get_unit_ratio(from_unit, to_unit))
             ratio_log = floor(ratio_log) if ratio_log > 0 else ceil(ratio_log)
             return max(0, base_precision + ratio_log)
 
@@ -740,18 +742,24 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if default_unit_of_measurement is None:
             return None
 
-        display_precision = self.suggested_display_precision
         unit_of_measurement = self.unit_of_measurement
+        if unit_of_measurement is None:
+            return None
 
+        display_precision = self.suggested_display_precision
         if display_precision is not None:
             if default_unit_of_measurement != unit_of_measurement:
-                return _get_ratio(default_unit_of_measurement, display_precision)
+                return _calculate_precision(
+                    default_unit_of_measurement, unit_of_measurement, display_precision
+                )
             return display_precision
 
         device_class_units = DEVICE_CLASS_UNITS.get(device_class)
         if not device_class_units:
             return None
 
+        # Get the base unit and precision for the device class so we can use it to derive
+        # the display precision for the current unit
         base_precision_info = next(
             (
                 (unit, precision)
@@ -764,7 +772,11 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return None
 
         device_class_base_unit, device_class_base_precision = base_precision_info
-        return _get_ratio(device_class_base_unit, device_class_base_precision)
+        precision = _calculate_precision(
+            device_class_base_unit, unit_of_measurement, device_class_base_precision
+        )
+        # Since we are deducing the precision, cap it to 2
+        return min(precision, 2)
 
     def _update_suggested_precision(self) -> None:
         """Update suggested display precision stored in registry."""

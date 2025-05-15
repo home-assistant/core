@@ -605,7 +605,7 @@ async def test_unit_translation_key_without_platform_raises(
             1000.0,
             pytest.approx(29.52998),
             29.530,
-            3,
+            2,
         ),
         (
             SensorDeviceClass.PRESSURE,
@@ -723,8 +723,8 @@ async def test_unit_translation_key_without_platform_raises(
             UnitOfEnergy.KILO_WATT_HOUR,
             1.1,
             0.0011,
-            0.0011,
-            4,
+            0.00,
+            2,
         ),
     ],
 )

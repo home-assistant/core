@@ -629,6 +629,9 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.WIND_SPEED: set(UnitOfSpeed),
 }
 
+# Map one unit of each device class to its precision.
+# The smallest unit with the lowest precision should be used. For example, if MWh should
+# have 0 decimals, that one should be used and not GWh, even though GWh also has 0 decimals.
 UNITS_PRECISION = {
     UnitOfPressure.PA: 0,
     UnitOfEnergy.WATT_HOUR: 1,
