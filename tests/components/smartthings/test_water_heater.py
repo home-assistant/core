@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from pysmartthings import Attribute, Capability, Command
+from pysmartthings.models import HealthStatus
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -25,12 +26,18 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration, snapshot_smartthings_entities, trigger_update
+from . import (
+    setup_integration,
+    snapshot_smartthings_entities,
+    trigger_health_update,
+    trigger_update,
+)
 
 from tests.common import MockConfigEntry
 
@@ -333,3 +340,38 @@ async def test_away_mode_update(
         hass.states.get("water_heater.warmepumpe").attributes[ATTR_AWAY_MODE]
         == STATE_ON
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
+async def test_availability(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test availability."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("water_heater.warmepumpe").state == "standard"
+
+    await trigger_health_update(
+        hass, devices, "3810e5ad-5351-d9f9-12ff-000001200000", HealthStatus.OFFLINE
+    )
+
+    assert hass.states.get("water_heater.warmepumpe").state == STATE_UNAVAILABLE
+
+    await trigger_health_update(
+        hass, devices, "3810e5ad-5351-d9f9-12ff-000001200000", HealthStatus.ONLINE
+    )
+
+    assert hass.states.get("water_heater.warmepumpe").state == "standard"
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
+async def test_availability_at_start(
+    hass: HomeAssistant,
+    unavailable_device: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unavailable at boot."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("water_heater.warmepumpe").state == STATE_UNAVAILABLE
