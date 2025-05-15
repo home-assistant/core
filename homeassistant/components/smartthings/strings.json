@@ -574,6 +574,14 @@
       "title": "[%key:component::smartthings::issues::deprecated_switch_appliance::title%]",
       "description": "The switch `{entity_id}` is deprecated and a media player entity has been added to replace it.\n\nThe switch was used in the following automations or scripts:\n{items}\n\nPlease use the new media player entity in the above automations or scripts and disable the entity to fix this issue."
     },
+    "deprecated_switch_dhw": {
+      "title": "[%key:component::smartthings::issues::deprecated_switch_appliance::title%]",
+      "description": "The switch `{entity_id}` is deprecated and a water heater entity has been added to replace it.\n\nPlease use the new water heater entity in the above automations or scripts and disable the entity to fix this issue."
+    },
+    "deprecated_switch_dhw_scripts": {
+      "title": "[%key:component::smartthings::issues::deprecated_switch_appliance::title%]",
+      "description": "The switch `{entity_id}` is deprecated and a water heater entity has been added to replace it.\n\nThe switch was used in the following automations or scripts:\n{items}\n\nPlease use the new water heater entity in the above automations or scripts and disable the entity to fix this issue."
+    },
     "deprecated_media_player": {
       "title": "Media player sensors deprecated",
       "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a media player entity.\n\nPlease update your dashboards, templates to use the new media player entity and disable the entity to fix this issue."
