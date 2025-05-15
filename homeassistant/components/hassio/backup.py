@@ -19,6 +19,7 @@ from aiohasupervisor.exceptions import (
 )
 from aiohasupervisor.models import (
     backups as supervisor_backups,
+    jobs as supervisor_jobs,
     mounts as supervisor_mounts,
 )
 from aiohasupervisor.models.backups import LOCATION_CLOUD_BACKUP, LOCATION_LOCAL_STORAGE
@@ -401,6 +402,16 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                 f"Backup failed: {create_errors or 'no backup_id'}"
             )
 
+        # The backup was created successfully, check for non critical errors
+        full_status = await self._client.jobs.get_job(backup.job_id)
+        addon_errors = _collect_errors(
+            full_status, "backup_store_addons", "backup_addon_save"
+        )
+        _folder_errors = _collect_errors(
+            full_status, "backup_store_folders", "backup_folder_save"
+        )
+        folder_errors = {Folder(key): val for key, val in _folder_errors.items()}
+
         async def open_backup() -> AsyncIterator[bytes]:
             try:
                 return await self._client.backups.download_backup(backup_id)
@@ -430,7 +441,9 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             ) from err
 
         return WrittenBackup(
+            addon_errors=addon_errors,
             backup=_backup_details_to_agent_backup(details, locations[0]),
+            folder_errors=folder_errors,
             open_stream=open_backup,
             release_stream=remove_backup,
         )
@@ -474,7 +487,9 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         details = await self._client.backups.backup_info(backup_id)
 
         return WrittenBackup(
+            addon_errors={},
             backup=_backup_details_to_agent_backup(details, locations[0]),
+            folder_errors={},
             open_stream=open_backup,
             release_stream=remove_backup,
         )
@@ -694,6 +709,27 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         job = await self._client.jobs.get_job(job_id)
         _LOGGER.debug("Job state: %s", job)
         on_event(job.to_dict())
+
+
+def _collect_errors(
+    job: supervisor_jobs.Job, child_job_name: str, grandchild_job_name: str
+) -> dict[str, list[tuple[str, str]]]:
+    """Collect errors from a job's grandchildren."""
+    errors: dict[str, list[tuple[str, str]]] = {}
+    for child_job in job.child_jobs:
+        if child_job.name != child_job_name:
+            continue
+        for grandchild in child_job.child_jobs:
+            if (
+                job.name != grandchild_job_name
+                or not grandchild.errors
+                or not grandchild.reference
+            ):
+                continue
+            errors[grandchild.reference] = [
+                (error.type, error.message) for error in grandchild.errors
+            ]
+    return errors
 
 
 async def _default_agent(client: SupervisorClient) -> str:

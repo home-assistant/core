@@ -11,6 +11,18 @@
     "automatic_backup_failed_upload_agents": {
       "title": "Automatic backup could not be uploaded to the configured locations",
       "description": "The automatic backup could not be uploaded to the configured locations {failed_agents}. Please check the logs for more information. Another attempt will be made at the next scheduled time if a backup schedule is configured."
+    },
+    "automatic_backup_failed_addons": {
+      "title": "Not all addons could be included in automatic backup",
+      "description": "Addons {failed_addons} could not be included in automatic backup. Please check the logs for more information. Another attempt will be made at the next scheduled time if a backup schedule is configured."
+    },
+    "automatic_backup_failed_agents_addons_folders": {
+      "title": "Automatic backup was created with errors",
+      "description": "The automatic backup was created with errors:\n* Locations which the backup could not be uploaded to: {failed_agents}\n* Add-ons which could not be backed up: {failed_addons}\n* Folders which could not be backed up: {failed_folders}\n\nPlease check the logs for more information. Another attempt will be made at the next scheduled time if a backup schedule is configured."
+    },
+    "automatic_backup_failed_folders": {
+      "title": "Not all folders could be included in automatic backup",
+      "description": "Folders {failed_folders} could not be included in automatic backup. Please check the logs for more information. Another attempt will be made at the next scheduled time if a backup schedule is configured."
     }
   },
   "services": {

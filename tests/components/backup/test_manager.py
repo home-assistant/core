@@ -123,7 +123,9 @@ async def test_create_backup_service(
     new_backup = NewBackup(backup_job_id="time-123")
     backup_task = AsyncMock(
         return_value=WrittenBackup(
+            addon_errors={},
             backup=TEST_BACKUP_ABC123,
+            folder_errors={},
             open_stream=AsyncMock(),
             release_stream=AsyncMock(),
         ),
@@ -320,7 +322,9 @@ async def test_async_create_backup(
     new_backup = NewBackup(backup_job_id="time-123")
     backup_task = AsyncMock(
         return_value=WrittenBackup(
+            addon_errors={},
             backup=TEST_BACKUP_ABC123,
+            folder_errors={},
             open_stream=AsyncMock(),
             release_stream=AsyncMock(),
         ),
@@ -1857,7 +1861,9 @@ async def test_receive_backup_busy_manager(
     # finish the backup
     backup_task.set_result(
         WrittenBackup(
+            addon_errors={},
             backup=TEST_BACKUP_ABC123,
+            folder_errors={},
             open_stream=AsyncMock(),
             release_stream=AsyncMock(),
         )
