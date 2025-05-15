@@ -7,6 +7,8 @@ from typing import Any
 from pysmartthings import Attribute, Capability, Command, SmartThings
 
 from homeassistant.components.water_heater import (
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     STATE_ECO,
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
@@ -14,9 +16,10 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import FullDevice, SmartThingsConfigEntry
-from .const import MAIN
+from .const import MAIN, UNIT_MAP
 from .entity import SmartThingsEntity
 
 OPERATION_MAP_TO_HA: dict[str, str] = {
@@ -64,8 +67,6 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
         | WaterHeaterEntityFeature.AWAY_MODE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_min_temp = 35
-    _attr_max_temp = 70
 
     def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Init the class."""
@@ -80,15 +81,37 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
                 Capability.CUSTOM_OUTING_MODE,
             },
         )
+        unit = self._internal_state[Capability.TEMPERATURE_MEASUREMENT][
+            Attribute.TEMPERATURE
+        ].unit
+        assert unit is not None
+        self._attr_temperature_unit = UNIT_MAP[unit]
+
+    @property
+    def min_temp(self) -> float:
+        """Return the minimum temperature."""
+        min_temperature = TemperatureConverter.convert(
+            DEFAULT_MIN_TEMP, UnitOfTemperature.FAHRENHEIT, self._attr_temperature_unit
+        )
+        return min(min_temperature, self.target_temperature_low)
+
+    @property
+    def max_temp(self) -> float:
+        """Return the maximum temperature."""
+        max_temperature = TemperatureConverter.convert(
+            DEFAULT_MAX_TEMP, UnitOfTemperature.FAHRENHEIT, self._attr_temperature_unit
+        )
+        return max(max_temperature, self.target_temperature_high)
 
     @property
     def operation_list(self) -> list[str]:
         """Return the list of available operation modes."""
-        modes = self.get_attribute_value(
-            Capability.AIR_CONDITIONER_MODE, Attribute.SUPPORTED_AC_MODES
-        )
         return [
-            OPERATION_MAP_TO_HA[mode] for mode in modes if mode in OPERATION_MAP_TO_HA
+            OPERATION_MAP_TO_HA[mode]
+            for mode in self.get_attribute_value(
+                Capability.AIR_CONDITIONER_MODE, Attribute.SUPPORTED_AC_MODES
+            )
+            if mode in OPERATION_MAP_TO_HA
         ]
 
     @property
