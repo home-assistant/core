@@ -284,13 +284,12 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
         This method can be overridden in child classes to know
         when the static info changes.
         """
+        device_info = self._entry_data.device_info
         if TYPE_CHECKING:
             static_info = cast(_InfoT, static_info)
-            assert self._device_info
+            assert device_info
         self._static_info = static_info
-        self._attr_unique_id = build_unique_id(
-            self._device_info.mac_address, static_info
-        )
+        self._attr_unique_id = build_unique_id(device_info.mac_address, static_info)
         self._attr_entity_registry_enabled_default = not static_info.disabled_by_default
         # https://github.com/home-assistant/core/issues/132532
         # If the name is "", we need to set it to None since otherwise
