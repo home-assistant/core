@@ -62,13 +62,6 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
 
     _attr_name = None
     _attr_translation_key = "water_heater"
-    _attr_supported_features = (
-        WaterHeaterEntityFeature.OPERATION_MODE
-        | WaterHeaterEntityFeature.TARGET_TEMPERATURE
-        | WaterHeaterEntityFeature.AWAY_MODE
-        | WaterHeaterEntityFeature.ON_OFF
-    )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Init the class."""
@@ -89,6 +82,18 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
         ].unit
         assert unit is not None
         self._attr_temperature_unit = UNIT_MAP[unit]
+
+    @property
+    def supported_features(self) -> WaterHeaterEntityFeature:
+        """Return the supported features."""
+        features = (
+            WaterHeaterEntityFeature.OPERATION_MODE
+            | WaterHeaterEntityFeature.AWAY_MODE
+            | WaterHeaterEntityFeature.ON_OFF
+        )
+        if self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "on":
+            features |= WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        return features
 
     @property
     def min_temp(self) -> float:
