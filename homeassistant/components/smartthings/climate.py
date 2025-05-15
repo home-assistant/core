@@ -87,6 +87,14 @@ FAN_OSCILLATION_TO_SWING = {
     value: key for key, value in SWING_TO_FAN_OSCILLATION.items()
 }
 
+HEAT_PUMP_AC_MODE_TO_HA = {
+    "auto": HVACMode.HEAT_COOL,
+    "cool": HVACMode.COOL,
+    "heat": HVACMode.HEAT,
+}
+
+HA_MODE_TO_HEAT_PUMP_AC_MODE = {v: k for k, v in HEAT_PUMP_AC_MODE_TO_HA.items()}
+
 WIND = "wind"
 WINDFREE = "windFree"
 
@@ -109,6 +117,14 @@ THERMOSTAT_CAPABILITIES = [
     Capability.THERMOSTAT_MODE,
 ]
 
+HEAT_PUMP_CAPABILITIES = [
+    Capability.TEMPERATURE_MEASUREMENT,
+    Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL,
+    Capability.AIR_CONDITIONER_MODE,
+    Capability.THERMOSTAT_COOLING_SETPOINT,
+    Capability.SWITCH,
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -127,6 +143,16 @@ async def async_setup_entry(
         for device in entry_data.devices.values()
         if all(
             capability in device.status[MAIN] for capability in THERMOSTAT_CAPABILITIES
+        )
+    )
+    entities.extend(
+        SmartThingsHeatPumpZone(entry_data.client, device, component)
+        for device in entry_data.devices.values()
+        for component in device.status
+        if component in {"INDOOR", "INDOOR1", "INDOOR2"}
+        and all(
+            capability in device.status[component]
+            for capability in HEAT_PUMP_CAPABILITIES
         )
     )
     async_add_entities(entities)
@@ -588,5 +614,125 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
                 for mode in ac_modes
                 if (state := AC_MODE_TO_STATE.get(mode)) is not None
                 if state not in modes
+            )
+        return modes
+
+
+class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
+    """Define a SmartThings heat pump zone."""
+
+    _attr_name = None
+
+    def __init__(self, client: SmartThings, device: FullDevice, component: str) -> None:
+        """Init the class."""
+        super().__init__(
+            client,
+            device,
+            {
+                Capability.AIR_CONDITIONER_MODE,
+                Capability.SWITCH,
+                Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL,
+                Capability.THERMOSTAT_COOLING_SETPOINT,
+                Capability.TEMPERATURE_MEASUREMENT,
+            },
+            component=component,
+        )
+
+    @property
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the list of supported features."""
+        features = ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+        if (
+            self.get_attribute_value(
+                Capability.AIR_CONDITIONER_MODE, Attribute.AIR_CONDITIONER_MODE
+            )
+            != "auto"
+        ):
+            features |= ClimateEntityFeature.TARGET_TEMPERATURE
+        return features
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target operation mode."""
+        if hvac_mode == HVACMode.OFF:
+            await self.async_turn_off()
+            return
+        if self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "off":
+            await self.async_turn_on()
+
+        await self.execute_device_command(
+            Capability.AIR_CONDITIONER_MODE,
+            Command.SET_AIR_CONDITIONER_MODE,
+            argument=HA_MODE_TO_HEAT_PUMP_AC_MODE[hvac_mode],
+        )
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        await self.execute_device_command(
+            Capability.THERMOSTAT_COOLING_SETPOINT,
+            Command.SET_COOLING_SETPOINT,
+            argument=kwargs[ATTR_TEMPERATURE],
+        )
+
+    async def async_turn_on(self) -> None:
+        """Turn device on."""
+        await self.execute_device_command(
+            Capability.SWITCH,
+            Command.ON,
+        )
+
+    async def async_turn_off(self) -> None:
+        """Turn device off."""
+        await self.execute_device_command(
+            Capability.SWITCH,
+            Command.OFF,
+        )
+
+    @property
+    def current_temperature(self) -> float | None:
+        """Return the current temperature."""
+        return self.get_attribute_value(
+            Capability.TEMPERATURE_MEASUREMENT, Attribute.TEMPERATURE
+        )
+
+    @property
+    def hvac_mode(self) -> HVACMode | None:
+        """Return current operation ie. heat, cool, idle."""
+        if self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "off":
+            return HVACMode.OFF
+        return AC_MODE_TO_STATE.get(
+            self.get_attribute_value(
+                Capability.AIR_CONDITIONER_MODE, Attribute.AIR_CONDITIONER_MODE
+            )
+        )
+
+    @property
+    def target_temperature(self) -> float:
+        """Return the temperature we try to reach."""
+        return self.get_attribute_value(
+            Capability.THERMOSTAT_COOLING_SETPOINT, Attribute.COOLING_SETPOINT
+        )
+
+    @property
+    def temperature_unit(self) -> str:
+        """Return the unit of measurement."""
+        unit = self._internal_state[Capability.TEMPERATURE_MEASUREMENT][
+            Attribute.TEMPERATURE
+        ].unit
+        assert unit
+        return UNIT_MAP[unit]
+
+    @property
+    def hvac_modes(self) -> list[HVACMode]:
+        """Determine the supported HVAC modes."""
+        modes = [HVACMode.OFF]
+        if (
+            ac_modes := self.get_attribute_value(
+                Capability.AIR_CONDITIONER_MODE, Attribute.SUPPORTED_AC_MODES
+            )
+        ) is not None:
+            modes.extend(
+                state
+                for mode in ac_modes
+                if (state := HEAT_PUMP_AC_MODE_TO_HA.get(mode)) is not None
             )
         return modes

@@ -128,6 +128,73 @@
     'state': 'heat',
   })
 # ---
+# name: test_all_entities[da_ac_ehs_01001][climate.heat_pump-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.heat_pump',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 385>,
+    'translation_key': None,
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_INDOOR1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_ehs_01001][climate.heat_pump-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 18.5,
+      'friendly_name': 'Heat pump',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'temperature': 35,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.heat_pump',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_ac_rac_000001][climate.ac_office_granit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -522,6 +589,205 @@
     }),
     'context': <ANY>,
     'entity_id': 'climate.corridor_a_c',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub][climate.eco_heating_system-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.eco_heating_system',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 385>,
+    'translation_key': None,
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_INDOOR',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub][climate.eco_heating_system-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 39.2,
+      'friendly_name': 'Eco Heating System',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'temperature': 25,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.eco_heating_system',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][climate.warmepumpe-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.warmepumpe',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 384>,
+    'translation_key': None,
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_INDOOR1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][climate.warmepumpe-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 31.2,
+      'friendly_name': 'Wärmepumpe',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'supported_features': <ClimateEntityFeature: 384>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.warmepumpe',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][climate.warmepumpe_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.warmepumpe_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 384>,
+    'translation_key': None,
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_INDOOR2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][climate.warmepumpe_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 29.1,
+      'friendly_name': 'Wärmepumpe',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'supported_features': <ClimateEntityFeature: 384>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.warmepumpe_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
