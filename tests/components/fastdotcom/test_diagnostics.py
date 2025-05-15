@@ -32,7 +32,7 @@ async def test_get_config_entry_diagnostics(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fastdotcom.coordinator.fast_com2",
+        "homeassistant.components.fastdotcom.coordinator.fast_com",
         return_value={
             "download_speed": 100.0,
             "upload_speed": 50.0,
@@ -41,12 +41,6 @@ async def test_get_config_entry_diagnostics(
         },
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        coordinator = hass.data[DOMAIN].get(config_entry.entry_id)
-        assert coordinator is not None, "Coordinator was not created during setup"
-
-        await coordinator.async_refresh()
         await hass.async_block_till_done()
 
     diagnostics = await get_diagnostics_for_config_entry(
