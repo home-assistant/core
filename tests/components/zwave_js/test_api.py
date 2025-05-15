@@ -7,6 +7,7 @@ import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, call, patch
 
+from aiohttp import ClientError
 import pytest
 from zwave_js_server.const import (
     ExclusionStrategy,
@@ -5096,14 +5097,17 @@ async def test_subscribe_node_statistics(
 
 async def test_hard_reset_controller(
     hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
     device_registry: dr.DeviceRegistry,
     client: MagicMock,
+    get_server_version: AsyncMock,
     integration: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that the hard_reset_controller WS API call works."""
     entry = integration
     ws_client = await hass_ws_client(hass)
+    assert entry.unique_id == "3245146787"
 
     async def async_send_command_driver_ready(
         message: dict[str, Any],
@@ -5138,6 +5142,40 @@ async def test_hard_reset_controller(
     assert client.async_send_command.call_args_list[0] == call(
         {"command": "driver.hard_reset"}, 25
     )
+    assert entry.unique_id == "1234"
+
+    client.async_send_command.reset_mock()
+
+    # Test client connect error when getting the server version.
+
+    get_server_version.side_effect = ClientError("Boom!")
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/hard_reset_controller",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, client.driver.controller.nodes[1])}
+    )
+    assert device is not None
+    assert msg["result"] == device.id
+    assert msg["success"]
+
+    assert client.async_send_command.call_count == 3
+    # The first call is the relevant hard reset command.
+    # 25 is the require_schema parameter.
+    assert client.async_send_command.call_args_list[0] == call(
+        {"command": "driver.hard_reset"}, 25
+    )
+    assert (
+        "Failed to get server version, cannot update config entry"
+        "unique id with new home id, after controller reset"
+    ) in caplog.text
 
     client.async_send_command.reset_mock()
 
@@ -5177,6 +5215,8 @@ async def test_hard_reset_controller(
     assert client.async_send_command.call_args_list[0] == call(
         {"command": "driver.hard_reset"}, 25
     )
+
+    client.async_send_command.reset_mock()
 
     # Test FailedZWaveCommand is caught
     with patch(
