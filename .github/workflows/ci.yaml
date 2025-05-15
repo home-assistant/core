@@ -653,7 +653,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
       - name: Dependency review
-        uses: actions/dependency-review-action@v4.7.0
+        uses: actions/dependency-review-action@v4.7.1
         with:
           license-check: false # We use our own license audit checks
 
