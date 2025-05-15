@@ -1,44 +1,70 @@
-"""Test PurpleAir diagnostics."""
+"""PurpleAir diagnostics tests."""
 
 from homeassistant.components.diagnostics import REDACTED
+from homeassistant.components.purpleair.const import (
+    CONF_SENSOR,
+    CONF_SENSOR_INDEX,
+    CONF_SENSOR_READ_KEY,
+    DOMAIN,
+    SCHEMA_VERSION,
+    TITLE,
+)
+from homeassistant.const import CONF_API_KEY, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
+
+from .const import TEST_SENSOR_INDEX1
 
 from tests.common import ANY
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
-async def test_entry_diagnostics(
+async def test_diagnostics(
     hass: HomeAssistant,
-    config_entry,
     hass_client: ClientSessionGenerator,
+    config_entry,
+    config_subentry,
     setup_config_entry,
 ) -> None:
     """Test config entry diagnostics."""
-    assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
+
+    # Get diagnostics for config entry
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry
+    )
+    test_diagnostics = {
         "entry": {
-            "entry_id": config_entry.entry_id,
-            "version": 1,
-            "minor_version": 1,
-            "domain": "purpleair",
-            "title": REDACTED,
+            "created_at": ANY,
             "data": {
-                "api_key": REDACTED,
+                CONF_API_KEY: REDACTED,
             },
+            "discovery_keys": {},
+            "disabled_by": None,
+            "domain": DOMAIN,
+            "entry_id": config_entry.entry_id,
+            "minor_version": 1,
+            "modified_at": ANY,
             "options": {
-                "sensor_indices": [
-                    123456,
-                ],
+                CONF_SHOW_ON_MAP: True,
             },
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "source": "user",
+            "subentries": [
+                {
+                    "data": {
+                        CONF_SENSOR_INDEX: TEST_SENSOR_INDEX1,
+                        CONF_SENSOR_READ_KEY: None,
+                    },
+                    "subentry_id": ANY,
+                    "subentry_type": CONF_SENSOR,
+                    "title": f"TEST_SENSOR_INDEX1 ({TEST_SENSOR_INDEX1})",
+                    "unique_id": REDACTED,
+                },
+            ],
+            "title": TITLE,
             "unique_id": REDACTED,
-            "disabled_by": None,
-            "created_at": ANY,
-            "modified_at": ANY,
-            "discovery_keys": {},
-            "subentries": [],
+            "version": SCHEMA_VERSION,
         },
         "data": {
             "fields": [
@@ -344,3 +370,4 @@ async def test_entry_diagnostics(
             "timestamp_utc": "2022-11-20T23:10:17",
         },
     }
+    assert diagnostics == test_diagnostics
