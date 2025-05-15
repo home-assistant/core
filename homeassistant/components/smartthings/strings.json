@@ -535,7 +535,7 @@
       "water_heater": {
         "state": {
           "standard": "Standard",
-          "force": "Force",
+          "force": "Forced",
           "power": "Power"
         }
       }
