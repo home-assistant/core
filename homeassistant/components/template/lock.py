@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator, Sequence
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -24,6 +25,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError, TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_PICTURE, DOMAIN
@@ -134,41 +136,33 @@ async def async_setup_platform(
     )
 
 
-class TemplateLock(TemplateEntity, LockEntity):
-    """Representation of a template lock."""
+class AbstractTemplateLock(LockEntity):
+    """Representation of a template lock features."""
 
-    _attr_should_poll = False
+    def __init__(self, config: dict[str, Any]) -> None:
+        """Initialize the features."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: dict[str, Any],
-        unique_id: str | None,
-    ) -> None:
-        """Initialize the lock."""
-        super().__init__(
-            hass, config=config, fallback_name=DEFAULT_NAME, unique_id=unique_id
-        )
+        self._registered_scripts: list[str] = []
+
         self._state: LockState | None = None
-        name = self._attr_name
-        if TYPE_CHECKING:
-            assert name is not None
-
         self._state_template = config.get(CONF_STATE)
-        for action_id, supported_feature in (
-            (CONF_LOCK, 0),
-            (CONF_UNLOCK, 0),
-            (CONF_OPEN, LockEntityFeature.OPEN),
-        ):
-            # Scripts can be an empty list, therefore we need to check for None
-            if (action_config := config.get(action_id)) is not None:
-                self.add_script(action_id, action_config, name, DOMAIN)
-                self._attr_supported_features |= supported_feature
         self._code_format_template = config.get(CONF_CODE_FORMAT)
         self._code_format: str | None = None
         self._code_format_template_error: TemplateError | None = None
         self._optimistic = config.get(CONF_OPTIMISTIC)
         self._attr_assumed_state = bool(self._optimistic)
+
+    def _register_scripts(
+        self, config: dict[str, Any]
+    ) -> Generator[tuple[str, Sequence[dict[str, Any]], LockEntityFeature | int]]:
+        for action_id, supported_feature in (
+            (CONF_LOCK, 0),
+            (CONF_UNLOCK, 0),
+            (CONF_OPEN, LockEntityFeature.OPEN),
+        ):
+            if (action_config := config.get(action_id)) is not None:
+                self._registered_scripts.append(action_id)
+                yield (action_id, action_config, supported_feature)
 
     @property
     def is_locked(self) -> bool:
@@ -195,14 +189,12 @@ class TemplateLock(TemplateEntity, LockEntity):
         """Return true if lock is open."""
         return self._state == LockState.OPEN
 
-    @callback
-    def _update_state(self, result: str | TemplateError) -> None:
-        """Update the state from the template."""
-        super()._update_state(result)
-        if isinstance(result, TemplateError):
-            self._state = None
-            return
+    @property
+    def code_format(self) -> str | None:
+        """Regex for code format or None if no code is required."""
+        return self._code_format
 
+    def _handle_state(self, result: Any) -> None:
         if isinstance(result, bool):
             self._state = LockState.LOCKED if result else LockState.UNLOCKED
             return
@@ -229,28 +221,6 @@ class TemplateLock(TemplateEntity, LockEntity):
 
         self._state = None
 
-    @property
-    def code_format(self) -> str | None:
-        """Regex for code format or None if no code is required."""
-        return self._code_format
-
-    @callback
-    def _async_setup_templates(self) -> None:
-        """Set up templates."""
-        if TYPE_CHECKING:
-            assert self._state_template is not None
-        self.add_template_attribute(
-            "_state", self._state_template, None, self._update_state
-        )
-        if self._code_format_template:
-            self.add_template_attribute(
-                "_code_format_template",
-                self._code_format_template,
-                None,
-                self._update_code_format,
-            )
-        super()._async_setup_templates()
-
     @callback
     def _update_code_format(self, render: str | TemplateError | None):
         """Update code format from the template."""
@@ -276,8 +246,10 @@ class TemplateLock(TemplateEntity, LockEntity):
 
         tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
 
-        await self.async_run_script(
-            self._action_scripts[CONF_LOCK],
+        run_script = getattr(self, "async_run_script")
+        scripts: dict[str, Script] = getattr(self, "_action_scripts")
+        await run_script(
+            scripts[CONF_LOCK],
             run_variables=tpl_vars,
             context=self._context,
         )
@@ -294,8 +266,10 @@ class TemplateLock(TemplateEntity, LockEntity):
 
         tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
 
-        await self.async_run_script(
-            self._action_scripts[CONF_UNLOCK],
+        run_script = getattr(self, "async_run_script")
+        scripts: dict[str, Script] = getattr(self, "_action_scripts")
+        await run_script(
+            scripts[CONF_UNLOCK],
             run_variables=tpl_vars,
             context=self._context,
         )
@@ -312,8 +286,10 @@ class TemplateLock(TemplateEntity, LockEntity):
 
         tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
 
-        await self.async_run_script(
-            self._action_scripts[CONF_OPEN],
+        run_script = getattr(self, "async_run_script")
+        scripts: dict[str, Script] = getattr(self, "_action_scripts")
+        await run_script(
+            scripts[CONF_OPEN],
             run_variables=tpl_vars,
             context=self._context,
         )
@@ -330,3 +306,57 @@ class TemplateLock(TemplateEntity, LockEntity):
                     "cause": str(self._code_format_template_error),
                 },
             )
+
+
+class TemplateLock(TemplateEntity, AbstractTemplateLock):
+    """Representation of a template lock."""
+
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: dict[str, Any],
+        unique_id: str | None,
+    ) -> None:
+        """Initialize the lock."""
+        TemplateEntity.__init__(
+            self, hass, config=config, fallback_name=DEFAULT_NAME, unique_id=unique_id
+        )
+        AbstractTemplateLock.__init__(self, config)
+        name = self._attr_name
+        if TYPE_CHECKING:
+            assert name is not None
+
+        for action_id, action_config, supported_feature in self._register_scripts(
+            config
+        ):
+            self.add_script(action_id, action_config, name, DOMAIN)
+            self._attr_supported_features |= supported_feature
+
+    @callback
+    def _update_state(self, result: str | TemplateError) -> None:
+        """Update the state from the template."""
+        super()._update_state(result)
+        if isinstance(result, TemplateError):
+            self._state = None
+            return
+
+        self._handle_state(result)
+
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
+        if TYPE_CHECKING:
+            assert self._state_template is not None
+        self.add_template_attribute(
+            "_state", self._state_template, None, self._update_state
+        )
+        if self._code_format_template:
+            self.add_template_attribute(
+                "_code_format_template",
+                self._code_format_template,
+                None,
+                self._update_code_format,
+            )
+        super()._async_setup_templates()
