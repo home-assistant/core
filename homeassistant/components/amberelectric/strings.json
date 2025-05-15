@@ -1,0 +1,61 @@
+{
+  "config": {
+    "error": {
+      "invalid_api_token": "Invalid API key",
+      "no_site": "No site provided",
+      "unknown_error": "Unexpected error"
+    },
+    "step": {
+      "site": {
+        "data": {
+          "site_id": "Site NMI",
+          "site_name": "Site Name"
+        },
+        "description": "Select the NMI of the site you would like to add"
+      },
+      "user": {
+        "data": {
+          "api_token": "API token",
+          "site_id": "Site ID"
+        },
+        "description": "Go to {api_url} to generate an API key"
+      }
+    }
+  },
+  "services": {
+    "get_forecasts": {
+      "name": "Get price forecasts",
+      "description": "Retrieve price forecasts",
+      "fields": {
+        "site_id": {
+          "description": "The site to get forecasts from.",
+          "name": "Amber site"
+        },
+        "channel_type": {
+          "description": "The channel to get forecasts for.",
+          "name": "Channel type"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "integration_not_found": {
+      "message": "Integration \"{target}\" not found in registry."
+    },
+    "not_loaded": {
+      "message": "{target} is not loaded."
+    },
+    "channel_not_found": {
+      "message": "There is no {channel_type} channel at this site."
+    }
+  },
+  "selector": {
+    "channel_type": {
+      "options": {
+        "general": "General",
+        "controlled_load": "Controlled Load",
+        "feed_in": "Feed In"
+      }
+    }
+  }
+}
