@@ -67,22 +67,25 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
         try:
             nusach = Nusach[call.data[ATTR_NUSACH].upper()]
-        except Error as err:
-            raise ServiceValidationError("Nusach %s is not supported", call.data[ATTR_NUSACH])
+        except Exception:
+            raise ServiceValidationError(
+                "Nusach %s is not supported", call.data[ATTR_NUSACH]
+            )
 
         try:
             set_language(call.data[CONF_LANGUAGE])
-        except Error as err:
+        except Exception as err:
             raise HomeAssistantError(
                 "Unable to set response language to %s", call.data[CONF_LANGUAGE]
             ) from err
 
         try:
             omer = Omer(date=hebrew_date, nusach=nusach)
-        except Error as err:
+        except Exception as err:
             raise HomeAssistantError(
                 "Unable to calculate the omer for %s", hebrew_date
             ) from err
+
         return {
             "message": str(omer.count_str()),
             "weeks": omer.week,
