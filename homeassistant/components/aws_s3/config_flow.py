@@ -91,7 +91,9 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors[CONF_ENDPOINT_URL] = "cannot_connect"
                 else:
                     return self.async_create_entry(
-                        title=f"{user_input[CONF_BUCKET]} {user_input[CONF_PREFIX]}",
+                        title=f"{user_input[CONF_BUCKET]} - {user_input[CONF_PREFIX]}"
+                        if user_input[CONF_PREFIX]
+                        else user_input[CONF_BUCKET],
                         data=user_input,
                     )
 
