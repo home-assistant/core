@@ -26,7 +26,7 @@ class FlussConfigEntryData(TypedDict):
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry[FlussApiClient]
+    hass: HomeAssistant, entry: ConfigEntry[FlussConfigEntryData]
 ) -> bool:
     """Set up Fluss+ from a config entry."""
     try:
