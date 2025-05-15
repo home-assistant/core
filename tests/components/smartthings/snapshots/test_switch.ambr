@@ -328,6 +328,53 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[da_sac_ehs_000001_sub_1][switch.heat_pump_main-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.heat_pump_main',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_switch_switch_switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub_1][switch.heat_pump_main-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Heat Pump Main',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.heat_pump_main',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_sac_ehs_000002_sub][switch.warmepumpe-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
