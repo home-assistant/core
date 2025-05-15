@@ -114,7 +114,7 @@ async def test_import(
             BASE_V2_CONFIG,
             _get_write_api_mock_v2,
             ApiException(http_resp=MagicMock()),
-            "cannot_connect",
+            "invalid_auth_v2",
         ),
         (
             API_VERSION_2,
