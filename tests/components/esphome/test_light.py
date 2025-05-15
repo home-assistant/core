@@ -5,6 +5,7 @@ from unittest.mock import call
 from aioesphomeapi import (
     APIClient,
     APIVersion,
+    ColorMode as ESPColorMode,
     LightColorCapability,
     LightInfo,
     LightState,
@@ -58,7 +59,7 @@ async def test_light_on_off(
             unique_id="my_light",
             min_mireds=153,
             max_mireds=400,
-            supported_color_modes=[LightColorCapability.ON_OFF],
+            supported_color_modes=[ESPColorMode.ON_OFF],
         )
     ]
     states = [LightState(key=1, state=True)]
@@ -218,12 +219,14 @@ async def test_light_brightness_on_off(
             unique_id="my_light",
             min_mireds=153,
             max_mireds=400,
-            supported_color_modes=[
-                LightColorCapability.ON_OFF | LightColorCapability.BRIGHTNESS
-            ],
+            supported_color_modes=[ESPColorMode.ON_OFF, ESPColorMode.BRIGHTNESS],
         )
     ]
-    states = [LightState(key=1, state=True, brightness=100)]
+    states = [
+        LightState(
+            key=1, state=True, brightness=100, color_mode=ESPColorMode.BRIGHTNESS
+        )
+    ]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -234,6 +237,10 @@ async def test_light_brightness_on_off(
     state = hass.states.get("light.test_mylight")
     assert state is not None
     assert state.state == STATE_ON
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+        ColorMode.BRIGHTNESS,
+    ]
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.BRIGHTNESS
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -246,8 +253,7 @@ async def test_light_brightness_on_off(
             call(
                 key=1,
                 state=True,
-                color_mode=LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
+                color_mode=ESPColorMode.BRIGHTNESS.value,
             )
         ]
     )
@@ -264,8 +270,7 @@ async def test_light_brightness_on_off(
             call(
                 key=1,
                 state=True,
-                color_mode=LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
+                color_mode=ESPColorMode.BRIGHTNESS.value,
                 brightness=pytest.approx(0.4980392156862745),
             )
         ]
@@ -407,13 +412,18 @@ async def test_light_brightness_on_off_with_unknown_color_mode(
             min_mireds=153,
             max_mireds=400,
             supported_color_modes=[
-                LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS
-                | LIGHT_COLOR_CAPABILITY_UNKNOWN
+                ESPColorMode.ON_OFF,
+                ESPColorMode.BRIGHTNESS,
+                LIGHT_COLOR_CAPABILITY_UNKNOWN,
             ],
         )
     ]
-    states = [LightState(key=1, state=True, brightness=100)]
+    entity_info[0].supported_color_modes.append(LIGHT_COLOR_CAPABILITY_UNKNOWN)
+    states = [
+        LightState(
+            key=1, state=True, brightness=100, color_mode=LIGHT_COLOR_CAPABILITY_UNKNOWN
+        )
+    ]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -436,9 +446,7 @@ async def test_light_brightness_on_off_with_unknown_color_mode(
             call(
                 key=1,
                 state=True,
-                color_mode=LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS
-                | LIGHT_COLOR_CAPABILITY_UNKNOWN,
+                color_mode=LIGHT_COLOR_CAPABILITY_UNKNOWN,
             )
         ]
     )
@@ -455,9 +463,7 @@ async def test_light_brightness_on_off_with_unknown_color_mode(
             call(
                 key=1,
                 state=True,
-                color_mode=LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS
-                | LIGHT_COLOR_CAPABILITY_UNKNOWN,
+                color_mode=ESPColorMode.BRIGHTNESS,
                 brightness=pytest.approx(0.4980392156862745),
             )
         ]
@@ -517,13 +523,10 @@ async def test_rgb_color_temp_light(
 ) -> None:
     """Test a generic light that supports color temp and RGB."""
     color_modes = [
-        LightColorCapability.ON_OFF | LightColorCapability.BRIGHTNESS,
-        LightColorCapability.ON_OFF
-        | LightColorCapability.BRIGHTNESS
-        | LightColorCapability.COLOR_TEMPERATURE,
-        LightColorCapability.ON_OFF
-        | LightColorCapability.BRIGHTNESS
-        | LightColorCapability.RGB,
+        ESPColorMode.ON_OFF,
+        ESPColorMode.BRIGHTNESS,
+        ESPColorMode.COLOR_TEMPERATURE,
+        ESPColorMode.RGB,
     ]
 
     mock_client.api_version = APIVersion(1, 7)
@@ -538,7 +541,11 @@ async def test_rgb_color_temp_light(
             supported_color_modes=color_modes,
         )
     ]
-    states = [LightState(key=1, state=True, brightness=100)]
+    states = [
+        LightState(
+            key=1, state=True, brightness=100, color_mode=ESPColorMode.BRIGHTNESS
+        )
+    ]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -561,8 +568,7 @@ async def test_rgb_color_temp_light(
             call(
                 key=1,
                 state=True,
-                color_mode=LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
+                color_mode=ESPColorMode.BRIGHTNESS,
             )
         ]
     )
@@ -579,8 +585,7 @@ async def test_rgb_color_temp_light(
             call(
                 key=1,
                 state=True,
-                color_mode=LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
+                color_mode=ESPColorMode.BRIGHTNESS,
                 brightness=pytest.approx(0.4980392156862745),
             )
         ]
@@ -598,9 +603,7 @@ async def test_rgb_color_temp_light(
             call(
                 key=1,
                 state=True,
-                color_mode=LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS
-                | LightColorCapability.COLOR_TEMPERATURE,
+                color_mode=ESPColorMode.COLOR_TEMPERATURE,
                 color_temperature=400,
             )
         ]
@@ -908,12 +911,14 @@ async def test_light_rgbww_with_cold_warm_white_support(
             min_mireds=153,
             max_mireds=400,
             supported_color_modes=[
-                LightColorCapability.RGB
-                | LightColorCapability.WHITE
-                | LightColorCapability.COLOR_TEMPERATURE
-                | LightColorCapability.COLD_WARM_WHITE
-                | LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS
+                ESPColorMode.RGB,
+                ESPColorMode.WHITE,
+                ESPColorMode.COLOR_TEMPERATURE,
+                ESPColorMode.COLD_WARM_WHITE,
+                ESPColorMode.ON_OFF,
+                ESPColorMode.BRIGHTNESS,
+                ESPColorMode.RGB_COLD_WARM_WHITE,
+                ESPColorMode.RGB_WHITE,
             ],
         )
     ]
@@ -928,12 +933,7 @@ async def test_light_rgbww_with_cold_warm_white_support(
             blue=1,
             warm_white=1,
             cold_white=1,
-            color_mode=LightColorCapability.RGB
-            | LightColorCapability.WHITE
-            | LightColorCapability.COLOR_TEMPERATURE
-            | LightColorCapability.COLD_WARM_WHITE
-            | LightColorCapability.ON_OFF
-            | LightColorCapability.BRIGHTNESS,
+            color_mode=ESPColorMode.RGB_COLD_WARM_WHITE,
         )
     ]
     user_service = []
@@ -946,7 +946,13 @@ async def test_light_rgbww_with_cold_warm_white_support(
     state = hass.states.get("light.test_mylight")
     assert state is not None
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGBWW]
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.RGB,
+        ColorMode.RGBW,
+        ColorMode.RGBWW,
+        ColorMode.WHITE,
+    ]
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.RGBWW
     assert state.attributes[ATTR_RGBWW_COLOR] == (255, 255, 255, 255, 255)
 
@@ -961,12 +967,7 @@ async def test_light_rgbww_with_cold_warm_white_support(
             call(
                 key=1,
                 state=True,
-                color_mode=LightColorCapability.RGB
-                | LightColorCapability.WHITE
-                | LightColorCapability.COLOR_TEMPERATURE
-                | LightColorCapability.COLD_WARM_WHITE
-                | LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
+                color_mode=ESPColorMode.RGB_COLD_WARM_WHITE,
             )
         ]
     )
@@ -983,12 +984,7 @@ async def test_light_rgbww_with_cold_warm_white_support(
             call(
                 key=1,
                 state=True,
-                color_mode=LightColorCapability.RGB
-                | LightColorCapability.WHITE
-                | LightColorCapability.COLOR_TEMPERATURE
-                | LightColorCapability.COLD_WARM_WHITE
-                | LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
+                color_mode=ESPColorMode.RGB_COLD_WARM_WHITE,
                 brightness=pytest.approx(0.4980392156862745),
             )
         ]
@@ -1011,14 +1007,7 @@ async def test_light_rgbww_with_cold_warm_white_support(
                 key=1,
                 state=True,
                 color_brightness=1.0,
-                color_mode=LightColorCapability.RGB
-                | LightColorCapability.WHITE
-                | LightColorCapability.COLOR_TEMPERATURE
-                | LightColorCapability.COLD_WARM_WHITE
-                | LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
-                cold_white=0,
-                warm_white=0,
+                color_mode=ESPColorMode.RGB,
                 rgb=(pytest.approx(0.3333333333333333), 1.0, 0.0),
                 brightness=pytest.approx(0.4980392156862745),
             )
@@ -1037,16 +1026,9 @@ async def test_light_rgbww_with_cold_warm_white_support(
             call(
                 key=1,
                 state=True,
-                color_brightness=pytest.approx(0.4235294117647059),
-                cold_white=1,
-                warm_white=1,
-                color_mode=LightColorCapability.RGB
-                | LightColorCapability.WHITE
-                | LightColorCapability.COLOR_TEMPERATURE
-                | LightColorCapability.COLD_WARM_WHITE
-                | LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
-                rgb=(0, pytest.approx(0.5462962962962963), 1.0),
+                color_brightness=1.0,
+                color_mode=ESPColorMode.RGB,
+                rgb=(1.0, 1.0, 1.0),
             )
         ]
     )
@@ -1063,16 +1045,10 @@ async def test_light_rgbww_with_cold_warm_white_support(
             call(
                 key=1,
                 state=True,
-                color_brightness=pytest.approx(0.4235294117647059),
-                cold_white=1,
-                warm_white=1,
-                color_mode=LightColorCapability.RGB
-                | LightColorCapability.WHITE
-                | LightColorCapability.COLOR_TEMPERATURE
-                | LightColorCapability.COLD_WARM_WHITE
-                | LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
-                rgb=(0, pytest.approx(0.5462962962962963), 1.0),
+                color_brightness=1.0,
+                white=1,
+                color_mode=ESPColorMode.RGB_WHITE,
+                rgb=(1.0, 1.0, 1.0),
             )
         ]
     )
@@ -1095,12 +1071,7 @@ async def test_light_rgbww_with_cold_warm_white_support(
                 color_brightness=1,
                 cold_white=1,
                 warm_white=1,
-                color_mode=LightColorCapability.RGB
-                | LightColorCapability.WHITE
-                | LightColorCapability.COLOR_TEMPERATURE
-                | LightColorCapability.COLD_WARM_WHITE
-                | LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
+                color_mode=ESPColorMode.RGB_COLD_WARM_WHITE,
                 rgb=(1, 1, 1),
             )
         ]
@@ -1118,16 +1089,8 @@ async def test_light_rgbww_with_cold_warm_white_support(
             call(
                 key=1,
                 state=True,
-                color_brightness=0,
-                cold_white=0,
-                warm_white=100,
-                color_mode=LightColorCapability.RGB
-                | LightColorCapability.WHITE
-                | LightColorCapability.COLOR_TEMPERATURE
-                | LightColorCapability.COLD_WARM_WHITE
-                | LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
-                rgb=(0, 0, 0),
+                color_temperature=400.0,
+                color_mode=ESPColorMode.COLOR_TEMPERATURE,
             )
         ]
     )
@@ -1733,11 +1696,16 @@ async def test_light_effects(
             max_mireds=400,
             effects=["effect1", "effect2"],
             supported_color_modes=[
-                LightColorCapability.ON_OFF | LightColorCapability.BRIGHTNESS,
+                ESPColorMode.ON_OFF,
+                ESPColorMode.BRIGHTNESS,
             ],
         )
     ]
-    states = [LightState(key=1, state=True, brightness=100)]
+    states = [
+        LightState(
+            key=1, state=True, brightness=100, color_mode=ESPColorMode.BRIGHTNESS
+        )
+    ]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -1761,8 +1729,7 @@ async def test_light_effects(
             call(
                 key=1,
                 state=True,
-                color_mode=LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
+                color_mode=ESPColorMode.BRIGHTNESS,
                 effect="effect1",
             )
         ]

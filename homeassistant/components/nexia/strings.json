@@ -65,6 +65,9 @@
       "hold": {
         "name": "Hold"
       },
+      "room_iq_sensor": {
+        "name": "Include {sensor_name}"
+      },
       "emergency_heat": {
         "name": "Emergency heat"
       }

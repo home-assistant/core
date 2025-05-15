@@ -3,8 +3,8 @@
 from unittest.mock import Mock, patch
 
 from homematicip.auth import Auth
-from homematicip.base.base_connection import HmipConnectionError
 from homematicip.connection.connection_context import ConnectionContext
+from homematicip.exceptions.connection_exceptions import HmipConnectionError
 import pytest
 
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
@@ -119,14 +119,13 @@ async def test_hap_reset_unloads_entry_if_setup(
 ) -> None:
     """Test calling reset while the entry has been setup."""
     mock_hap = await default_mock_hap_factory.async_get_mock_hap()
-    assert hass.data[HMIPC_DOMAIN][HAPID] == mock_hap
     config_entries = hass.config_entries.async_entries(HMIPC_DOMAIN)
     assert len(config_entries) == 1
+    assert config_entries[0].runtime_data == mock_hap
     # hap_reset is called during unload
     await hass.config_entries.async_unload(config_entries[0].entry_id)
     # entry is unloaded
     assert config_entries[0].state is ConfigEntryState.NOT_LOADED
-    assert hass.data[HMIPC_DOMAIN] == {}
 
 
 async def test_hap_create(

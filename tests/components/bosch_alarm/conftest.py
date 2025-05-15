@@ -118,6 +118,8 @@ def door() -> Generator[Door]:
     mock.name = "Main Door"
     mock.status_observer = AsyncMock(spec=Observable)
     mock.is_open.return_value = False
+    mock.is_cycling.return_value = False
+    mock.is_secured.return_value = False
     mock.is_locked.return_value = True
     return mock
 
@@ -169,6 +171,7 @@ def mock_panel(
         client.model = model_name
         client.faults = []
         client.events = []
+        client.panel_faults_ids = []
         client.firmware_version = "1.0.0"
         client.protocol_version = "1.0.0"
         client.serial_number = serial_number
