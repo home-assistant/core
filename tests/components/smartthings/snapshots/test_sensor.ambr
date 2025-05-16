@@ -5870,7 +5870,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '8193.81',
+    'state': '8901.522',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub][sensor.eco_heating_system_energy_difference-entry]
@@ -6027,8 +6027,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Eco Heating System Power',
-      'power_consumption_end': '2025-03-09T11:14:57Z',
-      'power_consumption_start': '2025-03-09T11:14:44Z',
+      'power_consumption_end': '2025-05-16T12:01:29Z',
+      'power_consumption_start': '2025-05-16T11:18:12Z',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -6037,7 +6037,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.539',
+    'state': '0.015',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub][sensor.eco_heating_system_power_energy-entry]
@@ -6092,7 +6092,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '9.4041739669111e-06',
+    'state': '1.08249458332857e-05',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub][sensor.eco_heating_system_temperature-entry]
@@ -6144,7 +6144,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '54.3',
+    'state': '40.8',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub_1][sensor.heat_pump_main_cooling_set_point-entry]
