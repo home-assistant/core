@@ -570,6 +570,13 @@ def load_fixture(filename: str, integration: str | None = None) -> str:
     return get_fixture_path(filename, integration).read_text(encoding="utf8")
 
 
+async def async_load_fixture(
+    hass: HomeAssistant, filename: str, integration: str | None = None
+) -> str:
+    """Load a fixture."""
+    return await hass.async_add_executor_job(load_fixture, filename, integration)
+
+
 def load_json_value_fixture(
     filename: str, integration: str | None = None
 ) -> JsonValueType:
@@ -584,11 +591,25 @@ def load_json_array_fixture(
     return json_loads_array(load_fixture(filename, integration))
 
 
+async def async_load_json_array_fixture(
+    hass: HomeAssistant, filename: str, integration: str | None = None
+) -> JsonArrayType:
+    """Load a JSON object from a fixture."""
+    return json_loads_array(await async_load_fixture(hass, filename, integration))
+
+
 def load_json_object_fixture(
     filename: str, integration: str | None = None
 ) -> JsonObjectType:
     """Load a JSON object from a fixture."""
     return json_loads_object(load_fixture(filename, integration))
+
+
+async def async_load_json_object_fixture(
+    hass: HomeAssistant, filename: str, integration: str | None = None
+) -> JsonObjectType:
+    """Load a JSON object from a fixture."""
+    return json_loads_object(await async_load_fixture(hass, filename, integration))
 
 
 def json_round_trip(obj: Any) -> Any:
