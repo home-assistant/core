@@ -9,7 +9,6 @@ from homeassistant.components.mqtt import ReceiveMessage
 from homeassistant.components.scene import Scene
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import dt as dt_util
 
 from .coordinator import QbusConfigEntry, QbusControllerCoordinator
 from .entity import QbusEntity, add_new_outputs
@@ -62,16 +61,5 @@ class QbusScene(QbusEntity, Scene):
         await self._async_publish_output_state(state)
 
     async def _state_received(self, msg: ReceiveMessage) -> None:
-        # We want users to be able to act on a scene activated with physical buttons
-        # of Qbus. This lets users add entities from other integrations to a Qbus
-        # scene (e.g. Hue, Sonos, etc).
-        #
-        # To accomplish this, users can use the state of a scene as a trigger in
-        # their automations.
-        #
-        # The only way to update the state of a scene entity, is by setting the
-        # private `__last_activated` variable of the parent `Scene` class.
-        #
-        # pylint: disable-next=attribute-defined-outside-init
-        self._Scene__last_activated = dt_util.utcnow().isoformat()
-        self.async_write_ha_state()
+        # Nothing to do
+        pass
