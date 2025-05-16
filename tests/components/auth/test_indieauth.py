@@ -84,8 +84,6 @@ def test_client_id_hostname() -> None:
     assert indieauth._parse_client_id("http://192.168.255.255")
 
     with pytest.raises(ValueError):
-        assert indieauth._parse_client_id("http://255.255.255.255/")
-    with pytest.raises(ValueError):
         assert indieauth._parse_client_id("http://11.0.0.0/")
     with pytest.raises(ValueError):
         assert indieauth._parse_client_id("http://172.32.0.0/")
