@@ -25,7 +25,7 @@
     'labels': set({
     }),
     'manufacturer': 'https://lyrion.org/',
-    'model': 'Lyrion Music Server',',
+    'model': 'Lyrion Music Server',
     'model_id': None,
     'name': 'Test Player',
     'name_by_user': None,
