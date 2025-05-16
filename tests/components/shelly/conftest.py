@@ -204,7 +204,7 @@ MOCK_CONFIG = {
         "xcounts": {"expr": None, "unit": None},
         "xfreq": {"expr": None, "unit": None},
     },
-    "flood:0": {"id": 0, "name": "Test name"},
+    "flood:0": {"id": 0, "name": "Kitchen"},
     "light:0": {"name": "test light_0"},
     "light:1": {"name": "test light_1"},
     "light:2": {"name": "test light_2"},

@@ -522,7 +522,7 @@ async def test_rpc_flood_entities(
     await init_integration(hass, 4)
 
     for entity in ("flood", "mute"):
-        entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_{entity}"
+        entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_kitchen_{entity}"
 
         state = hass.states.get(entity_id)
         assert state == snapshot(name=f"{entity_id}-state")
