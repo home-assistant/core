@@ -259,7 +259,9 @@ class ShoppingData:
         self, name: str, context: Context | None = None
     ) -> list[dict[str, JsonValueType]]:
         """Mark all shopping list items with the given name as complete."""
-        complete_items = [item for item in self.items if item["name"] == name]
+        complete_items = [
+            item for item in self.items if item["name"] == name and not item["complete"]
+        ]
 
         if len(complete_items) == 0:
             raise NoMatchingShoppingListItem

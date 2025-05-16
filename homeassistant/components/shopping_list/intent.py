@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, intent
-from homeassistant.helpers.intent import IntentHandleError
 
 from . import DOMAIN, EVENT_SHOPPING_LIST_UPDATED, NoMatchingShoppingListItem
 
@@ -53,15 +52,14 @@ class CompleteItemIntent(intent.IntentHandler):
         item = slots["item"]["value"].strip()
 
         try:
-            await intent_obj.hass.data[DOMAIN].async_complete(item)
-        except NoMatchingShoppingListItem as err:
-            raise IntentHandleError(
-                f"Item {item} not found on your shopping list", "item_not_found"
-            ) from err
+            complete_items = await intent_obj.hass.data[DOMAIN].async_complete(item)
+        except NoMatchingShoppingListItem:
+            complete_items = []
 
         intent_obj.hass.bus.async_fire(EVENT_SHOPPING_LIST_UPDATED)
 
         response = intent_obj.create_response()
+        response.async_set_speech_slots({"completed_items": complete_items})
         response.response_type = intent.IntentResponseType.ACTION_DONE
 
         return response

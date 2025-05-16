@@ -1,10 +1,7 @@
 """Test Shopping List intents."""
 
-import pytest
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
-from homeassistant.helpers.intent import IntentHandleError
 
 
 async def test_complete_item_intent(hass: HomeAssistant, sl_setup) -> None:
@@ -27,6 +24,9 @@ async def test_complete_item_intent(hass: HomeAssistant, sl_setup) -> None:
     )
 
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    completed_items = response.speech_slots.get("completed_items")
+    assert len(completed_items) == 2
+    assert completed_items[0]["name"] == "beer"
     assert hass.data["shopping_list"].items[1]["complete"]
     assert hass.data["shopping_list"].items[2]["complete"]
 
@@ -36,17 +36,18 @@ async def test_complete_item_intent(hass: HomeAssistant, sl_setup) -> None:
     )
 
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.speech_slots.get("completed_items") == []
     assert hass.data["shopping_list"].items[1]["complete"]
     assert hass.data["shopping_list"].items[2]["complete"]
 
 
 async def test_complete_item_intent_not_found(hass: HomeAssistant, sl_setup) -> None:
     """Test completing a missing item."""
-    with pytest.raises(IntentHandleError) as excinfo:
-        await intent.async_handle(
-            hass, "test", "HassShoppingListCompleteItem", {"item": {"value": "beer"}}
-        )
-    assert str(excinfo.value) == "Item beer not found on your shopping list"
+    response = await intent.async_handle(
+        hass, "test", "HassShoppingListCompleteItem", {"item": {"value": "beer"}}
+    )
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.speech_slots.get("completed_items") == []
 
 
 async def test_recent_items_intent(hass: HomeAssistant, sl_setup) -> None:
