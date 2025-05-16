@@ -45,6 +45,17 @@ THERMOSTAT_CAPABILITIES = {
     Capability.THERMOSTAT_MODE,
 }
 
+COOKTOP_HEATING_MODES = {
+    "off": "off",
+    "manual": "manual",
+    "boost": "boost",
+    "keepWarm": "keep_warm",
+    "quickPreheat": "quick_preheat",
+    "defrost": "defrost",
+    "melt": "melt",
+    "simmer": "simmer",
+}
+
 JOB_STATE_MAP = {
     "airWash": "air_wash",
     "airwash": "air_wash",
@@ -133,6 +144,9 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
     extra_state_attributes_fn: Callable[[Any], dict[str, Any]] | None = None
     capability_ignore_list: list[set[Capability]] | None = None
     options_attribute: Attribute | None = None
+    options_map: dict[str, str] | None = None
+    translation_placeholders_fn: Callable[[str], dict[str, str]] | None = None
+    component_fn: Callable[[str], bool] | None = None
     exists_fn: Callable[[Status], bool] | None = None
     use_temperature_unit: bool = False
     deprecated: Callable[[ComponentStatus], str | None] | None = None
@@ -262,6 +276,41 @@ CAPABILITY_TO_SENSORS: dict[
                 native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
                 device_class=SensorDeviceClass.CO,
                 state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
+    Capability.SAMSUNG_CE_COOKTOP_HEATING_POWER: {
+        Attribute.MANUAL_LEVEL: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.MANUAL_LEVEL,
+                translation_key="manual_level",
+                translation_placeholders_fn=lambda component: {
+                    "burner_id": component.split("-0")[-1]
+                },
+                component_fn=lambda component: component.startswith("burner-0"),
+            )
+        ],
+        Attribute.HEATING_MODE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.HEATING_MODE,
+                translation_key="heating_mode",
+                options_attribute=Attribute.SUPPORTED_HEATING_MODES,
+                options_map=COOKTOP_HEATING_MODES,
+                device_class=SensorDeviceClass.ENUM,
+                translation_placeholders_fn=lambda component: {
+                    "burner_id": component.split("-0")[-1]
+                },
+                component_fn=lambda component: component.startswith("burner-0"),
+            )
+        ],
+    },
+    Capability.CUSTOM_COOKTOP_OPERATING_STATE: {
+        Attribute.COOKTOP_OPERATING_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.COOKTOP_OPERATING_STATE,
+                translation_key="cooktop_operating_state",
+                device_class=SensorDeviceClass.ENUM,
+                options_attribute=Attribute.SUPPORTED_COOKTOP_OPERATING_STATE,
             )
         ]
     },
@@ -584,7 +633,7 @@ CAPABILITY_TO_SENSORS: dict[
                 device_class=SensorDeviceClass.TEMPERATURE,
                 use_temperature_unit=True,
                 # Set the value to None if it is 0 F (-17 C)
-                value_fn=lambda value: None if value in {0, -17} else value,
+                value_fn=lambda value: None if value in {-17, 0, 1} else value,
             )
         ]
     },
@@ -631,7 +680,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key="powerEnergy_meter",
                 translation_key="power_energy",
-                state_class=SensorStateClass.TOTAL_INCREASING,
+                state_class=SensorStateClass.TOTAL,
                 device_class=SensorDeviceClass.ENERGY,
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 value_fn=lambda value: value["powerEnergy"] / 1000,
@@ -990,6 +1039,18 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ],
     },
+    Capability.SAMSUNG_CE_WATER_CONSUMPTION_REPORT: {
+        Attribute.WATER_CONSUMPTION: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.WATER_CONSUMPTION,
+                translation_key="water_consumption",
+                state_class=SensorStateClass.TOTAL_INCREASING,
+                device_class=SensorDeviceClass.WATER,
+                native_unit_of_measurement=UnitOfVolume.LITERS,
+                value_fn=lambda value: value["cumulativeAmount"] / 1000,
+            )
+        ]
+    },
 }
 
 
@@ -1016,59 +1077,72 @@ async def async_setup_entry(
 
     for device in entry_data.devices.values():  # pylint: disable=too-many-nested-blocks
         for capability, attributes in CAPABILITY_TO_SENSORS.items():
-            if capability in device.status[MAIN]:
-                for attribute, descriptions in attributes.items():
-                    for description in descriptions:
-                        if (
-                            not description.capability_ignore_list
-                            or not any(
-                                all(
-                                    capability in device.status[MAIN]
-                                    for capability in capability_list
-                                )
-                                for capability_list in description.capability_ignore_list
-                            )
-                        ) and (
-                            not description.exists_fn
-                            or description.exists_fn(
-                                device.status[MAIN][capability][attribute]
-                            )
-                        ):
+            for component, capabilities in device.status.items():
+                if capability in capabilities:
+                    for attribute, descriptions in attributes.items():
+                        for description in descriptions:
                             if (
-                                description.deprecated
-                                and (
-                                    reason := description.deprecated(
-                                        device.status[MAIN]
+                                (
+                                    not description.capability_ignore_list
+                                    or not any(
+                                        all(
+                                            capability in device.status[MAIN]
+                                            for capability in capability_list
+                                        )
+                                        for capability_list in description.capability_ignore_list
                                     )
                                 )
-                                is not None
+                                and (
+                                    not description.exists_fn
+                                    or description.exists_fn(
+                                        device.status[MAIN][capability][attribute]
+                                    )
+                                )
+                                and (
+                                    component == MAIN
+                                    or (
+                                        description.component_fn is not None
+                                        and description.component_fn(component)
+                                    )
+                                )
                             ):
-                                if deprecate_entity(
-                                    hass,
-                                    entity_registry,
-                                    SENSOR_DOMAIN,
-                                    f"{device.device.device_id}_{MAIN}_{capability}_{attribute}_{description.key}",
-                                    f"deprecated_{reason}",
-                                ):
-                                    entities.append(
-                                        SmartThingsSensor(
-                                            entry_data.client,
-                                            device,
-                                            description,
-                                            capability,
-                                            attribute,
+                                if (
+                                    description.deprecated
+                                    and (
+                                        reason := description.deprecated(
+                                            device.status[MAIN]
                                         )
                                     )
-                                continue
-                            entities.append(
-                                SmartThingsSensor(
-                                    entry_data.client,
-                                    device,
-                                    description,
-                                    capability,
-                                    attribute,
+                                    is not None
+                                ):
+                                    if deprecate_entity(
+                                        hass,
+                                        entity_registry,
+                                        SENSOR_DOMAIN,
+                                        f"{device.device.device_id}_{MAIN}_{capability}_{attribute}_{description.key}",
+                                        f"deprecated_{reason}",
+                                    ):
+                                        entities.append(
+                                            SmartThingsSensor(
+                                                entry_data.client,
+                                                device,
+                                                description,
+                                                MAIN,
+                                                capability,
+                                                attribute,
+                                            )
+                                        )
+                                    continue
+                                entities.append(
+                                    SmartThingsSensor(
+                                        entry_data.client,
+                                        device,
+                                        description,
+                                        component,
+                                        capability,
+                                        attribute,
+                                    )
                                 )
-                            )
 
     async_add_entities(entities)
 
@@ -1083,6 +1157,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         client: SmartThings,
         device: FullDevice,
         entity_description: SmartThingsSensorEntityDescription,
+        component: str,
         capability: Capability,
         attribute: Attribute,
     ) -> None:
@@ -1090,16 +1165,22 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         capabilities_to_subscribe = {capability}
         if entity_description.use_temperature_unit:
             capabilities_to_subscribe.add(Capability.TEMPERATURE_MEASUREMENT)
-        super().__init__(client, device, capabilities_to_subscribe)
-        self._attr_unique_id = f"{device.device.device_id}_{MAIN}_{capability}_{attribute}_{entity_description.key}"
+        super().__init__(client, device, capabilities_to_subscribe, component=component)
+        self._attr_unique_id = f"{device.device.device_id}_{component}_{capability}_{attribute}_{entity_description.key}"
         self._attribute = attribute
         self.capability = capability
         self.entity_description = entity_description
+        if self.entity_description.translation_placeholders_fn:
+            self._attr_translation_placeholders = (
+                self.entity_description.translation_placeholders_fn(component)
+            )
 
     @property
     def native_value(self) -> str | float | datetime | int | None:
         """Return the state of the sensor."""
         res = self.get_attribute_value(self.capability, self._attribute)
+        if options_map := self.entity_description.options_map:
+            return options_map.get(res)
         return self.entity_description.value_fn(res)
 
     @property
@@ -1136,5 +1217,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
                 )
             ) is None:
                 return []
+            if options_map := self.entity_description.options_map:
+                return [options_map[option] for option in options]
             return [option.lower() for option in options]
         return super().options

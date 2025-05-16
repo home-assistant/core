@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2025
-MINOR_VERSION: Final = 5
+MINOR_VERSION: Final = 6
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -632,6 +632,14 @@ class UnitOfEnergy(StrEnum):
     KILO_CALORIE = "kcal"
     MEGA_CALORIE = "Mcal"
     GIGA_CALORIE = "Gcal"
+
+
+# Reactive energy units
+class UnitOfReactiveEnergy(StrEnum):
+    """Reactive energy units."""
+
+    VOLT_AMPERE_REACTIVE_HOUR = "varh"
+    KILO_VOLT_AMPERE_REACTIVE_HOUR = "kvarh"
 
 
 # Energy Distance units

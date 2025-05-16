@@ -66,6 +66,32 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
     "configuration_url": "http://example.com",
 }
 
+MOCK_SUBENTRY_BINARY_SENSOR_COMPONENT = {
+    "5b06357ef8654e8d9c54cee5bb0e939b": {
+        "platform": "binary_sensor",
+        "name": "Hatch",
+        "device_class": "door",
+        "state_topic": "test-topic",
+        "payload_on": "ON",
+        "payload_off": "OFF",
+        "expire_after": 1200,
+        "off_delay": 5,
+        "value_template": "{{ value_json.value }}",
+        "entity_picture": "https://example.com/5b06357ef8654e8d9c54cee5bb0e939b",
+    },
+}
+MOCK_SUBENTRY_BUTTON_COMPONENT = {
+    "365d05e6607c4dfb8ae915cff71a954b": {
+        "platform": "button",
+        "name": "Restart",
+        "device_class": "restart",
+        "command_topic": "test-topic",
+        "payload_press": "PRESS",
+        "command_template": "{{ value }}",
+        "retain": False,
+        "entity_picture": "https://example.com/365d05e6607c4dfb8ae915cff71a954b",
+    },
+}
 MOCK_SUBENTRY_NOTIFY_COMPONENT1 = {
     "363a7ecad6be4a19b939a016ea93e994": {
         "platform": "notify",
@@ -87,6 +113,7 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT2 = {
 MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME = {
     "5269352dd9534c908d22812ea5d714cd": {
         "platform": "notify",
+        "name": None,
         "command_topic": "test-topic",
         "command_template": "{{ value }}",
         "entity_picture": "https://example.com/5269352dd9534c908d22812ea5d714cd",
@@ -139,15 +166,23 @@ MOCK_SUBENTRY_SWITCH_COMPONENT = {
     },
 }
 
-# Bogus light component just for code coverage
-# Note that light cannot be setup through the UI yet
-# The test is for code coverage
-MOCK_SUBENTRY_LIGHT_COMPONENT = {
+MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT = {
     "8131babc5e8d4f44b82e0761d39091a2": {
         "platform": "light",
-        "name": "Test light",
-        "command_topic": "test-topic4",
+        "name": "Basic light",
+        "on_command_type": "last",
+        "optimistic": True,
+        "payload_off": "OFF",
+        "payload_on": "ON",
+        "command_topic": "test-topic",
         "schema": "basic",
+        "state_topic": "test-topic",
+        "color_temp_kelvin": True,
+        "state_value_template": "{{ value_json.value }}",
+        "brightness_scale": 255,
+        "max_kelvin": 6535,
+        "min_kelvin": 2000,
+        "white_scale": 255,
         "entity_picture": "https://example.com/8131babc5e8d4f44b82e0761d39091a2",
     },
 }
@@ -168,108 +203,65 @@ MOCK_SUBENTRY_AVAILABILITY_DATA = {
     }
 }
 
+MOCK_SUBENTRY_DEVICE_DATA = {
+    "name": "Milk notifier",
+    "sw_version": "1.0",
+    "hw_version": "2.1 rev a",
+    "model": "Model XL",
+    "model_id": "mn002",
+    "configuration_url": "https://example.com",
+}
+
 MOCK_NOTIFY_SUBENTRY_DATA_MULTI = {
-    "device": {
-        "name": "Milk notifier",
-        "sw_version": "1.0",
-        "hw_version": "2.1 rev a",
-        "model": "Model XL",
-        "model_id": "mn002",
-        "configuration_url": "https://example.com",
-    },
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1 | MOCK_SUBENTRY_NOTIFY_COMPONENT2,
 } | MOCK_SUBENTRY_AVAILABILITY_DATA
 
+MOCK_BINARY_SENSOR_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 2}},
+    "components": MOCK_SUBENTRY_BINARY_SENSOR_COMPONENT,
+}
+MOCK_BUTTON_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 2}},
+    "components": MOCK_SUBENTRY_BUTTON_COMPONENT,
+}
 MOCK_NOTIFY_SUBENTRY_DATA_SINGLE = {
-    "device": {
-        "name": "Milk notifier",
-        "sw_version": "1.0",
-        "hw_version": "2.1 rev a",
-        "model": "Model XL",
-        "model_id": "mn002",
-        "configuration_url": "https://example.com",
-        "mqtt_settings": {"qos": 1},
-    },
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1,
 }
 MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME = {
-    "device": {
-        "name": "Milk notifier",
-        "sw_version": "1.0",
-        "hw_version": "2.1 rev a",
-        "model": "Model XL",
-        "model_id": "mn002",
-        "configuration_url": "https://example.com",
-    },
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME,
 }
+MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT,
+}
 MOCK_SENSOR_SUBENTRY_DATA_SINGLE = {
-    "device": {
-        "name": "Test sensor",
-        "sw_version": "1.0",
-        "hw_version": "2.1 rev a",
-        "model": "Model XL",
-        "model_id": "mn002",
-        "configuration_url": "https://example.com",
-    },
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_SENSOR_COMPONENT,
 }
 MOCK_SENSOR_SUBENTRY_DATA_SINGLE_STATE_CLASS = {
-    "device": {
-        "name": "Test sensor",
-        "sw_version": "1.0",
-        "hw_version": "2.1 rev a",
-        "model": "Model XL",
-        "model_id": "mn002",
-        "configuration_url": "https://example.com",
-    },
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_SENSOR_COMPONENT_STATE_CLASS,
 }
 MOCK_SENSOR_SUBENTRY_DATA_SINGLE_LAST_RESET_TEMPLATE = {
-    "device": {
-        "name": "Test sensor",
-        "sw_version": "1.0",
-        "hw_version": "2.1 rev a",
-        "model": "Model XL",
-        "model_id": "mn002",
-        "configuration_url": "https://example.com",
-    },
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_SENSOR_COMPONENT_LAST_RESET,
 }
 MOCK_SWITCH_SUBENTRY_DATA_SINGLE_STATE_CLASS = {
-    "device": {
-        "name": "Test switch",
-        "sw_version": "1.0",
-        "hw_version": "2.1 rev a",
-        "model": "Model XL",
-        "model_id": "mn002",
-        "configuration_url": "https://example.com",
-    },
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_SWITCH_COMPONENT,
 }
 MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA = {
-    "device": {
-        "name": "Milk notifier",
-        "sw_version": "1.0",
-        "hw_version": "2.1 rev a",
-        "model": "Model XL",
-        "model_id": "mn002",
-        "configuration_url": "https://example.com",
-    },
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_NOTIFY_BAD_SCHEMA,
 }
 MOCK_SUBENTRY_DATA_SET_MIX = {
-    "device": {
-        "name": "Milk notifier",
-        "sw_version": "1.0",
-        "hw_version": "2.1 rev a",
-        "model": "Model XL",
-        "model_id": "mn002",
-        "configuration_url": "https://example.com",
-    },
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1
     | MOCK_SUBENTRY_NOTIFY_COMPONENT2
-    | MOCK_SUBENTRY_LIGHT_COMPONENT
+    | MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT
     | MOCK_SUBENTRY_SWITCH_COMPONENT,
 } | MOCK_SUBENTRY_AVAILABILITY_DATA
 _SENTINEL = object()

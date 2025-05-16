@@ -134,6 +134,22 @@ def esphome_state_property[_R, _EntityT: EsphomeEntity[Any, Any]](
     return _wrapper
 
 
+def async_esphome_state_property[_R, _EntityT: EsphomeEntity[Any, Any]](
+    func: Callable[[_EntityT], Awaitable[_R | None]],
+) -> Callable[[_EntityT], Coroutine[Any, Any, _R | None]]:
+    """Wrap a state property of an esphome entity.
+
+    This checks if the state object in the entity is set
+    and returns None if it is not set.
+    """
+
+    @functools.wraps(func)
+    async def _wrapper(self: _EntityT) -> _R | None:
+        return await func(self) if self._has_state else None
+
+    return _wrapper
+
+
 def esphome_float_state_property[_EntityT: EsphomeEntity[Any, Any]](
     func: Callable[[_EntityT], float | None],
 ) -> Callable[[_EntityT], float | None]:
@@ -223,7 +239,6 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
         self._states = cast(dict[int, _StateT], entry_data.state[state_type])
         assert entry_data.device_info is not None
         device_info = entry_data.device_info
-        self._device_info = device_info
         self._on_entry_data_changed()
         self._key = entity_info.key
         self._state_type = state_type
@@ -311,6 +326,11 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
     @callback
     def _on_entry_data_changed(self) -> None:
         entry_data = self._entry_data
+        # Update the device info since it can change
+        # when the device is reconnected
+        if TYPE_CHECKING:
+            assert entry_data.device_info is not None
+        self._device_info = entry_data.device_info
         self._api_version = entry_data.api_version
         self._client = entry_data.client
         if self._device_info.has_deep_sleep:

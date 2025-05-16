@@ -6,6 +6,10 @@
     'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
+      tuple(
+        'mac',
+        '84:fc:e6:12:f5:b8',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,
@@ -39,6 +43,10 @@
     'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
+      tuple(
+        'mac',
+        '84:fc:e6:12:f5:b8',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,

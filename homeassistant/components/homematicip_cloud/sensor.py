@@ -44,8 +44,8 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     LIGHT_LUX,
     PERCENTAGE,
     UnitOfEnergy,
@@ -60,9 +60,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
 from .entity import HomematicipGenericEntity
-from .hap import HomematicipHAP
+from .hap import HomematicIPConfigEntry, HomematicipHAP
 from .helpers import get_channels_from_device
 
 ATTR_CURRENT_ILLUMINATION = "current_illumination"
@@ -95,11 +94,11 @@ ILLUMINATION_DEVICE_ATTRIBUTES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HomematicIPConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP Cloud sensors from a config entry."""
-    hap = hass.data[DOMAIN][config_entry.unique_id]
+    hap = config_entry.runtime_data
     entities: list[HomematicipGenericEntity] = []
     for device in hap.home.devices:
         if isinstance(device, HomeControlAccessPoint):
@@ -127,6 +126,7 @@ async def async_setup_entry(
         ):
             entities.append(HomematicipTemperatureSensor(hap, device))
             entities.append(HomematicipHumiditySensor(hap, device))
+            entities.append(HomematicipAbsoluteHumiditySensor(hap, device))
         elif isinstance(device, (RoomControlDeviceAnalog,)):
             entities.append(HomematicipTemperatureSensor(hap, device))
         if isinstance(
@@ -346,6 +346,35 @@ class HomematicipTemperatureSensor(HomematicipGenericEntity, SensorEntity):
             state_attr[ATTR_TEMPERATURE_OFFSET] = temperature_offset
 
         return state_attr
+
+
+class HomematicipAbsoluteHumiditySensor(HomematicipGenericEntity, SensorEntity):
+    """Representation of the HomematicIP absolute humidity sensor."""
+
+    _attr_native_unit_of_measurement = CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the thermometer device."""
+        super().__init__(hap, device, post="Absolute Humidity")
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the state."""
+        if self.functional_channel is None:
+            return None
+
+        value = self.functional_channel.vaporAmount
+
+        # Handle case where value might be None
+        if (
+            self.functional_channel.vaporAmount is None
+            or self.functional_channel.vaporAmount == ""
+        ):
+            return None
+
+        # Convert from g/m³ to mg/m³
+        return int(float(value) * 1000)
 
 
 class HomematicipIlluminanceSensor(HomematicipGenericEntity, SensorEntity):
