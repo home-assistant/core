@@ -632,6 +632,11 @@ ZEROCONF = {
             "domain": "iometer",
         },
     ],
+    "_iota._tcp.local.": [
+        {
+            "domain": "daikin_br",
+        },
+    ],
     "_ipp._tcp.local.": [
         {
             "domain": "ipp",
