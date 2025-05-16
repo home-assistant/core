@@ -34,7 +34,7 @@ class AddItemIntent(intent.IntentHandler):
         item = slots["item"]["value"].strip()
         await intent_obj.hass.data[DOMAIN].async_add(item)
 
-        response: intent.IntentResponse = intent_obj.create_response()
+        response = intent_obj.create_response()
         intent_obj.hass.bus.async_fire(EVENT_SHOPPING_LIST_UPDATED)
         return response
 
@@ -61,7 +61,7 @@ class CompleteItemIntent(intent.IntentHandler):
 
         intent_obj.hass.bus.async_fire(EVENT_SHOPPING_LIST_UPDATED)
 
-        response: intent.IntentResponse = intent_obj.create_response()
+        response = intent_obj.create_response()
         response.response_type = intent.IntentResponseType.ACTION_DONE
 
         return response
