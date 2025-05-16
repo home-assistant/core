@@ -48,7 +48,7 @@ async def create_amber_config_entry(site_id):
 
 @pytest.fixture
 async def general_only_site_id_amber_config_entry():
-    """Generate the default Picnic config entry."""
+    """Generate the default Amber config entry."""
     return await create_amber_config_entry(GENERAL_ONLY_SITE_ID)
 
 

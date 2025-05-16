@@ -59,7 +59,7 @@
     }
   },
   "issues": {
-    "deprecated_binary_valve": {
+    "deprecated_forecast_sensor": {
       "description": "The forecast sensor `{entity}` is deprecated and is used in the following automations or scripts:\n{items}\n\nThe get_forecasts action is available and should be used going forward; Please use it on the above automations or scripts to fix this issue.",
       "title": "Deprecated forecast sensor detected in some automations or scripts"
     }
