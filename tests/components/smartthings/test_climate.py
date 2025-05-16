@@ -1063,7 +1063,7 @@ async def test_heat_pump_hvac_update(
             Attribute.MINIMUM_SETPOINT,
             6,
             ATTR_MIN_TEMP,
-            7,
+            25,
             6,
         ),
         (

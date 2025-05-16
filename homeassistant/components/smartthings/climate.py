@@ -665,7 +665,9 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
         min_setpoint = self.get_attribute_value(
             Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL, Attribute.MINIMUM_SETPOINT
         )
-        return min(DEFAULT_MIN_TEMP, min_setpoint)
+        if min_setpoint == -1000:
+            return DEFAULT_MIN_TEMP
+        return min_setpoint
 
     @property
     def max_temp(self) -> float:
@@ -673,7 +675,9 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
         max_setpoint = self.get_attribute_value(
             Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL, Attribute.MAXIMUM_SETPOINT
         )
-        return max(DEFAULT_MAX_TEMP, max_setpoint)
+        if max_setpoint == -1000:
+            return DEFAULT_MAX_TEMP
+        return max_setpoint
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
