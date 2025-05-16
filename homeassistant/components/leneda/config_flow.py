@@ -308,9 +308,7 @@ class LenedaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             energy_id=self._selected_energy_id,
         )
 
-        return await self.hass.async_add_executor_job(
-            client.get_supported_obis_codes, self._current_metering_point
-        )
+        return await client.get_supported_obis_codes(self._current_metering_point)
 
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
@@ -505,8 +503,7 @@ class LenedaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     end_date,
                 )
 
-                await self.hass.async_add_executor_job(
-                    client.get_aggregated_metering_data,
+                await client.get_aggregated_metering_data(
                     metering_points[0],
                     obis_code,
                     start_date,
