@@ -58,6 +58,12 @@
           "finished": "mdi:food-turkey"
         }
       },
+      "diverter_valve_position": {
+        "state": {
+          "room": "mdi:sofa",
+          "tank": "mdi:water-boiler"
+        }
+      },
       "manual_level": {
         "default": "mdi:radiator",
         "state": {
