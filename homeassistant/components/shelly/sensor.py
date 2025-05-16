@@ -34,7 +34,6 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
@@ -56,6 +55,7 @@ from .entity import (
 )
 from .utils import (
     async_remove_orphaned_entities,
+    get_blu_trv_device_info,
     get_device_entry_gen,
     get_device_uptime,
     get_shelly_air_lamp_life,
@@ -135,8 +135,8 @@ class RpcBluTrvSensor(RpcSensor):
 
         super().__init__(coordinator, key, attribute, description)
         ble_addr: str = coordinator.device.config[key]["addr"]
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_BLUETOOTH, ble_addr)}
+        self._attr_device_info = get_blu_trv_device_info(
+            coordinator.device.config[key], ble_addr, coordinator.mac
         )
 
 
