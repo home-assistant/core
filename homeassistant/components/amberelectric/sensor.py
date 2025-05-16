@@ -13,7 +13,7 @@ from amberelectric.models.current_interval import CurrentInterval
 from amberelectric.models.forecast_interval import ForecastInterval
 
 from homeassistant.components.automation import automations_with_entity
-from homeassistant.components.script import scripts_with_entity
+from homeassistant.components.script import async_delete_issue, scripts_with_entity
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
@@ -189,7 +189,7 @@ class AmberForecastSensor(AmberSensor):
         async_create_issue(
             self.hass,
             DOMAIN,
-            f"deprecated_binary_valve_{self.entity_id}",
+            f"deprecated_forecast_sensor_{self.entity_id}",
             breaks_in_ha_version="2025.11.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
@@ -198,6 +198,13 @@ class AmberForecastSensor(AmberSensor):
                 "entity": self.entity_id,
                 "items": "\n".join(items_list),
             },
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Call when entity will be removed from hass."""
+        await super().async_will_remove_from_hass()
+        async_delete_issue(
+            self.hass, DOMAIN, f"deprecated_forecast_sensor_{self.entity_id}"
         )
 
 
