@@ -29,7 +29,7 @@
       "fields": {
         "site_id": {
           "description": "The site to get forecasts from.",
-          "name": "Amber site"
+          "name": "Site"
         },
         "channel_type": {
           "description": "The channel to get forecasts for.",

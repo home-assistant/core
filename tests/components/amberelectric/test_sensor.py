@@ -1,107 +1,16 @@
 """Test the Amber Electric Sensors."""
 
-from collections.abc import AsyncGenerator
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from amberelectric.models.current_interval import CurrentInterval
 from amberelectric.models.interval import Interval
 from amberelectric.models.range import Range
 import pytest
 
-from homeassistant.components.amberelectric.const import (
-    CONF_SITE_ID,
-    CONF_SITE_NAME,
-    DOMAIN,
-)
-from homeassistant.const import CONF_API_TOKEN
+from homeassistant.components.amberelectric.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
-from .helpers import (
-    CONTROLLED_LOAD_CHANNEL,
-    FEED_IN_CHANNEL,
-    GENERAL_AND_CONTROLLED_SITE_ID,
-    GENERAL_AND_FEED_IN_SITE_ID,
-    GENERAL_CHANNEL,
-    GENERAL_ONLY_SITE_ID,
-)
-
-from tests.common import MockConfigEntry
-
-MOCK_API_TOKEN = "psk_0000000000000000"
-
-
-@pytest.fixture
-async def setup_general(hass: HomeAssistant) -> AsyncGenerator[Mock]:
-    """Set up general channel."""
-    MockConfigEntry(
-        domain="amberelectric",
-        data={
-            CONF_SITE_NAME: "mock_title",
-            CONF_API_TOKEN: MOCK_API_TOKEN,
-            CONF_SITE_ID: GENERAL_ONLY_SITE_ID,
-        },
-    ).add_to_hass(hass)
-
-    instance = Mock()
-    with patch(
-        "amberelectric.AmberApi",
-        return_value=instance,
-    ) as mock_update:
-        instance.get_current_prices = Mock(return_value=GENERAL_CHANNEL)
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        yield mock_update.return_value
-
-
-@pytest.fixture
-async def setup_general_and_controlled_load(
-    hass: HomeAssistant,
-) -> AsyncGenerator[Mock]:
-    """Set up general channel and controller load channel."""
-    MockConfigEntry(
-        domain="amberelectric",
-        data={
-            CONF_API_TOKEN: MOCK_API_TOKEN,
-            CONF_SITE_ID: GENERAL_AND_CONTROLLED_SITE_ID,
-        },
-    ).add_to_hass(hass)
-
-    instance = Mock()
-    with patch(
-        "amberelectric.AmberApi",
-        return_value=instance,
-    ) as mock_update:
-        instance.get_current_prices = Mock(
-            return_value=GENERAL_CHANNEL + CONTROLLED_LOAD_CHANNEL
-        )
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        yield mock_update.return_value
-
-
-@pytest.fixture
-async def setup_general_and_feed_in(hass: HomeAssistant) -> AsyncGenerator[Mock]:
-    """Set up general channel and feed in channel."""
-    MockConfigEntry(
-        domain="amberelectric",
-        data={
-            CONF_API_TOKEN: MOCK_API_TOKEN,
-            CONF_SITE_ID: GENERAL_AND_FEED_IN_SITE_ID,
-        },
-    ).add_to_hass(hass)
-
-    instance = Mock()
-    with patch(
-        "amberelectric.AmberApi",
-        return_value=instance,
-    ) as mock_update:
-        instance.get_current_prices = Mock(
-            return_value=GENERAL_CHANNEL + FEED_IN_CHANNEL
-        )
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        yield mock_update.return_value
+from .helpers import GENERAL_CHANNEL
 
 
 async def test_general_price_sensor(hass: HomeAssistant, setup_general: Mock) -> None:
