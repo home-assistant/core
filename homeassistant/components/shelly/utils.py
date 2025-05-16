@@ -131,7 +131,7 @@ def get_block_channel_name(device: BlockDevice, block: Block | None) -> str | No
     """Get name based on device and channel name."""
     if (
         not block
-        or block.type == "device"
+        or block.type in ("device", "relay")
         or get_number_of_channels(device, block) == 1
     ):
         return None
