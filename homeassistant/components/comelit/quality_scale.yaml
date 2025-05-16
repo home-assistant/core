@@ -26,9 +26,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: todo
-    comment: wrap api calls in try block
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
