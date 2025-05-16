@@ -118,6 +118,17 @@
           "stop": "[%key:common::state::stopped%]"
         }
       },
+      "lamp": {
+        "name": "Lamp",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "low": "Low",
+          "mid": "Mid",
+          "high": "High",
+          "extra_high": "Extra high"
+        }
+      },
       "detergent_amount": {
         "name": "Detergent dispense amount",
         "state": {
@@ -533,6 +544,15 @@
       "sabbath_mode": {
         "name": "Sabbath mode"
       }
+    },
+    "water_heater": {
+      "water_heater": {
+        "state": {
+          "standard": "Standard",
+          "force": "Forced",
+          "power": "Power"
+        }
+      }
     }
   },
   "issues": {
@@ -567,6 +587,14 @@
     "deprecated_switch_media_player_scripts": {
       "title": "[%key:component::smartthings::issues::deprecated_switch_appliance::title%]",
       "description": "The switch `{entity_id}` is deprecated and a media player entity has been added to replace it.\n\nThe switch was used in the following automations or scripts:\n{items}\n\nPlease use the new media player entity in the above automations or scripts and disable the entity to fix this issue."
+    },
+    "deprecated_switch_dhw": {
+      "title": "Heat pump switch deprecated",
+      "description": "The switch `{entity_id}` is deprecated and a water heater entity has been added to replace it.\n\nPlease use the new water heater entity in the above automations or scripts and disable the entity to fix this issue."
+    },
+    "deprecated_switch_dhw_scripts": {
+      "title": "[%key:component::smartthings::issues::deprecated_switch_dhw::title%]",
+      "description": "The switch `{entity_id}` is deprecated and a water heater entity has been added to replace it.\n\nThe switch was used in the following automations or scripts:\n{items}\n\nPlease use the new water heater entity in the above automations or scripts and disable the entity to fix this issue."
     },
     "deprecated_media_player": {
       "title": "Media player sensors deprecated",

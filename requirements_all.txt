@@ -81,7 +81,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.62.0
+PySwitchbot==0.62.2
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -241,7 +241,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==31.0.0
+aioesphomeapi==31.0.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -759,7 +759,7 @@ debugpy==1.8.14
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==13.1.0
+deebot-client==13.2.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1679,7 +1679,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.7.3
+plugwise==1.7.4
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -2293,7 +2293,7 @@ pysaj==0.0.16
 pyschlage==2025.4.0
 
 # homeassistant.components.sensibo
-pysensibo==1.1.0
+pysensibo==1.2.1
 
 # homeassistant.components.serial
 pyserial-asyncio-fast==0.16
