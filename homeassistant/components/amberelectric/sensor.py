@@ -23,23 +23,14 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION
-from .coordinator import AmberConfigEntry, AmberUpdateCoordinator, normalize_descriptor
+from .coordinator import AmberConfigEntry, AmberUpdateCoordinator
+from .formatters import (
+    format_cents_to_dollars,
+    friendly_channel_type,
+    normalize_descriptor,
+)
 
 UNIT = f"{CURRENCY_DOLLAR}/{UnitOfEnergy.KILO_WATT_HOUR}"
-
-
-def format_cents_to_dollars(cents: float) -> float:
-    """Return a formatted conversion from cents to dollars."""
-    return round(cents / 100, 2)
-
-
-def friendly_channel_type(channel_type: str) -> str:
-    """Return a human readable version of the channel type."""
-    if channel_type == "controlled_load":
-        return "Controlled Load"
-    if channel_type == "feed_in":
-        return "Feed In"
-    return "General"
 
 
 class AmberSensor(CoordinatorEntity[AmberUpdateCoordinator], SensorEntity):
