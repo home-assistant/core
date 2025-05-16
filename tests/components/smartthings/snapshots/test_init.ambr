@@ -790,7 +790,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': '20240611.1',
+    'sw_version': '20250317.1',
     'via_device_id': None,
   })
 # ---
