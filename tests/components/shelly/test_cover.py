@@ -116,7 +116,7 @@ async def test_rpc_device_services(
     entity_registry: EntityRegistry,
 ) -> None:
     """Test RPC device cover services."""
-    entity_id = "cover.test_cover_0"
+    entity_id = "cover.test_name_test_cover_0"
     await init_integration(hass, 2)
 
     await hass.services.async_call(
@@ -178,23 +178,24 @@ async def test_rpc_device_no_cover_keys(
     monkeypatch.delitem(mock_rpc_device.status, "cover:0")
     await init_integration(hass, 2)
 
-    assert hass.states.get("cover.test_cover_0") is None
+    assert hass.states.get("cover.test_name_test_cover_0") is None
 
 
 async def test_rpc_device_update(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test RPC device update."""
+    entity_id = "cover.test_name_test_cover_0"
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "state", "closed")
     await init_integration(hass, 2)
 
-    state = hass.states.get("cover.test_cover_0")
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == CoverState.CLOSED
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "state", "open")
     mock_rpc_device.mock_update()
-    state = hass.states.get("cover.test_cover_0")
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == CoverState.OPEN
 
@@ -208,7 +209,7 @@ async def test_rpc_device_no_position_control(
     )
     await init_integration(hass, 2)
 
-    state = hass.states.get("cover.test_cover_0")
+    state = hass.states.get("cover.test_name_test_cover_0")
     assert state
     assert state.state == CoverState.OPEN
 
@@ -220,7 +221,7 @@ async def test_rpc_cover_tilt(
     entity_registry: EntityRegistry,
 ) -> None:
     """Test RPC cover that supports tilt."""
-    entity_id = "cover.test_cover_0"
+    entity_id = "cover.test_name_test_cover_0"
 
     config = deepcopy(mock_rpc_device.config)
     config["cover:0"]["slat"] = {"enable": True}
