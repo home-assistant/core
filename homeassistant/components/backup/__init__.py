@@ -1,8 +1,10 @@
 """The Backup integration."""
 
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.config_entries import SOURCE_SYSTEM
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import config_validation as cv, discovery_flow
+from homeassistant.helpers.backup import DATA_BACKUP
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.typing import ConfigType
 
@@ -16,11 +18,14 @@ from .agent import (
     BackupAgentPlatformProtocol,
     LocalBackupAgent,
 )
+from .config import BackupConfig, CreateBackupParametersDict
 from .const import DATA_MANAGER, DOMAIN
+from .coordinator import BackupConfigEntry, BackupDataUpdateCoordinator
 from .http import async_register_http_views
 from .manager import (
     BackupManager,
     BackupManagerError,
+    BackupPlatformEvent,
     BackupPlatformProtocol,
     BackupReaderWriter,
     BackupReaderWriterError,
@@ -31,6 +36,7 @@ from .manager import (
     IdleEvent,
     IncorrectPasswordError,
     ManagerBackup,
+    ManagerStateEvent,
     NewBackup,
     RestoreBackupEvent,
     RestoreBackupStage,
@@ -47,12 +53,15 @@ __all__ = [
     "BackupAgent",
     "BackupAgentError",
     "BackupAgentPlatformProtocol",
+    "BackupConfig",
     "BackupManagerError",
     "BackupNotFound",
+    "BackupPlatformEvent",
     "BackupPlatformProtocol",
     "BackupReaderWriter",
     "BackupReaderWriterError",
     "CreateBackupEvent",
+    "CreateBackupParametersDict",
     "CreateBackupStage",
     "CreateBackupState",
     "Folder",
@@ -60,15 +69,17 @@ __all__ = [
     "IncorrectPasswordError",
     "LocalBackupAgent",
     "ManagerBackup",
+    "ManagerStateEvent",
     "NewBackup",
     "RestoreBackupEvent",
     "RestoreBackupStage",
     "RestoreBackupState",
     "WrittenBackup",
-    "async_get_manager",
     "suggested_filename",
     "suggested_filename_from_name_date",
 ]
+
+PLATFORMS = [Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -88,7 +99,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     backup_manager = BackupManager(hass, reader_writer)
     hass.data[DATA_MANAGER] = backup_manager
-    await backup_manager.async_setup()
+    try:
+        await backup_manager.async_setup()
+    except Exception as err:
+        hass.data[DATA_BACKUP].manager_ready.set_exception(err)
+        raise
+    else:
+        hass.data[DATA_BACKUP].manager_ready.set_result(None)
 
     async_register_websocket_handlers(hass, with_hassio)
 
@@ -118,16 +135,28 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_register_http_views(hass)
 
+    discovery_flow.async_create_flow(
+        hass, DOMAIN, context={"source": SOURCE_SYSTEM}, data={}
+    )
+
     return True
 
 
-@callback
-def async_get_manager(hass: HomeAssistant) -> BackupManager:
-    """Get the backup manager instance.
+async def async_setup_entry(hass: HomeAssistant, entry: BackupConfigEntry) -> bool:
+    """Set up a config entry."""
+    backup_manager: BackupManager = hass.data[DATA_MANAGER]
+    coordinator = BackupDataUpdateCoordinator(hass, entry, backup_manager)
+    await coordinator.async_config_entry_first_refresh()
 
-    Raises HomeAssistantError if the backup integration is not available.
-    """
-    if DATA_MANAGER not in hass.data:
-        raise HomeAssistantError("Backup integration is not available")
+    entry.async_on_unload(coordinator.async_unsubscribe)
 
-    return hass.data[DATA_MANAGER]
+    entry.runtime_data = coordinator
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: BackupConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

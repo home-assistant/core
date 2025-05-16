@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "Homee {name} ({host})",
+    "flow_title": "homee {name} ({host})",
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
@@ -18,15 +18,209 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "host": "The IP address of your Homee.",
-          "username": "The username for your Homee.",
-          "password": "The password for your Homee."
+          "host": "The IP address of your homee.",
+          "username": "The username for your homee.",
+          "password": "The password for your homee."
         }
       }
     }
   },
   "entity": {
+    "binary_sensor": {
+      "blackout_alarm": {
+        "name": "Blackout"
+      },
+      "carbon_dioxide": {
+        "name": "Carbon dioxide"
+      },
+      "flood": {
+        "name": "Flood"
+      },
+      "high_temperature": {
+        "name": "High temperature"
+      },
+      "leak_alarm": {
+        "name": "Leak"
+      },
+      "load_alarm": {
+        "name": "Load",
+        "state": {
+          "off": "[%key:common::state::normal%]",
+          "on": "Overload"
+        }
+      },
+      "low_temperature": {
+        "name": "Low temperature"
+      },
+      "malfunction": {
+        "name": "Malfunction"
+      },
+      "maximum": {
+        "name": "Maximum level"
+      },
+      "minimum": {
+        "name": "Minimum level"
+      },
+      "motor_blocked": {
+        "name": "Motor blocked"
+      },
+      "overcurrent": {
+        "name": "Overcurrent"
+      },
+      "overload": {
+        "name": "Overload"
+      },
+      "rain": {
+        "name": "Rain"
+      },
+      "replace_filter": {
+        "name": "Replace filter",
+        "state": {
+          "on": "Replace"
+        }
+      },
+      "storage": {
+        "name": "Storage",
+        "state": {
+          "off": "Space available",
+          "on": "Storage full"
+        }
+      },
+      "surge": {
+        "name": "Surge"
+      },
+      "voltage_drop": {
+        "name": "Voltage drop"
+      },
+      "water": {
+        "name": "Water"
+      }
+    },
+    "button": {
+      "automatic_mode": {
+        "name": "Automatic mode"
+      },
+      "briefly_open": {
+        "name": "Briefly open"
+      },
+      "identification_mode": {
+        "name": "Identification mode"
+      },
+      "impulse_instance": {
+        "name": "Impulse {instance}"
+      },
+      "light": {
+        "name": "Light"
+      },
+      "light_instance": {
+        "name": "Light {instance}"
+      },
+      "open_partial": {
+        "name": "Open partially"
+      },
+      "permanently_open": {
+        "name": "Open permanently"
+      },
+      "reset_meter": {
+        "name": "Reset meter"
+      },
+      "reset_meter_instance": {
+        "name": "Reset meter {instance}"
+      },
+      "ventilate": {
+        "name": "Ventilate"
+      }
+    },
+    "climate": {
+      "homee": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "manual": "[%key:common::state::manual%]"
+            }
+          }
+        }
+      }
+    },
+    "fan": {
+      "homee": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "manual": "[%key:common::state::manual%]",
+              "auto": "[%key:common::state::auto%]",
+              "summer": "Summer"
+            }
+          }
+        }
+      }
+    },
+    "light": {
+      "light_instance": {
+        "name": "Light {instance}"
+      }
+    },
+    "number": {
+      "down_position": {
+        "name": "Down position"
+      },
+      "down_slat_position": {
+        "name": "Down slat position"
+      },
+      "down_time": {
+        "name": "Down-movement duration"
+      },
+      "endposition_configuration": {
+        "name": "End position"
+      },
+      "motion_alarm_cancelation_delay": {
+        "name": "Motion alarm delay"
+      },
+      "open_window_detection_sensibility": {
+        "name": "Window open sensibility"
+      },
+      "polling_interval": {
+        "name": "Polling interval"
+      },
+      "shutter_slat_time": {
+        "name": "Slat turn duration"
+      },
+      "slat_max_angle": {
+        "name": "Maximum slat angle"
+      },
+      "slat_min_angle": {
+        "name": "Minimum slat angle"
+      },
+      "slat_steps": {
+        "name": "Slat steps"
+      },
+      "temperature_offset": {
+        "name": "Temperature offset"
+      },
+      "up_time": {
+        "name": "Up-movement duration"
+      },
+      "wake_up_interval": {
+        "name": "Wake-up interval"
+      },
+      "wind_monitoring_state": {
+        "name": "Threshold for wind trigger"
+      }
+    },
+    "select": {
+      "repeater_mode": {
+        "name": "Repeater mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "level1": "Level 1",
+          "level2": "Level 2"
+        }
+      }
+    },
     "sensor": {
+      "brightness": {
+        "name": "Illuminance"
+      },
       "brightness_instance": {
         "name": "Illuminance {instance}"
       },
@@ -130,8 +324,8 @@
           "open": "[%key:common::state::open%]",
           "closed": "[%key:common::state::closed%]",
           "partial": "Partially open",
-          "opening": "Opening",
-          "closing": "Closing"
+          "opening": "[%key:common::state::opening%]",
+          "closing": "[%key:common::state::closing%]"
         }
       },
       "uv": {
@@ -151,11 +345,39 @@
           "tilted": "Tilted"
         }
       }
+    },
+    "switch": {
+      "external_binary_input": {
+        "name": "Child lock"
+      },
+      "manual_operation": {
+        "name": "Manual operation"
+      },
+      "on_off_instance": {
+        "name": "Switch {instance}"
+      },
+      "watchdog": {
+        "name": "Watchdog"
+      }
+    },
+    "valve": {
+      "valve_position": {
+        "name": "Valve position"
+      }
     }
   },
   "exceptions": {
     "connection_closed": {
-      "message": "Could not connect to Homee while setting attribute"
+      "message": "Could not connect to homee while setting attribute."
+    },
+    "invalid_preset_mode": {
+      "message": "Invalid preset mode: {preset_mode}. Turning on is only supported with preset mode 'Manual'."
+    }
+  },
+  "issues": {
+    "deprecated_entity": {
+      "title": "The Homee {name} entity is deprecated",
+      "description": "The Homee entity `{entity}` is deprecated and will be removed in release 2025.12.\nThe valve is available directly in the respective climate entity.\nPlease update your automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue."
     }
   }
 }

@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
+    DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
@@ -32,6 +33,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfReactiveEnergy,
     UnitOfReactivePower,
     UnitOfSoundPressure,
     UnitOfSpeed,
@@ -57,6 +59,7 @@ from homeassistant.util.unit_conversion import (
     MassConverter,
     PowerConverter,
     PressureConverter,
+    ReactiveEnergyConverter,
     SpeedConverter,
     TemperatureConverter,
     UnitlessRatioConverter,
@@ -185,7 +188,7 @@ class SensorDeviceClass(StrEnum):
     DURATION = "duration"
     """Fixed duration.
 
-    Unit of measurement: `d`, `h`, `min`, `s`, `ms`
+    Unit of measurement: `d`, `h`, `min`, `s`, `ms`, `µs`
     """
 
     ENERGY = "energy"
@@ -224,7 +227,7 @@ class SensorDeviceClass(StrEnum):
     """Gas.
 
     Unit of measurement:
-    - SI / metric: `m³`
+    - SI / metric: `L`, `m³`
     - USCS / imperial: `ft³`, `CCF`
     """
 
@@ -348,10 +351,16 @@ class SensorDeviceClass(StrEnum):
     - `psi`
     """
 
+    REACTIVE_ENERGY = "reactive_energy"
+    """Reactive energy.
+
+    Unit of measurement: `varh`, `kvarh`
+    """
+
     REACTIVE_POWER = "reactive_power"
     """Reactive power.
 
-    Unit of measurement: `var`
+    Unit of measurement: `var`, `kvar`
     """
 
     SIGNAL_STRENGTH = "signal_strength"
@@ -454,6 +463,12 @@ class SensorDeviceClass(StrEnum):
     - USCS / imperial: `oz`, `lb`
     """
 
+    WIND_DIRECTION = "wind_direction"
+    """Wind direction.
+
+    Unit of measurement: `°`
+    """
+
     WIND_SPEED = "wind_speed"
     """Wind speed.
 
@@ -483,6 +498,9 @@ class SensorStateClass(StrEnum):
 
     MEASUREMENT = "measurement"
     """The state represents a measurement in present time."""
+
+    MEASUREMENT_ANGLE = "measurement_angle"
+    """The state represents a angle measurement in present time. Currently only degrees are supported."""
 
     TOTAL = "total"
     """The state represents a total amount.
@@ -519,6 +537,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.PRECIPITATION: DistanceConverter,
     SensorDeviceClass.PRECIPITATION_INTENSITY: SpeedConverter,
     SensorDeviceClass.PRESSURE: PressureConverter,
+    SensorDeviceClass.REACTIVE_ENERGY: ReactiveEnergyConverter,
     SensorDeviceClass.SPEED: SpeedConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: UnitlessRatioConverter,
@@ -551,6 +570,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfTime.MINUTES,
         UnitOfTime.SECONDS,
         UnitOfTime.MILLISECONDS,
+        UnitOfTime.MICROSECONDS,
     },
     SensorDeviceClass.ENERGY: set(UnitOfEnergy),
     SensorDeviceClass.ENERGY_DISTANCE: set(UnitOfEnergyDistance),
@@ -560,6 +580,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfVolume.CENTUM_CUBIC_FEET,
         UnitOfVolume.CUBIC_FEET,
         UnitOfVolume.CUBIC_METERS,
+        UnitOfVolume.LITERS,
     },
     SensorDeviceClass.HUMIDITY: {PERCENTAGE},
     SensorDeviceClass.ILLUMINANCE: {LIGHT_LUX},
@@ -575,6 +596,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.PM25: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.POWER_FACTOR: {PERCENTAGE, None},
     SensorDeviceClass.POWER: {
+        UnitOfPower.MILLIWATT,
         UnitOfPower.WATT,
         UnitOfPower.KILO_WATT,
         UnitOfPower.MEGA_WATT,
@@ -584,7 +606,8 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
     SensorDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
     SensorDeviceClass.PRESSURE: set(UnitOfPressure),
-    SensorDeviceClass.REACTIVE_POWER: {UnitOfReactivePower.VOLT_AMPERE_REACTIVE},
+    SensorDeviceClass.REACTIVE_ENERGY: set(UnitOfReactiveEnergy),
+    SensorDeviceClass.REACTIVE_POWER: set(UnitOfReactivePower),
     SensorDeviceClass.SIGNAL_STRENGTH: {
         SIGNAL_STRENGTH_DECIBELS,
         SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -612,6 +635,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfVolume.LITERS,
     },
     SensorDeviceClass.WEIGHT: set(UnitOfMass),
+    SensorDeviceClass.WIND_DIRECTION: {DEGREE},
     SensorDeviceClass.WIND_SPEED: set(UnitOfSpeed),
 }
 
@@ -658,6 +682,10 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.PRECIPITATION: set(SensorStateClass),
     SensorDeviceClass.PRECIPITATION_INTENSITY: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.PRESSURE: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.REACTIVE_ENERGY: {
+        SensorStateClass.TOTAL,
+        SensorStateClass.TOTAL_INCREASING,
+    },
     SensorDeviceClass.REACTIVE_POWER: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.SIGNAL_STRENGTH: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.SOUND_PRESSURE: {SensorStateClass.MEASUREMENT},
@@ -683,5 +711,11 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
         SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,
     },
+    SensorDeviceClass.WIND_DIRECTION: {SensorStateClass.MEASUREMENT_ANGLE},
     SensorDeviceClass.WIND_SPEED: {SensorStateClass.MEASUREMENT},
+}
+
+
+STATE_CLASS_UNITS: dict[SensorStateClass | str, set[type[StrEnum] | str | None]] = {
+    SensorStateClass.MEASUREMENT_ANGLE: {DEGREE},
 }

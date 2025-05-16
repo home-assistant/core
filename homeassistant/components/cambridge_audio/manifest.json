@@ -8,6 +8,6 @@
   "iot_class": "local_push",
   "loggers": ["aiostreammagic"],
   "quality_scale": "platinum",
-  "requirements": ["aiostreammagic==2.10.0"],
+  "requirements": ["aiostreammagic==2.11.0"],
   "zeroconf": ["_stream-magic._tcp.local.", "_smoip._tcp.local."]
 }

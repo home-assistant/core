@@ -1,0 +1,7 @@
+{
+  "services": {
+    "count_omer": {
+      "service": "mdi:counter"
+    }
+  }
+}

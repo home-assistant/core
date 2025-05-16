@@ -411,3 +411,9 @@ def migrate_certificate_file_to_content(file_name_or_auto: str) -> str | None:
             return certificate_file.read()
     except OSError:
         return None
+
+
+@callback
+def learn_more_url(platform: str) -> str:
+    """Return the URL for the platform specific MQTT documentation."""
+    return f"https://www.home-assistant.io/integrations/{platform}.mqtt/"

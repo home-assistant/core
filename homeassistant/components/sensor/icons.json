@@ -114,6 +114,9 @@
     "pressure": {
       "default": "mdi:gauge"
     },
+    "reactive_energy": {
+      "default": "mdi:lightning-bolt"
+    },
     "reactive_power": {
       "default": "mdi:flash"
     },
@@ -155,6 +158,9 @@
     },
     "weight": {
       "default": "mdi:weight"
+    },
+    "wind_direction": {
+      "default": "mdi:compass-rose"
     },
     "wind_speed": {
       "default": "mdi:weather-windy"

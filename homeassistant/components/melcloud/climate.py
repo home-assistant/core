@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, cast
 
 from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW, AtaDevice, AtwDevice
 import pymelcloud.ata_device as ata
@@ -57,8 +57,8 @@ ATA_HVAC_MODE_REVERSE_LOOKUP = {v: k for k, v in ATA_HVAC_MODE_LOOKUP.items()}
 
 
 ATW_ZONE_HVAC_MODE_LOOKUP = {
-    atw.ZONE_OPERATION_MODE_HEAT: HVACMode.HEAT,
-    atw.ZONE_OPERATION_MODE_COOL: HVACMode.COOL,
+    atw.ZONE_STATUS_HEAT: HVACMode.HEAT,
+    atw.ZONE_STATUS_COOL: HVACMode.COOL,
 }
 ATW_ZONE_HVAC_MODE_REVERSE_LOOKUP = {v: k for k, v in ATW_ZONE_HVAC_MODE_LOOKUP.items()}
 
@@ -152,6 +152,14 @@ class AtaDeviceClimate(MelCloudClimate):
         self._attr_unique_id = f"{self.api.device.serial}-{self.api.device.mac}"
         self._attr_device_info = self.api.device_info
 
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+
+        # We can only check for vane_horizontal once we fetch the device data from the cloud
+        if self._device.vane_horizontal:
+            self._attr_supported_features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
+
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes with device specific additions."""
@@ -228,7 +236,7 @@ class AtaDeviceClimate(MelCloudClimate):
         set_dict: dict[str, Any] = {}
         if ATTR_HVAC_MODE in kwargs:
             self._apply_set_hvac_mode(
-                kwargs.get(ATTR_HVAC_MODE, self.hvac_mode), set_dict
+                cast(HVACMode, kwargs.get(ATTR_HVAC_MODE, self.hvac_mode)), set_dict
             )
 
         if ATTR_TEMPERATURE in kwargs:
@@ -274,14 +282,28 @@ class AtaDeviceClimate(MelCloudClimate):
         """Return vertical vane position or mode."""
         return self._device.vane_vertical
 
+    @property
+    def swing_horizontal_mode(self) -> str | None:
+        """Return horizontal vane position or mode."""
+        return self._device.vane_horizontal
+
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set vertical vane position or mode."""
         await self.async_set_vane_vertical(swing_mode)
+
+    async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
+        """Set horizontal vane position or mode."""
+        await self.async_set_vane_horizontal(swing_horizontal_mode)
 
     @property
     def swing_modes(self) -> list[str] | None:
         """Return a list of available vertical vane positions and modes."""
         return self._device.vane_vertical_positions
+
+    @property
+    def swing_horizontal_modes(self) -> list[str] | None:
+        """Return a list of available horizontal vane positions and modes."""
+        return self._device.vane_horizontal_positions
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""

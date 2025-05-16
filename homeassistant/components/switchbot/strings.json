@@ -70,6 +70,10 @@
         "data": {
           "retry_count": "Retry count",
           "lock_force_nightlatch": "Force Nightlatch operation mode"
+        },
+        "data_description": {
+          "retry_count": "How many times to retry sending commands to your SwitchBot devices",
+          "lock_force_nightlatch": "Force Nightlatch operation mode even if Nightlatch is not detected"
         }
       }
     }
@@ -156,6 +160,43 @@
           }
         }
       }
+    },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "last_run_success": {
+            "state": {
+              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+            }
+          },
+          "preset_mode": {
+            "state": {
+              "normal": "Normal",
+              "natural": "Natural",
+              "sleep": "Sleep",
+              "baby": "Baby"
+            }
+          }
+        }
+      }
+    },
+    "vacuum": {
+      "vacuum": {
+        "state_attributes": {
+          "last_run_success": {
+            "state": {
+              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "operation_error": {
+      "message": "An error occurred while performing the action: {error}"
     }
   }
 }

@@ -1,0 +1,45 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "backup_path": "Backup path",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "url": "The URL of the WebDAV server. Check with your provider for the correct URL.",
+          "username": "The username for the WebDAV server.",
+          "password": "The password for the WebDAV server.",
+          "backup_path": "Define the path where the backups should be located (will be created automatically if it does not exist).",
+          "verify_ssl": "Whether to verify the SSL certificate of the server. If you are using a self-signed certificate, do not select this option."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_method": "The server does not support the required methods. Please check whether you have the correct URL. Check with your provider for the correct URL.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
+  "exceptions": {
+    "invalid_username_password": {
+      "message": "Invalid username or password"
+    },
+    "cannot_connect": {
+      "message": "Cannot connect to WebDAV server"
+    },
+    "cannot_access_or_create_backup_path": {
+      "message": "Cannot access or create backup path. Please check the path and permissions."
+    },
+    "failed_to_migrate_folder": {
+      "message": "Failed to migrate wrong encoded folder \"{wrong_path}\" to \"{correct_path}\"."
+    }
+  }
+}

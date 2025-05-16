@@ -10,7 +10,7 @@ from typing import Any, cast
 
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice, BlockUpdateType
-from aioshelly.const import MODEL_NAMES, MODEL_VALVE
+from aioshelly.const import MODEL_VALVE
 from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
@@ -18,6 +18,7 @@ from aioshelly.exceptions import (
     RpcCallError,
 )
 from aioshelly.rpc_device import RpcDevice, RpcUpdateType
+from aioshelly.rpc_device.utils import bluetooth_mac_from_primary_mac
 from propcache.api import cached_property
 
 from homeassistant.components.bluetooth import async_remove_scanner
@@ -25,13 +26,18 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_HOST,
+    CONF_MODEL,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
+from homeassistant.helpers.device_registry import (
+    CONNECTION_BLUETOOTH,
+    CONNECTION_NETWORK_MAC,
+    format_mac,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .bluetooth import async_connect_scanner
@@ -72,6 +78,7 @@ from .utils import (
     get_http_port,
     get_rpc_device_wakeup_period,
     get_rpc_ws_url,
+    get_shelly_model_name,
     update_device_fw_info,
 )
 
@@ -85,6 +92,9 @@ class ShellyEntryData:
     rest: ShellyRestCoordinator | None = None
     rpc: ShellyRpcCoordinator | None = None
     rpc_poll: ShellyRpcPollingCoordinator | None = None
+    rpc_script_events: dict[int, list[str]] | None = None
+    rpc_supports_scripts: bool | None = None
+    rpc_zigbee_enabled: bool | None = None
 
 
 type ShellyConfigEntry = ConfigEntry[ShellyEntryData]
@@ -137,7 +147,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
     @cached_property
     def model(self) -> str:
         """Model of the device."""
-        return cast(str, self.config_entry.data["model"])
+        return cast(str, self.config_entry.data[CONF_MODEL])
 
     @cached_property
     def mac(self) -> str:
@@ -154,6 +164,11 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         """Sleep period of the device."""
         return self.config_entry.data.get(CONF_SLEEP_PERIOD, 0)
 
+    @property
+    def connections(self) -> set[tuple[str, str]]:
+        """Connections of the device."""
+        return {(CONNECTION_NETWORK_MAC, self.mac)}
+
     def async_setup(self, pending_platforms: list[Platform] | None = None) -> None:
         """Set up the coordinator."""
         self._pending_platforms = pending_platforms
@@ -161,10 +176,10 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         device_entry = dev_reg.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             name=self.name,
-            connections={(CONNECTION_NETWORK_MAC, self.mac)},
+            connections=self.connections,
             identifiers={(DOMAIN, self.mac)},
             manufacturer="Shelly",
-            model=MODEL_NAMES.get(self.model),
+            model=get_shelly_model_name(self.model, self.sleep_period, self.device),
             model_id=self.model,
             sw_version=self.sw_version,
             hw_version=f"gen{get_device_entry_gen(self.config_entry)}",
@@ -374,14 +389,23 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         if self.sleep_period:
             # Sleeping device, no point polling it, just mark it unavailable
             raise UpdateFailed(
-                f"Sleeping device did not update within {self.sleep_period} seconds interval"
+                translation_domain=DOMAIN,
+                translation_key="update_error_sleeping_device",
+                translation_placeholders={
+                    "device": self.name,
+                    "period": str(self.sleep_period),
+                },
             )
 
         LOGGER.debug("Polling Shelly Block Device - %s", self.name)
         try:
             await self.device.update()
         except DeviceConnectionError as err:
-            raise UpdateFailed(repr(err)) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"device": self.name},
+            ) from err
         except InvalidAuthError:
             await self.async_shutdown_device_and_start_reauth()
 
@@ -466,7 +490,11 @@ class ShellyRestCoordinator(ShellyCoordinatorBase[BlockDevice]):
                 return
             await self.device.update_shelly()
         except (DeviceConnectionError, MacAddressMismatchError) as err:
-            raise UpdateFailed(repr(err)) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"device": self.name},
+            ) from err
         except InvalidAuthError:
             await self.async_shutdown_device_and_start_reauth()
         else:
@@ -494,6 +522,23 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._input_event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._connect_task: asyncio.Task | None = None
         entry.async_on_unload(entry.add_update_listener(self._async_update_listener))
+
+    @cached_property
+    def bluetooth_source(self) -> str:
+        """Return the Bluetooth source address.
+
+        This is the Bluetooth MAC address of the device that is used
+        for the Bluetooth scanner.
+        """
+        return format_mac(bluetooth_mac_from_primary_mac(self.mac)).upper()
+
+    @property
+    def connections(self) -> set[tuple[str, str]]:
+        """Connections of the device."""
+        connections = super().connections
+        if not self.sleep_period:
+            connections.add((CONNECTION_BLUETOOTH, self.bluetooth_source))
+        return connections
 
     async def async_device_online(self, source: str) -> None:
         """Handle device going online."""
@@ -623,7 +668,12 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         if self.sleep_period:
             # Sleeping device, no point polling it, just mark it unavailable
             raise UpdateFailed(
-                f"Sleeping device did not update within {self.sleep_period} seconds interval"
+                translation_domain=DOMAIN,
+                translation_key="update_error_sleeping_device",
+                translation_placeholders={
+                    "device": self.name,
+                    "period": str(self.sleep_period),
+                },
             )
 
         async with self._connection_lock:
@@ -631,7 +681,11 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                 return
 
             if not await self._async_device_connect_task():
-                raise UpdateFailed("Device reconnect error")
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="update_error_reconnect_error",
+                    translation_placeholders={"device": self.name},
+                )
 
     async def _async_disconnected(self, reconnect: bool) -> None:
         """Handle device disconnected."""
@@ -681,7 +735,11 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         is updated.
         """
         if not self.sleep_period:
-            await self._async_connect_ble_scanner()
+            if (
+                self.config_entry.runtime_data.rpc_supports_scripts
+                and not self.config_entry.runtime_data.rpc_zigbee_enabled
+            ):
+                await self._async_connect_ble_scanner()
         else:
             await self._async_setup_outbound_websocket()
 
@@ -705,7 +763,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         )
         if ble_scanner_mode == BLEScannerMode.DISABLED and self.connected:
             await async_stop_scanner(self.device)
-            async_remove_scanner(self.hass, format_mac(self.mac).upper())
+            async_remove_scanner(self.hass, self.bluetooth_source)
             return
         if await async_ensure_ble_enabled(self.device):
             # BLE enable required a reboot, don't bother connecting
@@ -807,13 +865,21 @@ class ShellyRpcPollingCoordinator(ShellyCoordinatorBase[RpcDevice]):
     async def _async_update_data(self) -> None:
         """Fetch data."""
         if not self.device.connected:
-            raise UpdateFailed("Device disconnected")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error_device_disconnected",
+                translation_placeholders={"device": self.name},
+            )
 
         LOGGER.debug("Polling Shelly RPC Device - %s", self.name)
         try:
             await self.device.poll()
         except (DeviceConnectionError, RpcCallError) as err:
-            raise UpdateFailed(f"Device disconnected: {err!r}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"device": self.name},
+            ) from err
         except InvalidAuthError:
             await self.async_shutdown_device_and_start_reauth()
 

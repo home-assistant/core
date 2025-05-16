@@ -505,7 +505,7 @@ def mock_browse_by_idstring(
 
 
 def mock_get_music_library_information(
-    search_type: str, search_term: str, full_album_art_uri: bool = True
+    search_type: str, search_term: str | None = None, full_album_art_uri: bool = True
 ) -> list[MockMusicServiceItem]:
     """Mock the call to get music library information."""
     if search_type == "albums" and search_term == "Abbey Road":
@@ -517,6 +517,10 @@ def mock_get_music_library_information(
                 "object.container.album.musicAlbum",
             )
         ]
+    if search_type == "sonos_playlists":
+        playlists = load_json_value_fixture("sonos_playlists.json", "sonos")
+        playlists_list = [DidlPlaylistContainer.from_dict(pl) for pl in playlists]
+        return SearchResult(playlists_list, "sonos_playlists", 1, 1, 0)
     return []
 
 
@@ -580,13 +584,19 @@ def alarm_clock_fixture_extended():
     return alarm_clock
 
 
+@pytest.fixture(name="speaker_model")
+def speaker_model_fixture(request: pytest.FixtureRequest):
+    """Create fixture for the speaker model."""
+    return getattr(request, "param", "Model Name")
+
+
 @pytest.fixture(name="speaker_info")
-def speaker_info_fixture():
+def speaker_info_fixture(speaker_model):
     """Create speaker_info fixture."""
     return {
         "zone_name": "Zone A",
         "uid": "RINCON_test",
-        "model_name": "Model Name",
+        "model_name": speaker_model,
         "model_number": "S12",
         "hardware_version": "1.20.1.6-1.1",
         "software_version": "49.2-64250",

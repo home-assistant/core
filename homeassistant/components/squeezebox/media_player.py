@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_EXTRA,
     BrowseError,
     BrowseMedia,
     MediaPlayerEnqueue,
@@ -34,24 +35,22 @@ from homeassistant.helpers import (
     entity_platform,
     entity_registry as er,
 )
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.start import async_at_start
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
 from .browse_media import (
+    BrowseData,
     build_item_response,
     generate_playlist,
     library_payload,
     media_source_content_filter,
 )
 from .const import (
+    ATTR_ANNOUNCE_TIMEOUT,
+    ATTR_ANNOUNCE_VOLUME,
     CONF_BROWSE_LIMIT,
     CONF_VOLUME_STEP,
     DEFAULT_BROWSE_LIMIT,
@@ -64,6 +63,7 @@ from .const import (
     SQUEEZEBOX_SOURCE_STRINGS,
 )
 from .coordinator import SqueezeBoxPlayerUpdateCoordinator
+from .entity import SqueezeboxEntity
 
 if TYPE_CHECKING:
     from . import SqueezeboxConfigEntry
@@ -75,6 +75,7 @@ ATTR_QUERY_RESULT = "query_result"
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
 
 ATTR_PARAMETERS = "parameters"
 ATTR_OTHER_PLAYER = "other_player"
@@ -157,9 +158,27 @@ async def async_setup_entry(
     entry.async_on_unload(async_at_start(hass, start_server_discovery))
 
 
-class SqueezeBoxMediaPlayerEntity(
-    CoordinatorEntity[SqueezeBoxPlayerUpdateCoordinator], MediaPlayerEntity
-):
+def get_announce_volume(extra: dict) -> float | None:
+    """Get announce volume from extra service data."""
+    if ATTR_ANNOUNCE_VOLUME not in extra:
+        return None
+    announce_volume = float(extra[ATTR_ANNOUNCE_VOLUME])
+    if not (0 < announce_volume <= 1):
+        raise ValueError
+    return announce_volume * 100
+
+
+def get_announce_timeout(extra: dict) -> int | None:
+    """Get announce volume from extra service data."""
+    if ATTR_ANNOUNCE_TIMEOUT not in extra:
+        return None
+    announce_timeout = int(extra[ATTR_ANNOUNCE_TIMEOUT])
+    if announce_timeout < 1:
+        raise ValueError
+    return announce_timeout
+
+
+class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     """Representation of the media player features of a SqueezeBox device.
 
     Wraps a pysqueezebox.Player() object.
@@ -184,6 +203,7 @@ class SqueezeBoxMediaPlayerEntity(
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.GROUPING
         | MediaPlayerEntityFeature.MEDIA_ENQUEUE
+        | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
     )
     _attr_has_entity_name = True
     _attr_name = None
@@ -192,30 +212,11 @@ class SqueezeBoxMediaPlayerEntity(
     def __init__(self, coordinator: SqueezeBoxPlayerUpdateCoordinator) -> None:
         """Initialize the SqueezeBox device."""
         super().__init__(coordinator)
-        player = coordinator.player
-        self._player = player
         self._query_result: bool | dict = {}
         self._remove_dispatcher: Callable | None = None
         self._previous_media_position = 0
-        self._attr_unique_id = format_mac(player.player_id)
-        _manufacturer = None
-        if player.model == "SqueezeLite" or "SqueezePlay" in player.model:
-            _manufacturer = "Ralph Irving"
-        elif (
-            "Squeezebox" in player.model
-            or "Transporter" in player.model
-            or "Slim" in player.model
-        ):
-            _manufacturer = "Logitech"
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
-            name=player.name,
-            connections={(CONNECTION_NETWORK_MAC, self._attr_unique_id)},
-            via_device=(DOMAIN, coordinator.server_uuid),
-            model=player.model,
-            manufacturer=_manufacturer,
-        )
+        self._attr_unique_id = format_mac(self._player.player_id)
+        self._browse_data = BrowseData()
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -437,10 +438,17 @@ class SqueezeBoxMediaPlayerEntity(
         await self.coordinator.async_refresh()
 
     async def async_play_media(
-        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+        self,
+        media_type: MediaType | str,
+        media_id: str,
+        announce: bool | None = None,
+        **kwargs: Any,
     ) -> None:
         """Send the play_media command to the media player."""
         index = None
+
+        if media_type:
+            media_type = media_type.lower()
 
         enqueue: MediaPlayerEnqueue | None = kwargs.get(ATTR_MEDIA_ENQUEUE)
 
@@ -460,6 +468,44 @@ class SqueezeBoxMediaPlayerEntity(
             )
             media_id = play_item.url
 
+        if announce:
+            if media_type not in MediaType.MUSIC:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_announce_media_type",
+                    translation_placeholders={
+                        "media_type": str(media_type),
+                    },
+                )
+
+            extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
+            cmd = "announce"
+            try:
+                announce_volume = get_announce_volume(extra)
+            except ValueError:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_announce_volume",
+                    translation_placeholders={
+                        "announce_volume": ATTR_ANNOUNCE_VOLUME,
+                    },
+                ) from None
+            else:
+                self._player.set_announce_volume(announce_volume)
+
+            try:
+                announce_timeout = get_announce_timeout(extra)
+            except ValueError:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_announce_timeout",
+                    translation_placeholders={
+                        "announce_timeout": ATTR_ANNOUNCE_TIMEOUT,
+                    },
+                ) from None
+            else:
+                self._player.set_announce_timeout(announce_timeout)
+
         if media_type in MediaType.MUSIC:
             if not media_id.startswith(SQUEEZEBOX_SOURCE_STRINGS):
                 # do not process special squeezebox "source" media ids
@@ -476,9 +522,7 @@ class SqueezeBoxMediaPlayerEntity(
                     "search_type": MediaType.PLAYLIST,
                 }
                 playlist = await generate_playlist(
-                    self._player,
-                    payload,
-                    self.browse_limit,
+                    self._player, payload, self.browse_limit, self._browse_data
                 )
             except BrowseError:
                 # a list of urls
@@ -491,9 +535,7 @@ class SqueezeBoxMediaPlayerEntity(
                 "search_type": media_type,
             }
             playlist = await generate_playlist(
-                self._player,
-                payload,
-                self.browse_limit,
+                self._player, payload, self.browse_limit, self._browse_data
             )
 
             _LOGGER.debug("Generated playlist: %s", playlist)
@@ -565,13 +607,21 @@ class SqueezeBoxMediaPlayerEntity(
             other_player = ent_reg.async_get(other_player_entity_id)
             if other_player is None:
                 raise ServiceValidationError(
-                    f"Could not find player with entity_id {other_player_entity_id}"
+                    translation_domain=DOMAIN,
+                    translation_key="join_cannot_find_other_player",
+                    translation_placeholders={
+                        "other_player_entity_id": str(other_player_entity_id)
+                    },
                 )
             if other_player_id := other_player.unique_id:
                 await self._player.async_sync(other_player_id)
             else:
                 raise ServiceValidationError(
-                    f"Could not join unknown player {other_player_entity_id}"
+                    translation_domain=DOMAIN,
+                    translation_key="join_cannot_join_unknown_player",
+                    translation_placeholders={
+                        "other_player_entity_id": str(other_player_entity_id)
+                    },
                 )
 
     async def async_unjoin_player(self) -> None:
@@ -591,8 +641,11 @@ class SqueezeBoxMediaPlayerEntity(
             media_content_id,
         )
 
+        if media_content_type:
+            media_content_type = media_content_type.lower()
+
         if media_content_type in [None, "library"]:
-            return await library_payload(self.hass, self._player)
+            return await library_payload(self.hass, self._player, self._browse_data)
 
         if media_content_id and media_source.is_media_source_id(media_content_id):
             return await media_source.async_browse_media(
@@ -609,6 +662,7 @@ class SqueezeBoxMediaPlayerEntity(
             self._player,
             payload,
             self.browse_limit,
+            self._browse_data,
         )
 
     async def async_get_browse_image(

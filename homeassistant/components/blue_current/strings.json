@@ -28,20 +28,20 @@
         "name": "Activity",
         "state": {
           "available": "Available",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "unavailable": "Unavailable",
-          "error": "Error",
+          "error": "[%key:common::state::error%]",
           "offline": "Offline"
         }
       },
       "vehicle_status": {
         "name": "Vehicle status",
         "state": {
-          "standby": "Standby",
+          "standby": "[%key:common::state::standby%]",
           "vehicle_detected": "Detected",
           "ready": "Ready",
           "no_power": "No power",
-          "vehicle_error": "Error"
+          "vehicle_error": "[%key:common::state::error%]"
         }
       },
       "actual_v1": {
@@ -112,6 +112,17 @@
       },
       "grid_max_current": {
         "name": "Max grid current"
+      }
+    },
+    "button": {
+      "stop_charge_session": {
+        "name": "Stop charge session"
+      },
+      "reboot": {
+        "name": "Reboot"
+      },
+      "reset": {
+        "name": "Reset"
       }
     }
   }

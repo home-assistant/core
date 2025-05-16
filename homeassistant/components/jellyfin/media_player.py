@@ -17,7 +17,7 @@ from homeassistant.util.dt import parse_datetime
 
 from .browse_media import build_item_response, build_root_response
 from .client_wrapper import get_artwork_url
-from .const import CONTENT_TYPE_MAP, LOGGER
+from .const import CONTENT_TYPE_MAP, LOGGER, MAX_IMAGE_WIDTH
 from .coordinator import JellyfinConfigEntry, JellyfinDataUpdateCoordinator
 from .entity import JellyfinClientEntity
 
@@ -169,7 +169,9 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
         if self.now_playing is None:
             return None
 
-        return get_artwork_url(self.coordinator.api_client, self.now_playing, 150)
+        return get_artwork_url(
+            self.coordinator.api_client, self.now_playing, MAX_IMAGE_WIDTH
+        )
 
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:

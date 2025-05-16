@@ -75,7 +75,11 @@ class AccuWeatherObservationDataUpdateCoordinator(
             async with timeout(10):
                 result = await self.accuweather.async_get_current_conditions()
         except EXCEPTIONS as error:
-            raise UpdateFailed(error) from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="current_conditions_update_error",
+                translation_placeholders={"error": repr(error)},
+            ) from error
 
         _LOGGER.debug("Requests remaining: %d", self.accuweather.requests_remaining)
 
@@ -117,9 +121,15 @@ class AccuWeatherDailyForecastDataUpdateCoordinator(
         """Update data via library."""
         try:
             async with timeout(10):
-                result = await self.accuweather.async_get_daily_forecast()
+                result = await self.accuweather.async_get_daily_forecast(
+                    language=self.hass.config.language
+                )
         except EXCEPTIONS as error:
-            raise UpdateFailed(error) from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="forecast_update_error",
+                translation_placeholders={"error": repr(error)},
+            ) from error
 
         _LOGGER.debug("Requests remaining: %d", self.accuweather.requests_remaining)
 

@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
+    DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
@@ -32,6 +33,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfReactiveEnergy,
     UnitOfReactivePower,
     UnitOfSoundPressure,
     UnitOfSpeed,
@@ -43,6 +45,7 @@ from homeassistant.const import (
 )
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    ReactiveEnergyConverter,
     TemperatureConverter,
     VolumeFlowRateConverter,
 )
@@ -158,7 +161,7 @@ class NumberDeviceClass(StrEnum):
     DURATION = "duration"
     """Fixed duration.
 
-    Unit of measurement: `d`, `h`, `min`, `s`, `ms`
+    Unit of measurement: `d`, `h`, `min`, `s`, `ms`, `µs`
     """
 
     ENERGY = "energy"
@@ -195,7 +198,7 @@ class NumberDeviceClass(StrEnum):
     """Gas.
 
     Unit of measurement:
-    - SI / metric: `m³`
+    - SI / metric: `L`, `m³`
     - USCS / imperial: `ft³`, `CCF`
     """
 
@@ -319,10 +322,16 @@ class NumberDeviceClass(StrEnum):
     - `psi`
     """
 
+    REACTIVE_ENERGY = "reactive_energy"
+    """Reactive energy.
+
+    Unit of measurement: `varh`, `kvarh`
+    """
+
     REACTIVE_POWER = "reactive_power"
     """Reactive power.
 
-    Unit of measurement: `var`
+    Unit of measurement: `var`, `kvar`
     """
 
     SIGNAL_STRENGTH = "signal_strength"
@@ -424,6 +433,12 @@ class NumberDeviceClass(StrEnum):
     - USCS / imperial: `oz`, `lb`
     """
 
+    WIND_DIRECTION = "wind_direction"
+    """Wind direction.
+
+    Unit of measurement: `°`
+    """
+
     WIND_SPEED = "wind_speed"
     """Wind speed.
 
@@ -455,6 +470,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfTime.MINUTES,
         UnitOfTime.SECONDS,
         UnitOfTime.MILLISECONDS,
+        UnitOfTime.MICROSECONDS,
     },
     NumberDeviceClass.ENERGY: set(UnitOfEnergy),
     NumberDeviceClass.ENERGY_DISTANCE: set(UnitOfEnergyDistance),
@@ -464,6 +480,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfVolume.CENTUM_CUBIC_FEET,
         UnitOfVolume.CUBIC_FEET,
         UnitOfVolume.CUBIC_METERS,
+        UnitOfVolume.LITERS,
     },
     NumberDeviceClass.HUMIDITY: {PERCENTAGE},
     NumberDeviceClass.ILLUMINANCE: {LIGHT_LUX},
@@ -479,6 +496,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.PM25: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.POWER_FACTOR: {PERCENTAGE, None},
     NumberDeviceClass.POWER: {
+        UnitOfPower.MILLIWATT,
         UnitOfPower.WATT,
         UnitOfPower.KILO_WATT,
         UnitOfPower.MEGA_WATT,
@@ -488,7 +506,8 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
     NumberDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
     NumberDeviceClass.PRESSURE: set(UnitOfPressure),
-    NumberDeviceClass.REACTIVE_POWER: {UnitOfReactivePower.VOLT_AMPERE_REACTIVE},
+    NumberDeviceClass.REACTIVE_ENERGY: set(UnitOfReactiveEnergy),
+    NumberDeviceClass.REACTIVE_POWER: set(UnitOfReactivePower),
     NumberDeviceClass.SIGNAL_STRENGTH: {
         SIGNAL_STRENGTH_DECIBELS,
         SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -516,10 +535,12 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfVolume.LITERS,
     },
     NumberDeviceClass.WEIGHT: set(UnitOfMass),
+    NumberDeviceClass.WIND_DIRECTION: {DEGREE},
     NumberDeviceClass.WIND_SPEED: set(UnitOfSpeed),
 }
 
 UNIT_CONVERTERS: dict[NumberDeviceClass, type[BaseUnitConverter]] = {
+    NumberDeviceClass.REACTIVE_ENERGY: ReactiveEnergyConverter,
     NumberDeviceClass.TEMPERATURE: TemperatureConverter,
     NumberDeviceClass.VOLUME_FLOW_RATE: VolumeFlowRateConverter,
 }

@@ -24,12 +24,17 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_RESOURCE,
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -38,6 +43,7 @@ from .const import (
     CONF_DIM_MODE,
     CONF_DOMAIN_DATA,
     CONF_SK_NUM_TRIES,
+    CONF_TARGET_VALUE_LOCKED,
     CONF_TRANSITION,
     CONNECTION,
     DEVICE_CONNECTIONS,
@@ -49,6 +55,7 @@ from .helpers import (
     InputType,
     async_update_config_entry,
     generate_unique_id,
+    purge_device_registry,
     register_lcn_address_devices,
     register_lcn_host_device,
 )
@@ -120,6 +127,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     register_lcn_host_device(hass, config_entry)
     register_lcn_address_devices(hass, config_entry)
 
+    # clean up orphaned devices
+    purge_device_registry(hass, config_entry.entry_id, {**config_entry.data})
+
     # forward config_entry to components
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -151,6 +161,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         if config_entry.minor_version < 2:
             new_data[CONF_ACKNOWLEDGE] = False
 
+    if config_entry.version < 2:
         # update to 2.1  (fix transitions for lights and switches)
         new_entities_data = [*new_data[CONF_ENTITIES]]
         for entity in new_entities_data:
@@ -160,8 +171,19 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 entity[CONF_DOMAIN_DATA][CONF_TRANSITION] /= 1000.0
         new_data[CONF_ENTITIES] = new_entities_data
 
+    if config_entry.version < 3:
+        # update to 3.1 (remove resource parameter, add climate target lock value parameter)
+        for entity in new_data[CONF_ENTITIES]:
+            entity.pop(CONF_RESOURCE, None)
+
+            if entity[CONF_DOMAIN] == Platform.CLIMATE:
+                entity[CONF_DOMAIN_DATA].setdefault(CONF_TARGET_VALUE_LOCKED, -1)
+
+        # migrate climate and scene unique ids
+        await async_migrate_entities(hass, config_entry)
+
     hass.config_entries.async_update_entry(
-        config_entry, data=new_data, minor_version=1, version=2
+        config_entry, data=new_data, minor_version=1, version=3
     )
 
     _LOGGER.debug(
@@ -170,6 +192,29 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.minor_version,
     )
     return True
+
+
+async def async_migrate_entities(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Migrate entity registry."""
+
+    @callback
+    def update_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
+        """Update unique ID of entity entry."""
+        # fix unique entity ids for climate and scene
+        if "." in entity_entry.unique_id:
+            if entity_entry.domain == Platform.CLIMATE:
+                setpoint = entity_entry.unique_id.split(".")[-1]
+                return {
+                    "new_unique_id": entity_entry.unique_id.rsplit("-", 1)[0]
+                    + f"-{setpoint}"
+                }
+            if entity_entry.domain == Platform.SCENE:
+                return {"new_unique_id": entity_entry.unique_id.replace(".", "")}
+        return None
+
+    await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:

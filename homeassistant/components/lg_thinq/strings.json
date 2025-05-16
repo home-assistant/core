@@ -19,7 +19,7 @@
         "description": "Please enter a ThinQ [PAT(Personal Access Token)]({pat_url}) created with your LG ThinQ account.",
         "data": {
           "access_token": "Personal Access Token",
-          "country": "Country"
+          "country": "[%key:common::config_flow::data::country%]"
         }
       }
     }
@@ -105,6 +105,12 @@
       },
       "one_touch_filter": {
         "name": "Fresh air filter"
+      },
+      "water_heater_operation_mode": {
+        "name": "[%key:component::binary_sensor::entity_component::power::name%]",
+        "state": {
+          "off": "[%key:common::state::standby%]"
+        }
       }
     },
     "climate": {
@@ -113,11 +119,11 @@
           "fan_mode": {
             "state": {
               "slow": "Slow",
-              "low": "Low",
-              "mid": "Medium",
-              "high": "High",
+              "low": "[%key:common::state::low%]",
+              "mid": "[%key:common::state::medium%]",
+              "high": "[%key:common::state::high%]",
               "power": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
-              "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]"
+              "auto": "[%key:common::state::auto%]"
             }
           },
           "preset_mode": {
@@ -264,10 +270,10 @@
         "name": "{location} schedule turn-on"
       },
       "relative_hour_to_start_wm": {
-        "name": "Delay starts in"
+        "name": "Delayed start"
       },
       "relative_hour_to_start_wm_for_location": {
-        "name": "{location} delay starts in"
+        "name": "{location} delayed start"
       },
       "relative_hour_to_stop": {
         "name": "Schedule turn-off"
@@ -276,10 +282,10 @@
         "name": "{location} schedule turn-off"
       },
       "relative_hour_to_stop_wm": {
-        "name": "Delay ends in"
+        "name": "Delayed end"
       },
       "relative_hour_to_stop_wm_for_location": {
-        "name": "{location} delay ends in"
+        "name": "{location} delayed end"
       },
       "sleep_timer_relative_hour_to_stop": {
         "name": "Sleep timer"
@@ -297,13 +303,22 @@
         "state": {
           "invalid": "Invalid",
           "weak": "Weak",
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "strong": "Strong",
           "very_strong": "Very strong"
         }
       },
       "current_temperature": {
         "name": "Current temperature"
+      },
+      "room_air_current_temperature": {
+        "name": "Indoor temperature"
+      },
+      "room_in_water_current_temperature": {
+        "name": "Inlet temperature"
+      },
+      "room_out_water_current_temperature": {
+        "name": "Outlet temperature"
       },
       "temperature": {
         "name": "Temperature"
@@ -328,7 +343,7 @@
       "growth_mode": {
         "name": "Mode",
         "state": {
-          "standard": "Auto",
+          "standard": "[%key:common::state::auto%]",
           "ext_leaf": "Vegetables",
           "ext_herb": "Herbs",
           "ext_flower": "Flowers",
@@ -338,7 +353,7 @@
       "growth_mode_for_location": {
         "name": "{location} mode",
         "state": {
-          "standard": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "standard": "[%key:common::state::auto%]",
           "ext_leaf": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::ext_leaf%]",
           "ext_herb": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::ext_herb%]",
           "ext_flower": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::ext_flower%]",
@@ -375,17 +390,17 @@
       "temperature_state": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]",
         "state": {
-          "high": "High",
+          "high": "[%key:common::state::high%]",
           "normal": "Good",
-          "low": "Low"
+          "low": "[%key:common::state::low%]"
         }
       },
       "temperature_state_for_location": {
         "name": "[%key:component::lg_thinq::entity::number::target_temperature_for_location::name%]",
         "state": {
-          "high": "[%key:component::lg_thinq::entity::sensor::temperature_state::state::high%]",
+          "high": "[%key:common::state::high%]",
           "normal": "[%key:component::lg_thinq::entity::sensor::temperature_state::state::normal%]",
-          "low": "[%key:component::lg_thinq::entity::sensor::temperature_state::state::low%]"
+          "low": "[%key:common::state::low%]"
         }
       },
       "current_state": {
@@ -396,7 +411,7 @@
           "cancel": "Cancel",
           "carbonation": "Carbonation",
           "change_condition": "Settings Change",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "charging_complete": "Charging completed",
           "checking_turbidity": "Detecting soil level",
           "cleaning": "Cleaning",
@@ -483,7 +498,7 @@
           "cancel": "[%key:component::lg_thinq::entity::sensor::current_state::state::cancel%]",
           "carbonation": "[%key:component::lg_thinq::entity::sensor::current_state::state::carbonation%]",
           "change_condition": "[%key:component::lg_thinq::entity::sensor::current_state::state::change_condition%]",
-          "charging": "[%key:component::lg_thinq::entity::sensor::current_state::state::charging%]",
+          "charging": "[%key:common::state::charging%]",
           "charging_complete": "[%key:component::lg_thinq::entity::sensor::current_state::state::charging_complete%]",
           "checking_turbidity": "[%key:component::lg_thinq::entity::sensor::current_state::state::checking_turbidity%]",
           "cleaning": "[%key:component::lg_thinq::entity::sensor::current_state::state::cleaning%]",
@@ -566,7 +581,7 @@
         "name": "[%key:component::lg_thinq::entity::binary_sensor::one_touch_filter::name%]",
         "state": {
           "off": "[%key:common::state::off%]",
-          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "auto": "[%key:common::state::auto%]",
           "power": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
           "replace": "Replace filter",
           "smart_power": "Smart safe storage",
@@ -584,7 +599,7 @@
         "name": "Operating mode",
         "state": {
           "air_clean": "Purify",
-          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "auto": "[%key:common::state::auto%]",
           "clothes_dry": "Laundry",
           "edge": "Edge cleaning",
           "heat_pump": "Heat pump",
@@ -592,7 +607,7 @@
           "intensive_dry": "Spot",
           "macro": "Custom mode",
           "mop": "Mop",
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "off": "[%key:common::state::off%]",
           "quiet_humidity": "Silent",
           "rapid_humidity": "Jet",
@@ -611,7 +626,7 @@
           "auto": "Low power",
           "high": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
           "mop": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::mop%]",
-          "normal": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::normal%]",
+          "normal": "[%key:common::state::normal%]",
           "off": "[%key:common::state::off%]",
           "turbo": "[%key:component::lg_thinq::entity::select::wind_strength::state::power%]"
         }
@@ -634,11 +649,11 @@
       "current_dish_washing_course": {
         "name": "Current cycle",
         "state": {
-          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "auto": "[%key:common::state::auto%]",
           "heavy": "Intensive",
           "delicate": "Delicate",
           "turbo": "[%key:component::lg_thinq::entity::select::wind_strength::state::power%]",
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "rinse": "Rinse",
           "refresh": "Refresh",
           "express": "Express",
@@ -766,8 +781,8 @@
         "name": "Battery",
         "state": {
           "high": "Full",
-          "mid": "Medium",
-          "low": "Low",
+          "mid": "[%key:common::state::medium%]",
+          "low": "[%key:common::state::low%]",
           "warning": "Empty"
         }
       },
@@ -848,6 +863,12 @@
       },
       "power_level_for_location": {
         "name": "{location} power level"
+      },
+      "cycle_count": {
+        "name": "Cycles"
+      },
+      "cycle_count_for_location": {
+        "name": "{location} cycles"
       }
     },
     "select": {
@@ -855,12 +876,12 @@
         "name": "Speed",
         "state": {
           "slow": "[%key:component::lg_thinq::entity::climate::climate_air_conditioner::state_attributes::fan_mode::state::slow%]",
-          "low": "Low",
-          "mid": "Medium",
-          "high": "High",
+          "low": "[%key:common::state::low%]",
+          "mid": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]",
           "power": "Turbo",
           "turbo": "[%key:component::lg_thinq::entity::select::wind_strength::state::power%]",
-          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "auto": "[%key:common::state::auto%]",
           "wind_1": "Step 1",
           "wind_2": "Step 2",
           "wind_3": "Step 3",
@@ -884,7 +905,7 @@
         "name": "Operating mode",
         "state": {
           "air_clean": "Purifying",
-          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "auto": "[%key:common::state::auto%]",
           "baby_care": "[%key:component::lg_thinq::entity::sensor::personalization_mode::state::baby%]",
           "circulator": "Booster",
           "clean": "Single",
@@ -907,11 +928,23 @@
           "vacation": "Vacation"
         }
       },
+      "current_job_mode_dehumidifier": {
+        "name": "[%key:component::lg_thinq::entity::sensor::current_job_mode::name%]",
+        "state": {
+          "air_clean": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::air_clean%]",
+          "clothes_dry": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::clothes_dry%]",
+          "intensive_dry": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::intensive_dry%]",
+          "quiet_humidity": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::quiet_humidity%]",
+          "rapid_humidity": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::rapid_humidity%]",
+          "smart_humidity": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::smart_humidity%]"
+        }
+      },
       "operation_mode": {
         "name": "Operation",
         "state": {
           "cancel": "[%key:component::lg_thinq::entity::sensor::current_state::state::cancel%]",
           "power_off": "Power off",
+          "power_on": "Power on",
           "preheating": "Preheating",
           "start": "[%key:common::action::start%]",
           "stop": "[%key:common::action::stop%]",
@@ -923,6 +956,7 @@
         "state": {
           "cancel": "[%key:component::lg_thinq::entity::sensor::current_state::state::cancel%]",
           "power_off": "[%key:component::lg_thinq::entity::select::operation_mode::state::power_off%]",
+          "power_on": "[%key:component::lg_thinq::entity::select::operation_mode::state::power_on%]",
           "preheating": "[%key:component::lg_thinq::entity::select::operation_mode::state::preheating%]",
           "start": "[%key:common::action::start%]",
           "stop": "[%key:common::action::stop%]",
@@ -982,7 +1016,7 @@
         "name": "[%key:component::lg_thinq::entity::binary_sensor::one_touch_filter::name%]",
         "state": {
           "off": "[%key:common::state::off%]",
-          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "auto": "[%key:common::state::auto%]",
           "power": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
           "replace": "[%key:component::lg_thinq::entity::sensor::fresh_air_filter::state::replace%]",
           "smart_power": "[%key:component::lg_thinq::entity::sensor::fresh_air_filter::state::smart_power%]",
@@ -999,6 +1033,11 @@
           "normal": "[%key:component::lg_thinq::entity::sensor::current_dish_washing_course::state::delicate%]"
         }
       }
+    }
+  },
+  "exceptions": {
+    "failed_to_connect_mqtt": {
+      "message": "Failed to connect MQTT: {error}"
     }
   }
 }
