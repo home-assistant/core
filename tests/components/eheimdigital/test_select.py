@@ -133,4 +133,4 @@ async def test_state_update(
         setattr(device, item[1], item[2])
         await eheimdigital_hub_mock.call_args.kwargs["receive_callback"]()
         assert (state := hass.states.get(item[0]))
-        assert state.state == item[2].name
+        assert state.state == item[2].name.lower()

@@ -6,9 +6,9 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'MANUAL',
-        'PULSE',
-        'BIO',
+        'manual',
+        'pulse',
+        'bio',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -44,9 +44,9 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock classicVARIO Filter mode',
       'options': list([
-        'MANUAL',
-        'PULSE',
-        'BIO',
+        'manual',
+        'pulse',
+        'bio',
       ]),
     }),
     'context': <ANY>,
