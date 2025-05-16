@@ -196,17 +196,19 @@ async def test_ac_set_hvac_mode_turns_on(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
-async def test_ac_set_hvac_mode_wind(
+@pytest.mark.parametrize("mode", ["fan", "wind"])
+async def test_ac_set_hvac_mode_fan(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    mode: str,
 ) -> None:
     """Test setting AC HVAC mode to wind if the device supports it."""
     set_attribute_value(
         devices,
         Capability.AIR_CONDITIONER_MODE,
         Attribute.SUPPORTED_AC_MODES,
-        ["auto", "cool", "dry", "heat", "wind"],
+        ["auto", "cool", "dry", "heat", mode],
     )
     set_attribute_value(devices, Capability.SWITCH, Attribute.SWITCH, "on")
 
@@ -223,7 +225,7 @@ async def test_ac_set_hvac_mode_wind(
         Capability.AIR_CONDITIONER_MODE,
         Command.SET_AIR_CONDITIONER_MODE,
         MAIN,
-        argument="wind",
+        argument=mode,
     )
 
 
