@@ -47,7 +47,11 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: done
   docs-use-cases: todo
-  dynamic-devices: todo
+  dynamic-devices:
+    status: exempt
+    comment: |
+      Adding/removing a vehicle is a rare occurrence, and we don't want to
+      waste valuable hits on Renault API, which is rate-limited
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
