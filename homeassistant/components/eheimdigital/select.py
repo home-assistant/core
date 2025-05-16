@@ -34,11 +34,15 @@ CLASSICVARIO_DESCRIPTIONS: tuple[
     EheimDigitalSelectDescription[EheimDigitalClassicVario](
         key="filter_mode",
         translation_key="filter_mode",
-        value_fn=lambda device: device.filter_mode.name
-        if device.filter_mode is not None
-        else None,
-        set_value_fn=lambda device, value: device.set_filter_mode(FilterMode[value]),
-        options=FilterMode._member_names_,
+        value_fn=(
+            lambda device: device.filter_mode.name.lower()
+            if device.filter_mode is not None
+            else None
+        ),
+        set_value_fn=lambda device, value: device.set_filter_mode(
+            FilterMode[value.upper()]
+        ),
+        options=[name.lower() for name in FilterMode.__members__],
     ),
 )
 

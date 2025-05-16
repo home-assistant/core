@@ -58,7 +58,7 @@ async def test_setup(
             [
                 (
                     "select.mock_classicvario_filter_mode",
-                    "MANUAL",
+                    "manual",
                     "set_filter_mode",
                     (FilterMode.MANUAL,),
                 ),

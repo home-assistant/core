@@ -71,9 +71,9 @@
       "filter_mode": {
         "name": "Filter mode",
         "state": {
-          "MANUAL": "Manual mode",
-          "PULSE": "Pulse mode",
-          "BIO": "Bio mode"
+          "manual": "Manual",
+          "pulse": "Pulse",
+          "bio": "Bio"
         }
       }
     },
