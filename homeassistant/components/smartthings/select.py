@@ -33,6 +33,7 @@ class SmartThingsSelectDescription(SelectEntityDescription):
     options_map: dict[str, str] | None = None
     default_options: list[str] | None = None
     extra_components: list[str] | None = None
+    capability_ignore_list: list[Capability] | None = None
 
 
 CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
@@ -90,6 +91,7 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         options_map=LAMP_TO_HA,
         entity_category=EntityCategory.CONFIG,
         extra_components=["hood"],
+        capability_ignore_list=[Capability.SAMSUNG_CE_CONNECTION_STATE],
     ),
 }
 
@@ -112,6 +114,13 @@ async def async_setup_entry(
             or (
                 description.extra_components is not None
                 and component in description.extra_components
+            )
+        )
+        and (
+            description.capability_ignore_list is None
+            or any(
+                capability not in device.status[component]
+                for capability in description.capability_ignore_list
             )
         )
     )
