@@ -39,8 +39,8 @@ CLASSICVARIO_DESCRIPTIONS: tuple[
             if device.filter_mode is not None
             else None
         ),
-        set_value_fn=lambda device, value: device.set_filter_mode(
-            FilterMode[value.upper()]
+        set_value_fn=(
+            lambda device, value: device.set_filter_mode(FilterMode[value.upper()])
         ),
         options=[name.lower() for name in FilterMode.__members__],
     ),
