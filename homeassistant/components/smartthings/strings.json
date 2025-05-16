@@ -148,6 +148,28 @@
           "extra": "[%key:component::smartthings::entity::select::detergent_amount::state::extra%]",
           "custom": "[%key:component::smartthings::entity::select::detergent_amount::state::custom%]"
         }
+      },
+      "spin_level": {
+        "name": "Spin level",
+        "state": {
+          "none": "None",
+          "rinse_hold": "Rinse hold",
+          "no_spin": "No spin",
+          "low": "[%key:common::state::low%]",
+          "extra_low": "Extra low",
+          "delicate": "Delicate",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]",
+          "extra_high": "Extra high",
+          "200": "200",
+          "400": "400",
+          "600": "600",
+          "800": "800",
+          "1000": "1000",
+          "1200": "1200",
+          "1400": "1400",
+          "1600": "1600"
+        }
       }
     },
     "sensor": {

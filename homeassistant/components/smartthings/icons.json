@@ -53,6 +53,9 @@
       },
       "flexible_detergent_amount": {
         "default": "mdi:car-coolant-level"
+      },
+      "spin_level": {
+        "default": "mdi:rotate-right"
       }
     },
     "sensor": {
