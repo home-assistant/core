@@ -115,14 +115,7 @@ class QbusControllerCoordinator(DataUpdateCoordinator[list[QbusMqttOutput]]):
             sw_version=self._controller.version,
         )
 
-        self.device_info = DeviceInfo(
-            identifiers=device_entry.identifiers,
-            manufacturer=device_entry.manufacturer,
-            model=device_entry.model,
-            name=device_entry.name,
-            serial_number=device_entry.serial_number,
-            sw_version=device_entry.sw_version,
-        )
+        self.device_info = DeviceInfo(identifiers=device_entry.identifiers)
 
     async def _async_subscribe_to_controller_state(self) -> None:
         if self._controller is None or self._subscribed_to_controller_state is True:
