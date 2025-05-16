@@ -5,7 +5,6 @@ from __future__ import annotations
 from aiohttp import web
 
 from homeassistant.components import cloud, webhook
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID, URL_API
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -21,7 +20,7 @@ from .const import (
     SIGNAL_RACHIO_SCHEDULE_UPDATE,
     SIGNAL_RACHIO_ZONE_UPDATE,
 )
-from .device import RachioPerson
+from .device import RachioConfigEntry
 
 # Device webhook values
 TYPE_CONTROLLER_STATUS = "DEVICE_STATUS"
@@ -83,7 +82,7 @@ SIGNAL_MAP = {
 
 
 @callback
-def async_register_webhook(hass: HomeAssistant, entry: ConfigEntry) -> None:
+def async_register_webhook(hass: HomeAssistant, entry: RachioConfigEntry) -> None:
     """Register a webhook."""
     webhook_id: str = entry.data[CONF_WEBHOOK_ID]
 
@@ -91,7 +90,7 @@ def async_register_webhook(hass: HomeAssistant, entry: ConfigEntry) -> None:
         hass: HomeAssistant, webhook_id: str, request: web.Request
     ) -> web.Response:
         """Handle webhook calls from the server."""
-        person: RachioPerson = hass.data[DOMAIN][entry.entry_id]
+        person = entry.runtime_data
         data = await request.json()
 
         try:
@@ -114,14 +113,14 @@ def async_register_webhook(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 
 @callback
-def async_unregister_webhook(hass: HomeAssistant, entry: ConfigEntry) -> None:
+def async_unregister_webhook(hass: HomeAssistant, entry: RachioConfigEntry) -> None:
     """Unregister a webhook."""
     webhook_id: str = entry.data[CONF_WEBHOOK_ID]
     webhook.async_unregister(hass, webhook_id)
 
 
 async def async_get_or_create_registered_webhook_id_and_url(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: RachioConfigEntry
 ) -> str:
     """Generate webhook url."""
     config = entry.data.copy()

@@ -39,9 +39,9 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: done
-  discovery-update-info: todo
-  discovery: todo
+  diagnostics: todo
+  discovery-update-info: done
+  discovery: done
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo

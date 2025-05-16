@@ -866,17 +866,17 @@ class Config:
                         # pylint: disable-next=import-outside-toplevel
                         from .components.frontend import storage as frontend_store
 
-                        _, owner_data = await frontend_store.async_user_store(
+                        owner_store = await frontend_store.async_user_store(
                             self.hass, owner.id
                         )
 
                         if (
-                            "language" in owner_data
-                            and "language" in owner_data["language"]
+                            "language" in owner_store.data
+                            and "language" in owner_store.data["language"]
                         ):
                             with suppress(vol.InInvalid):
                                 data["language"] = cv.language(
-                                    owner_data["language"]["language"]
+                                    owner_store.data["language"]["language"]
                                 )
                 # pylint: disable-next=broad-except
                 except Exception:

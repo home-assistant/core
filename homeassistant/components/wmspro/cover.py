@@ -45,6 +45,7 @@ class WebControlProCover(WebControlProGenericEntity, CoverEntity):
     """Base representation of a WMS based cover."""
 
     _drive_action_desc: WMS_WebControl_pro_API_actionDescription
+    _attr_name = None
 
     @property
     def current_cover_position(self) -> int | None:
