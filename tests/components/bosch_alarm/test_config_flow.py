@@ -309,6 +309,51 @@ async def test_dhcp_updates_host(
     assert mock_config_entry.data[CONF_HOST] == "4.5.6.7"
 
 
+@pytest.mark.parametrize("serial_number", [None])
+async def test_dhcp_discovery_if_panel_setup_config_flow(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_panel: AsyncMock,
+    serial_number: str,
+    model_name: str,
+    config_flow_data: dict[str, Any],
+) -> None:
+    """Test DHCP discovery doesn't fail if a panel was set up via config flow."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            hostname="test",
+            ip="4.5.6.7",
+            macaddress="34ea34b43b5a",
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+    assert result["errors"] == {}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        config_flow_data,
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"Bosch {model_name}"
+    assert result["data"] == {
+        CONF_HOST: "4.5.6.7",
+        CONF_MAC: "34:ea:34:b4:3b:5a",
+        CONF_PORT: 7700,
+        CONF_MODEL: model_name,
+        **config_flow_data,
+    }
+
+
 @pytest.mark.parametrize("model", ["solution_3000", "amax_3000"])
 async def test_dhcp_abort_ongoing_flow(
     hass: HomeAssistant,
