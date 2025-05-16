@@ -15,7 +15,7 @@
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.trv_name_battery',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -26,7 +26,7 @@
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'TRV-Name battery',
+    'original_name': 'Battery',
     'platform': 'shelly',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -39,7 +39,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'TRV-Name battery',
+      'friendly_name': 'TRV-Name Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -67,7 +67,7 @@
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.trv_name_signal_strength',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -78,7 +78,7 @@
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
-    'original_name': 'TRV-Name signal strength',
+    'original_name': 'Signal strength',
     'platform': 'shelly',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -91,7 +91,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
-      'friendly_name': 'TRV-Name signal strength',
+      'friendly_name': 'TRV-Name Signal strength',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dBm',
     }),
@@ -119,7 +119,7 @@
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.trv_name_valve_position',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -130,7 +130,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TRV-Name valve position',
+    'original_name': 'Valve position',
     'platform': 'shelly',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -142,7 +142,7 @@
 # name: test_blu_trv_sensor_entity[sensor.trv_name_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TRV-Name valve position',
+      'friendly_name': 'TRV-Name Valve position',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
