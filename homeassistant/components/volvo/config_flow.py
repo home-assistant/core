@@ -8,7 +8,7 @@ from typing import Any
 
 import voluptuous as vol
 from volvocarsapi.api import VolvoCarsApi
-from volvocarsapi.models import VolvoApiException
+from volvocarsapi.models import VolvoApiException, VolvoCarsVehicle
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -18,7 +18,11 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY, CONF_NAME, CONF_TOKEN
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
-from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+)
 
 from .api import ConfigFlowVolvoAuth
 from .const import CONF_VIN, DOMAIN, MANUFACTURER
@@ -35,7 +39,7 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Initialize Volvo config flow."""
         super().__init__()
 
-        self._vins: list[str] = []
+        self._vehicles: list[VolvoCarsVehicle] = []
         self._config_data: dict = {}
 
     @property
@@ -82,10 +86,10 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             web_session = aiohttp_client.async_get_clientsession(self.hass)
             token = self._config_data[CONF_TOKEN][CONF_ACCESS_TOKEN]
             auth = ConfigFlowVolvoAuth(web_session, token)
-            api = VolvoCarsApi(web_session, auth, "", user_input[CONF_API_KEY])
+            api = VolvoCarsApi(web_session, auth, user_input[CONF_API_KEY])
 
             try:
-                self._vins = await api.async_get_vehicles()
+                await self._async_load_vehicles(api)
             except VolvoApiException:
                 _LOGGER.exception("Unable to retrieve vehicles")
                 errors["base"] = "cannot_load_vehicles"
@@ -93,11 +97,11 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             if not errors:
                 self._config_data |= user_input
 
-                if len(self._vins) == 1:
+                if len(self._vehicles) == 1:
                     # If there is only one VIN, take that as value and
                     # immediately create the entry. No need to show
                     # additional step.
-                    self._config_data[CONF_VIN] = self._vins[0]
+                    self._config_data[CONF_VIN] = self._vehicles[0].vin
                     return await self._async_create_or_update()
 
                 if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
@@ -117,11 +121,14 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             else:
                 user_input = {}
 
-        schema = vol.Schema(
+        schema = self.add_suggested_values_to_schema(
+            vol.Schema(
+                {
+                    vol.Required(CONF_API_KEY): str,
+                }
+            ),
             {
-                vol.Required(
-                    CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")
-                ): str,
+                CONF_API_KEY: user_input.get(CONF_API_KEY, ""),
             },
         )
 
@@ -137,11 +144,18 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             self._config_data |= user_input
             return await self._async_create_or_update()
 
+        self._vehicles[0]
         schema = vol.Schema(
             {
                 vol.Required(CONF_VIN): SelectSelector(
                     SelectSelectorConfig(
-                        options=self._vins,
+                        options=[
+                            SelectOptionDict(
+                                value=v.vin,
+                                label=f"{v.description.model} ({v.vin})",
+                            )
+                            for v in self._vehicles
+                        ],
                         multiple=False,
                     )
                 ),
@@ -174,3 +188,13 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             title=f"{MANUFACTURER} {vin}",
             data=self._config_data,
         )
+
+    async def _async_load_vehicles(self, api: VolvoCarsApi) -> None:
+        self._vehicles = []
+        vins = await api.async_get_vehicles()
+
+        for vin in vins:
+            vehicle = await api.async_get_vehicle_details(vin)
+
+            if vehicle:
+                self._vehicles.append(vehicle)

@@ -32,6 +32,8 @@ from .common import load_json_object_fixture
 from .const import (
     CLIENT_ID,
     CLIENT_SECRET,
+    DEFAULT_MODEL,
+    DEFAULT_VIN,
     MOCK_ACCESS_TOKEN,
     REDIRECT_URI,
     SERVER_TOKEN_RESPONSE,
@@ -62,7 +64,7 @@ def model_from_marker(full_model_from_marker: str) -> str:  # pylint: disable=ha
 def full_model_from_marker(request: SubRequest) -> str:  # pylint: disable=hass-argument-type
     """Get full model from marker."""
     marker = request.node.get_closest_marker("use_model")
-    return marker.args[0] if marker is not None else "xc40_electric_2024"
+    return marker.args[0] if marker is not None else DEFAULT_MODEL
 
 
 @pytest.fixture
@@ -70,11 +72,11 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return the default mocked config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="YV1ABCDEFG1234567",
+        unique_id=DEFAULT_VIN,
         data={
             "auth_implementation": DOMAIN,
             CONF_API_KEY: "abcdef0123456879abcdef",
-            CONF_VIN: "YV1ABCDEFG1234567",
+            CONF_VIN: DEFAULT_VIN,
             CONF_TOKEN: {
                 "access_token": MOCK_ACCESS_TOKEN,
                 "refresh_token": "mock-refresh-token",

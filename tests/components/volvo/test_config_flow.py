@@ -14,7 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import REDIRECT_URI, SERVER_TOKEN_RESPONSE
+from .common import load_json_object_fixture
+from .const import DEFAULT_MODEL, DEFAULT_VIN, REDIRECT_URI, SERVER_TOKEN_RESPONSE
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -44,17 +45,7 @@ async def test_single_vin_flow(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Check flow where API returns a single VIN."""
-    aioclient_mock.post(
-        TOKEN_URL,
-        json=SERVER_TOKEN_RESPONSE,
-    )
-
-    aioclient_mock.get(
-        f"{_API_URL}{_API_CONNECTED_ENDPOINT}",
-        json={
-            "data": [{"vin": "YV1ABCDEFG1234567"}],
-        },
-    )
+    _mock_api_client(aioclient_mock, single_vin=True)
 
     # Since there is only one VIN, the api_key step is the only step
     config_flow = await hass.config_entries.flow.async_configure(config_flow["flow_id"])
@@ -112,12 +103,7 @@ async def test_reconfigure_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "api_key"
 
-    aioclient_mock.get(
-        f"{_API_URL}{_API_CONNECTED_ENDPOINT}",
-        json={
-            "data": [{"vin": "YV1ABCDEFG1234567"}, {"vin": "YV10000000AAAAAAA"}],
-        },
-    )
+    _mock_api_client(aioclient_mock)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_API_KEY: "abcdef0123456879abcdef"}
@@ -179,17 +165,7 @@ async def _async_run_flow_to_completion(
     *,
     has_vin_step: bool = True,
 ) -> ConfigFlowResult:
-    aioclient_mock.post(
-        TOKEN_URL,
-        json=SERVER_TOKEN_RESPONSE,
-    )
-
-    aioclient_mock.get(
-        f"{_API_URL}{_API_CONNECTED_ENDPOINT}",
-        json={
-            "data": [{"vin": "YV1ABCDEFG1234567"}, {"vin": "YV10000000AAAAAAA"}],
-        },
-    )
+    _mock_api_client(aioclient_mock)
 
     config_flow = await hass.config_entries.flow.async_configure(config_flow["flow_id"])
     assert config_flow["type"] is FlowResultType.FORM
@@ -204,7 +180,44 @@ async def _async_run_flow_to_completion(
         assert config_flow["step_id"] == "vin"
 
         config_flow = await hass.config_entries.flow.async_configure(
-            config_flow["flow_id"], {CONF_VIN: "YV1ABCDEFG1234567"}
+            config_flow["flow_id"], {CONF_VIN: DEFAULT_VIN}
         )
 
     return config_flow
+
+
+def _mock_api_client(
+    aioclient_mock: AiohttpClientMocker, single_vin: bool = False
+) -> None:
+    aioclient_mock.post(
+        TOKEN_URL,
+        json=SERVER_TOKEN_RESPONSE,
+    )
+
+    vins = [{"vin": DEFAULT_VIN}]
+
+    if not single_vin:
+        vins.append({"vin": "YV10000000AAAAAAA"})
+
+    aioclient_mock.get(
+        f"{_API_URL}{_API_CONNECTED_ENDPOINT}",
+        json={
+            "data": vins,
+        },
+    )
+
+    vehicle_data = load_json_object_fixture("vehicle", DEFAULT_MODEL)
+    aioclient_mock.get(
+        f"{_API_URL}{_API_CONNECTED_ENDPOINT}/{DEFAULT_VIN}",
+        json={
+            "data": vehicle_data,
+        },
+    )
+
+    vehicle_data = load_json_object_fixture("vehicle", "xc90_petrol_2019")
+    aioclient_mock.get(
+        f"{_API_URL}{_API_CONNECTED_ENDPOINT}/YV10000000AAAAAAA",
+        json={
+            "data": vehicle_data,
+        },
+    )
