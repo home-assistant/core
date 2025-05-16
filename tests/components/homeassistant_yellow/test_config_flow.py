@@ -101,12 +101,12 @@ async def test_config_flow(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Home Assistant Yellow"
-    assert result["data"] == {"firmware": "ezsp"}
+    assert result["data"] == {"firmware": "ezsp", "firmware_version": None}
     assert result["options"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert config_entry.data == {"firmware": "ezsp"}
+    assert config_entry.data == {"firmware": "ezsp", "firmware_version": None}
     assert config_entry.options == {}
     assert config_entry.title == "Home Assistant Yellow"
 
