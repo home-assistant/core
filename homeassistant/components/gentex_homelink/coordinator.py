@@ -24,7 +24,7 @@ class HomeLinkData:
     """Class for HomeLink integration runtime data."""
 
     provider: MQTTProvider
-    coordinator: DataUpdateCoordinator
+    coordinator: "HomeLinkCoordinator"
     last_update_id: str | None
 
 
