@@ -1,76 +1,56 @@
 """Support for Fluss Devices."""
 
-from datetime import timedelta
 import logging
-from typing import Any
 
 from fluss_api.main import FlussApiClient
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import slugify
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__package__)
-DEFAULT_NAME = "Fluss +"
-UPDATE_INTERVAL = 60
+from .coordinator import FlussDataUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: ConfigEntry[FlussDataUpdateCoordinator],
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Fluss Devices."""
-    api: FlussApiClient = entry.runtime_data
-    api_key: str = entry.data[CONF_API_KEY]
+    """Set up the Fluss Devices, filtering out any invalid payloads."""
+    coordinator: FlussDataUpdateCoordinator = entry.runtime_data
+    devices = coordinator.data.get("devices", [])
 
-    coordinator = FlussDataUpdateCoordinator(hass, api, api_key)
-    await coordinator.async_config_entry_first_refresh()
+    entities: list[FlussButton] = []
+    for device in devices:
+        if not isinstance(device, dict):
+            _LOGGER.warning("Skipping non-dict device: %s", device)
+            continue
 
-    async_add_entities(
-        FlussButton(coordinator, device)
-        for device in coordinator.data["devices"]
-        if isinstance(device, dict)
-    )
+        device_id = device.get("deviceId")
+        if device_id is None:
+            _LOGGER.warning("Skipping Fluss device without deviceId: %s", device)
+            continue
 
+        entities.append(FlussButton(coordinator, device))
 
-class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Class to manage fetching Fluss device data."""
-
-    def __init__(self, hass: HomeAssistant, api: FlussApiClient, api_key: str) -> None:
-        """Initialize the coordinator."""
-        self.api = api
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=f"Fluss+ ({slugify(api_key[:8])})",
-            update_interval=timedelta(seconds=UPDATE_INTERVAL),
-        )
-
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Fetch data from the Fluss API."""
-        try:
-            return await self.api.async_get_devices()
-        except Exception as err:
-            raise UpdateFailed(f"Error fetching Fluss data: {err}") from err
+    async_add_entities(entities)
 
 
-class FlussButton(ButtonEntity):
+class FlussButton(CoordinatorEntity, ButtonEntity):
     """Representation of a Fluss button device."""
+
+    _attr_has_entity_name = True
 
     def __init__(self, coordinator: FlussDataUpdateCoordinator, device: dict) -> None:
         """Initialize the button."""
-        if "deviceId" not in device:
-            raise ValueError("Device missing required 'deviceId' attribute.")
-
-        self.coordinator = coordinator
+        super().__init__(coordinator)
         self.device = device
         self._name = device.get("deviceName", "Unknown Device")
-        self._attr_unique_id = f"fluss_{device['deviceId']}"
+        self._attr_unique_id = str(device["deviceId"])
 
     @property
     def name(self) -> str:

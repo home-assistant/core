@@ -15,6 +15,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
@@ -41,7 +42,8 @@ class FlussConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                FlussApiClient(user_input[CONF_API_KEY], self.hass)
+                session = async_get_clientsession(self.hass)
+                FlussApiClient(user_input[CONF_API_KEY], session=session)
             except FlussApiClientCommunicationError:
                 errors["base"] = "cannot_connect"
             except FlussApiClientAuthenticationError:
