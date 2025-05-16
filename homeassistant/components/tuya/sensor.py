@@ -35,13 +35,20 @@ from .const import (
     DPType,
     UnitOfMeasurement,
 )
-from .entity import ElectricityTypeData, EnumTypeData, IntegerTypeData, TuyaEntity
+from .entity import (
+    BaseTypeData,
+    EnumTypeData,
+    IntegerTypeData,
+    MealPlanTypeData,
+    TuyaEntity,
+)
 
 
 @dataclass(frozen=True)
 class TuyaSensorEntityDescription(SensorEntityDescription):
     """Describes Tuya sensor entity."""
 
+    raw_type: BaseTypeData | None = None
     subkey: str | None = None
 
 
@@ -304,6 +311,17 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="last_amount",
             state_class=SensorStateClass.MEASUREMENT,
         ),
+<<<<<<< Updated upstream
+=======
+        TuyaSensorEntityDescription(
+            key=DPCode.MEAL_PLAN,
+            translation_key="meal_plan",
+            raw_type=MealPlanTypeData,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+        ),
+        *BATTERY_SENSORS,
+>>>>>>> Stashed changes
     ),
     # Air Quality Monitor
     # https://developer.tuya.com/en/docs/iot/hjjcy?id=Kbeoad8y1nnlv
@@ -1333,7 +1351,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
 
     _status_range: DeviceStatusRange | None = None
     _type: DPType | None = None
-    _type_data: IntegerTypeData | EnumTypeData | None = None
+    _type_data: EnumTypeData | IntegerTypeData | MealPlanTypeData | None = None
     _uom: UnitOfMeasurement | None = None
 
     def __init__(
@@ -1429,14 +1447,20 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         # Get subkey value from Json string.
         if self._type is DPType.JSON:
             if self.entity_description.subkey is None:
-                return None
-            values = ElectricityTypeData.from_json(value)
+                self._attr_extra_state_attributes = (
+                    self.entity_description.raw_type.from_raw(value)
+                )
+                return value
+            values = self.entity_description.raw_type.from_json(value)
             return getattr(values, self.entity_description.subkey)
 
         if self._type is DPType.RAW:
             if self.entity_description.subkey is None:
-                return None
-            values = ElectricityTypeData.from_raw(value)
+                self._attr_extra_state_attributes = (
+                    self.entity_description.raw_type.from_raw(value)
+                )
+                return value
+            values = self.entity_description.raw_type.from_raw(value)
             return getattr(values, self.entity_description.subkey)
 
         # Valid string or enum value
