@@ -1264,7 +1264,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "bosch_shc",
     "braviatv",
     "bring",
-    "briiv",
     "broadlink",
     "brother",
     "brottsplatskartan",
