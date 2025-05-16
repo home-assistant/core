@@ -81,7 +81,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.62.0
+PySwitchbot==0.62.2
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -1679,7 +1679,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.7.3
+plugwise==1.7.4
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -2326,7 +2326,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==3.2.1
+pysmartthings==3.2.2
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2

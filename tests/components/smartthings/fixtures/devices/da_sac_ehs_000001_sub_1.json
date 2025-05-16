@@ -1,15 +1,15 @@
 {
   "items": [
     {
-      "deviceId": "1f98ebd0-ac48-d802-7f62-000001200100",
-      "name": "Eco Heating System",
-      "label": "Eco Heating System",
+      "deviceId": "6a7d5349-0a66-0277-058d-000001200101",
+      "name": "Heat Pump",
+      "label": "Heat Pump Main",
       "manufacturerName": "Samsung Electronics",
       "presentationId": "DA-SAC-EHS-000001-SUB",
       "deviceManufacturerCode": "Samsung Electronics",
-      "locationId": "d22d6401-6070-4928-8e7b-b724e2dbf425",
-      "ownerId": "35445a41-3ae2-4bc0-6f51-31705de6b96f",
-      "roomId": "169ef666-a51d-4d74-9b45-e660ecd4a8d7",
+      "locationId": "c411c5a8-ace8-4fa8-bb60-91525ac83273",
+      "ownerId": "d1da8ead-6b9d-64a2-ca29-2a25e4c259ca",
+      "roomId": "e6fa0aa4-08e7-45f7-8ec7-35c9c60908f9",
       "deviceTypeName": "Samsung OCF Air Conditioner",
       "components": [
         {
@@ -203,25 +203,25 @@
           "optional": false
         }
       ],
-      "createTime": "2023-08-02T14:32:26.006Z",
-      "parentDeviceId": "1f98ebd0-ac48-d802-7f62-12592d8286b7",
+      "createTime": "2025-04-14T15:04:59.106Z",
+      "parentDeviceId": "6a7d5349-0a66-0277-058d-7c8a76501360",
       "profile": {
         "id": "89782721-6841-3ef6-a699-28e069d28b8b"
       },
       "ocf": {
         "ocfDeviceType": "oic.d.airconditioner",
-        "name": "Eco Heating System",
+        "name": "Heat Pump",
         "specVersion": "core.1.1.0",
         "verticalDomainSpecVersion": "1.2.1",
         "manufacturerName": "Samsung Electronics",
-        "modelNumber": "SAC_EHS_MONO|220614|61007400001600000400000000000000",
+        "modelNumber": "SAC_EHS_MONO|231215|61007400001700000400000000000000",
         "platformVersion": "4.0",
         "platformOS": "Tizen",
         "hwVersion": "",
         "firmwareVersion": "20250317.1",
         "vendorId": "DA-SAC-EHS-000001-SUB",
         "vendorResourceClientServerVersion": "4.0.54",
-        "lastSignupTime": "2023-08-02T14:32:25.282882Z",
+        "lastSignupTime": "2025-04-14T15:04:58.476041486Z",
         "transferCandidate": true,
         "additionalAuthCodeRequired": false,
         "modelCode": ""
