@@ -13,6 +13,7 @@ from aiohttp import ClientResponseError
 from pysmartthings import (
     Attribute,
     Capability,
+    Category,
     ComponentStatus,
     Device,
     DeviceEvent,
@@ -194,6 +195,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         }
         devices = await client.get_devices()
         for device in devices:
+            if (
+                (main_component := device.components.get(MAIN)) is not None
+                and main_component.manufacturer_category is Category.BLUETOOTH_TRACKER
+            ):
+                device_status[device.device_id] = FullDevice(
+                    device=device,
+                    status={},
+                    online=True,
+                )
+                continue
             status = process_status(await client.get_device_status(device.device_id))
             online = await client.get_device_health(device.device_id)
             device_status[device.device_id] = FullDevice(
