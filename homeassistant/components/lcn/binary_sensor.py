@@ -63,7 +63,7 @@ async def async_setup_entry(
         async_add_entities,
     )
 
-    hass.data[DOMAIN][config_entry.entry_id][ADD_ENTITIES_CALLBACKS].update(
+    config_entry.runtime_data[ADD_ENTITIES_CALLBACKS].update(
         {DOMAIN_BINARY_SENSOR: add_entities}
     )
 

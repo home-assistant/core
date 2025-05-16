@@ -181,7 +181,7 @@ async def websocket_scan_devices(
     config_entry: ConfigEntry,
 ) -> None:
     """Scan for new devices."""
-    host_connection = hass.data[DOMAIN][config_entry.entry_id][CONNECTION]
+    host_connection = config_entry.runtime_data[CONNECTION]
     await host_connection.scan_modules()
 
     for device_connection in host_connection.address_conns.values():
@@ -347,9 +347,7 @@ async def websocket_add_entity(
     }
 
     # Create new entity and add to corresponding component
-    add_entities = hass.data[DOMAIN][msg["entry_id"]][ADD_ENTITIES_CALLBACKS][
-        msg[CONF_DOMAIN]
-    ]
+    add_entities = config_entry.runtime_data[ADD_ENTITIES_CALLBACKS][msg[CONF_DOMAIN]]
     add_entities([entity_config])
 
     # Add entity config to config_entry

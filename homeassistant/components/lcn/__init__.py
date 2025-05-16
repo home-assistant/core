@@ -69,8 +69,6 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LCN component."""
-    hass.data.setdefault(DOMAIN, {})
-
     async_setup_services(hass)
     await register_panel_and_ws_api(hass)
 
@@ -79,9 +77,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up a connection to PCHK host from a config entry."""
-    if config_entry.entry_id in hass.data[DOMAIN]:
-        return False
-
     settings = {
         "SK_NUM_TRIES": config_entry.data[CONF_SK_NUM_TRIES],
         "DIM_MODE": pypck.lcn_defs.OutputPortDimMode[config_entry.data[CONF_DIM_MODE]],
@@ -114,7 +109,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         ) from ex
 
     _LOGGER.debug('LCN connected to "%s"', config_entry.title)
-    hass.data[DOMAIN][config_entry.entry_id] = {
+    config_entry.runtime_data = {
         CONNECTION: lcn_connection,
         DEVICE_CONNECTIONS: {},
         ADD_ENTITIES_CALLBACKS: {},
@@ -224,9 +219,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         config_entry, PLATFORMS
     )
 
-    if unload_ok and config_entry.entry_id in hass.data[DOMAIN]:
-        host = hass.data[DOMAIN].pop(config_entry.entry_id)
-        await host[CONNECTION].async_close()
+    if unload_ok:
+        await config_entry.runtime_data[CONNECTION].async_close()
 
     return unload_ok
 
@@ -235,7 +229,7 @@ def async_host_event_received(
     hass: HomeAssistant, config_entry: ConfigEntry, event: pypck.lcn_defs.LcnEvent
 ) -> None:
     """Process received event from LCN."""
-    lcn_connection = hass.data[DOMAIN][config_entry.entry_id][CONNECTION]
+    lcn_connection = config_entry.runtime_data[CONNECTION]
 
     async def reload_config_entry() -> None:
         """Close connection and schedule config entry for reload."""
@@ -266,7 +260,7 @@ def async_host_input_received(
     if not isinstance(inp, pypck.inputs.ModInput):
         return
 
-    lcn_connection = hass.data[DOMAIN][config_entry.entry_id][CONNECTION]
+    lcn_connection = config_entry.runtime_data[CONNECTION]
     logical_address = lcn_connection.physical_to_logical(inp.physical_source_addr)
     address = (
         logical_address.seg_id,

@@ -17,7 +17,6 @@ from .const import (
     ADD_ENTITIES_CALLBACKS,
     CONF_DOMAIN_DATA,
     CONF_OUTPUT,
-    DOMAIN,
     OUTPUT_PORTS,
     RELAY_PORTS,
     SETPOINTS,
@@ -62,7 +61,7 @@ async def async_setup_entry(
         async_add_entities,
     )
 
-    hass.data[DOMAIN][config_entry.entry_id][ADD_ENTITIES_CALLBACKS].update(
+    config_entry.runtime_data[ADD_ENTITIES_CALLBACKS].update(
         {DOMAIN_SWITCH: add_entities}
     )
 
