@@ -167,7 +167,7 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             if entry.data[CONF_HOST] == discovery_info.ip:
                 if (
                     not entry.data.get(CONF_MAC)
-                    and entry.state == ConfigEntryState.LOADED
+                    and entry.state is ConfigEntryState.LOADED
                 ):
                     result = self.hass.config_entries.async_update_entry(
                         entry,
