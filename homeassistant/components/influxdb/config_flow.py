@@ -201,9 +201,8 @@ class InfluxDBConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
                 }
                 if (cert := user_input.get(CONF_SSL_CA_CERT)) is not None:
-                    data[CONF_SSL_CA_CERT] = await _save_uploaded_cert_file(
-                        self.hass, cert
-                    )
+                    path = await _save_uploaded_cert_file(self.hass, cert)
+                    data[CONF_SSL_CA_CERT] = str(path)
                 errors = await _validate_influxdb_connection(self.hass, data)
             except ValueError:
                 errors = {"base": "invalid_url"}
@@ -234,7 +233,8 @@ class InfluxDBConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
             }
             if (cert := user_input.get(CONF_SSL_CA_CERT)) is not None:
-                data[CONF_SSL_CA_CERT] = await _save_uploaded_cert_file(self.hass, cert)
+                path = await _save_uploaded_cert_file(self.hass, cert)
+                data[CONF_SSL_CA_CERT] = str(path)
             errors = await _validate_influxdb_connection(self.hass, data)
 
             if not errors:
