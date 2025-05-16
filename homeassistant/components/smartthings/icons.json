@@ -41,6 +41,13 @@
           "stop": "mdi:stop"
         }
       },
+      "lamp": {
+        "default": "mdi:lightbulb",
+        "state": {
+          "on": "mdi:lightbulb-on",
+          "off": "mdi:lightbulb-off"
+        }
+      },
       "detergent_amount": {
         "default": "mdi:car-coolant-level"
       },

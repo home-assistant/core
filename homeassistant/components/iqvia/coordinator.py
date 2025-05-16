@@ -16,16 +16,18 @@ from .const import LOGGER
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
+type IqviaConfigEntry = ConfigEntry[dict[str, IqviaUpdateCoordinator]]
+
 
 class IqviaUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Custom DataUpdateCoordinator for IQVIA."""
 
-    config_entry: ConfigEntry
+    config_entry: IqviaConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: IqviaConfigEntry,
         name: str,
         update_method: Callable[[], Coroutine[Any, Any, dict[str, Any]]],
     ) -> None:
