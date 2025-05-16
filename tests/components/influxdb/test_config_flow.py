@@ -197,7 +197,7 @@ async def test_setup_v1(
 async def test_setup_v1_ssl_cert(
     hass: HomeAssistant, mock_client, config_base, config_url, get_write_api
 ) -> None:
-    """Test we can setup an InfluxDB v1."""
+    """Test we can setup an InfluxDB v1 with SSL Certificate."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -262,7 +262,7 @@ async def test_setup_v1_ssl_cert(
 async def test_setup_v2(
     hass: HomeAssistant, mock_client, config_base, get_write_api
 ) -> None:
-    """Test we can setup an InfluxDB v1."""
+    """Test we can setup an InfluxDB v2."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -323,7 +323,7 @@ async def test_setup_v2(
 async def test_setup_v2_ssl_cert(
     hass: HomeAssistant, mock_client, config_base, get_write_api
 ) -> None:
-    """Test we can setup an InfluxDB v1."""
+    """Test we can setup an InfluxDB v2 with SSL Certificate."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -363,6 +363,133 @@ async def test_setup_v2_ssl_cert(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{config_base['bucket']} ({config_base['url']})"
     assert result["data"] == data
+
+
+@pytest.mark.parametrize(
+    (
+        "mock_client",
+        "config_base",
+        "api_version",
+        "get_write_api",
+        "test_exception",
+        "reason",
+    ),
+    [
+        (
+            DEFAULT_API_VERSION,
+            {
+                "url": "http://localhost:8086",
+                "verify_ssl": False,
+                "database": "home_assistant",
+                "username": "user",
+                "password": "pass",
+            },
+            DEFAULT_API_VERSION,
+            _get_write_api_mock_v1,
+            InfluxDBClientError("SSLError"),
+            "ssl_error",
+        ),
+        (
+            DEFAULT_API_VERSION,
+            {
+                "url": "http://localhost:8086",
+                "verify_ssl": False,
+                "database": "home_assistant",
+                "username": "user",
+                "password": "pass",
+            },
+            DEFAULT_API_VERSION,
+            _get_write_api_mock_v1,
+            InfluxDBClientError("database not found"),
+            "invalid_database",
+        ),
+        (
+            DEFAULT_API_VERSION,
+            {
+                "url": "http://localhost:8086",
+                "verify_ssl": False,
+                "database": "home_assistant",
+                "username": "user",
+                "password": "pass",
+            },
+            DEFAULT_API_VERSION,
+            _get_write_api_mock_v1,
+            InfluxDBClientError("authorization failed"),
+            "invalid_auth",
+        ),
+        (
+            API_VERSION_2,
+            {
+                "url": "http://localhost:8086",
+                "verify_ssl": True,
+                "organization": "my_org",
+                "bucket": "home_assistant",
+                "token": "token",
+            },
+            API_VERSION_2,
+            _get_write_api_mock_v2,
+            ApiException("SSLError"),
+            "ssl_error",
+        ),
+        (
+            API_VERSION_2,
+            {
+                "url": "http://localhost:8086",
+                "verify_ssl": True,
+                "organization": "my_org",
+                "bucket": "home_assistant",
+                "token": "token",
+            },
+            API_VERSION_2,
+            _get_write_api_mock_v2,
+            ApiException("token"),
+            "invalid_auth_v2",
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_setup_connection_error(
+    hass: HomeAssistant,
+    mock_client,
+    config_base,
+    api_version,
+    get_write_api,
+    test_exception,
+    reason,
+) -> None:
+    """Test connection error during setup of InfluxDB v2."""
+    write_api = get_write_api(mock_client)
+    write_api.side_effect = test_exception
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] is None
+
+    if api_version == DEFAULT_API_VERSION:
+        api = "1.x"
+    else:
+        api = "2.x"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"api_version": api},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == f"configure_v{api_version}"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        config_base,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": reason}
 
 
 @pytest.mark.parametrize(
