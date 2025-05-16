@@ -119,7 +119,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'away_mode': 'off',
-      'current_temperature': 54.3,
+      'current_temperature': 40.8,
       'friendly_name': 'Eco Heating System',
       'max_temp': 60.0,
       'min_temp': 40,
