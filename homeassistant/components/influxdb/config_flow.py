@@ -187,25 +187,22 @@ class InfluxDBConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            try:
-                url = URL(user_input[CONF_URL])
-                data = {
-                    CONF_API_VERSION: DEFAULT_API_VERSION,
-                    CONF_HOST: url.host,
-                    CONF_PORT: url.port,
-                    CONF_USERNAME: user_input.get(CONF_USERNAME),
-                    CONF_PASSWORD: user_input.get(CONF_PASSWORD),
-                    CONF_DB_NAME: user_input[CONF_DB_NAME],
-                    CONF_SSL: url.scheme == "https",
-                    CONF_PATH: url.path,
-                    CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
-                }
-                if (cert := user_input.get(CONF_SSL_CA_CERT)) is not None:
-                    path = await _save_uploaded_cert_file(self.hass, cert)
-                    data[CONF_SSL_CA_CERT] = str(path)
-                errors = await _validate_influxdb_connection(self.hass, data)
-            except ValueError:
-                errors = {"base": "invalid_url"}
+            url = URL(user_input[CONF_URL])
+            data = {
+                CONF_API_VERSION: DEFAULT_API_VERSION,
+                CONF_HOST: url.host,
+                CONF_PORT: url.port,
+                CONF_USERNAME: user_input.get(CONF_USERNAME),
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+                CONF_DB_NAME: user_input[CONF_DB_NAME],
+                CONF_SSL: url.scheme == "https",
+                CONF_PATH: url.path,
+                CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+            }
+            if (cert := user_input.get(CONF_SSL_CA_CERT)) is not None:
+                path = await _save_uploaded_cert_file(self.hass, cert)
+                data[CONF_SSL_CA_CERT] = str(path)
+            errors = await _validate_influxdb_connection(self.hass, data)
 
             if not errors:
                 title = f"{data[CONF_DB_NAME]} ({data[CONF_HOST]})"
