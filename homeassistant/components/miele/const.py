@@ -316,6 +316,8 @@ STATE_PROGRAM_PHASE: dict[int, dict[int, str]] = {
     MieleAppliance.TUMBLE_DRYER: STATE_PROGRAM_PHASE_TUMBLE_DRYER,
     MieleAppliance.DRYER_PROFESSIONAL: STATE_PROGRAM_PHASE_TUMBLE_DRYER,
     MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL: STATE_PROGRAM_PHASE_TUMBLE_DRYER,
+    MieleAppliance.WASHER_DRYER: STATE_PROGRAM_PHASE_WASHING_MACHINE
+    | STATE_PROGRAM_PHASE_TUMBLE_DRYER,
     MieleAppliance.DISHWASHER: STATE_PROGRAM_PHASE_DISHWASHER,
     MieleAppliance.DISHWASHER_SEMI_PROFESSIONAL: STATE_PROGRAM_PHASE_DISHWASHER,
     MieleAppliance.DISHWASHER_PROFESSIONAL: STATE_PROGRAM_PHASE_DISHWASHER,
@@ -337,7 +339,7 @@ class StateProgramType(MieleEnum):
     automatic_program = 2
     cleaning_care_program = 3
     maintenance_program = 4
-    unknown = -9999
+    missing2none = -9999
 
 
 class StateDryingStep(MieleEnum):
@@ -351,7 +353,7 @@ class StateDryingStep(MieleEnum):
     hand_iron_2 = 5
     machine_iron = 6
     smoothing = 7
-    unknown = -9999
+    missing2none = -9999
 
 
 WASHING_MACHINE_PROGRAM_ID: dict[int, str] = {
