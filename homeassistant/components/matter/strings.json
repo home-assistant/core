@@ -327,14 +327,8 @@
           "other": "Other fault"
         }
       },
-      "pump_status": {
-        "name": "Pump status",
-        "state": {
-          "devicefault_speedlow": "Fault, low speed"
-        }
-      },
       "pump_control_mode": {
-        "name": "Controle mode",
+        "name": "Control mode",
         "state": {
           "constant_flow": "Constant flow",
           "constant_pressure": "Constant pressure",
@@ -343,6 +337,9 @@
           "proportional_pressure": "Proportional pressure",
           "automatic": "Automatic"
         }
+      },
+      "pump_speed": {
+        "name": "Rotation speed"
       },
       "evse_circuit_capacity": {
         "name": "Circuit capacity"

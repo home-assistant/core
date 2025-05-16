@@ -87,6 +87,9 @@
       "evse_fault_state": {
         "default": "mdi:ev-station"
       },
+      "pump_speed": {
+        "default": "mdi:speedometer"
+      },
       "pump_status": {
         "default": "mdi:pump"
       }

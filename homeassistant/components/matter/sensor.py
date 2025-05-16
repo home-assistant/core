@@ -1088,21 +1088,6 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
-            key="PumpStatus",
-            translation_key="pump_status",
-            device_class=SensorDeviceClass.ENUM,
-            entity_category=EntityCategory.DIAGNOSTIC,
-            options=list(PUMP_STATUS_MAP.values()),
-            measurement_to_ha=PUMP_STATUS_MAP.get,
-        ),
-        entity_class=MatterSensor,
-        required_attributes=(
-            clusters.PumpConfigurationAndControl.Attributes.PumpStatus,
-        ),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.SENSOR,
-        entity_description=MatterSensorEntityDescription(
             key="PumpControlMode",
             translation_key="pump_control_mode",
             device_class=SensorDeviceClass.ENUM,
@@ -1114,5 +1099,16 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.PumpConfigurationAndControl.Attributes.ControlMode,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="PumpSpeed",
+            translation_key="pump_speed",
+            native_unit_of_measurement=None,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.PumpConfigurationAndControl.Attributes.Speed,),
     ),
 ]

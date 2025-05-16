@@ -334,4 +334,21 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.WaterHeaterManagement.Attributes.BoostState,),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="Pump_fault",
+            translation_key="pump_fault",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            measurement_to_ha=lambda x: (
+                x
+                == clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kDeviceFault
+            ),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(
+            clusters.PumpConfigurationAndControl.Attributes.PumpStatus,
+        ),
+    ),
 ]
