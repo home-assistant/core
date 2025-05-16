@@ -109,6 +109,11 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
 
     async def _async_update_data(self) -> WLEDDevice:
         """Fetch data from WLED."""
+
+        # Already connected to WebSocket, no need to poll
+        if self.data is not None and self.wled.connected and self.unsub is not None:
+            return self.data
+
         try:
             device = await self.wled.update()
         except WLEDError as error:
