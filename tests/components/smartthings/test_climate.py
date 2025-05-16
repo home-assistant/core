@@ -1047,7 +1047,7 @@ async def test_heat_pump_hvac_update(
             Attribute.TEMPERATURE,
             20,
             ATTR_CURRENT_TEMPERATURE,
-            39.2,
+            23.1,
             20,
         ),
         (
