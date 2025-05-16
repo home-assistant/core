@@ -10,7 +10,7 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 LOGGER = logging.getLogger(__package__)
 
-CONF = "polling_interval"
+REMOTE_VERSION_UPDATE_INTERVAL_HOURS = 24
 
 ENTITY_SENSOR_DOCUMENTS_TOTAL = "documents_total"
 ENTITY_SENSOR_DOCUMENTS_INBOX = "documents_inbox"
@@ -24,3 +24,4 @@ ENTITY_SENSOR_STATUS_REDIS = "status_redis"
 ENTITY_SENSOR_STATUS_CELERY = "status_celery"
 ENTITY_SENSOR_STATUS_INDEX = "status_index"
 ENTITY_SENSOR_STATUS_CLASSIFIER = "status_classifier"
+ENTITY_SENSOR_STATUS_SANITY = "status_sanity"

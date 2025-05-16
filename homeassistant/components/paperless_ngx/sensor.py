@@ -32,6 +32,7 @@ from .const import (
     ENTITY_SENSOR_STATUS_DATABASE,
     ENTITY_SENSOR_STATUS_INDEX,
     ENTITY_SENSOR_STATUS_REDIS,
+    ENTITY_SENSOR_STATUS_SANITY,
     ENTITY_SENSOR_STORAGE_AVAILABLE,
     ENTITY_SENSOR_STORAGE_TOTAL,
 )
@@ -199,6 +200,27 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
             if data.status and data.status.tasks
             else None,
             "error": str(data.status.tasks.classifier_error)
+            if data.status and data.status.tasks
+            else None,
+        },
+    ),
+    PaperlessEntityDescription(
+        key=ENTITY_SENSOR_STATUS_SANITY,
+        translation_key=ENTITY_SENSOR_STATUS_SANITY,
+        icon="mdi:check-circle-outline",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        options=enum_values_lower(StatusType),
+        value_fn=build_state_fn(
+            lambda data: data.status.tasks.sanity_check_status
+            if data.status and data.status.tasks
+            else None,
+        ),
+        attributes_fn=lambda data: {
+            "last_run": str(data.status.tasks.sanity_check_last_run)
+            if data.status and data.status.tasks
+            else None,
+            "error": str(data.status.tasks.sanity_check_error)
             if data.status and data.status.tasks
             else None,
         },

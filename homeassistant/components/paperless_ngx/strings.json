@@ -35,9 +35,6 @@
       "characters_count": {
         "name": "Characters count"
       },
-      "update_available": {
-        "name": "Update available"
-      },
       "storage_total": {
         "name": "Storage total"
       },
@@ -48,6 +45,7 @@
         "name": "Status database",
         "state": {
           "ok": "OK",
+          "warning": "WARNING",
           "error": "ERROR",
           "unknown": "UNKNOWN"
         }
@@ -56,6 +54,7 @@
         "name": "Status Redis",
         "state": {
           "ok": "OK",
+          "warning": "WARNING",
           "error": "ERROR",
           "unknown": "UNKNOWN"
         }
@@ -64,6 +63,7 @@
         "name": "Status Celery",
         "state": {
           "ok": "OK",
+          "warning": "WARNING",
           "error": "ERROR",
           "unknown": "UNKNOWN"
         }
@@ -72,6 +72,7 @@
         "name": "Status index",
         "state": {
           "ok": "OK",
+          "warning": "WARNING",
           "error": "ERROR",
           "unknown": "UNKNOWN"
         }
@@ -80,9 +81,24 @@
         "name": "Status classifier",
         "state": {
           "ok": "OK",
+          "warning": "WARNING",
           "error": "ERROR",
           "unknown": "UNKNOWN"
         }
+      },
+      "status_sanity": {
+        "name": "Status sanity",
+        "state": {
+          "ok": "OK",
+          "warning": "WARNING",
+          "error": "ERROR",
+          "unknown": "UNKNOWN"
+        }
+      }
+    },
+    "binary_sensor": {
+      "update_available": {
+        "name": "Update available"
       }
     }
   },

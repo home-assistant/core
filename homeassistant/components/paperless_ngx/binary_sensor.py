@@ -46,9 +46,10 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[PaperlessBinarySensorEntityDescription, ...] =
             else None,
         ),
         attributes_fn=lambda data: {
-            "remote_version": str(data.remote_version.version)
+            "latest_version": str(data.remote_version.version)
             if data.remote_version is not None
             else None,
+            "last_checked": str(data.remote_version_last_checked),
         },
     ),
 )
