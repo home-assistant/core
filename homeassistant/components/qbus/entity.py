@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 import re
+from typing import Generic, TypeVar, cast
 
 from qbusmqttapi.discovery import QbusMqttOutput
 from qbusmqttapi.factory import QbusMqttMessageFactory, QbusMqttTopicFactory
@@ -19,6 +20,8 @@ from .const import DOMAIN, MANUFACTURER
 from .coordinator import QbusControllerCoordinator
 
 _REFID_REGEX = re.compile(r"^\d+\/(\d+(?:\/\d+)?)$")
+
+StateT = TypeVar("StateT", bound=QbusMqttState)
 
 
 def add_new_outputs(
@@ -54,8 +57,10 @@ def format_ref_id(ref_id: str) -> str | None:
     return None
 
 
-class QbusEntity(Entity, ABC):
+class QbusEntity(Entity, Generic[StateT], ABC):
     """Representation of a Qbus entity."""
+
+    _state_cls: type[StateT] = cast(type[StateT], QbusMqttState)
 
     _attr_has_entity_name = True
     _attr_name: str | None = None
@@ -96,9 +101,16 @@ class QbusEntity(Entity, ABC):
             )
         )
 
-    @abstractmethod
     async def _state_received(self, msg: ReceiveMessage) -> None:
-        pass
+        state = self._message_factory.parse_output_state(self._state_cls, msg.payload)
+
+        if isinstance(state, self._state_cls):
+            await self._handle_state_received(state)
+            self.async_schedule_update_ha_state()
+
+    @abstractmethod
+    async def _handle_state_received(self, state: StateT) -> None:
+        raise NotImplementedError
 
     async def _async_publish_output_state(self, state: QbusMqttState) -> None:
         request = self._message_factory.create_set_output_state_request(

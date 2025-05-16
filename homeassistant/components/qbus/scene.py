@@ -5,7 +5,6 @@ from typing import Any
 from qbusmqttapi.discovery import QbusMqttOutput
 from qbusmqttapi.state import QbusMqttState, StateAction, StateType
 
-from homeassistant.components.mqtt import ReceiveMessage
 from homeassistant.components.scene import Scene
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -61,7 +60,7 @@ class QbusScene(QbusEntity, Scene):
         )
         await self._async_publish_output_state(state)
 
-    async def _state_received(self, msg: ReceiveMessage) -> None:
+    async def _handle_state_received(self, state: QbusMqttState) -> None:
         # We want users to be able to act on a scene activated with physical buttons
         # of Qbus. This lets users add entities from other integrations to a Qbus
         # scene (e.g. Hue, Sonos, etc).
@@ -74,4 +73,3 @@ class QbusScene(QbusEntity, Scene):
         #
         # pylint: disable-next=attribute-defined-outside-init
         self._Scene__last_activated = dt_util.utcnow().isoformat()
-        self.async_write_ha_state()

@@ -13,7 +13,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.mqtt import ReceiveMessage, client as mqtt
+from homeassistant.components.mqtt import client as mqtt
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -56,6 +56,8 @@ async def async_setup_entry(
 
 class QbusClimate(QbusEntity, ClimateEntity):
     """Representation of a Qbus climate entity."""
+
+    _state_cls = QbusMqttThermoState
 
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_supported_features = (
@@ -129,14 +131,7 @@ class QbusClimate(QbusEntity, ClimateEntity):
 
             await self._async_publish_output_state(state)
 
-    async def _state_received(self, msg: ReceiveMessage) -> None:
-        state = self._message_factory.parse_output_state(
-            QbusMqttThermoState, msg.payload
-        )
-
-        if state is None:
-            return
-
+    async def _handle_state_received(self, state: QbusMqttThermoState) -> None:
         if preset_mode := state.read_regime():
             self._attr_preset_mode = preset_mode
 
@@ -155,8 +150,6 @@ class QbusClimate(QbusEntity, ClimateEntity):
         if state.type == StateType.EVENT:
             assert self._request_state_debouncer is not None
             await self._request_state_debouncer.async_call()
-
-        self.async_schedule_update_ha_state()
 
     def _set_hvac_action(self) -> None:
         if self.target_temperature is None or self.current_temperature is None:

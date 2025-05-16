@@ -16,7 +16,6 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.components.mqtt import ReceiveMessage
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -51,6 +50,8 @@ async def async_setup_entry(
 
 class QbusCover(QbusEntity, CoverEntity):
     """Representation of a Qbus cover entity."""
+
+    _state_cls = QbusMqttShutterState
 
     _attr_supported_features: CoverEntityFeature
     _attr_device_class = CoverDeviceClass.BLIND
@@ -145,21 +146,14 @@ class QbusCover(QbusEntity, CoverEntity):
         state.write_slat_position(int(kwargs[ATTR_TILT_POSITION]))
         await self._async_publish_output_state(state)
 
-    async def _state_received(self, msg: ReceiveMessage) -> None:
-        output = self._message_factory.parse_output_state(
-            QbusMqttShutterState, msg.payload
-        )
+    async def _handle_state_received(self, state: QbusMqttShutterState) -> None:
+        output_state = state.read_state()
+        shutter_position = state.read_position()
+        slat_position = state.read_slat_position()
 
-        if output is None:
-            return
-
-        state = output.read_state()
-        shutter_position = output.read_position()
-        slat_position = output.read_slat_position()
-
-        if state is not None:
+        if output_state is not None:
             self._previous_state = self._target_state
-            self._target_state = state
+            self._target_state = output_state
 
         if shutter_position is not None:
             self._target_shutter_position = shutter_position
@@ -170,7 +164,6 @@ class QbusCover(QbusEntity, CoverEntity):
         self._update_is_closed()
         self._update_cover_position()
         self._update_tilt_position()
-        self.async_schedule_update_ha_state()
 
     def _update_is_closed(self) -> None:
         if self._attr_supported_features & CoverEntityFeature.SET_POSITION:

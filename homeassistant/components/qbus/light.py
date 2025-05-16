@@ -6,7 +6,6 @@ from qbusmqttapi.discovery import QbusMqttOutput
 from qbusmqttapi.state import QbusMqttAnalogState, StateType
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
-from homeassistant.components.mqtt import ReceiveMessage
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.color import brightness_to_value, value_to_brightness
@@ -43,6 +42,8 @@ async def async_setup_entry(
 class QbusLight(QbusEntity, LightEntity):
     """Representation of a Qbus light entity."""
 
+    _state_cls = QbusMqttAnalogState
+
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_color_mode = ColorMode.BRIGHTNESS
 
@@ -58,17 +59,11 @@ class QbusLight(QbusEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
-
-        percentage: int | None = None
-        on: bool | None = None
-
         state = QbusMqttAnalogState(id=self._mqtt_output.id)
 
         if brightness is None:
-            on = True
-
             state.type = StateType.ACTION
-            state.write_on_off(on)
+            state.write_on_off(on=True)
         else:
             percentage = round(brightness_to_value((1, 100), brightness))
 
@@ -84,16 +79,10 @@ class QbusLight(QbusEntity, LightEntity):
 
         await self._async_publish_output_state(state)
 
-    async def _state_received(self, msg: ReceiveMessage) -> None:
-        output = self._message_factory.parse_output_state(
-            QbusMqttAnalogState, msg.payload
-        )
+    async def _handle_state_received(self, state: QbusMqttAnalogState) -> None:
+        percentage = round(state.read_percentage())
+        self._set_state(percentage)
 
-        if output is not None:
-            percentage = round(output.read_percentage())
-            self._set_state(percentage)
-            self.async_schedule_update_ha_state()
-
-    def _set_state(self, percentage: int = 0) -> None:
+    def _set_state(self, percentage: int) -> None:
         self._attr_is_on = percentage > 0
         self._attr_brightness = value_to_brightness((1, 100), percentage)
