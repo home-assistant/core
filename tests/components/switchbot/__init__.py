@@ -463,3 +463,220 @@ HUMIDIFIER_SERVICE_INFO = BluetoothServiceInfoBleak(
     connectable=True,
     tx_power=-127,
 )
+
+
+WOSTRIP_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="WoStrip",
+    address="AA:BB:CC:DD:EE:FF",
+    manufacturer_data={
+        2409: b'\x84\xf7\x03\xb3?\xde\x04\xe4"\x0c\x00\x00\x00\x00\x00\x00'
+    },
+    service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"r\x00d"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="WoStrip",
+        manufacturer_data={
+            2409: b'\x84\xf7\x03\xb3?\xde\x04\xe4"\x0c\x00\x00\x00\x00\x00\x00'
+        },
+        service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"r\x00d"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "WoStrip"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+WOLOCKPRO_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="WoLockPro",
+    manufacturer_data={2409: b"\xf7a\x07H\xe6\xe8-\x80\x00d\x00\x08"},
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"$\x80d"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="WoLockPro",
+        manufacturer_data={2409: b"\xf7a\x07H\xe6\xe8-\x80\x00d\x00\x08"},
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"$\x80d"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "WoLockPro"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+LOCK_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="WoLock",
+    manufacturer_data={2409: b"\xca\xbaP\xddv;\x03\x03\x00 "},
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"o\x80d"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="WoLock",
+        manufacturer_data={2409: b"\xca\xbaP\xddv;\x03\x03\x00 "},
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"o\x80d"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "WoLock"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+CIRCULATOR_FAN_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="CirculatorFan",
+    manufacturer_data={
+        2409: b"\xb0\xe9\xfeXY\xa8~LR9",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"~\x00R"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="CirculatorFan",
+        manufacturer_data={
+            2409: b"\xb0\xe9\xfeXY\xa8~LR9",
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"~\x00R"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "CirculatorFan"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+K20_VACUUM_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="K20 Vacuum",
+    manufacturer_data={
+        2409: b"\xb0\xe9\xfe\x01\xf3\x8f'\x01\x11S\x00\x10d\x0f",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b".\x00d"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="K20 Vacuum",
+        manufacturer_data={
+            2409: b"\xb0\xe9\xfe\x01\xf3\x8f'\x01\x11S\x00\x10d\x0f",
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b".\x00d"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "K20 Vacuum"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+K10_PRO_VACUUM_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="K10 Pro Vacuum",
+    manufacturer_data={
+        2409: b"\xb0\xe9\xfeP\x8d\x8d\x02 d",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"(\x00"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="K10 Pro Vacuum",
+        manufacturer_data={
+            2409: b"\xb0\xe9\xfeP\x8d\x8d\x02 d",
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"(\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "K10 Pro Vacuum"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+K10_VACUUM_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="K10 Vacuum",
+    manufacturer_data={
+        2409: b"\xca8\x06\xa9_\xf1\x02 d",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"}\x00"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="K10 Vacuum",
+        manufacturer_data={
+            2409: b"\xca8\x06\xa9_\xf1\x02 d",
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"}\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "K10 Vacuum"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+K10_POR_COMBO_VACUUM_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="K10 Pro Combo Vacuum",
+    manufacturer_data={
+        2409: b"\xb0\xe9\xfe\x01\xf4\x1d\x0b\x01\x01\xb1\x03\x118\x01",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"3\x00\x00"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="K10 Pro Combo Vacuum",
+        manufacturer_data={
+            2409: b"\xb0\xe9\xfe\x01\xf4\x1d\x0b\x01\x01\xb1\x03\x118\x01",
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"3\x00\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "K10 Pro Combo Vacuum"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+S10_VACUUM_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="S10 Vacuum",
+    manufacturer_data={
+        2409: b"\xb0\xe9\xfe\x00\x08|\n\x01\x11\x05\x00\x10M\x02",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"z\x00\x00"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="S10 Vacuum",
+        manufacturer_data={
+            2409: b"\xb0\xe9\xfe\x00\x08|\n\x01\x11\x05\x00\x10M\x02",
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"z\x00\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "S10 Vacuum"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)

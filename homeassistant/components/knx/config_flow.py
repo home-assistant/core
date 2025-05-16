@@ -84,9 +84,9 @@ CONF_KEYRING_FILE: Final = "knxkeys_file"
 
 CONF_KNX_TUNNELING_TYPE: Final = "tunneling_type"
 CONF_KNX_TUNNELING_TYPE_LABELS: Final = {
-    CONF_KNX_TUNNELING: "UDP (Tunnelling v1)",
-    CONF_KNX_TUNNELING_TCP: "TCP (Tunnelling v2)",
-    CONF_KNX_TUNNELING_TCP_SECURE: "Secure Tunnelling (TCP)",
+    CONF_KNX_TUNNELING: "UDP (Tunneling v1)",
+    CONF_KNX_TUNNELING_TCP: "TCP (Tunneling v2)",
+    CONF_KNX_TUNNELING_TCP_SECURE: "Secure Tunneling (TCP)",
 }
 
 OPTION_MANUAL_TUNNEL: Final = "Manual"
@@ -393,7 +393,7 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
                 except (vol.Invalid, XKNXException):
                     errors[CONF_KNX_LOCAL_IP] = "invalid_ip_address"
 
-            selected_tunnelling_type = user_input[CONF_KNX_TUNNELING_TYPE]
+            selected_tunneling_type = user_input[CONF_KNX_TUNNELING_TYPE]
             if not errors:
                 try:
                     self._selected_tunnel = await request_description(
@@ -406,16 +406,16 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
                     errors["base"] = "cannot_connect"
                 else:
                     if bool(self._selected_tunnel.tunnelling_requires_secure) is not (
-                        selected_tunnelling_type == CONF_KNX_TUNNELING_TCP_SECURE
+                        selected_tunneling_type == CONF_KNX_TUNNELING_TCP_SECURE
                     ) or (
-                        selected_tunnelling_type == CONF_KNX_TUNNELING_TCP
+                        selected_tunneling_type == CONF_KNX_TUNNELING_TCP
                         and not self._selected_tunnel.supports_tunnelling_tcp
                     ):
                         errors[CONF_KNX_TUNNELING_TYPE] = "unsupported_tunnel_type"
 
             if not errors:
                 self.new_entry_data = KNXConfigEntryData(
-                    connection_type=selected_tunnelling_type,
+                    connection_type=selected_tunneling_type,
                     host=_host,
                     port=user_input[CONF_PORT],
                     route_back=user_input[CONF_KNX_ROUTE_BACK],
@@ -426,11 +426,11 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
                     tunnel_endpoint_ia=None,
                 )
 
-                if selected_tunnelling_type == CONF_KNX_TUNNELING_TCP_SECURE:
+                if selected_tunneling_type == CONF_KNX_TUNNELING_TCP_SECURE:
                     return await self.async_step_secure_key_source_menu_tunnel()
                 self.new_title = (
                     "Tunneling "
-                    f"{'UDP' if selected_tunnelling_type == CONF_KNX_TUNNELING else 'TCP'} "
+                    f"{'UDP' if selected_tunneling_type == CONF_KNX_TUNNELING else 'TCP'} "
                     f"@ {_host}"
                 )
                 return self.finish_flow()
@@ -497,7 +497,7 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
     async def async_step_secure_tunnel_manual(
         self, user_input: dict | None = None
     ) -> ConfigFlowResult:
-        """Configure ip secure tunnelling manually."""
+        """Configure ip secure tunneling manually."""
         errors: dict = {}
 
         if user_input is not None:
