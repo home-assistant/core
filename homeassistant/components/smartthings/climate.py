@@ -31,7 +31,7 @@ from .entity import SmartThingsEntity
 
 ATTR_OPERATION_STATE = "operation_state"
 MODE_TO_STATE = {
-    "auto": HVACMode.HEAT_COOL,
+    "auto": HVACMode.AUTO,
     "cool": HVACMode.COOL,
     "eco": HVACMode.AUTO,
     "rush hour": HVACMode.AUTO,
@@ -40,7 +40,7 @@ MODE_TO_STATE = {
     "off": HVACMode.OFF,
 }
 STATE_TO_MODE = {
-    HVACMode.HEAT_COOL: "auto",
+    HVACMode.AUTO: "auto",
     HVACMode.COOL: "cool",
     HVACMode.HEAT: "heat",
     HVACMode.OFF: "off",
@@ -58,7 +58,7 @@ OPERATING_STATE_TO_ACTION = {
 }
 
 AC_MODE_TO_STATE = {
-    "auto": HVACMode.HEAT_COOL,
+    "auto": HVACMode.AUTO,
     "cool": HVACMode.COOL,
     "dry": HVACMode.DRY,
     "coolClean": HVACMode.COOL,
@@ -70,7 +70,7 @@ AC_MODE_TO_STATE = {
     "wind": HVACMode.FAN_ONLY,
 }
 STATE_TO_AC_MODE = {
-    HVACMode.HEAT_COOL: "auto",
+    HVACMode.AUTO: "auto",
     HVACMode.COOL: "cool",
     HVACMode.DRY: "dry",
     HVACMode.HEAT: "heat",
