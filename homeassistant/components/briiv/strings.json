@@ -1,31 +1,31 @@
 {
   "config": {
-    "flow_title": "Briiv Air Purifier {serial_number}",
+    "flow_title": "Briiv air purifier {serial_number}",
     "step": {
       "user": {
-        "title": "Briiv Air Purifier",
-        "description": "Found {new_devices} new devices.\n\nAlready configured devices:\n{configured_devices}",
+        "title": "Briiv air purifier",
+        "description": "Found {new_devices} new devices.\n\nalready configured devices:\n{configured_devices}",
         "data": {
-          "action": "Select Device"
+          "action": "select device"
         }
       },
       "manual": {
-        "title": "Manual Configuration",
-        "description": "Manually configure a Briiv device",
+        "title": "manual configuration",
+        "description": "manually configure a Briiv device",
         "data": {
-          "host": "IP Address",
-          "serial_number": "Serial Number"
+          "host": "ip address",
+          "serial_number": "serial number"
         }
       }
     },
     "error": {
-      "discovery_error": "Failed to discover devices",
-      "cannot_connect": "Failed to connect",
-      "invalid_host": "Invalid IP address",
-      "invalid_serial": "Invalid serial number"
+      "discovery_error": "failed to discover devices",
+      "cannot_connect": "failed to connect",
+      "invalid_host": "invalid ip address",
+      "invalid_serial": "invalid serial number"
     },
     "abort": {
-      "already_configured": "Device is already configured"
+      "already_configured": "device is already configured"
     }
   }
 }
