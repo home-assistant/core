@@ -76,15 +76,15 @@
   },
   "services": {
     "set_date_time": {
-      "name": "Set the date and time on the panel",
-      "description": "Set the date and time on the panel",
+      "name": "Set date & time",
+      "description": "Sets the date and time on the alarm panel.",
       "fields": {
         "datetime": {
-          "name": "Date and time to set",
-          "description": "The date and time to set. The time zone of the Home Assistant instance is assumed. Defaults to current date and time if unset."
+          "name": "Date & time",
+          "description": "The date and time to set. The time zone of the Home Assistant instance is assumed. If omitted, the current date and time is used."
         },
         "config_entry_id": {
-          "name": "Bosch Alarm config entry",
+          "name": "Config entry",
           "description": "The Bosch Alarm integration ID."
         }
       }
