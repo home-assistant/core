@@ -420,7 +420,7 @@ class ZHADeviceProxy(EventBase):
     def handle_zha_event(self, zha_event: ZHAEvent) -> None:
         """Handle a ZHA event."""
         if ATTR_UNIQUE_ID in zha_event.data:
-            unique_id = zha_event.data.pop(ATTR_UNIQUE_ID)
+            unique_id = zha_event.data[ATTR_UNIQUE_ID]
 
             # Client cluster handler unique IDs in the ZHA lib were disambiguated by
             # adding a suffix of `_CLIENT`. Unfortunately, this breaks existing
@@ -434,9 +434,11 @@ class ZHADeviceProxy(EventBase):
             ZHA_EVENT,
             {
                 ATTR_DEVICE_IEEE: str(zha_event.device_ieee),
-                ATTR_UNIQUE_ID: unique_id,
                 ATTR_DEVICE_ID: self.device_id,
                 **zha_event.data,
+                # The order of these keys is intentional, `zha_event.data` can contain
+                # a `unique_id` key, which we explicitly replace
+                ATTR_UNIQUE_ID: unique_id,
             },
         )
 
