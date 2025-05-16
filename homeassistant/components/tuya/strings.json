@@ -56,6 +56,9 @@
       },
       "tilt": {
         "name": "Tilt"
+      },
+      "charge_state": {
+        "name": "Charge state"
       }
     },
     "button": {
@@ -76,6 +79,9 @@
       },
       "snooze": {
         "name": "Snooze"
+      },
+      "meal_plan": {
+        "name": "Meal plan"
       }
     },
     "cover": {
@@ -520,6 +526,9 @@
       "remaining_time": {
         "name": "Remaining time"
       },
+      "meal_plan": {
+        "name": "Meal plan"
+      },
       "methane": {
         "name": "[%key:component::tuya::entity::binary_sensor::methane::name%]"
       },
@@ -849,6 +858,9 @@
       },
       "sterilization": {
         "name": "Sterilization"
+      },
+      "light": {
+        "name": "Light"
       }
     }
   }

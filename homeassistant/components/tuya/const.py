@@ -132,6 +132,7 @@ class DPCode(StrEnum):
     BRIGHTNESS_MIN_2 = "brightness_min_2"
     BRIGHTNESS_MIN_3 = "brightness_min_3"
     C_F = "c_f"  # Temperature unit switching
+    CHARGE_STATE = "charge_state"
     CH2O_STATE = "ch2o_state"
     CH2O_VALUE = "ch2o_value"
     CH4_SENSOR_STATE = "ch4_sensor_state"
@@ -225,6 +226,7 @@ class DPCode(StrEnum):
     MACH_OPERATE = "mach_operate"
     MANUAL_FEED = "manual_feed"
     MATERIAL = "material"  # Material
+    MEAL_PLAN = "meal_plan"
     MODE = "mode"  # Working mode / Mode
     MOODLIGHTING = "moodlighting"  # Mood light
     MOTION_RECORD = "motion_record"
