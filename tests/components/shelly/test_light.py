@@ -3,7 +3,15 @@
 from copy import deepcopy
 from unittest.mock import AsyncMock, Mock
 
-from aioshelly.const import MODEL_BULB, MODEL_BULB_RGBW, MODEL_DUO, MODEL_VINTAGE_V2
+from aioshelly.const import (
+    MODEL_BULB,
+    MODEL_BULB_RGBW,
+    MODEL_DIMMER,
+    MODEL_DIMMER_2,
+    MODEL_DUO,
+    MODEL_RGBW2,
+    MODEL_VINTAGE_V2,
+)
 import pytest
 
 from homeassistant.components.light import (
@@ -305,11 +313,11 @@ async def test_block_device_white_bulb(
     "model",
     [
         MODEL_DUO,
-        # MODEL_BULB_RGBW,
-        # MODEL_DIMMER,
-        # MODEL_DIMMER_2,
-        # MODEL_RGBW2,
-        # MODEL_VINTAGE_V2,
+        MODEL_BULB_RGBW,
+        MODEL_DIMMER,
+        MODEL_DIMMER_2,
+        MODEL_RGBW2,
+        MODEL_VINTAGE_V2,
     ],
 )
 async def test_block_device_support_transition(
