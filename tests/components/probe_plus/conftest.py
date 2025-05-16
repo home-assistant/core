@@ -26,7 +26,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        title="Probe Plus",
+        title="FM210 aa:bb:cc:dd:ee:ff",
         domain=DOMAIN,
         version=1,
         data={

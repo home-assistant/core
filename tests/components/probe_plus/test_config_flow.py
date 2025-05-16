@@ -15,7 +15,7 @@ from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from tests.common import MockConfigEntry
 
 service_info = BluetoothServiceInfo(
-    name="FM210 aa:bb:cc:dd:ee:ff",
+    name="FM210",
     address="aa:bb:cc:dd:ee:ff",
     rssi=-63,
     manufacturer_data={},
@@ -54,7 +54,7 @@ async def test_user_config_flow_creates_entry(
         },
     )
 
-    assert result["unique_id"] == "aa:bb:cc:dd:ee:ff"
+    assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
     assert result["title"] == "FM210 aa:bb:cc:dd:ee:ff"
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
@@ -63,27 +63,19 @@ async def test_user_config_flow_creates_entry(
 
 async def test_user_flow_already_configured(
     hass: HomeAssistant,
+    mock_discovered_service_info: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_setup_entry: AsyncMock,
-    mock_discovered_service_info: AsyncMock,
 ) -> None:
     """Test that the user flow aborts when the entry is already configured."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
-        },
-    )
+    # this aborts with no devices found as the config flow
+    # already checks for existing config entries when validating the discovered devices
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
+    assert result["reason"] == "no_devices_found"
 
 
 async def test_bluetooth_discovery(
@@ -100,11 +92,11 @@ async def test_bluetooth_discovery(
     assert result["step_id"] == "bluetooth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"]
+        result["flow_id"], user_input={}
     )
 
     assert result["title"] == "FM210 aa:bb:cc:dd:ee:ff"
-    assert result["unique_id"] == "aa:bb:cc:dd:ee:ff"
+    assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_ADDRESS: service_info.address,
