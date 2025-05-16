@@ -9,6 +9,7 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.components.select import (
     ATTR_OPTION,
+    ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
@@ -92,6 +93,38 @@ async def test_select_option(
         Command.SET_MACHINE_STATE,
         MAIN,
         argument="run",
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ks_range_0101x"])
+async def test_select_option_map(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state update."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("select.vulcan_lamp")
+    assert state
+    assert state.state == "extra_high"
+    assert state.attributes[ATTR_OPTIONS] == [
+        "off",
+        "extra_high",
+    ]
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: "select.vulcan_lamp", ATTR_OPTION: "extra_high"},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "2c3cbaa0-1899-5ddc-7b58-9d657bd48f18",
+        Capability.SAMSUNG_CE_LAMP,
+        Command.SET_BRIGHTNESS_LEVEL,
+        MAIN,
+        argument="extraHigh",
     )
 
 

@@ -11,6 +11,7 @@ from pylamarzocco.models import (
     BaseWidgetOutput,
     CoffeeAndFlushCounter,
     CoffeeBoiler,
+    MachineStatus,
     SteamBoilerLevel,
     SteamBoilerTemperature,
 )
@@ -73,6 +74,18 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
         ),
     ),
     LaMarzoccoSensorEntityDescription(
+        key="brewing_start_time",
+        translation_key="brewing_start_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=(
+            lambda config: cast(
+                MachineStatus, config[WidgetType.CM_MACHINE_STATUS]
+            ).brewing_start_time
+        ),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        available_fn=(lambda coordinator: not coordinator.websocket_terminated),
+    ),
+    LaMarzoccoSensorEntityDescription(
         key="steam_boiler_ready_time",
         translation_key="steam_boiler_ready_time",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -132,17 +145,18 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensor entities."""
-    coordinator = entry.runtime_data.config_coordinator
+    config_coordinator = entry.runtime_data.config_coordinator
+    statistic_coordinators = entry.runtime_data.statistics_coordinator
 
     entities = [
-        LaMarzoccoSensorEntity(coordinator, description)
+        LaMarzoccoSensorEntity(config_coordinator, description)
         for description in ENTITIES
-        if description.supported_fn(coordinator)
+        if description.supported_fn(config_coordinator)
     ]
     entities.extend(
-        LaMarzoccoStatisticSensorEntity(coordinator, description)
+        LaMarzoccoStatisticSensorEntity(statistic_coordinators, description)
         for description in STATISTIC_ENTITIES
-        if description.supported_fn(coordinator)
+        if description.supported_fn(statistic_coordinators)
     )
     async_add_entities(entities)
 
