@@ -83,6 +83,19 @@
           "timestamp": "2025-05-15T02:34:53.575Z"
         }
       },
+      "airConditionerMode": {
+        "availableAcModes": {
+          "value": null
+        },
+        "supportedAcModes": {
+          "value": ["eco", "std", "force"],
+          "timestamp": "2025-05-07T08:18:06.705Z"
+        },
+        "airConditionerMode": {
+          "value": "std",
+          "timestamp": "2025-05-06T10:47:04.400Z"
+        }
+      },
       "samsungce.ehsFsvSettings": {
         "fsvSettings": {
           "value": [
@@ -594,19 +607,6 @@
         },
         "maxNumberOfReservations": {
           "value": null
-        }
-      },
-      "airConditionerMode": {
-        "availableAcModes": {
-          "value": null
-        },
-        "supportedAcModes": {
-          "value": ["eco", "std", "force"],
-          "timestamp": "2025-05-07T08:18:06.705Z"
-        },
-        "airConditionerMode": {
-          "value": "std",
-          "timestamp": "2025-05-06T10:47:04.400Z"
         }
       },
       "samsungce.sensingOnSuspendMode": {
