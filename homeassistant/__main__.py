@@ -92,19 +92,26 @@ def get_arguments() -> argparse.Namespace:
         "-c",
         "--config",
         metavar="path_to_config_dir",
-        default=config_util.get_default_config_dir(),
+        default=os.environ.get("HA_CONFIG", config_util.get_default_config_dir()),
         help="Directory that contains the Home Assistant configuration",
     )
     parser.add_argument(
         "--recovery-mode",
         action="store_true",
+        default=config_util.get_environ_bool("HA_RECOVERY_MODE"),
         help="Start Home Assistant in recovery mode",
     )
     parser.add_argument(
-        "--debug", action="store_true", help="Start Home Assistant in debug mode"
+        "--debug",
+        action="store_true",
+        default=config_util.get_environ_bool("HA_DEBUG"),
+        help="Start Home Assistant in debug mode",
     )
     parser.add_argument(
-        "--open-ui", action="store_true", help="Open the webinterface in a browser"
+        "--open-ui",
+        action="store_true",
+        default=config_util.get_environ_bool("HA_OPEN_UI"),
+        help="Open the webinterface in a browser",
     )
 
     skip_pip_group = parser.add_mutually_exclusive_group()
@@ -122,22 +129,29 @@ def get_arguments() -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Enable verbose logging to file."
+        "-v",
+        "--verbose",
+        action="store_true",
+        default=config_util.get_environ_bool("HA_VERBOSE"),
+        help="Enable verbose logging to file.",
     )
     parser.add_argument(
         "--log-rotate-days",
         type=int,
-        default=None,
+        default=config_util.get_environ_int("HA_LOG_ROTATE_DAYS"),
         help="Enables daily log rotation and keeps up to the specified days",
     )
     parser.add_argument(
         "--log-file",
         type=str,
-        default=None,
+        default=os.environ.get("HA_LOG_FILE"),
         help="Log file to write to.  If not set, CONFIG/home-assistant.log is used",
     )
     parser.add_argument(
-        "--log-no-color", action="store_true", help="Disable color logs"
+        "--log-no-color",
+        action="store_true",
+        default=config_util.get_environ_bool("HA_LOG_NO_COLOR"),
+        help="Disable color logs",
     )
     parser.add_argument(
         "--script", nargs=argparse.REMAINDER, help="Run one of the embedded scripts"
@@ -145,6 +159,7 @@ def get_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--ignore-os-check",
         action="store_true",
+        default=config_util.get_environ_bool("HA_IGNORE_OS_CHECK"),
         help="Skips validation of operating system",
     )
 
