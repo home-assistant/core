@@ -139,11 +139,11 @@
 # ---
 # name: test_sensor[keys0].8
   tuple(
-    '2027-04-04',
+    '690',
     ReadOnlyDict({
       'api_timestamp': datetime.datetime(2024, 12, 30, 14, 18, 56, 849000, tzinfo=datetime.timezone.utc),
-      'device_class': 'date',
       'friendly_name': 'Volvo XC40 Time to service',
+      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
     }),
     'yv1abcdefg1234567_time_to_service',
   )
@@ -243,11 +243,11 @@
 # ---
 # name: test_sensor[keys1].6
   tuple(
-    '2025-05-31',
+    '17',
     ReadOnlyDict({
       'api_timestamp': datetime.datetime(2024, 12, 30, 14, 18, 56, 849000, tzinfo=datetime.timezone.utc),
-      'device_class': 'date',
       'friendly_name': 'Volvo S90 Time to service',
+      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
     }),
     'yv1abcdefg1234567_time_to_service',
   )

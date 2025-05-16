@@ -22,7 +22,6 @@ from .coordinator import VolvoConfigEntry, VolvoDataCoordinator
 async def async_setup_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> bool:
     """Set up Volvo from a config entry."""
 
-    # Create APIs
     implementation = await async_get_config_entry_implementation(hass, entry)
     oauth_session = OAuth2Session(hass, entry, implementation)
     web_session = async_get_clientsession(hass)
@@ -39,11 +38,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> boo
     api = VolvoCarsApi(
         web_session,
         auth,
-        entry.data[CONF_VIN],
         entry.data[CONF_API_KEY],
+        entry.data[CONF_VIN],
     )
 
-    # Setup entry
     coordinator = VolvoDataCoordinator(hass, entry, api)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator

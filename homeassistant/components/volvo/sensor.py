@@ -34,7 +34,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DATA_BATTERY_CAPACITY
-from .coordinator import VolvoConfigEntry, VolvoDataCoordinator
+from .coordinator import VolvoConfigEntry
 from .entity import VolvoEntity, VolvoEntityDescription, value_to_translation_key
 
 PARALLEL_UPDATES = 0
@@ -334,14 +334,6 @@ class VolvoSensor(VolvoEntity, SensorEntity):
     """Volvo sensor."""
 
     entity_description: VolvoSensorDescription
-
-    def __init__(
-        self,
-        coordinator: VolvoDataCoordinator,
-        description: VolvoSensorDescription,
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator, description)
 
     def _update_state(self, api_field: VolvoCarsApiBaseModel | None) -> None:
         assert isinstance(api_field, VolvoCarsValue)

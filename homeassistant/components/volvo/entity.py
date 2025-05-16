@@ -1,6 +1,6 @@
 """Volvo entity classes."""
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from dataclasses import dataclass
 
 from volvocarsapi.models import VolvoCarsApiBaseModel, VolvoCarsValueField
@@ -30,7 +30,7 @@ class VolvoEntityDescription(EntityDescription):
     api_field: str
 
 
-class VolvoEntity(ABC, CoordinatorEntity[VolvoDataCoordinator]):
+class VolvoEntity(CoordinatorEntity[VolvoDataCoordinator]):
     """Volvo base entity."""
 
     _attr_has_entity_name = True
