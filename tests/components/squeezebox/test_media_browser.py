@@ -10,6 +10,7 @@ from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_PLAY_MEDIA,
     BrowseError,
+    MediaClass,
     MediaType,
 )
 from homeassistant.components.squeezebox.browse_media import (
@@ -171,15 +172,16 @@ async def test_async_browse_media_for_apps(
 
 
 @pytest.mark.parametrize(
-    ("category", "child_count"),
+    ("category", "media_filter_classes"),
     [
-        ("favorites", 1),
-        ("artists", 1),
-        ("albums", 1),
-        ("playlists", 1),
-        ("genres", 1),
-        ("new music", 1),
-        ("album artists", 1),
+        ("favorites", None),
+        ("artists", None),
+        ("albums", None),
+        ("playlists", None),
+        ("genres", None),
+        ("new music", None),
+        ("album artists", None),
+        ("albums", [MediaClass.ALBUM]),
     ],
 )
 async def test_async_search_media(
@@ -187,7 +189,7 @@ async def test_async_search_media(
     config_entry: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
     category: str,
-    child_count: int,
+    media_filter_classes: list[MediaClass] | None,
 ) -> None:
     """Test each category with subitems."""
     with patch(
@@ -203,12 +205,67 @@ async def test_async_search_media(
                 "media_content_id": "",
                 "media_content_type": category,
                 "search_query": "Fake Item 1",
+                "media_filter_classes": media_filter_classes,
             }
         )
         response = await client.receive_json()
         assert response["success"]
         category_level = response["result"]["result"]
         assert category_level[0]["title"] == "Fake Item 1"
+
+
+async def test_async_search_media_invalid_filter(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test search_media action with invalid media_filter_class."""
+    with patch(
+        "homeassistant.components.squeezebox.browse_media.is_internal_request",
+        return_value=False,
+    ):
+        client = await hass_ws_client()
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "media_player/search_media",
+                "entity_id": "media_player.test_player",
+                "media_content_id": "",
+                "media_content_type": "albums",
+                "search_query": "Fake Item 1",
+                "media_filter_classes": "movie",
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert len(response["result"]["result"]) == 0
+
+
+async def test_async_search_media_invalid_type(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test search_media action with invalid media_content_type."""
+    with patch(
+        "homeassistant.components.squeezebox.browse_media.is_internal_request",
+        return_value=False,
+    ):
+        client = await hass_ws_client()
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "media_player/search_media",
+                "entity_id": "media_player.test_player",
+                "media_content_id": "",
+                "media_content_type": "",
+                "search_query": "Fake Item 1",
+            },
+        )
+        response = await client.receive_json()
+        assert not response["success"]
+        err_message = "Media Content Type must be specified and must be one of"
+        assert err_message in response["error"]["message"]
 
 
 async def test_generate_playlist_for_app(
