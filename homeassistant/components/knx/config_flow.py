@@ -20,6 +20,7 @@ from xknx.io.util import validate_ip as xknx_validate_ip
 from xknx.secure.keyring import Keyring, XMLInterface
 
 from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigEntryBaseFlow,
     ConfigFlow,
@@ -124,7 +125,7 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
     @property
     def _xknx(self) -> XKNX:
         """Return XKNX instance."""
-        if isinstance(self, OptionsFlow) and (
+        if (isinstance(self, OptionsFlow) or self.source == SOURCE_RECONFIGURE) and (
             knx_module := self.hass.data.get(KNX_MODULE_KEY)
         ):
             return knx_module.xknx
@@ -858,7 +859,14 @@ class KNXConfigFlow(KNXCommonFlow, ConfigFlow, domain=DOMAIN):
 
     @callback
     def finish_flow(self) -> ConfigFlowResult:
-        """Create the ConfigEntry."""
+        """Create or update the ConfigEntry."""
+        if self.source == SOURCE_RECONFIGURE:
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(),
+                data_updates=self.new_entry_data,
+                title=self.new_title or UNDEFINED,
+            )
+
         title = self.new_title or f"KNX {self.new_entry_data[CONF_KNX_CONNECTION_TYPE]}"
         return self.async_create_entry(
             title=title,
@@ -868,6 +876,20 @@ class KNXConfigFlow(KNXCommonFlow, ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         return await self.async_step_connection_type()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of existing entry."""
+        entry = self._get_reconfigure_entry()
+        self.initial_data = dict(entry.data)  # type: ignore[assignment]
+        return self.async_show_menu(
+            step_id="reconfigure",
+            menu_options=[
+                "connection_type",
+                "secure_knxkeys",
+            ],
+        )
 
 
 class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
