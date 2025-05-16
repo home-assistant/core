@@ -9,6 +9,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     PERCENTAGE,
     UV_INDEX,
@@ -23,10 +25,17 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import OpenweathermapConfigEntry
 from .const import (
+    ATTR_API_AIRPOLLUTION_AQI,
+    ATTR_API_AIRPOLLUTION_CO,
+    ATTR_API_AIRPOLLUTION_NO,
+    ATTR_API_AIRPOLLUTION_NO2,
+    ATTR_API_AIRPOLLUTION_O3,
+    ATTR_API_AIRPOLLUTION_PM2_5,
+    ATTR_API_AIRPOLLUTION_PM10,
+    ATTR_API_AIRPOLLUTION_SO2,
     ATTR_API_CLOUDS,
     ATTR_API_CONDITION,
     ATTR_API_CURRENT,
@@ -47,8 +56,10 @@ from .const import (
     ATTRIBUTION,
     DOMAIN,
     MANUFACTURER,
+    OWM_MODE_AIRPOLLUTION,
     OWM_MODE_FREE_FORECAST,
 )
+from .coordinator import OWMUpdateCoordinator
 
 WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -151,6 +162,56 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
+AIRPOLLUTION_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=ATTR_API_AIRPOLLUTION_AQI,
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_AIRPOLLUTION_CO,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        device_class=SensorDeviceClass.CO,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_AIRPOLLUTION_NO,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.NITROGEN_MONOXIDE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_AIRPOLLUTION_NO2,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_AIRPOLLUTION_O3,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.OZONE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_AIRPOLLUTION_SO2,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_AIRPOLLUTION_PM2_5,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM25,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_AIRPOLLUTION_PM10,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM10,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -162,7 +223,7 @@ async def async_setup_entry(
     name = domain_data.name
     unique_id = config_entry.unique_id
     assert unique_id is not None
-    weather_coordinator = domain_data.coordinator
+    coordinator = domain_data.coordinator
 
     if domain_data.mode == OWM_MODE_FREE_FORECAST:
         entity_registry = er.async_get(hass)
@@ -171,13 +232,23 @@ async def async_setup_entry(
         )
         for entry in entries:
             entity_registry.async_remove(entry.entity_id)
+    elif domain_data.mode == OWM_MODE_AIRPOLLUTION:
+        async_add_entities(
+            OpenWeatherMapSensor(
+                name,
+                unique_id,
+                description,
+                coordinator,
+            )
+            for description in AIRPOLLUTION_SENSOR_TYPES
+        )
     else:
         async_add_entities(
             OpenWeatherMapSensor(
                 name,
                 unique_id,
                 description,
-                weather_coordinator,
+                coordinator,
             )
             for description in WEATHER_SENSOR_TYPES
         )
@@ -195,7 +266,7 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
         name: str,
         unique_id: str,
         description: SensorEntityDescription,
-        coordinator: DataUpdateCoordinator,
+        coordinator: OWMUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
