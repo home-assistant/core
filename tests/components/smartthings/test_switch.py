@@ -280,61 +280,77 @@ async def test_create_issue_with_items(
 
 
 @pytest.mark.parametrize(
-    ("device_fixture", "device_id", "suggested_object_id", "issue_string"),
+    ("device_fixture", "device_id", "suggested_object_id", "issue_string", "version"),
     [
         (
             "da_ks_cooktop_31001",
             "808dbd84-f357-47e2-a0cd-3b66fa22d584",
             "induction_hob",
             "appliance",
+            "2025.10.0",
         ),
         (
             "da_ks_microwave_0101x",
             "2bad3237-4886-e699-1b90-4a51a3d55c8a",
             "microwave",
             "appliance",
+            "2025.10.0",
         ),
         (
             "da_wm_dw_000001",
             "f36dc7ce-cac0-0667-dc14-a3704eb5e676",
             "dishwasher",
             "appliance",
+            "2025.10.0",
         ),
         (
             "da_wm_sc_000001",
             "b93211bf-9d96-bd21-3b2f-964fcc87f5cc",
             "airdresser",
             "appliance",
+            "2025.10.0",
         ),
         (
             "da_wm_wd_000001",
             "02f7256e-8353-5bdd-547f-bd5b1647e01b",
             "dryer",
             "appliance",
+            "2025.10.0",
         ),
         (
             "da_wm_wm_000001",
             "f984b91d-f250-9d42-3436-33f09a422a47",
             "washer",
             "appliance",
+            "2025.10.0",
         ),
         (
             "hw_q80r_soundbar",
             "afcf3b91-0000-1111-2222-ddff2a0a6577",
             "soundbar",
             "media_player",
+            "2025.10.0",
         ),
         (
             "vd_network_audio_002s",
             "0d94e5db-8501-2355-eb4f-214163702cac",
             "soundbar_living",
             "media_player",
+            "2025.10.0",
         ),
         (
             "vd_stv_2017_k",
             "4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1",
             "tv_samsung_8_series_49",
             "media_player",
+            "2025.10.0",
+        ),
+        (
+            "da_sac_ehs_000002_sub",
+            "3810e5ad-5351-d9f9-12ff-000001200000",
+            "warmepumpe",
+            "dhw",
+            "2025.12.0",
         ),
     ],
 )
@@ -347,6 +363,7 @@ async def test_create_issue(
     device_id: str,
     suggested_object_id: str,
     issue_string: str,
+    version: str,
 ) -> None:
     """Test we create an issue when an automation or script is using a deprecated entity."""
     entity_id = f"switch.{suggested_object_id}"
@@ -372,6 +389,7 @@ async def test_create_issue(
         "entity_id": entity_id,
         "entity_name": suggested_object_id,
     }
+    assert issue.breaks_in_ha_version == version
 
     entity_registry.async_update_entity(
         entity_entry.entity_id,

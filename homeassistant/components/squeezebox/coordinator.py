@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from . import SqueezeboxConfigEntry
 
 from .const import (
+    DOMAIN,
     PLAYER_UPDATE_INTERVAL,
     SENSOR_UPDATE_INTERVAL,
     SIGNAL_PLAYER_REDISCOVERED,
@@ -65,7 +66,10 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
             data: dict | None = await self.lms.async_prepared_status()
 
         if not data:
-            raise UpdateFailed("No data from status poll")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="coordinator_no_data",
+            )
         _LOGGER.debug("Raw serverstatus %s=%s", self.lms.name, data)
 
         return data
