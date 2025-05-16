@@ -66,6 +66,7 @@ AC_MODE_TO_STATE = {
     "heat": HVACMode.HEAT,
     "heatClean": HVACMode.HEAT,
     "fanOnly": HVACMode.FAN_ONLY,
+    "fan": HVACMode.FAN_ONLY,
     "wind": HVACMode.FAN_ONLY,
 }
 STATE_TO_AC_MODE = {
@@ -88,6 +89,7 @@ FAN_OSCILLATION_TO_SWING = {
 }
 
 WIND = "wind"
+FAN = "fan"
 WINDFREE = "windFree"
 
 
@@ -387,14 +389,15 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             tasks.append(self.async_turn_on())
 
         mode = STATE_TO_AC_MODE[hvac_mode]
-        # If new hvac_mode is HVAC_MODE_FAN_ONLY and AirConditioner support "wind" mode the AirConditioner new mode has to be "wind"
-        # The conversion make the mode change working
-        # The conversion is made only for device that wrongly has capability "wind" instead "fan_only"
+        # If new hvac_mode is HVAC_MODE_FAN_ONLY and AirConditioner support "wind" or "fan" mode the AirConditioner
+        # new mode has to be "wind" or "fan"
         if hvac_mode == HVACMode.FAN_ONLY:
-            if WIND in self.get_attribute_value(
-                Capability.AIR_CONDITIONER_MODE, Attribute.SUPPORTED_AC_MODES
-            ):
-                mode = WIND
+            for fan_mode in (WIND, FAN):
+                if fan_mode in self.get_attribute_value(
+                    Capability.AIR_CONDITIONER_MODE, Attribute.SUPPORTED_AC_MODES
+                ):
+                    mode = fan_mode
+                    break
 
         tasks.append(
             self.execute_device_command(
