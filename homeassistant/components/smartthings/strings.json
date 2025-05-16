@@ -108,6 +108,15 @@
       },
       "hood_fan_speed": {
         "name": "Fan speed"
+      },
+      "freezer_temperature": {
+        "name": "Freezer temperature"
+      },
+      "cooler_temperature": {
+        "name": "Cooler temperature"
+      },
+      "cool_select_plus_temperature": {
+        "name": "CoolSelect+ temperature"
       }
     },
     "select": {
