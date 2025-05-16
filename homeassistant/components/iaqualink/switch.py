@@ -31,7 +31,7 @@ async def async_setup_entry(
     )
 
 
-class HassAqualinkSwitch(AqualinkEntity, SwitchEntity):
+class HassAqualinkSwitch(AqualinkEntity[AqualinkSwitch], SwitchEntity):
     """Representation of a switch."""
 
     def __init__(self, dev: AqualinkSwitch) -> None:
