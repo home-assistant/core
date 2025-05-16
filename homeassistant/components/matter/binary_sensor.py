@@ -350,5 +350,23 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.PumpConfigurationAndControl.Attributes.PumpStatus,
         ),
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="PumpStatusRunning",
+            translation_key="pump_running",
+            device_class=BinarySensorDeviceClass.RUNNING,
+            measurement_to_ha=lambda x: (
+                x
+                == clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kRunning
+            ),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(
+            clusters.PumpConfigurationAndControl.Attributes.PumpStatus,
+        ),
+        allow_multi=True,
     ),
 ]
