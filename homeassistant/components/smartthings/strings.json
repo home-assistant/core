@@ -115,6 +115,17 @@
           "stop": "[%key:common::state::stopped%]"
         }
       },
+      "lamp": {
+        "name": "Lamp",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "low": "Low",
+          "mid": "Mid",
+          "high": "High",
+          "extra_high": "Extra high"
+        }
+      },
       "detergent_amount": {
         "name": "Detergent dispense amount",
         "state": {
@@ -529,6 +540,15 @@
       },
       "sabbath_mode": {
         "name": "Sabbath mode"
+      }
+    },
+    "water_heater": {
+      "water_heater": {
+        "state": {
+          "standard": "Standard",
+          "force": "Forced",
+          "power": "Power"
+        }
       }
     }
   },
