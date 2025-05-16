@@ -4,6 +4,8 @@ DOMAIN = "ollama"
 
 CONF_MODEL = "model"
 CONF_PROMPT = "prompt"
+CONF_REASONING_START = "reasoning_start"
+CONF_REASONING_END = "reasoning_end"
 
 CONF_KEEP_ALIVE = "keep_alive"
 DEFAULT_KEEP_ALIVE = -1  # seconds. -1 = indefinite, 0 = never
@@ -120,6 +122,7 @@ MODEL_NAMES = [  # https://ollama.com/library
     "qwen2.5-coder",
     "qwen2.5",
     "qwen2",
+    "qwen3",
     "reader-lm",
     "reflection",
     "samantha-mistral",

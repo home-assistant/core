@@ -41,6 +41,8 @@ from .const import (
     CONF_MODEL,
     CONF_NUM_CTX,
     CONF_PROMPT,
+    CONF_REASONING_END,
+    CONF_REASONING_START,
     DEFAULT_KEEP_ALIVE,
     DEFAULT_MAX_HISTORY,
     DEFAULT_MODEL,
@@ -280,6 +282,18 @@ def ollama_config_option_schema(
                 min=-1, max=sys.maxsize, step=1, mode=NumberSelectorMode.BOX
             )
         ),
+        vol.Optional(
+            CONF_REASONING_START,
+            description={
+                "suggested_value": options.get(CONF_REASONING_START, "<think>")
+            },
+        ): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
+        vol.Optional(
+            CONF_REASONING_END,
+            description={
+                "suggested_value": options.get(CONF_REASONING_END, "</think>")
+            },
+        ): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
     }
 
 

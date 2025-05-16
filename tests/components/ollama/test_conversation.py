@@ -140,6 +140,134 @@ async def test_chat_stream(
         assert result.response.speech["plain"]["speech"] == "test response"
 
 
+@pytest.mark.parametrize(
+    "response",
+    [
+        {"message": {"role": "assistant", "content": "test response"}},
+        {
+            "message": {
+                "role": "assistant",
+                "content": "<think>\nOh, what if?\n</think>\ntest response",
+            }
+        },
+        [
+            {"message": {"role": "assistant", "content": "test "}},
+            {
+                "message": {"role": "assistant", "content": "response"},
+                "done": True,
+                "done_reason": "stop",
+            },
+        ],
+        [
+            {"message": {"role": "assistant", "content": "<think>\n"}},
+            {"message": {"role": "assistant", "content": "Oh, what if?\n"}},
+            {"message": {"role": "assistant", "content": "</think>\n"}},
+            {"message": {"role": "assistant", "content": "test "}},
+            {
+                "message": {"role": "assistant", "content": "response"},
+                "done": True,
+                "done_reason": "stop",
+            },
+        ],
+    ],
+    ids=["simple", "think", "streamed", "streamed_think"],
+)
+async def test_reasoning_filter(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    response: dict | list[dict],
+) -> None:
+    """Test that reasoning responses are filtered correctly."""
+
+    agent_id = mock_config_entry.entry_id
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            ollama.CONF_REASONING_START: "<think>",
+            ollama.CONF_REASONING_END: "</think>",
+        },
+    )
+
+    with patch(
+        "ollama.AsyncClient.chat",
+        return_value=stream_generator(response),
+    ):
+        result = await conversation.async_converse(
+            hass,
+            "test message",
+            None,
+            Context(),
+            agent_id=agent_id,
+        )
+
+        assert result.response.speech["plain"]["speech"] == "test response"
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        {
+            "message": {
+                "role": "assistant",
+                "content": "<think>\nOh, what if?\n</think>\ntest response",
+            }
+        },
+        [
+            {"message": {"role": "assistant", "content": "<think>\n"}},
+            {"message": {"role": "assistant", "content": "Oh, what if?\n"}},
+            {"message": {"role": "assistant", "content": "</think>\n"}},
+            {"message": {"role": "assistant", "content": "test "}},
+            {
+                "message": {"role": "assistant", "content": "response"},
+                "done": True,
+                "done_reason": "stop",
+            },
+        ],
+    ],
+    ids=["think", "streamed_think"],
+)
+async def test_reasoning_no_filter(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    response: dict | list[dict],
+) -> None:
+    """Test that reasoning responses are filtered correctly."""
+
+    agent_id = mock_config_entry.entry_id
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            ollama.CONF_REASONING_START: "",
+            ollama.CONF_REASONING_END: "",
+        },
+    )
+
+    with patch(
+        "ollama.AsyncClient.chat",
+        return_value=stream_generator(response),
+    ):
+        result = await conversation.async_converse(
+            hass,
+            "test message",
+            None,
+            Context(),
+            agent_id=agent_id,
+        )
+
+        assert (
+            result.response.speech["plain"]["speech"]
+            == "<think>\nOh, what if?\n</think>\ntest response"
+        )
+
+
 async def test_template_variables(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:

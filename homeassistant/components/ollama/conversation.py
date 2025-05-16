@@ -24,6 +24,8 @@ from .const import (
     CONF_MODEL,
     CONF_NUM_CTX,
     CONF_PROMPT,
+    CONF_REASONING_END,
+    CONF_REASONING_START,
     DEFAULT_KEEP_ALIVE,
     DEFAULT_MAX_HISTORY,
     DEFAULT_NUM_CTX,
@@ -128,6 +130,8 @@ def _convert_content(
 
 async def _transform_stream(
     result: AsyncGenerator[ollama.Message],
+    reasoning_start: str | None = None,
+    reasoning_end: str | None = None,
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     """Transform the response stream into HA format.
 
@@ -144,6 +148,7 @@ async def _transform_stream(
     """
 
     new_msg = True
+    is_reasoning = False
     async for response in result:
         _LOGGER.debug("Received response: %s", response)
         response_message = response["message"]
@@ -160,6 +165,20 @@ async def _transform_stream(
                 for tool_call in tool_calls
             ]
         if (content := response_message.get("content")) is not None:
+            # Handle reasoning start and end
+            if reasoning_start and content.startswith(reasoning_start):
+                _LOGGER.debug("Reasoning started")
+                is_reasoning = True
+            if is_reasoning and reasoning_end and reasoning_end in content:
+                # Discarding reasoning content here because frontend has no use for it
+                content = content.split(reasoning_end, 1)[1].lstrip()
+                _LOGGER.debug("Reasoning ended, new content: %s", content)
+                is_reasoning = False
+
+            if is_reasoning:
+                # Reasoning is in progress, don't yield anything
+                # Maybe, in the future, we add to something like chunk["reasoning"]
+                continue
             chunk["content"] = content
         if response_message.get("done"):
             new_msg = True
@@ -264,7 +283,12 @@ class OllamaConversationEntity(
                 [
                     _convert_content(content)
                     async for content in chat_log.async_add_delta_content_stream(
-                        user_input.agent_id, _transform_stream(response_generator)
+                        user_input.agent_id,
+                        _transform_stream(
+                            response_generator,
+                            settings.get(CONF_REASONING_START),
+                            settings.get(CONF_REASONING_END),
+                        ),
                     )
                 ]
             )
