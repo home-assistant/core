@@ -54,6 +54,10 @@ async def async_setup_entry(
                 Capability.CUSTOM_OUTING_MODE,
             )
         )
+        and device.status[MAIN][Capability.TEMPERATURE_MEASUREMENT][
+            Attribute.TEMPERATURE
+        ].value
+        is not None
     )
 
 
