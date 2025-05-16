@@ -13,7 +13,7 @@
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'binary_sensor.trv_name_calibration',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -24,7 +24,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'TRV-Name calibration',
+    'original_name': 'Calibration',
     'platform': 'shelly',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -37,7 +37,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'TRV-Name calibration',
+      'friendly_name': 'TRV-Name Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.trv_name_calibration',
