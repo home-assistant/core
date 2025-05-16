@@ -47,6 +47,7 @@ from .models import ElectricityTypeData, EnumTypeData, IntegerTypeData
 class TuyaSensorEntityDescription(SensorEntityDescription):
     """Describes Tuya sensor entity."""
 
+    raw_type: BaseTypeData | None = None
     subkey: str | None = None
 
 
@@ -1417,7 +1418,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
 
     _status_range: DeviceStatusRange | None = None
     _type: DPType | None = None
-    _type_data: IntegerTypeData | EnumTypeData | None = None
+    _type_data: EnumTypeData | IntegerTypeData | MealPlanTypeData | None = None
     _uom: UnitOfMeasurement | None = None
 
     def __init__(
@@ -1517,14 +1518,20 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         # Get subkey value from Json string.
         if self._type is DPType.JSON:
             if self.entity_description.subkey is None:
-                return None
-            values = ElectricityTypeData.from_json(value)
+                self._attr_extra_state_attributes = (
+                    self.entity_description.raw_type.from_raw(value)
+                )
+                return value
+            values = self.entity_description.raw_type.from_json(value)
             return getattr(values, self.entity_description.subkey)
 
         if self._type is DPType.RAW:
             if self.entity_description.subkey is None:
-                return None
-            values = ElectricityTypeData.from_raw(value)
+                self._attr_extra_state_attributes = (
+                    self.entity_description.raw_type.from_raw(value)
+                )
+                return value
+            values = self.entity_description.raw_type.from_raw(value)
             return getattr(values, self.entity_description.subkey)
 
         # Valid string or enum value
