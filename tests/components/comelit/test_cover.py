@@ -15,6 +15,7 @@ from homeassistant.components.cover import (
     SERVICE_STOP_COVER,
     STATE_CLOSED,
     STATE_CLOSING,
+    STATE_OPEN,
     STATE_OPENING,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
@@ -94,7 +95,7 @@ async def test_cover_open(
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state.state == STATE_UNKNOWN
+    assert state.state == STATE_OPEN
 
 
 async def test_cover_close(
@@ -159,3 +160,36 @@ async def test_cover_stop_if_stopped(
 
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_UNKNOWN
+
+
+async def test_cover_restore_state(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+) -> None:
+    """Test cover restore state on reload."""
+
+    mock_serial_bridge.reset_mock()
+    await setup_integration(hass, mock_serial_bridge_config_entry)
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_UNKNOWN
+
+    # Open cover
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    mock_serial_bridge.set_device_status.assert_called()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_OPENING
+
+    await hass.config_entries.async_reload(mock_serial_bridge_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_OPENING
