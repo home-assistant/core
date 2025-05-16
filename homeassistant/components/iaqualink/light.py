@@ -38,7 +38,7 @@ async def async_setup_entry(
     )
 
 
-class HassAqualinkLight(AqualinkEntity, LightEntity):
+class HassAqualinkLight(AqualinkEntity[AqualinkLight], LightEntity):
     """Representation of a light."""
 
     def __init__(self, dev: AqualinkLight) -> None:

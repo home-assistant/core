@@ -32,7 +32,7 @@ async def async_setup_entry(
     )
 
 
-class HassAqualinkSensor(AqualinkEntity, SensorEntity):
+class HassAqualinkSensor(AqualinkEntity[AqualinkSensor], SensorEntity):
     """Representation of a sensor."""
 
     def __init__(self, dev: AqualinkSensor) -> None:

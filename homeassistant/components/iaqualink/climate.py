@@ -42,7 +42,7 @@ async def async_setup_entry(
     )
 
 
-class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
+class HassAqualinkThermostat(AqualinkEntity[AqualinkThermostat], ClimateEntity):
     """Representation of a thermostat."""
 
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
