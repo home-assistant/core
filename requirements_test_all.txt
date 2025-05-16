@@ -1143,7 +1143,7 @@ led-ble==1.1.7
 lektricowifi==0.1
 
 # homeassistant.components.leneda
-leneda-client==0.4.0
+leneda-client==0.5.0
 
 # homeassistant.components.letpot
 letpot==0.4.0
