@@ -15,6 +15,12 @@
       },
       "night_temperature_offset": {
         "default": "mdi:thermometer"
+      },
+      "system_led": {
+        "default": "mdi:led-on",
+        "state": {
+          "0": "mdi:led-off"
+        }
       }
     },
     "sensor": {

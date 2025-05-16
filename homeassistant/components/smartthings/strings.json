@@ -105,6 +105,9 @@
       "washer_rinse_cycles": {
         "name": "Rinse cycles",
         "unit_of_measurement": "cycles"
+      },
+      "hood_fan_speed": {
+        "name": "Fan speed"
       }
     },
     "select": {
@@ -113,6 +116,17 @@
           "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
           "pause": "[%key:common::state::paused%]",
           "stop": "[%key:common::state::stopped%]"
+        }
+      },
+      "lamp": {
+        "name": "Lamp",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "low": "Low",
+          "mid": "Mid",
+          "high": "High",
+          "extra_high": "Extra high"
         }
       },
       "detergent_amount": {
@@ -530,6 +544,15 @@
       "sabbath_mode": {
         "name": "Sabbath mode"
       }
+    },
+    "water_heater": {
+      "water_heater": {
+        "state": {
+          "standard": "Standard",
+          "force": "Forced",
+          "power": "Power"
+        }
+      }
     }
   },
   "issues": {
@@ -555,23 +578,31 @@
     },
     "deprecated_switch_appliance_scripts": {
       "title": "[%key:component::smartthings::issues::deprecated_switch_appliance::title%]",
-      "description": "The switch `{entity_id}` is deprecated because the actions did not work, so it has been replaced with a binary sensor instead.\n\nThe switch was used in the following automations or scripts:\n{items}\n\nPlease use the new binary sensor in the above automations or scripts and disable the entity to fix this issue."
+      "description": "The switch `{entity_id}` is deprecated because the actions did not work, so it has been replaced with a binary sensor instead.\n\nThe switch was used in the following automations or scripts:\n{items}\n\nPlease use the new binary sensor in the above automations or scripts and disable the switch to fix this issue."
     },
     "deprecated_switch_media_player": {
       "title": "[%key:component::smartthings::issues::deprecated_switch_appliance::title%]",
-      "description": "The switch `{entity_id}` is deprecated and a media player entity has been added to replace it.\n\nPlease use the new media player entity in the above automations or scripts and disable the entity to fix this issue."
+      "description": "The switch `{entity_id}` is deprecated and a media player entity has been added to replace it.\n\nPlease update your dashboards and templates accordingly and disable the switch to fix this issue."
     },
     "deprecated_switch_media_player_scripts": {
       "title": "[%key:component::smartthings::issues::deprecated_switch_appliance::title%]",
-      "description": "The switch `{entity_id}` is deprecated and a media player entity has been added to replace it.\n\nThe switch was used in the following automations or scripts:\n{items}\n\nPlease use the new media player entity in the above automations or scripts and disable the entity to fix this issue."
+      "description": "The switch `{entity_id}` is deprecated and a media player entity has been added to replace it.\n\nThe switch was used in the following automations or scripts:\n{items}\n\nPlease use the new media player entity in the above automations or scripts and disable the switch to fix this issue."
+    },
+    "deprecated_switch_dhw": {
+      "title": "Heat pump switch deprecated",
+      "description": "The switch `{entity_id}` is deprecated and a water heater entity has been added to replace it.\n\nPlease update your dashboards and templates accordingly and disable the switch to fix this issue."
+    },
+    "deprecated_switch_dhw_scripts": {
+      "title": "[%key:component::smartthings::issues::deprecated_switch_dhw::title%]",
+      "description": "The switch `{entity_id}` is deprecated and a water heater entity has been added to replace it.\n\nThe switch was used in the following automations or scripts:\n{items}\n\nPlease use the new water heater entity in the above automations or scripts and disable the switch to fix this issue."
     },
     "deprecated_media_player": {
       "title": "Media player sensors deprecated",
-      "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a media player entity.\n\nPlease update your dashboards, templates to use the new media player entity and disable the entity to fix this issue."
+      "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a media player entity.\n\nPlease update your dashboards and templates to use the new media player entity and disable the sensor to fix this issue."
     },
     "deprecated_media_player_scripts": {
       "title": "Deprecated sensor detected in some automations or scripts",
-      "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a media player entity.\n\nThe sensor was used in the following automations or scripts:\n{items}\n\nPlease update the above automations or scripts to use the new media player entity and disable the entity to fix this issue."
+      "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a media player entity.\n\nThe sensor was used in the following automations or scripts:\n{items}\n\nPlease update the above automations or scripts to use the new media player entity and disable the sensor to fix this issue."
     }
   }
 }

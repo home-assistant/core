@@ -152,14 +152,24 @@ async def async_setup_entry(
                 device.device.components[MAIN].manufacturer_category
                 in INVALID_SWITCH_CATEGORIES
             )
-            if media_player or appliance:
-                issue = "media_player" if media_player else "appliance"
+            dhw = Capability.SAMSUNG_CE_EHS_FSV_SETTINGS in device.status[MAIN]
+            if media_player or appliance or dhw:
+                if appliance:
+                    issue = "appliance"
+                    version = "2025.10.0"
+                elif media_player:
+                    issue = "media_player"
+                    version = "2025.10.0"
+                else:
+                    issue = "dhw"
+                    version = "2025.12.0"
                 if deprecate_entity(
                     hass,
                     entity_registry,
                     SWITCH_DOMAIN,
                     f"{device.device.device_id}_{MAIN}_{Capability.SWITCH}_{Attribute.SWITCH}_{Attribute.SWITCH}",
                     f"deprecated_switch_{issue}",
+                    version,
                 ):
                     entities.append(
                         SmartThingsSwitch(
