@@ -3,13 +3,13 @@
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
+from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .notify import PLATFORM_SCHEMA, ProwlNotificationService
+from .notify import PLATFORM_SCHEMA, LegacyProwlNotificationService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,9 +24,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Prowl service."""
     # This just checks if the API key is valid before initialising the entry
-    prowl = ProwlNotificationService(
-        hass, entry.data[CONF_NAME], entry.data[CONF_API_KEY]
-    )
+    prowl = LegacyProwlNotificationService(hass, entry.data[CONF_API_KEY])
     try:
         if not await prowl.async_verify_key():
             raise ConfigEntryAuthFailed(

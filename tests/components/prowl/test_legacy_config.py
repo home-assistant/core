@@ -80,3 +80,15 @@ async def test_unknown_exception_legacy_send_notification(
         await prowl.async_send_message("Test Notification")
 
     assert mock_pyprowl_syntax_error.notify.call_count > 0
+
+
+@pytest.mark.asyncio
+async def test_legacy_verify_api_key_syntax_error(
+    hass: HomeAssistant, mock_pyprowl_syntax_error
+) -> None:
+    """API key verification in Prowl with an unhandled exception from the library."""
+    prowl = LegacyProwlNotificationService(hass, TEST_API_KEY)
+
+    with pytest.raises(SyntaxError):
+        await prowl.async_verify_key()
+    assert mock_pyprowl_syntax_error.verify_key.call_count > 0

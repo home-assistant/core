@@ -17,7 +17,7 @@ from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
-from .notify import ProwlNotificationService
+from .notify import LegacyProwlNotificationService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,7 +97,7 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _validate_api_key(self, api_key: str):
         """Validate the provided API key."""
-        prowl = ProwlNotificationService(self.hass, DOMAIN, api_key)
+        prowl = LegacyProwlNotificationService(self.hass, api_key)
         try:
             if not await prowl.async_verify_key():
                 return {"base": "invalid_api_key"}

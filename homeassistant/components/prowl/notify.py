@@ -16,14 +16,13 @@ from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
-    NotifyEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import API_URL
@@ -33,15 +32,13 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend({vol.Required(CONF_API_KEY): cv.string})
 
 
-class ProwlNotificationService(NotifyEntity):
-    """Implement the notification service for Prowl."""
+class LegacyProwlNotificationService(BaseNotificationService):
+    """Provides the legacy notification service for Prowl."""
 
-    def __init__(self, hass: HomeAssistant, name: str, api_key: str) -> None:
+    def __init__(self, hass: HomeAssistant, api_key: str) -> None:
         """Initialize the service."""
         self._hass = hass
         self._prowl = pyprowl.Prowl(api_key)
-        self._attr_name = name
-        self._attr_unique_id = name
 
     async def async_verify_key(self) -> bool:
         """Validate API key."""
@@ -62,43 +59,6 @@ class ProwlNotificationService(NotifyEntity):
             else:
                 # Not one of the API specific exceptions, so not catching it.
                 raise
-
-    async def async_send_message(self, message: str, title: str | None = None) -> None:
-        """Send the message."""
-        try:
-            async with asyncio.timeout(10):
-                await self._hass.async_add_executor_job(
-                    partial(
-                        self._prowl.notify,
-                        appName="Home-Assistant",
-                        event=title or ATTR_TITLE_DEFAULT,
-                        description=message,
-                        priority=0,
-                    )
-                )
-        except TimeoutError:
-            _LOGGER.exception("Timeout accessing Prowl at %s", API_URL)
-            raise
-        except Exception as ex:
-            # pyprowl just specifically raises an Exception with a string at API failures unfortunately.
-            if str(ex).startswith("401 "):
-                # Bad API key
-                raise ConfigEntryAuthFailed from ex
-            elif str(ex)[0:3].isdigit():  # noqa: RET506
-                # One of the other API errors
-                raise HomeAssistantError from ex
-            else:
-                # Not one of the API specific exceptions, so not catching it.
-                raise
-
-
-class LegacyProwlNotificationService(BaseNotificationService):
-    """Provides the legacy notification service for Prowl."""
-
-    def __init__(self, hass: HomeAssistant, api_key: str) -> None:
-        """Initialize the service."""
-        self._hass = hass
-        self._prowl = pyprowl.Prowl(api_key)
 
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Call the new entity service to send the message."""
@@ -147,7 +107,7 @@ async def async_get_service(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the notify entities."""
     prowl = entry.runtime_data
