@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from leneda.exceptions import ForbiddenException, UnauthorizedException
 import pytest
@@ -107,6 +107,7 @@ async def test_form_new_credentials(
 
     with patch(
         "homeassistant.components.leneda.config_flow.LenedaClient.get_supported_obis_codes",
+        new_callable=AsyncMock,
         return_value=MOCK_OBIS_CODES,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -169,6 +170,7 @@ async def test_form_add_metering_point(
 
     with patch(
         "homeassistant.components.leneda.config_flow.LenedaClient.get_supported_obis_codes",
+        new_callable=AsyncMock,
         return_value=MOCK_OBIS_CODES,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -200,12 +202,13 @@ async def test_form_probe_success(hass: HomeAssistant, recorder_mock: Recorder) 
 
     future: asyncio.Future = asyncio.Future()
 
-    with (
-        patch(
-            "homeassistant.components.leneda.config_flow.LenedaClient.get_supported_obis_codes",
-            return_value=future,
-        ),
-        patch.object(hass, "async_add_executor_job", return_value=future),
+    async def wait_for_result(*args, **kwargs):
+        return await future
+
+    with patch(
+        "homeassistant.components.leneda.config_flow.LenedaClient.get_supported_obis_codes",
+        new_callable=AsyncMock,
+        side_effect=wait_for_result,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -254,10 +257,14 @@ async def test_form_probe_no_sensors(
 
     future: asyncio.Future = asyncio.Future()
 
+    async def wait_for_result(*args, **kwargs):
+        return await future
+
     with (
         patch(
             "homeassistant.components.leneda.config_flow.LenedaClient.get_supported_obis_codes",
-            return_value=future,
+            new_callable=AsyncMock,
+            side_effect=wait_for_result,
         ),
         patch.object(hass, "async_add_executor_job", return_value=future),
     ):
@@ -305,6 +312,7 @@ async def test_form_manual_setup(hass: HomeAssistant, recorder_mock: Recorder) -
 
     with patch(
         "homeassistant.components.leneda.config_flow.LenedaClient.get_supported_obis_codes",
+        new_callable=AsyncMock,
         return_value=MOCK_OBIS_CODES,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -400,6 +408,7 @@ async def test_duplicate_metering_point(
 
     with patch(
         "homeassistant.components.leneda.config_flow.LenedaClient.get_supported_obis_codes",
+        new_callable=AsyncMock,
         return_value=MOCK_OBIS_CODES,
     ):
         # Enter new credentials
@@ -430,6 +439,7 @@ async def test_forbidden_error(hass: HomeAssistant, recorder_mock: Recorder) -> 
 
     with patch(
         "homeassistant.components.leneda.config_flow.LenedaClient.get_supported_obis_codes",
+        new_callable=AsyncMock,
         side_effect=ForbiddenException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -463,6 +473,7 @@ async def test_unauthorized_error(hass: HomeAssistant, recorder_mock: Recorder) 
 
     with patch(
         "homeassistant.components.leneda.config_flow.LenedaClient.get_supported_obis_codes",
+        new_callable=AsyncMock,
         side_effect=UnauthorizedException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -496,6 +507,7 @@ async def test_unknown_error(hass: HomeAssistant, recorder_mock: Recorder) -> No
 
     with patch(
         "homeassistant.components.leneda.config_flow.LenedaClient.get_supported_obis_codes",
+        new_callable=AsyncMock,
         side_effect=Exception("Unknown error"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -544,6 +556,7 @@ async def test_reauth_flow(
     # Test with valid API token
     with patch(
         "homeassistant.components.leneda.config_flow.LenedaClient.get_aggregated_metering_data",
+        new_callable=AsyncMock,
         return_value=MagicMock(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -579,6 +592,7 @@ async def test_reauth_flow_forbidden(
 
     with patch(
         "homeassistant.components.leneda.config_flow.LenedaClient.get_aggregated_metering_data",
+        new_callable=AsyncMock,
         side_effect=ForbiddenException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -614,6 +628,7 @@ async def test_reauth_flow_unknown_error(
 
     with patch(
         "homeassistant.components.leneda.config_flow.LenedaClient.get_aggregated_metering_data",
+        new_callable=AsyncMock,
         side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(

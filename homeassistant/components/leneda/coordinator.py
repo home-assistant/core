@@ -182,8 +182,7 @@ class LenedaCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         )
 
         # Get hourly data
-        result = await self.hass.async_add_executor_job(
-            self.client.get_aggregated_metering_data,
+        result = await self.client.get_aggregated_metering_data(
             metering_point,
             obis,
             start_date,
@@ -301,8 +300,7 @@ class LenedaCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             end_date,
         )
 
-        result = await self.hass.async_add_executor_job(
-            self.client.get_aggregated_metering_data,
+        result = await self.client.get_aggregated_metering_data(
             metering_point,
             obis,
             start_date,
