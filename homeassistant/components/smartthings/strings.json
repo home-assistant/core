@@ -595,7 +595,7 @@
     },
     "deprecated_media_player": {
       "title": "Media player sensors deprecated",
-      "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a media player entity.\n\nPlease update your dashboards and templates to use the new media player entity and disable the switch to fix this issue."
+      "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a media player entity.\n\nPlease update your dashboards and templates to use the new media player entity and disable the sensor to fix this issue."
     },
     "deprecated_media_player_scripts": {
       "title": "Deprecated sensor detected in some automations or scripts",
