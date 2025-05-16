@@ -203,7 +203,7 @@ async def test_resolving(
     stream = MockResultStream(hass, "wav", b"")
     media = await media_source.async_resolve_media(hass, stream.media_source_id, None)
     assert media.url == stream.url
-    assert stream.content_type == stream.content_type
+    assert media.mime_type == stream.content_type
 
     with pytest.raises(media_source.Unresolvable):
         await media_source.async_resolve_media(
