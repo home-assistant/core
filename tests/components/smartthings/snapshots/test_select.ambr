@@ -401,6 +401,70 @@
     'state': 'stop',
   })
 # ---
+# name: test_all_entities[da_wm_wm_000001][select.washer_soil_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'extra_light',
+        'light',
+        'normal',
+        'heavy',
+        'extra_heavy',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.washer_soil_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Soil level',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'soil_level',
+    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_custom.washerSoilLevel_washerSoilLevel_washerSoilLevel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001][select.washer_soil_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Washer Soil level',
+      'options': list([
+        'none',
+        'extra_light',
+        'light',
+        'normal',
+        'heavy',
+        'extra_heavy',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.washer_soil_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
+  })
+# ---
 # name: test_all_entities[da_wm_wm_000001_1][select.washing_machine-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
