@@ -34,38 +34,41 @@ rules:
     comment: |
       No custom actions are defined.
   config-entry-unloading: done
-  docs-configuration-parameters: todo
-  docs-installation-parameters: todo
-  entity-unavailable: todo
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      No options flow is provided.
+  docs-installation-parameters: done
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: todo
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info: done
   discovery: done
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: |
       Device type integration
-  entity-category: todo
-  entity-device-class: todo
-  entity-disabled-by-default: todo
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: |
