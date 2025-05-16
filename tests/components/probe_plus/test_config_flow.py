@@ -54,6 +54,8 @@ async def test_user_config_flow_creates_entry(
         },
     )
 
+    assert result["unique_id"] == "aa:bb:cc:dd:ee:ff"
+    assert result["title"] == "FM210 aa:bb:cc:dd:ee:ff"
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_ADDRESS: "aa:bb:cc:dd:ee:ff"
@@ -98,12 +100,11 @@ async def test_bluetooth_discovery(
     assert result["step_id"] == "bluetooth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
-        },
+        result["flow_id"]
     )
 
+    assert result["title"] == "FM210 aa:bb:cc:dd:ee:ff"
+    assert result["unique_id"] == "aa:bb:cc:dd:ee:ff"
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_ADDRESS: service_info.address,
