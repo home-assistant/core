@@ -584,7 +584,7 @@ CAPABILITY_TO_SENSORS: dict[
                 device_class=SensorDeviceClass.TEMPERATURE,
                 use_temperature_unit=True,
                 # Set the value to None if it is 0 F (-17 C)
-                value_fn=lambda value: None if value in {0, -17} else value,
+                value_fn=lambda value: None if value in {-17, 0, 1} else value,
             )
         ]
     },
