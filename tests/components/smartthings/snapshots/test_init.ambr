@@ -794,6 +794,39 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_sac_ehs_000001_sub_1]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '6a7d5349-0a66-0277-058d-000001200101',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'SAC_EHS_MONO',
+    'model_id': None,
+    'name': 'Heat Pump Main',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '20250317.1',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_sac_ehs_000002_sub]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
