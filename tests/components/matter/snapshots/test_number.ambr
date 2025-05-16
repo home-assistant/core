@@ -1700,6 +1700,63 @@
     'state': '0.0',
   })
 # ---
+# name: test_numbers[pump][number.mock_pump_level_control-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 10,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.mock_pump_level_control',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Level control',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'level_control',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-LevelControlCurrentLevel-8-0',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_numbers[pump][number.mock_pump_level_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Pump Level control',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 10,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_pump_level_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '127.0',
+  })
+# ---
 # name: test_numbers[pump][number.mock_pump_on_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
