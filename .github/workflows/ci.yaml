@@ -1486,6 +1486,14 @@ jobs:
         uses: actions/download-artifact@v4.3.0
         with:
           pattern: test-results-*
+      - name: Beautify test results
+        run: |
+          sudo apt update
+          sudo apt install libxml2-utils
+          for file in $(ls test-results-*/junit.xml); do
+            xmllint --format "$file" > "$file-tmp"
+            mv "$file-tmp" "$file"
+          done
       - name: Upload test results to Codecov
         uses: codecov/test-results-action@v1
         with:
