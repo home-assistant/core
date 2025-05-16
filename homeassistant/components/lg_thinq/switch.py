@@ -31,6 +31,15 @@ class ThinQSwitchEntityDescription(SwitchEntityDescription):
     off_key: str | None = None
 
 
+DRYER_OPERATION_SWITCH_DESC = ThinQSwitchEntityDescription(
+    key=ThinQProperty.DRYER_OPERATION_MODE, translation_key="operation_power"
+)
+
+WASHER_OPERATION_SWITCH_DESC = ThinQSwitchEntityDescription(
+    key=ThinQProperty.WASHER_OPERATION_MODE, translation_key="operation_power"
+)
+
+
 DEVICE_TYPE_SWITCH_MAP: dict[DeviceType, tuple[ThinQSwitchEntityDescription, ...]] = {
     DeviceType.AIR_CONDITIONER: (
         ThinQSwitchEntityDescription(
@@ -97,11 +106,7 @@ DEVICE_TYPE_SWITCH_MAP: dict[DeviceType, tuple[ThinQSwitchEntityDescription, ...
             translation_key="operation_power",
         ),
     ),
-    DeviceType.DRYER: (
-        ThinQSwitchEntityDescription(
-            key=ThinQProperty.DRYER_OPERATION_MODE, translation_key="operation_power"
-        ),
-    ),
+    DeviceType.DRYER: (DRYER_OPERATION_SWITCH_DESC,),
     DeviceType.HUMIDIFIER: (
         ThinQSwitchEntityDescription(
             key=ThinQProperty.HUMIDIFIER_OPERATION_MODE,
@@ -185,39 +190,15 @@ DEVICE_TYPE_SWITCH_MAP: dict[DeviceType, tuple[ThinQSwitchEntityDescription, ...
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    DeviceType.WASHCOMBO_MAIN: (
-        ThinQSwitchEntityDescription(
-            key=ThinQProperty.WASHER_OPERATION_MODE, translation_key="operation_power"
-        ),
-    ),
-    DeviceType.WASHCOMBO_MINI: (
-        ThinQSwitchEntityDescription(
-            key=ThinQProperty.WASHER_OPERATION_MODE, translation_key="operation_power"
-        ),
-    ),
-    DeviceType.WASHER: (
-        ThinQSwitchEntityDescription(
-            key=ThinQProperty.WASHER_OPERATION_MODE, translation_key="operation_power"
-        ),
-    ),
+    DeviceType.WASHCOMBO_MAIN: (WASHER_OPERATION_SWITCH_DESC,),
+    DeviceType.WASHCOMBO_MINI: (WASHER_OPERATION_SWITCH_DESC,),
+    DeviceType.WASHER: (WASHER_OPERATION_SWITCH_DESC,),
     DeviceType.WASHTOWER: (
-        ThinQSwitchEntityDescription(
-            key=ThinQProperty.DRYER_OPERATION_MODE, translation_key="operation_power"
-        ),
-        ThinQSwitchEntityDescription(
-            key=ThinQProperty.WASHER_OPERATION_MODE, translation_key="operation_power"
-        ),
+        DRYER_OPERATION_SWITCH_DESC,
+        WASHER_OPERATION_SWITCH_DESC,
     ),
-    DeviceType.WASHTOWER_DRYER: (
-        ThinQSwitchEntityDescription(
-            key=ThinQProperty.DRYER_OPERATION_MODE, translation_key="operation_power"
-        ),
-    ),
-    DeviceType.WASHTOWER_WASHER: (
-        ThinQSwitchEntityDescription(
-            key=ThinQProperty.WASHER_OPERATION_MODE, translation_key="operation_power"
-        ),
-    ),
+    DeviceType.WASHTOWER_DRYER: (DRYER_OPERATION_SWITCH_DESC,),
+    DeviceType.WASHTOWER_WASHER: (WASHER_OPERATION_SWITCH_DESC,),
     DeviceType.WINE_CELLAR: (
         ThinQSwitchEntityDescription(
             key=ThinQProperty.OPTIMAL_HUMIDITY,
