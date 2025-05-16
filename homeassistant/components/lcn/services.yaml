@@ -3,6 +3,7 @@
 output_abs:
   fields:
     device_id:
+      required: true
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector: &device_selector
         device:
@@ -71,10 +72,6 @@ output_abs:
               model: LCN-UMF
             - integration: lcn
               model: LCN-WBH
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
     output:
       required: true
       selector:
@@ -103,12 +100,9 @@ output_abs:
 output_rel:
   fields:
     device_id:
+      required: true
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector: *device_selector
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
     output:
       required: true
       selector:
@@ -129,12 +123,9 @@ output_rel:
 output_toggle:
   fields:
     device_id:
+      required: true
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector: *device_selector
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
     output:
       required: true
       selector:
@@ -156,12 +147,9 @@ output_toggle:
 relays:
   fields:
     device_id:
+      required: true
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector: *device_selector
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
     state:
       required: true
       example: "t---001-"
@@ -171,12 +159,9 @@ relays:
 led:
   fields:
     device_id:
+      required: true
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector: *device_selector
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
     led:
       required: true
       selector:
@@ -207,12 +192,9 @@ led:
 var_abs:
   fields:
     device_id:
+      required: true
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector: *device_selector
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
     variable:
       required: true
       default: native
@@ -276,12 +258,9 @@ var_abs:
 var_reset:
   fields:
     device_id:
+      required: true
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector: *device_selector
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
     variable:
       required: true
       selector:
@@ -311,12 +290,9 @@ var_reset:
 var_rel:
   fields:
     device_id:
+      required: true
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector: *device_selector
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
     variable:
       required: true
       selector:
@@ -404,12 +380,9 @@ var_rel:
 lock_regulator:
   fields:
     device_id:
+      required: true
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector: *device_selector
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
     setpoint:
       required: true
       selector:
@@ -440,12 +413,9 @@ lock_regulator:
 send_keys:
   fields:
     device_id:
+      required: true
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector: *device_selector
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
     keys:
       required: true
       example: "a1a5d8"
@@ -489,12 +459,9 @@ send_keys:
 lock_keys:
   fields:
     device_id:
+      required: true
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector: *device_selector
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
     table:
       example: "a"
       default: a
@@ -534,12 +501,9 @@ lock_keys:
 dyn_text:
   fields:
     device_id:
+      required: true
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector: *device_selector
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
     row:
       required: true
       selector:
@@ -555,12 +519,9 @@ dyn_text:
 pck:
   fields:
     device_id:
+      required: true
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector: *device_selector
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
     pck:
       required: true
       example: "PIN4"
