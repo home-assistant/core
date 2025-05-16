@@ -189,7 +189,7 @@ MOCK_BLOCKS = [
 ]
 
 MOCK_CONFIG = {
-    "input:0": {"id": 0, "name": "Test name input 0", "type": "button"},
+    "input:0": {"id": 0, "name": "Test input 0", "type": "button"},
     "input:1": {
         "id": 1,
         "type": "analog",

@@ -31,7 +31,7 @@ async def test_rpc_button(
 ) -> None:
     """Test RPC device event."""
     await init_integration(hass, 2)
-    entity_id = "event.test_name_input_0"
+    entity_id = "event.test_name_test_input_0"
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
