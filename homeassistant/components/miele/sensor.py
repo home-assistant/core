@@ -258,6 +258,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             state_class=SensorStateClass.TOTAL_INCREASING,
             native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             entity_category=EntityCategory.DIAGNOSTIC,
+            default_value=0,
         ),
     ),
     MieleSensorDefinition(
@@ -274,6 +275,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             state_class=SensorStateClass.TOTAL_INCREASING,
             native_unit_of_measurement=UnitOfVolume.LITERS,
             entity_category=EntityCategory.DIAGNOSTIC,
+            default_value=0,
         ),
     ),
     MieleSensorDefinition(
@@ -565,6 +567,10 @@ async def async_setup_entry(
                             entity_class = MielePlateSensor
                         case "state_elapsed_time":
                             entity_class = MieleElapsedTimeSensor
+                        case "current_energy_consumption":
+                            entity_class = MieleConsumptionSensor
+                        case "current_water_consumption":
+                            entity_class = MieleConsumptionSensor
                         case _:
                             entity_class = MieleSensor
                     if (
@@ -776,5 +782,38 @@ class MieleElapsedTimeSensor(MieleRestorableSensor):
             return self.entity_description.default_value
 
         # otherwise, cache value and return it
+        self._last_value = current_value
+        return current_value
+
+
+class MieleConsumptionSensor(MieleRestorableSensor):
+    """Representation of consumption sensor."""
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+
+        current_value = self.entity_description.value_fn(self.device)
+        current_status = StateStatus(self.device.state_status)
+
+        if current_status in [
+            StateStatus.ON,
+            StateStatus.OFF,
+            StateStatus.PROGRAMMED,
+            StateStatus.WAITING_TO_START,
+            StateStatus.IDLE,
+            StateStatus.SERVICE,
+        ]:
+            self._last_value = -1
+            return self.entity_description.default_value
+
+        if (
+            current_status in [StateStatus.IN_USE, StateStatus.PAUSE]
+            and current_value is not None
+            and cast(int, current_value) > 0
+            and self._last_value == -1
+        ):
+            return self.entity_description.default_value
+
         self._last_value = current_value
         return current_value
