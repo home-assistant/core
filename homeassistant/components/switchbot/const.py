@@ -43,6 +43,8 @@ class SupportedModels(StrEnum):
     K10_VACUUM = "k10_vacuum"
     K10_PRO_VACUUM = "k10_pro_vacuum"
     K10_PRO_COMBO_VACUUM = "k10_pro_combo_vacumm"
+    AIR_PURIFIER = "air_purifier"
+    AIR_PURIFIER_TABLE = "air_purifier_table"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -66,6 +68,8 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.K10_VACUUM: SupportedModels.K10_VACUUM,
     SwitchbotModel.K10_PRO_VACUUM: SupportedModels.K10_PRO_VACUUM,
     SwitchbotModel.K10_PRO_COMBO_VACUUM: SupportedModels.K10_PRO_COMBO_VACUUM,
+    SwitchbotModel.AIR_PURIFIER: SupportedModels.AIR_PURIFIER,
+    SwitchbotModel.AIR_PURIFIER_TABLE: SupportedModels.AIR_PURIFIER_TABLE,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -89,6 +93,8 @@ ENCRYPTED_MODELS = {
     SwitchbotModel.RELAY_SWITCH_1PM,
     SwitchbotModel.LOCK,
     SwitchbotModel.LOCK_PRO,
+    SwitchbotModel.AIR_PURIFIER,
+    SwitchbotModel.AIR_PURIFIER_TABLE,
 }
 
 ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
@@ -98,6 +104,8 @@ ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
     SwitchbotModel.LOCK_PRO: switchbot.SwitchbotLock,
     SwitchbotModel.RELAY_SWITCH_1PM: switchbot.SwitchbotRelaySwitch,
     SwitchbotModel.RELAY_SWITCH_1: switchbot.SwitchbotRelaySwitch,
+    SwitchbotModel.AIR_PURIFIER: switchbot.SwitchbotAirPurifier,
+    SwitchbotModel.AIR_PURIFIER_TABLE: switchbot.SwitchbotAirPurifier,
 }
 
 HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {

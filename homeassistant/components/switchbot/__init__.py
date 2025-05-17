@@ -78,6 +78,8 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.K10_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.K10_PRO_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.K10_PRO_COMBO_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
+    SupportedModels.AIR_PURIFIER.value: [Platform.FAN, Platform.SENSOR],
+    SupportedModels.AIR_PURIFIER_TABLE.value: [Platform.FAN, Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -99,6 +101,8 @@ CLASS_BY_DEVICE = {
     SupportedModels.K10_VACUUM.value: switchbot.SwitchbotVacuum,
     SupportedModels.K10_PRO_VACUUM.value: switchbot.SwitchbotVacuum,
     SupportedModels.K10_PRO_COMBO_VACUUM.value: switchbot.SwitchbotVacuum,
+    SupportedModels.AIR_PURIFIER.value: switchbot.SwitchbotAirPurifier,
+    SupportedModels.AIR_PURIFIER_TABLE.value: switchbot.SwitchbotAirPurifier,
 }
 
 
