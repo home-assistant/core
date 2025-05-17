@@ -87,17 +87,18 @@ async def test_hob_sensor_states(
             "tumble_dryer",
             [
                 "laundry_scenario/005_drying.json",
+                "laundry_scenario/006_drying_end.json",
             ],
             {
-                "": ["off", "in_use"],
-                "program": ["no_program", "minimum_iron"],
-                "program_phase": ["not_running", "drying"],
-                "drying_step": ["unknown", "normal"],
-                "remaining_time": ["0", "49"],
+                "": ["off", "in_use", "program_ended"],
+                "program": ["no_program", "minimum_iron", "minimum_iron"],
+                "program_phase": ["not_running", "drying", "finished"],
+                "drying_step": ["unknown", "normal", "normal"],
+                "remaining_time": ["0", "49", "0"],
                 # OFF -> elapsed forced to 0 (some devices continue reporting last value of last cycle)
                 # IN_USE -> elapsed time from API (normal case)
                 # PROGRAM_ENDED -> elapsed time kept from last program (some devices immediately go to 0)
-                "elapsed_time": ["0", "20"],
+                "elapsed_time": ["0", "20", "20"],
             },
         ),
     ],
