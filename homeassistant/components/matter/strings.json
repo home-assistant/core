@@ -123,6 +123,7 @@
         "state_attributes": {
           "event_type": {
             "state": {
+              "any_button_interaction": "(Any button interaction)",
               "switch_latched": "Switch latched",
               "initial_press": "Pressed",
               "long_press": "Held down",
