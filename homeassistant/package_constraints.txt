@@ -29,7 +29,7 @@ cached-ipaddress==0.10.0
 certifi>=2021.5.30
 ciso8601==2.3.2
 cronsim==2.6
-cryptography==44.0.1
+cryptography==45.0.1
 dbus-fast==2.43.0
 fnv-hash-fast==1.5.0
 go2rtc-client==0.1.2
