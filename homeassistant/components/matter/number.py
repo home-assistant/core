@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from chip.clusters import Objects as clusters
+from matter_server.client.models import device_types
 from matter_server.common import custom_clusters
 
 from homeassistant.components.number import (
@@ -15,6 +16,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    PERCENTAGE,
     EntityCategory,
     Platform,
     UnitOfLength,
@@ -44,6 +46,13 @@ class MatterNumberEntityDescription(NumberEntityDescription, MatterEntityDescrip
     """Describe Matter Number Input entities."""
 
 
+@dataclass(frozen=True)
+class MatterLevelControNumberEntityDescription(
+    NumberEntityDescription, MatterEntityDescription
+):
+    """Describe Matter LevelControl Number Input entities."""
+
+
 class MatterNumber(MatterEntity, NumberEntity):
     """Representation of a Matter Attribute as a Number entity."""
 
@@ -56,6 +65,31 @@ class MatterNumber(MatterEntity, NumberEntity):
             sendvalue = value_convert(value)
         await self.write_attribute(
             value=sendvalue,
+        )
+
+    @callback
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
+        if value_convert := self.entity_description.measurement_to_ha:
+            value = value_convert(value)
+        self._attr_native_value = value
+
+
+class MatterLevelControNumber(MatterEntity, NumberEntity):
+    """Representation of a Matter Attribute as a Number entity."""
+
+    entity_description: MatterLevelControNumberEntityDescription
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set level value."""
+        sendvalue = int(value)
+        if value_convert := self.entity_description.ha_to_native_value:
+            sendvalue = value_convert(value)
+        await self.send_device_command(
+            clusters.LevelControl.Commands.MoveToLevel(
+                level=sendvalue,
+            )
         )
 
     @callback
@@ -182,5 +216,23 @@ DISCOVERY_SCHEMAS = [
             clusters.Thermostat.Attributes.LocalTemperatureCalibration,
         ),
         vendor_id=(4874,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterLevelControNumberEntityDescription(
+            key="LevelControlCurrentLevel",
+            native_unit_of_measurement=PERCENTAGE,
+            translation_key="level_control",
+            native_max_value=100,
+            native_min_value=0,
+            native_step=10,
+            measurement_to_ha=lambda x: None if x is None else x / 2,
+            ha_to_native_value=lambda x: round(x * 2),
+            mode=NumberMode.SLIDER,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(clusters.LevelControl.Attributes.CurrentLevel,),
+        device_type=(device_types.Pump,),
+        allow_multi=True,
     ),
 ]

@@ -121,3 +121,22 @@ async def test_matter_exception_on_write_attribute(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize("node_fixture", ["pump"])
+async def test_pump_level(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test level control for pump."""
+    # CurrentLevel on LevelControl cluster
+    state = hass.states.get("number.mock_pump_level_control")
+    assert state
+    assert state.state == "127.0"
+
+    set_node_attribute(matter_node, 1, 8, 0, 100)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("number.mock_pump_level_control")
+    assert state
+    assert state.state == "50.0"
