@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from tuya_sharing.manager import Manager as _RealManager  # for type matching
 
-from homeassistant.components.tuya.const import CONF_APP_TYPE, CONF_USER_CODE, DOMAIN
+from homeassistant.components.tuya.const import CONF_APP_TYPE, DOMAIN
 
 from tests.common import MockConfigEntry
 
@@ -26,10 +27,22 @@ def mock_old_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Mock an config entry."""
+    data = {
+        "user_code": "12345",
+        "terminal_id": "mocked_terminal_id",
+        "endpoint": "https://api.mock",
+        "token_info": {
+            "access_token": "mocked_access_token",
+            "refresh_token": "mocked_refresh_token",
+            "expire_time": 99999999,
+            "t": 0,
+            "uid": "mocked_uid",
+        },
+    }
     return MockConfigEntry(
         title="12345",
         domain=DOMAIN,
-        data={CONF_USER_CODE: "12345"},
+        data=data,
         unique_id="12345",
     )
 
@@ -68,3 +81,23 @@ def mock_tuya_login_control() -> Generator[MagicMock]:
             },
         )
         yield login_control
+
+
+@pytest.fixture(name="mock_tuya_manager")
+def mock_tuya_manager_fixture() -> Generator[_RealManager]:
+    """Mock out the Tuya ManagerCompat used in the tuya integration."""
+
+    target = "homeassistant.components.tuya.ManagerCompat"
+    with patch(target, autospec=True) as mock_manager_cls:
+        mock_manager: _RealManager = mock_manager_cls.return_value
+
+        # start tests with no devices
+        mock_manager.device_map = {}
+
+        # async methods the integration expects
+        mock_manager.async_add_device = AsyncMock()
+        mock_manager.async_remove_device = AsyncMock()
+        mock_manager.async_update_devices = AsyncMock()
+        mock_manager.async_send_commands = AsyncMock()
+
+        yield mock_manager
