@@ -134,16 +134,9 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                             self.hass, SIGNAL_ALARM_DISCOVERED, alarm, self
                         )
                 alarm_dict = {alarm["id"]: alarm for alarm in self.player.alarms}
-                # return {"alarms": alarm_dict}
-            #            _LOGGER.critical(
-            #                "known alarms %s, alarms %s", self.known_alarms, self.player.alarms
-            #            )
 
             for known_alarm in self.known_alarms.copy():
-                # we have some alarms
                 if known_alarm not in alarm_dict:
-                    # self.known_alarms.remove(alarm)
-                    # we've got an alarm which needs to be deleted
                     _LOGGER.debug(
                         "Alarm %s with entity_id %s needs to be deleted",
                         known_alarm,
