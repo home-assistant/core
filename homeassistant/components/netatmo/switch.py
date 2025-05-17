@@ -8,11 +8,7 @@ from typing import Any
 from pyatmo import DeviceType, modules as NaModules
 from pyatmo.person import Person
 
-from homeassistant.components.switch import (
-    SwitchDeviceClass,
-    SwitchEntity,
-    SwitchEntityDescription,
-)
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -117,10 +113,11 @@ class NetatmoPersonHomeSwitch(NetatmoDeviceEntity, SwitchEntity):
     person: Person
     _attr_configuration_url = CONF_URL_SECURITY
 
-    def __init__(self, person: NetatmoPerson) -> None:
+    def __init__(self, netatmo_person: NetatmoPerson) -> None:
         """Initialize the Netatmo device."""
-        super().__init__(person.data_handler, person.person)
-        self.person = person.person
+        super().__init__(netatmo_person.data_handler, netatmo_person.person)
+        person = netatmo_person.person
+        self.person = person
         self._signal_name = f"{HOME}-{self.home.entity_id}"
         self._publishers.extend(
             [
@@ -131,23 +128,21 @@ class NetatmoPersonHomeSwitch(NetatmoDeviceEntity, SwitchEntity):
                 },
             ]
         )
-        self.entity_description = SwitchEntityDescription(
-            key=PERSONS_ENTITY_DESCRIPTION_KEY, device_class=SwitchDeviceClass.SWITCH
-        )
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, f"{person.parent_id}-{PERSONS_DEVICE_IDENTIFIER_SUFFIX}")
+                (
+                    DOMAIN,
+                    f"{netatmo_person.parent_id}-{PERSONS_DEVICE_IDENTIFIER_SUFFIX}",
+                )
             },
             name=f"{self.home.name} {PERSONS_DEVICE_NAME_SUFFIX}",
             manufacturer=self.device_description[0],
             model=self.device_description[1],
             configuration_url=self._attr_configuration_url,
         )
-        self._attr_name = self.person.pseudo
-        self._attr_unique_id = (
-            f"{self.person.entity_id}-{PERSONS_ENTITY_DESCRIPTION_KEY}"
-        )
-        self._attr_is_on = not self.person.out_of_sight
+        self._attr_name = person.pseudo
+        self._attr_unique_id = f"{person.entity_id}-{PERSONS_ENTITY_DESCRIPTION_KEY}"
+        self._attr_is_on = not person.out_of_sight
 
     @property
     def device_type(self) -> DeviceType:
@@ -159,7 +154,6 @@ class NetatmoPersonHomeSwitch(NetatmoDeviceEntity, SwitchEntity):
         """Update the entity's state."""
 
         self._attr_is_on = not self.person.out_of_sight
-        self._attr_available = True
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
