@@ -8,6 +8,7 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from functools import partial
 import logging
+from operator import delitem
 from typing import TYPE_CHECKING, Any, Final, TypedDict, cast
 
 from aioesphomeapi import (
@@ -183,18 +184,7 @@ class RuntimeEntryData:
         """Register to receive callbacks when static info changes for an EntityInfo type."""
         callbacks = self.entity_info_callbacks.setdefault(entity_info_type, [])
         callbacks.append(callback_)
-        return partial(
-            self._async_unsubscribe_register_static_info, callbacks, callback_
-        )
-
-    @callback
-    def _async_unsubscribe_register_static_info(
-        self,
-        callbacks: list[Callable[[list[EntityInfo]], None]],
-        callback_: Callable[[list[EntityInfo]], None],
-    ) -> None:
-        """Unsubscribe to when static info is registered."""
-        callbacks.remove(callback_)
+        return partial(callbacks.remove, callback_)
 
     @callback
     def async_register_key_static_info_updated_callback(
@@ -206,18 +196,7 @@ class RuntimeEntryData:
         callback_key = (type(static_info), static_info.key)
         callbacks = self.entity_info_key_updated_callbacks.setdefault(callback_key, [])
         callbacks.append(callback_)
-        return partial(
-            self._async_unsubscribe_static_key_info_updated, callbacks, callback_
-        )
-
-    @callback
-    def _async_unsubscribe_static_key_info_updated(
-        self,
-        callbacks: list[Callable[[EntityInfo], None]],
-        callback_: Callable[[EntityInfo], None],
-    ) -> None:
-        """Unsubscribe to when static info is updated ."""
-        callbacks.remove(callback_)
+        return partial(callbacks.remove, callback_)
 
     @callback
     def async_set_assist_pipeline_state(self, state: bool) -> None:
@@ -232,14 +211,7 @@ class RuntimeEntryData:
     ) -> CALLBACK_TYPE:
         """Subscribe to assist pipeline updates."""
         self.assist_pipeline_update_callbacks.append(update_callback)
-        return partial(self._async_unsubscribe_assist_pipeline_update, update_callback)
-
-    @callback
-    def _async_unsubscribe_assist_pipeline_update(
-        self, update_callback: CALLBACK_TYPE
-    ) -> None:
-        """Unsubscribe to assist pipeline updates."""
-        self.assist_pipeline_update_callbacks.remove(update_callback)
+        return partial(self.assist_pipeline_update_callbacks.remove, update_callback)
 
     @callback
     def async_remove_entities(
@@ -337,12 +309,7 @@ class RuntimeEntryData:
     def async_subscribe_device_updated(self, callback_: CALLBACK_TYPE) -> CALLBACK_TYPE:
         """Subscribe to state updates."""
         self.device_update_subscriptions.add(callback_)
-        return partial(self._async_unsubscribe_device_update, callback_)
-
-    @callback
-    def _async_unsubscribe_device_update(self, callback_: CALLBACK_TYPE) -> None:
-        """Unsubscribe to device updates."""
-        self.device_update_subscriptions.remove(callback_)
+        return partial(self.device_update_subscriptions.remove, callback_)
 
     @callback
     def async_subscribe_static_info_updated(
@@ -350,14 +317,7 @@ class RuntimeEntryData:
     ) -> CALLBACK_TYPE:
         """Subscribe to static info updates."""
         self.static_info_update_subscriptions.add(callback_)
-        return partial(self._async_unsubscribe_static_info_updated, callback_)
-
-    @callback
-    def _async_unsubscribe_static_info_updated(
-        self, callback_: Callable[[list[EntityInfo]], None]
-    ) -> None:
-        """Unsubscribe to static info updates."""
-        self.static_info_update_subscriptions.remove(callback_)
+        return partial(self.static_info_update_subscriptions.remove, callback_)
 
     @callback
     def async_subscribe_state_update(
@@ -369,14 +329,7 @@ class RuntimeEntryData:
         """Subscribe to state updates."""
         subscription_key = (state_type, state_key)
         self.state_subscriptions[subscription_key] = entity_callback
-        return partial(self._async_unsubscribe_state_update, subscription_key)
-
-    @callback
-    def _async_unsubscribe_state_update(
-        self, subscription_key: tuple[type[EntityState], int]
-    ) -> None:
-        """Unsubscribe to state updates."""
-        self.state_subscriptions.pop(subscription_key)
+        return partial(delitem, self.state_subscriptions, subscription_key)
 
     @callback
     def async_update_state(self, state: EntityState) -> None:
@@ -523,7 +476,7 @@ class RuntimeEntryData:
     ) -> CALLBACK_TYPE:
         """Register to receive callbacks when the Assist satellite's configuration is updated."""
         self.assist_satellite_config_update_callbacks.append(callback_)
-        return lambda: self.assist_satellite_config_update_callbacks.remove(callback_)
+        return partial(self.assist_satellite_config_update_callbacks.remove, callback_)
 
     @callback
     def async_assist_satellite_config_updated(
@@ -540,7 +493,7 @@ class RuntimeEntryData:
     ) -> CALLBACK_TYPE:
         """Register to receive callbacks when the Assist satellite's wake word is set."""
         self.assist_satellite_set_wake_word_callbacks.append(callback_)
-        return lambda: self.assist_satellite_set_wake_word_callbacks.remove(callback_)
+        return partial(self.assist_satellite_set_wake_word_callbacks.remove, callback_)
 
     @callback
     def async_assist_satellite_set_wake_word(self, wake_word_id: str) -> None:

@@ -21,6 +21,8 @@ from homeassistant.components.fan import (
 from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
+    CONF_NAME,
+    CONF_STATE,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     STATE_ON,
@@ -29,14 +31,17 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
+from .const import CONF_OBJECT_ID, CONF_PICTURE, DOMAIN
 from .template_entity import (
+    LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
+    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_ICON_SCHEMA,
     TemplateEntity,
     rewrite_common_legacy_to_modern_conf,
 )
@@ -59,54 +64,121 @@ CONF_SET_PRESET_MODE_ACTION = "set_preset_mode"
 
 _VALID_DIRECTIONS = [DIRECTION_FORWARD, DIRECTION_REVERSE]
 
+CONF_DIRECTION = "direction"
+CONF_OSCILLATING = "oscillating"
+CONF_PERCENTAGE = "percentage"
+CONF_PRESET_MODE = "preset_mode"
+
+LEGACY_FIELDS = TEMPLATE_ENTITY_LEGACY_FIELDS | {
+    CONF_DIRECTION_TEMPLATE: CONF_DIRECTION,
+    CONF_OSCILLATING_TEMPLATE: CONF_OSCILLATING,
+    CONF_PERCENTAGE_TEMPLATE: CONF_PERCENTAGE,
+    CONF_PRESET_MODE_TEMPLATE: CONF_PRESET_MODE,
+    CONF_VALUE_TEMPLATE: CONF_STATE,
+}
+
+DEFAULT_NAME = "Template Fan"
+
 FAN_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Optional(CONF_DIRECTION): cv.template,
+            vol.Optional(CONF_NAME): cv.template,
+            vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_OSCILLATING): cv.template,
+            vol.Optional(CONF_PERCENTAGE): cv.template,
+            vol.Optional(CONF_PICTURE): cv.template,
+            vol.Optional(CONF_PRESET_MODE): cv.template,
+            vol.Optional(CONF_PRESET_MODES): cv.ensure_list,
+            vol.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_SET_PERCENTAGE_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_SET_PRESET_MODE_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_SPEED_COUNT): vol.Coerce(int),
+            vol.Optional(CONF_STATE): cv.template,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+        }
+    )
+    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
+    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema),
+)
+
+LEGACY_FAN_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
     vol.Schema(
         {
+            vol.Optional(CONF_DIRECTION_TEMPLATE): cv.template,
+            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
             vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+            vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_OSCILLATING_TEMPLATE): cv.template,
             vol.Optional(CONF_PERCENTAGE_TEMPLATE): cv.template,
             vol.Optional(CONF_PRESET_MODE_TEMPLATE): cv.template,
-            vol.Optional(CONF_OSCILLATING_TEMPLATE): cv.template,
-            vol.Optional(CONF_DIRECTION_TEMPLATE): cv.template,
-            vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_PRESET_MODES): cv.ensure_list,
+            vol.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_SET_PERCENTAGE_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_SET_PRESET_MODE_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_SPEED_COUNT): vol.Coerce(int),
-            vol.Optional(CONF_PRESET_MODES): cv.ensure_list,
-            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
+            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         }
     ).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema),
 )
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_FANS): cv.schema_with_slug_keys(FAN_SCHEMA)}
+    {vol.Required(CONF_FANS): cv.schema_with_slug_keys(LEGACY_FAN_SCHEMA)}
 )
 
 
-async def _async_create_entities(hass: HomeAssistant, config):
-    """Create the Template Fans."""
+def rewrite_legacy_to_modern_conf(
+    hass: HomeAssistant, config: dict[str, dict]
+) -> list[dict]:
+    """Rewrite legacy fan configuration definitions to modern ones."""
     fans = []
 
-    for object_id, entity_config in config[CONF_FANS].items():
-        entity_config = rewrite_common_legacy_to_modern_conf(hass, entity_config)
+    for object_id, entity_conf in config.items():
+        entity_conf = {**entity_conf, CONF_OBJECT_ID: object_id}
 
-        unique_id = entity_config.get(CONF_UNIQUE_ID)
+        entity_conf = rewrite_common_legacy_to_modern_conf(
+            hass, entity_conf, LEGACY_FIELDS
+        )
+
+        if CONF_NAME not in entity_conf:
+            entity_conf[CONF_NAME] = template.Template(object_id, hass)
+
+        fans.append(entity_conf)
+
+    return fans
+
+
+@callback
+def _async_create_template_tracking_entities(
+    async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant,
+    definitions: list[dict],
+    unique_id_prefix: str | None,
+) -> None:
+    """Create the template fans."""
+    fans = []
+
+    for entity_conf in definitions:
+        unique_id = entity_conf.get(CONF_UNIQUE_ID)
+
+        if unique_id and unique_id_prefix:
+            unique_id = f"{unique_id_prefix}-{unique_id}"
 
         fans.append(
             TemplateFan(
                 hass,
-                object_id,
-                entity_config,
+                entity_conf,
                 unique_id,
             )
         )
 
-    return fans
+    async_add_entities(fans)
 
 
 async def async_setup_platform(
@@ -116,7 +188,21 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template fans."""
-    async_add_entities(await _async_create_entities(hass, config))
+    if discovery_info is None:
+        _async_create_template_tracking_entities(
+            async_add_entities,
+            hass,
+            rewrite_legacy_to_modern_conf(hass, config[CONF_FANS]),
+            None,
+        )
+        return
+
+    _async_create_template_tracking_entities(
+        async_add_entities,
+        hass,
+        discovery_info["entities"],
+        discovery_info["unique_id"],
+    )
 
 
 class TemplateFan(TemplateEntity, FanEntity):
@@ -127,27 +213,24 @@ class TemplateFan(TemplateEntity, FanEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        object_id,
         config: dict[str, Any],
         unique_id,
     ) -> None:
         """Initialize the fan."""
-        super().__init__(
-            hass, config=config, fallback_name=object_id, unique_id=unique_id
-        )
-        self.hass = hass
-        self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, object_id, hass=hass
-        )
+        super().__init__(hass, config=config, fallback_name=None, unique_id=unique_id)
+        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
+            self.entity_id = async_generate_entity_id(
+                ENTITY_ID_FORMAT, object_id, hass=hass
+            )
         name = self._attr_name
         if TYPE_CHECKING:
             assert name is not None
 
-        self._template = config.get(CONF_VALUE_TEMPLATE)
-        self._percentage_template = config.get(CONF_PERCENTAGE_TEMPLATE)
-        self._preset_mode_template = config.get(CONF_PRESET_MODE_TEMPLATE)
-        self._oscillating_template = config.get(CONF_OSCILLATING_TEMPLATE)
-        self._direction_template = config.get(CONF_DIRECTION_TEMPLATE)
+        self._template = config.get(CONF_STATE)
+        self._percentage_template = config.get(CONF_PERCENTAGE)
+        self._preset_mode_template = config.get(CONF_PRESET_MODE)
+        self._oscillating_template = config.get(CONF_OSCILLATING)
+        self._direction_template = config.get(CONF_DIRECTION)
 
         self._attr_supported_features |= (
             FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
@@ -231,7 +314,7 @@ class TemplateFan(TemplateEntity, FanEntity):
 
         if preset_mode is not None:
             await self.async_set_preset_mode(preset_mode)
-        elif percentage is not None:
+        if percentage is not None:
             await self.async_set_percentage(percentage)
 
         if self._template is None:
