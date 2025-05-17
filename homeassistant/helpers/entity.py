@@ -31,7 +31,6 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_DEFAULT_NAME,
-    MAX_LENGTH_STATE_STATE,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -1216,16 +1215,6 @@ class Entity(
         ):
             self._context = None
             self._context_set = None
-
-        if len(state) > MAX_LENGTH_STATE_STATE:
-            _LOGGER.error(
-                "State %s for %s is longer than %s, falling back to %s",
-                state,
-                self.entity_id,
-                MAX_LENGTH_STATE_STATE,
-                STATE_UNKNOWN,
-            )
-            state = STATE_UNKNOWN
 
         # Intentionally called with positional args for performance reasons
         self.hass.states.async_set_internal(

@@ -219,6 +219,12 @@
           "iot_class": "cloud_push",
           "name": "Amazon Web Services (AWS)"
         },
+        "aws_s3": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "AWS S3"
+        },
         "fire_tv": {
           "integration_type": "virtual",
           "config_flow": false,
@@ -2361,6 +2367,12 @@
           "iot_class": "cloud_polling",
           "name": "Google Drive"
         },
+        "google_gemini": {
+          "integration_type": "virtual",
+          "config_flow": false,
+          "supported_by": "google_generative_ai_conversation",
+          "name": "Google Gemini"
+        },
         "google_generative_ai_conversation": {
           "integration_type": "service",
           "config_flow": true,
@@ -4228,6 +4240,11 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "national_grid_us": {
+      "name": "National Grid US",
+      "integration_type": "virtual",
+      "supported_by": "opower"
+    },
     "neato": {
       "name": "Neato Botvac",
       "integration_type": "hub",
@@ -4448,10 +4465,18 @@
       "iot_class": "cloud_polling"
     },
     "nuki": {
-      "name": "Nuki Bridge",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
+      "name": "Nuki",
+      "integrations": {
+        "nuki": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Nuki Bridge"
+        }
+      },
+      "iot_standards": [
+        "matter"
+      ]
     },
     "numato": {
       "name": "Numato USB GPIO Expander",
@@ -4554,12 +4579,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
-    },
-    "oncue": {
-      "name": "Oncue by Kohler",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
     },
     "ondilo_ico": {
       "name": "Ondilo ICO",
@@ -5367,6 +5386,12 @@
       "iot_class": "local_polling",
       "single_config_entry": true
     },
+    "rehlko": {
+      "name": "Rehlko",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "rejseplanen": {
       "name": "Rejseplanen",
       "integration_type": "hub",
@@ -5551,12 +5576,6 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "rtsp_to_webrtc": {
-      "name": "RTSPtoWebRTC",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_push"
-    },
     "ruckus_unleashed": {
       "name": "Ruckus",
       "integration_type": "hub",
@@ -5602,12 +5621,6 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
-    },
-    "s3": {
-      "name": "S3",
-      "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "cloud_push"
     },
     "sabnzbd": {
       "name": "SABnzbd",
@@ -6269,7 +6282,7 @@
     "stiebel_eltron": {
       "name": "STIEBEL ELTRON",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "stookwijzer": {
@@ -7610,6 +7623,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "zimi": {
+      "name": "zimi",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "zodiac": {
       "integration_type": "hub",
