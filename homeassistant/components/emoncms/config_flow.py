@@ -167,6 +167,7 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_mismatch()
             return self.async_update_reload_and_abort(
                 reconfig_entry,
+                title=sensor_name(url),
                 data=user_input,
                 reload_even_if_entry_is_unchanged=False,
             )
