@@ -1,0 +1,87 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      The integration does not provide any additional actions.
+  appropriate-polling:
+    status: exempt
+    comment: Integration is push based.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      The integration does not provide any additional actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure:
+    status: exempt
+    comment: |
+      The integration only receives and reads data from devices, no connection is needed.
+  test-before-setup:
+    status: exempt
+    comment: |
+      The integration only receives and reads data from devices, no connection is needed.
+  unique-config-entry:
+    status: exempt
+    comment: |
+      Data will only be pushed to one config entry from the device via webhook.
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: |
+      The integration does not provide any additional actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      The integration does not provide any configuration options.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: |
+      The integration has no initiative access to the device.
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      The integration does not provide any authentication.
+  test-coverage: done
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info: todo
+  discovery: todo
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category: todo
+  entity-device-class: todo
+  entity-disabled-by-default: todo
+  entity-translations: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: todo
+  inject-websession: todo
+  strict-typing: todo
