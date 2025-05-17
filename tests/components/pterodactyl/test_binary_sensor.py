@@ -5,6 +5,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from requests.exceptions import ConnectionError
 from syrupy.assertion import SnapshotAssertion
 
@@ -17,11 +18,11 @@ from . import setup_integration
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.usefixtures("mock_pterodactyl")
 async def test_binary_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_pterodactyl: Generator[AsyncMock],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test binary sensor."""
@@ -36,10 +37,10 @@ async def test_binary_sensor(
         )
 
 
+@pytest.mark.usefixtures("mock_pterodactyl")
 async def test_binary_sensor_update(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_pterodactyl: Generator[AsyncMock],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test binary sensor update."""
