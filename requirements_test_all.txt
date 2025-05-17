@@ -988,7 +988,7 @@ hole==0.8.0
 holidays==0.72
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250509.0
+home-assistant-frontend==20250516.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.5.7
@@ -1899,7 +1899,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==3.2.1
+pysmartthings==3.2.2
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -1935,7 +1935,7 @@ pysqueezebox==0.12.0
 pystiebeleltron==0.1.0
 
 # homeassistant.components.suez_water
-pysuezV2==2.0.4
+pysuezV2==2.0.5
 
 # homeassistant.components.switchbee
 pyswitchbee==1.8.3
