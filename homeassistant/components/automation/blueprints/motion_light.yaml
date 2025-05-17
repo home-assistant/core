@@ -17,9 +17,11 @@ blueprint:
     light_target:
       name: Light
       selector:
-        target:
-          entity:
-            domain: light
+        entity:
+          filter:
+            domain:
+              - light
+              - switch
     no_motion_wait:
       name: Wait time
       description: Time to leave the light on after last motion is detected.
@@ -43,7 +45,7 @@ triggers:
 
 actions:
   - alias: "Turn on the light"
-    action: light.turn_on
+    action: homeassistant.turn_on
     target: !input light_target
   - alias: "Wait until there is no motion from device"
     wait_for_trigger:
@@ -54,5 +56,5 @@ actions:
   - alias: "Wait the number of seconds that has been set"
     delay: !input no_motion_wait
   - alias: "Turn off the light"
-    action: light.turn_off
+    action: homeassistant.turn_off
     target: !input light_target
