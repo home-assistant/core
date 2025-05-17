@@ -2882,6 +2882,12 @@
         }
       }
     },
+    "idrive_e2": {
+      "name": "IDrive e2",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "idteck_prox": {
       "name": "IDTECK Proximity Reader",
       "integration_type": "hub",
