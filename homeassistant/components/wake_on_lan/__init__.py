@@ -7,7 +7,12 @@ import voluptuous as vol
 import wakeonlan
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC
+from homeassistant.const import (
+    CONF_BROADCAST_ADDRESS,
+    CONF_BROADCAST_PORT,
+    CONF_IF,
+    CONF_MAC,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -23,6 +28,7 @@ WAKE_ON_LAN_SEND_MAGIC_PACKET_SCHEMA = vol.Schema(
         vol.Required(CONF_MAC): cv.string,
         vol.Optional(CONF_BROADCAST_ADDRESS): cv.string,
         vol.Optional(CONF_BROADCAST_PORT): cv.port,
+        vol.Optional(CONF_IF): cv.string,
     }
 )
 
@@ -37,18 +43,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         mac_address = call.data.get(CONF_MAC)
         broadcast_address = call.data.get(CONF_BROADCAST_ADDRESS)
         broadcast_port = call.data.get(CONF_BROADCAST_PORT)
+        interface = call.data.get(CONF_IF)
 
         service_kwargs = {}
         if broadcast_address is not None:
             service_kwargs["ip_address"] = broadcast_address
         if broadcast_port is not None:
             service_kwargs["port"] = broadcast_port
+        if interface is not None:
+            service_kwargs["interface"] = interface
 
         _LOGGER.debug(
-            "Send magic packet to mac %s (broadcast: %s, port: %s)",
+            "Send magic packet to mac %s (broadcast: %s, port: %s, interface: %s)",
             mac_address,
             broadcast_address,
             broadcast_port,
+            interface,
         )
 
         await hass.async_add_executor_job(

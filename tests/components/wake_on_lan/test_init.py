@@ -30,8 +30,25 @@ async def test_send_magic_packet(hass: HomeAssistant) -> None:
         mac = "aa:bb:cc:dd:ee:ff"
         bc_ip = "192.168.255.255"
         bc_port = 999
+        interface_ip = "192.168.0.10"
 
         await async_setup_component(hass, DOMAIN, {})
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MAGIC_PACKET,
+            {
+                "mac": mac,
+                "broadcast_address": bc_ip,
+                "broadcast_port": bc_port,
+                "if": interface_ip,
+            },
+            blocking=True,
+        )
+        assert len(mocked_wakeonlan.mock_calls) == 1
+        assert mocked_wakeonlan.mock_calls[-1][1][0] == mac
+        assert mocked_wakeonlan.mock_calls[-1][2]["ip_address"] == bc_ip
+        assert mocked_wakeonlan.mock_calls[-1][2]["port"] == bc_port
+        assert mocked_wakeonlan.mock_calls[-1][2]["interface"] == interface_ip
 
         await hass.services.async_call(
             DOMAIN,
@@ -39,10 +56,11 @@ async def test_send_magic_packet(hass: HomeAssistant) -> None:
             {"mac": mac, "broadcast_address": bc_ip, "broadcast_port": bc_port},
             blocking=True,
         )
-        assert len(mocked_wakeonlan.mock_calls) == 1
+        assert len(mocked_wakeonlan.mock_calls) == 2
         assert mocked_wakeonlan.mock_calls[-1][1][0] == mac
         assert mocked_wakeonlan.mock_calls[-1][2]["ip_address"] == bc_ip
         assert mocked_wakeonlan.mock_calls[-1][2]["port"] == bc_port
+        assert "interface" not in mocked_wakeonlan.mock_calls[-1][2]
 
         await hass.services.async_call(
             DOMAIN,
@@ -50,7 +68,7 @@ async def test_send_magic_packet(hass: HomeAssistant) -> None:
             {"mac": mac, "broadcast_address": bc_ip},
             blocking=True,
         )
-        assert len(mocked_wakeonlan.mock_calls) == 2
+        assert len(mocked_wakeonlan.mock_calls) == 3
         assert mocked_wakeonlan.mock_calls[-1][1][0] == mac
         assert mocked_wakeonlan.mock_calls[-1][2]["ip_address"] == bc_ip
         assert "port" not in mocked_wakeonlan.mock_calls[-1][2]
@@ -61,7 +79,7 @@ async def test_send_magic_packet(hass: HomeAssistant) -> None:
             {"mac": mac, "broadcast_port": bc_port},
             blocking=True,
         )
-        assert len(mocked_wakeonlan.mock_calls) == 3
+        assert len(mocked_wakeonlan.mock_calls) == 4
         assert mocked_wakeonlan.mock_calls[-1][1][0] == mac
         assert mocked_wakeonlan.mock_calls[-1][2]["port"] == bc_port
         assert "ip_address" not in mocked_wakeonlan.mock_calls[-1][2]
@@ -73,11 +91,11 @@ async def test_send_magic_packet(hass: HomeAssistant) -> None:
                 {"broadcast_address": bc_ip},
                 blocking=True,
             )
-        assert len(mocked_wakeonlan.mock_calls) == 3
+        assert len(mocked_wakeonlan.mock_calls) == 4
 
         await hass.services.async_call(
             DOMAIN, SERVICE_SEND_MAGIC_PACKET, {"mac": mac}, blocking=True
         )
-        assert len(mocked_wakeonlan.mock_calls) == 4
+        assert len(mocked_wakeonlan.mock_calls) == 5
         assert mocked_wakeonlan.mock_calls[-1][1][0] == mac
         assert not mocked_wakeonlan.mock_calls[-1][2]
