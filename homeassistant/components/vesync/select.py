@@ -1,6 +1,6 @@
 """Support for VeSync numeric entities."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
 
@@ -48,7 +48,7 @@ class VeSyncSelectEntityDescription(SelectEntityDescription):
 
     exists_fn: Callable[[VeSyncBaseDevice], bool]
     current_option_fn: Callable[[VeSyncBaseDevice], str]
-    select_option_fn: Callable[[VeSyncBaseDevice, str], bool]
+    select_option_fn: Callable[[VeSyncBaseDevice, str], Awaitable[bool]]
 
 
 SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
@@ -152,7 +152,5 @@ class VeSyncSelectEntity(VeSyncBaseEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Set an option."""
-        if await self.hass.async_add_executor_job(
-            self.entity_description.select_option_fn, self.device, option
-        ):
+        if await self.entity_description.select_option_fn(self.device, option):
             await self.coordinator.async_request_refresh()

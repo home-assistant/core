@@ -1,6 +1,6 @@
 """Support for VeSync numeric entities."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
 
@@ -30,7 +30,7 @@ class VeSyncNumberEntityDescription(NumberEntityDescription):
 
     exists_fn: Callable[[VeSyncBaseDevice], bool]
     value_fn: Callable[[VeSyncBaseDevice], float]
-    set_value_fn: Callable[[VeSyncBaseDevice, float], bool]
+    set_value_fn: Callable[[VeSyncBaseDevice, float], Awaitable[bool]]
 
 
 NUMBER_DESCRIPTIONS: list[VeSyncNumberEntityDescription] = [
@@ -110,5 +110,5 @@ class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        if self.entity_description.set_value_fn(self.device, value):
+        if await self.entity_description.set_value_fn(self.device, value):
             await self.coordinator.async_request_refresh()

@@ -1,6 +1,6 @@
 """Support for VeSync switches."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
 from typing import Any, Final
@@ -32,8 +32,8 @@ class VeSyncSwitchEntityDescription(SwitchEntityDescription):
 
     is_on: Callable[[VeSyncBaseDevice], bool]
     exists_fn: Callable[[VeSyncBaseDevice], bool]
-    on_fn: Callable[[VeSyncBaseDevice], bool]
-    off_fn: Callable[[VeSyncBaseDevice], bool]
+    on_fn: Callable[[VeSyncBaseDevice], Awaitable[bool]]
+    off_fn: Callable[[VeSyncBaseDevice], Awaitable[bool]]
 
 
 SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
@@ -122,14 +122,14 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        if not self.entity_description.off_fn(self.device):
+        if not await self.entity_description.off_fn(self.device):
             raise HomeAssistantError("An error occurred while turning off.")
 
         self.schedule_update_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        if not self.entity_description.on_fn(self.device):
+        if not await self.entity_description.on_fn(self.device):
             raise HomeAssistantError("An error occurred while turning on.")
 
         self.schedule_update_ha_state()

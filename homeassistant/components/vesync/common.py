@@ -3,7 +3,9 @@
 import logging
 
 from pyvesync.base_devices import VeSyncHumidifier
+from pyvesync.base_devices.fan_base import VeSyncFanBase
 from pyvesync.base_devices.outlet_base import VeSyncOutlet
+from pyvesync.base_devices.purifier_base import VeSyncPurifier
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.devices.vesyncswitch import VeSyncWallSwitch
 
@@ -48,3 +50,15 @@ def is_wall_switch(device: VeSyncBaseDevice) -> bool:
     """Check if the device represents a wall switch, note this doessn't include dimming switches."""
 
     return isinstance(device, VeSyncWallSwitch)
+
+
+def is_fan(device: VeSyncBaseDevice) -> bool:
+    """Check if the device represents a fan."""
+
+    return isinstance(device, VeSyncFanBase)
+
+
+def is_purifier(device: VeSyncBaseDevice) -> bool:
+    """Check if the device represents a fan."""
+
+    return isinstance(device, VeSyncPurifier)
