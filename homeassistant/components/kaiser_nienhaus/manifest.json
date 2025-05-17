@@ -1,6 +1,6 @@
 {
-  "domain": "kaiser_neinhaus",
-  "name": "Kaiser Neinhaus",
+  "domain": "kaiser_nienhaus",
+  "name": "Kaiser Nienhaus",
   "integration_type": "virtual",
   "supported_by": "motion_blinds"
 }
