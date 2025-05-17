@@ -36,6 +36,11 @@
           'startTime': list([
           ]),
           'targetTemperature': list([
+            dict({
+              'max': -14,
+              'min': -28,
+              'zone': 1,
+            }),
           ]),
           'ventilationStep': list([
           ]),
@@ -64,6 +69,11 @@
           'startTime': list([
           ]),
           'targetTemperature': list([
+            dict({
+              'max': -14,
+              'min': -28,
+              'zone': 1,
+            }),
           ]),
           'ventilationStep': list([
           ]),
@@ -92,6 +102,11 @@
           'startTime': list([
           ]),
           'targetTemperature': list([
+            dict({
+              'max': -14,
+              'min': -28,
+              'zone': 1,
+            }),
           ]),
           'ventilationStep': list([
           ]),
@@ -120,6 +135,11 @@
           'startTime': list([
           ]),
           'targetTemperature': list([
+            dict({
+              'max': -14,
+              'min': -28,
+              'zone': 1,
+            }),
           ]),
           'ventilationStep': list([
           ]),
@@ -642,6 +662,9 @@
           }),
         }),
       }),
+      'missing_code_warnings': list([
+        'None',
+      ]),
     }),
   })
 # ---
@@ -686,6 +709,11 @@
           'startTime': list([
           ]),
           'targetTemperature': list([
+            dict({
+              'max': -14,
+              'min': -28,
+              'zone': 1,
+            }),
           ]),
           'ventilationStep': list([
           ]),
@@ -817,6 +845,9 @@
           }),
         }),
       }),
+      'missing_code_warnings': list([
+        'None',
+      ]),
       'programs': 'Not implemented',
     }),
   })

@@ -13,6 +13,7 @@ from aiohttp import ClientResponseError
 from pysmartthings import (
     Attribute,
     Capability,
+    Category,
     ComponentStatus,
     Device,
     DeviceEvent,
@@ -24,6 +25,7 @@ from pysmartthings import (
     SmartThingsSinkError,
     Status,
 )
+from pysmartthings.models import HealthStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -31,6 +33,7 @@ from homeassistant.const import (
     ATTR_HW_VERSION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_SUGGESTED_AREA,
     ATTR_SW_VERSION,
     ATTR_VIA_DEVICE,
     CONF_ACCESS_TOKEN,
@@ -79,6 +82,7 @@ class FullDevice:
 
     device: Device
     status: dict[str, ComponentStatus]
+    online: bool
 
 
 type SmartThingsConfigEntry = ConfigEntry[SmartThingsData]
@@ -100,6 +104,7 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.UPDATE,
     Platform.VALVE,
+    Platform.WATER_HEATER,
 ]
 
 
@@ -191,8 +196,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         }
         devices = await client.get_devices()
         for device in devices:
+            if (
+                (main_component := device.components.get(MAIN)) is not None
+                and main_component.manufacturer_category is Category.BLUETOOTH_TRACKER
+            ):
+                device_status[device.device_id] = FullDevice(
+                    device=device,
+                    status={},
+                    online=True,
+                )
+                continue
             status = process_status(await client.get_device_status(device.device_id))
-            device_status[device.device_id] = FullDevice(device=device, status=status)
+            online = await client.get_device_health(device.device_id)
+            device_status[device.device_id] = FullDevice(
+                device=device, status=status, online=online.state == HealthStatus.ONLINE
+            )
     except SmartThingsAuthenticationFailedError as err:
         raise ConfigEntryAuthFailed from err
 
@@ -448,14 +466,24 @@ def create_devices(
                     ATTR_SW_VERSION: viper.software_version,
                 }
             )
+        if (
+            device_registry.async_get_device({(DOMAIN, device.device.device_id)})
+            is None
+        ):
+            kwargs.update(
+                {
+                    ATTR_SUGGESTED_AREA: (
+                        rooms.get(device.device.room_id)
+                        if device.device.room_id
+                        else None
+                    )
+                }
+            )
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, device.device.device_id)},
             configuration_url="https://account.smartthings.com",
             name=device.device.label,
-            suggested_area=(
-                rooms.get(device.device.room_id) if device.device.room_id else None
-            ),
             **kwargs,
         )
 
@@ -488,6 +516,11 @@ def process_status(status: dict[str, ComponentStatus]) -> dict[str, ComponentSta
         )
         if disabled_components is not None:
             for component in disabled_components:
+                # Burner components are named burner-06
+                # but disabledComponents contain burner-6
+                if "burner" in component:
+                    burner_id = int(component.split("-")[-1])
+                    component = f"burner-0{burner_id}"
                 if component in status:
                     del status[component]
     for component_status in status.values():
