@@ -67,18 +67,13 @@ class ActronNeoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             await self.api.update_status()
             self.last_update_success = True
             self.auth_error_count = 0
-
-            status_data = {}
             current_time = dt_util.utcnow()
 
             for system in self.systems:
                 serial = system.get("serial")
                 self.last_seen[serial] = current_time
                 status = self.api.state_manager.get_status(serial)
-                # Store the actual status object
                 self.status_objects[serial] = status
-                # Also maintain the serialized data for the DataUpdateCoordinator
-                status_data[serial] = vars(status)
         except ActronNeoAuthError as err:
             self.last_update_success = False
             self.auth_error_count += 1
@@ -96,7 +91,7 @@ class ActronNeoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
             raise UpdateFailed(f"Error communicating with API: {err}") from err
         else:
-            return status_data
+            return self.status_objects[serial]
 
     def is_device_stale(self, system_id: str) -> bool:
         """Check if a device is stale (not seen for a while)."""
@@ -109,9 +104,6 @@ class ActronNeoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def get_status(self, serial_number: str) -> ActronAirNeoStatus:
         """Get the stored status object for a system."""
-        # First try to get from our stored objects
         if serial_number in self.status_objects:
             return self.status_objects[serial_number]
-
-        # Fallback to getting from the API state manager (shouldn't be needed in normal operation)
         return self.api.state_manager.get_status(serial_number)
