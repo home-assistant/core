@@ -1,6 +1,7 @@
 {
   "domain": "suez_water",
   "name": "Suez Water",
+  "after_dependencies": ["recorder"],
   "codeowners": ["@ooii", "@jb101010-2"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/suez_water",
