@@ -23,7 +23,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alarm',
+    'original_icon': None,
     'original_name': 'Alarm (1)',
     'platform': 'squeezebox',
     'previous_unique_id': None,
@@ -38,7 +38,6 @@
     'attributes': ReadOnlyDict({
       'alarm_id': '1',
       'friendly_name': 'Test Player Alarm (1)',
-      'icon': 'mdi:alarm',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_player_alarm_1',
@@ -72,7 +71,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alarm',
+    'original_icon': None,
     'original_name': 'Alarms enabled',
     'platform': 'squeezebox',
     'previous_unique_id': None,
@@ -86,7 +85,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Player Alarms enabled',
-      'icon': 'mdi:alarm',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_player_alarms_enabled',
