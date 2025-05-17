@@ -978,7 +978,8 @@ class TelegramNotificationService:
                         context=context,
                     )
 
-                msg_ids[chat_id] = msg.id
+                if msg is not None:
+                    msg_ids[chat_id] = msg.id
                 file_content.seek(0)
         else:
             _LOGGER.error("Can't send file with kwargs: %s", kwargs)
@@ -1006,7 +1007,8 @@ class TelegramNotificationService:
                     message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                     context=context,
                 )
-                msg_ids[chat_id] = msg.id
+                if msg is not None:
+                    msg_ids[chat_id] = msg.id
             return msg_ids
         return await self.send_file(SERVICE_SEND_STICKER, target, **kwargs)
 
@@ -1035,7 +1037,8 @@ class TelegramNotificationService:
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
-            msg_ids[chat_id] = msg.id
+            if msg is not None:
+                msg_ids[chat_id] = msg.id
         return msg_ids
 
     async def send_poll(
@@ -1070,7 +1073,8 @@ class TelegramNotificationService:
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
-            msg_ids[chat_id] = msg.id
+            if msg is not None:
+                msg_ids[chat_id] = msg.id
         return msg_ids
 
     async def leave_chat(self, chat_id=None, context=None):
