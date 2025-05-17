@@ -552,6 +552,9 @@
       },
       "sabbath_mode": {
         "name": "Sabbath mode"
+      },
+      "sanitize": {
+        "name": "Sanitize"
       }
     },
     "water_heater": {

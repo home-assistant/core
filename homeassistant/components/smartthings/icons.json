@@ -102,6 +102,9 @@
       },
       "ice_maker": {
         "default": "mdi:delete-variant"
+      },
+      "sanitize": {
+        "default": "mdi:lotion"
       }
     }
   }
