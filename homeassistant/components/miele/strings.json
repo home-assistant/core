@@ -886,7 +886,7 @@
         "name": "Energy forecast"
       },
       "water_forecast": {
-        "name": "Water Forecast"
+        "name": "Water forecast"
       }
     },
     "switch": {
