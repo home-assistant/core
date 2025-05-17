@@ -38,7 +38,7 @@ from homeassistant.util.color import (
 )
 
 from . import DeconzConfigEntry
-from .const import DOMAIN as DECONZ_DOMAIN, POWER_PLUGS
+from .const import DOMAIN, POWER_PLUGS
 from .entity import DeconzDevice
 from .hub import DeconzHub
 
@@ -395,11 +395,11 @@ class DeconzGroup(DeconzBaseLight[Group]):
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         return DeviceInfo(
-            identifiers={(DECONZ_DOMAIN, self.unique_id)},
+            identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Dresden Elektronik",
             model="deCONZ group",
             name=self._device.name,
-            via_device=(DECONZ_DOMAIN, self.hub.api.config.bridge_id),
+            via_device=(DOMAIN, self.hub.api.config.bridge_id),
         )
 
     @property

@@ -8,7 +8,13 @@ from typing import cast
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entityfilter import generate_filter
 from homeassistant.helpers.service import (
@@ -16,15 +22,18 @@ from homeassistant.helpers.service import (
     async_register_admin_service,
 )
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .const import ATTR_APPLY_FILTER, ATTR_KEEP_DAYS, ATTR_REPACK, DOMAIN
 from .core import Recorder
+from .statistics import statistics_during_period
 from .tasks import PurgeEntitiesTask, PurgeTask
 
 SERVICE_PURGE = "purge"
 SERVICE_PURGE_ENTITIES = "purge_entities"
 SERVICE_ENABLE = "enable"
 SERVICE_DISABLE = "disable"
+SERVICE_GET_STATISTICS = "get_statistics"
 
 SERVICE_PURGE_SCHEMA = vol.Schema(
     {
@@ -62,6 +71,20 @@ SERVICE_PURGE_ENTITIES_SCHEMA = vol.All(
 
 SERVICE_ENABLE_SCHEMA = vol.Schema({})
 SERVICE_DISABLE_SCHEMA = vol.Schema({})
+
+SERVICE_GET_STATISTICS_SCHEMA = vol.Schema(
+    {
+        vol.Required("start_time"): cv.datetime,
+        vol.Optional("end_time"): cv.datetime,
+        vol.Required("statistic_ids"): vol.All(cv.ensure_list, [cv.string]),
+        vol.Required("period"): vol.In(["5minute", "hour", "day", "week", "month"]),
+        vol.Required("types"): vol.All(
+            cv.ensure_list,
+            [vol.In(["change", "last_reset", "max", "mean", "min", "state", "sum"])],
+        ),
+        vol.Optional("units"): vol.Schema({cv.string: cv.string}),
+    }
+)
 
 
 @callback
@@ -136,9 +159,83 @@ def _async_register_disable_service(hass: HomeAssistant, instance: Recorder) -> 
 
 
 @callback
+def _async_register_get_statistics_service(
+    hass: HomeAssistant, instance: Recorder
+) -> None:
+    async def async_handle_get_statistics_service(
+        service: ServiceCall,
+    ) -> ServiceResponse:
+        """Handle calls to the get_statistics service."""
+        start_time = dt_util.as_utc(service.data["start_time"])
+        end_time = (
+            dt_util.as_utc(service.data["end_time"])
+            if "end_time" in service.data
+            else None
+        )
+
+        statistic_ids = service.data["statistic_ids"]
+        types = service.data["types"]
+        period = service.data["period"]
+        units = service.data.get("units")
+
+        result = await instance.async_add_executor_job(
+            statistics_during_period,
+            hass,
+            start_time,
+            end_time,
+            statistic_ids,
+            period,
+            units,
+            types,
+        )
+
+        formatted_result: JsonObjectType = {}
+        for statistic_id, statistic_rows in result.items():
+            formatted_statistic_rows: JsonArrayType = []
+
+            for row in statistic_rows:
+                formatted_row: JsonObjectType = {
+                    "start": dt_util.utc_from_timestamp(row["start"]).isoformat(),
+                    "end": dt_util.utc_from_timestamp(row["end"]).isoformat(),
+                }
+                if (last_reset := row.get("last_reset")) is not None:
+                    formatted_row["last_reset"] = dt_util.utc_from_timestamp(
+                        last_reset
+                    ).isoformat()
+                if (state := row.get("state")) is not None:
+                    formatted_row["state"] = state
+                if (sum_value := row.get("sum")) is not None:
+                    formatted_row["sum"] = sum_value
+                if (min_value := row.get("min")) is not None:
+                    formatted_row["min"] = min_value
+                if (max_value := row.get("max")) is not None:
+                    formatted_row["max"] = max_value
+                if (mean := row.get("mean")) is not None:
+                    formatted_row["mean"] = mean
+                if (change := row.get("change")) is not None:
+                    formatted_row["change"] = change
+
+                formatted_statistic_rows.append(formatted_row)
+
+            formatted_result[statistic_id] = formatted_statistic_rows
+
+        return {"statistics": formatted_result}
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_GET_STATISTICS,
+        async_handle_get_statistics_service,
+        schema=SERVICE_GET_STATISTICS_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+
+@callback
 def async_register_services(hass: HomeAssistant, instance: Recorder) -> None:
     """Register recorder services."""
     _async_register_purge_service(hass, instance)
     _async_register_purge_entities_service(hass, instance)
     _async_register_enable_service(hass, instance)
     _async_register_disable_service(hass, instance)
+    _async_register_get_statistics_service(hass, instance)
