@@ -62,6 +62,33 @@ async def test_reconfigure(
     assert entry.data == new_input
 
 
+async def test_reconfigure_api_error(
+    hass: HomeAssistant,
+    emoncms_client: AsyncMock,
+) -> None:
+    """Test reconfigure flow with API error."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=SENSOR_NAME,
+        data=USER_INPUT,
+        unique_id=UNIQUE_ID,
+    )
+    await setup_integration(hass, config_entry)
+    emoncms_client.async_request.return_value = EMONCMS_FAILURE
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "api_error"}
+    assert result["description_placeholders"]["details"] == "failure"
+
+
 async def test_user_flow(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,

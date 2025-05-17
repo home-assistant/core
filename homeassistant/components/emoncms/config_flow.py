@@ -156,6 +156,7 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Reconfigure the entry."""
         errors: dict[str, str] = {}
+        description_placeholders = {}
         reconfig_entry = self._get_reconfigure_entry()
         if user_input is not None:
             url = user_input[CONF_URL]
@@ -163,15 +164,19 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
             emoncms_client = EmoncmsClient(
                 url, api_key, session=async_get_clientsession(self.hass)
             )
-            await self.async_set_unique_id(await emoncms_client.async_get_uuid())
-            self._abort_if_unique_id_mismatch()
-            return self.async_update_reload_and_abort(
-                reconfig_entry,
-                title=sensor_name(url),
-                data=user_input,
-                reload_even_if_entry_is_unchanged=False,
-            )
-
+            result = await get_feed_list(emoncms_client)
+            if not result[CONF_SUCCESS]:
+                errors["base"] = "api_error"
+                description_placeholders = {"details": result[CONF_MESSAGE]}
+            else:
+                await self.async_set_unique_id(await emoncms_client.async_get_uuid())
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfig_entry,
+                    title=sensor_name(url),
+                    data=user_input,
+                    reload_even_if_entry_is_unchanged=False,
+                )
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
@@ -184,6 +189,7 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input or reconfig_entry.data,
             ),
             errors=errors,
+            description_placeholders=description_placeholders,
         )
 
 
