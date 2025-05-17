@@ -22,5 +22,10 @@
         }
       }
     }
+  },
+  "services": {
+    "get_forecasts": {
+      "service": "mdi:transmission-tower"
+    }
   }
 }

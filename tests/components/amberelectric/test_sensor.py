@@ -1,107 +1,22 @@
 """Test the Amber Electric Sensors."""
 
-from collections.abc import AsyncGenerator
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from amberelectric.models.current_interval import CurrentInterval
 from amberelectric.models.interval import Interval
 from amberelectric.models.range import Range
 import pytest
 
-from homeassistant.components.amberelectric.const import (
-    CONF_SITE_ID,
-    CONF_SITE_NAME,
-    DOMAIN,
-)
-from homeassistant.const import CONF_API_TOKEN
+from homeassistant.components import automation, script
+from homeassistant.components.amberelectric.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .helpers import (
-    CONTROLLED_LOAD_CHANNEL,
-    FEED_IN_CHANNEL,
-    GENERAL_AND_CONTROLLED_SITE_ID,
-    GENERAL_AND_FEED_IN_SITE_ID,
-    GENERAL_CHANNEL,
-    GENERAL_ONLY_SITE_ID,
-)
+from . import setup_integration
+from .helpers import GENERAL_CHANNEL
 
 from tests.common import MockConfigEntry
-
-MOCK_API_TOKEN = "psk_0000000000000000"
-
-
-@pytest.fixture
-async def setup_general(hass: HomeAssistant) -> AsyncGenerator[Mock]:
-    """Set up general channel."""
-    MockConfigEntry(
-        domain="amberelectric",
-        data={
-            CONF_SITE_NAME: "mock_title",
-            CONF_API_TOKEN: MOCK_API_TOKEN,
-            CONF_SITE_ID: GENERAL_ONLY_SITE_ID,
-        },
-    ).add_to_hass(hass)
-
-    instance = Mock()
-    with patch(
-        "amberelectric.AmberApi",
-        return_value=instance,
-    ) as mock_update:
-        instance.get_current_prices = Mock(return_value=GENERAL_CHANNEL)
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        yield mock_update.return_value
-
-
-@pytest.fixture
-async def setup_general_and_controlled_load(
-    hass: HomeAssistant,
-) -> AsyncGenerator[Mock]:
-    """Set up general channel and controller load channel."""
-    MockConfigEntry(
-        domain="amberelectric",
-        data={
-            CONF_API_TOKEN: MOCK_API_TOKEN,
-            CONF_SITE_ID: GENERAL_AND_CONTROLLED_SITE_ID,
-        },
-    ).add_to_hass(hass)
-
-    instance = Mock()
-    with patch(
-        "amberelectric.AmberApi",
-        return_value=instance,
-    ) as mock_update:
-        instance.get_current_prices = Mock(
-            return_value=GENERAL_CHANNEL + CONTROLLED_LOAD_CHANNEL
-        )
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        yield mock_update.return_value
-
-
-@pytest.fixture
-async def setup_general_and_feed_in(hass: HomeAssistant) -> AsyncGenerator[Mock]:
-    """Set up general channel and feed in channel."""
-    MockConfigEntry(
-        domain="amberelectric",
-        data={
-            CONF_API_TOKEN: MOCK_API_TOKEN,
-            CONF_SITE_ID: GENERAL_AND_FEED_IN_SITE_ID,
-        },
-    ).add_to_hass(hass)
-
-    instance = Mock()
-    with patch(
-        "amberelectric.AmberApi",
-        return_value=instance,
-    ) as mock_update:
-        instance.get_current_prices = Mock(
-            return_value=GENERAL_CHANNEL + FEED_IN_CHANNEL
-        )
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        yield mock_update.return_value
 
 
 async def test_general_price_sensor(hass: HomeAssistant, setup_general: Mock) -> None:
@@ -109,11 +24,11 @@ async def test_general_price_sensor(hass: HomeAssistant, setup_general: Mock) ->
     assert len(hass.states.async_all()) == 6
     price = hass.states.get("sensor.mock_title_general_price")
     assert price
-    assert price.state == "0.08"
+    assert price.state == "0.09"
     attributes = price.attributes
     assert attributes["duration"] == 30
     assert attributes["date"] == "2021-09-21"
-    assert attributes["per_kwh"] == 0.08
+    assert attributes["per_kwh"] == 0.09
     assert attributes["nem_date"] == "2021-09-21T08:30:00+10:00"
     assert attributes["spot_per_kwh"] == 0.01
     assert attributes["start_time"] == "2021-09-21T08:00:00+10:00"
@@ -147,11 +62,11 @@ async def test_general_and_controlled_load_price_sensor(hass: HomeAssistant) -> 
     assert len(hass.states.async_all()) == 9
     price = hass.states.get("sensor.mock_title_controlled_load_price")
     assert price
-    assert price.state == "0.08"
+    assert price.state == "0.04"
     attributes = price.attributes
     assert attributes["duration"] == 30
     assert attributes["date"] == "2021-09-21"
-    assert attributes["per_kwh"] == 0.08
+    assert attributes["per_kwh"] == 0.04
     assert attributes["nem_date"] == "2021-09-21T08:30:00+10:00"
     assert attributes["spot_per_kwh"] == 0.01
     assert attributes["start_time"] == "2021-09-21T08:00:00+10:00"
@@ -169,11 +84,11 @@ async def test_general_and_feed_in_price_sensor(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all()) == 9
     price = hass.states.get("sensor.mock_title_feed_in_price")
     assert price
-    assert price.state == "-0.08"
+    assert price.state == "-0.01"
     attributes = price.attributes
     assert attributes["duration"] == 30
     assert attributes["date"] == "2021-09-21"
-    assert attributes["per_kwh"] == -0.08
+    assert attributes["per_kwh"] == -0.01
     assert attributes["nem_date"] == "2021-09-21T08:30:00+10:00"
     assert attributes["spot_per_kwh"] == 0.01
     assert attributes["start_time"] == "2021-09-21T08:00:00+10:00"
@@ -185,6 +100,7 @@ async def test_general_and_feed_in_price_sensor(hass: HomeAssistant) -> None:
     assert attributes["attribution"] == "Data provided by Amber Electric"
 
 
+@pytest.mark.usefixtures("setup_general")
 async def test_general_forecast_sensor(
     hass: HomeAssistant, setup_general: Mock
 ) -> None:
@@ -234,7 +150,7 @@ async def test_controlled_load_forecast_sensor(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all()) == 9
     price = hass.states.get("sensor.mock_title_controlled_load_forecast")
     assert price
-    assert price.state == "0.09"
+    assert price.state == "0.04"
     attributes = price.attributes
     assert attributes["channel_type"] == "controlledLoad"
     assert attributes["attribution"] == "Data provided by Amber Electric"
@@ -242,7 +158,7 @@ async def test_controlled_load_forecast_sensor(hass: HomeAssistant) -> None:
     first_forecast = attributes["forecasts"][0]
     assert first_forecast["duration"] == 30
     assert first_forecast["date"] == "2021-09-21"
-    assert first_forecast["per_kwh"] == 0.09
+    assert first_forecast["per_kwh"] == 0.04
     assert first_forecast["nem_date"] == "2021-09-21T09:00:00+10:00"
     assert first_forecast["spot_per_kwh"] == 0.01
     assert first_forecast["start_time"] == "2021-09-21T08:30:00+10:00"
@@ -258,7 +174,7 @@ async def test_feed_in_forecast_sensor(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all()) == 9
     price = hass.states.get("sensor.mock_title_feed_in_forecast")
     assert price
-    assert price.state == "-0.09"
+    assert price.state == "-0.01"
     attributes = price.attributes
     assert attributes["channel_type"] == "feedIn"
     assert attributes["attribution"] == "Data provided by Amber Electric"
@@ -266,7 +182,7 @@ async def test_feed_in_forecast_sensor(hass: HomeAssistant) -> None:
     first_forecast = attributes["forecasts"][0]
     assert first_forecast["duration"] == 30
     assert first_forecast["date"] == "2021-09-21"
-    assert first_forecast["per_kwh"] == -0.09
+    assert first_forecast["per_kwh"] == -0.01
     assert first_forecast["nem_date"] == "2021-09-21T09:00:00+10:00"
     assert first_forecast["spot_per_kwh"] == 0.01
     assert first_forecast["start_time"] == "2021-09-21T08:30:00+10:00"
@@ -274,6 +190,67 @@ async def test_feed_in_forecast_sensor(hass: HomeAssistant) -> None:
     assert first_forecast["renewables"] == 50
     assert first_forecast["spike_status"] == "none"
     assert first_forecast["descriptor"] == "very_low"
+
+
+@pytest.mark.usefixtures("forecast_prices")
+async def test_create_issue(
+    hass: HomeAssistant,
+    general_only_site_id_amber_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test we create an issue when an automation or script is using a deprecated entity."""
+    entity_id = "sensor.mock_title_general_forecast"
+    issue_id = f"deprecated_forecast_sensor_{entity_id}"
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "test",
+                "trigger": {"platform": "state", "entity_id": entity_id},
+                "action": {
+                    "action": "automation.turn_on",
+                    "target": {
+                        "entity_id": "automation.test",
+                    },
+                },
+            }
+        },
+    )
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {
+            script.DOMAIN: {
+                "test": {
+                    "sequence": [
+                        {
+                            "condition": "state",
+                            "entity_id": entity_id,
+                            "state": "on",
+                        },
+                    ],
+                }
+            }
+        },
+    )
+    await setup_integration(hass, general_only_site_id_amber_config_entry)
+
+    assert automation.automations_with_entity(hass, entity_id)[0] == "automation.test"
+    assert script.scripts_with_entity(hass, entity_id)[0] == "script.test"
+
+    assert len(issue_registry.issues) == 1
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    await hass.config_entries.async_unload(
+        general_only_site_id_amber_config_entry.entry_id
+    )
+    await hass.async_block_till_done()
+
+    # Assert the issue is no longer present
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 0
 
 
 @pytest.mark.usefixtures("setup_general")
