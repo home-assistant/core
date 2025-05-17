@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from teslemetry_stream import TeslemetryStreamVehicle
+from teslemetry_stream import TeslemetryStream, TeslemetryStreamVehicle
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -41,11 +41,11 @@ from .entity import (
     TeslemetryEnergyHistoryEntity,
     TeslemetryEnergyInfoEntity,
     TeslemetryEnergyLiveEntity,
-    TeslemetryVehicleEntity,
+    TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
     TeslemetryWallConnectorEntity,
 )
-from .models import TeslemetryEnergyData, TeslemetryVehicleData
+from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
 
@@ -470,6 +470,28 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="climate_state_passenger_temp_setting",
         polling=True,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryVehicleSensorEntityDescription(
+        key="hvac_left_temperature_request",
+        streaming_listener=lambda vehicle,
+        callback: vehicle.listen_HvacLeftTemperatureRequest(callback),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryVehicleSensorEntityDescription(
+        key="hvac_right_temperature_request",
+        streaming_listener=lambda vehicle,
+        callback: vehicle.listen_HvacRightTemperatureRequest(callback),
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -1596,6 +1618,12 @@ async def async_setup_entry(
         if energysite.history_coordinator is not None
     )
 
+    entities.append(
+        TeslemetryCreditBalanceSensor(
+            entry.unique_id or entry.entry_id, entry.runtime_data
+        )
+    )
+
     async_add_entities(entities)
 
 
@@ -1633,7 +1661,7 @@ class TeslemetryStreamSensorEntity(TeslemetryVehicleStreamEntity, RestoreSensor)
         self.async_write_ha_state()
 
 
-class TeslemetryVehicleSensorEntity(TeslemetryVehicleEntity, SensorEntity):
+class TeslemetryVehicleSensorEntity(TeslemetryVehiclePollingEntity, SensorEntity):
     """Base class for Teslemetry vehicle metric sensors."""
 
     entity_description: TeslemetryVehicleSensorEntityDescription
@@ -1696,7 +1724,7 @@ class TeslemetryStreamTimeSensorEntity(TeslemetryVehicleStreamEntity, SensorEnti
         self.async_write_ha_state()
 
 
-class TeslemetryVehicleTimeSensorEntity(TeslemetryVehicleEntity, SensorEntity):
+class TeslemetryVehicleTimeSensorEntity(TeslemetryVehiclePollingEntity, SensorEntity):
     """Base class for Teslemetry vehicle time sensors."""
 
     entity_description: TeslemetryTimeEntityDescription
@@ -1763,8 +1791,7 @@ class TeslemetryWallConnectorSensorEntity(TeslemetryWallConnectorEntity, SensorE
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
-        if self.exists:
-            self._attr_native_value = self.entity_description.value_fn(self._value)
+        self._attr_native_value = self.entity_description.value_fn(self._value)
 
 
 class TeslemetryEnergyInfoSensorEntity(TeslemetryEnergyInfoEntity, SensorEntity):
@@ -1804,3 +1831,33 @@ class TeslemetryEnergyHistorySensorEntity(TeslemetryEnergyHistoryEntity, SensorE
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_native_value = self._value
+
+
+class TeslemetryCreditBalanceSensor(RestoreSensor):
+    """Entity for Teslemetry Credit balance."""
+
+    _attr_has_entity_name = True
+    stream: TeslemetryStream
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 0
+
+    def __init__(self, uid: str, data: TeslemetryData) -> None:
+        """Initialize common aspects of a Teslemetry entity."""
+
+        self._attr_translation_key = "credit_balance"
+        self._attr_unique_id = f"{uid}_credit_balance"
+        self.stream = data.stream
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+
+        if (sensor_data := await self.async_get_last_sensor_data()) is not None:
+            self._attr_native_value = sensor_data.native_value
+
+        self.async_on_remove(self.stream.listen_Balance(self._async_update))
+
+    def _async_update(self, value: int) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_native_value = value
+        self.async_write_ha_state()

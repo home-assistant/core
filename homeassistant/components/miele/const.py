@@ -2,6 +2,8 @@
 
 from enum import IntEnum
 
+from pymiele import MieleEnum
+
 DOMAIN = "miele"
 MANUFACTURER = "Miele"
 
@@ -9,6 +11,7 @@ ACTIONS = "actions"
 POWER_ON = "powerOn"
 POWER_OFF = "powerOff"
 PROCESS_ACTION = "processAction"
+PROGRAM_ID = "programId"
 VENTILATION_STEP = "ventilationStep"
 TARGET_TEMPERATURE = "targetTemperature"
 AMBIENT_LIGHT = "ambientLight"
@@ -313,6 +316,8 @@ STATE_PROGRAM_PHASE: dict[int, dict[int, str]] = {
     MieleAppliance.TUMBLE_DRYER: STATE_PROGRAM_PHASE_TUMBLE_DRYER,
     MieleAppliance.DRYER_PROFESSIONAL: STATE_PROGRAM_PHASE_TUMBLE_DRYER,
     MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL: STATE_PROGRAM_PHASE_TUMBLE_DRYER,
+    MieleAppliance.WASHER_DRYER: STATE_PROGRAM_PHASE_WASHING_MACHINE
+    | STATE_PROGRAM_PHASE_TUMBLE_DRYER,
     MieleAppliance.DISHWASHER: STATE_PROGRAM_PHASE_DISHWASHER,
     MieleAppliance.DISHWASHER_SEMI_PROFESSIONAL: STATE_PROGRAM_PHASE_DISHWASHER,
     MieleAppliance.DISHWASHER_PROFESSIONAL: STATE_PROGRAM_PHASE_DISHWASHER,
@@ -325,13 +330,31 @@ STATE_PROGRAM_PHASE: dict[int, dict[int, str]] = {
     MieleAppliance.ROBOT_VACUUM_CLEANER: STATE_PROGRAM_PHASE_ROBOT_VACUUM_CLEANER,
 }
 
-STATE_PROGRAM_TYPE = {
-    0: "normal_operation_mode",
-    1: "own_program",
-    2: "automatic_program",
-    3: "cleaning_care_program",
-    4: "maintenance_program",
-}
+
+class StateProgramType(MieleEnum):
+    """Defines program types."""
+
+    normal_operation_mode = 0
+    own_program = 1
+    automatic_program = 2
+    cleaning_care_program = 3
+    maintenance_program = 4
+    missing2none = -9999
+
+
+class StateDryingStep(MieleEnum):
+    """Defines drying steps."""
+
+    extra_dry = 0
+    normal_plus = 1
+    normal = 2
+    slightly_dry = 3
+    hand_iron_1 = 4
+    hand_iron_2 = 5
+    machine_iron = 6
+    smoothing = 7
+    missing2none = -9999
+
 
 WASHING_MACHINE_PROGRAM_ID: dict[int, str] = {
     -1: "no_program",  # Extrapolated from other device types.
