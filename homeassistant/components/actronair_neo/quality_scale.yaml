@@ -41,7 +41,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics: todo
   discovery-update-info:
     status: exempt
     comment: This integration uses DHCP discovery, however is cloud polling. Therefore there is no information to update.
@@ -61,7 +61,7 @@ rules:
   exception-translations: todo
   icon-translations: todo
   reconfiguration-flow: todo
-  repair-issues: done
+  repair-issues: todo
   stale-devices: done
 
   # Platinum
