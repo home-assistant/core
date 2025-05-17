@@ -61,6 +61,14 @@
         "name": "Sensor update available"
       }
     },
+    "image": {
+      "plant_image": {
+        "name": "Plant Image"
+      },
+      "plant_image_user": {
+        "name": "User Image"
+      }
+    },
     "sensor": {
       "scientific_name": {
         "name": "Scientific name"
