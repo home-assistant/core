@@ -604,7 +604,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '84fce612f5b8-pm01',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_all_entities[indoor][sensor.airgradient_pm1-state]
@@ -613,7 +613,7 @@
       'device_class': 'pm1',
       'friendly_name': 'Airgradient PM1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airgradient_pm1',
@@ -656,7 +656,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '84fce612f5b8-pm10',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_all_entities[indoor][sensor.airgradient_pm10-state]
@@ -665,7 +665,7 @@
       'device_class': 'pm10',
       'friendly_name': 'Airgradient PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airgradient_pm10',
@@ -708,7 +708,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '84fce612f5b8-pm02',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_all_entities[indoor][sensor.airgradient_pm2_5-state]
@@ -717,7 +717,7 @@
       'device_class': 'pm25',
       'friendly_name': 'Airgradient PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airgradient_pm2_5',
@@ -811,7 +811,7 @@
     'supported_features': 0,
     'translation_key': 'raw_pm02',
     'unique_id': '84fce612f5b8-pm02_raw',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_all_entities[indoor][sensor.airgradient_raw_pm2_5-state]
@@ -820,7 +820,7 @@
       'device_class': 'pm25',
       'friendly_name': 'Airgradient Raw PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airgradient_raw_pm2_5',

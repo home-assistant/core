@@ -663,7 +663,7 @@ class UnitOfElectricCurrent(StrEnum):
 class UnitOfElectricPotential(StrEnum):
     """Electric potential units."""
 
-    MICROVOLT = "µV"
+    MICROVOLT = "μV"  # "μ" == "\u03bc"
     MILLIVOLT = "mV"
     VOLT = "V"
     KILOVOLT = "kV"
@@ -692,7 +692,7 @@ class UnitOfTemperature(StrEnum):
 class UnitOfTime(StrEnum):
     """Time units."""
 
-    MICROSECONDS = "μs"
+    MICROSECONDS = "μs"  # "μ" == "\u03bc"
     MILLISECONDS = "ms"
     SECONDS = "s"
     MINUTES = "min"
@@ -813,7 +813,7 @@ class UnitOfMass(StrEnum):
     GRAMS = "g"
     KILOGRAMS = "kg"
     MILLIGRAMS = "mg"
-    MICROGRAMS = "µg"
+    MICROGRAMS = "μg"  # "μ" == "\u03bc"
     OUNCES = "oz"
     POUNDS = "lb"
     STONES = "st"
@@ -831,13 +831,13 @@ class UnitOfConductivity(
     """Conductivity units."""
 
     SIEMENS_PER_CM = "S/cm"
-    MICROSIEMENS_PER_CM = "µS/cm"
+    MICROSIEMENS_PER_CM = "μS/cm"  # "μ" == "\u03bc"
     MILLISIEMENS_PER_CM = "mS/cm"
 
     # Deprecated aliases
     SIEMENS = "S/cm"
     """Deprecated: Please use UnitOfConductivity.SIEMENS_PER_CM"""
-    MICROSIEMENS = "µS/cm"
+    MICROSIEMENS = "μS/cm"  # 'b'\xce\xbcS/cm'
     """Deprecated: Please use UnitOfConductivity.MICROSIEMENS_PER_CM"""
     MILLISIEMENS = "mS/cm"
     """Deprecated: Please use UnitOfConductivity.MILLISIEMENS_PER_CM"""
@@ -908,9 +908,9 @@ class UnitOfPrecipitationDepth(StrEnum):
 
 
 # Concentration units
-CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"
+CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "μg/m³"  # "μ" == "\u03bc"
 CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = "mg/m³"
-CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = "μg/ft³"
+CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = "μg/ft³"  # "μ" == "\u03bc"
 CONCENTRATION_PARTS_PER_CUBIC_METER: Final = "p/m³"
 CONCENTRATION_PARTS_PER_MILLION: Final = "ppm"
 CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
