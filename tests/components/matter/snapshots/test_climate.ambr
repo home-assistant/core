@@ -196,6 +196,188 @@
     'state': 'off',
   })
 # ---
+# name: test_climates[silabs_laundrywasher][climate.laundrywasher-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.laundrywasher',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-MatterTemperatureControl-86-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climates[silabs_laundrywasher][climate.laundrywasher-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': None,
+      'friendly_name': 'LaundryWasher',
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'supported_features': <ClimateEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.laundrywasher',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cool',
+  })
+# ---
+# name: test_climates[silabs_refrigerator][climate.refrigerator_temperature_control_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': -15.0,
+      'min_temp': -18.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.refrigerator_temperature_control_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature control (2)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 1>,
+    'translation_key': 'temperature_control',
+    'unique_id': '00000000000004D2-000000000000003A-MatterNodeDevice-2-MatterTemperatureControl-86-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climates[silabs_refrigerator][climate.refrigerator_temperature_control_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': None,
+      'friendly_name': 'Refrigerator Temperature control (2)',
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': -15.0,
+      'min_temp': -18.0,
+      'supported_features': <ClimateEntityFeature: 1>,
+      'temperature': -18.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.refrigerator_temperature_control_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cool',
+  })
+# ---
+# name: test_climates[silabs_refrigerator][climate.refrigerator_temperature_control_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': 4.0,
+      'min_temp': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.refrigerator_temperature_control_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature control (3)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 1>,
+    'translation_key': 'temperature_control',
+    'unique_id': '00000000000004D2-000000000000003A-MatterNodeDevice-3-MatterTemperatureControl-86-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climates[silabs_refrigerator][climate.refrigerator_temperature_control_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': None,
+      'friendly_name': 'Refrigerator Temperature control (3)',
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': 4.0,
+      'min_temp': 1.0,
+      'supported_features': <ClimateEntityFeature: 1>,
+      'temperature': 4.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.refrigerator_temperature_control_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cool',
+  })
+# ---
 # name: test_climates[thermostat][climate.longan_link_hvac-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
