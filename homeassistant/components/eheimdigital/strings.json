@@ -67,6 +67,16 @@
         "name": "System LED brightness"
       }
     },
+    "select": {
+      "filter_mode": {
+        "name": "Filter mode",
+        "state": {
+          "manual": "Manual",
+          "pulse": "Pulse",
+          "bio": "Bio"
+        }
+      }
+    },
     "sensor": {
       "current_speed": {
         "name": "Current speed"
