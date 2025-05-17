@@ -39,36 +39,23 @@ class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Connecting to Actron Neo API")
             try:
                 api = ActronNeoAPI(username, password)
-            except ActronNeoAuthError:
-                errors["base"] = ERROR_INVALID_AUTH
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=ACTRON_AIR_SCHEMA,
-                    errors=errors,
-                )
-
-            try:
                 instance_uuid = await instance_id.async_get(self.hass)
                 await api.request_pairing_token("HomeAssistant", instance_uuid)
                 await api.refresh_token()
+                user_data = await api.get_user()
+                await self.async_set_unique_id(user_data["id"])
+
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=username,
+                    data={
+                        CONF_API_TOKEN: api.pairing_token,
+                    },
+                )
+            except ActronNeoAuthError:
+                errors["base"] = ERROR_INVALID_AUTH
             except ActronNeoAPIError:
                 errors["base"] = ERROR_API_ERROR
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=ACTRON_AIR_SCHEMA,
-                    errors=errors,
-                )
-
-            user_data = await api.get_user()
-            await self.async_set_unique_id(user_data["id"])
-
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(
-                title=username,
-                data={
-                    CONF_API_TOKEN: api.pairing_token,
-                },
-            )
 
         return self.async_show_form(
             step_id="user",
