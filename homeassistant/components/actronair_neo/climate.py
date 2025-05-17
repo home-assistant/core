@@ -76,7 +76,7 @@ class ActronSystemClimate(
         | ClimateEntityFeature.TURN_ON
         | ClimateEntityFeature.TURN_OFF
     )
-    _attr_entity_registry_enabled_default = True
+    _attr_name: None = None
 
     def __init__(
         self,
@@ -88,7 +88,6 @@ class ActronSystemClimate(
         super().__init__(coordinator)
         self._serial_number: str = serial_number
         self._name: str = name
-        self._attr_name: None = None
         self._attr_unique_id: str = self._serial_number
         initial_status = coordinator.get_status(serial_number)
         self._attr_device_info: DeviceInfo = DeviceInfo(
