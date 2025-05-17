@@ -141,6 +141,11 @@ async def _transform_stream(
             if isinstance(event.item, ResponseOutputMessage):
                 yield {"role": event.item.role}
             elif isinstance(event.item, ResponseFunctionToolCall):
+                # OpenAI has tool calls as individual events
+                # while HA puts tool calls inside the assistant message.
+                # We turn them into individual assistant content for HA
+                # to ensure that tools are called as soon as possible.
+                yield {"role": "assistant"}
                 current_tool_call = event.item
         elif isinstance(event, ResponseOutputItemDoneEvent):
             item = event.item.model_dump()
