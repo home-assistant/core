@@ -1227,6 +1227,62 @@ async def test_template_with_trigger_templated_delay_on(hass: HomeAssistant) -> 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
+    ("config", "delay_state"),
+    [
+        (
+            {
+                "template": {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "binary_sensor": {
+                        "name": "test",
+                        "state": "{{ trigger.event.data.beer == 2 }}",
+                        "device_class": "motion",
+                        "delay_on": '{{ ({ "seconds": 10 }) }}',
+                    },
+                },
+            },
+            STATE_ON,
+        ),
+        (
+            {
+                "template": {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "binary_sensor": {
+                        "name": "test",
+                        "state": "{{ trigger.event.data.beer != 2 }}",
+                        "device_class": "motion",
+                        "delay_off": '{{ ({ "seconds": 10 }) }}',
+                    },
+                },
+            },
+            STATE_OFF,
+        ),
+    ],
+)
+@pytest.mark.usefixtures("start_ha")
+async def test_trigger_template_delay_with_multiple_triggers(
+    hass: HomeAssistant, delay_state: str
+) -> None:
+    """Test trigger based binary sensor with multiple triggers occurring during the delay."""
+    future = dt_util.utcnow()
+    for _ in range(10):
+        # State should still be unknown
+        state = hass.states.get("binary_sensor.test")
+        assert state.state == STATE_UNKNOWN
+
+        hass.bus.async_fire("test_event", {"beer": 2}, context=Context())
+        await hass.async_block_till_done()
+
+        future += timedelta(seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == delay_state
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
+@pytest.mark.parametrize(
     "config",
     [
         {
