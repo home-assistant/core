@@ -108,6 +108,12 @@
       },
       "ice_maker": {
         "default": "mdi:delete-variant"
+      },
+      "auto_cycle_link": {
+        "default": "mdi:link-off",
+        "state": {
+          "on": "mdi:link"
+        }
       }
     }
   }

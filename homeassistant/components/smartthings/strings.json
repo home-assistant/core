@@ -556,6 +556,9 @@
       "sabbath_mode": {
         "name": "Sabbath mode"
       },
+      "auto_cycle_link": {
+        "name": "Auto cycle link"
+      },
       "keep_fresh_mode": {
         "name": "Keep fresh mode"
       }
