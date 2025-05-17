@@ -172,6 +172,7 @@ class ConfigManagerFlowIndexView(
                 vol.Required("handler"): vol.Any(str, list),
                 vol.Optional("show_advanced_options", default=False): cv.boolean,
                 vol.Optional("entry_id"): cv.string,
+                vol.Optional("virtual_domain"): cv.string,
             },
             extra=vol.ALLOW_EXTRA,
         )
@@ -199,6 +200,8 @@ class ConfigManagerFlowIndexView(
         if entry_id := data.get("entry_id"):
             context["source"] = config_entries.SOURCE_RECONFIGURE
             context["entry_id"] = entry_id
+        if virtual_domain := data.get("virtual_domain"):
+            context["virtual_domain"] = virtual_domain
         return context
 
     def _prepare_result_json(
