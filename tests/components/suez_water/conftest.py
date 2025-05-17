@@ -12,7 +12,7 @@ from homeassistant.components.recorder import Recorder
 from homeassistant.components.suez_water.const import CONF_COUNTER_ID, DOMAIN
 
 from tests.common import MockConfigEntry
-from tests.conftest import RecorderInstanceGenerator
+from tests.conftest import RecorderInstanceContextManager
 
 MOCK_DATA = {
     "username": "test-username",
@@ -23,7 +23,7 @@ MOCK_DATA = {
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 

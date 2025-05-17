@@ -82,9 +82,9 @@ async def snapshot_platform_with_given_assertion(
     """Snapshot a platform."""
     entity_entries = er.async_entries_for_config_entry(entity_registry, config_entry_id)
     assert entity_entries
-    assert (
-        len({entity_entry.domain for entity_entry in entity_entries}) == 1
-    ), "Please limit the loaded platforms to 1 platform."
+    assert len({entity_entry.domain for entity_entry in entity_entries}) == 1, (
+        "Please limit the loaded platforms to 1 platform."
+    )
     for entity_entry in entity_entries:
         assert entity_entry == snapshot(
             name=f"{entity_entry.entity_id}_{snapshot_assertion_suffix_name}-entry"
