@@ -29,27 +29,26 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Growatt sensor."""
-    coordinators = hass.data[DOMAIN][config_entry.entry_id]
+    # Use runtime_data instead of hass.data
+    data = config_entry.runtime_data
 
-    entities = []
+    entities: list[GrowattSensor] = []
 
     # Add total sensors
-    total_coordinator = coordinators["total"]
+    total_coordinator = data.total_coordinator
     entities.extend(
-        [
-            GrowattSensor(
-                total_coordinator,
-                name=f"{config_entry.data['name']} Total",
-                serial_id=config_entry.data["plant_id"],
-                unique_id=f"{config_entry.data['plant_id']}-{description.key}",
-                description=description,
-            )
-            for description in TOTAL_SENSOR_TYPES
-        ]
+        GrowattSensor(
+            total_coordinator,
+            name=f"{config_entry.data['name']} Total",
+            serial_id=config_entry.data["plant_id"],
+            unique_id=f"{config_entry.data['plant_id']}-{description.key}",
+            description=description,
+        )
+        for description in TOTAL_SENSOR_TYPES
     )
 
     # Add sensors for each device
-    for device_sn, device_coordinator in coordinators["devices"].items():
+    for device_sn, device_coordinator in data.devices.items():
         sensor_descriptions: list = []
         if device_coordinator.device_type == "inverter":
             sensor_descriptions = list(INVERTER_SENSOR_TYPES)
@@ -78,10 +77,10 @@ async def async_setup_entry(
             ]
         )
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
-class GrowattSensor(CoordinatorEntity, SensorEntity):
+class GrowattSensor(CoordinatorEntity[GrowattCoordinator], SensorEntity):
     """Representation of a Growatt Sensor."""
 
     _attr_has_entity_name = True

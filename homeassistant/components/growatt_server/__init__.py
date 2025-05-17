@@ -12,14 +12,16 @@ from .const import (
     DEFAULT_PLANT_ID,
     DEFAULT_URL,
     DEPRECATED_URLS,
-    DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
     PLATFORMS,
 )
 from .coordinator import GrowattCoordinator
+from .models import GrowattRuntimeData
 
 
-def get_device_list(api, config):
+def get_device_list(
+    api: growattServer.GrowattApi, config: dict[str, str]
+) -> tuple[list[dict[str, str]], str]:
     """Retrieve the device list for the selected plant."""
     plant_id = config[CONF_PLANT_ID]
 
@@ -37,7 +39,7 @@ def get_device_list(api, config):
 
     # Get a list of devices for specified plant to add sensors for.
     devices = api.device_list(plant_id)
-    return [devices, plant_id]
+    return devices, plant_id
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -63,23 +65,27 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         hass, config_entry, plant_id, "total", plant_id
     )
 
-    # Store the coordinator in hass.data
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = {
-        "total": total_coordinator,
-        "devices": {},
+    # Create coordinators for each device
+    device_coordinators = {
+        device["deviceSn"]: GrowattCoordinator(
+            hass, config_entry, device["deviceSn"], device["deviceType"], plant_id
+        )
+        for device in devices
+        if device["deviceType"] in ["inverter", "tlx", "storage", "mix"]
     }
 
-    # Create coordinators for each device
-    for device in devices:
-        device_type = device["deviceType"]
-        if device_type in ["inverter", "tlx", "storage", "mix"]:
-            device_coordinator = GrowattCoordinator(
-                hass, config_entry, device["deviceSn"], device_type, plant_id
-            )
-            hass.data[DOMAIN][config_entry.entry_id]["devices"][device["deviceSn"]] = (
-                device_coordinator
-            )
+    # Perform the first refresh for the total coordinator
+    await total_coordinator.async_config_entry_first_refresh()
+
+    # Perform the first refresh for each device coordinator
+    for device_coordinator in device_coordinators.values():
+        await device_coordinator.async_config_entry_first_refresh()
+
+    # Store runtime data in the config entry
+    config_entry.runtime_data = GrowattRuntimeData(
+        total_coordinator=total_coordinator,
+        devices=device_coordinators,
+    )
 
     # Set up all the entities
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
