@@ -698,7 +698,7 @@ class UnitOfTemperature(StrEnum):
 class UnitOfTime(StrEnum):
     """Time units."""
 
-    MICROSECONDS = "μs"  # b'\xce\xbcs'
+    MICROSECONDS = "μs"  # "μ" == "\u03bc"
     MILLISECONDS = "ms"
     SECONDS = "s"
     MINUTES = "min"
@@ -819,7 +819,7 @@ class UnitOfMass(StrEnum):
     GRAMS = "g"
     KILOGRAMS = "kg"
     MILLIGRAMS = "mg"
-    MICROGRAMS = "μg"  # b'\xce\xbg'
+    MICROGRAMS = "μg"  # "μ" == "\u03bc"
     OUNCES = "oz"
     POUNDS = "lb"
     STONES = "st"
@@ -837,7 +837,7 @@ class UnitOfConductivity(
     """Conductivity units."""
 
     SIEMENS_PER_CM = "S/cm"
-    MICROSIEMENS_PER_CM = "μS/cm"  # b'\xce\xbcS/cm'
+    MICROSIEMENS_PER_CM = "μS/cm"  # "μ" == "\u03bc"
     MILLISIEMENS_PER_CM = "mS/cm"
 
     # Deprecated aliases
@@ -914,11 +914,10 @@ class UnitOfPrecipitationDepth(StrEnum):
 
 
 # Concentration units
-CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"
 CONCENTRATION_GRAMS_PER_CUBIC_METER: Final = "g/m³"
-CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "μg/m³"  # b'\xce\xbcg/m\xc2\xb3'
 CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = "mg/m³"
-CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = "μg/ft³"  # b'\xce\xbcg/ft\xc2\xb3'
+CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "μg/m³"  # "μ" == "\u03bc"
+CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = "μg/ft³"  # "μ" == "\u03bc"
 CONCENTRATION_PARTS_PER_CUBIC_METER: Final = "p/m³"
 CONCENTRATION_PARTS_PER_MILLION: Final = "ppm"
 CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
