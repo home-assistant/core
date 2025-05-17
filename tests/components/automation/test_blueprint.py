@@ -149,7 +149,14 @@ async def test_notify_leaving_zone(
         assert len(mock_call_action.mock_calls) == 3
 
 
-async def test_motion_light(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        "light.kitchen",
+        "switch.kitchen",
+    ],
+)
+async def test_motion_light(hass: HomeAssistant, entity_id: str) -> None:
     """Test motion light blueprint."""
     hass.states.async_set("binary_sensor.kitchen", "off")
 
@@ -165,7 +172,7 @@ async def test_motion_light(hass: HomeAssistant) -> None:
                     "use_blueprint": {
                         "path": "motion_light.yaml",
                         "input": {
-                            "light_target": {"entity_id": "light.kitchen"},
+                            "light_target": {"entity_id": entity_id},
                             "motion_entity": "binary_sensor.kitchen",
                         },
                     }
@@ -173,8 +180,8 @@ async def test_motion_light(hass: HomeAssistant) -> None:
             },
         )
 
-    turn_on_calls = async_mock_service(hass, "light", "turn_on")
-    turn_off_calls = async_mock_service(hass, "light", "turn_off")
+    turn_on_calls = async_mock_service(hass, "homeassistant", "turn_on")
+    turn_off_calls = async_mock_service(hass, "homeassistant", "turn_off")
 
     # Turn on motion
     hass.states.async_set("binary_sensor.kitchen", "on")
