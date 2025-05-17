@@ -946,6 +946,5 @@ async def test_entity_icon_and_entity_picture(
         hass,
         mqtt_mock_entry,
         domain,
-        config,
-        default_entity_picture="https://brands.home-assistant.io/_/mqtt/icon.png",
+        config
     )
