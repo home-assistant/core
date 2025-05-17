@@ -541,7 +541,7 @@
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
-        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
       'max_temp': 35.0,
       'min_temp': 7.0,
@@ -589,7 +589,7 @@
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
-        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
       'max_temp': 35.0,
       'min_temp': 7.0,
