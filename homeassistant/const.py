@@ -669,7 +669,7 @@ class UnitOfElectricCurrent(StrEnum):
 class UnitOfElectricPotential(StrEnum):
     """Electric potential units."""
 
-    MICROVOLT = "μV"  # b'\xce\xbcV'
+    MICROVOLT = "μV"  # "μ" == "\u03bc"
     MILLIVOLT = "mV"
     VOLT = "V"
     KILOVOLT = "kV"

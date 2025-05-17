@@ -519,7 +519,7 @@ UNITS = (
     ),
     UnitOfMeasurement(
         unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        aliases={"ug/m3", "μg/m3", "ug/m³"},
+        aliases={"ug/m3", "μg/m3", "\u00b5g/m3", "ug/m³"},
         device_classes={
             SensorDeviceClass.NITROGEN_DIOXIDE,
             SensorDeviceClass.NITROGEN_MONOXIDE,
