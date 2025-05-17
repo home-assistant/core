@@ -1,0 +1,12 @@
+{
+  "domain": "leneda",
+  "name": "Leneda",
+  "codeowners": ["@fedus"],
+  "config_flow": true,
+  "dependencies": ["recorder"],
+  "documentation": "https://www.home-assistant.io/integrations/leneda",
+  "iot_class": "cloud_polling",
+  "loggers": ["leneda-client"],
+  "quality_scale": "bronze",
+  "requirements": ["leneda-client==0.5.0"]
+}
