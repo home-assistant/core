@@ -28,9 +28,7 @@ async def test_binary_sensor(
     with patch(
         "homeassistant.components.pterodactyl._PLATFORMS", [Platform.BINARY_SENSOR]
     ):
-        mock_config_entry = await setup_integration(
-            hass, mock_config_entry, mock_pterodactyl
-        )
+        mock_config_entry = await setup_integration(hass, mock_config_entry)
 
         assert len(hass.states.async_all(Platform.BINARY_SENSOR)) == 2
         await snapshot_platform(
@@ -45,7 +43,7 @@ async def test_binary_sensor_update(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test binary sensor update."""
-    await setup_integration(hass, mock_config_entry, mock_pterodactyl)
+    await setup_integration(hass, mock_config_entry)
 
     freezer.tick(timedelta(seconds=90))
     async_fire_time_changed(hass)
@@ -69,7 +67,7 @@ async def test_binary_sensor_update_failure(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test failed binary sensor update."""
-    await setup_integration(hass, mock_config_entry, mock_pterodactyl)
+    await setup_integration(hass, mock_config_entry)
 
     mock_pterodactyl.client.servers.get_server.side_effect = ConnectionError(
         "Simulated connection error"

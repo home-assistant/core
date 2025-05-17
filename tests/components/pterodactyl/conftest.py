@@ -1,7 +1,6 @@
 """Common fixtures for the Pterodactyl tests."""
 
 from collections.abc import Generator
-import json
 from unittest.mock import AsyncMock, patch
 
 from pydactyl.responses import PaginatedResponse
@@ -12,7 +11,7 @@ from homeassistant.const import CONF_API_KEY, CONF_URL
 
 from .const import TEST_API_KEY, TEST_URL
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -46,10 +45,10 @@ def mock_pterodactyl() -> Generator[AsyncMock]:
     with patch(
         "homeassistant.components.pterodactyl.api.PterodactylClient", autospec=True
     ) as mock:
-        server_list_data = json.loads(load_fixture("server_list_data.json", DOMAIN))
-        server_1_data = json.loads(load_fixture("server_1_data.json", DOMAIN))
-        server_2_data = json.loads(load_fixture("server_2_data.json", DOMAIN))
-        utilization_data = json.loads(load_fixture("utilization_data.json", DOMAIN))
+        server_list_data = load_json_object_fixture("server_list_data.json", DOMAIN)
+        server_1_data = load_json_object_fixture("server_1_data.json", DOMAIN)
+        server_2_data = load_json_object_fixture("server_2_data.json", DOMAIN)
+        utilization_data = load_json_object_fixture("utilization_data.json", DOMAIN)
 
         mock.return_value.client.servers.list_servers.return_value = PaginatedResponse(
             mock.return_value, "client", server_list_data
