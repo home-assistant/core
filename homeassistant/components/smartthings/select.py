@@ -20,6 +20,26 @@ LAMP_TO_HA = {
     "extraHigh": "extra_high",
 }
 
+WASHER_SPIN_LEVEL_TO_HA = {
+    "none": "none",
+    "rinseHold": "rinse_hold",
+    "noSpin": "no_spin",
+    "low": "low",
+    "extraLow": "extra_low",
+    "delicate": "delicate",
+    "medium": "medium",
+    "high": "high",
+    "extraHigh": "extra_high",
+    "200": "200",
+    "400": "400",
+    "600": "600",
+    "800": "800",
+    "1000": "1000",
+    "1200": "1200",
+    "1400": "1400",
+    "1600": "1600",
+}
+
 
 @dataclass(frozen=True, kw_only=True)
 class SmartThingsSelectDescription(SelectEntityDescription):
@@ -87,6 +107,15 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         status_attribute=Attribute.BRIGHTNESS_LEVEL,
         command=Command.SET_BRIGHTNESS_LEVEL,
         options_map=LAMP_TO_HA,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    Capability.CUSTOM_WASHER_SPIN_LEVEL: SmartThingsSelectDescription(
+        key=Capability.CUSTOM_WASHER_SPIN_LEVEL,
+        translation_key="spin_level",
+        options_attribute=Attribute.SUPPORTED_WASHER_SPIN_LEVEL,
+        status_attribute=Attribute.WASHER_SPIN_LEVEL,
+        command=Command.SET_WASHER_SPIN_LEVEL,
+        options_map=WASHER_SPIN_LEVEL_TO_HA,
         entity_category=EntityCategory.CONFIG,
     ),
 }
