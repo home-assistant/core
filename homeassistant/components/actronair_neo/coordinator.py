@@ -37,9 +37,9 @@ class ActronNeoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER,
             name="Actron Neo Status",
             update_interval=SCAN_INTERVAL,
+            config_entry=entry,
         )
         self.api = ActronNeoAPI(pairing_token=pairing_token)
-        self.entry = entry
         self.last_update_success = False
         self.last_seen: dict[str, datetime] = {}
         self.auth_error_count = 0
