@@ -710,6 +710,8 @@ build.json @home-assistant/supervisor
 /tests/components/imeon_inverter/ @Imeon-Energy
 /homeassistant/components/imgw_pib/ @bieniu
 /tests/components/imgw_pib/ @bieniu
+/homeassistant/components/immich/ @mib1185
+/tests/components/immich/ @mib1185
 /homeassistant/components/improv_ble/ @emontnemery
 /tests/components/improv_ble/ @emontnemery
 /homeassistant/components/incomfort/ @jbouwh

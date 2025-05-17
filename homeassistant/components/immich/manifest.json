@@ -1,0 +1,11 @@
+{
+  "domain": "immich",
+  "name": "Immich",
+  "codeowners": ["@mib1185"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/immich",
+  "iot_class": "local_polling",
+  "loggers": ["aioimmich"],
+  "quality_scale": "silver",
+  "requirements": ["aioimmich==0.3.0"]
+}
