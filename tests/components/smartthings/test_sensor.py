@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from pysmartthings import Attribute, Capability
+from pysmartthings.models import HealthStatus
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -11,12 +12,17 @@ from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.smartthings.const import DOMAIN, MAIN
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from . import setup_integration, snapshot_smartthings_entities, trigger_update
+from . import (
+    setup_integration,
+    snapshot_smartthings_entities,
+    trigger_health_update,
+    trigger_update,
+)
 
 from tests.common import MockConfigEntry
 
@@ -65,6 +71,7 @@ async def test_state_update(
         "issue_string",
         "entity_id",
         "expected_state",
+        "version",
     ),
     [
         (
@@ -74,6 +81,7 @@ async def test_state_update(
             "media_player",
             "sensor.tv_samsung_8_series_49_media_playback_status",
             STATE_UNKNOWN,
+            "2025.10.0",
         ),
         (
             "vd_stv_2017_k",
@@ -82,6 +90,7 @@ async def test_state_update(
             "media_player",
             "sensor.tv_samsung_8_series_49_volume",
             "13",
+            "2025.10.0",
         ),
         (
             "vd_stv_2017_k",
@@ -90,6 +99,7 @@ async def test_state_update(
             "media_player",
             "sensor.tv_samsung_8_series_49_media_input_source",
             "hdmi1",
+            "2025.10.0",
         ),
         (
             "im_speaker_ai_0001",
@@ -98,6 +108,7 @@ async def test_state_update(
             "media_player",
             "sensor.galaxy_home_mini_media_playback_repeat",
             "off",
+            "2025.10.0",
         ),
         (
             "im_speaker_ai_0001",
@@ -106,6 +117,25 @@ async def test_state_update(
             "media_player",
             "sensor.galaxy_home_mini_media_playback_shuffle",
             "disabled",
+            "2025.10.0",
+        ),
+        (
+            "da_ac_ehs_01001",
+            f"4165c51e-bf6b-c5b6-fd53-127d6248754b_{MAIN}_{Capability.TEMPERATURE_MEASUREMENT}_{Attribute.TEMPERATURE}_{Attribute.TEMPERATURE}",
+            "temperature",
+            "dhw",
+            "sensor.temperature",
+            "57",
+            "2025.12.0",
+        ),
+        (
+            "da_ac_ehs_01001",
+            f"4165c51e-bf6b-c5b6-fd53-127d6248754b_{MAIN}_{Capability.THERMOSTAT_COOLING_SETPOINT}_{Attribute.COOLING_SETPOINT}_{Attribute.COOLING_SETPOINT}",
+            "cooling_setpoint",
+            "dhw",
+            "sensor.cooling_setpoint",
+            "56",
+            "2025.12.0",
         ),
     ],
 )
@@ -120,6 +150,7 @@ async def test_create_issue_with_items(
     issue_string: str,
     entity_id: str,
     expected_state: str,
+    version: str,
 ) -> None:
     """Test we create an issue when an automation or script is using a deprecated entity."""
     issue_id = f"deprecated_{issue_string}_{entity_id}"
@@ -183,6 +214,7 @@ async def test_create_issue_with_items(
         "entity_name": suggested_object_id,
         "items": "- [test](/config/automation/edit/test)\n- [test](/config/script/edit/test)",
     }
+    assert issue.breaks_in_ha_version == version
 
     entity_registry.async_update_entity(
         entity_entry.entity_id,
@@ -205,6 +237,7 @@ async def test_create_issue_with_items(
         "issue_string",
         "entity_id",
         "expected_state",
+        "version",
     ),
     [
         (
@@ -214,6 +247,7 @@ async def test_create_issue_with_items(
             "media_player",
             "sensor.tv_samsung_8_series_49_media_playback_status",
             STATE_UNKNOWN,
+            "2025.10.0",
         ),
         (
             "vd_stv_2017_k",
@@ -222,6 +256,7 @@ async def test_create_issue_with_items(
             "media_player",
             "sensor.tv_samsung_8_series_49_volume",
             "13",
+            "2025.10.0",
         ),
         (
             "vd_stv_2017_k",
@@ -230,6 +265,7 @@ async def test_create_issue_with_items(
             "media_player",
             "sensor.tv_samsung_8_series_49_media_input_source",
             "hdmi1",
+            "2025.10.0",
         ),
         (
             "im_speaker_ai_0001",
@@ -238,6 +274,7 @@ async def test_create_issue_with_items(
             "media_player",
             "sensor.galaxy_home_mini_media_playback_repeat",
             "off",
+            "2025.10.0",
         ),
         (
             "im_speaker_ai_0001",
@@ -246,6 +283,25 @@ async def test_create_issue_with_items(
             "media_player",
             "sensor.galaxy_home_mini_media_playback_shuffle",
             "disabled",
+            "2025.10.0",
+        ),
+        (
+            "da_ac_ehs_01001",
+            f"4165c51e-bf6b-c5b6-fd53-127d6248754b_{MAIN}_{Capability.TEMPERATURE_MEASUREMENT}_{Attribute.TEMPERATURE}_{Attribute.TEMPERATURE}",
+            "temperature",
+            "dhw",
+            "sensor.temperature",
+            "57",
+            "2025.12.0",
+        ),
+        (
+            "da_ac_ehs_01001",
+            f"4165c51e-bf6b-c5b6-fd53-127d6248754b_{MAIN}_{Capability.THERMOSTAT_COOLING_SETPOINT}_{Attribute.COOLING_SETPOINT}_{Attribute.COOLING_SETPOINT}",
+            "cooling_setpoint",
+            "dhw",
+            "sensor.cooling_setpoint",
+            "56",
+            "2025.12.0",
         ),
     ],
 )
@@ -260,6 +316,7 @@ async def test_create_issue(
     issue_string: str,
     entity_id: str,
     expected_state: str,
+    version: str,
 ) -> None:
     """Test we create an issue when an automation or script is using a deprecated entity."""
     issue_id = f"deprecated_{issue_string}_{entity_id}"
@@ -284,6 +341,7 @@ async def test_create_issue(
         "entity_id": entity_id,
         "entity_name": suggested_object_id,
     }
+    assert issue.breaks_in_ha_version == version
 
     entity_registry.async_update_entity(
         entity_entry.entity_id,
@@ -296,3 +354,44 @@ async def test_create_issue(
     # Assert the issue is no longer present
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
     assert len(issue_registry.issues) == 0
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_availability(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test availability."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.ac_office_granit_temperature").state == "25"
+
+    await trigger_health_update(
+        hass, devices, "96a5ef74-5832-a84b-f1f7-ca799957065d", HealthStatus.OFFLINE
+    )
+
+    assert (
+        hass.states.get("sensor.ac_office_granit_temperature").state
+        == STATE_UNAVAILABLE
+    )
+
+    await trigger_health_update(
+        hass, devices, "96a5ef74-5832-a84b-f1f7-ca799957065d", HealthStatus.ONLINE
+    )
+
+    assert hass.states.get("sensor.ac_office_granit_temperature").state == "25"
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_availability_at_start(
+    hass: HomeAssistant,
+    unavailable_device: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unavailable at boot."""
+    await setup_integration(hass, mock_config_entry)
+    assert (
+        hass.states.get("sensor.ac_office_granit_temperature").state
+        == STATE_UNAVAILABLE
+    )

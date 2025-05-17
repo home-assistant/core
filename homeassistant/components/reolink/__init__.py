@@ -23,7 +23,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -364,39 +364,90 @@ def migrate_entity_ids(
     devices = dr.async_entries_for_config_entry(device_reg, config_entry_id)
     ch_device_ids = {}
     for device in devices:
-        (device_uid, ch, is_chime) = get_device_uid_and_ch(device, host)
+        for dev_id in device.identifiers:
+            (device_uid, ch, is_chime) = get_device_uid_and_ch(dev_id, host)
+            if not device_uid:
+                continue
 
-        if host.api.supported(None, "UID") and device_uid[0] != host.unique_id:
-            if ch is None:
-                new_device_id = f"{host.unique_id}"
-            else:
-                new_device_id = f"{host.unique_id}_{device_uid[1]}"
-            new_identifiers = {(DOMAIN, new_device_id)}
-            device_reg.async_update_device(device.id, new_identifiers=new_identifiers)
-
-        if ch is None or is_chime:
-            continue  # Do not consider the NVR itself or chimes
-
-        ch_device_ids[device.id] = ch
-        if host.api.supported(ch, "UID") and device_uid[1] != host.api.camera_uid(ch):
-            if host.api.supported(None, "UID"):
-                new_device_id = f"{host.unique_id}_{host.api.camera_uid(ch)}"
-            else:
-                new_device_id = f"{device_uid[0]}_{host.api.camera_uid(ch)}"
-            new_identifiers = {(DOMAIN, new_device_id)}
-            existing_device = device_reg.async_get_device(identifiers=new_identifiers)
-            if existing_device is None:
+            if host.api.supported(None, "UID") and device_uid[0] != host.unique_id:
+                if ch is None:
+                    new_device_id = f"{host.unique_id}"
+                else:
+                    new_device_id = f"{host.unique_id}_{device_uid[1]}"
+                _LOGGER.debug(
+                    "Updating Reolink device UID from %s to %s",
+                    device_uid,
+                    new_device_id,
+                )
+                new_identifiers = {(DOMAIN, new_device_id)}
                 device_reg.async_update_device(
                     device.id, new_identifiers=new_identifiers
                 )
-            else:
-                _LOGGER.warning(
-                    "Reolink device with uid %s already exists, "
-                    "removing device with uid %s",
-                    new_device_id,
-                    device_uid,
+
+            if ch is None or is_chime:
+                continue  # Do not consider the NVR itself or chimes
+
+            # Check for wrongfully combined host with NVR entities in one device
+            # Can be removed in HA 2025.12
+            if (DOMAIN, host.unique_id) in device.identifiers:
+                new_identifiers = device.identifiers.copy()
+                for old_id in device.identifiers:
+                    if old_id[0] == DOMAIN and old_id[1] != host.unique_id:
+                        new_identifiers.remove(old_id)
+                _LOGGER.debug(
+                    "Updating Reolink device identifiers from %s to %s",
+                    device.identifiers,
+                    new_identifiers,
                 )
-                device_reg.async_remove_device(device.id)
+                device_reg.async_update_device(
+                    device.id, new_identifiers=new_identifiers
+                )
+                break
+
+            # Check for wrongfully added MAC of the NVR/Hub to the camera
+            # Can be removed in HA 2025.12
+            host_connnection = (CONNECTION_NETWORK_MAC, host.api.mac_address)
+            if host_connnection in device.connections:
+                new_connections = device.connections.copy()
+                new_connections.remove(host_connnection)
+                _LOGGER.debug(
+                    "Updating Reolink device connections from %s to %s",
+                    device.connections,
+                    new_connections,
+                )
+                device_reg.async_update_device(
+                    device.id, new_connections=new_connections
+                )
+
+            ch_device_ids[device.id] = ch
+            if host.api.supported(ch, "UID") and device_uid[1] != host.api.camera_uid(
+                ch
+            ):
+                if host.api.supported(None, "UID"):
+                    new_device_id = f"{host.unique_id}_{host.api.camera_uid(ch)}"
+                else:
+                    new_device_id = f"{device_uid[0]}_{host.api.camera_uid(ch)}"
+                _LOGGER.debug(
+                    "Updating Reolink device UID from %s to %s",
+                    device_uid,
+                    new_device_id,
+                )
+                new_identifiers = {(DOMAIN, new_device_id)}
+                existing_device = device_reg.async_get_device(
+                    identifiers=new_identifiers
+                )
+                if existing_device is None:
+                    device_reg.async_update_device(
+                        device.id, new_identifiers=new_identifiers
+                    )
+                else:
+                    _LOGGER.warning(
+                        "Reolink device with uid %s already exists, "
+                        "removing device with uid %s",
+                        new_device_id,
+                        device_uid,
+                    )
+                    device_reg.async_remove_device(device.id)
 
     entity_reg = er.async_get(hass)
     entities = er.async_entries_for_config_entry(entity_reg, config_entry_id)
@@ -415,6 +466,11 @@ def migrate_entity_ids(
             host.unique_id
         ):
             new_id = f"{host.unique_id}_{entity.unique_id.split('_', 1)[1]}"
+            _LOGGER.debug(
+                "Updating Reolink entity unique_id from %s to %s",
+                entity.unique_id,
+                new_id,
+            )
             entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_id)
 
         if entity.device_id in ch_device_ids:
@@ -430,6 +486,11 @@ def migrate_entity_ids(
                 continue
             if host.api.supported(ch, "UID") and id_parts[1] != host.api.camera_uid(ch):
                 new_id = f"{host.unique_id}_{host.api.camera_uid(ch)}_{id_parts[2]}"
+                _LOGGER.debug(
+                    "Updating Reolink entity unique_id from %s to %s",
+                    entity.unique_id,
+                    new_id,
+                )
                 existing_entity = entity_reg.async_get_entity_id(
                     entity.domain, entity.platform, new_id
                 )

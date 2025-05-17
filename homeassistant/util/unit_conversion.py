@@ -24,6 +24,7 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfReactiveEnergy,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
@@ -151,8 +152,8 @@ class BaseUnitConverter:
         cls, from_unit: str | None, to_unit: str | None
     ) -> float:
         """Get floored base10 log ratio between units of measurement."""
-        from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
-        return floor(max(0, log10(from_ratio / to_ratio)))
+        ratio = cls.get_unit_ratio(from_unit, to_unit)
+        return floor(max(0, log10(ratio)))
 
     @classmethod
     @lru_cache
@@ -427,6 +428,17 @@ class PressureConverter(BaseUnitConverter):
         UnitOfPressure.PSI,
         UnitOfPressure.MMHG,
     }
+
+
+class ReactiveEnergyConverter(BaseUnitConverter):
+    """Utility to convert reactive energy values."""
+
+    UNIT_CLASS = "reactive_energy"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR: 1,
+        UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR: 1 / 1e3,
+    }
+    VALID_UNITS = set(UnitOfReactiveEnergy)
 
 
 class SpeedConverter(BaseUnitConverter):
@@ -705,10 +717,13 @@ class VolumeFlowRateConverter(BaseUnitConverter):
     # Units in terms of m³/h
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 1,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND: 1 / _HRS_TO_SECS,
         UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE: 1
         / (_HRS_TO_MINUTES * _CUBIC_FOOT_TO_CUBIC_METER),
+        UnitOfVolumeFlowRate.LITERS_PER_HOUR: 1 / _L_TO_CUBIC_METER,
         UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 1
         / (_HRS_TO_MINUTES * _L_TO_CUBIC_METER),
+        UnitOfVolumeFlowRate.LITERS_PER_SECOND: 1 / (_HRS_TO_SECS * _L_TO_CUBIC_METER),
         UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 1
         / (_HRS_TO_MINUTES * _GALLON_TO_CUBIC_METER),
         UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND: 1
@@ -717,7 +732,10 @@ class VolumeFlowRateConverter(BaseUnitConverter):
     VALID_UNITS = {
         UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND,
+        UnitOfVolumeFlowRate.LITERS_PER_HOUR,
         UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        UnitOfVolumeFlowRate.LITERS_PER_SECOND,
         UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
         UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
     }

@@ -9,7 +9,7 @@ from typing import Any, cast
 from pysyncthru import SyncThru, SyncthruState
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -40,6 +40,7 @@ def get_toner_entity_description(color: str) -> SyncThruSensorDescription:
     return SyncThruSensorDescription(
         key=f"toner_{color}",
         translation_key=f"toner_{color}",
+        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda printer: printer.toner_status().get(color, {}).get("remaining"),
         extra_state_attributes_fn=lambda printer: printer.toner_status().get(color, {}),
@@ -51,6 +52,7 @@ def get_drum_entity_description(color: str) -> SyncThruSensorDescription:
     return SyncThruSensorDescription(
         key=f"drum_{color}",
         translation_key=f"drum_{color}",
+        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda printer: printer.drum_status().get(color, {}).get("remaining"),
         extra_state_attributes_fn=lambda printer: printer.drum_status().get(color, {}),
@@ -68,6 +70,7 @@ def get_input_tray_entity_description(tray: str) -> SyncThruSensorDescription:
     return SyncThruSensorDescription(
         key=f"tray_{tray}",
         translation_key=translation_key,
+        entity_category=EntityCategory.DIAGNOSTIC,
         translation_placeholders=placeholders,
         value_fn=(
             lambda printer: printer.input_tray_status().get(tray, {}).get("newError")
@@ -84,6 +87,7 @@ def get_output_tray_entity_description(tray: int) -> SyncThruSensorDescription:
     return SyncThruSensorDescription(
         key=f"output_tray_{tray}",
         translation_key="output_tray",
+        entity_category=EntityCategory.DIAGNOSTIC,
         translation_placeholders={"tray_number": str(tray)},
         value_fn=(
             lambda printer: printer.output_tray_status().get(tray, {}).get("status")
