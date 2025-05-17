@@ -943,8 +943,5 @@ async def test_entity_icon_and_entity_picture(
     domain = update.DOMAIN
     config = DEFAULT_CONFIG
     await help_test_entity_icon_and_entity_picture(
-        hass,
-        mqtt_mock_entry,
-        domain,
-        config
+        hass, mqtt_mock_entry, domain, config
     )
