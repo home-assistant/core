@@ -203,10 +203,7 @@ class ActronZoneClimate(
     def _zone(self) -> ActronAirNeoZone:
         """Get the current zone data from the coordinator."""
         status = self.coordinator.get_status(self._serial_number)
-        for zone in status.remote_zone_info:
-            if zone.zone_id == self._zone_id:
-                return zone
-        return None
+        return status.zones.get(self._zone_id)
 
     @property
     def hvac_mode(self) -> HVACMode:
