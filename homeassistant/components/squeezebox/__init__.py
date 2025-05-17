@@ -58,6 +58,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
+]
 
 
 @dataclass
