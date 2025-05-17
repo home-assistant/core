@@ -17,7 +17,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .const import _LOGGER, STALE_DEVICE_TIMEOUT
-from .repairs import async_register_stale_auth_issue
 
 type ActronConfigEntry = ConfigEntry[ActronNeoDataUpdateCoordinator]
 
@@ -57,7 +56,6 @@ class ActronNeoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.error(
                 "Authentication error while setting up Actron Neo integration"
             )
-            await async_register_stale_auth_issue(self.hass, self.entry)
             raise
         except ActronNeoAPIError as err:
             _LOGGER.error("API error while setting up Actron Neo integration: %s", err)
@@ -90,9 +88,6 @@ class ActronNeoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "Authentication error while updating Actron Neo data. "
                 "Device may be unavailable"
             )
-
-            if self.auth_error_count >= AUTH_ERROR_THRESHOLD:
-                await async_register_stale_auth_issue(self.hass, self.entry)
             raise UpdateFailed("Authentication error") from err
         except ActronNeoAPIError as err:
             self.last_update_success = False
