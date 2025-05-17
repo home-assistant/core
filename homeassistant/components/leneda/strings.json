@@ -1,22 +1,22 @@
 {
   "common": {
-    "electricity_consumption_active": "Electricity Consumption (Active)",
-    "electricity_consumption_reactive": "Electricity Consumption (Reactive)",
-    "electricity_consumption_covered_layer1": "Electricity Consumption (Covered Layer 1 - AIR)",
-    "electricity_consumption_covered_layer2": "Electricity Consumption (Covered Layer 2 - ACR/ACF/AC1)",
-    "electricity_consumption_covered_layer3": "Electricity Consumption (Covered Layer 3 - CEL)",
-    "electricity_consumption_covered_layer4": "Electricity Consumption (Covered Layer 4 - APS/CER/CEN)",
-    "electricity_consumption_remaining": "Electricity Consumption (Remaining after sharing invoiced by supplier)",
-    "electricity_production_active": "Electricity Production (Active)",
-    "electricity_production_reactive": "Electricity Production (Reactive)",
-    "electricity_production_shared_layer1": "Electricity Production (Shared Layer 1 - AIR)",
-    "electricity_production_shared_layer2": "Electricity Production (Shared Layer 2 - ACR/ACF/AC1)",
-    "electricity_production_shared_layer3": "Electricity Production (Shared Layer 3 - CEL)",
-    "electricity_production_shared_layer4": "Electricity Production (Shared Layer 4 - APS/CER/CEN)",
-    "electricity_production_remaining": "Electricity Production (Remaining after sharing sold to market)",
-    "gas_consumption_volume": "Gas Consumption (Volume)",
-    "gas_consumption_standard_volume": "Gas Consumption (Standard Volume)",
-    "gas_consumption_energy": "Gas Consumption (Energy)"
+    "electricity_consumption_active": "Electricity consumption (active)",
+    "electricity_consumption_reactive": "Electricity consumption (reactive)",
+    "electricity_consumption_covered_layer1": "Electricity consumption (covered layer 1 - AIR)",
+    "electricity_consumption_covered_layer2": "Electricity consumption (covered layer 2 - ACR/ACF/AC1)",
+    "electricity_consumption_covered_layer3": "Electricity consumption (covered layer 3 - CEL)",
+    "electricity_consumption_covered_layer4": "Electricity consumption (covered layer 4 - APS/CER/CEN)",
+    "electricity_consumption_remaining": "Electricity consumption (remaining after sharing invoiced by supplier)",
+    "electricity_production_active": "Electricity production (active)",
+    "electricity_production_reactive": "Electricity production (reactive)",
+    "electricity_production_shared_layer1": "Electricity production (shared layer 1 - AIR)",
+    "electricity_production_shared_layer2": "Electricity production (shared layer 2 - ACR/ACF/AC1)",
+    "electricity_production_shared_layer3": "Electricity production (shared layer 3 - CEL)",
+    "electricity_production_shared_layer4": "Electricity production (shared layer 4 - APS/CER/CEN)",
+    "electricity_production_remaining": "Electricity production (remaining after sharing sold to market)",
+    "gas_consumption_volume": "Gas consumption (volume)",
+    "gas_consumption_standard_volume": "Gas consumption (standard volume)",
+    "gas_consumption_energy": "Gas consumption (energy)"
   },
   "config": {
     "step": {
@@ -36,7 +36,7 @@
         }
       },
       "new_credentials": {
-        "title": "New Credentials",
+        "title": "New credentials",
         "description": "Enter your Leneda credentials",
         "data": {
           "api_token": "[%key:common::config_flow::data::api_key%]",
@@ -48,7 +48,7 @@
         }
       },
       "select_existing": {
-        "title": "Select Existing Configuration",
+        "title": "Select existing configuration",
         "description": "Select an existing Leneda configuration to add metering points to",
         "data": {
           "existing_energy_id": "Existing Energy ID"
@@ -58,31 +58,31 @@
         }
       },
       "add_metering_point": {
-        "title": "Add Metering Point",
+        "title": "Add metering point",
         "description": "Enter the metering point ID to monitor",
         "data": {
-          "metering_point": "Metering Point ID"
+          "metering_point": "Metering point ID"
         },
         "data_description": {
           "metering_point": "The ID of your metering point"
         }
       },
       "setup_type": {
-        "title": "Setup Type",
+        "title": "Setup type",
         "description": "Choose how you want to set up your metering points",
         "data": {
-          "setup_type": "Setup Type"
+          "setup_type": "Setup type"
         },
         "data_description": {
           "setup_type": "Choose between automatic probing or manual setup"
         },
         "menu_options": {
-          "probe": "Automatic Setup (Probe for sensors)",
-          "manual": "Manual Setup (Select sensors)"
+          "probe": "Automatic setup (probe for sensors)",
+          "manual": "Manual setup (select sensors)"
         }
       },
       "metering_points_summary": {
-        "title": "Metering Points Summary",
+        "title": "Metering points summary",
         "description": "Review and confirm your metering points configuration\n\n{summary}",
         "menu_options": {
           "add_metering_point": "Add another metering point",
@@ -90,14 +90,14 @@
         }
       },
       "probe_no_sensors": {
-        "title": "No Sensors Detected",
+        "title": "No sensors detected",
         "description": "No sensors detected for metering point {metering_point}. The metering point might be invalid or not accessible. You can still continue to manual setup.",
         "menu_options": {
           "manual": "Continue to manual setup"
         }
       },
       "manual": {
-        "title": "Manual Setup",
+        "title": "Manual setup",
         "description": "Select the sensors to monitor for {metering_point}{probed_text}",
         "data": {
           "sensors": "Sensors"
@@ -132,7 +132,7 @@
       "no_obis_codes": "No sensors detected. The metering point might be invalid or not accessible. You can continue to manual setup."
     },
     "abort": {
-      "already_configured": "This energy ID is already configured",
+      "already_configured": "This Energy ID is already configured",
       "invalid_auth": "Invalid authentication",
       "config_updated": "Configuration updated successfully",
       "existing_config_not_found": "Existing configuration not found",
@@ -173,11 +173,11 @@
         "title": "Configure Leneda",
         "description": "Select a metering point to manage its sensors",
         "data": {
-          "metering_point": "Metering Point"
+          "metering_point": "Metering point"
         }
       },
       "manage_sensors": {
-        "title": "Manage Sensors",
+        "title": "Manage sensors",
         "description": "Select the sensors to monitor for {metering_point}",
         "data": {
           "sensors": "Sensors"
