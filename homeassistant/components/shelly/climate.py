@@ -42,6 +42,7 @@ from .entity import ShellyRpcEntity, rpc_call
 from .utils import (
     async_remove_shelly_entity,
     get_block_device_info,
+    get_block_entity_name,
     get_blu_trv_device_info,
     get_device_entry_gen,
     get_rpc_key_ids,
@@ -178,6 +179,7 @@ class BlockSleepingClimate(
     )
     _attr_target_temperature_step = SHTRV_01_TEMPERATURE_SETTINGS["step"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -210,6 +212,9 @@ class BlockSleepingClimate(
             self._unique_id = entry.unique_id
         self._attr_device_info = get_block_device_info(
             coordinator.device, coordinator.mac, sensor_block
+        )
+        self._attr_name = get_block_entity_name(
+            self.coordinator.device, sensor_block, None
         )
 
         self._channel = cast(int, self._unique_id.split("_")[1])
