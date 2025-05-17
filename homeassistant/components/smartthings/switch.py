@@ -98,6 +98,12 @@ CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescriptio
         status_attribute=Attribute.STATUS,
         entity_category=EntityCategory.CONFIG,
     ),
+    Capability.SAMSUNG_CE_STEAM_CLOSET_KEEP_FRESH_MODE: SmartThingsSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_STEAM_CLOSET_KEEP_FRESH_MODE,
+        translation_key="keep_fresh_mode",
+        status_attribute=Attribute.STATUS,
+        entity_category=EntityCategory.CONFIG,
+    ),
 }
 
 
