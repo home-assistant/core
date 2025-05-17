@@ -1,6 +1,5 @@
 """Setup config flow for Actron Neo integration."""
 
-from collections.abc import Mapping
 from typing import Any
 
 from actron_neo_api import ActronNeoAPI, ActronNeoAPIError, ActronNeoAuthError
@@ -76,21 +75,3 @@ class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=ACTRON_AIR_SCHEMA,
             errors=errors,
         )
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle reauthorization request."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, str] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reauthorization confirmation."""
-        return await self.async_step_user()
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Reconfigure the integration."""
-        return await self.async_step_user()

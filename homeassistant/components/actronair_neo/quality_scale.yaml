@@ -36,7 +36,7 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: done
+  reauthentication-flow: todo
   test-coverage: todo
 
   # Gold
@@ -60,7 +60,7 @@ rules:
   entity-translations: todo
   exception-translations: todo
   icon-translations: todo
-  reconfiguration-flow: done
+  reconfiguration-flow: todo
   repair-issues: done
   stale-devices: done
 
