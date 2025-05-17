@@ -90,13 +90,12 @@ class ActronSystemClimate(
         self._serial_number: str = serial_number
         self._name: str = name
         self._attr_unique_id: str = serial_number
-        initial_status = coordinator.get_status(serial_number)
         self._attr_device_info: DeviceInfo = DeviceInfo(
             identifiers={(DOMAIN, serial_number)},
-            name=initial_status.ac_system.system_name,
+            name=self._status.ac_system.system_name,
             manufacturer="Actron Air",
-            model=initial_status.ac_system.master_wc_model,
-            sw_version=initial_status.ac_system.master_wc_firmware_version,
+            model=self._status.ac_system.master_wc_model,
+            sw_version=self._status.ac_system.master_wc_firmware_version,
             serial_number=serial_number,
         )
 
