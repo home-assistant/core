@@ -102,6 +102,12 @@
       },
       "ice_maker": {
         "default": "mdi:delete-variant"
+      },
+      "power_cool": {
+        "default": "mdi:snowflake-alert"
+      },
+      "power_freeze": {
+        "default": "mdi:snowflake"
       }
     }
   }

@@ -552,6 +552,12 @@
       },
       "sabbath_mode": {
         "name": "Sabbath mode"
+      },
+      "power_cool": {
+        "name": "Power cool"
+      },
+      "power_freeze": {
+        "name": "Power freeze"
       }
     },
     "water_heater": {
