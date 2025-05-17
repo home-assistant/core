@@ -120,6 +120,134 @@
           'nameplate_energy': 40500,
           'nameplate_power': 15000,
           'site_name': 'Site',
+          'tariff_content_v2_code': 'Test',
+          'tariff_content_v2_daily_charges': list([
+            dict({
+              'name': 'Charge',
+            }),
+          ]),
+          'tariff_content_v2_demand_charges': dict({
+            'ALL': dict({
+              'rates': dict({
+                'ALL': 0,
+              }),
+            }),
+            'Summer': dict({
+            }),
+            'Winter': dict({
+            }),
+          }),
+          'tariff_content_v2_energy_charges': dict({
+            'ALL': dict({
+              'rates': dict({
+                'ALL': 0,
+              }),
+            }),
+            'Summer': dict({
+              'rates': dict({
+                'OFF_PEAK': 0.198,
+                'ON_PEAK': 0.22,
+              }),
+            }),
+            'Winter': dict({
+            }),
+          }),
+          'tariff_content_v2_name': 'Battery Maximiser',
+          'tariff_content_v2_seasons': dict({
+            'Summer': dict({
+              'fromDay': 1,
+              'fromMonth': 1,
+              'toDay': 31,
+              'toMonth': 12,
+              'tou_periods': dict({
+                'OFF_PEAK': dict({
+                  'periods': list([
+                    dict({
+                      'fromHour': 21,
+                      'toDayOfWeek': 6,
+                      'toHour': 16,
+                    }),
+                  ]),
+                }),
+                'ON_PEAK': dict({
+                  'periods': list([
+                    dict({
+                      'fromHour': 16,
+                      'toDayOfWeek': 6,
+                      'toHour': 21,
+                    }),
+                  ]),
+                }),
+              }),
+            }),
+            'Winter': dict({
+            }),
+          }),
+          'tariff_content_v2_sell_tariff_daily_charges': list([
+            dict({
+              'name': 'Charge',
+            }),
+          ]),
+          'tariff_content_v2_sell_tariff_demand_charges': dict({
+            'ALL': dict({
+              'rates': dict({
+                'ALL': 0,
+              }),
+            }),
+            'Summer': dict({
+            }),
+            'Winter': dict({
+            }),
+          }),
+          'tariff_content_v2_sell_tariff_energy_charges': dict({
+            'ALL': dict({
+              'rates': dict({
+                'ALL': 0,
+              }),
+            }),
+            'Summer': dict({
+              'rates': dict({
+                'OFF_PEAK': 0.08,
+                'ON_PEAK': 0.16,
+              }),
+            }),
+            'Winter': dict({
+            }),
+          }),
+          'tariff_content_v2_sell_tariff_name': 'Battery Maximiser',
+          'tariff_content_v2_sell_tariff_seasons': dict({
+            'Summer': dict({
+              'fromDay': 1,
+              'fromMonth': 1,
+              'toDay': 31,
+              'toMonth': 12,
+              'tou_periods': dict({
+                'OFF_PEAK': dict({
+                  'periods': list([
+                    dict({
+                      'fromHour': 21,
+                      'toDayOfWeek': 6,
+                      'toHour': 16,
+                    }),
+                  ]),
+                }),
+                'ON_PEAK': dict({
+                  'periods': list([
+                    dict({
+                      'fromHour': 16,
+                      'toDayOfWeek': 6,
+                      'toHour': 21,
+                    }),
+                  ]),
+                }),
+              }),
+            }),
+            'Winter': dict({
+            }),
+          }),
+          'tariff_content_v2_sell_tariff_utility': 'Origin',
+          'tariff_content_v2_utility': 'Origin',
+          'tariff_content_v2_version': 1,
           'tou_settings_optimization_strategy': 'economics',
           'tou_settings_schedule': list([
             dict({
@@ -204,6 +332,80 @@
           'backseat_token_updated_at': None,
           'ble_autopair_enrolled': False,
           'calendar_enabled': True,
+          'charge_schedule_data_charge_buffer': 6,
+          'charge_schedule_data_charge_schedule_window': None,
+          'charge_schedule_data_charge_schedules': list([
+            dict({
+              'days_of_week': 127,
+              'enabled': True,
+              'end_enabled': True,
+              'end_time': 960,
+              'id': '**REDACTED**',
+              'latitude': -30.222626,
+              'longitude': -97.6236871,
+              'name': '',
+              'one_time': False,
+              'start_enabled': True,
+              'start_time': 540,
+            }),
+            dict({
+              'days_of_week': 2,
+              'enabled': True,
+              'end_enabled': False,
+              'end_time': 360,
+              'id': '**REDACTED**',
+              'latitude': -30.222626,
+              'longitude': -97.6236871,
+              'name': '',
+              'one_time': True,
+              'start_enabled': True,
+              'start_time': 360,
+            }),
+            dict({
+              'days_of_week': 4,
+              'enabled': True,
+              'end_enabled': True,
+              'end_time': 360,
+              'id': '**REDACTED**',
+              'latitude': -30.222626,
+              'longitude': -97.6236871,
+              'name': '',
+              'one_time': True,
+              'start_enabled': False,
+              'start_time': 1320,
+            }),
+            dict({
+              'days_of_week': 28,
+              'enabled': True,
+              'end_enabled': True,
+              'end_time': 360,
+              'id': '**REDACTED**',
+              'latitude': -30.222626,
+              'longitude': -97.6236871,
+              'name': '',
+              'one_time': False,
+              'start_enabled': True,
+              'start_time': 1320,
+            }),
+            dict({
+              'days_of_week': 1,
+              'enabled': False,
+              'end_enabled': True,
+              'end_time': 360,
+              'id': '**REDACTED**',
+              'latitude': -30.222626,
+              'longitude': -97.6236871,
+              'name': '',
+              'one_time': False,
+              'start_enabled': True,
+              'start_time': 1320,
+            }),
+          ]),
+          'charge_schedule_data_max_num_charge_schedules': 100,
+          'charge_schedule_data_next_schedule': True,
+          'charge_schedule_data_show_schedule_complete_state': False,
+          'charge_schedule_data_timestamp_nanos': 178000000,
+          'charge_schedule_data_timestamp_seconds': 1745538813,
           'charge_state_battery_heater_on': False,
           'charge_state_battery_level': 77,
           'charge_state_battery_range': 266.87,
@@ -324,6 +526,83 @@
           'id': '**REDACTED**',
           'id_s': '**REDACTED**',
           'in_service': False,
+          'preconditioning_schedule_data_max_num_precondition_schedules': 100,
+          'preconditioning_schedule_data_next_schedule': True,
+          'preconditioning_schedule_data_precondition_schedules': list([
+            dict({
+              'days_of_week': 0,
+              'enabled': True,
+              'id': '**REDACTED**',
+              'latitude': -30.222626,
+              'longitude': -97.6236871,
+              'name': '',
+              'one_time': True,
+              'precondition_time': 60,
+            }),
+            dict({
+              'days_of_week': 127,
+              'enabled': False,
+              'id': '**REDACTED**',
+              'latitude': -30.222626,
+              'longitude': -97.6236871,
+              'name': '',
+              'one_time': False,
+              'precondition_time': 960,
+            }),
+            dict({
+              'days_of_week': 48,
+              'enabled': False,
+              'id': '**REDACTED**',
+              'latitude': -30.222626,
+              'longitude': -97.6236871,
+              'name': '',
+              'one_time': False,
+              'precondition_time': 945,
+            }),
+            dict({
+              'days_of_week': 48,
+              'enabled': True,
+              'id': '**REDACTED**',
+              'latitude': -30.222626,
+              'longitude': -97.6236871,
+              'name': '',
+              'one_time': False,
+              'precondition_time': 510,
+            }),
+            dict({
+              'days_of_week': 1,
+              'enabled': False,
+              'id': '**REDACTED**',
+              'latitude': -30.222626,
+              'longitude': -97.6236871,
+              'name': '',
+              'one_time': True,
+              'precondition_time': 540,
+            }),
+            dict({
+              'days_of_week': 127,
+              'enabled': False,
+              'id': '**REDACTED**',
+              'latitude': -30.222626,
+              'longitude': -97.6236871,
+              'name': '',
+              'one_time': False,
+              'precondition_time': 465,
+            }),
+            dict({
+              'days_of_week': 127,
+              'enabled': False,
+              'id': '**REDACTED**',
+              'latitude': -30.222626,
+              'longitude': -97.6236871,
+              'name': '',
+              'one_time': False,
+              'precondition_time': 450,
+            }),
+          ]),
+          'preconditioning_schedule_data_preconditioning_schedule_window': None,
+          'preconditioning_schedule_data_timestamp_nanos': 727000000,
+          'preconditioning_schedule_data_timestamp_seconds': 1745538813,
           'state': 'online',
           'tokens': '**REDACTED**',
           'user_id': '**REDACTED**',
