@@ -1,0 +1,283 @@
+{
+  "DummyWasher": {
+    "ident": {
+      "type": {
+        "key_localized": "Device type",
+        "value_raw": 1,
+        "value_localized": "Washing machine"
+      },
+      "deviceName": "",
+      "protocolVersion": 4,
+      "deviceIdentLabel": {
+        "fabNumber": "**REDACTED**",
+        "fabIndex": "32",
+        "techType": "WCR870",
+        "matNumber": "10979100",
+        "swids": [
+          "5836",
+          "20457",
+          "20449",
+          "25260",
+          "20450",
+          "5013",
+          "25314",
+          "25205",
+          "25313",
+          "25191"
+        ]
+      },
+      "xkmIdentLabel": {
+        "techType": "EK057",
+        "releaseVersion": "08.32"
+      }
+    },
+    "state": {
+      "ProgramID": {
+        "value_raw": 3,
+        "value_localized": "Minimum iron",
+        "key_localized": "Program name"
+      },
+      "status": {
+        "value_raw": 5,
+        "value_localized": "In use",
+        "key_localized": "status"
+      },
+      "programType": {
+        "value_raw": 1,
+        "value_localized": "Program",
+        "key_localized": "Program type"
+      },
+      "programPhase": {
+        "value_raw": 260,
+        "value_localized": "Main wash",
+        "key_localized": "Program phase"
+      },
+      "remainingTime": [1, 45],
+      "startTime": [0, 0],
+      "targetTemperature": [
+        {
+          "value_raw": 3000,
+          "value_localized": 30.0,
+          "unit": "Celsius"
+        },
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        },
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        }
+      ],
+      "coreTargetTemperature": [
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        }
+      ],
+      "temperature": [
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        },
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        },
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        }
+      ],
+      "coreTemperature": [
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        }
+      ],
+      "signalInfo": false,
+      "signalFailure": false,
+      "signalDoor": false,
+      "remoteEnable": {
+        "fullRemoteControl": true,
+        "smartGrid": false,
+        "mobileStart": false
+      },
+      "ambientLight": null,
+      "light": null,
+      "elapsedTime": [0, 12],
+      "spinningSpeed": {
+        "unit": "rpm",
+        "value_raw": 1200,
+        "value_localized": "1200",
+        "key_localized": "Spin speed"
+      },
+      "dryingStep": {
+        "value_raw": null,
+        "value_localized": "",
+        "key_localized": "Drying level"
+      },
+      "ventilationStep": {
+        "value_raw": null,
+        "value_localized": "",
+        "key_localized": "Fan level"
+      },
+      "plateStep": [],
+      "ecoFeedback": {
+        "currentWaterConsumption": {
+          "unit": "l",
+          "value": 7.0
+        },
+        "currentEnergyConsumption": {
+          "unit": "kWh",
+          "value": 0.1
+        },
+        "waterForecast": 0.3,
+        "energyForecast": 0.3
+      },
+      "batteryLevel": null
+    }
+  },
+  "DummyDryer": {
+    "ident": {
+      "type": {
+        "key_localized": "Device type",
+        "value_raw": 2,
+        "value_localized": "Tumble dryer"
+      },
+      "deviceName": "",
+      "protocolVersion": 4,
+      "deviceIdentLabel": {
+        "fabNumber": "**REDACTED**",
+        "fabIndex": "13",
+        "techType": "TCJ690WP",
+        "matNumber": "10979980",
+        "swids": [
+          "5213",
+          "25359",
+          "25360",
+          "25002",
+          "20456",
+          "25213",
+          "5136",
+          "20445",
+          "25234",
+          "4174"
+        ]
+      },
+      "xkmIdentLabel": {
+        "techType": "EK037",
+        "releaseVersion": "04.05"
+      }
+    },
+    "state": {
+      "ProgramID": {
+        "value_raw": 0,
+        "value_localized": "",
+        "key_localized": "Program name"
+      },
+      "status": {
+        "value_raw": 1,
+        "value_localized": "Off",
+        "key_localized": "status"
+      },
+      "programType": {
+        "value_raw": 0,
+        "value_localized": "",
+        "key_localized": "Program type"
+      },
+      "programPhase": {
+        "value_raw": 0,
+        "value_localized": "",
+        "key_localized": "Program phase"
+      },
+      "remainingTime": [0, 0],
+      "startTime": [0, 0],
+      "targetTemperature": [
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        },
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        },
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        }
+      ],
+      "coreTargetTemperature": [
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        }
+      ],
+      "temperature": [
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        },
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        },
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        }
+      ],
+      "coreTemperature": [
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        }
+      ],
+      "signalInfo": false,
+      "signalFailure": false,
+      "signalDoor": false,
+      "remoteEnable": {
+        "fullRemoteControl": true,
+        "smartGrid": true,
+        "mobileStart": false
+      },
+      "ambientLight": null,
+      "light": null,
+      "elapsedTime": [0, 55],
+      "spinningSpeed": {
+        "unit": "rpm",
+        "value_raw": null,
+        "value_localized": null,
+        "key_localized": "Spin speed"
+      },
+      "dryingStep": {
+        "value_raw": null,
+        "value_localized": "",
+        "key_localized": "Drying level"
+      },
+      "ventilationStep": {
+        "value_raw": null,
+        "value_localized": "",
+        "key_localized": "Fan level"
+      },
+      "plateStep": [],
+      "ecoFeedback": null,
+      "batteryLevel": null
+    }
+  }
+}
