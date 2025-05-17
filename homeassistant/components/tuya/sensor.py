@@ -311,8 +311,6 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="last_amount",
             state_class=SensorStateClass.MEASUREMENT,
         ),
-<<<<<<< Updated upstream
-=======
         TuyaSensorEntityDescription(
             key=DPCode.MEAL_PLAN,
             translation_key="meal_plan",
@@ -321,7 +319,6 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_registry_enabled_default=False,
         ),
         *BATTERY_SENSORS,
->>>>>>> Stashed changes
     ),
     # Air Quality Monitor
     # https://developer.tuya.com/en/docs/iot/hjjcy?id=Kbeoad8y1nnlv
