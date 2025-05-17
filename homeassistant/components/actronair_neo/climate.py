@@ -77,6 +77,7 @@ class ActronSystemClimate(
         | ClimateEntityFeature.TURN_OFF
     )
     _attr_name: None = None
+    _attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT, HVACMode.AUTO]
 
     def __init__(
         self,
@@ -88,15 +89,15 @@ class ActronSystemClimate(
         super().__init__(coordinator)
         self._serial_number: str = serial_number
         self._name: str = name
-        self._attr_unique_id: str = self._serial_number
+        self._attr_unique_id: str = serial_number
         initial_status = coordinator.get_status(serial_number)
         self._attr_device_info: DeviceInfo = DeviceInfo(
-            identifiers={(DOMAIN, self._serial_number)},
+            identifiers={(DOMAIN, serial_number)},
             name=initial_status.ac_system.system_name,
             manufacturer="Actron Air",
             model=initial_status.ac_system.master_wc_model,
             sw_version=initial_status.ac_system.master_wc_firmware_version,
-            serial_number=self._serial_number,
+            serial_number=serial_number,
         )
 
     @property
@@ -107,17 +108,11 @@ class ActronSystemClimate(
     @property
     def hvac_mode(self) -> HVACMode:
         """Return the current HVAC mode."""
-        system_state = self._status.user_aircon_settings.is_on
-        if not system_state:
+        if not self._status.user_aircon_settings.is_on:
             return HVACMode.OFF
 
         mode = self._status.user_aircon_settings.mode
         return HVAC_MODE_MAPPING.get(mode, HVACMode.OFF)
-
-    @property
-    def hvac_modes(self) -> list[HVACMode]:
-        """Return HVAC Modes."""
-        return [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT, HVACMode.AUTO]
 
     @property
     def fan_mode(self) -> str | None:
@@ -183,7 +178,6 @@ class ActronZoneClimate(
         | ClimateEntityFeature.TURN_ON
         | ClimateEntityFeature.TURN_OFF
     )
-    _attr_entity_registry_enabled_default = True
 
     def __init__(
         self,
@@ -193,7 +187,7 @@ class ActronZoneClimate(
     ) -> None:
         """Initialize an Actron Air Neo unit."""
         super().__init__(coordinator)
-        self._serial_number: str = serial_number
+        self._serial_number = serial_number
         self._zone_id: int = zone.zone_id
         self._attr_name: None = None
         self._attr_unique_id: str = f"{serial_number}_zone_{zone.zone_id}"
@@ -203,6 +197,7 @@ class ActronZoneClimate(
             manufacturer="Actron Air",
             model="Zone",
             suggested_area=zone.title,
+            via_device=(DOMAIN, serial_number),
         )
 
     @property
