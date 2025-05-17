@@ -5,7 +5,9 @@
       "no_plants": "No plants have been found on this account"
     },
     "error": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "account_locked": "Account is locked for 24 hours. Please try again later.",
+      "unknown_error": "Unknown error occured."
     },
     "step": {
       "plant": {
@@ -444,6 +446,27 @@
       },
       "total_maximum_output": {
         "name": "Maximum power"
+      },
+      "noah_energy_today": {
+        "name": "Energy today"
+      },
+      "noah_energy_total": {
+        "name": "Energy total"
+      },
+      "noah_battery_soc": {
+        "name": "Statement of charge (SoC)"
+      },
+      "noah_current_power": {
+        "name": "Current power"
+      },
+      "noah_charge_power": {
+        "name": "Charge power"
+      },
+      "noah_discharge_power": {
+        "name": "Discharge power"
+      },
+      "noah_solar_power": {
+        "name": "Solar power"
       }
     }
   }
