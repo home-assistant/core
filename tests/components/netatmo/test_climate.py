@@ -66,6 +66,34 @@ async def test_entity(
     )
 
 
+async def test_schedule_update_webhook_event(
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
+) -> None:
+    """Test schedule update webhook event without schedule_id."""
+
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    climate_entity_livingroom = "climate.livingroom"
+
+    # Save initial state
+    initial_state = hass.states.get(climate_entity_livingroom)
+
+    # Create a schedule update event without a schedule_id (the event is sent when temperature sets of a schedule are changed)
+    response = {
+        "home_id": "91763b24c43d3e344f424e8b",
+        "event_type": "schedule",
+        "push_type": "home_event_changed",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+
+    # State should be unchanged
+    assert hass.states.get(climate_entity_livingroom) == initial_state
+
+
 async def test_webhook_event_handling_thermostats(
     hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
