@@ -1969,7 +1969,7 @@ async def test_history_stats_handles_floored_timestamps(
         await async_update_entity(hass, "sensor.sensor1")
         await hass.async_block_till_done()
 
-    assert last_times == (start_time, start_time + timedelta(hours=2))
+    assert last_times == (start_time, start_time)
 
 
 async def test_unique_id(

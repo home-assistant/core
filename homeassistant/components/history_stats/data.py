@@ -137,13 +137,11 @@ class HistoryStats:
                 return self._state
         else:
             await self._async_history_from_db(
-                current_period_start_timestamp, current_period_end_timestamp
+                current_period_start_timestamp, now_timestamp
             )
             if event and (new_state := event.data["new_state"]) is not None:
-                if (
-                    current_period_start_timestamp
-                    <= floored_timestamp(new_state.last_changed)
-                    <= current_period_end_timestamp
+                if current_period_start_timestamp <= floored_timestamp(
+                    new_state.last_changed
                 ):
                     self._history_current_period.append(
                         HistoryState(new_state.state, new_state.last_changed_timestamp)
