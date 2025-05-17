@@ -625,7 +625,7 @@ async def test_thermostat_set_hvac_mode(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.asd", ATTR_HVAC_MODE: HVACMode.AUTO},
+        {ATTR_ENTITY_ID: "climate.asd", ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
