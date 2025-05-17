@@ -62,6 +62,12 @@
       "added_discharged_energy": {
         "name": "Discharged energy"
       },
+      "added_green_energy": {
+        "name": "Added green energy"
+      },
+      "added_grid_energy": {
+        "name": "Added grid energy"
+      },
       "cost": {
         "name": "Cost"
       },
