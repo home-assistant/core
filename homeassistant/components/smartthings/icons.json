@@ -111,6 +111,12 @@
       },
       "sanitize": {
         "default": "mdi:lotion"
+      },
+      "auto_cycle_link": {
+        "default": "mdi:link-off",
+        "state": {
+          "on": "mdi:link"
+        }
       }
     }
   }
