@@ -20,6 +20,7 @@ from homeassistant.helpers.selector import (
 from .const import (
     AWS_DOMAIN,
     CONF_ACCESS_KEY_ID,
+    CONF_BACKUP_FOLDER,
     CONF_BUCKET,
     CONF_ENDPOINT_URL,
     CONF_SECRET_ACCESS_KEY,
@@ -39,6 +40,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_ENDPOINT_URL, default=DEFAULT_ENDPOINT_URL): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.URL)
         ),
+        vol.Optional(CONF_BACKUP_FOLDER): cv.string,
     }
 )
 
@@ -57,6 +59,7 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     CONF_BUCKET: user_input[CONF_BUCKET],
                     CONF_ENDPOINT_URL: user_input[CONF_ENDPOINT_URL],
+                    CONF_BACKUP_FOLDER: user_input[CONF_BACKUP_FOLDER],
                 }
             )
 
