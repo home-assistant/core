@@ -4,10 +4,12 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+import jwt
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN
 
@@ -19,7 +21,7 @@ class OAuth2FlowHandler(
 
     DOMAIN = DOMAIN
 
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @property
     def logger(self) -> logging.Logger:
@@ -45,9 +47,34 @@ class OAuth2FlowHandler(
 
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
+        await self.async_set_unique_id(
+            jwt.decode(
+                data["token"]["access_token"], options={"verify_signature": False}
+            )["sub"]
+        )
         if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
             return self.async_update_reload_and_abort(
-                self._get_reauth_entry(),
-                data_updates=data,
+                self._get_reauth_entry(), data_updates=data
             )
+        self._abort_if_unique_id_configured()
         return await super().async_oauth_create_entry(data)
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a DHCP discovery."""
+        device_registry = dr.async_get(self.hass)
+        if device_entry := device_registry.async_get_device(
+            identifiers={
+                (DOMAIN, discovery_info.hostname),
+                (DOMAIN, discovery_info.hostname.split("-")[-1]),
+            }
+        ):
+            device_registry.async_update_device(
+                device_entry.id,
+                new_connections={
+                    (dr.CONNECTION_NETWORK_MAC, discovery_info.macaddress)
+                },
+            )
+        return await super().async_step_dhcp(discovery_info)

@@ -166,7 +166,7 @@
         "name": "Load consumption today (solar)"
       },
       "mix_self_consumption_today": {
-        "name": "Self consumption today (solar + battery)"
+        "name": "Self-consumption today (solar + battery)"
       },
       "mix_load_consumption_battery_today": {
         "name": "Load consumption today (battery)"
@@ -175,7 +175,7 @@
         "name": "Import from grid today (load)"
       },
       "mix_last_update": {
-        "name": "Last Data Update"
+        "name": "Last data update"
       },
       "mix_import_from_grid_today_combined": {
         "name": "Import from grid today (load + charging)"

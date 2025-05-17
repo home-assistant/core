@@ -19,10 +19,10 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
+from .entity import ComelitBridgeBaseEntity
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -89,7 +89,7 @@ async def async_setup_entry(
     )
 
 
-class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity):
+class ComelitClimateEntity(ComelitBridgeBaseEntity, ClimateEntity):
     """Climate device."""
 
     _attr_hvac_modes = [HVACMode.AUTO, HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF]
@@ -102,7 +102,6 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
     )
     _attr_target_temperature_step = PRECISION_TENTHS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(
@@ -112,13 +111,7 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
         config_entry_entry_id: str,
     ) -> None:
         """Init light entity."""
-        self._api = coordinator.api
-        self._device = device
-        super().__init__(coordinator)
-        # Use config_entry.entry_id as base for unique_id
-        # because no serial number or mac is available
-        self._attr_unique_id = f"{config_entry_entry_id}-{device.index}"
-        self._attr_device_info = coordinator.platform_device_info(device, device.type)
+        super().__init__(coordinator, device, config_entry_entry_id)
         self._update_attributes()
 
     def _update_attributes(self) -> None:
@@ -141,11 +134,9 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
         self._attr_current_temperature = values[0] / 10
 
         self._attr_hvac_action = None
-        if _mode == ClimaComelitMode.OFF:
-            self._attr_hvac_action = HVACAction.OFF
         if not _active:
             self._attr_hvac_action = HVACAction.IDLE
-        if _mode in API_STATUS:
+        elif _mode in API_STATUS:
             self._attr_hvac_action = API_STATUS[_mode]["hvac_action"]
 
         self._attr_hvac_mode = None

@@ -1,0 +1,88 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: no actions
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: no actions
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: no events
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: todo
+    comment: wrap api calls in try block
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: no configuration parameters
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: device not discoverable
+  discovery:
+    status: exempt
+    comment: device not discoverable
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations:
+    status: exempt
+    comment: no known limitations, yet
+  docs-supported-devices:
+    status: todo
+    comment: review and complete missing ones
+  docs-supported-functions: todo
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: todo
+    comment: missing implementation
+  entity-category:
+    status: exempt
+    comment: no config or diagnostic entities
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow:
+    status: todo
+    comment: PR in progress
+  repair-issues:
+    status: exempt
+    comment: no known use cases for repair issues or flows, yet
+  stale-devices:
+    status: todo
+    comment: missing implementation
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

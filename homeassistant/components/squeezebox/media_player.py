@@ -75,6 +75,7 @@ ATTR_QUERY_RESULT = "query_result"
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
 
 ATTR_PARAMETERS = "parameters"
 ATTR_OTHER_PLAYER = "other_player"
@@ -446,6 +447,9 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         """Send the play_media command to the media player."""
         index = None
 
+        if media_type:
+            media_type = media_type.lower()
+
         enqueue: MediaPlayerEnqueue | None = kwargs.get(ATTR_MEDIA_ENQUEUE)
 
         if enqueue == MediaPlayerEnqueue.ADD:
@@ -467,7 +471,11 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         if announce:
             if media_type not in MediaType.MUSIC:
                 raise ServiceValidationError(
-                    "Announcements must have media type of 'music'.  Playlists are not supported"
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_announce_media_type",
+                    translation_placeholders={
+                        "media_type": str(media_type),
+                    },
                 )
 
             extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
@@ -476,7 +484,11 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
                 announce_volume = get_announce_volume(extra)
             except ValueError:
                 raise ServiceValidationError(
-                    f"{ATTR_ANNOUNCE_VOLUME} must be a number greater than 0 and less than or equal to 1"
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_announce_volume",
+                    translation_placeholders={
+                        "announce_volume": ATTR_ANNOUNCE_VOLUME,
+                    },
                 ) from None
             else:
                 self._player.set_announce_volume(announce_volume)
@@ -485,7 +497,11 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
                 announce_timeout = get_announce_timeout(extra)
             except ValueError:
                 raise ServiceValidationError(
-                    f"{ATTR_ANNOUNCE_TIMEOUT} must be a whole number greater than 0"
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_announce_timeout",
+                    translation_placeholders={
+                        "announce_timeout": ATTR_ANNOUNCE_TIMEOUT,
+                    },
                 ) from None
             else:
                 self._player.set_announce_timeout(announce_timeout)
@@ -591,13 +607,21 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
             other_player = ent_reg.async_get(other_player_entity_id)
             if other_player is None:
                 raise ServiceValidationError(
-                    f"Could not find player with entity_id {other_player_entity_id}"
+                    translation_domain=DOMAIN,
+                    translation_key="join_cannot_find_other_player",
+                    translation_placeholders={
+                        "other_player_entity_id": str(other_player_entity_id)
+                    },
                 )
             if other_player_id := other_player.unique_id:
                 await self._player.async_sync(other_player_id)
             else:
                 raise ServiceValidationError(
-                    f"Could not join unknown player {other_player_entity_id}"
+                    translation_domain=DOMAIN,
+                    translation_key="join_cannot_join_unknown_player",
+                    translation_placeholders={
+                        "other_player_entity_id": str(other_player_entity_id)
+                    },
                 )
 
     async def async_unjoin_player(self) -> None:
@@ -616,6 +640,9 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
             media_content_type,
             media_content_id,
         )
+
+        if media_content_type:
+            media_content_type = media_content_type.lower()
 
         if media_content_type in [None, "library"]:
             return await library_payload(self.hass, self._player, self._browse_data)
