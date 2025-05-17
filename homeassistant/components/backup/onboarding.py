@@ -19,9 +19,14 @@ from homeassistant.components.onboarding import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.backup import async_get_manager as async_get_backup_manager
 
-from . import BackupManager, Folder, IncorrectPasswordError, http as backup_http
+from . import (
+    BackupManager,
+    Folder,
+    IncorrectPasswordError,
+    async_get_manager,
+    http as backup_http,
+)
 
 if TYPE_CHECKING:
     from homeassistant.components.onboarding import OnboardingStoreData
@@ -54,7 +59,7 @@ def with_backup_manager[_ViewT: BaseOnboardingView, **_P](
         if self._data["done"]:
             raise HTTPUnauthorized
 
-        manager = await async_get_backup_manager(request.app[KEY_HASS])
+        manager = async_get_manager(request.app[KEY_HASS])
         return await func(self, manager, request, *args, **kwargs)
 
     return with_backup
