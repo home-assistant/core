@@ -86,7 +86,7 @@ async def test_full_flow(
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
         "&scope=user-modify-playback-state,user-read-playback-state,user-read-private,"
-        "playlist-read-private,playlist-read-collaborative,user-library-read,"
+        "playlist-read-private,playlist-read-collaborative,user-library-read,user-library-modify,"
         "user-top-read,user-read-playback-position,user-read-recently-played,user-follow-read"
     )
 
