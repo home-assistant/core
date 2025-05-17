@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from .const import CONF_CLIP_NEGATIVE, CONF_RETURN_AVERAGE
 from .coordinator import AirQCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.SENSOR]
 
 AirQConfigEntry = ConfigEntry[AirQCoordinator]
 

@@ -59,6 +59,7 @@ async def test_logging_in_coordinator_first_update_data(
     with (
         patch("aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO),
         patch("aioairq.AirQ.get_latest_data", return_value=TEST_DEVICE_DATA),
+        patch("aioairq.AirQ.get_current_brightness", return_value=6.0),
     ):
         await coordinator._async_update_data()
 
@@ -94,6 +95,7 @@ async def test_logging_in_coordinator_subsequent_update_data(
     with (
         patch("aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO),
         patch("aioairq.AirQ.get_latest_data", return_value=TEST_DEVICE_DATA),
+        patch("aioairq.AirQ.get_current_brightness", return_value=6.0),
     ):
         await coordinator._async_update_data()
     # check that the name _is not_ missing
@@ -121,6 +123,7 @@ async def test_logging_when_warming_up_sensor_present(
             "aioairq.AirQ.get_latest_data",
             return_value=TEST_DEVICE_DATA | {"Status": STATUS_WARMUP},
         ),
+        patch("aioairq.AirQ.get_current_brightness", return_value=6.0),
     ):
         await coordinator._async_update_data()
     assert (
