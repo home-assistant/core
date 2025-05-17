@@ -1,0 +1,12 @@
+{
+  "domain": "everhome",
+  "name": "everHome",
+  "codeowners": ["@everhome-gmbh"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/everhome",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "silver",
+  "requirements": ["ecotracker==0.1.15"],
+  "zeroconf": ["_everhome._tcp.local."]
+}
