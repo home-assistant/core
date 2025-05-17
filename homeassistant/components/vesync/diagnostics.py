@@ -49,7 +49,7 @@ async def async_get_device_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
     manager: VeSync = hass.data[DOMAIN][VS_MANAGER]
-    device_dict = _build_device_dict(manager)
+    device_dict = manager.devices
     vesync_device_id = next(iden[1] for iden in device.identifiers if iden[0] == DOMAIN)
 
     # Base device information, without sensitive information.
@@ -98,15 +98,6 @@ async def async_get_device_diagnostics(
         )
 
     return data
-
-
-def _build_device_dict(manager: VeSync) -> dict:
-    """Build a dictionary of ALL VeSync devices."""
-    device_dict = {x.cid: x for x in manager.switches}
-    device_dict.update({x.cid: x for x in manager.fans})
-    device_dict.update({x.cid: x for x in manager.outlets})
-    device_dict.update({x.cid: x for x in manager.bulbs})
-    return device_dict
 
 
 def _redact_device_values(device: VeSyncBaseDevice) -> dict:

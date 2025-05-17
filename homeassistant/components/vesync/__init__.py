@@ -67,6 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     async def async_new_device_discovery(service: ServiceCall) -> None:
         """Discover if new devices should be added."""
+        # needs to be corrected.
         manager = hass.data[DOMAIN][VS_MANAGER]
         devices = hass.data[DOMAIN][VS_DEVICES]
 

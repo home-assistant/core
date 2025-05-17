@@ -24,7 +24,6 @@ class VeSyncBaseEntity(CoordinatorEntity[VeSyncDataCoordinator]):
 
     @property
     def base_unique_id(self):
-        # Something is wrong here. I get new devices.
         """Return the ID of this device."""
         # The unique_id property may be overridden in subclasses, such as in
         # sensors. Maintaining base_unique_id allows us to group related
