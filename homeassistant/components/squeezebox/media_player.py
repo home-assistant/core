@@ -330,22 +330,22 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     @property
     def media_title(self) -> str | None:
         """Title of current playing media."""
-        return str(self._player.title)
+        return str(self._player.title) if self._player.title else None
 
     @property
     def media_channel(self) -> str | None:
         """Channel (e.g. webradio name) of current playing media."""
-        return str(self._player.remote_title)
+        return str(self._player.remote_title) if self._player.remote_title else None
 
     @property
     def media_artist(self) -> str | None:
         """Artist of current playing media."""
-        return str(self._player.artist)
+        return str(self._player.artist) if self._player.artist else None
 
     @property
     def media_album_name(self) -> str | None:
         """Album of current playing media."""
-        return str(self._player.album)
+        return str(self._player.album) if self._player.album else None
 
     @property
     def repeat(self) -> RepeatMode:
