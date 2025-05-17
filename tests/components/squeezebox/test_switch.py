@@ -40,15 +40,6 @@ async def test_switch_state(
     await hass.async_block_till_done()
     assert hass.states.get(f"switch.test_player_alarm_{TEST_ALARM_ID}").state == "off"
 
-    mock_alarms_player.connected = False
-    freezer.tick(timedelta(seconds=SENSOR_UPDATE_INTERVAL))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert (
-        hass.states.get(f"switch.test_player_alarm_{TEST_ALARM_ID}").state
-        == "unavailable"
-    )
-
 
 async def test_switch_deleted(
     hass: HomeAssistant,

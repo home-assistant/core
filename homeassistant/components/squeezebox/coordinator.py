@@ -12,6 +12,7 @@ from pysqueezebox import Player, Server
 from pysqueezebox.player import Alarm
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -104,7 +105,7 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.player = player
         self.available = True
-        self.known_alarms: list[str] = []
+        self.known_alarms: dict[str, str | None] = {}
         self._remove_dispatcher: Callable | None = None
         self.player_uuid = format_mac(player.player_id)
         self.server_uuid = server_uuid
@@ -112,6 +113,7 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update the Player() object if available, or listen for rediscovery if not."""
+        alarm_dict: dict[str, Alarm] = {}
         if self.available:
             # Only update players available at last update, unavailable players are rediscovered instead
             await self.player.async_update()
@@ -127,14 +129,36 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             elif self.player.alarms:
                 for alarm in self.player.alarms:
                     if alarm["id"] not in self.known_alarms:
-                        self.known_alarms.append(alarm["id"])
+                        self.known_alarms[alarm["id"]] = None
                         async_dispatcher_send(
                             self.hass, SIGNAL_ALARM_DISCOVERED, alarm, self
                         )
-                alarm_dict: dict[str, Alarm] = {
-                    alarm["id"]: alarm for alarm in self.player.alarms
-                }
-                return {"alarms": alarm_dict}
+                alarm_dict = {alarm["id"]: alarm for alarm in self.player.alarms}
+                # return {"alarms": alarm_dict}
+            #            _LOGGER.critical(
+            #                "known alarms %s, alarms %s", self.known_alarms, self.player.alarms
+            #            )
+
+            for known_alarm in self.known_alarms.copy():
+                # we have some alarms
+                if known_alarm not in alarm_dict:
+                    # self.known_alarms.remove(alarm)
+                    # we've got an alarm which needs to be deleted
+                    _LOGGER.debug(
+                        "Alarm %s with entity_id %s needs to be deleted",
+                        known_alarm,
+                        self.known_alarms[known_alarm],
+                    )
+
+                    entity_registry = er.async_get(self.hass)
+                    if entity_registry.async_get(str(self.known_alarms[known_alarm])):
+                        entity_registry.async_remove(
+                            str(self.known_alarms[known_alarm])
+                        )
+                        del self.known_alarms[known_alarm]
+
+        if alarm_dict:
+            return {"alarms": alarm_dict}
         return {}
 
     @callback

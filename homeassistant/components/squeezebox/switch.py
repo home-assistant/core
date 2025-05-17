@@ -10,7 +10,6 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -81,27 +80,7 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if (
-            "alarms" not in self.coordinator.data
-            or self.coordinator.data.get("alarms", {}).get(self._alarm_id) is None
-        ):
-            self._attr_available = False
-            self.check_if_deleted()
         self.async_write_ha_state()
-
-    def check_if_deleted(self) -> None:
-        """Check if alarm has been deleted from player."""
-        if not self.coordinator.available:
-            # The player is not available, so the alarm is not available but probably still exists
-            return
-
-        # The alarm is not available, but the player is, so the alarm has been deleted
-        _LOGGER.debug("%s has been deleted", self.entity_id)
-
-        entity_registry = er.async_get(self.hass)
-        if entity_registry.async_get(self.entity_id):
-            entity_registry.async_remove(self.entity_id)
-            self.coordinator.known_alarms.remove(str(self._alarm_id))
 
     async def async_added_to_hass(self) -> None:
         """Set up alarm switch when added to hass."""
@@ -117,6 +96,7 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
                 self.hass, async_write_state_daily, hour=0, minute=0, second=0
             )
         )
+        self.coordinator.known_alarms[str(self._alarm_id)] = self.entity_id
 
     @property
     def alarm(self) -> Alarm:
@@ -126,7 +106,10 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
     @property
     def available(self) -> bool:
         """Return whether the alarm is available."""
-        return self._attr_available and super().available
+        return (
+            self.coordinator.data.get("alarms", {}).get(self._alarm_id)
+            and super().available
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
