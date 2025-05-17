@@ -613,7 +613,7 @@ async def test_rpc_climate_hvac_mode(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test climate hvac mode service."""
-    entity_id = "climate.test_name_thermostat_0"
+    entity_id = "climate.test_name"
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
