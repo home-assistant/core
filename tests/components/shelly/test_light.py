@@ -58,10 +58,14 @@ SHELLY_PLUS_RGBW_CHANNELS = 4
 
 
 async def test_block_device_rgbw_bulb(
-    hass: HomeAssistant, mock_block_device: Mock, entity_registry: EntityRegistry
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block device RGBW bulb."""
-    entity_id = "light.test_name_channel_1"
+    monkeypatch.setitem(mock_block_device.shelly, "num_outputs", 1)
+    entity_id = "light.test_name"
     await init_integration(hass, 1, model=MODEL_BULB)
 
     # Test initial
@@ -142,7 +146,8 @@ async def test_block_device_rgb_bulb(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test block device RGB bulb."""
-    entity_id = "light.test_name_channel_1"
+    monkeypatch.setitem(mock_block_device.shelly, "num_outputs", 1)
+    entity_id = "light.test_name"
     monkeypatch.delattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "mode")
     monkeypatch.setattr(
         mock_block_device.blocks[LIGHT_BLOCK_ID], "description", "light_1"
@@ -246,7 +251,8 @@ async def test_block_device_white_bulb(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block device white bulb."""
-    entity_id = "light.test_name_channel_1"
+    monkeypatch.setitem(mock_block_device.shelly, "num_outputs", 1)
+    entity_id = "light.test_name"
     monkeypatch.delattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "red")
     monkeypatch.delattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "green")
     monkeypatch.delattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "blue")
@@ -322,7 +328,8 @@ async def test_block_device_support_transition(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block device supports transition."""
-    entity_id = "light.test_name_channel_1"
+    # num_outputs is 2, channel name is used
+    entity_id = "light.channel_1"
     monkeypatch.setitem(
         mock_block_device.settings, "fw", "20220809-122808/v1.12-g99f7e0b"
     )
@@ -374,7 +381,7 @@ async def test_block_device_relay_app_type_light(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block device relay in app type set to light mode."""
-    entity_id = "light.test_name_channel_1"
+    entity_id = "light.channel_1"
     monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "red")
     monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "green")
     monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "blue")
@@ -448,7 +455,7 @@ async def test_rpc_device_switch_type_lights_mode(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC device with switch in consumption type lights mode."""
-    entity_id = "light.test_switch_0"
+    entity_id = "light.test_name_test_switch_0"
     monkeypatch.setitem(
         mock_rpc_device.config["sys"]["ui_data"], "consumption_types", ["lights"]
     )
@@ -595,7 +602,7 @@ async def test_rpc_device_rgb_profile(
     for i in range(SHELLY_PLUS_RGBW_CHANNELS):
         monkeypatch.delitem(mock_rpc_device.status, f"light:{i}")
     monkeypatch.delitem(mock_rpc_device.status, "rgbw:0")
-    entity_id = "light.test_rgb_0"
+    entity_id = "light.test_name_test_rgb_0"
     await init_integration(hass, 2)
 
     # Test initial
@@ -639,7 +646,7 @@ async def test_rpc_device_rgbw_profile(
     for i in range(SHELLY_PLUS_RGBW_CHANNELS):
         monkeypatch.delitem(mock_rpc_device.status, f"light:{i}")
     monkeypatch.delitem(mock_rpc_device.status, "rgb:0")
-    entity_id = "light.test_rgbw_0"
+    entity_id = "light.test_name_test_rgbw_0"
     await init_integration(hass, 2)
 
     # Test initial
@@ -753,7 +760,7 @@ async def test_rpc_rgbw_device_rgb_w_modes_remove_others(
     # register lights
     for i in range(SHELLY_PLUS_RGBW_CHANNELS):
         monkeypatch.delitem(mock_rpc_device.status, f"light:{i}")
-        entity_id = f"light.test_light_{i}"
+        entity_id = f"light.test_name_test_light_{i}"
         register_entity(
             hass,
             LIGHT_DOMAIN,
@@ -781,7 +788,7 @@ async def test_rpc_rgbw_device_rgb_w_modes_remove_others(
     await hass.async_block_till_done()
 
     # verify we have RGB/w light
-    entity_id = f"light.test_{active_mode}_0"
+    entity_id = f"light.test_name_test_{active_mode}_0"
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
@@ -802,7 +809,7 @@ async def test_rpc_cct_light(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC CCT light."""
-    entity_id = f"{LIGHT_DOMAIN}.test_name_cct_light_0"
+    entity_id = f"{LIGHT_DOMAIN}.cct_light_0"
 
     config = deepcopy(mock_rpc_device.config)
     config["cct:0"] = {"id": 0, "name": None, "ct_range": [3333, 5555]}
