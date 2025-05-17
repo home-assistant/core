@@ -5,15 +5,15 @@ from unittest.mock import AsyncMock, patch
 import aiohttp
 
 from homeassistant.components.wmspro.const import DOMAIN
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, ConfigEntryState
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import setup_config_entry
 
 from tests.common import MockConfigEntry
+from tests.service_info import MockDhcpServiceInfo
 
 
 async def test_config_flow(
@@ -49,12 +49,10 @@ async def test_config_flow_from_dhcp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_hub_refresh: AsyncMock
 ) -> None:
     """Test we can handle DHCP discovery to create a config entry."""
-    info = DhcpServiceInfo(
+    info = MockDhcpServiceInfo(
         ip="1.2.3.4", hostname="webcontrol", macaddress="00:11:22:33:44:55"
     )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_DHCP}, data=info
-    )
+    result = await info.start_discovery_flow(hass, DOMAIN)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
@@ -108,12 +106,10 @@ async def test_config_flow_from_dhcp_add_mac(
     assert len(mock_setup_entry.mock_calls) == 1
     assert hass.config_entries.async_entries(DOMAIN)[0].unique_id is None
 
-    info = DhcpServiceInfo(
+    info = MockDhcpServiceInfo(
         ip="1.2.3.4", hostname="webcontrol", macaddress="00:11:22:33:44:55"
     )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_DHCP}, data=info
-    )
+    result = await info.start_discovery_flow(hass, DOMAIN)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == "00:11:22:33:44:55"
@@ -125,12 +121,10 @@ async def test_config_flow_from_dhcp_ip_update(
     mock_hub_refresh: AsyncMock,
 ) -> None:
     """Test we can use DHCP discovery to update IP in a config entry."""
-    info = DhcpServiceInfo(
+    info = MockDhcpServiceInfo(
         ip="1.2.3.4", hostname="webcontrol", macaddress="00:11:22:33:44:55"
     )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_DHCP}, data=info
-    )
+    result = await info.start_discovery_flow(hass, DOMAIN)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
@@ -153,12 +147,10 @@ async def test_config_flow_from_dhcp_ip_update(
     assert len(mock_setup_entry.mock_calls) == 1
     assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == "00:11:22:33:44:55"
 
-    info = DhcpServiceInfo(
+    info = MockDhcpServiceInfo(
         ip="5.6.7.8", hostname="webcontrol", macaddress="00:11:22:33:44:55"
     )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_DHCP}, data=info
-    )
+    result = await info.start_discovery_flow(hass, DOMAIN)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == "00:11:22:33:44:55"
@@ -171,12 +163,10 @@ async def test_config_flow_from_dhcp_no_update(
     mock_hub_refresh: AsyncMock,
 ) -> None:
     """Test we do not use DHCP discovery to overwrite hostname with IP in config entry."""
-    info = DhcpServiceInfo(
+    info = MockDhcpServiceInfo(
         ip="1.2.3.4", hostname="webcontrol", macaddress="00:11:22:33:44:55"
     )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_DHCP}, data=info
-    )
+    result = await info.start_discovery_flow(hass, DOMAIN)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
@@ -199,12 +189,10 @@ async def test_config_flow_from_dhcp_no_update(
     assert len(mock_setup_entry.mock_calls) == 1
     assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == "00:11:22:33:44:55"
 
-    info = DhcpServiceInfo(
+    info = MockDhcpServiceInfo(
         ip="5.6.7.8", hostname="webcontrol", macaddress="00:11:22:33:44:55"
     )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_DHCP}, data=info
-    )
+    result = await info.start_discovery_flow(hass, DOMAIN)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == "00:11:22:33:44:55"
