@@ -44,6 +44,13 @@ async def mock_temperature_humidity_entity(hass: HomeAssistant) -> None:
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
         },
     )
+    hass.states.async_set(
+        "binary_sensor.mock_motion",
+        "off",
+        {
+            ATTR_DEVICE_CLASS: "motion",
+        },
+    )
 
 
 async def test_list_areas(area_registry: ar.AreaRegistry) -> None:
@@ -79,6 +86,7 @@ async def test_create_area(
         modified_at=utcnow(),
         temperature_entity_id=None,
         humidity_entity_id=None,
+        motion_entity_id=None,
     )
     assert len(area_registry.areas) == 1
 
@@ -100,6 +108,7 @@ async def test_create_area(
         picture="/image/example.png",
         temperature_entity_id="sensor.mock_temperature",
         humidity_entity_id="sensor.mock_humidity",
+        motion_entity_id="binary_sensor.mock_motion",
     )
 
     assert area2 == ar.AreaEntry(
@@ -114,6 +123,7 @@ async def test_create_area(
         modified_at=utcnow(),
         temperature_entity_id="sensor.mock_temperature",
         humidity_entity_id="sensor.mock_humidity",
+        motion_entity_id="binary_sensor.mock_motion",
     )
     assert len(area_registry.areas) == 2
     assert area.created_at != area2.created_at
@@ -222,6 +232,7 @@ async def test_update_area(
         picture="/image/example.png",
         temperature_entity_id="sensor.mock_temperature",
         humidity_entity_id="sensor.mock_humidity",
+        motion_entity_id="binary_sensor.mock_motion",
     )
 
     assert updated_area != area
@@ -237,6 +248,7 @@ async def test_update_area(
         modified_at=modified_at,
         temperature_entity_id="sensor.mock_temperature",
         humidity_entity_id="sensor.mock_humidity",
+        motion_entity_id="binary_sensor.mock_motion",
     )
     assert len(area_registry.areas) == 1
 
@@ -341,6 +353,18 @@ async def test_update_area_with_normalized_name_already_in_use(
             {"humidity_entity_id": "sensor.random"},
             "Entity sensor.random is not a humidity sensor",
         ),
+        (
+            {"motion_entity_id": "sensor.invalid"},
+            "Entity sensor.invalid does not exist",
+        ),
+        (
+            {"motion_entity_id": "light.kitchen"},
+            "Entity light.kitchen is not a motion binary_sensor",
+        ),
+        (
+            {"motion_entity_id": "binary_sensor.random"},
+            "Entity binary_sensor.random is not a motion binary_sensor",
+        ),
     ],
 )
 async def test_update_area_entity_validation(
@@ -354,6 +378,7 @@ async def test_update_area_entity_validation(
     area = area_registry.async_create("mock")
     hass.states.async_set("light.kitchen", "on", {})
     hass.states.async_set("sensor.random", "3", {})
+    hass.states.async_set("binary_sensor.random", "off", {})
 
     with pytest.raises(ValueError) as e_info:
         area_registry.async_update(area.id, **create_kwargs)
@@ -406,6 +431,7 @@ async def test_loading_area_from_storage(
                     "modified_at": modified_at.isoformat(),
                     "temperature_entity_id": "sensor.mock_temperature",
                     "humidity_entity_id": "sensor.mock_humidity",
+                    "motion_entity_id": "binary_sensor.mock_motion",
                 }
             ]
         },
@@ -428,6 +454,7 @@ async def test_loading_area_from_storage(
         modified_at=modified_at,
         temperature_entity_id="sensor.mock_temperature",
         humidity_entity_id="sensor.mock_humidity",
+        motion_entity_id="binary_sensor.mock_motion",
     )
 
 
@@ -468,6 +495,7 @@ async def test_migration_from_1_1(
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "temperature_entity_id": None,
                     "humidity_entity_id": None,
+                    "motion_entity_id": None,
                 }
             ]
         },
