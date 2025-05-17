@@ -12,5 +12,5 @@
   "documentation": "https://www.home-assistant.io/integrations/actronair_neo",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["actron-neo-api==0.1.75"]
+  "requirements": ["actron-neo-api==0.1.76"]
 }
