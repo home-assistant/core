@@ -132,7 +132,7 @@
     'supported_features': 0,
     'translation_key': 'light',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-light',
-    'unit_of_measurement': 'μmol/s⋅m²',
+    'unit_of_measurement': 'µmol/s⋅m²',
   })
 # ---
 # name: test_all_entities[sensor.gummibaum_light-state]
@@ -140,7 +140,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Gummibaum Light',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μmol/s⋅m²',
+      'unit_of_measurement': 'µmol/s⋅m²',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gummibaum_light',
@@ -971,7 +971,7 @@
     'supported_features': 0,
     'translation_key': 'light',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-light',
-    'unit_of_measurement': 'μmol/s⋅m²',
+    'unit_of_measurement': 'µmol/s⋅m²',
   })
 # ---
 # name: test_all_entities[sensor.kakaobaum_light-state]
@@ -979,7 +979,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Kakaobaum Light',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μmol/s⋅m²',
+      'unit_of_measurement': 'µmol/s⋅m²',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kakaobaum_light',
