@@ -181,6 +181,8 @@ from .const import (
     CONF_RGBWW_STATE_TOPIC,
     CONF_RGBWW_VALUE_TEMPLATE,
     CONF_SCHEMA,
+    CONF_STATE_OFF,
+    CONF_STATE_ON,
     CONF_STATE_TOPIC,
     CONF_STATE_VALUE_TEMPLATE,
     CONF_SUGGESTED_DISPLAY_PRECISION,
@@ -743,6 +745,28 @@ PLATFORM_MQTT_FIELDS = {
             required=False,
             validator=cv.template,
             error="invalid_template",
+        ),
+        CONF_PAYLOAD_OFF: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=str,
+            default=DEFAULT_PAYLOAD_OFF,
+        ),
+        CONF_PAYLOAD_ON: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=str,
+            default=DEFAULT_PAYLOAD_ON,
+        ),
+        CONF_STATE_OFF: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=str,
+        ),
+        CONF_STATE_ON: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=str,
         ),
         CONF_RETAIN: PlatformField(
             selector=BOOLEAN_SELECTOR, required=False, validator=bool
