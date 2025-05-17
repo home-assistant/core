@@ -234,6 +234,53 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[da_wm_sc_000001][switch.airdresser_auto_cycle_link-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.airdresser_auto_cycle_link',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Auto cycle link',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_cycle_link',
+    'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_samsungce.steamClosetAutoCycleLink_steamClosetAutoCycleLink_steamClosetAutoCycleLink',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_sc_000001][switch.airdresser_auto_cycle_link-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'AirDresser Auto cycle link',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.airdresser_auto_cycle_link',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_all_entities[da_wm_wd_000001][switch.dryer_wrinkle_prevent-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
