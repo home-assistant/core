@@ -298,7 +298,7 @@ aionanoleaf==0.2.1
 aionotion==2024.03.0
 
 # homeassistant.components.ntfy
-aiontfy==0.5.1
+aiontfy==0.5.2
 
 # homeassistant.components.nut
 aionut==4.3.4
@@ -1215,7 +1215,7 @@ monzopy==1.4.2
 mopeka-iot-ble==0.8.0
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.26
+motionblinds==0.6.27
 
 # homeassistant.components.motionblinds_ble
 motionblindsble==0.1.3
