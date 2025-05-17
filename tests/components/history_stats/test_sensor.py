@@ -1017,6 +1017,18 @@ async def test_start_from_history_then_watch_state_changes_sliding(
                     }
                     for i, sensor_type in enumerate(["time", "ratio", "count"])
                 ]
+                + [
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.state",
+                        "name": f"sensor_delayed{i}",
+                        "state": "on",
+                        "end": "{{ utcnow()-timedelta(minutes=5) }}",
+                        "duration": {"minutes": 55},
+                        "type": sensor_type,
+                    }
+                    for i, sensor_type in enumerate(["time", "ratio", "count"])
+                ]
             },
         )
         await hass.async_block_till_done()
@@ -1028,6 +1040,9 @@ async def test_start_from_history_then_watch_state_changes_sliding(
     assert hass.states.get("sensor.sensor0").state == "0.0"
     assert hass.states.get("sensor.sensor1").state == "0.0"
     assert hass.states.get("sensor.sensor2").state == "0"
+    assert hass.states.get("sensor.sensor_delayed0").state == "0.0"
+    assert hass.states.get("sensor.sensor_delayed1").state == "0.0"
+    assert hass.states.get("sensor.sensor_delayed2").state == "0"
 
     with freeze_time(time):
         hass.states.async_set("binary_sensor.state", "on")
@@ -1038,6 +1053,10 @@ async def test_start_from_history_then_watch_state_changes_sliding(
     assert hass.states.get("sensor.sensor0").state == "0.0"
     assert hass.states.get("sensor.sensor1").state == "0.0"
     assert hass.states.get("sensor.sensor2").state == "1"
+    # Delayed sensor will not have registered the turn on yet
+    assert hass.states.get("sensor.sensor_delayed0").state == "0.0"
+    assert hass.states.get("sensor.sensor_delayed1").state == "0.0"
+    assert hass.states.get("sensor.sensor_delayed2").state == "0"
 
     # After sensor has been on for 15 minutes, check state
     time += timedelta(minutes=15)  # 00:15
@@ -1048,6 +1067,10 @@ async def test_start_from_history_then_watch_state_changes_sliding(
     assert hass.states.get("sensor.sensor0").state == "0.25"
     assert hass.states.get("sensor.sensor1").state == "25.0"
     assert hass.states.get("sensor.sensor2").state == "1"
+    # Delayed sensor will only have data from 00:00 - 00:10
+    assert hass.states.get("sensor.sensor_delayed0").state == "0.17"
+    assert hass.states.get("sensor.sensor_delayed1").state == "18.2"  # 10 / 55
+    assert hass.states.get("sensor.sensor_delayed2").state == "1"
 
     with freeze_time(time):
         hass.states.async_set("binary_sensor.state", "off")
@@ -1064,6 +1087,9 @@ async def test_start_from_history_then_watch_state_changes_sliding(
     assert hass.states.get("sensor.sensor0").state == "0.25"
     assert hass.states.get("sensor.sensor1").state == "25.0"
     assert hass.states.get("sensor.sensor2").state == "1"
+    assert hass.states.get("sensor.sensor_delayed0").state == "0.25"
+    assert hass.states.get("sensor.sensor_delayed1").state == "27.3"  # 15 / 55
+    assert hass.states.get("sensor.sensor_delayed2").state == "1"
 
     time += timedelta(minutes=20)  # 01:05
 
@@ -1075,6 +1101,9 @@ async def test_start_from_history_then_watch_state_changes_sliding(
     assert hass.states.get("sensor.sensor0").state == "0.17"
     assert hass.states.get("sensor.sensor1").state == "16.7"
     assert hass.states.get("sensor.sensor2").state == "1"
+    assert hass.states.get("sensor.sensor_delayed0").state == "0.17"
+    assert hass.states.get("sensor.sensor_delayed1").state == "18.2"  # 10 / 55
+    assert hass.states.get("sensor.sensor_delayed2").state == "1"
 
     time += timedelta(minutes=5)  # 01:10
 
@@ -1086,6 +1115,9 @@ async def test_start_from_history_then_watch_state_changes_sliding(
     assert hass.states.get("sensor.sensor0").state == "0.08"
     assert hass.states.get("sensor.sensor1").state == "8.3"
     assert hass.states.get("sensor.sensor2").state == "1"
+    assert hass.states.get("sensor.sensor_delayed0").state == "0.08"
+    assert hass.states.get("sensor.sensor_delayed1").state == "9.1"  # 5 / 55
+    assert hass.states.get("sensor.sensor_delayed2").state == "1"
 
     time += timedelta(minutes=10)  # 01:20
 
@@ -1096,6 +1128,9 @@ async def test_start_from_history_then_watch_state_changes_sliding(
     assert hass.states.get("sensor.sensor0").state == "0.0"
     assert hass.states.get("sensor.sensor1").state == "0.0"
     assert hass.states.get("sensor.sensor2").state == "0"
+    assert hass.states.get("sensor.sensor_delayed0").state == "0.0"
+    assert hass.states.get("sensor.sensor_delayed1").state == "0.0"
+    assert hass.states.get("sensor.sensor_delayed2").state == "0"
 
 
 async def test_does_not_work_into_the_future(
