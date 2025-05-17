@@ -26,6 +26,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfMass,
     UnitOfPower,
+    UnitOfPressure,
     UnitOfTemperature,
     UnitOfVolume,
 )
@@ -197,6 +198,15 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="alarm",
                 options=["both", "strobe", "siren", "off"],
                 device_class=SensorDeviceClass.ENUM,
+            )
+        ]
+    },
+    Capability.ATMOSPHERIC_PRESSURE_MEASUREMENT: {
+        Attribute.ATMOSPHERIC_PRESSURE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.ATMOSPHERIC_PRESSURE,
+                device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+                state_class=SensorStateClass.MEASUREMENT,
             )
         ]
     },
@@ -1071,6 +1081,7 @@ UNITS = {
     "lux": LIGHT_LUX,
     "mG": None,
     "μg/m^3": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    "kPa": UnitOfPressure.KPA,
 }
 
 
