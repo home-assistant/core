@@ -108,6 +108,7 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._remove_dispatcher: Callable | None = None
         self.player_uuid = format_mac(player.player_id)
         self.server_uuid = server_uuid
+        self.data: dict[str, Any] = {}
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update the Player() object if available, or listen for rediscovery if not."""

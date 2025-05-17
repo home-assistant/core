@@ -40,7 +40,7 @@ async def async_setup_entry(
             alarm["id"],
             coordinator.player,
         )
-        async_add_entities([SqueezeBoxAlarmEntity(alarm, coordinator)])
+        async_add_entities([SqueezeBoxAlarmEntity(alarm["id"], coordinator)])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_ALARM_DISCOVERED, _alarm_discovered)
@@ -67,15 +67,15 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
-        self, alarm: Alarm, coordinator: SqueezeBoxPlayerUpdateCoordinator
+        self, alarm_id: str, coordinator: SqueezeBoxPlayerUpdateCoordinator
     ) -> None:
         """Initialize the Squeezebox alarm switch."""
         super().__init__(coordinator)
-        self._alarm: Alarm | None = alarm
+        self._alarm_id: str | None = alarm_id
         self._attr_available = True
-        self._attr_translation_placeholders = {"alarm_id": alarm["id"]}
+        self._attr_translation_placeholders = {"alarm_id": self._alarm_id}
         self._attr_unique_id: str = (
-            f"{format_mac(self._player.player_id)}-alarm-{alarm['id']}"
+            f"{format_mac(self._player.player_id)}-alarm-{self._alarm_id}"
         )
 
     @callback
@@ -83,12 +83,10 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
         """Handle updated data from the coordinator."""
         if (
             "alarms" not in self.coordinator.data
-            or self.coordinator.data["alarms"].get(self.alarm["id"]) is None
+            or self.coordinator.data.get("alarms", {}).get(self._alarm_id) is None
         ):
             self._attr_available = False
             self.check_if_deleted()
-        else:
-            self._alarm = self.coordinator.data["alarms"].get(self.alarm["id"])
         self.async_write_ha_state()
 
     def check_if_deleted(self) -> None:
@@ -103,7 +101,7 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
         entity_registry = er.async_get(self.hass)
         if entity_registry.async_get(self.entity_id):
             entity_registry.async_remove(self.entity_id)
-            self.coordinator.known_alarms.remove(self.alarm["id"])
+            self.coordinator.known_alarms.remove(str(self._alarm_id))
 
     async def async_added_to_hass(self) -> None:
         """Set up alarm switch when added to hass."""
@@ -123,7 +121,7 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
     @property
     def alarm(self) -> Alarm:
         """Return the alarm object."""
-        return self._alarm
+        return self.coordinator.data.get("alarms", {}).get(self._alarm_id)
 
     @property
     def available(self) -> bool:
@@ -133,7 +131,7 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return attributes of Squeezebox alarm switch."""
-        return {ATTR_ALARM_ID: str(self.alarm["id"])}
+        return {ATTR_ALARM_ID: str(self._alarm_id)}
 
     @property
     def is_on(self) -> bool:
@@ -148,14 +146,12 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
-        await self.coordinator.player.async_update_alarm(
-            self.alarm["id"], enabled=False
-        )
+        await self.coordinator.player.async_update_alarm(self._alarm_id, enabled=False)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
-        await self.coordinator.player.async_update_alarm(self.alarm["id"], enabled=True)
+        await self.coordinator.player.async_update_alarm(self._alarm_id, enabled=True)
         await self.coordinator.async_request_refresh()
 
 
