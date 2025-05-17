@@ -910,6 +910,12 @@
       },
       "core_target_temperature": {
         "name": "Core target temperature"
+      },
+      "energy_forecast": {
+        "name": "Energy forecast"
+      },
+      "water_forecast": {
+        "name": "Water forecast"
       }
     },
     "switch": {
