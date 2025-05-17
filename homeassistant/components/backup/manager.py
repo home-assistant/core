@@ -110,7 +110,9 @@ class ManagerBackup(BaseBackup):
 class WrittenBackup:
     """Written backup class."""
 
+    addon_errors: dict[str, list[tuple[str, str]]]
     backup: AgentBackup
+    folder_errors: dict[Folder, list[tuple[str, str]]]
     open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]]
     release_stream: Callable[[], Coroutine[Any, Any, None]]
 
@@ -1208,7 +1210,9 @@ class BackupManager:
                 backup_success = True
 
             if with_automatic_settings:
-                self._update_issue_after_agent_upload(agent_errors, unavailable_agents)
+                self._update_issue_after_agent_upload(
+                    written_backup, agent_errors, unavailable_agents
+                )
             # delete old backups more numerous than copies
             # try this regardless of agent errors above
             await delete_backups_exceeding_configured_count(self)
@@ -1354,8 +1358,10 @@ class BackupManager:
         for subscription in self._backup_event_subscriptions:
             subscription(event)
 
-    def _update_issue_backup_failed(self) -> None:
-        """Update issue registry when a backup fails."""
+    def _create_automatic_backup_failed_issue(
+        self, translation_key: str, translation_placeholders: dict[str, str] | None
+    ) -> None:
+        """Create an issue in the issue registry for automatic backup failures."""
         ir.async_create_issue(
             self.hass,
             DOMAIN,
@@ -1364,37 +1370,84 @@ class BackupManager:
             is_persistent=True,
             learn_more_url="homeassistant://config/backup",
             severity=ir.IssueSeverity.WARNING,
-            translation_key="automatic_backup_failed_create",
+            translation_key=translation_key,
+            translation_placeholders=translation_placeholders,
+        )
+
+    def _update_issue_backup_failed(self) -> None:
+        """Update issue registry when a backup fails."""
+        self._create_automatic_backup_failed_issue(
+            "automatic_backup_failed_create", None
         )
 
     def _update_issue_after_agent_upload(
-        self, agent_errors: dict[str, Exception], unavailable_agents: list[str]
+        self,
+        written_backup: WrittenBackup,
+        agent_errors: dict[str, Exception],
+        unavailable_agents: list[str],
     ) -> None:
         """Update issue registry after a backup is uploaded to agents."""
-        if not agent_errors and not unavailable_agents:
+
+        addon_errors = written_backup.addon_errors
+        folder_errors = written_backup.folder_errors
+
+        if (
+            not agent_errors
+            and not unavailable_agents
+            and not addon_errors
+            and not folder_errors
+        ):
+            # No issues to report, clear previous error
             ir.async_delete_issue(self.hass, DOMAIN, "automatic_backup_failed")
             return
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            "automatic_backup_failed",
-            is_fixable=False,
-            is_persistent=True,
-            learn_more_url="homeassistant://config/backup",
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="automatic_backup_failed_upload_agents",
-            translation_placeholders={
-                "failed_agents": ", ".join(
-                    chain(
-                        (
-                            self.backup_agents[agent_id].name
-                            for agent_id in agent_errors
-                        ),
-                        unavailable_agents,
+        if (agent_errors or unavailable_agents) and not (addon_errors or folder_errors):
+            # No issues with add-ons or folders, but issues with agents
+            self._create_automatic_backup_failed_issue(
+                "automatic_backup_failed_upload_agents",
+                {
+                    "failed_agents": ", ".join(
+                        chain(
+                            (
+                                self.backup_agents[agent_id].name
+                                for agent_id in agent_errors
+                            ),
+                            unavailable_agents,
+                        )
                     )
-                )
-            },
-        )
+                },
+            )
+        elif addon_errors and not (agent_errors or unavailable_agents or folder_errors):
+            # No issues with agents or folders, but issues with add-ons
+            self._create_automatic_backup_failed_issue(
+                "automatic_backup_failed_addons",
+                {"failed_addons": ", ".join(addon for addon in addon_errors)},
+            )
+        elif folder_errors and not (agent_errors or unavailable_agents or addon_errors):
+            # No issues with agents or add-ons, but issues with folders
+            self._create_automatic_backup_failed_issue(
+                "automatic_backup_failed_folders",
+                {"failed_folders": ", ".join(addon for addon in addon_errors)},
+            )
+        else:
+            # Issues with agents, add-ons, and/or folders
+            self._create_automatic_backup_failed_issue(
+                "automatic_backup_failed_agents_addons_folders",
+                {
+                    "failed_agents": ", ".join(
+                        chain(
+                            (
+                                self.backup_agents[agent_id].name
+                                for agent_id in agent_errors
+                            ),
+                            unavailable_agents,
+                        )
+                    )
+                    or "-",
+                    "failed_addons": ", ".join(addon for addon in addon_errors) or "-",
+                    "failed_folders": ", ".join(folder for folder in folder_errors)
+                    or "-",
+                },
+            )
 
     async def async_can_decrypt_on_download(
         self,
@@ -1677,7 +1730,11 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                     raise BackupReaderWriterError(str(err)) from err
 
             return WrittenBackup(
-                backup=backup, open_stream=open_backup, release_stream=remove_backup
+                addon_errors={},
+                backup=backup,
+                folder_errors={},
+                open_stream=open_backup,
+                release_stream=remove_backup,
             )
         finally:
             # Inform integrations the backup is done
@@ -1816,7 +1873,11 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             await async_add_executor_job(temp_file.unlink, True)
 
         return WrittenBackup(
-            backup=backup, open_stream=open_backup, release_stream=remove_backup
+            addon_errors={},
+            backup=backup,
+            folder_errors={},
+            open_stream=open_backup,
+            release_stream=remove_backup,
         )
 
     async def async_restore_backup(
