@@ -1271,6 +1271,7 @@
         'warm_air',
         'woollens',
       ]),
+      'raw_value': 0,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.washing_machine_program',
