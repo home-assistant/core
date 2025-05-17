@@ -10,6 +10,7 @@ from telegram import Update
 from telegram.error import NetworkError, RetryAfter, TelegramError, TimedOut
 
 from homeassistant.components.telegram_bot import (
+    ATTR_CHAT_ID,
     ATTR_FILE,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -18,7 +19,10 @@ from homeassistant.components.telegram_bot import (
     ATTR_OPTIONS,
     ATTR_QUESTION,
     ATTR_STICKER_ID,
+    ATTR_TARGET,
+    CONF_ALLOWED_CHAT_IDS,
     DOMAIN,
+    EVENT_TELEGRAM_SENT,
     SERVICE_SEND_ANIMATION,
     SERVICE_SEND_DOCUMENT,
     SERVICE_SEND_LOCATION,
@@ -30,7 +34,7 @@ from homeassistant.components.telegram_bot import (
     SERVICE_SEND_VOICE,
 )
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
-from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, EVENT_HOMEASSISTANT_START
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -80,7 +84,7 @@ async def test_polling_platform_init(hass: HomeAssistant, polling_platform) -> N
         ),
     ],
 )
-async def test_send_message(
+async def test_send_single_message(
     hass: HomeAssistant, webhook_platform, service: str, input: dict[str]
 ) -> None:
     """Test the send_message service. Tests any service that does not require files to be sent."""
@@ -102,6 +106,72 @@ async def test_send_message(
 
     assert len(response["chats"]) == 1
     assert (response["chats"][0]["message_id"]) == 12345
+
+
+@pytest.mark.parametrize(
+    ("service", "input"),
+    [
+        (
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_MESSAGE: "test_message",
+                ATTR_MESSAGE_THREAD_ID: "123",
+                ATTR_TARGET: [-123456789, 12345678],
+            },
+        ),
+        (
+            SERVICE_SEND_STICKER,
+            {
+                ATTR_STICKER_ID: "1",
+                ATTR_MESSAGE_THREAD_ID: "123",
+                ATTR_TARGET: [-123456789, 12345678],
+            },
+        ),
+        (
+            SERVICE_SEND_POLL,
+            {
+                ATTR_QUESTION: "Question",
+                ATTR_OPTIONS: ["Yes", "No"],
+                ATTR_TARGET: [-123456789, 12345678],
+            },
+        ),
+        (
+            SERVICE_SEND_LOCATION,
+            {
+                ATTR_MESSAGE: "test_message",
+                ATTR_MESSAGE_THREAD_ID: "123",
+                ATTR_LONGITUDE: "1.123",
+                ATTR_LATITUDE: "1.123",
+                ATTR_TARGET: [-123456789, 12345678],
+            },
+        ),
+    ],
+)
+async def test_send_mass_message(
+    hass: HomeAssistant, webhook_platform, service: str, input: dict[str]
+) -> None:
+    """Test sending messages to multiple targets with telegram bots."""
+    context = Context()
+    events = async_capture_events(hass, "telegram_sent")
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        service,
+        input,
+        blocking=True,
+        context=context,
+        return_response=True,
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 2
+    assert events[0].context == context
+
+    assert len(response["chats"]) == 2
+    assert (response["chats"][0]["message_id"]) == 12345
+    assert (response["chats"][0]["chat_id"]) == -123456789
+    assert (response["chats"][1]["message_id"]) == 12345
+    assert (response["chats"][1]["chat_id"]) == 12345678
 
 
 @patch(
@@ -432,6 +502,64 @@ async def test_webhook_endpoint_unauthorized_update_doesnt_generate_telegram_tex
     assert len(events) == 0
 
 
+async def test_multiple_bots(
+    hass: HomeAssistant, mock_external_calls, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test handling of messages with multiple telegram bots configured."""
+    # Set up two bots with different allowed chat IDs
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    CONF_PLATFORM: "broadcast",
+                    CONF_API_KEY: "ABC",
+                    CONF_ALLOWED_CHAT_IDS: [1111],
+                },
+                {
+                    CONF_PLATFORM: "broadcast",
+                    CONF_API_KEY: "DEF",
+                    CONF_ALLOWED_CHAT_IDS: [2222],
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Capture events
+    events = async_capture_events(hass, EVENT_TELEGRAM_SENT)
+
+    # Send to first bot's chat ID
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {ATTR_MESSAGE: "test", ATTR_TARGET: 1111},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Send to second bot's chat ID
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {ATTR_MESSAGE: "test", ATTR_TARGET: 2222},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Check that two events were fired
+    assert len(events) == 2
+
+    # Verify that the messages were sent to the correct chat IDs
+    assert events[0].data[ATTR_CHAT_ID] == 1111
+    assert events[1].data[ATTR_CHAT_ID] == 2222
+
+    # Verify no warning logs were created for disallowed targets
+    for record in caplog.records:
+        assert "Disallowed targets" not in record.message
+
+
 async def test_webhook_endpoint_without_secret_token_is_denied(
     hass: HomeAssistant,
     webhook_platform,
@@ -466,3 +594,105 @@ async def test_webhook_endpoint_invalid_secret_token_is_denied(
         headers={"X-Telegram-Bot-Api-Secret-Token": incorrect_secret_token},
     )
     assert response.status == 401
+
+
+async def test_multiple_bots_with_overlapping_chat_ids(
+    hass: HomeAssistant, mock_external_calls, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test handling of messages with multiple telegram bots with overlapping chat IDs."""
+    # Set up two bots with overlapping allowed chat IDs
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    CONF_PLATFORM: "broadcast",
+                    CONF_API_KEY: "ABC",
+                    CONF_ALLOWED_CHAT_IDS: [1111, 3333],
+                },
+                {
+                    CONF_PLATFORM: "broadcast",
+                    CONF_API_KEY: "DEF",
+                    CONF_ALLOWED_CHAT_IDS: [2222, 3333],
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Capture events
+    events = async_capture_events(hass, EVENT_TELEGRAM_SENT)
+
+    # Send to shared chat ID (3333) - should use the first bot
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {ATTR_MESSAGE: "test", ATTR_TARGET: 3333},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Check that one event was fired
+    assert len(events) == 1
+
+    # Verify that the message was sent to the correct chat ID
+    assert events[0].data[ATTR_CHAT_ID] == 3333
+
+
+async def test_multiple_bots_with_unsupported_chat_id(
+    hass: HomeAssistant, mock_external_calls, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test handling of messages with target chat ID not supported by any bot."""
+    # Set up two bots with different allowed chat IDs
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    CONF_PLATFORM: "broadcast",
+                    CONF_API_KEY: "ABC",
+                    CONF_ALLOWED_CHAT_IDS: [1111],
+                },
+                {
+                    CONF_PLATFORM: "broadcast",
+                    CONF_API_KEY: "DEF",
+                    CONF_ALLOWED_CHAT_IDS: [2222],
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Capture events
+    events = async_capture_events(hass, EVENT_TELEGRAM_SENT)
+
+    # Clear logs before the test
+    caplog.clear()
+
+    # Send to an unsupported chat ID (9999)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {ATTR_MESSAGE: "test", ATTR_TARGET: 9999},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Check that one event was fired (message sent to first bot's default chat ID)
+    assert len(events) == 1
+
+    # Verify that the message was sent to the first bot's default chat ID
+    assert events[0].data[ATTR_CHAT_ID] == 1111
+
+    # Verify warning log was created for unsupported target
+    warning_found = False
+    for record in caplog.records:
+        if (
+            "No Telegram bot configured for target(s)" in record.message
+            and "9999" in record.message
+        ):
+            warning_found = True
+            break
+    assert warning_found, "Warning for unsupported target not found in logs"
