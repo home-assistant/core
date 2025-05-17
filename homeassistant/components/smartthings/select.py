@@ -20,6 +20,17 @@ LAMP_TO_HA = {
     "extraHigh": "extra_high",
 }
 
+WASHER_SOIL_LEVEL_TO_HA = {
+    "none": "none",
+    "heavy": "heavy",
+    "normal": "normal",
+    "light": "light",
+    "extraLight": "extra_light",
+    "extraHeavy": "extra_heavy",
+    "up": "up",
+    "down": "down",
+}
+
 
 @dataclass(frozen=True, kw_only=True)
 class SmartThingsSelectDescription(SelectEntityDescription):
@@ -87,6 +98,15 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         status_attribute=Attribute.BRIGHTNESS_LEVEL,
         command=Command.SET_BRIGHTNESS_LEVEL,
         options_map=LAMP_TO_HA,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    Capability.CUSTOM_WASHER_SOIL_LEVEL: SmartThingsSelectDescription(
+        key=Capability.CUSTOM_WASHER_SOIL_LEVEL,
+        translation_key="soil_level",
+        options_attribute=Attribute.SUPPORTED_WASHER_SOIL_LEVEL,
+        status_attribute=Attribute.WASHER_SOIL_LEVEL,
+        command=Command.SET_WASHER_SOIL_LEVEL,
+        options_map=WASHER_SOIL_LEVEL_TO_HA,
         entity_category=EntityCategory.CONFIG,
     ),
 }
