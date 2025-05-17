@@ -21,7 +21,9 @@
       }
     },
     "abort": {
-      "already_configured": "This server is already configured"
+      "already_configured": "This server is already configured",
+      "unique_id_mismatch": "Unique ID mismatch",
+      "reconfigure_successful": "Reconfiguration successfully achieved"
     }
   },
   "entity": {

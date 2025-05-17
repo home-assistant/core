@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
+
 from homeassistant.components.emoncms.const import CONF_ONLY_INCLUDE_FEEDID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_URL
@@ -9,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
-from .conftest import EMONCMS_FAILURE, SENSOR_NAME
+from .conftest import EMONCMS_FAILURE, SENSOR_NAME, UNIQUE_ID
 
 from tests.common import MockConfigEntry
 
@@ -17,6 +19,47 @@ USER_INPUT = {
     CONF_URL: "http://1.1.1.1",
     CONF_API_KEY: "my_api_key",
 }
+
+
+@pytest.mark.parametrize(
+    ("url", "api_key"),
+    [
+        (USER_INPUT[CONF_URL], "regenerated_api_key"),
+        ("http://1.1.1.2", USER_INPUT[CONF_API_KEY]),
+    ],
+)
+async def test_reconfigure(
+    hass: HomeAssistant,
+    emoncms_client: AsyncMock,
+    url: str,
+    api_key: str,
+) -> None:
+    """Test reconfigure flow."""
+    new_input = {
+        CONF_URL: url,
+        CONF_API_KEY: api_key,
+    }
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=SENSOR_NAME,
+        data=new_input,
+        unique_id=UNIQUE_ID,
+    )
+    await setup_integration(hass, config_entry)
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        new_input,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    entry = hass.config_entries.async_get_entry(config_entry.entry_id)
+    assert entry.data == new_input
 
 
 async def test_user_flow(

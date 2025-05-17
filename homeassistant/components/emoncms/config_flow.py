@@ -151,6 +151,40 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reconfigure the entry."""
+        errors: dict[str, str] = {}
+        reconfig_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            url = user_input[CONF_URL]
+            api_key = user_input[CONF_API_KEY]
+            emoncms_client = EmoncmsClient(
+                url, api_key, session=async_get_clientsession(self.hass)
+            )
+            await self.async_set_unique_id(await emoncms_client.async_get_uuid())
+            self._abort_if_unique_id_mismatch()
+            return self.async_update_reload_and_abort(
+                reconfig_entry,
+                data=user_input,
+                reload_even_if_entry_is_unchanged=False,
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_URL): str,
+                        vol.Required(CONF_API_KEY): str,
+                    }
+                ),
+                user_input or reconfig_entry.data,
+            ),
+            errors=errors,
+        )
+
 
 class EmoncmsOptionsFlow(OptionsFlow):
     """Emoncms Options flow handler."""
