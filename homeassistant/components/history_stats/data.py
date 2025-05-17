@@ -113,15 +113,14 @@ class HistoryStats:
             start_changed = (
                 current_period_start_timestamp != previous_period_start_timestamp
             )
+            end_changed = current_period_end_timestamp != previous_period_end_timestamp
             if start_changed:
                 self._prune_history_cache(current_period_start_timestamp)
 
             new_data = False
             if event and (new_state := event.data["new_state"]) is not None:
-                if (
-                    current_period_start_timestamp
-                    <= floored_timestamp(new_state.last_changed)
-                    <= current_period_end_timestamp
+                if current_period_start_timestamp <= floored_timestamp(
+                    new_state.last_changed
                 ):
                     self._history_current_period.append(
                         HistoryState(new_state.state, new_state.last_changed_timestamp)
@@ -131,19 +130,18 @@ class HistoryStats:
                 not new_data
                 and current_period_end_timestamp < now_timestamp
                 and not start_changed
+                and not end_changed
             ):
                 # If period has not changed and current time after the period end...
                 # Don't compute anything as the value cannot have changed
                 return self._state
         else:
             await self._async_history_from_db(
-                current_period_start_timestamp, current_period_end_timestamp
+                current_period_start_timestamp, now_timestamp
             )
             if event and (new_state := event.data["new_state"]) is not None:
-                if (
-                    current_period_start_timestamp
-                    <= floored_timestamp(new_state.last_changed)
-                    <= current_period_end_timestamp
+                if current_period_start_timestamp <= floored_timestamp(
+                    new_state.last_changed
                 ):
                     self._history_current_period.append(
                         HistoryState(new_state.state, new_state.last_changed_timestamp)
@@ -208,6 +206,9 @@ class HistoryStats:
             current_state_matches = history_state.state in self._entity_states
             state_change_timestamp = history_state.last_changed
 
+            if state_change_timestamp > end_timestamp:
+                break
+
             if math.floor(state_change_timestamp) > now_timestamp:
                 # Shouldn't count states that are in the future
                 _LOGGER.debug(
@@ -215,7 +216,7 @@ class HistoryStats:
                     state_change_timestamp,
                     now_timestamp,
                 )
-                continue
+                break
 
             if previous_state_matches:
                 elapsed += state_change_timestamp - last_state_change_timestamp
