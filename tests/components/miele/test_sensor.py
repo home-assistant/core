@@ -54,18 +54,29 @@ async def test_hob_sensor_states(
             [
                 "laundry_scenario/002_washing.json",
                 "laundry_scenario/003_rinse_hold.json",
+                "laundry_scenario/004_wash_end.json",
             ],
             {
-                "": ["off", "in_use", "rinse_hold"],
-                "program": ["no_program", "minimum_iron", "minimum_iron"],
-                "program_phase": ["not_running", "main_wash", "rinse_hold"],
-                # "target_temperature": ["unknown", "30", "30"],
-                "spin_speed": ["unknown", "1200", "1200"],
-                "remaining_time": ["0", "105", "8"],
+                "": ["off", "in_use", "rinse_hold", "program_ended"],
+                "program": [
+                    "no_program",
+                    "minimum_iron",
+                    "minimum_iron",
+                    "minimum_iron",
+                ],
+                "program_phase": [
+                    "not_running",
+                    "main_wash",
+                    "rinse_hold",
+                    "anti_crease",
+                ],
+                # "target_temperature": ["unknown", "30", "30", "30"],
+                "spin_speed": ["unknown", "1200", "1200", "1200"],
+                "remaining_time": ["0", "105", "8", "0"],
                 # OFF -> elapsed forced to 0 (some devices continue reporting last value of last cycle)
                 # IN_USE -> elapsed time from API (normal case)
                 # PROGRAM_ENDED -> elapsed time kept from last program (some devices immediately go to 0)
-                "elapsed_time": ["0", "12", "109"],
+                "elapsed_time": ["0", "12", "109", "109"],
             },
         ),
         (

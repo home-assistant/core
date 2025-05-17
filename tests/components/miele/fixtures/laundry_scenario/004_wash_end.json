@@ -38,8 +38,8 @@
         "key_localized": "Program name"
       },
       "status": {
-        "value_raw": 11,
-        "value_localized": "Rinse hold",
+        "value_raw": 7,
+        "value_localized": "Finished",
         "key_localized": "status"
       },
       "programType": {
@@ -48,11 +48,11 @@
         "key_localized": "Program type"
       },
       "programPhase": {
-        "value_raw": 262,
-        "value_localized": "Rinse hold",
+        "value_raw": 267,
+        "value_localized": "Anti-crease",
         "key_localized": "Program phase"
       },
-      "remainingTime": [0, 8],
+      "remainingTime": [0, 0],
       "startTime": [0, 0],
       "targetTemperature": [
         {
@@ -112,7 +112,7 @@
       },
       "ambientLight": null,
       "light": null,
-      "elapsedTime": [1, 49],
+      "elapsedTime": [0, 0],
       "spinningSpeed": {
         "unit": "rpm",
         "value_raw": 1200,
