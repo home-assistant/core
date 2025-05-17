@@ -17,7 +17,14 @@
           "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "https": "Connect over https (requires reverse proxy)"
+          "https": "Connect over HTTPS (requires reverse proxy)"
+        },
+        "data_description": {
+          "host": "[%key:component::squeezebox::config::step::user::data_description::host%]",
+          "port": "The web interface port on the LMS. The default is 9000.",
+          "username": "The username from LMS Advanced Security (if defined).",
+          "password": "The password from LMS Advanced Security (if defined).",
+          "https": "Connect to the LMS over HTTPS (requires reverse proxy)."
         }
       }
     },
@@ -29,7 +36,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_server_found": "No LMS server found."
+      "no_server_found": "No LMS found."
     }
   },
   "services": {
@@ -132,6 +139,12 @@
       },
       "alarms_enabled": {
         "name": "Alarms enabled"
+    "update": {
+      "newversion": {
+        "name": "Lyrion Music Server"
+      },
+      "newplugins": {
+        "name": "Updated plugins"
       }
     }
   },
@@ -148,6 +161,35 @@
           "volume_step": "Amount to adjust the volume when turning volume up or down."
         }
       }
+    }
+  },
+  "exceptions": {
+    "invalid_announce_media_type": {
+      "message": "Only type 'music' can be played as announcement (received type {media_type})."
+    },
+    "invalid_announce_volume": {
+      "message": "{announce_volume} must be a number greater than 0 and less than or equal to 1."
+    },
+    "invalid_announce_timeout": {
+      "message": "{announce_timeout} must be a number greater than 0."
+    },
+    "join_cannot_find_other_player": {
+      "message": "Could not find player with entity_id {other_player_entity_id}."
+    },
+    "join_cannot_join_unknown_player": {
+      "message": "Could not join unknown player {other_player_entity_id}."
+    },
+    "coordinator_no_data": {
+      "message": "No data from status poll."
+    },
+    "browse_media_not_found": {
+      "message": "Media not found: {type} / {id}."
+    },
+    "browse_media_type_not_supported": {
+      "message": "Media type not supported: {media_type}."
+    },
+    "update_restart_failed": {
+      "message": "Error trying to update LMS Plugins: Restart failed."
     }
   }
 }

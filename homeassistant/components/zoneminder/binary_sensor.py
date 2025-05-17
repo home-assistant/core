@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as ZONEMINDER_DOMAIN
+from . import DOMAIN
 
 
 async def async_setup_platform(
@@ -23,7 +23,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up the ZoneMinder binary sensor platform."""
     sensors = []
-    for host_name, zm_client in hass.data[ZONEMINDER_DOMAIN].items():
+    for host_name, zm_client in hass.data[DOMAIN].items():
         sensors.append(ZMAvailabilitySensor(host_name, zm_client))
     add_entities(sensors)
 

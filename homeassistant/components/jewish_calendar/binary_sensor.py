@@ -38,19 +38,19 @@ class JewishCalendarBinarySensorEntityDescription(
 BINARY_SENSORS: tuple[JewishCalendarBinarySensorEntityDescription, ...] = (
     JewishCalendarBinarySensorEntityDescription(
         key="issur_melacha_in_effect",
-        name="Issur Melacha in Effect",
+        translation_key="issur_melacha_in_effect",
         icon="mdi:power-plug-off",
         is_on=lambda state, now: bool(state.issur_melacha_in_effect(now)),
     ),
     JewishCalendarBinarySensorEntityDescription(
         key="erev_shabbat_hag",
-        name="Erev Shabbat/Hag",
+        translation_key="erev_shabbat_hag",
         is_on=lambda state, now: bool(state.erev_shabbat_chag(now)),
         entity_registry_enabled_default=False,
     ),
     JewishCalendarBinarySensorEntityDescription(
         key="motzei_shabbat_hag",
-        name="Motzei Shabbat/Hag",
+        translation_key="motzei_shabbat_hag",
         is_on=lambda state, now: bool(state.motzei_shabbat_chag(now)),
         entity_registry_enabled_default=False,
     ),
@@ -91,7 +91,6 @@ class JewishCalendarBinarySensor(JewishCalendarEntity, BinarySensorEntity):
             location=self._location,
             candle_lighting_offset=self._candle_lighting_offset,
             havdalah_offset=self._havdalah_offset,
-            language=self._language,
         )
 
     async def async_added_to_hass(self) -> None:

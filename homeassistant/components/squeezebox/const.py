@@ -13,8 +13,6 @@ SERVER_MODEL = "Lyrion Music Server"
 STATUS_API_TIMEOUT = 10
 STATUS_SENSOR_LASTSCAN = "lastscan"
 STATUS_SENSOR_NEEDSRESTART = "needsrestart"
-STATUS_SENSOR_NEWVERSION = "newversion"
-STATUS_SENSOR_NEWPLUGINS = "newplugins"
 STATUS_SENSOR_RESCAN = "rescan"
 STATUS_SENSOR_INFO_TOTAL_ALBUMS = "info total albums"
 STATUS_SENSOR_INFO_TOTAL_ARTISTS = "info total artists"
@@ -27,6 +25,8 @@ STATUS_QUERY_LIBRARYNAME = "libraryname"
 STATUS_QUERY_MAC = "mac"
 STATUS_QUERY_UUID = "uuid"
 STATUS_QUERY_VERSION = "version"
+STATUS_UPDATE_NEWVERSION = "newversion"
+STATUS_UPDATE_NEWPLUGINS = "newplugins"
 SQUEEZEBOX_SOURCE_STRINGS = (
     "source:",
     "wavin:",
@@ -53,3 +53,5 @@ ATTR_SCHEDULED_TODAY = "scheduled_today"
 ATTR_TIME = "time"
 ATTR_VOLUME = "volume"
 ATTR_URL = "url"
+UPDATE_PLUGINS_RELEASE_SUMMARY = "update_plugins_release_summary"
+UPDATE_RELEASE_SUMMARY = "update_release_summary"

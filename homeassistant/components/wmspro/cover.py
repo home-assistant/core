@@ -32,25 +32,30 @@ async def async_setup_entry(
     entities: list[WebControlProGenericEntity] = []
     for dest in hub.dests.values():
         if dest.action(WMS_WebControl_pro_API_actionDescription.AwningDrive):
-            entities.append(WebControlProAwning(config_entry.entry_id, dest))  # noqa: PERF401
+            entities.append(WebControlProAwning(config_entry.entry_id, dest))
+        elif dest.action(
+            WMS_WebControl_pro_API_actionDescription.RollerShutterBlindDrive
+        ):
+            entities.append(WebControlProRollerShutter(config_entry.entry_id, dest))
 
     async_add_entities(entities)
 
 
-class WebControlProAwning(WebControlProGenericEntity, CoverEntity):
-    """Representation of a WMS based awning."""
+class WebControlProCover(WebControlProGenericEntity, CoverEntity):
+    """Base representation of a WMS based cover."""
 
-    _attr_device_class = CoverDeviceClass.AWNING
+    _drive_action_desc: WMS_WebControl_pro_API_actionDescription
+    _attr_name = None
 
     @property
     def current_cover_position(self) -> int | None:
         """Return current position of cover."""
-        action = self._dest.action(WMS_WebControl_pro_API_actionDescription.AwningDrive)
+        action = self._dest.action(self._drive_action_desc)
         return 100 - action["percentage"]
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        action = self._dest.action(WMS_WebControl_pro_API_actionDescription.AwningDrive)
+        action = self._dest.action(self._drive_action_desc)
         await action(percentage=100 - kwargs[ATTR_POSITION])
 
     @property
@@ -60,12 +65,12 @@ class WebControlProAwning(WebControlProGenericEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        action = self._dest.action(WMS_WebControl_pro_API_actionDescription.AwningDrive)
+        action = self._dest.action(self._drive_action_desc)
         await action(percentage=0)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        action = self._dest.action(WMS_WebControl_pro_API_actionDescription.AwningDrive)
+        action = self._dest.action(self._drive_action_desc)
         await action(percentage=100)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
@@ -75,3 +80,19 @@ class WebControlProAwning(WebControlProGenericEntity, CoverEntity):
             WMS_WebControl_pro_API_actionType.Stop,
         )
         await action()
+
+
+class WebControlProAwning(WebControlProCover):
+    """Representation of a WMS based awning."""
+
+    _attr_device_class = CoverDeviceClass.AWNING
+    _drive_action_desc = WMS_WebControl_pro_API_actionDescription.AwningDrive
+
+
+class WebControlProRollerShutter(WebControlProCover):
+    """Representation of a WMS based roller shutter or blind."""
+
+    _attr_device_class = CoverDeviceClass.SHUTTER
+    _drive_action_desc = (
+        WMS_WebControl_pro_API_actionDescription.RollerShutterBlindDrive
+    )

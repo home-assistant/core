@@ -113,6 +113,17 @@
       "grid_max_current": {
         "name": "Max grid current"
       }
+    },
+    "button": {
+      "stop_charge_session": {
+        "name": "Stop charge session"
+      },
+      "reboot": {
+        "name": "Reboot"
+      },
+      "reset": {
+        "name": "Reset"
+      }
     }
   }
 }

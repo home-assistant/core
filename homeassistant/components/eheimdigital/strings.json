@@ -62,6 +62,9 @@
       },
       "night_temperature_offset": {
         "name": "Night temperature offset"
+      },
+      "system_led": {
+        "name": "System LED brightness"
       }
     },
     "sensor": {
@@ -78,6 +81,14 @@
           "rotor_stuck": "Rotor stuck",
           "air_in_filter": "Air in filter"
         }
+      }
+    },
+    "time": {
+      "day_start_time": {
+        "name": "Day start time"
+      },
+      "night_start_time": {
+        "name": "Night start time"
       }
     }
   }

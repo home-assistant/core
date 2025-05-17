@@ -26,6 +26,8 @@ from homeassistant.components.squeezebox.const import (
     STATUS_SENSOR_OTHER_PLAYER_COUNT,
     STATUS_SENSOR_PLAYER_COUNT,
     STATUS_SENSOR_RESCAN,
+    STATUS_UPDATE_NEWPLUGINS,
+    STATUS_UPDATE_NEWVERSION,
 )
 from homeassistant.components.squeezebox.coordinator import (
     SqueezeBoxPlayerUpdateCoordinator,
@@ -75,6 +77,9 @@ FAKE_QUERY_RESPONSE = {
     STATUS_SENSOR_INFO_TOTAL_SONGS: 42,
     STATUS_SENSOR_PLAYER_COUNT: 10,
     STATUS_SENSOR_OTHER_PLAYER_COUNT: 0,
+    STATUS_UPDATE_NEWVERSION: 'A new version of Logitech Media Server is available (8.5.2 - 0). <a href="updateinfo.html?installerFile=/var/lib/squeezeboxserver/cache/updates/logitechmediaserver_8.5.2_amd64.deb" target="update">Click here for further information</a>.',
+    STATUS_UPDATE_NEWPLUGINS: "Plugins have been updated - Restart Required (Big Sounds)",
+    "_can": 1,
     "players_loop": [
         {
             "isplaying": 0,
@@ -306,7 +311,9 @@ def mock_pysqueezebox_server(
         mock_lms.uuid = uuid
         mock_lms.name = TEST_SERVER_NAME
         mock_lms.async_query = AsyncMock(return_value={"uuid": format_mac(uuid)})
-        mock_lms.async_status = AsyncMock(return_value={"uuid": format_mac(uuid)})
+        mock_lms.async_status = AsyncMock(
+            return_value={"uuid": format_mac(uuid), "version": FAKE_VERSION}
+        )
         return mock_lms
 
 

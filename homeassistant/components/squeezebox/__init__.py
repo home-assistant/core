@@ -57,7 +57,7 @@ PLATFORMS = [
     Platform.MEDIA_PLAYER,
     Platform.SENSOR,
     Platform.SWITCH,
-]
+    Platform.UPDATE,
 
 
 @dataclass

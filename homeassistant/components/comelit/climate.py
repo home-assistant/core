@@ -134,11 +134,9 @@ class ComelitClimateEntity(ComelitBridgeBaseEntity, ClimateEntity):
         self._attr_current_temperature = values[0] / 10
 
         self._attr_hvac_action = None
-        if _mode == ClimaComelitMode.OFF:
-            self._attr_hvac_action = HVACAction.OFF
         if not _active:
             self._attr_hvac_action = HVACAction.IDLE
-        if _mode in API_STATUS:
+        elif _mode in API_STATUS:
             self._attr_hvac_action = API_STATUS[_mode]["hvac_action"]
 
         self._attr_hvac_mode = None

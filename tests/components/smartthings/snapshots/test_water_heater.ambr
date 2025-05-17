@@ -1,0 +1,218 @@
+# serializer version: 1
+# name: test_all_entities[da_ac_ehs_01001][water_heater.heat_pump-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max_temp': 69,
+      'min_temp': 38,
+      'operation_list': list([
+        'off',
+        'eco',
+        'standard',
+        'power',
+        'force',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'water_heater',
+    'entity_category': None,
+    'entity_id': 'water_heater.heat_pump',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': <WaterHeaterEntityFeature: 14>,
+    'translation_key': 'water_heater',
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_ehs_01001][water_heater.heat_pump-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'away_mode': 'off',
+      'current_temperature': 57,
+      'friendly_name': 'Heat pump',
+      'max_temp': 69,
+      'min_temp': 38,
+      'operation_list': list([
+        'off',
+        'eco',
+        'standard',
+        'power',
+        'force',
+      ]),
+      'operation_mode': 'off',
+      'supported_features': <WaterHeaterEntityFeature: 14>,
+      'target_temp_high': 69,
+      'target_temp_low': 38,
+      'temperature': 56,
+    }),
+    'context': <ANY>,
+    'entity_id': 'water_heater.heat_pump',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub][water_heater.eco_heating_system-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max_temp': 60.0,
+      'min_temp': 40,
+      'operation_list': list([
+        'off',
+        'eco',
+        'standard',
+        'force',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'water_heater',
+    'entity_category': None,
+    'entity_id': 'water_heater.eco_heating_system',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': <WaterHeaterEntityFeature: 14>,
+    'translation_key': 'water_heater',
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub][water_heater.eco_heating_system-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'away_mode': 'off',
+      'current_temperature': 40.8,
+      'friendly_name': 'Eco Heating System',
+      'max_temp': 60.0,
+      'min_temp': 40,
+      'operation_list': list([
+        'off',
+        'eco',
+        'standard',
+        'force',
+      ]),
+      'operation_mode': 'off',
+      'supported_features': <WaterHeaterEntityFeature: 14>,
+      'target_temp_high': 55,
+      'target_temp_low': 40,
+      'temperature': 48,
+    }),
+    'context': <ANY>,
+    'entity_id': 'water_heater.eco_heating_system',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][water_heater.warmepumpe-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max_temp': 60.0,
+      'min_temp': 40,
+      'operation_list': list([
+        'off',
+        'eco',
+        'standard',
+        'power',
+        'force',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'water_heater',
+    'entity_category': None,
+    'entity_id': 'water_heater.warmepumpe',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': <WaterHeaterEntityFeature: 15>,
+    'translation_key': 'water_heater',
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][water_heater.warmepumpe-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'away_mode': 'off',
+      'current_temperature': 49.6,
+      'friendly_name': 'Wärmepumpe',
+      'max_temp': 60.0,
+      'min_temp': 40,
+      'operation_list': list([
+        'off',
+        'eco',
+        'standard',
+        'power',
+        'force',
+      ]),
+      'operation_mode': 'standard',
+      'supported_features': <WaterHeaterEntityFeature: 15>,
+      'target_temp_high': 57,
+      'target_temp_low': 40,
+      'temperature': 52,
+    }),
+    'context': <ANY>,
+    'entity_id': 'water_heater.warmepumpe',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'standard',
+  })
+# ---
