@@ -46,7 +46,6 @@ async def test_hob_sensor_states(
 
 @pytest.mark.parametrize("load_device_file", ["laundry_scenario/001_off.json"])
 @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("device_name", "json_sequence", "expected_sensor_states"),
     [
@@ -106,7 +105,6 @@ async def test_hob_sensor_states(
 async def test_laundry_scenario(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
-    entity_registry: er.EntityRegistry,
     setup_platform: None,
     mock_config_entry: MockConfigEntry,
     device_name: str,
