@@ -9,6 +9,7 @@ from pysuez import PySuezError, SuezClient, TelemetryMeasure
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
 from homeassistant.components.recorder.statistics import (
+    StatisticMeanType,
     StatisticsRow,
     async_add_external_statistics,
     get_last_statistics,
@@ -241,6 +242,7 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
         """Build statistics metadata for requested configuration."""
         return StatisticMetaData(
             has_mean=False,
+            mean_type=StatisticMeanType.NONE,
             has_sum=True,
             name=f"Suez water {name} {self._counter_id}",
             source=DOMAIN,
