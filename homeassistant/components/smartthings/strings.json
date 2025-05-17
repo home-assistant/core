@@ -39,6 +39,9 @@
       "dryer_wrinkle_prevent_active": {
         "name": "Wrinkle prevent active"
       },
+      "keep_fresh_mode_active": {
+        "name": "Keep fresh mode active"
+      },
       "filter_status": {
         "name": "Filter status"
       },
@@ -552,6 +555,9 @@
       },
       "sabbath_mode": {
         "name": "Sabbath mode"
+      },
+      "keep_fresh_mode": {
+        "name": "Keep fresh mode"
       }
     },
     "water_heater": {
