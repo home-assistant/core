@@ -559,6 +559,9 @@
       "auto_cycle_link": {
         "name": "Auto cycle link"
       },
+      "sanitize": {
+        "name": "Sanitize"
+      },
       "keep_fresh_mode": {
         "name": "Keep fresh mode"
       }
