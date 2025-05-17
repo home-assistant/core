@@ -883,7 +883,7 @@
         "name": "Core target temperature"
       },
       "energy_forecast": {
-        "name": "Energy Forecast"
+        "name": "Energy forecast"
       },
       "water_forecast": {
         "name": "Water Forecast"
