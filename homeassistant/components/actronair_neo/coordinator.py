@@ -44,7 +44,6 @@ class ActronNeoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.last_update_success = False
         self.last_seen: dict[str, datetime] = {}
         self.auth_error_count = 0
-        self.hass = hass
         self.systems: list[ActronAirNeoACSystem] = []
         self.status_objects: dict[str, ActronAirNeoStatus] = {}
 
