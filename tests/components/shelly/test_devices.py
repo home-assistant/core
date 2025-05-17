@@ -101,7 +101,11 @@ async def test_shelly_2pm_gen3_relay_names(
     device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test Shelly 2PM Gen3 with relay names."""
+    """Test Shelly 2PM Gen3 with relay names.
+
+    This device has two relays/channels,we should get a main device and two sub
+    devices.
+    """
     device_fixture = load_json_object_fixture("2pm_gen3.json", DOMAIN)
     device_fixture["config"]["switch:0"]["name"] = "Kitchen light"
     device_fixture["config"]["switch:1"]["name"] = "Living room light"
