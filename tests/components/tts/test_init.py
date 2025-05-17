@@ -921,6 +921,29 @@ async def test_web_view_wrong_file(
     [("mock_setup", "test"), ("mock_config_entry_setup", "tts.test")],
     indirect=["setup"],
 )
+async def test_web_view_wrong_file_with_head_request(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    setup: str,
+    expected_url_suffix: str,
+) -> None:
+    """Set up a TTS platform and receive wrong file from web."""
+    client = await hass_client()
+
+    url = (
+        "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
+        f"_en-us_-_{expected_url_suffix}.mp3"
+    )
+
+    req = await client.head(url)
+    assert req.status == HTTPStatus.NOT_FOUND
+
+
+@pytest.mark.parametrize(
+    ("setup", "expected_url_suffix"),
+    [("mock_setup", "test"), ("mock_config_entry_setup", "tts.test")],
+    indirect=["setup"],
+)
 async def test_web_view_wrong_filename(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
