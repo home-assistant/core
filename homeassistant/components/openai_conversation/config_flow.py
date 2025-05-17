@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import json
 import logging
 from types import MappingProxyType
@@ -176,7 +177,9 @@ class OpenAIOptionsFlow(OptionsFlow):
 
                 options = {
                     CONF_RECOMMENDED: user_input[CONF_RECOMMENDED],
-                    CONF_PROMPT: user_input[CONF_PROMPT],
+                    CONF_PROMPT: user_input.get(
+                        CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
+                    ),
                     CONF_LLM_HASS_API: user_input.get(CONF_LLM_HASS_API),
                 }
 
@@ -243,7 +246,7 @@ class OpenAIOptionsFlow(OptionsFlow):
 
 def openai_config_option_schema(
     hass: HomeAssistant,
-    options: dict[str, Any] | MappingProxyType[str, Any],
+    options: Mapping[str, Any],
 ) -> VolDictType:
     """Return a schema for OpenAI completion options."""
     hass_apis: list[SelectOptionDict] = [

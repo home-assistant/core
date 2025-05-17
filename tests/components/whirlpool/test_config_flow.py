@@ -196,6 +196,7 @@ async def test_no_appliances_flow(
     region: tuple[str, Region],
     brand: tuple[str, Brand],
     mock_appliances_manager_api: MagicMock,
+    mock_whirlpool_setup_entry: MagicMock,
 ) -> None:
     """Test we get an error with no appliances."""
     result = await hass.config_entries.flow.async_init(
@@ -205,6 +206,7 @@ async def test_no_appliances_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
+    original_aircons = mock_appliances_manager_api.return_value.aircons
     mock_appliances_manager_api.return_value.aircons = []
     mock_appliances_manager_api.return_value.washer_dryers = []
     result = await hass.config_entries.flow.async_configure(
@@ -213,6 +215,14 @@ async def test_no_appliances_flow(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "no_appliances"}
+
+    # Test that it succeeds if appliances are found
+    mock_appliances_manager_api.return_value.aircons = original_aircons
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]}
+    )
+
+    assert_successful_user_flow(mock_whirlpool_setup_entry, result, region[0], brand[0])
 
 
 @pytest.mark.usefixtures(

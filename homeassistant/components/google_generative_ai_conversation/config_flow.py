@@ -208,7 +208,7 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
 
 async def google_generative_ai_config_option_schema(
     hass: HomeAssistant,
-    options: dict[str, Any] | MappingProxyType[str, Any],
+    options: Mapping[str, Any],
     genai_client: genai.Client,
 ) -> dict:
     """Return a schema for Google Generative AI completion options."""

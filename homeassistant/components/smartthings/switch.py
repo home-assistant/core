@@ -12,6 +12,7 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -69,6 +70,7 @@ CAPABILITY_TO_COMMAND_SWITCHES: dict[
         translation_key="wrinkle_prevent",
         status_attribute=Attribute.DRYER_WRINKLE_PREVENT,
         command=Command.SET_DRYER_WRINKLE_PREVENT,
+        entity_category=EntityCategory.CONFIG,
     )
 }
 CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescription] = {
@@ -76,6 +78,7 @@ CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescriptio
         key=Capability.SAMSUNG_CE_WASHER_BUBBLE_SOAK,
         translation_key="bubble_soak",
         status_attribute=Attribute.STATUS,
+        entity_category=EntityCategory.CONFIG,
     ),
     Capability.SWITCH: SmartThingsSwitchEntityDescription(
         key=Capability.SWITCH,
@@ -83,6 +86,11 @@ CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescriptio
         component_translation_key={
             "icemaker": "ice_maker",
         },
+    ),
+    Capability.SAMSUNG_CE_SABBATH_MODE: SmartThingsSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_SABBATH_MODE,
+        translation_key="sabbath_mode",
+        status_attribute=Attribute.STATUS,
     ),
 }
 
@@ -144,14 +152,24 @@ async def async_setup_entry(
                 device.device.components[MAIN].manufacturer_category
                 in INVALID_SWITCH_CATEGORIES
             )
-            if media_player or appliance:
-                issue = "media_player" if media_player else "appliance"
+            dhw = Capability.SAMSUNG_CE_EHS_FSV_SETTINGS in device.status[MAIN]
+            if media_player or appliance or dhw:
+                if appliance:
+                    issue = "appliance"
+                    version = "2025.10.0"
+                elif media_player:
+                    issue = "media_player"
+                    version = "2025.10.0"
+                else:
+                    issue = "dhw"
+                    version = "2025.12.0"
                 if deprecate_entity(
                     hass,
                     entity_registry,
                     SWITCH_DOMAIN,
                     f"{device.device.device_id}_{MAIN}_{Capability.SWITCH}_{Attribute.SWITCH}_{Attribute.SWITCH}",
                     f"deprecated_switch_{issue}",
+                    version,
                 ):
                     entities.append(
                         SmartThingsSwitch(

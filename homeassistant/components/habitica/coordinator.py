@@ -52,10 +52,10 @@ type HabiticaConfigEntry = ConfigEntry[HabiticaDataUpdateCoordinator]
 class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
     """Habitica Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: HabiticaConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, habitica: Habitica
+        self, hass: HomeAssistant, config_entry: HabiticaConfigEntry, habitica: Habitica
     ) -> None:
         """Initialize the Habitica data coordinator."""
         super().__init__(

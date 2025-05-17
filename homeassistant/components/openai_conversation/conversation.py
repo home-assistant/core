@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator, Callable
 import json
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import openai
 from openai._streaming import AsyncStream
@@ -19,7 +19,11 @@ from openai.types.responses import (
     ResponseIncompleteEvent,
     ResponseInputParam,
     ResponseOutputItemAddedEvent,
+    ResponseOutputItemDoneEvent,
     ResponseOutputMessage,
+    ResponseOutputMessageParam,
+    ResponseReasoningItem,
+    ResponseReasoningItemParam,
     ResponseStreamEvent,
     ResponseTextDeltaEvent,
     ToolParam,
@@ -127,6 +131,7 @@ def _convert_content_to_param(
 async def _transform_stream(
     chat_log: conversation.ChatLog,
     result: AsyncStream[ResponseStreamEvent],
+    messages: ResponseInputParam,
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     """Transform an OpenAI delta stream into HA format."""
     async for event in result:
@@ -136,7 +141,21 @@ async def _transform_stream(
             if isinstance(event.item, ResponseOutputMessage):
                 yield {"role": event.item.role}
             elif isinstance(event.item, ResponseFunctionToolCall):
+                # OpenAI has tool calls as individual events
+                # while HA puts tool calls inside the assistant message.
+                # We turn them into individual assistant content for HA
+                # to ensure that tools are called as soon as possible.
+                yield {"role": "assistant"}
                 current_tool_call = event.item
+        elif isinstance(event, ResponseOutputItemDoneEvent):
+            item = event.item.model_dump()
+            item.pop("status", None)
+            if isinstance(event.item, ResponseReasoningItem):
+                messages.append(cast(ResponseReasoningItemParam, item))
+            elif isinstance(event.item, ResponseOutputMessage):
+                messages.append(cast(ResponseOutputMessageParam, item))
+            elif isinstance(event.item, ResponseFunctionToolCall):
+                messages.append(cast(ResponseFunctionToolCallParam, item))
         elif isinstance(event, ResponseTextDeltaEvent):
             yield {"content": event.delta}
         elif isinstance(event, ResponseFunctionCallArgumentsDeltaEvent):
@@ -314,7 +333,6 @@ class OpenAIConversationEntity(
                 "top_p": options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
                 "temperature": options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
                 "user": chat_log.conversation_id,
-                "store": False,
                 "stream": True,
             }
             if tools:
@@ -326,6 +344,8 @@ class OpenAIConversationEntity(
                         CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
                     )
                 }
+            else:
+                model_args["store"] = False
 
             try:
                 result = await client.responses.create(**model_args)
@@ -337,9 +357,10 @@ class OpenAIConversationEntity(
                 raise HomeAssistantError("Error talking to OpenAI") from err
 
             async for content in chat_log.async_add_delta_content_stream(
-                user_input.agent_id, _transform_stream(chat_log, result)
+                user_input.agent_id, _transform_stream(chat_log, result, messages)
             ):
-                messages.extend(_convert_content_to_param(content))
+                if not isinstance(content, conversation.AssistantContent):
+                    messages.extend(_convert_content_to_param(content))
 
             if not chat_log.unresponded_tool_results:
                 break

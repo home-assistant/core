@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pysmartthings import Attribute, Capability, Command, SmartThings
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -15,16 +16,22 @@ from . import FullDevice, SmartThingsConfigEntry
 from .const import MAIN
 from .entity import SmartThingsEntity
 
+LAMP_TO_HA = {
+    "extraHigh": "extra_high",
+}
+
 
 @dataclass(frozen=True, kw_only=True)
 class SmartThingsSelectDescription(SelectEntityDescription):
     """Class describing SmartThings select entities."""
 
     key: Capability
-    requires_remote_control_status: bool
+    requires_remote_control_status: bool = False
     options_attribute: Attribute
     status_attribute: Attribute
     command: Command
+    options_map: dict[str, str] | None = None
+    default_options: list[str] | None = None
 
 
 CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
@@ -45,6 +52,7 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         options_attribute=Attribute.SUPPORTED_MACHINE_STATES,
         status_attribute=Attribute.MACHINE_STATE,
         command=Command.SET_MACHINE_STATE,
+        default_options=["run", "pause", "stop"],
     ),
     Capability.WASHER_OPERATING_STATE: SmartThingsSelectDescription(
         key=Capability.WASHER_OPERATING_STATE,
@@ -54,6 +62,32 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         options_attribute=Attribute.SUPPORTED_MACHINE_STATES,
         status_attribute=Attribute.MACHINE_STATE,
         command=Command.SET_MACHINE_STATE,
+        default_options=["run", "pause", "stop"],
+    ),
+    Capability.SAMSUNG_CE_AUTO_DISPENSE_DETERGENT: SmartThingsSelectDescription(
+        key=Capability.SAMSUNG_CE_AUTO_DISPENSE_DETERGENT,
+        translation_key="detergent_amount",
+        options_attribute=Attribute.SUPPORTED_AMOUNT,
+        status_attribute=Attribute.AMOUNT,
+        command=Command.SET_AMOUNT,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    Capability.SAMSUNG_CE_FLEXIBLE_AUTO_DISPENSE_DETERGENT: SmartThingsSelectDescription(
+        key=Capability.SAMSUNG_CE_FLEXIBLE_AUTO_DISPENSE_DETERGENT,
+        translation_key="flexible_detergent_amount",
+        options_attribute=Attribute.SUPPORTED_AMOUNT,
+        status_attribute=Attribute.AMOUNT,
+        command=Command.SET_AMOUNT,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    Capability.SAMSUNG_CE_LAMP: SmartThingsSelectDescription(
+        key=Capability.SAMSUNG_CE_LAMP,
+        translation_key="lamp",
+        options_attribute=Attribute.SUPPORTED_BRIGHTNESS_LEVEL,
+        status_attribute=Attribute.BRIGHTNESS_LEVEL,
+        command=Command.SET_BRIGHTNESS_LEVEL,
+        options_map=LAMP_TO_HA,
+        entity_category=EntityCategory.CONFIG,
     ),
 }
 
@@ -97,16 +131,29 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
     @property
     def options(self) -> list[str]:
         """Return the list of options."""
-        return self.get_attribute_value(
-            self.entity_description.key, self.entity_description.options_attribute
+        options: list[str] = (
+            self.get_attribute_value(
+                self.entity_description.key, self.entity_description.options_attribute
+            )
+            or self.entity_description.default_options
+            or []
         )
+        if self.entity_description.options_map:
+            options = [
+                self.entity_description.options_map.get(option, option)
+                for option in options
+            ]
+        return options
 
     @property
     def current_option(self) -> str | None:
         """Return the current option."""
-        return self.get_attribute_value(
+        option = self.get_attribute_value(
             self.entity_description.key, self.entity_description.status_attribute
         )
+        if self.entity_description.options_map:
+            option = self.entity_description.options_map.get(option)
+        return option
 
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
@@ -119,6 +166,15 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
         ):
             raise ServiceValidationError(
                 "Can only be updated when remote control is enabled"
+            )
+        if self.entity_description.options_map:
+            option = next(
+                (
+                    key
+                    for key, value in self.entity_description.options_map.items()
+                    if value == option
+                ),
+                option,
             )
         await self.execute_device_command(
             self.entity_description.key,
