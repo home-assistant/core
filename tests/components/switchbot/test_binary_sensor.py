@@ -1,4 +1,4 @@
-"""Test the switchbot sensors."""
+"""Test the Switchbot binary sensor entities."""
 
 from unittest.mock import AsyncMock
 
@@ -25,4 +25,4 @@ async def test_entities(
     """Test the Switchbot entities."""
     await setup_integration(hass, mock_config_entry)
 
-    snapshot_switchbot_entities(hass, entity_registry, snapshot, Platform.SENSOR)
+    snapshot_switchbot_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)

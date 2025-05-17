@@ -1,0 +1,65 @@
+# serializer version: 1
+# name: test_entities[WoHumi][humidifier.test_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'available_modes': list([
+        'normal',
+        'auto',
+      ]),
+      'max_humidity': 100,
+      'min_humidity': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'humidifier',
+    'entity_category': None,
+    'entity_id': 'humidifier.test_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'switchbot',
+    'previous_unique_id': None,
+    'supported_features': <HumidifierEntityFeature: 1>,
+    'translation_key': 'humidifier',
+    'unique_id': 'aabbccddeeff',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[WoHumi][humidifier.test_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'available_modes': list([
+        'normal',
+        'auto',
+      ]),
+      'device_class': 'humidifier',
+      'friendly_name': 'test-name',
+      'last_run_success': None,
+      'max_humidity': 100,
+      'min_humidity': 1,
+      'mode': 'auto',
+      'supported_features': <HumidifierEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.test_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

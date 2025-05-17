@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from switchbot.devices.device import SwitchbotOperationError
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
@@ -13,14 +14,35 @@ from homeassistant.const import (
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
-from . import LOCK_SERVICE_INFO, WOLOCKPRO_SERVICE_INFO
+from . import (
+    LOCK_SERVICE_INFO,
+    WOLOCKPRO_SERVICE_INFO,
+    setup_integration,
+    snapshot_switchbot_entities,
+)
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_entities(
+    hass: HomeAssistant,
+    switchbot_device: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the Switchbot entities."""
+    await setup_integration(hass, mock_config_entry)
+
+    snapshot_switchbot_entities(hass, entity_registry, snapshot, Platform.LOCK)
 
 
 @pytest.mark.parametrize(

@@ -2,9 +2,12 @@
 
 from unittest.mock import patch
 
+from syrupy import SnapshotAssertion
+
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
@@ -45,6 +48,30 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     await hass.async_block_till_done()
 
     return entry
+
+
+async def setup_integration(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Set up the Switchbot integration in Home Assistant."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+def snapshot_switchbot_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    platform: Platform,
+) -> None:
+    """Snapshot Switchbot entities."""
+    entities = hass.states.async_all(platform)
+    for entity_state in entities:
+        entity_entry = entity_registry.async_get(entity_state.entity_id)
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert entity_state == snapshot(name=f"{entity_entry.entity_id}-state")
 
 
 WOHAND_SERVICE_INFO = BluetoothServiceInfoBleak(
