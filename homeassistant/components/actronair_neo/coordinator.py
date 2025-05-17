@@ -78,9 +78,7 @@ class ActronNeoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 # Store the actual status object
                 self.status_objects[serial] = status
                 # Also maintain the serialized data for the DataUpdateCoordinator
-                status_data[serial] = (
-                    status.to_dict() if hasattr(status, "to_dict") else vars(status)
-                )
+                status_data[serial] = vars(status)
         except ActronNeoAuthError as err:
             self.last_update_success = False
             self.auth_error_count += 1
