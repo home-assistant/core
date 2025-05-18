@@ -47,7 +47,6 @@ async def test_set_date_time_service(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
     mock_panel.set_panel_date.assert_called_once()
 
 
