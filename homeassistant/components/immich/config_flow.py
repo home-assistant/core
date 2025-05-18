@@ -163,8 +163,7 @@ class ImmichConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
-                    data={**self._current_data, **user_input},
+                    self._get_reauth_entry(), data_updates=user_input
                 )
 
         return self.async_show_form(
