@@ -1,21 +1,27 @@
 """Tests for the AdGuard Home config flow."""
 
-import aiohttp
+from pypaperless.exceptions import (
+    InitializationError,
+    PaperlessConnectionError,
+    PaperlessForbiddenError,
+    PaperlessInactiveOrDeletedError,
+    PaperlessInvalidTokenError,
+)
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.paperless_ngx.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONTENT_TYPE_JSON
+from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import USER_INPUT
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_show_authenticate_form(hass: HomeAssistant) -> None:
+async def test_show_config_form(hass: HomeAssistant) -> None:
     """Test that the setup form is served."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -25,80 +31,42 @@ async def test_show_authenticate_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_connection_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (PaperlessConnectionError(), {CONF_HOST: "cannot_connect"}),
+        (PaperlessInvalidTokenError(), {CONF_API_KEY: "invalid_api_key"}),
+        (PaperlessInactiveOrDeletedError(), {CONF_API_KEY: "user_inactive_or_deleted"}),
+        (PaperlessForbiddenError(), {CONF_API_KEY: "forbidden"}),
+        (InitializationError(), {CONF_HOST: "cannot_connect"}),
+        (Exception("BOOM!"), {"base": "unknown"}),
+    ],
+)
+async def test_config_flow_error_handling(
+    hass: HomeAssistant,
+    mock_client,
+    side_effect,
+    expected_error,
 ) -> None:
-    """Test we show user form on AdGuard Home connection error."""
-
-    aioclient_mock.get(
-        (f"https://{USER_INPUT[CONF_HOST]}/api/schema/"),
-        exc=aiohttp.ClientError,
-    )
+    """Test user step shows correct error for various client initialization issues."""
+    mock_client.initialize.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data=USER_INPUT,
     )
 
-    assert result
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "unknown"}
+    assert result["errors"] == expected_error
 
 
-async def test_invalid_auth_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test we show user form on AdGuard Home connection error."""
-
-    aioclient_mock.get(
-        (f"https://{USER_INPUT[CONF_HOST]}/api/"),
-        exc=aiohttp.ClientResponseError(
-            request_info=None,
-            history=(),
-            status=401,
-        ),
-    )
-    aioclient_mock.get(
-        (f"https://{USER_INPUT[CONF_HOST]}/api/schema/"),
-        exc=aiohttp.ClientResponseError(
-            request_info=None,
-            history=(),
-            status=401,
-        ),
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
-    )
-
-    assert result
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {CONF_ACCESS_TOKEN: "invalid_auth"}
-
-
-async def test_full_flow_implementation(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+async def test_full_config_flow(hass: HomeAssistant) -> None:
     """Test registering an integration and finishing flow works."""
 
-    aioclient_mock.get(
-        (f"https://{USER_INPUT[CONF_HOST]}/api/schema/"),
-    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    aioclient_mock.get(
-        f"https://{USER_INPUT[CONF_HOST]}/api/tags/?page=1&page_size=150",
-        headers={"Content-Type": CONTENT_TYPE_JSON},
-        json={
-            "count": 0,
-            "next": None,
-            "previous": None,
-            "all": [],
-            "results": [],
-        },
     )
 
     assert result
@@ -113,10 +81,11 @@ async def test_full_flow_implementation(
 
     config_entry = result["result"]
     assert config_entry.title == "Paperless-ngx"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.data == USER_INPUT
 
 
-async def test_integration_already_exists(hass: HomeAssistant) -> None:
+async def test_config_already_exists(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
     MockConfigEntry(
         domain=DOMAIN,

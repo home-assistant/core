@@ -56,20 +56,20 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
 
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
-        fetched_data = PaperlessData()
+        data = PaperlessData()
 
         try:
             (
-                fetched_data.remote_version,
-                fetched_data.remote_version_last_checked,
+                data.remote_version,
+                data.remote_version_last_checked,
             ) = await self._get_paperless_remote_version(self.api)
-            fetched_data.status = await self._get_paperless_status(self.api)
-            fetched_data.statistics = await self._get_paperless_statistics(self.api)
+            data.status = await self._get_paperless_status(self.api)
+            data.statistics = await self._get_paperless_statistics(self.api)
 
         except PaperlessInvalidTokenError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
-                translation_key="invalid_auth",
+                translation_key="invalid_api_key",
             ) from err
         except PaperlessInactiveOrDeletedError as err:
             raise ConfigEntryAuthFailed(
@@ -77,7 +77,7 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
                 translation_key="user_inactive_or_deleted",
             ) from err
 
-        return fetched_data
+        return data
 
     async def _get_paperless_remote_version(
         self, api: Paperless

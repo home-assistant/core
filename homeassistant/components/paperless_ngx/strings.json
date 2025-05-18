@@ -4,28 +4,71 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "access_token": "[%key:common::config_flow::data::access_token%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
           "scan_interval": "Scan interval (seconds)"
         },
         "data_description": {
           "host": "Host to connect to Paperless-ngx API",
-          "access_token": "Access token to connect to Paperless-ngx API",
+          "api_key": "API key to connect to Paperless-ngx API",
           "scan_interval": "Interval in seconds to update the data from Paperless-ngx API"
         },
         "title": "Add Paperless-ngx instance"
+      },
+      "reauth_confirm": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "scan_interval": "Scan interval (seconds)"
+        },
+        "data_description": {
+          "host": "Host to connect to Paperless-ngx API",
+          "api_key": "API key to connect to Paperless-ngx API",
+          "scan_interval": "Interval in seconds to update the data from Paperless-ngx API"
+        },
+        "title": "Re-auth Paperless-ngx instance"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "scan_interval": "Scan interval (seconds)"
+        },
+        "data_description": {
+          "host": "Host to connect to Paperless-ngx API",
+          "api_key": "API key to connect to Paperless-ngx API",
+          "scan_interval": "Interval in seconds to update the data from Paperless-ngx API"
+        },
+        "title": "Reconfigure Paperless-ngx instance"
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect. Invalid URL or authentication token.",
-      "invalid_auth": "Authentication failed. Access token is not valid.",
+      "cannot_connect": "[%key:common::config_flow::error::invalid_host%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "user_inactive_or_deleted": "Authentication failed. The user is inactive or has been deleted.",
-      "forbidden": "Access forbidden. Your account does not have permission to access the API.",
+      "forbidden": "Access forbidden. Your token does not have permission to access the API.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::invalid_host%]"
+    },
+    "invalid_api_key": {
+      "message": "[%key:common::config_flow::error::invalid_api_key%]"
+    },
+    "user_inactive_or_deleted": {
+      "message": "Authentication failed. The user is inactive or has been deleted."
+    },
+    "forbidden": {
+      "message": "Access forbidden. Your account does not have permission to access the API."
+    },
+    "unknown": {
+      "message": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "entity": {
@@ -108,23 +151,6 @@
           "unknown": "UNKNOWN"
         }
       }
-    }
-  },
-  "exceptions": {
-    "cannot_connect": {
-      "message": "Failed to connect. Invalid URL or authentication token."
-    },
-    "invalid_auth": {
-      "message": "Authentication failed. Access token is not valid."
-    },
-    "user_inactive_or_deleted": {
-      "message": "Authentication failed. The user is inactive or has been deleted."
-    },
-    "forbidden": {
-      "message": "Access forbidden. Your account does not have permission to access the API."
-    },
-    "unknown": {
-      "message": "[%key:common::config_flow::error::unknown%]"
     }
   }
 }

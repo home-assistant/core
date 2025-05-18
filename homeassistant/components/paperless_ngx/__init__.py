@@ -4,17 +4,22 @@ from __future__ import annotations
 
 from typing import cast
 
-from aiohttp import ClientConnectionError, ClientConnectorError
 from pypaperless import Paperless
 from pypaperless.exceptions import (
     InitializationError,
+    PaperlessConnectionError,
+    PaperlessForbiddenError,
     PaperlessInactiveOrDeletedError,
     PaperlessInvalidTokenError,
 )
 
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
+from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, PLATFORMS
@@ -32,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) ->
         aiohttp_session = async_get_clientsession(hass)
         client = Paperless(
             url=data[CONF_HOST],
-            token=data[CONF_ACCESS_TOKEN],
+            token=data[CONF_API_KEY],
             session=aiohttp_session,
         )
 
@@ -41,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) ->
         coordinator = PaperlessCoordinator(hass, entry, client)
         await coordinator.async_config_entry_first_refresh()
 
-    except (InitializationError, ClientConnectorError, ClientConnectionError) as err:
+    except PaperlessConnectionError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
@@ -49,15 +54,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) ->
     except PaperlessInvalidTokenError as err:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
-            translation_key="invalid_auth",
+            translation_key="invalid_api_key",
         ) from err
     except PaperlessInactiveOrDeletedError as err:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="user_inactive_or_deleted",
         ) from err
+    except PaperlessForbiddenError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="forbidden",
+        ) from err
+    except InitializationError as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from err
     except Exception as err:
-        raise ConfigEntryNotReady(
+        raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="unknown",
         ) from err
