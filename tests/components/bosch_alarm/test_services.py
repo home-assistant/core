@@ -98,6 +98,7 @@ async def test_set_date_time_service_fails_bad_year(
 ) -> None:
     """Test that the service calls fail if the panel fails the service call."""
     await setup_integration(hass, mock_config_entry)
+    # The panels only accept certain ranges of years due to how the years are encoded
     mock_panel.set_panel_date.side_effect = ValueError()
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
