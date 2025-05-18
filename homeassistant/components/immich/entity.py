@@ -21,7 +21,6 @@ class ImmichEntity(CoordinatorEntity[ImmichDataUpdateCoordinator]):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            name=coordinator.config_entry.title,
             manufacturer="Immich",
             sw_version=coordinator.data.server_about.version,
             entry_type=DeviceEntryType.SERVICE,
