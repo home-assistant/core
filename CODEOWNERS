@@ -224,6 +224,8 @@ build.json @home-assistant/supervisor
 /tests/components/bosch_shc/ @tschamm
 /homeassistant/components/braviatv/ @bieniu @Drafteed
 /tests/components/braviatv/ @bieniu @Drafteed
+/homeassistant/components/bresser/ @fkiscd
+/tests/components/bresser/ @fkiscd
 /homeassistant/components/bring/ @miaucl @tr4nt0r
 /tests/components/bring/ @miaucl @tr4nt0r
 /homeassistant/components/broadlink/ @danielhiversen @felipediel @L-I-Am @eifinger

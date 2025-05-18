@@ -803,6 +803,12 @@
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
     },
+    "bresser": {
+      "name": "Bresser",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "bring": {
       "name": "Bring!",
       "integration_type": "service",

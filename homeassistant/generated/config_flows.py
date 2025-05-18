@@ -95,6 +95,7 @@ FLOWS = {
         "bosch_alarm",
         "bosch_shc",
         "braviatv",
+        "bresser",
         "bring",
         "broadlink",
         "brother",
