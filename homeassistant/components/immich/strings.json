@@ -1,6 +1,6 @@
 {
   "common": {
-    "data_desc_url": "The URL of your immich instance. (_e.g. `https://immich.example.com`_)",
+    "data_desc_url": "The full URL of your immich instance.",
     "data_desc_api_key": "API key to connect to your immich instance.",
     "data_desc_ssl_verify": "Whether to verify the SSL certificate when SSL encryption is used to connect to your immich instance."
   },
