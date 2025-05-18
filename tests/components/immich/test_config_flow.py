@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, Mock, patch
 from aiohttp import ClientError
 from aioimmich.exceptions import ImmichUnauthorizedError
 
-from homeassistant import config_entries
 from homeassistant.components.immich.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -35,7 +35,7 @@ async def test_step_user(
 ) -> None:
     """Test a user initiated config flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -109,7 +109,7 @@ async def test_user_already_configured(hass: HomeAssistant) -> None:
     mock_config.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
