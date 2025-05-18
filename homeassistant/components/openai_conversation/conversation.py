@@ -298,9 +298,31 @@ class OpenAIConversationEntity(
             continue_conversation=chat_log.continue_conversation,
         )
 
+    async def _async_handle_llm_task(
+        self,
+        task: conversation.LLMTask,
+        chat_log: conversation.ChatLog,
+    ) -> conversation.LLMTaskResult:
+        """Process an LLM task."""
+        options = self.entry.options
+
+        model = options.get(CONF_CHAT_MODEL)
+
+        # If user is using recommended model, decide based on task type
+        if model is None and task.type == conversation.LLMTaskType.GENERATE:
+            model = "gpt-4o"
+
+        await self._async_handle_chat_log(chat_log, model_overide=model)
+
+        return conversation.LLMTaskResult(
+            result={},  # TODO: Add task result
+            conversation_id=chat_log.conversation_id,
+        )
+
     async def _async_handle_chat_log(
         self,
         chat_log: conversation.ChatLog,
+        model_overide: str | None = None,
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.entry.options
@@ -331,7 +353,11 @@ class OpenAIConversationEntity(
                 tools = []
             tools.append(web_search)
 
-        model = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        if model_overide is not None:
+            model = model_overide
+        else:
+            model = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+
         messages = [
             m
             for content in chat_log.content
