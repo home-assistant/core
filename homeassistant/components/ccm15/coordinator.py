@@ -67,19 +67,29 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             return None
         return self.data.devices[ac_index]
 
-    async def async_set_hvac_mode(self, ac_index, data, hvac_mode: HVACMode) -> None:
+    async def async_set_hvac_mode(
+        self, ac_index: int, data: CCM15SlaveDevice, hvac_mode: HVACMode
+    ) -> None:
         """Set the HVAC mode."""
         _LOGGER.debug("Set Hvac[%s]='%s'", ac_index, str(hvac_mode))
         data.ac_mode = CONST_STATE_CMD_MAP[hvac_mode]
         await self.async_set_state(ac_index, data)
 
-    async def async_set_fan_mode(self, ac_index, data, fan_mode: str) -> None:
+    async def async_set_fan_mode(
+        self, ac_index: int, data: CCM15SlaveDevice, fan_mode: str
+    ) -> None:
         """Set the fan mode."""
         _LOGGER.debug("Set Fan[%s]='%s'", ac_index, fan_mode)
         data.fan_mode = CONST_FAN_CMD_MAP[fan_mode]
         await self.async_set_state(ac_index, data)
 
-    async def async_set_temperature(self, ac_index, data, temp, hvac_mode) -> None:
+    async def async_set_temperature(
+        self,
+        ac_index: int,
+        data: CCM15SlaveDevice,
+        temp: int,
+        hvac_mode: HVACMode | None,
+    ) -> None:
         """Set the target temperature mode."""
         _LOGGER.debug("Set Temp[%s]='%s'", ac_index, temp)
         data.temperature_setpoint = temp
