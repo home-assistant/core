@@ -9,9 +9,9 @@ import voluptuous as vol
 
 from homeassistant.components.bosch_alarm.const import (
     ATTR_CONFIG_ENTRY_ID,
-    DATETIME_ATTR,
+    ATTR_DATETIME,
     DOMAIN,
-    SET_DATE_TIME_SERVICE_NAME,
+    SERVICE_SET_DATE_TIME,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -39,13 +39,15 @@ async def test_set_date_time_service(
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         DOMAIN,
-        SET_DATE_TIME_SERVICE_NAME,
+        SERVICE_SET_DATE_TIME,
         {
             ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            DATETIME_ATTR: dt_util.now(),
+            ATTR_DATETIME: dt_util.now(),
         },
         blocking=True,
     )
+    await hass.async_block_till_done()
+    mock_panel.set_panel_date.assert_called_once()
 
 
 async def test_set_date_time_service_fails_bad_entity(
@@ -56,13 +58,13 @@ async def test_set_date_time_service_fails_bad_entity(
 ) -> None:
     """Test that the service calls fail if the service call is done for an incorrect entity."""
     await setup_integration(hass, mock_config_entry)
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError, match=".."):
         await hass.services.async_call(
             DOMAIN,
-            SET_DATE_TIME_SERVICE_NAME,
+            SERVICE_SET_DATE_TIME,
             {
                 ATTR_CONFIG_ENTRY_ID: "bad-config_id",
-                DATETIME_ATTR: dt_util.now(),
+                ATTR_DATETIME: dt_util.now(),
             },
             blocking=True,
         )
@@ -79,10 +81,10 @@ async def test_set_date_time_service_fails_bad_params(
     with pytest.raises(vol.MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
-            SET_DATE_TIME_SERVICE_NAME,
+            SERVICE_SET_DATE_TIME,
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                DATETIME_ATTR: "",
+                ATTR_DATETIME: "",
             },
             blocking=True,
         )
@@ -100,10 +102,10 @@ async def test_set_date_time_service_fails_bad_year(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
-            SET_DATE_TIME_SERVICE_NAME,
+            SERVICE_SET_DATE_TIME,
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                DATETIME_ATTR: dt_util.now(),
+                ATTR_DATETIME: dt_util.now(),
             },
             blocking=True,
         )
@@ -121,10 +123,10 @@ async def test_set_date_time_service_fails_connection_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SET_DATE_TIME_SERVICE_NAME,
+            SERVICE_SET_DATE_TIME,
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                DATETIME_ATTR: dt_util.now(),
+                ATTR_DATETIME: dt_util.now(),
             },
             blocking=True,
         )
@@ -137,16 +139,14 @@ async def test_set_date_time_service_fails_unloaded(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that the service calls fail if the config entry is unloaded."""
-    await setup_integration(hass, mock_config_entry)
-    async with mock_config_entry.setup_lock:
-        await mock_config_entry.async_unload(hass)
+    mock_config_entry.add_to_hass(hass)
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SET_DATE_TIME_SERVICE_NAME,
+            SERVICE_SET_DATE_TIME,
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                DATETIME_ATTR: dt_util.now(),
+                ATTR_DATETIME: dt_util.now(),
             },
             blocking=True,
         )
