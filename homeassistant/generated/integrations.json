@@ -3187,6 +3187,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "kaiser_nienhaus": {
+      "name": "Kaiser Nienhaus",
+      "integration_type": "virtual",
+      "supported_by": "motion_blinds"
+    },
     "kaiterra": {
       "name": "Kaiterra",
       "integration_type": "hub",
