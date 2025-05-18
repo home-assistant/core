@@ -12,7 +12,6 @@ from typing import Any
 
 class LLMTaskType(StrEnum):
     """LLM task types.
-    
     A task type describes the intent of the request in order to
     match the right model for balance of cost and quality.
     """
