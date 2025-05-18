@@ -114,7 +114,7 @@ class LenedaEnergySensor(CoordinatorEntity, SensorEntity):
         self._attr_native_unit_of_measurement = UNIT_TO_AGGREGATED_UNIT.get(
             obis_info.unit, obis_info.unit
         )
-        self._attr_icon = sensor_config["icon"]
+        self._attr_translation_key = sensor_type
 
         # Set device info
         self._attr_device_info = {
