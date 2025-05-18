@@ -25,7 +25,7 @@ class SwitchBotCloudBinarySensorEntityDescription(BinarySensorEntityDescription)
     """Describes a Switchbot Cloud binary sensor."""
 
     # Value or values to consider binary sensor to be "on"
-    on_value: bool | float | int | str | set[bool | float | int | str] = True
+    on_value: bool | str = True
 
 
 CALIBRATION_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
@@ -94,12 +94,6 @@ class SwitchBotCloudBinarySensor(SwitchBotCloudEntity, BinarySensorEntity):
         """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return None
-
-        if isinstance(self.entity_description.on_value, set):
-            return (
-                self.coordinator.data.get(self.entity_description.key)
-                in self.entity_description.on_value
-            )
 
         return (
             self.coordinator.data.get(self.entity_description.key)
