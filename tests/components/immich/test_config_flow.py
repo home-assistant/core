@@ -83,7 +83,6 @@ async def test_step_user_error_handling(
             result["flow_id"],
             MOCK_USER_DATA,
         )
-        await hass.async_block_till_done()
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "invalid_auth"}
@@ -93,7 +92,6 @@ async def test_step_user_error_handling(
             result["flow_id"],
             MOCK_USER_DATA,
         )
-        await hass.async_block_till_done()
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "cannot_connect"}
@@ -103,7 +101,6 @@ async def test_step_user_error_handling(
             result["flow_id"],
             MOCK_USER_DATA,
         )
-        await hass.async_block_till_done()
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "unknown"}
@@ -113,7 +110,6 @@ async def test_step_user_error_handling(
             result["flow_id"],
             {**MOCK_USER_DATA, CONF_URL: "hts://invalid"},
         )
-        await hass.async_block_till_done()
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"url": "invalid_url"}
@@ -206,7 +202,6 @@ async def test_reauth_flow_error_handling(
                 CONF_API_KEY: "other_fake_api_key",
             },
         )
-        await hass.async_block_till_done()
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
         assert result["errors"] == {"base": "invalid_auth"}
@@ -218,7 +213,6 @@ async def test_reauth_flow_error_handling(
                 CONF_API_KEY: "other_fake_api_key",
             },
         )
-        await hass.async_block_till_done()
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
         assert result["errors"] == {"base": "cannot_connect"}
@@ -230,7 +224,6 @@ async def test_reauth_flow_error_handling(
                 CONF_API_KEY: "other_fake_api_key",
             },
         )
-        await hass.async_block_till_done()
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
         assert result["errors"] == {"base": "unknown"}
@@ -247,3 +240,4 @@ async def test_reauth_flow_error_handling(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config.data[CONF_API_KEY] == "other_fake_api_key"
+    assert len(mock_setup_entry.mock_calls) == 1
