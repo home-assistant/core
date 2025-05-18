@@ -373,7 +373,7 @@
     'supported_features': 0,
     'translation_key': 'photos_count',
     'unique_id': 'abcdef0123456789_photos_count',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'photos',
   })
 # ---
 # name: test_sensors[sensor.mock_title_photos_count-state]
@@ -381,6 +381,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Title Photos count',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'photos',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_photos_count',
@@ -423,7 +424,7 @@
     'supported_features': 0,
     'translation_key': 'videos_count',
     'unique_id': 'abcdef0123456789_videos_count',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'videos',
   })
 # ---
 # name: test_sensors[sensor.mock_title_videos_count-state]
@@ -431,6 +432,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Title Videos count',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'videos',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_videos_count',

@@ -54,10 +54,12 @@
         "name": "Disk usage"
       },
       "photos_count": {
-        "name": "Photos count"
+        "name": "Photos count",
+        "unit_of_measurement": "photos"
       },
       "videos_count": {
-        "name": "Videos count"
+        "name": "Videos count",
+        "unit_of_measurement": "videos"
       },
       "usage_by_photos": {
         "name": "Disk used by photos"
