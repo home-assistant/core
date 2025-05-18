@@ -4,8 +4,8 @@ from unittest.mock import PropertyMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.nobo_hub.const import (
-    CONF_OVERRIDE_TYPE,
     CONF_DISABLE_COMFORT_CONTROL,
+    CONF_OVERRIDE_TYPE,
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant

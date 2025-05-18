@@ -20,8 +20,8 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
     CONF_AUTO_DISCOVERED,
-    CONF_OVERRIDE_TYPE,
     CONF_DISABLE_COMFORT_CONTROL,
+    CONF_OVERRIDE_TYPE,
     CONF_SERIAL,
     DOMAIN,
     OVERRIDE_TYPE_CONSTANT,
