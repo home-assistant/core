@@ -60,6 +60,9 @@ class HistoryStats:
         self._start = start
         self._end = end
 
+        self._pending_events: list[Event[EventStateChangedData]] = []
+        self._query_count = 0
+
     async def async_update(
         self, event: Event[EventStateChangedData] | None
     ) -> HistoryStatsState:
@@ -84,6 +87,9 @@ class HistoryStats:
         previous_period_end_timestamp = floored_timestamp(previous_period_end)
         utc_now = dt_util.utcnow()
         now_timestamp = floored_timestamp(utc_now)
+
+        if event:
+            self._pending_events.append(event)
 
         if current_period_start_timestamp > now_timestamp:
             # History cannot tell the future
@@ -139,15 +145,21 @@ class HistoryStats:
             await self._async_history_from_db(
                 current_period_start_timestamp, now_timestamp
             )
-            if event and (new_state := event.data["new_state"]) is not None:
-                if current_period_start_timestamp <= floored_timestamp(
-                    new_state.last_changed
-                ):
-                    self._history_current_period.append(
-                        HistoryState(new_state.state, new_state.last_changed_timestamp)
-                    )
+            for pending_event in self._pending_events:
+                if (new_state := pending_event.data["new_state"]) is not None:
+                    if current_period_start_timestamp <= floored_timestamp(
+                        new_state.last_changed
+                    ):
+                        self._history_current_period.append(
+                            HistoryState(
+                                new_state.state, new_state.last_changed_timestamp
+                            )
+                        )
 
             self._has_recorder_data = True
+
+        if self._query_count == 0:
+            self._pending_events = []
 
         seconds_matched, match_count = self._async_compute_seconds_and_changes(
             now_timestamp,
@@ -163,12 +175,16 @@ class HistoryStats:
         current_period_end_timestamp: float,
     ) -> None:
         """Update history data for the current period from the database."""
-        instance = get_instance(self.hass)
-        states = await instance.async_add_executor_job(
-            self._state_changes_during_period,
-            current_period_start_timestamp,
-            current_period_end_timestamp,
-        )
+        self._query_count += 1
+        try:
+            instance = get_instance(self.hass)
+            states = await instance.async_add_executor_job(
+                self._state_changes_during_period,
+                current_period_start_timestamp,
+                current_period_end_timestamp,
+            )
+        finally:
+            self._query_count -= 1
         self._history_current_period = [
             HistoryState(state.state, state.last_changed.timestamp())
             for state in states
