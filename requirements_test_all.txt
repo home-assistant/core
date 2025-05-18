@@ -78,7 +78,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.62.0
+PySwitchbot==0.62.2
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -229,7 +229,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==31.0.0
+aioesphomeapi==31.0.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -298,7 +298,7 @@ aionanoleaf==0.2.1
 aionotion==2024.03.0
 
 # homeassistant.components.ntfy
-aiontfy==0.5.1
+aiontfy==0.5.2
 
 # homeassistant.components.nut
 aionut==4.3.4
@@ -650,7 +650,7 @@ dbus-fast==2.43.0
 debugpy==1.8.14
 
 # homeassistant.components.ecovacs
-deebot-client==13.1.0
+deebot-client==13.2.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -896,7 +896,7 @@ google-cloud-texttospeech==2.25.1
 google-genai==1.7.0
 
 # homeassistant.components.google_travel_time
-google-maps-routing==0.6.14
+google-maps-routing==0.6.15
 
 # homeassistant.components.nest
 google-nest-sdm==7.1.4
@@ -988,7 +988,7 @@ hole==0.8.0
 holidays==0.72
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250509.0
+home-assistant-frontend==20250516.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.5.7
@@ -1018,7 +1018,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==9.2.2
+ical==9.2.4
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -1045,7 +1045,7 @@ imgw_pib==1.0.10
 incomfort-client==0.6.8
 
 # homeassistant.components.influxdb
-influxdb-client==1.24.0
+influxdb-client==1.48.0
 
 # homeassistant.components.influxdb
 influxdb==5.3.1
@@ -1197,7 +1197,7 @@ microBeesPy==0.3.5
 mill-local==0.3.0
 
 # homeassistant.components.mill
-millheater==0.12.3
+millheater==0.12.5
 
 # homeassistant.components.minio
 minio==7.1.12
@@ -1215,7 +1215,7 @@ monzopy==1.4.2
 mopeka-iot-ble==0.8.0
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.26
+motionblinds==0.6.27
 
 # homeassistant.components.motionblinds_ble
 motionblindsble==0.1.3
@@ -1269,7 +1269,7 @@ nextcord==2.6.0
 nextdns==4.0.0
 
 # homeassistant.components.niko_home_control
-nhc==0.4.10
+nhc==0.4.12
 
 # homeassistant.components.nibe_heatpump
 nibe==2.17.0
@@ -1393,7 +1393,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.7.3
+plugwise==1.7.4
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1488,7 +1488,7 @@ pyHomee==1.2.8
 pyRFXtrx==0.31.1
 
 # homeassistant.components.tibber
-pyTibber==0.30.8
+pyTibber==0.31.2
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1821,7 +1821,7 @@ pyownet==0.10.0.post1
 pypalazzetti==0.1.19
 
 # homeassistant.components.lcn
-pypck==0.8.5
+pypck==0.8.6
 
 # homeassistant.components.pglab
 pypglab==0.0.5
@@ -1875,7 +1875,7 @@ pysabnzbd==1.1.1
 pyschlage==2025.4.0
 
 # homeassistant.components.sensibo
-pysensibo==1.1.0
+pysensibo==1.2.1
 
 # homeassistant.components.acer_projector
 # homeassistant.components.crownstone
@@ -1899,7 +1899,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==3.2.1
+pysmartthings==3.2.2
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -1935,7 +1935,7 @@ pysqueezebox==0.12.0
 pystiebeleltron==0.1.0
 
 # homeassistant.components.suez_water
-pysuezV2==2.0.4
+pysuezV2==2.0.5
 
 # homeassistant.components.switchbee
 pyswitchbee==1.8.3
@@ -2023,7 +2023,7 @@ python-roborock==2.18.2
 python-smarttub==0.0.39
 
 # homeassistant.components.snoo
-python-snoo==0.6.5
+python-snoo==0.6.6
 
 # homeassistant.components.songpal
 python-songpal==0.16.2
@@ -2552,7 +2552,7 @@ yt-dlp[default]==2025.03.31
 zamg==0.3.6
 
 # homeassistant.components.zimi
-zcc-helper==3.5
+zcc-helper==3.5.2
 
 # homeassistant.components.zeroconf
 zeroconf==0.147.0

@@ -25,6 +25,8 @@ from .errors import HmipcConnectionError
 
 _LOGGER = logging.getLogger(__name__)
 
+type HomematicIPConfigEntry = ConfigEntry[HomematicipHAP]
+
 
 async def build_context_async(
     hass: HomeAssistant, hapid: str | None, authtoken: str | None
@@ -102,7 +104,9 @@ class HomematicipHAP:
 
     home: AsyncHome
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: HomematicIPConfigEntry
+    ) -> None:
         """Initialize HomematicIP Cloud connection."""
         self.hass = hass
         self.config_entry = config_entry

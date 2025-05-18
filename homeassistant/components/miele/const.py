@@ -366,6 +366,51 @@ class ProgramPhaseMicrowaveOvenCombo(MieleEnum):
     missing2none = -9999
 
 
+class ProgramPhaseSteamOven(MieleEnum):
+    """Program phase codes for steam ovens."""
+
+    not_running = 0, 65535
+    steam_reduction = 3863
+    process_running = 7938
+    waiting_for_start = 7939
+    heating_up_phase = 7940
+    process_finished = 7942
+    missing2none = -9999
+
+
+class ProgramPhaseSteamOvenCombi(MieleEnum):
+    """Program phase codes for steam oven combi."""
+
+    not_running = 0, 65535
+    heating_up = 3073
+    process_running = 3074, 7938
+    process_finished = 3078, 7942
+    energy_save = 3084
+
+    steam_reduction = 3863
+    waiting_for_start = 7939
+    heating_up_phase = 7940
+
+    missing2none = -9999
+
+
+class ProgramPhaseSteamOvenMicro(MieleEnum):
+    """Program phase codes for steam oven micro."""
+
+    not_running = 0, 65535
+
+    heating = 3329
+    process_running = 3330, 7938, 7942
+    process_finished = 3334
+    energy_save = 3340
+
+    steam_reduction = 3863
+    waiting_for_start = 7939
+    heating_up_phase = 7940
+
+    missing2none = -9999
+
+
 PROGRAM_PHASE: dict[int, type[MieleEnum]] = {
     MieleAppliance.WASHING_MACHINE: ProgramPhaseWashingMachine,
     MieleAppliance.WASHING_MACHINE_SEMI_PROFESSIONAL: ProgramPhaseWashingMachine,
@@ -379,11 +424,15 @@ PROGRAM_PHASE: dict[int, type[MieleEnum]] = {
     MieleAppliance.DISHWASHER_PROFESSIONAL: ProgramPhaseDishwasher,
     MieleAppliance.OVEN: ProgramPhaseOven,
     MieleAppliance.OVEN_MICROWAVE: ProgramPhaseMicrowaveOvenCombo,
-    MieleAppliance.STEAM_OVEN: ProgramPhaseOven,
+    MieleAppliance.STEAM_OVEN: ProgramPhaseSteamOven,
+    MieleAppliance.STEAM_OVEN_COMBI: ProgramPhaseSteamOvenCombi,
+    MieleAppliance.STEAM_OVEN_MK2: ProgramPhaseSteamOvenCombi,
+    MieleAppliance.STEAM_OVEN_MICRO: ProgramPhaseSteamOvenMicro,
     MieleAppliance.DIALOG_OVEN: ProgramPhaseOven,
     MieleAppliance.MICROWAVE: ProgramPhaseMicrowave,
     MieleAppliance.COFFEE_SYSTEM: ProgramPhaseCoffeeSystem,
     MieleAppliance.ROBOT_VACUUM_CLEANER: ProgramPhaseRobotVacuumCleaner,
+    MieleAppliance.DISH_WARMER: ProgramPhaseWarmingDrawer,
 }
 
 
