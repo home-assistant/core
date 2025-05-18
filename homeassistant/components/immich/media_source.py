@@ -164,10 +164,10 @@ class ImmichMediaSource(MediaSource):
         """Resolve media to a url."""
         identifier = ImmichMediaSourceIdentifier(item.identifier)
         if identifier.file_name is None:
-            raise Unresolvable(f"No file name {identifier}")
+            raise Unresolvable("No file name")
         mime_type, _ = mimetypes.guess_type(identifier.file_name)
         if not isinstance(mime_type, str):
-            raise Unresolvable(f"No file extension {identifier}")
+            raise Unresolvable("No file extension")
         return PlayMedia(
             (
                 f"/immich/{identifier.unique_id}/{identifier.asset_id}/{identifier.file_name}/fullsize"
