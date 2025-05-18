@@ -45,11 +45,10 @@ class ImmichDataUpdateCoordinator(DataUpdateCoordinator[ImmichData]):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, api: Immich) -> None:
         """Initialize the data update coordinator."""
         self.api = api
-        self.config_entry = entry
-
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=60),
         )
