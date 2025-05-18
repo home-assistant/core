@@ -1,104 +1,68 @@
 """Tests for the Nanoleaf light platform."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
+from syrupy import SnapshotAssertion
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_EFFECT,
-    ATTR_HS_COLOR,
-    ATTR_TRANSITION,
+from homeassistant.components.light import ATTR_EFFECT_LIST, DOMAIN as LIGHT_DOMAIN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    Platform,
 )
-from homeassistant.components.nanoleaf.light import NanoleafLight
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from . import setup_integration
+
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.fixture
-def mock_nanoleaf():
-    """Create a mock Nanoleaf object."""
-    nanoleaf = MagicMock()
-    nanoleaf.serial_no = "ABCDEF123456"
-    nanoleaf.color_temperature_max = 4500
-    nanoleaf.color_temperature_min = 1200
-    nanoleaf.is_on = False
-    nanoleaf.brightness = 50
-    nanoleaf.color_temperature = 2700
-    nanoleaf.hue = 120
-    nanoleaf.saturation = 50
-    nanoleaf.color_mode = "hs"
-    nanoleaf.effect = "Rainbow"
-    nanoleaf.effects_list = ["Rainbow", "Sunset", "Nemo"]
-    nanoleaf.turn_on = AsyncMock()
-    nanoleaf.turn_off = AsyncMock()
-    nanoleaf.set_brightness = AsyncMock()
-    nanoleaf.set_effect = AsyncMock()
-    nanoleaf.set_hue = AsyncMock()
-    nanoleaf.set_saturation = AsyncMock()
-    nanoleaf.set_color_temperature = AsyncMock()
-    return nanoleaf
+async def test_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_nanoleaf: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test all entities."""
+    with patch("homeassistant.components.nanoleaf.PLATFORMS", [Platform.LIGHT]):
+        await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.fixture
-def mock_coordinator(mock_nanoleaf):
-    """Create a mock coordinator."""
-    coordinator = MagicMock()
-    coordinator.async_refresh = AsyncMock()
-    coordinator.nanoleaf = mock_nanoleaf
-    return coordinator
+@pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
+async def test_turning_on_or_off_writes_state(
+    hass: HomeAssistant,
+    mock_nanoleaf: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+) -> None:
+    """Test turning on or off the light writes the state."""
+    await setup_integration(hass, mock_config_entry)
 
-
-async def test_async_turn_on_writes_state(mock_coordinator) -> None:
-    """Test that async_turn_on calls coordinator.async_refresh."""
-    entity = NanoleafLight(mock_coordinator)
-    with patch.object(entity.coordinator, "async_refresh") as mock_async_refresh:
-        await entity.async_turn_on()
-        mock_async_refresh.assert_called_once()
-
-
-async def test_async_turn_off_writes_state(mock_coordinator) -> None:
-    """Test that async_turn_off calls coordinator.async_refresh."""
-    entity = NanoleafLight(mock_coordinator)
-
-    with patch.object(entity.coordinator, "async_refresh") as mock_async_refresh:
-        await entity.async_turn_off()
-        mock_async_refresh.assert_called_once()
-
-
-async def test_async_turn_on_with_options_writes_state(mock_coordinator) -> None:
-    """Test that async_turn_on with various options calls coordinator.async_refresh."""
-    entity = NanoleafLight(mock_coordinator)
-
-    test_cases = [
-        {ATTR_BRIGHTNESS: 128},
-        {ATTR_HS_COLOR: (180, 75)},
-        {ATTR_COLOR_TEMP_KELVIN: 3000},
-        {ATTR_EFFECT: "Rainbow"},
-        {ATTR_TRANSITION: 2},
-        {ATTR_BRIGHTNESS: 128, ATTR_TRANSITION: 2},
+    assert hass.states.get("light.nanoleaf").attributes[ATTR_EFFECT_LIST] == [
+        "Rainbow",
+        "Sunset",
+        "Nemo",
     ]
 
-    for options in test_cases:
-        with patch.object(entity.coordinator, "async_refresh") as mock_async_refresh:
-            await entity.async_turn_on(**options)
-            mock_async_refresh.assert_called_once()
+    mock_nanoleaf.effects_list = ["Rainbow", "Sunset", "Nemo", "Something Else"]
 
-
-async def test_async_turn_off_with_transition_writes_state(mock_coordinator) -> None:
-    """Test that async_turn_off with transition calls coordinator.async_refresh."""
-    entity = NanoleafLight(mock_coordinator)
-
-    with patch.object(entity.coordinator, "async_refresh") as mock_async_refresh:
-        await entity.async_turn_off(**{ATTR_TRANSITION: 5})
-        mock_async_refresh.assert_called_once()
-
-
-async def test_effect_validation(mock_coordinator) -> None:
-    """Test that invalid effects raise ValueError."""
-    mock_coordinator.nanoleaf.effects_list = ["Rainbow", "Sunset"]
-    entity = NanoleafLight(mock_coordinator)
-
-    with patch.object(entity.coordinator, "async_refresh") as mock_async_refresh:
-        with pytest.raises(ValueError):
-            await entity.async_turn_on(**{ATTR_EFFECT: "Invalid Effect"})
-        mock_async_refresh.assert_not_called()
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        service,
+        {
+            ATTR_ENTITY_ID: "light.nanoleaf",
+        },
+        blocking=True,
+    )
+    assert hass.states.get("light.nanoleaf").attributes[ATTR_EFFECT_LIST] == [
+        "Rainbow",
+        "Sunset",
+        "Nemo",
+        "Something Else",
+    ]
