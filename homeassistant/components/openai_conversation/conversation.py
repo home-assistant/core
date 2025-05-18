@@ -274,7 +274,7 @@ class OpenAIConversationEntity(
         user_input: conversation.ConversationInput,
         chat_log: conversation.ChatLog,
     ) -> conversation.ConversationResult:
-        """Call the API."""
+        """Process the user input and call the API."""
         options = self.entry.options
 
         try:
@@ -286,6 +286,24 @@ class OpenAIConversationEntity(
             )
         except conversation.ConverseError as err:
             return err.as_conversation_result()
+
+        await self._async_handle_chat_log(chat_log)
+
+        intent_response = intent.IntentResponse(language=user_input.language)
+        assert type(chat_log.content[-1]) is conversation.AssistantContent
+        intent_response.async_set_speech(chat_log.content[-1].content or "")
+        return conversation.ConversationResult(
+            response=intent_response,
+            conversation_id=chat_log.conversation_id,
+            continue_conversation=chat_log.continue_conversation,
+        )
+
+    async def _async_handle_chat_log(
+        self,
+        chat_log: conversation.ChatLog,
+    ) -> None:
+        """Generate an answer for the chat log."""
+        options = self.entry.options
 
         tools: list[ToolParam] | None = None
         if chat_log.llm_api:
@@ -357,22 +375,13 @@ class OpenAIConversationEntity(
                 raise HomeAssistantError("Error talking to OpenAI") from err
 
             async for content in chat_log.async_add_delta_content_stream(
-                user_input.agent_id, _transform_stream(chat_log, result, messages)
+                self.entity_id, _transform_stream(chat_log, result, messages)
             ):
                 if not isinstance(content, conversation.AssistantContent):
                     messages.extend(_convert_content_to_param(content))
 
             if not chat_log.unresponded_tool_results:
                 break
-
-        intent_response = intent.IntentResponse(language=user_input.language)
-        assert type(chat_log.content[-1]) is conversation.AssistantContent
-        intent_response.async_set_speech(chat_log.content[-1].content or "")
-        return conversation.ConversationResult(
-            response=intent_response,
-            conversation_id=chat_log.conversation_id,
-            continue_conversation=chat_log.continue_conversation,
-        )
 
     async def _async_entry_update_listener(
         self, hass: HomeAssistant, entry: ConfigEntry
