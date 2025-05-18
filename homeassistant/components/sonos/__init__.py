@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections import OrderedDict
-from dataclasses import dataclass, field
 import datetime
 from functools import partial
 from ipaddress import AddressValueError, IPv4Address
@@ -25,9 +23,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOSTS, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -44,9 +41,9 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import create_eager_task
 
 from .alarms import SonosAlarms
+from .config_entry import SonosConfigEntry, SonosData, SonosRuntimeData
 from .const import (
     AVAILABILITY_CHECK_INTERVAL,
-    DATA_SONOS,
     DATA_SONOS_DISCOVERY_MANAGER,
     DISCOVERY_INTERVAL,
     DOMAIN,
@@ -95,32 +92,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-@dataclass
-class UnjoinData:
-    """Class to track data necessary for unjoin coalescing."""
-
-    speakers: list[SonosSpeaker]
-    event: asyncio.Event = field(default_factory=asyncio.Event)
-
-
-class SonosData:
-    """Storage class for platform global data."""
-
-    def __init__(self) -> None:
-        """Initialize the data."""
-        # OrderedDict behavior used by SonosAlarms and SonosFavorites
-        self.discovered: OrderedDict[str, SonosSpeaker] = OrderedDict()
-        self.favorites: dict[str, SonosFavorites] = {}
-        self.alarms: dict[str, SonosAlarms] = {}
-        self.topology_condition = asyncio.Condition()
-        self.hosts_heartbeat: CALLBACK_TYPE | None = None
-        self.discovery_known: set[str] = set()
-        self.boot_counts: dict[str, int] = {}
-        self.mdns_names: dict[str, str] = {}
-        self.entity_id_mappings: dict[str, SonosSpeaker] = {}
-        self.unjoin_data: dict[str, UnjoinData] = {}
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Sonos component."""
     conf = config.get(DOMAIN)
@@ -137,17 +108,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SonosConfigEntry) -> bool:
     """Set up Sonos from a config entry."""
     soco_config.EVENTS_MODULE = events_asyncio
     soco_config.REQUEST_TIMEOUT = 9.5
     soco_config.ZGT_EVENT_FALLBACK = False
     zonegroupstate.EVENT_CACHE_TIMEOUT = SUBSCRIPTION_TIMEOUT
 
-    if DATA_SONOS not in hass.data:
-        hass.data[DATA_SONOS] = SonosData()
+    entry.runtime_data = SonosRuntimeData(SonosData())
+    data = entry.runtime_data.sonos_data
 
-    data = hass.data[DATA_SONOS]
     config = hass.data[DOMAIN].get("media_player", {})
     hosts = config.get(CONF_HOSTS, [])
     _LOGGER.debug("Reached async_setup_entry, config=%s", config)
@@ -172,12 +142,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SonosConfigEntry) -> bool:
     """Unload a Sonos config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     await hass.data[DATA_SONOS_DISCOVERY_MANAGER].async_shutdown()
-    hass.data.pop(DATA_SONOS)
-    hass.data.pop(DATA_SONOS_DISCOVERY_MANAGER)
     return unload_ok
 
 
@@ -185,7 +153,11 @@ class SonosDiscoveryManager:
     """Manage sonos discovery."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, data: SonosData, hosts: list[str]
+        self,
+        hass: HomeAssistant,
+        entry: SonosConfigEntry,
+        data: SonosData,
+        hosts: list[str],
     ) -> None:
         """Init discovery manager."""
         self.hass = hass
@@ -380,7 +352,9 @@ class SonosDiscoveryManager:
             if soco.uid not in self.data.boot_counts:
                 self.data.boot_counts[soco.uid] = soco.boot_seqnum
             _LOGGER.debug("Adding new speaker: %s", speaker_info)
-            speaker = SonosSpeaker(self.hass, soco, speaker_info, zone_group_state_sub)
+            speaker = SonosSpeaker(
+                self.hass, self.entry, soco, speaker_info, zone_group_state_sub
+            )
             self.data.discovered[soco.uid] = speaker
             for coordinator, coord_dict in (
                 (SonosAlarms, self.data.alarms),
@@ -388,7 +362,9 @@ class SonosDiscoveryManager:
             ):
                 c_dict: dict[str, Any] = coord_dict
                 if soco.household_id not in c_dict:
-                    new_coordinator = coordinator(self.hass, soco.household_id)
+                    new_coordinator = coordinator(
+                        self.hass, soco.household_id, self.entry
+                    )
                     new_coordinator.setup(soco)
                     c_dict[soco.household_id] = new_coordinator
             speaker.setup(self.entry)
@@ -622,10 +598,10 @@ class SonosDiscoveryManager:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: SonosConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove Sonos config entry from a device."""
-    known_devices = hass.data[DATA_SONOS].discovered.keys()
+    known_devices = config_entry.runtime_data.sonos_data.discovered.keys()
     for identifier in device_entry.identifiers:
         if identifier[0] != DOMAIN:
             continue

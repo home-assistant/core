@@ -134,6 +134,7 @@ def async_setup_sonos(
     """Return a coroutine to set up a Sonos integration instance on demand."""
 
     async def _wrapper():
+        config_entry.runtime_data = Mock()
         config_entry.add_to_hass(hass)
         sonos_alarms = Alarms()
         sonos_alarms.last_alarm_list_version = "RINCON_test:0"
@@ -148,7 +149,9 @@ def async_setup_sonos(
 @pytest.fixture(name="config_entry")
 def config_entry_fixture() -> MockConfigEntry:
     """Create a mock Sonos config entry."""
-    return MockConfigEntry(domain=DOMAIN, title="Sonos")
+    entry = MockConfigEntry(domain=DOMAIN, title="Sonos")
+    entry.runtime_data = Mock()
+    return entry
 
 
 class MockSoCo(MagicMock):

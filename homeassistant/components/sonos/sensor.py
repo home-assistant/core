@@ -5,12 +5,12 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .config_entry import SonosConfigEntry
 from .const import (
     SONOS_CREATE_AUDIO_FORMAT_SENSOR,
     SONOS_CREATE_BATTERY,
@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SonosConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sonos from a config entry."""
@@ -38,13 +38,13 @@ async def async_setup_entry(
         speaker: SonosSpeaker, audio_format: str
     ) -> None:
         _LOGGER.debug("Creating audio input format sensor on %s", speaker.zone_name)
-        entity = SonosAudioInputFormatSensorEntity(speaker, audio_format)
+        entity = SonosAudioInputFormatSensorEntity(speaker, audio_format, config_entry)
         async_add_entities([entity])
 
     @callback
     def _async_create_battery_sensor(speaker: SonosSpeaker) -> None:
         _LOGGER.debug("Creating battery level sensor on %s", speaker.zone_name)
-        entity = SonosBatteryEntity(speaker)
+        entity = SonosBatteryEntity(speaker, config_entry)
         async_add_entities([entity])
 
     @callback
@@ -82,9 +82,9 @@ class SonosBatteryEntity(SonosEntity, SensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_native_unit_of_measurement = PERCENTAGE
 
-    def __init__(self, speaker: SonosSpeaker) -> None:
+    def __init__(self, speaker: SonosSpeaker, config_entry: SonosConfigEntry) -> None:
         """Initialize the battery sensor."""
-        super().__init__(speaker)
+        super().__init__(speaker, config_entry)
         self._attr_unique_id = f"{self.soco.uid}-battery"
 
     async def _async_fallback_poll(self) -> None:
@@ -109,9 +109,11 @@ class SonosAudioInputFormatSensorEntity(SonosPollingEntity, SensorEntity):
     _attr_translation_key = "audio_input_format"
     _attr_should_poll = True
 
-    def __init__(self, speaker: SonosSpeaker, audio_format: str) -> None:
+    def __init__(
+        self, speaker: SonosSpeaker, audio_format: str, config_entry: SonosConfigEntry
+    ) -> None:
         """Initialize the audio input format sensor."""
-        super().__init__(speaker)
+        super().__init__(speaker, config_entry)
         self._attr_unique_id = f"{self.soco.uid}-audio-format"
         self._attr_native_value = audio_format
 

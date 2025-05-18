@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .config_entry import SonosConfigEntry
 from .const import SONOS_CREATE_BATTERY, SONOS_CREATE_MIC_SENSOR
 from .entity import SonosEntity
 from .helpers import soco_error
@@ -35,13 +36,13 @@ async def async_setup_entry(
     @callback
     def _async_create_battery_entity(speaker: SonosSpeaker) -> None:
         _LOGGER.debug("Creating battery binary_sensor on %s", speaker.zone_name)
-        entity = SonosPowerEntity(speaker)
+        entity = SonosPowerEntity(speaker, config_entry)
         async_add_entities([entity])
 
     @callback
     def _async_create_mic_entity(speaker: SonosSpeaker) -> None:
         _LOGGER.debug("Creating microphone binary_sensor on %s", speaker.zone_name)
-        async_add_entities([SonosMicrophoneSensorEntity(speaker)])
+        async_add_entities([SonosMicrophoneSensorEntity(speaker, config_entry)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
@@ -62,9 +63,9 @@ class SonosPowerEntity(SonosEntity, BinarySensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
 
-    def __init__(self, speaker: SonosSpeaker) -> None:
+    def __init__(self, speaker: SonosSpeaker, config_entry: SonosConfigEntry) -> None:
         """Initialize the power entity binary sensor."""
-        super().__init__(speaker)
+        super().__init__(speaker, config_entry)
         self._attr_unique_id = f"{self.soco.uid}-power"
 
     async def _async_fallback_poll(self) -> None:
@@ -95,9 +96,9 @@ class SonosMicrophoneSensorEntity(SonosEntity, BinarySensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_translation_key = "microphone"
 
-    def __init__(self, speaker: SonosSpeaker) -> None:
+    def __init__(self, speaker: SonosSpeaker, config_entry: SonosConfigEntry) -> None:
         """Initialize the microphone binary sensor entity."""
-        super().__init__(speaker)
+        super().__init__(speaker, config_entry)
         self._attr_unique_id = f"{self.soco.uid}-microphone"
 
     async def _async_fallback_poll(self) -> None:

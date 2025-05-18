@@ -6,12 +6,12 @@ import logging
 from typing import cast
 
 from homeassistant.components.number import NumberEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .config_entry import SonosConfigEntry
 from .const import SONOS_CREATE_LEVELS
 from .entity import SonosEntity
 from .helpers import soco_error
@@ -69,7 +69,7 @@ LEVEL_FROM_NUMBER = {"balance": _balance_from_number}
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SonosConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Sonos number platform from a config entry."""
@@ -93,7 +93,9 @@ async def async_setup_entry(
             _LOGGER.debug(
                 "Creating %s number control on %s", level_type, speaker.zone_name
             )
-            entities.append(SonosLevelEntity(speaker, level_type, valid_range))
+            entities.append(
+                SonosLevelEntity(speaker, level_type, valid_range, config_entry)
+            )
         async_add_entities(entities)
 
     config_entry.async_on_unload(
@@ -107,10 +109,14 @@ class SonosLevelEntity(SonosEntity, NumberEntity):
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
-        self, speaker: SonosSpeaker, level_type: str, valid_range: tuple[int, int]
+        self,
+        speaker: SonosSpeaker,
+        level_type: str,
+        valid_range: tuple[int, int],
+        config_entry: SonosConfigEntry,
     ) -> None:
         """Initialize the level entity."""
-        super().__init__(speaker)
+        super().__init__(speaker, config_entry)
         self._attr_unique_id = f"{self.soco.uid}-{level_type}"
         self._attr_translation_key = level_type
         self.level_type = level_type
