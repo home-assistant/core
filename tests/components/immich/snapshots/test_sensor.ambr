@@ -1,0 +1,444 @@
+# serializer version: 1
+# name: test_sensors[sensor.someone_disk_available-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.someone_disk_available',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Disk available',
+    'platform': 'immich',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'disk_available',
+    'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e_disk_available',
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+  })
+# ---
+# name: test_sensors[sensor.someone_disk_available-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'Someone Disk available',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.someone_disk_available',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '136.34839630127',
+  })
+# ---
+# name: test_sensors[sensor.someone_disk_size-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.someone_disk_size',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Disk size',
+    'platform': 'immich',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'disk_size',
+    'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e_disk_size',
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+  })
+# ---
+# name: test_sensors[sensor.someone_disk_size-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'Someone Disk size',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.someone_disk_size',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '294.229309082031',
+  })
+# ---
+# name: test_sensors[sensor.someone_disk_usage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.someone_disk_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Disk usage',
+    'platform': 'immich',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'disk_usage',
+    'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e_disk_usage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.someone_disk_usage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Someone Disk usage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.someone_disk_usage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '48.56',
+  })
+# ---
+# name: test_sensors[sensor.someone_disk_used-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.someone_disk_used',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Disk used',
+    'platform': 'immich',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'disk_use',
+    'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e_disk_use',
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+  })
+# ---
+# name: test_sensors[sensor.someone_disk_used-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'Someone Disk used',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.someone_disk_used',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '142.865287780762',
+  })
+# ---
+# name: test_sensors[sensor.someone_disk_used_by_photos-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.someone_disk_used_by_photos',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Disk used by photos',
+    'platform': 'immich',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'usage_by_photos',
+    'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e_usage_by_photos',
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+  })
+# ---
+# name: test_sensors[sensor.someone_disk_used_by_photos-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'Someone Disk used by photos',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.someone_disk_used_by_photos',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.5625927364454',
+  })
+# ---
+# name: test_sensors[sensor.someone_disk_used_by_videos-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.someone_disk_used_by_videos',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Disk used by videos',
+    'platform': 'immich',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'usage_by_videos',
+    'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e_usage_by_videos',
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+  })
+# ---
+# name: test_sensors[sensor.someone_disk_used_by_videos-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'Someone Disk used by videos',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.someone_disk_used_by_videos',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60.754158870317',
+  })
+# ---
+# name: test_sensors[sensor.someone_photos_count-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.someone_photos_count',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Photos count',
+    'platform': 'immich',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'photos_count',
+    'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e_photos_count',
+    'unit_of_measurement': 'photos',
+  })
+# ---
+# name: test_sensors[sensor.someone_photos_count-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Someone Photos count',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'photos',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.someone_photos_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '27038',
+  })
+# ---
+# name: test_sensors[sensor.someone_videos_count-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.someone_videos_count',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Videos count',
+    'platform': 'immich',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'videos_count',
+    'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e_videos_count',
+    'unit_of_measurement': 'videos',
+  })
+# ---
+# name: test_sensors[sensor.someone_videos_count-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Someone Videos count',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'videos',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.someone_videos_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1836',
+  })
+# ---

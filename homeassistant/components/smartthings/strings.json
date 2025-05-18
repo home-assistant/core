@@ -39,6 +39,9 @@
       "dryer_wrinkle_prevent_active": {
         "name": "Wrinkle prevent active"
       },
+      "keep_fresh_mode_active": {
+        "name": "Keep fresh mode active"
+      },
       "filter_status": {
         "name": "Filter status"
       },
@@ -108,6 +111,15 @@
       },
       "hood_fan_speed": {
         "name": "Fan speed"
+      },
+      "freezer_temperature": {
+        "name": "Freezer temperature"
+      },
+      "cooler_temperature": {
+        "name": "Cooler temperature"
+      },
+      "cool_select_plus_temperature": {
+        "name": "CoolSelect+ temperature"
       }
     },
     "select": {
@@ -543,6 +555,15 @@
       },
       "sabbath_mode": {
         "name": "Sabbath mode"
+      },
+      "auto_cycle_link": {
+        "name": "Auto cycle link"
+      },
+      "sanitize": {
+        "name": "Sanitize"
+      },
+      "keep_fresh_mode": {
+        "name": "Keep fresh mode"
       }
     },
     "water_heater": {
@@ -603,6 +624,14 @@
     "deprecated_media_player_scripts": {
       "title": "Deprecated sensor detected in some automations or scripts",
       "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a media player entity.\n\nThe sensor was used in the following automations or scripts:\n{items}\n\nPlease update the above automations or scripts to use the new media player entity and disable the sensor to fix this issue."
+    },
+    "deprecated_dhw": {
+      "title": "Water heater sensors deprecated",
+      "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a water heater entity.\n\nPlease update your dashboards and templates to use the new water heater entity and disable the sensor to fix this issue."
+    },
+    "deprecated_dhw_scripts": {
+      "title": "[%key:component::smartthings::issues::deprecated_dhw::title%]",
+      "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a water heater entity.\n\nThe sensor was used in the following automations or scripts:\n{items}\n\nPlease update the above automations or scripts to use the new water heater entity and disable the sensor to fix this issue."
     }
   }
 }
