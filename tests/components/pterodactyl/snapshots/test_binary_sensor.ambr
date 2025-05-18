@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_setup_lcn_scene[scene.testmodule_romantic-entry]
+# name: test_binary_sensor[binary_sensor.test_server_1_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10,9 +10,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'scene',
+    'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'scene.testmodule_romantic',
+    'entity_id': 'binary_sensor.test_server_1_status',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -22,31 +22,32 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'Romantic',
-    'platform': 'lcn',
+    'original_name': 'Status',
+    'platform': 'pterodactyl',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk_json-m000007-00',
+    'translation_key': 'status',
+    'unique_id': '1-1-1-1-1_status',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_lcn_scene[scene.testmodule_romantic-state]
+# name: test_binary_sensor[binary_sensor.test_server_1_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TestModule Romantic',
+      'device_class': 'running',
+      'friendly_name': 'Test Server 1 Status',
     }),
     'context': <ANY>,
-    'entity_id': 'scene.testmodule_romantic',
+    'entity_id': 'binary_sensor.test_server_1_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
-# name: test_setup_lcn_scene[scene.testmodule_romantic_transition-entry]
+# name: test_binary_sensor[binary_sensor.test_server_2_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -57,9 +58,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'scene',
+    'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'scene.testmodule_romantic_transition',
+    'entity_id': 'binary_sensor.test_server_2_status',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -69,27 +70,28 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'Romantic Transition',
-    'platform': 'lcn',
+    'original_name': 'Status',
+    'platform': 'pterodactyl',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk_json-m000007-01',
+    'translation_key': 'status',
+    'unique_id': '2-2-2-2-2_status',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_lcn_scene[scene.testmodule_romantic_transition-state]
+# name: test_binary_sensor[binary_sensor.test_server_2_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TestModule Romantic Transition',
+      'device_class': 'running',
+      'friendly_name': 'Test Server 2 Status',
     }),
     'context': <ANY>,
-    'entity_id': 'scene.testmodule_romantic_transition',
+    'entity_id': 'binary_sensor.test_server_2_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
