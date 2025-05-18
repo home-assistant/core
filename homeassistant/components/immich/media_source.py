@@ -136,29 +136,25 @@ class ImmichMediaSource(MediaSource):
         except ImmichError:
             return []
 
-        ret = []
-        for asset in album_info.assets:
-            mime_type, _ = mimetypes.guess_type(asset.file_name)
-            if not isinstance(mime_type, str) or not mime_type.startswith("image/"):
-                continue
-            ret.append(
-                BrowseMediaSource(
-                    domain=DOMAIN,
-                    identifier=(
-                        f"{identifier.unique_id}/"
-                        f"{identifier.album_id}/"
-                        f"{asset.asset_id}/"
-                        f"{asset.file_name}"
-                    ),
-                    media_class=MediaClass.IMAGE,
-                    media_content_type=mime_type,
-                    title=asset.file_name,
-                    can_play=True,
-                    can_expand=False,
-                    thumbnail=f"/immich/{identifier.unique_id}/{asset.asset_id}/{asset.file_name}/thumbnail",
-                )
+        return [
+            BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=(
+                    f"{identifier.unique_id}/"
+                    f"{identifier.album_id}/"
+                    f"{asset.asset_id}/"
+                    f"{asset.file_name}"
+                ),
+                media_class=MediaClass.IMAGE,
+                media_content_type=asset.mime_type,
+                title=asset.file_name,
+                can_play=True,
+                can_expand=False,
+                thumbnail=f"/immich/{identifier.unique_id}/{asset.asset_id}/{asset.file_name}/thumbnail",
             )
-        return ret
+            for asset in album_info.assets
+            if asset.mime_type.startswith("image/")
+        ]
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
