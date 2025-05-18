@@ -31,7 +31,7 @@ class ImmichData:
 
     server_about: ImmichServerAbout
     server_storage: ImmichServerStorage
-    server_usage: ImmichServerStatistics
+    server_usage: ImmichServerStatistics | None
 
 
 type ImmichConfigEntry = ConfigEntry[ImmichDataUpdateCoordinator]
@@ -42,9 +42,12 @@ class ImmichDataUpdateCoordinator(DataUpdateCoordinator[ImmichData]):
 
     config_entry: ImmichConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, api: Immich) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, api: Immich, is_admin: bool
+    ) -> None:
         """Initialize the data update coordinator."""
         self.api = api
+        self.is_admin = is_admin
         super().__init__(
             hass,
             _LOGGER,
@@ -58,7 +61,11 @@ class ImmichDataUpdateCoordinator(DataUpdateCoordinator[ImmichData]):
         try:
             server_about = await self.api.server.async_get_about_info()
             server_storage = await self.api.server.async_get_storage_info()
-            server_usage = await self.api.server.async_get_server_statistics()
+            server_usage = (
+                await self.api.server.async_get_server_statistics()
+                if self.is_admin
+                else None
+            )
         except ImmichUnauthorizedError as err:
             raise ConfigEntryAuthFailed from err
         except CONNECT_ERRORS as err:

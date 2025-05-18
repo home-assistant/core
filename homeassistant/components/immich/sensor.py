@@ -28,6 +28,7 @@ class ImmichSensorEntityDescription(SensorEntityDescription):
     """Immich sensor entity description."""
 
     value: Callable[[ImmichData], StateType]
+    is_suitable: Callable[[ImmichData], bool] = lambda _: True
 
 
 SENSOR_TYPES: tuple[ImmichSensorEntityDescription, ...] = (
@@ -74,13 +75,15 @@ SENSOR_TYPES: tuple[ImmichSensorEntityDescription, ...] = (
         key="photos_count",
         translation_key="photos_count",
         state_class=SensorStateClass.MEASUREMENT,
-        value=lambda data: data.server_usage.photos,
+        value=lambda data: data.server_usage.photos if data.server_usage else None,
+        is_suitable=lambda data: data.server_usage is not None,
     ),
     ImmichSensorEntityDescription(
         key="videos_count",
         translation_key="videos_count",
         state_class=SensorStateClass.MEASUREMENT,
-        value=lambda data: data.server_usage.videos,
+        value=lambda data: data.server_usage.videos if data.server_usage else None,
+        is_suitable=lambda data: data.server_usage is not None,
     ),
     ImmichSensorEntityDescription(
         key="usage_by_photos",
@@ -90,7 +93,8 @@ SENSOR_TYPES: tuple[ImmichSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
-        value=lambda data: data.server_usage.usage_photos,
+        value=lambda d: d.server_usage.usage_photos if d.server_usage else None,
+        is_suitable=lambda data: data.server_usage is not None,
         entity_registry_enabled_default=False,
     ),
     ImmichSensorEntityDescription(
@@ -101,7 +105,8 @@ SENSOR_TYPES: tuple[ImmichSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
-        value=lambda data: data.server_usage.usage_videos,
+        value=lambda d: d.server_usage.usage_videos if d.server_usage else None,
+        is_suitable=lambda data: data.server_usage is not None,
         entity_registry_enabled_default=False,
     ),
 )
@@ -115,7 +120,9 @@ async def async_setup_entry(
     """Add immich server state sensors."""
     coordinator = entry.runtime_data
     async_add_entities(
-        ImmichSensorEntity(coordinator, description) for description in SENSOR_TYPES
+        ImmichSensorEntity(coordinator, description)
+        for description in SENSOR_TYPES
+        if description.is_suitable(coordinator.data)
     )
 
 
