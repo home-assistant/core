@@ -17,6 +17,20 @@
           }),
           'tool_name': 'test_tool',
         }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.openai',
+      'role': 'tool_result',
+      'tool_call_id': 'call_call_1',
+      'tool_name': 'test_tool',
+      'tool_result': 'value1',
+    }),
+    dict({
+      'agent_id': 'conversation.openai',
+      'content': None,
+      'role': 'assistant',
+      'tool_calls': list([
         dict({
           'id': 'call_call_2',
           'tool_args': dict({
@@ -29,16 +43,44 @@
     dict({
       'agent_id': 'conversation.openai',
       'role': 'tool_result',
-      'tool_call_id': 'call_call_1',
+      'tool_call_id': 'call_call_2',
       'tool_name': 'test_tool',
-      'tool_result': 'value1',
+      'tool_result': 'value2',
+    }),
+    dict({
+      'agent_id': 'conversation.openai',
+      'content': 'Cool',
+      'role': 'assistant',
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_function_call_without_reasoning
+  list([
+    dict({
+      'content': 'Please call the test function',
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.openai',
+      'content': None,
+      'role': 'assistant',
+      'tool_calls': list([
+        dict({
+          'id': 'call_call_1',
+          'tool_args': dict({
+            'param1': 'call1',
+          }),
+          'tool_name': 'test_tool',
+        }),
+      ]),
     }),
     dict({
       'agent_id': 'conversation.openai',
       'role': 'tool_result',
-      'tool_call_id': 'call_call_2',
+      'tool_call_id': 'call_call_1',
       'tool_name': 'test_tool',
-      'tool_result': 'value2',
+      'tool_result': 'value1',
     }),
     dict({
       'agent_id': 'conversation.openai',
