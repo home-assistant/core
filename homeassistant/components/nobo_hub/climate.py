@@ -142,13 +142,13 @@ class NoboZone(ClimateEntity):
         """Set new target temperature."""
         if ATTR_TARGET_TEMP_LOW in kwargs:
             low = round(kwargs[ATTR_TARGET_TEMP_LOW])
-            high = round(kwargs[ATTR_TARGET_TEMP_HIGH])
 
             if self._disable_comfort_control:
-                await self._nobo.async_update_zone(self._id, temp_eco_c=low)
+                await self._nobo.async_update_zone(
+                    self._id, temp_eco_c=low
+                )
             else:
-                low = min(low, high)
-                high = max(low, high)
+                high = round(kwargs[ATTR_TARGET_TEMP_HIGH])
                 await self._nobo.async_update_zone(
                     self._id, temp_comfort_c=high, temp_eco_c=low
                 )
@@ -181,6 +181,8 @@ class NoboZone(ClimateEntity):
             None if current_temperature is None else float(current_temperature)
         )
         if self._disable_comfort_control:
+            self._attr_target_temperature_high = None
+            self._attr_target_temperature_low = None
             self._attr_target_temperature = int(
                 self._nobo.zones[self._id][ATTR_TEMP_ECO_C]
             )
@@ -191,6 +193,7 @@ class NoboZone(ClimateEntity):
             self._attr_target_temperature_low = int(
                 self._nobo.zones[self._id][ATTR_TEMP_ECO_C]
             )
+            self._attr_target_temperature = None
 
     @callback
     def _after_update(self, hub):
