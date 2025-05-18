@@ -123,7 +123,7 @@ class IrmKmiOptionFlow(OptionsFlow):
     async def async_step_init(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            _LOGGER.debug(user_input)
+            _LOGGER.debug("Provided config user is: %s", user_input)
             return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
