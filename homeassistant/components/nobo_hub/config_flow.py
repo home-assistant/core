@@ -197,7 +197,9 @@ class OptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             data = {
                 CONF_OVERRIDE_TYPE: user_input.get(CONF_OVERRIDE_TYPE),
-                CONF_DISABLE_COMFORT_CONTROL: user_input.get(CONF_DISABLE_COMFORT_CONTROL),
+                CONF_DISABLE_COMFORT_CONTROL: user_input.get(
+                    CONF_DISABLE_COMFORT_CONTROL
+                ),
             }
             return self.async_create_entry(title="", data=data)
 
@@ -214,7 +216,9 @@ class OptionsFlowHandler(OptionsFlow):
                 vol.Required(CONF_OVERRIDE_TYPE, default=override_type): vol.In(
                     [OVERRIDE_TYPE_CONSTANT, OVERRIDE_TYPE_NOW]
                 ),
-                vol.Optional(CONF_DISABLE_COMFORT_CONTROL, default=disable_comfort_control): bool,
+                vol.Optional(
+                    CONF_DISABLE_COMFORT_CONTROL, default=disable_comfort_control
+                ): bool,
             }
         )
 

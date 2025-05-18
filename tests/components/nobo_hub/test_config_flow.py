@@ -3,7 +3,11 @@
 from unittest.mock import PropertyMock, patch
 
 from homeassistant import config_entries
-from homeassistant.components.nobo_hub.const import CONF_OVERRIDE_TYPE, CONF_DISABLE_COMFORT_CONTROL, DOMAIN
+from homeassistant.components.nobo_hub.const import (
+    CONF_OVERRIDE_TYPE,
+    CONF_DISABLE_COMFORT_CONTROL,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
