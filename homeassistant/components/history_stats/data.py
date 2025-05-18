@@ -222,7 +222,7 @@ class HistoryStats:
             current_state_matches = history_state.state in self._entity_states
             state_change_timestamp = history_state.last_changed
 
-            if state_change_timestamp > end_timestamp:
+            if math.floor(state_change_timestamp) > end_timestamp:
                 break
 
             if math.floor(state_change_timestamp) > now_timestamp:
