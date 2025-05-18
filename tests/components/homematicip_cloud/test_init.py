@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from homematicip.connection.connection_context import ConnectionContext
 from homematicip.exceptions.connection_exceptions import HmipConnectionError
 
+from homeassistant.components.homematicip_cloud import _async_remove_obsolete_entities
 from homeassistant.components.homematicip_cloud.const import (
     CONF_ACCESSPOINT,
     CONF_AUTHTOKEN,
@@ -248,3 +249,63 @@ async def test_setup_two_haps_unload_one_by_one(hass: HomeAssistant) -> None:
 
     # Check services are removed
     assert not hass.services.async_services().get(HMIPC_DOMAIN)
+
+
+async def test_remove_obsolete_entities(hass: HomeAssistant) -> None:
+    """Test removing obsolete entities."""
+    mock_config = {HMIPC_AUTHTOKEN: "123", HMIPC_HAPID: "ABC123", HMIPC_NAME: "name"}
+    entry = MockConfigEntry(domain=HMIPC_DOMAIN, data=mock_config)
+    entry.add_to_hass(hass)
+
+    # Create mock entities for all three removal conditions
+    mock_entries = [
+        Mock(entity_id="sensor.ap", unique_id="HomematicipAccesspointStatus123"),
+        Mock(entity_id="sensor.light", unique_id="HomematicipLightMeasuring456"),
+        Mock(entity_id="sensor.battery", unique_id="HomematicipBatterySensor_ABC123"),
+        Mock(entity_id="sensor.keep", unique_id="ShouldRemain123"),
+    ]
+
+    with patch("homeassistant.components.homematicip_cloud.HomematicipHAP") as mock_hap:
+        instance = mock_hap.return_value
+        instance.async_setup = AsyncMock(return_value=True)
+        instance.home.id = "1"
+        instance.home.modelType = "mock-type"
+        instance.home.name = "mock-name"
+        instance.home.label = "mock-label"
+        # Use a proper version string for comparison
+        instance.home.currentAPVersion = "2.2.12"
+        # Add access point states needed for battery sensor check
+        instance.home.accessPointUpdateStates = ["ABC123"]
+        instance.async_reset = AsyncMock(return_value=True)
+
+        assert await async_setup_component(hass, HMIPC_DOMAIN, {})
+
+    config_entries = hass.config_entries.async_entries(HMIPC_DOMAIN)
+    assert len(config_entries) == 1
+    hap = config_entries[0].runtime_data
+
+    # Create a mock registry
+    mock_registry = Mock()
+
+    # Here's where we patch async_get to return our mock registry
+    with patch(
+        "homeassistant.helpers.entity_registry.async_get",
+        return_value=mock_registry,
+    ):
+        # Configure mock_registry to return our mock entries
+        mock_registry.entities.get_entries_for_config_entry_id.return_value = (
+            mock_entries
+        )
+
+        # Run the function being tested
+        _async_remove_obsolete_entities(hass, config_entries[0], hap)
+
+        # Assert that methods were called as expected
+        assert mock_registry.async_remove.call_count == 3
+        mock_registry.async_remove.assert_any_call("sensor.ap")
+        mock_registry.async_remove.assert_any_call("sensor.light")
+        mock_registry.async_remove.assert_any_call("sensor.battery")
+
+        # Make sure we didn't remove the other entity
+        for call in mock_registry.async_remove.call_args_list:
+            assert "sensor.keep" not in call[0]

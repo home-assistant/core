@@ -231,3 +231,23 @@ async def test_auth_create_exception(hass: HomeAssistant, simple_mock_auth) -> N
         ),
     ):
         assert not await hmip_auth.get_auth(hass, HAPID, HAPPIN)
+
+
+async def test_get_state_after_disconnect(
+    hass: HomeAssistant, hmip_config_entry: MockConfigEntry, simple_mock_home
+) -> None:
+    """Test get state after disconnect."""
+    hass.config.components.add(HMIPC_DOMAIN)
+    hap = HomematicipHAP(hass, hmip_config_entry)
+    assert hap
+
+    with patch.object(hap, "get_state") as mock_get_state:
+        assert not hap._ws_connection_closed.is_set()
+
+        await hap.ws_connected_handler()
+        mock_get_state.assert_not_called()
+
+        await hap.ws_disconnected_handler()
+        assert hap._ws_connection_closed.is_set()
+        await hap.ws_connected_handler()
+        mock_get_state.assert_called_once()
