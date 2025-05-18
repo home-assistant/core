@@ -11,6 +11,7 @@ from aioimmich.const import CONNECT_ERRORS
 from aioimmich.exceptions import ImmichUnauthorizedError
 from aioimmich.server.models import ImmichServerAbout
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -18,34 +19,58 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     CONF_SSL,
+    CONF_URL,
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
-from .const import DEFAULT_PORT, DEFAULT_USE_SSL, DEFAULT_VERIFY_SSL, DOMAIN
+from .const import DEFAULT_VERIFY_SSL, DOMAIN
+
+
+class InvalidUrl(HomeAssistantError):
+    """Error to indicate invalid URL."""
+
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_API_KEY): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Required(CONF_SSL, default=DEFAULT_USE_SSL): bool,
+        vol.Required(CONF_URL): TextSelector(
+            config=TextSelectorConfig(type=TextSelectorType.URL)
+        ),
+        vol.Required(CONF_API_KEY): TextSelector(
+            config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
         vol.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
     }
 )
 
 
+def _parse_url(url: str) -> tuple[str, int, bool]:
+    """Parse the URL and return host, port, and ssl."""
+    parsed_url = URL(url)
+    if (
+        (host := parsed_url.host) is None
+        or (port := parsed_url.port) is None
+        or (scheme := parsed_url.scheme) is None
+    ):
+        raise InvalidUrl
+    return host, port, scheme == "https"
+
+
 async def check_server_info(
-    hass: HomeAssistant, data: dict[str, Any]
+    hass: HomeAssistant, host: str, port: int, ssl: bool, verify_ssl: bool, api_key: str
 ) -> ImmichServerAbout:
     """Try to read server info."""
-    session = async_get_clientsession(hass, data[CONF_VERIFY_SSL])
-    immich = Immich(
-        session, data[CONF_API_KEY], data[CONF_HOST], data[CONF_PORT], data[CONF_SSL]
-    )
+    session = async_get_clientsession(hass, verify_ssl)
+    immich = Immich(session, api_key, host, port, ssl)
     return await immich.server.async_get_about_info()
 
 
@@ -63,20 +88,42 @@ class ImmichConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             try:
-                await check_server_info(self.hass, user_input)
-            except ImmichUnauthorizedError:
-                errors["base"] = "invalid_auth"
-            except CONNECT_ERRORS:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                (host, port, ssl) = _parse_url(user_input[CONF_URL])
+            except InvalidUrl:
+                errors[CONF_URL] = "invalid_url"
             else:
-                return self.async_create_entry(
-                    title=user_input[CONF_HOST], data=user_input
+                self._async_abort_entries_match(
+                    {CONF_HOST: host, CONF_PORT: port, CONF_SSL: ssl}
                 )
+                try:
+                    await check_server_info(
+                        self.hass,
+                        host,
+                        port,
+                        ssl,
+                        user_input[CONF_VERIFY_SSL],
+                        user_input[CONF_API_KEY],
+                    )
+                except ImmichUnauthorizedError:
+                    errors["base"] = "invalid_auth"
+                except CONNECT_ERRORS:
+                    errors["base"] = "cannot_connect"
+                except Exception:
+                    _LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
+                else:
+                    (host, port, ssl) = _parse_url(user_input[CONF_URL])
+                    return self.async_create_entry(
+                        title=user_input[CONF_URL],
+                        data={
+                            CONF_HOST: host,
+                            CONF_PORT: port,
+                            CONF_SSL: ssl,
+                            CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                            CONF_API_KEY: user_input[CONF_API_KEY],
+                        },
+                    )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -99,7 +146,14 @@ class ImmichConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                await check_server_info(self.hass, {**self._current_data, **user_input})
+                await check_server_info(
+                    self.hass,
+                    self._current_data[CONF_HOST],
+                    self._current_data[CONF_PORT],
+                    self._current_data[CONF_SSL],
+                    self._current_data[CONF_VERIFY_SSL],
+                    user_input[CONF_API_KEY],
+                )
             except ImmichUnauthorizedError:
                 errors["base"] = "invalid_auth"
             except CONNECT_ERRORS:

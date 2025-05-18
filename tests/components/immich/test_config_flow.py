@@ -7,11 +7,11 @@ from aioimmich.exceptions import ImmichUnauthorizedError
 
 from homeassistant import config_entries
 from homeassistant.components.immich.const import DOMAIN
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import MOCK_USER_DATA
+from .const import MOCK_CONFIG_ENTRY_DATA, MOCK_USER_DATA
 
 from tests.common import MockConfigEntry
 
@@ -80,6 +80,16 @@ async def test_step_user(
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "unknown"}
 
+        # Test invalid url
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {**MOCK_USER_DATA, CONF_URL: "hts://invalid"},
+        )
+        await hass.async_block_till_done()
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"url": "invalid_url"}
+
         # Test successful connection
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -88,14 +98,14 @@ async def test_step_user(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "localhost"
-    assert result["data"] == MOCK_USER_DATA
+    assert result["title"] == "http://localhost"
+    assert result["data"] == MOCK_CONFIG_ENTRY_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_user_already_configured(hass: HomeAssistant) -> None:
     """Test starting a flow by user when already configured."""
-    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_ENTRY_DATA)
     mock_config.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -116,7 +126,7 @@ async def test_reauth_flow(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_immich: Mock
 ) -> None:
     """Test reauthentication flow."""
-    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_ENTRY_DATA)
     mock_config.add_to_hass(hass)
     result = await mock_config.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM

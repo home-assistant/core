@@ -5,10 +5,17 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     CONF_SSL,
+    CONF_URL,
     CONF_VERIFY_SSL,
 )
 
 MOCK_USER_DATA = {
+    CONF_URL: "http://localhost",
+    CONF_API_KEY: "abcdef0123456789",
+    CONF_VERIFY_SSL: False,
+}
+
+MOCK_CONFIG_ENTRY_DATA = {
     CONF_HOST: "localhost",
     CONF_API_KEY: "abcdef0123456789",
     CONF_PORT: 80,

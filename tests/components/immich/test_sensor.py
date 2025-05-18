@@ -10,7 +10,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .const import MOCK_USER_DATA
+from .const import MOCK_CONFIG_ENTRY_DATA
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -25,7 +25,7 @@ async def test_sensors(
     """Test the Immich sensor platform."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=MOCK_USER_DATA,
+        data=MOCK_CONFIG_ENTRY_DATA,
         entry_id="abcdef0123456789",
     )
     entry.add_to_hass(hass)
