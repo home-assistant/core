@@ -9,7 +9,7 @@ from typing import Any
 from aioimmich import Immich
 from aioimmich.const import CONNECT_ERRORS
 from aioimmich.exceptions import ImmichUnauthorizedError
-from aioimmich.server.models import ImmichServerAbout
+from aioimmich.users.models import ImmichUser
 import voluptuous as vol
 from yarl import URL
 
@@ -65,13 +65,13 @@ def _parse_url(url: str) -> tuple[str, int, bool]:
     return host, port, scheme == "https"
 
 
-async def check_server_info(
+async def check_user_info(
     hass: HomeAssistant, host: str, port: int, ssl: bool, verify_ssl: bool, api_key: str
-) -> ImmichServerAbout:
-    """Try to read server info."""
+) -> ImmichUser:
+    """Test connection and fetch own user info."""
     session = async_get_clientsession(hass, verify_ssl)
     immich = Immich(session, api_key, host, port, ssl)
-    return await immich.server.async_get_about_info()
+    return await immich.users.async_get_my_user()
 
 
 class ImmichConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -93,9 +93,8 @@ class ImmichConfigFlow(ConfigFlow, domain=DOMAIN):
             except InvalidUrl:
                 errors[CONF_URL] = "invalid_url"
             else:
-                self._async_abort_entries_match({CONF_HOST: host})
                 try:
-                    await check_server_info(
+                    my_user_info = await check_user_info(
                         self.hass,
                         host,
                         port,
@@ -111,8 +110,10 @@ class ImmichConfigFlow(ConfigFlow, domain=DOMAIN):
                     _LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
                 else:
+                    await self.async_set_unique_id(my_user_info.user_id)
+                    self._abort_if_unique_id_configured()
                     return self.async_create_entry(
-                        title=user_input[CONF_URL],
+                        title=f"{my_user_info.name} @ {host}",
                         data={
                             CONF_HOST: host,
                             CONF_PORT: port,
@@ -143,7 +144,7 @@ class ImmichConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                await check_server_info(
+                my_user_info = await check_user_info(
                     self.hass,
                     self._current_data[CONF_HOST],
                     self._current_data[CONF_PORT],
@@ -159,6 +160,8 @@ class ImmichConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                await self.async_set_unique_id(my_user_info.user_id)
+                self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     self._get_reauth_entry(), data_updates=user_input
                 )

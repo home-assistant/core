@@ -36,7 +36,8 @@
     },
     "abort": {
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "unique_id_mismatch": "The provided API key does not match the configured user.",
+      "already_configured": "This user is already configured for this immich instance."
     }
   },
   "entity": {

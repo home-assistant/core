@@ -1,6 +1,7 @@
 """Common fixtures for the Immich tests."""
 
 from collections.abc import Generator
+from datetime import datetime
 from unittest.mock import AsyncMock, Mock, patch
 
 from aioimmich.server.models import (
@@ -8,6 +9,7 @@ from aioimmich.server.models import (
     ImmichServerStatistics,
     ImmichServerStorage,
 )
+from aioimmich.users.models import AvatarColor, ImmichUser, UserStatus
 import pytest
 
 
@@ -55,6 +57,24 @@ def mock_immich_data():
         "server_usage": ImmichServerStatistics(
             27038, 1836, 119525451912, 54291170551, 65234281361
         ),
+        "user_info": ImmichUser(
+            "user_id",
+            "user@immich.local",
+            "user",
+            "",
+            AvatarColor.PRIMARY,
+            datetime.fromisoformat("2025-05-11T10:07:46.866Z"),
+            "user",
+            False,
+            False,
+            datetime.fromisoformat("2025-05-11T10:07:46.866Z"),
+            None,
+            None,
+            "",
+            None,
+            None,
+            UserStatus.ACTIVE,
+        ),
     }
 
 
@@ -72,5 +92,8 @@ def mock_immich(mock_immich_data) -> Mock:
             async_get_server_statistics=AsyncMock(
                 return_value=mock_immich_data["server_usage"]
             ),
-        )
+        ),
+        users=Mock(
+            async_get_my_user=AsyncMock(return_value=mock_immich_data["user_info"]),
+        ),
     )
