@@ -55,5 +55,12 @@
     "reservations_remaining": 2,
     "attachment_total_size": 0,
     "attachment_total_size_remaining": 104857600
+  },
+  "billing": {
+    "customer": true,
+    "subscription": true,
+    "status": "active",
+    "interval": "year",
+    "paid_until": 1754080667
   }
 }

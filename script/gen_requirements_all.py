@@ -172,10 +172,6 @@ pubnub!=6.4.0
 # https://github.com/dahlia/iso4217/issues/16
 iso4217!=1.10.20220401
 
-# pyOpenSSL 24.0.0 or later required to avoid import errors when
-# cryptography 42.0.0 is installed with botocore
-pyOpenSSL>=24.0.0
-
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
 protobuf==6.30.2
@@ -246,6 +242,11 @@ aiofiles>=24.1.0
 # https://github.com/aio-libs/multidict/issues/1134
 # https://github.com/aio-libs/multidict/issues/1131
 multidict>=6.4.2
+
+# rpds-py > 0.25.0 requires cargo 1.84.0
+# Stable Alpine current only ships cargo 1.83.0
+# No wheels upstream available for armhf & armv7
+rpds-py==0.24.0
 """
 
 GENERATED_MESSAGE = (
