@@ -93,9 +93,7 @@ class ImmichConfigFlow(ConfigFlow, domain=DOMAIN):
             except InvalidUrl:
                 errors[CONF_URL] = "invalid_url"
             else:
-                self._async_abort_entries_match(
-                    {CONF_HOST: host, CONF_PORT: port, CONF_SSL: ssl}
-                )
+                self._async_abort_entries_match({CONF_HOST: host})
                 try:
                     await check_server_info(
                         self.hass,
