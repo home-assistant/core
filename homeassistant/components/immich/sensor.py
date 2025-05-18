@@ -25,7 +25,7 @@ PARALLEL_UPDATES = 0
 
 @dataclass(frozen=True, kw_only=True)
 class ImmichSensorEntityDescription(SensorEntityDescription):
-    """IMGW-PIB sensor entity description."""
+    """Immich sensor entity description."""
 
     value: Callable[[ImmichData], StateType]
 
@@ -120,7 +120,7 @@ async def async_setup_entry(
 
 
 class ImmichSensorEntity(ImmichEntity, SensorEntity):
-    """Define IMGW-PIB sensor entity."""
+    """Define Immich sensor entity."""
 
     entity_description: ImmichSensorEntityDescription
 
