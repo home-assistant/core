@@ -17,8 +17,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
-from .const import DEFAULT_SCAN_INTERVAL, BridgeType
+from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN, BridgeType
 from .coordinator import AiriosDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,6 +66,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: AiriosConfigEntry) -> bo
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
     entry.runtime_data = coordinator
+
+    # Always register a device for the bridge. It is necessary to set the
+    # via_device attribute for the bound nodes.
+    result = await api.bridge.node_product_name()
+    if result is None or result.value is None:
+        raise ConfigEntryNotReady("Node product name not available")
+    product_name = result.value
+
+    result = await api.bridge.node_product_id()
+    if result is None or result.value is None:
+        raise ConfigEntryNotReady("Node product ID not available")
+    product_id = result.value
+
+    result = await api.bridge.node_software_version()
+    if result is None or result.value is None:
+        raise ConfigEntryNotReady("Node software version not available")
+    sw_version = result.value
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, str(bridge_rf_address))},
+        manufacturer=DEFAULT_NAME,
+        name=product_name,
+        model=product_name,
+        model_id=f"0x{product_id:08X}",
+        sw_version=f"0x{sw_version:04X}",
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
