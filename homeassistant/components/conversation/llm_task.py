@@ -1,4 +1,9 @@
-"""LLM tasks to be handled by conversation agents."""
+"""LLM tasks to be handled by conversation agents.
+
+LLM tasks provide a way to use conversation agents for general purpose tasks
+outside of an assistant pipeline (e.g. use for summarization in the frontend). This
+exposes a conversation agent LLM for general use, without user prompts or customizations.
+"""
 
 from dataclasses import dataclass
 from enum import StrEnum
