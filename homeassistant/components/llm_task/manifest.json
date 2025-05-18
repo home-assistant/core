@@ -1,0 +1,9 @@
+{
+  "domain": "llm_task",
+  "name": "LLM Task",
+  "codeowners": ["@home-assistant/core"],
+  "dependencies": ["conversation"],
+  "documentation": "https://www.home-assistant.io/integrations/llm_task",
+  "integration_type": "system",
+  "quality_scale": "internal"
+}
