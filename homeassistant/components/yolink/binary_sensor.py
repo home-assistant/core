@@ -26,7 +26,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import (
+    DEV_MODEL_WATER_METER_YS5018_EC,
+    DEV_MODEL_WATER_METER_YS5018_UC,
+    DOMAIN,
+)
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -104,6 +108,17 @@ SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
             ]
         ),
     ),
+    YoLinkBinarySensorEntityDescription(
+        key="water_running",
+        translation_key="water_running",
+        value=lambda state: state.get("waterFlowing") if state is not None else None,
+        should_update_entity=lambda value: value is not None,
+        exists_fn=lambda device: (
+            device.device_type == ATTR_DEVICE_WATER_METER_CONTROLLER
+            and device.device_model_name
+            in [DEV_MODEL_WATER_METER_YS5018_EC, DEV_MODEL_WATER_METER_YS5018_UC]
+        ),
+    ),
 )
 
 
@@ -151,12 +166,12 @@ class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
     def update_entity_state(self, state: dict[str, Any]) -> None:
         """Update HA Entity State."""
         if (
-            attr_val := self.entity_description.value(
+            _attr_val := self.entity_description.value(
                 state.get(self.entity_description.state_key)
             )
-        ) is None and self.entity_description.should_update_entity(attr_val) is False:
+        ) is None or self.entity_description.should_update_entity(_attr_val) is False:
             return
-        self._attr_is_on = attr_val
+        self._attr_is_on = _attr_val
         self.async_write_ha_state()
 
     @property

@@ -34,6 +34,7 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .common import (
     MOCK_BINARY_SENSOR_SUBENTRY_DATA_SINGLE,
+    MOCK_BUTTON_SUBENTRY_DATA_SINGLE,
     MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE,
     MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
     MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME,
@@ -2678,6 +2679,26 @@ async def test_migrate_of_incompatible_config_entry(
             "Milk notifier Hatch",
         ),
         (
+            MOCK_BUTTON_SUBENTRY_DATA_SINGLE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 2}},
+            {"name": "Restart"},
+            {"device_class": "restart"},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "payload_press": "PRESS",
+                "retain": False,
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+            ),
+            "Milk notifier Restart",
+        ),
+        (
             MOCK_NOTIFY_SUBENTRY_DATA_SINGLE,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 1}},
             {"name": "Milkman alert"},
@@ -2840,11 +2861,19 @@ async def test_migrate_of_incompatible_config_entry(
                 (
                     {
                         "command_topic": "test-topic",
+                        "light_brightness_settings": {
+                            "brightness_command_topic": "test-topic#invalid"
+                        },
+                    },
+                    {"light_brightness_settings": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
                         "advanced_settings": {"max_kelvin": 2000, "min_kelvin": 2000},
                     },
                     {
-                        "max_kelvin": "max_below_min_kelvin",
-                        "min_kelvin": "max_below_min_kelvin",
+                        "advanced_settings": "max_below_min_kelvin",
                     },
                 ),
             ),
@@ -2853,6 +2882,7 @@ async def test_migrate_of_incompatible_config_entry(
     ],
     ids=[
         "binary_sensor",
+        "button",
         "notify_with_entity_name",
         "notify_no_entity_name",
         "sensor_options",

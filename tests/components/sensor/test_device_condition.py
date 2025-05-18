@@ -119,7 +119,7 @@ async def test_get_conditions(
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
     )
-    assert len(conditions) == 27
+    assert len(conditions) == 28
     assert conditions == unordered(expected_conditions)
 
 

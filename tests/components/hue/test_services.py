@@ -9,6 +9,7 @@ from homeassistant.components.hue.const import (
     CONF_ALLOW_UNREACHABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.util.json import JsonArrayType
 
 from .conftest import setup_bridge, setup_component
 
@@ -190,6 +191,7 @@ async def test_hue_multi_bridge_activate_scene_all_respond(
     mock_bridge_v2: Mock,
     mock_config_entry_v1: MockConfigEntry,
     mock_config_entry_v2: MockConfigEntry,
+    v2_resources_test_data: JsonArrayType,
 ) -> None:
     """Test that makes multiple bridges successfully activate a scene."""
     await setup_component(hass)
@@ -197,6 +199,8 @@ async def test_hue_multi_bridge_activate_scene_all_respond(
     mock_api_v1 = mock_bridge_v1.api
     mock_api_v1.mock_group_responses.append(GROUP_RESPONSE)
     mock_api_v1.mock_scene_responses.append(SCENE_RESPONSE)
+
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
     await setup_bridge(hass, mock_bridge_v1, mock_config_entry_v1)
     await setup_bridge(hass, mock_bridge_v2, mock_config_entry_v2)
@@ -224,6 +228,7 @@ async def test_hue_multi_bridge_activate_scene_one_responds(
     mock_bridge_v2: Mock,
     mock_config_entry_v1: MockConfigEntry,
     mock_config_entry_v2: MockConfigEntry,
+    v2_resources_test_data: JsonArrayType,
 ) -> None:
     """Test that makes only one bridge successfully activate a scene."""
     await setup_component(hass)
@@ -231,6 +236,8 @@ async def test_hue_multi_bridge_activate_scene_one_responds(
     mock_api_v1 = mock_bridge_v1.api
     mock_api_v1.mock_group_responses.append(GROUP_RESPONSE)
     mock_api_v1.mock_scene_responses.append(SCENE_RESPONSE)
+
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
     await setup_bridge(hass, mock_bridge_v1, mock_config_entry_v1)
     await setup_bridge(hass, mock_bridge_v2, mock_config_entry_v2)
@@ -257,12 +264,15 @@ async def test_hue_multi_bridge_activate_scene_zero_responds(
     mock_bridge_v2: Mock,
     mock_config_entry_v1: MockConfigEntry,
     mock_config_entry_v2: MockConfigEntry,
+    v2_resources_test_data: JsonArrayType,
 ) -> None:
     """Test that makes no bridge successfully activate a scene."""
     await setup_component(hass)
     mock_api_v1 = mock_bridge_v1.api
     mock_api_v1.mock_group_responses.append(GROUP_RESPONSE)
     mock_api_v1.mock_scene_responses.append(SCENE_RESPONSE)
+
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
     await setup_bridge(hass, mock_bridge_v1, mock_config_entry_v1)
     await setup_bridge(hass, mock_bridge_v2, mock_config_entry_v2)

@@ -16,10 +16,10 @@ from .conftest import MockConfigEntry, init_integration
 
 from tests.common import snapshot_platform
 
-SENSOR_VAR1 = "sensor.sensor_var1"
-SENSOR_SETPOINT1 = "sensor.sensor_setpoint1"
-SENSOR_LED6 = "sensor.sensor_led6"
-SENSOR_LOGICOP1 = "sensor.sensor_logicop1"
+SENSOR_VAR1 = "sensor.testmodule_sensor_var1"
+SENSOR_SETPOINT1 = "sensor.testmodule_sensor_setpoint1"
+SENSOR_LED6 = "sensor.testmodule_sensor_led6"
+SENSOR_LOGICOP1 = "sensor.testmodule_sensor_logicop1"
 
 
 async def test_setup_lcn_sensor(

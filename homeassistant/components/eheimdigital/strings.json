@@ -62,6 +62,19 @@
       },
       "night_temperature_offset": {
         "name": "Night temperature offset"
+      },
+      "system_led": {
+        "name": "System LED brightness"
+      }
+    },
+    "select": {
+      "filter_mode": {
+        "name": "Filter mode",
+        "state": {
+          "manual": "Manual",
+          "pulse": "Pulse",
+          "bio": "Bio"
+        }
       }
     },
     "sensor": {

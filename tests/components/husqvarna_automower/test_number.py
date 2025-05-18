@@ -96,7 +96,7 @@ async def test_number_workarea_commands(
             service_data={"value": "75"},
             blocking=True,
         )
-    assert len(mocked_method.mock_calls) == 2
+    assert mock_automower_client.commands.workarea_settings.call_count == 2
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

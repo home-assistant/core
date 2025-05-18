@@ -80,6 +80,18 @@ MOCK_SUBENTRY_BINARY_SENSOR_COMPONENT = {
         "entity_picture": "https://example.com/5b06357ef8654e8d9c54cee5bb0e939b",
     },
 }
+MOCK_SUBENTRY_BUTTON_COMPONENT = {
+    "365d05e6607c4dfb8ae915cff71a954b": {
+        "platform": "button",
+        "name": "Restart",
+        "device_class": "restart",
+        "command_topic": "test-topic",
+        "payload_press": "PRESS",
+        "command_template": "{{ value }}",
+        "retain": False,
+        "entity_picture": "https://example.com/365d05e6607c4dfb8ae915cff71a954b",
+    },
+}
 MOCK_SUBENTRY_NOTIFY_COMPONENT1 = {
     "363a7ecad6be4a19b939a016ea93e994": {
         "platform": "notify",
@@ -167,6 +179,10 @@ MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT = {
         "state_topic": "test-topic",
         "color_temp_kelvin": True,
         "state_value_template": "{{ value_json.value }}",
+        "brightness_scale": 255,
+        "max_kelvin": 6535,
+        "min_kelvin": 2000,
+        "white_scale": 255,
         "entity_picture": "https://example.com/8131babc5e8d4f44b82e0761d39091a2",
     },
 }
@@ -204,6 +220,10 @@ MOCK_NOTIFY_SUBENTRY_DATA_MULTI = {
 MOCK_BINARY_SENSOR_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 2}},
     "components": MOCK_SUBENTRY_BINARY_SENSOR_COMPONENT,
+}
+MOCK_BUTTON_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 2}},
+    "components": MOCK_SUBENTRY_BUTTON_COMPONENT,
 }
 MOCK_NOTIFY_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},
@@ -1855,7 +1875,6 @@ async def help_test_entity_icon_and_entity_picture(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     domain: str,
     config: ConfigType,
-    default_entity_picture: str | None = None,
 ) -> None:
     """Test entity picture and icon."""
     await mqtt_mock_entry()
@@ -1875,7 +1894,7 @@ async def help_test_entity_icon_and_entity_picture(
     state = hass.states.get(entity_id)
     assert entity_id is not None and state
     assert state.attributes.get("icon") is None
-    assert state.attributes.get("entity_picture") == default_entity_picture
+    assert state.attributes.get("entity_picture") is None
 
     # Discover an entity with an entity picture set
     unique_id = "veryunique2"
@@ -1902,7 +1921,7 @@ async def help_test_entity_icon_and_entity_picture(
     state = hass.states.get(entity_id)
     assert entity_id is not None and state
     assert state.attributes.get("icon") == "mdi:emoji-happy-outline"
-    assert state.attributes.get("entity_picture") == default_entity_picture
+    assert state.attributes.get("entity_picture") is None
 
 
 async def help_test_publishing_with_custom_encoding(
