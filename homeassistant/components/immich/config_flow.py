@@ -113,7 +113,6 @@ class ImmichConfigFlow(ConfigFlow, domain=DOMAIN):
                     _LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
                 else:
-                    (host, port, ssl) = _parse_url(user_input[CONF_URL])
                     return self.async_create_entry(
                         title=user_input[CONF_URL],
                         data={
