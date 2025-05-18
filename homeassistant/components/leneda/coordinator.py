@@ -191,9 +191,9 @@ class LenedaCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             "Accumulation",
         )
         _LOGGER.debug(
-            "Successfully fetched hourly data for %s: %s",
+            "Successfully fetched hourly data for %s, %d values found",
             statistic_id,
-            result.to_dict(),
+            len(result.aggregated_time_series),
         )
 
         if not hasattr(result, "aggregated_time_series"):
