@@ -47,6 +47,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_VERIFY_SSL: True,
         },
         unique_id="e7ef5713-9dab-4bd4-b899-715b0ca4379e",
+        title="Someone",
     )
 
 

@@ -33,7 +33,7 @@ async def test_step_user(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "user @ localhost"
+    assert result["title"] == "user"
     assert result["data"] == MOCK_CONFIG_ENTRY_DATA
     assert result["result"].unique_id == "e7ef5713-9dab-4bd4-b899-715b0ca4379e"
     assert len(mock_setup_entry.mock_calls) == 1

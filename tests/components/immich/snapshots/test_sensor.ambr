@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[sensor.mock_title_disk_available-entry]
+# name: test_sensors[sensor.someone_disk_available-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -14,7 +14,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_title_disk_available',
+    'entity_id': 'sensor.someone_disk_available',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -41,23 +41,23 @@
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
-# name: test_sensors[sensor.mock_title_disk_available-state]
+# name: test_sensors[sensor.someone_disk_available-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
-      'friendly_name': 'Mock Title Disk available',
+      'friendly_name': 'Someone Disk available',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_disk_available',
+    'entity_id': 'sensor.someone_disk_available',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '136.34839630127',
   })
 # ---
-# name: test_sensors[sensor.mock_title_disk_size-entry]
+# name: test_sensors[sensor.someone_disk_size-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -72,7 +72,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_title_disk_size',
+    'entity_id': 'sensor.someone_disk_size',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -99,23 +99,23 @@
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
-# name: test_sensors[sensor.mock_title_disk_size-state]
+# name: test_sensors[sensor.someone_disk_size-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
-      'friendly_name': 'Mock Title Disk size',
+      'friendly_name': 'Someone Disk size',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_disk_size',
+    'entity_id': 'sensor.someone_disk_size',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '294.229309082031',
   })
 # ---
-# name: test_sensors[sensor.mock_title_disk_usage-entry]
+# name: test_sensors[sensor.someone_disk_usage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -130,7 +130,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_title_disk_usage',
+    'entity_id': 'sensor.someone_disk_usage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -151,22 +151,22 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.mock_title_disk_usage-state]
+# name: test_sensors[sensor.someone_disk_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Disk usage',
+      'friendly_name': 'Someone Disk usage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_disk_usage',
+    'entity_id': 'sensor.someone_disk_usage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '48.56',
   })
 # ---
-# name: test_sensors[sensor.mock_title_disk_used-entry]
+# name: test_sensors[sensor.someone_disk_used-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -181,7 +181,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_title_disk_used',
+    'entity_id': 'sensor.someone_disk_used',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -208,23 +208,23 @@
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
-# name: test_sensors[sensor.mock_title_disk_used-state]
+# name: test_sensors[sensor.someone_disk_used-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
-      'friendly_name': 'Mock Title Disk used',
+      'friendly_name': 'Someone Disk used',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_disk_used',
+    'entity_id': 'sensor.someone_disk_used',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '142.865287780762',
   })
 # ---
-# name: test_sensors[sensor.mock_title_disk_used_by_photos-entry]
+# name: test_sensors[sensor.someone_disk_used_by_photos-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -239,7 +239,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_title_disk_used_by_photos',
+    'entity_id': 'sensor.someone_disk_used_by_photos',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -266,23 +266,23 @@
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
-# name: test_sensors[sensor.mock_title_disk_used_by_photos-state]
+# name: test_sensors[sensor.someone_disk_used_by_photos-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
-      'friendly_name': 'Mock Title Disk used by photos',
+      'friendly_name': 'Someone Disk used by photos',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_disk_used_by_photos',
+    'entity_id': 'sensor.someone_disk_used_by_photos',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50.5625927364454',
   })
 # ---
-# name: test_sensors[sensor.mock_title_disk_used_by_videos-entry]
+# name: test_sensors[sensor.someone_disk_used_by_videos-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -297,7 +297,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_title_disk_used_by_videos',
+    'entity_id': 'sensor.someone_disk_used_by_videos',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -324,23 +324,23 @@
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
-# name: test_sensors[sensor.mock_title_disk_used_by_videos-state]
+# name: test_sensors[sensor.someone_disk_used_by_videos-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
-      'friendly_name': 'Mock Title Disk used by videos',
+      'friendly_name': 'Someone Disk used by videos',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_disk_used_by_videos',
+    'entity_id': 'sensor.someone_disk_used_by_videos',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '60.754158870317',
   })
 # ---
-# name: test_sensors[sensor.mock_title_photos_count-entry]
+# name: test_sensors[sensor.someone_photos_count-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -355,7 +355,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_title_photos_count',
+    'entity_id': 'sensor.someone_photos_count',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -376,22 +376,22 @@
     'unit_of_measurement': 'photos',
   })
 # ---
-# name: test_sensors[sensor.mock_title_photos_count-state]
+# name: test_sensors[sensor.someone_photos_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Photos count',
+      'friendly_name': 'Someone Photos count',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'photos',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_photos_count',
+    'entity_id': 'sensor.someone_photos_count',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '27038',
   })
 # ---
-# name: test_sensors[sensor.mock_title_videos_count-entry]
+# name: test_sensors[sensor.someone_videos_count-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -406,7 +406,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_title_videos_count',
+    'entity_id': 'sensor.someone_videos_count',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -427,15 +427,15 @@
     'unit_of_measurement': 'videos',
   })
 # ---
-# name: test_sensors[sensor.mock_title_videos_count-state]
+# name: test_sensors[sensor.someone_videos_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Videos count',
+      'friendly_name': 'Someone Videos count',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'videos',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_videos_count',
+    'entity_id': 'sensor.someone_videos_count',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

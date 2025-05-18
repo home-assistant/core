@@ -113,7 +113,7 @@ class ImmichConfigFlow(ConfigFlow, domain=DOMAIN):
                     await self.async_set_unique_id(my_user_info.user_id)
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(
-                        title=f"{my_user_info.name} @ {host}",
+                        title=my_user_info.name,
                         data={
                             CONF_HOST: host,
                             CONF_PORT: port,
