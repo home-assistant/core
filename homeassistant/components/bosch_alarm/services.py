@@ -43,7 +43,7 @@ def setup_services(hass: HomeAssistant) -> None:
                 translation_key="integration_not_found",
                 translation_placeholders={"target": DOMAIN},
             )
-        if config_entry.state != ConfigEntryState.LOADED:
+        if config_entry.state is not ConfigEntryState.LOADED:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="not_loaded",
