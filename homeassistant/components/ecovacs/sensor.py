@@ -6,7 +6,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Generic
 
-from deebot_client.capabilities import CapabilityEvent, CapabilityLifeSpan
+from deebot_client.capabilities import CapabilityEvent, CapabilityLifeSpan, DeviceType
+from deebot_client.device import Device
 from deebot_client.events import (
     BatteryEvent,
     ErrorEvent,
@@ -16,6 +17,7 @@ from deebot_client.events import (
     NetworkInfoEvent,
     StatsEvent,
     TotalStatsEvent,
+    station,
 )
 from sucks import VacBot
 
@@ -26,15 +28,15 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    AREA_SQUARE_METERS,
     ATTR_BATTERY_LEVEL,
     CONF_DESCRIPTION,
     PERCENTAGE,
     EntityCategory,
+    UnitOfArea,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import EcovacsConfigEntry
@@ -46,7 +48,7 @@ from .entity import (
     EcovacsLegacyEntity,
     EventT,
 )
-from .util import get_supported_entitites
+from .util import get_name_key, get_options, get_supported_entitites
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -58,6 +60,15 @@ class EcovacsSensorEntityDescription(
     """Ecovacs sensor entity description."""
 
     value_fn: Callable[[EventT], StateType]
+    native_unit_of_measurement_fn: Callable[[DeviceType], str | None] | None = None
+
+
+@callback
+def get_area_native_unit_of_measurement(device_type: DeviceType) -> str | None:
+    """Get the area native unit of measurement based on device type."""
+    if device_type is DeviceType.MOWER:
+        return UnitOfArea.SQUARE_CENTIMETERS
+    return UnitOfArea.SQUARE_METERS
 
 
 ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
@@ -67,7 +78,9 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         capability_fn=lambda caps: caps.stats.clean,
         value_fn=lambda e: e.area,
         translation_key="stats_area",
-        native_unit_of_measurement=AREA_SQUARE_METERS,
+        device_class=SensorDeviceClass.AREA,
+        native_unit_of_measurement_fn=get_area_native_unit_of_measurement,
+        suggested_unit_of_measurement=UnitOfArea.SQUARE_METERS,
     ),
     EcovacsSensorEntityDescription[StatsEvent](
         key="stats_time",
@@ -84,8 +97,10 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         value_fn=lambda e: e.area,
         key="total_stats_area",
         translation_key="total_stats_area",
-        native_unit_of_measurement=AREA_SQUARE_METERS,
+        device_class=SensorDeviceClass.AREA,
+        native_unit_of_measurement_fn=get_area_native_unit_of_measurement,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_unit_of_measurement=UnitOfArea.SQUARE_METERS,
     ),
     EcovacsSensorEntityDescription[TotalStatsEvent](
         capability_fn=lambda caps: caps.stats.total,
@@ -136,6 +151,15 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    # Station
+    EcovacsSensorEntityDescription[station.StationEvent](
+        capability_fn=lambda caps: caps.station.state if caps.station else None,
+        value_fn=lambda e: get_name_key(e.state),
+        key="station_state",
+        translation_key="station_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=get_options(station.State),
+    ),
 )
 
 
@@ -182,7 +206,7 @@ LEGACY_LIFESPAN_SENSORS = tuple(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EcovacsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add entities for passed config_entry in HA."""
     controller = config_entry.runtime_data
@@ -238,6 +262,27 @@ class EcovacsSensor(
     """Ecovacs sensor."""
 
     entity_description: EcovacsSensorEntityDescription
+
+    def __init__(
+        self,
+        device: Device,
+        capability: CapabilityEvent,
+        entity_description: EcovacsSensorEntityDescription,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize entity."""
+        super().__init__(device, capability, entity_description, **kwargs)
+        if (
+            entity_description.native_unit_of_measurement_fn
+            and (
+                native_unit_of_measurement
+                := entity_description.native_unit_of_measurement_fn(
+                    device.capabilities.device_type
+                )
+            )
+            is not None
+        ):
+            self._attr_native_unit_of_measurement = native_unit_of_measurement
 
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""

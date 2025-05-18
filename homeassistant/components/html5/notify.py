@@ -154,6 +154,7 @@ HTML5_SHOWNOTIFICATION_PARAMETERS = (
     "tag",
     "timestamp",
     "vibrate",
+    "silent",
 )
 
 

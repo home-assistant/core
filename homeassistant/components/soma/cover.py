@@ -14,7 +14,7 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import API, DEVICES, DOMAIN
 from .entity import SomaEntity
@@ -24,7 +24,7 @@ from .utils import is_api_response_success
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Soma cover platform."""
 
@@ -76,7 +76,7 @@ class SomaTilt(SomaEntity, CoverEntity):
         response = self.api.set_shade_position(self.device["mac"], 100)
         if not is_api_response_success(response):
             raise HomeAssistantError(
-                f'Error while closing the cover ({self.name}): {response["msg"]}'
+                f"Error while closing the cover ({self.name}): {response['msg']}"
             )
         self.set_position(0)
 
@@ -85,7 +85,7 @@ class SomaTilt(SomaEntity, CoverEntity):
         response = self.api.set_shade_position(self.device["mac"], -100)
         if not is_api_response_success(response):
             raise HomeAssistantError(
-                f'Error while opening the cover ({self.name}): {response["msg"]}'
+                f"Error while opening the cover ({self.name}): {response['msg']}"
             )
         self.set_position(100)
 
@@ -94,7 +94,7 @@ class SomaTilt(SomaEntity, CoverEntity):
         response = self.api.stop_shade(self.device["mac"])
         if not is_api_response_success(response):
             raise HomeAssistantError(
-                f'Error while stopping the cover ({self.name}): {response["msg"]}'
+                f"Error while stopping the cover ({self.name}): {response['msg']}"
             )
         # Set cover position to some value where up/down are both enabled
         self.set_position(50)
@@ -109,7 +109,7 @@ class SomaTilt(SomaEntity, CoverEntity):
         if not is_api_response_success(response):
             raise HomeAssistantError(
                 f"Error while setting the cover position ({self.name}):"
-                f' {response["msg"]}'
+                f" {response['msg']}"
             )
         self.set_position(kwargs[ATTR_TILT_POSITION])
 
@@ -152,7 +152,7 @@ class SomaShade(SomaEntity, CoverEntity):
         response = self.api.set_shade_position(self.device["mac"], 100)
         if not is_api_response_success(response):
             raise HomeAssistantError(
-                f'Error while closing the cover ({self.name}): {response["msg"]}'
+                f"Error while closing the cover ({self.name}): {response['msg']}"
             )
 
     def open_cover(self, **kwargs: Any) -> None:
@@ -160,7 +160,7 @@ class SomaShade(SomaEntity, CoverEntity):
         response = self.api.set_shade_position(self.device["mac"], 0)
         if not is_api_response_success(response):
             raise HomeAssistantError(
-                f'Error while opening the cover ({self.name}): {response["msg"]}'
+                f"Error while opening the cover ({self.name}): {response['msg']}"
             )
 
     def stop_cover(self, **kwargs: Any) -> None:
@@ -168,7 +168,7 @@ class SomaShade(SomaEntity, CoverEntity):
         response = self.api.stop_shade(self.device["mac"])
         if not is_api_response_success(response):
             raise HomeAssistantError(
-                f'Error while stopping the cover ({self.name}): {response["msg"]}'
+                f"Error while stopping the cover ({self.name}): {response['msg']}"
             )
         # Set cover position to some value where up/down are both enabled
         self.set_position(50)
@@ -182,7 +182,7 @@ class SomaShade(SomaEntity, CoverEntity):
         if not is_api_response_success(response):
             raise HomeAssistantError(
                 f"Error while setting the cover position ({self.name}):"
-                f' {response["msg"]}'
+                f" {response['msg']}"
             )
 
     async def async_update(self) -> None:

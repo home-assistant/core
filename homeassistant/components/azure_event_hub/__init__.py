@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import datetime
 import json
 import logging
-from types import MappingProxyType
 from typing import Any
 
 from azure.eventhub import EventData, EventDataBatch
@@ -19,7 +18,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA, EntityFilter
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.json import JSONEncoder
@@ -179,7 +178,7 @@ class AzureEventHub:
         await self.async_send(None)
         await self._queue.join()
 
-    def update_options(self, new_options: MappingProxyType[str, Any]) -> None:
+    def update_options(self, new_options: Mapping[str, Any]) -> None:
         """Update options."""
         self._send_interval = new_options[CONF_SEND_INTERVAL]
 

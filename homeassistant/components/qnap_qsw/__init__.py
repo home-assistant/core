@@ -35,10 +35,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     qsw = QnapQswApi(aiohttp_client.async_get_clientsession(hass), options)
 
-    coord_data = QswDataCoordinator(hass, qsw)
+    coord_data = QswDataCoordinator(hass, entry, qsw)
     await coord_data.async_config_entry_first_refresh()
 
-    coord_fw = QswFirmwareCoordinator(hass, qsw)
+    coord_fw = QswFirmwareCoordinator(hass, entry, qsw)
     try:
         await coord_fw.async_config_entry_first_refresh()
     except ConfigEntryNotReady as error:

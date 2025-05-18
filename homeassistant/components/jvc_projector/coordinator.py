@@ -13,6 +13,7 @@ from jvcprojector import (
     const,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import format_mac
@@ -25,15 +26,22 @@ _LOGGER = logging.getLogger(__name__)
 INTERVAL_SLOW = timedelta(seconds=10)
 INTERVAL_FAST = timedelta(seconds=5)
 
+type JVCConfigEntry = ConfigEntry[JvcProjectorDataUpdateCoordinator]
+
 
 class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
     """Data update coordinator for the JVC Projector integration."""
 
-    def __init__(self, hass: HomeAssistant, device: JvcProjector) -> None:
+    config_entry: JVCConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: JVCConfigEntry, device: JvcProjector
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass=hass,
             logger=_LOGGER,
+            config_entry=config_entry,
             name=NAME,
             update_interval=INTERVAL_SLOW,
         )

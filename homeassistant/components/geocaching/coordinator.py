@@ -14,16 +14,23 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, ENVIRONMENT, LOGGER, UPDATE_INTERVAL
 
+type GeocachingConfigEntry = ConfigEntry[GeocachingDataUpdateCoordinator]
+
 
 class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
     """Class to manage fetching Geocaching data from single endpoint."""
 
+    config_entry: GeocachingConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, *, entry: ConfigEntry, session: OAuth2Session
+        self,
+        hass: HomeAssistant,
+        *,
+        entry: GeocachingConfigEntry,
+        session: OAuth2Session,
     ) -> None:
         """Initialize global Geocaching data updater."""
         self.session = session
-        self.entry = entry
 
         async def async_token_refresh() -> str:
             await session.async_ensure_token_valid()
@@ -39,7 +46,13 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
             token_refresh_method=async_token_refresh,
         )
 
-        super().__init__(hass, LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=entry,
+            name=DOMAIN,
+            update_interval=UPDATE_INTERVAL,
+        )
 
     async def _async_update_data(self) -> GeocachingStatus:
         try:

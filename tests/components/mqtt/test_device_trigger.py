@@ -2,6 +2,7 @@
 
 import json
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 from pytest_unordered import unordered
@@ -15,7 +16,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.setup import async_setup_component
 
-from .test_common import help_test_unload_config_entry
+from .common import help_test_unload_config_entry
 
 from tests.common import async_fire_mqtt_message, async_get_device_automations
 from tests.typing import MqttMockHAClientGenerator, WebSocketGenerator
@@ -26,26 +27,46 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     """Stub copying the blueprints to the config folder."""
 
 
+@pytest.mark.parametrize(
+    ("discovery_topic", "data"),
+    [
+        (
+            "homeassistant/device_automation/0AFFD2/bla/config",
+            '{ "automation_type":"trigger",'
+            '  "device":{"identifiers":["0AFFD2"]},'
+            '  "payload": "short_press",'
+            '  "topic": "foobar/triggers/button1",'
+            '  "type": "button_short_press",'
+            '  "subtype": "button_1" }',
+        ),
+        (
+            "homeassistant/device/0AFFD2/config",
+            '{ "device":{"identifiers":["0AFFD2"]},'
+            '  "o": {"name": "foobar"}, "cmps": '
+            '{ "bla": {'
+            '  "automation_type":"trigger", '
+            '  "payload": "short_press",'
+            '  "topic": "foobar/triggers/button1",'
+            '  "type": "button_short_press",'
+            '  "subtype": "button_1",'
+            '  "platform":"device_automation"}}}',
+        ),
+    ],
+)
 async def test_get_triggers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    discovery_topic: str,
+    data: str,
 ) -> None:
     """Test we get the expected triggers from a discovered mqtt device."""
     await mqtt_mock_entry()
-    data1 = (
-        '{ "automation_type":"trigger",'
-        '  "device":{"identifiers":["0AFFD2"]},'
-        '  "payload": "short_press",'
-        '  "topic": "foobar/triggers/button1",'
-        '  "type": "button_short_press",'
-        '  "subtype": "button_1" }'
-    )
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data1)
+    async_fire_mqtt_message(hass, discovery_topic, data)
     await hass.async_block_till_done()
 
     device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
-    expected_triggers = [
+    expected_triggers: list[dict[str, Any]] = [
         {
             "platform": "device",
             "domain": DOMAIN,
@@ -165,7 +186,7 @@ async def test_discover_bad_triggers(
     await hass.async_block_till_done()
 
     device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
-    expected_triggers = [
+    expected_triggers: list[dict[str, Any]] = [
         {
             "platform": "device",
             "domain": DOMAIN,
@@ -226,7 +247,7 @@ async def test_update_remove_triggers(
 
     device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry.name == "milk"
-    expected_triggers1 = [
+    expected_triggers1: list[dict[str, Any]] = [
         {
             "platform": "device",
             "domain": DOMAIN,
@@ -1263,7 +1284,7 @@ async def test_entity_device_info_update(
     """Test device registry update."""
     await mqtt_mock_entry()
 
-    config = {
+    config: dict[str, Any] = {
         "automation_type": "trigger",
         "topic": "test-topic",
         "type": "foo",
@@ -1672,14 +1693,19 @@ async def test_trigger_debug_info(
     assert debug_info_data["triggers"][0]["discovery_data"]["payload"] == config2
 
 
-@pytest.mark.usefixtures("mqtt_mock")
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.0)
 async def test_unload_entry(
     hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test unloading the MQTT entry."""
 
+    await mqtt_mock_entry()
     data1 = (
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
@@ -1713,6 +1739,7 @@ async def test_unload_entry(
             ]
         },
     )
+    await hass.async_block_till_done()
 
     # Fake short press 1
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")

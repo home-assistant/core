@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
@@ -10,11 +11,12 @@ from regenmaschine.errors import RequestError
 from homeassistant.components.update import (
     UpdateDeviceClass,
     UpdateEntity,
+    UpdateEntityDescription,
     UpdateEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RainMachineConfigEntry
 from .const import DATA_MACHINE_FIRMWARE_UPDATE_STATUS
@@ -42,7 +44,14 @@ UPDATE_STATE_MAP = {
 }
 
 
-UPDATE_DESCRIPTION = RainMachineEntityDescription(
+@dataclass(frozen=True, kw_only=True)
+class RainMachineUpdateEntityDescription(
+    UpdateEntityDescription, RainMachineEntityDescription
+):
+    """Describe a RainMachine update."""
+
+
+UPDATE_DESCRIPTION = RainMachineUpdateEntityDescription(
     key="update",
     api_category=DATA_MACHINE_FIRMWARE_UPDATE_STATUS,
 )
@@ -51,7 +60,7 @@ UPDATE_DESCRIPTION = RainMachineEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: RainMachineConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Rainmachine update based on a config entry."""
     data = entry.runtime_data

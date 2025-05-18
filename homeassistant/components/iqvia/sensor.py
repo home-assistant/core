@@ -12,10 +12,9 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_STATE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     DOMAIN,
@@ -32,6 +31,7 @@ from .const import (
     TYPE_DISEASE_INDEX,
     TYPE_DISEASE_TODAY,
 )
+from .coordinator import IqviaConfigEntry
 from .entity import IQVIAEntity
 
 ATTR_ALLERGEN_AMOUNT = "allergen_amount"
@@ -127,12 +127,14 @@ INDEX_SENSOR_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: IqviaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up IQVIA sensors based on a config entry."""
     sensors: list[ForecastSensor | IndexSensor] = [
         ForecastSensor(
-            hass.data[DOMAIN][entry.entry_id][
+            entry.runtime_data[
                 API_CATEGORY_MAPPING.get(description.key, description.key)
             ],
             entry,

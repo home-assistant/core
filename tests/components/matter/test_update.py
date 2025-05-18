@@ -86,7 +86,7 @@ async def test_update_entity(
     matter_node: MatterNode,
 ) -> None:
     """Test update entity exists and update check got made."""
-    state = hass.states.get("update.mock_dimmable_light")
+    state = hass.states.get("update.mock_dimmable_light_firmware")
     assert state
     assert state.state == STATE_OFF
 
@@ -101,7 +101,7 @@ async def test_update_check_service(
     matter_node: MatterNode,
 ) -> None:
     """Test check device update through service call."""
-    state = hass.states.get("update.mock_dimmable_light")
+    state = hass.states.get("update.mock_dimmable_light_firmware")
     assert state
     assert state.state == STATE_OFF
     assert state.attributes.get("installed_version") == "v1.0"
@@ -124,14 +124,14 @@ async def test_update_check_service(
         HA_DOMAIN,
         SERVICE_UPDATE_ENTITY,
         {
-            ATTR_ENTITY_ID: "update.mock_dimmable_light",
+            ATTR_ENTITY_ID: "update.mock_dimmable_light_firmware",
         },
         blocking=True,
     )
 
     assert matter_client.check_node_update.call_count == 2
 
-    state = hass.states.get("update.mock_dimmable_light")
+    state = hass.states.get("update.mock_dimmable_light_firmware")
     assert state
     assert state.state == STATE_ON
     assert state.attributes.get("latest_version") == "v2.0"
@@ -150,7 +150,7 @@ async def test_update_install(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test device update with Matter attribute changes influence progress."""
-    state = hass.states.get("update.mock_dimmable_light")
+    state = hass.states.get("update.mock_dimmable_light_firmware")
     assert state
     assert state.state == STATE_OFF
     assert state.attributes.get("installed_version") == "v1.0"
@@ -173,7 +173,7 @@ async def test_update_install(
 
     assert matter_client.check_node_update.call_count == 2
 
-    state = hass.states.get("update.mock_dimmable_light")
+    state = hass.states.get("update.mock_dimmable_light_firmware")
     assert state
     assert state.state == STATE_ON
     assert state.attributes.get("latest_version") == "v2.0"
@@ -186,7 +186,7 @@ async def test_update_install(
         UPDATE_DOMAIN,
         SERVICE_INSTALL,
         {
-            ATTR_ENTITY_ID: "update.mock_dimmable_light",
+            ATTR_ENTITY_ID: "update.mock_dimmable_light_firmware",
         },
         blocking=True,
     )
@@ -199,10 +199,11 @@ async def test_update_install(
     )
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("update.mock_dimmable_light")
+    state = hass.states.get("update.mock_dimmable_light_firmware")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes.get("in_progress")
+    assert state.attributes["in_progress"] is True
+    assert state.attributes["update_percentage"] is None
 
     set_node_attribute_typed(
         matter_node,
@@ -212,10 +213,11 @@ async def test_update_install(
     )
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("update.mock_dimmable_light")
+    state = hass.states.get("update.mock_dimmable_light_firmware")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes.get("in_progress") == 50
+    assert state.attributes["in_progress"] is True
+    assert state.attributes["update_percentage"] == 50
 
     set_node_attribute_typed(
         matter_node,
@@ -237,7 +239,7 @@ async def test_update_install(
     )
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("update.mock_dimmable_light")
+    state = hass.states.get("update.mock_dimmable_light_firmware")
     assert state.state == STATE_OFF
     assert state.attributes.get("installed_version") == "v2.0"
 
@@ -252,7 +254,7 @@ async def test_update_install_failure(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test update entity service call errors."""
-    state = hass.states.get("update.mock_dimmable_light")
+    state = hass.states.get("update.mock_dimmable_light_firmware")
     assert state
     assert state.state == STATE_OFF
     assert state.attributes.get("installed_version") == "v1.0"
@@ -275,7 +277,7 @@ async def test_update_install_failure(
 
     assert matter_client.check_node_update.call_count == 2
 
-    state = hass.states.get("update.mock_dimmable_light")
+    state = hass.states.get("update.mock_dimmable_light_firmware")
     assert state
     assert state.state == STATE_ON
     assert state.attributes.get("latest_version") == "v2.0"
@@ -291,7 +293,7 @@ async def test_update_install_failure(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
             {
-                ATTR_ENTITY_ID: "update.mock_dimmable_light",
+                ATTR_ENTITY_ID: "update.mock_dimmable_light_firmware",
                 ATTR_VERSION: "v3.0",
             },
             blocking=True,
@@ -304,7 +306,7 @@ async def test_update_install_failure(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
             {
-                ATTR_ENTITY_ID: "update.mock_dimmable_light",
+                ATTR_ENTITY_ID: "update.mock_dimmable_light_firmware",
                 ATTR_VERSION: "v3.0",
             },
             blocking=True,
@@ -321,7 +323,7 @@ async def test_update_state_save_and_restore(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test latest update information is retained across reload/restart."""
-    state = hass.states.get("update.mock_dimmable_light")
+    state = hass.states.get("update.mock_dimmable_light_firmware")
     assert state
     assert state.state == STATE_OFF
     assert state.attributes.get("installed_version") == "v1.0"
@@ -334,7 +336,7 @@ async def test_update_state_save_and_restore(
 
     assert matter_client.check_node_update.call_count == 2
 
-    state = hass.states.get("update.mock_dimmable_light")
+    state = hass.states.get("update.mock_dimmable_light_firmware")
     assert state
     assert state.state == STATE_ON
     assert state.attributes.get("latest_version") == "v2.0"
@@ -343,7 +345,7 @@ async def test_update_state_save_and_restore(
 
     assert len(hass_storage[RESTORE_STATE_KEY]["data"]) == 1
     state = hass_storage[RESTORE_STATE_KEY]["data"][0]["state"]
-    assert state["entity_id"] == "update.mock_dimmable_light"
+    assert state["entity_id"] == "update.mock_dimmable_light_firmware"
     extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
 
     # Check that the extra data has the format we expect.
@@ -374,7 +376,7 @@ async def test_update_state_restore(
         (
             (
                 State(
-                    "update.mock_dimmable_light",
+                    "update.mock_dimmable_light_firmware",
                     STATE_ON,
                     {
                         "auto_update": False,
@@ -391,7 +393,7 @@ async def test_update_state_restore(
 
     assert check_node_update.call_count == 0
 
-    state = hass.states.get("update.mock_dimmable_light")
+    state = hass.states.get("update.mock_dimmable_light_firmware")
     assert state
     assert state.state == STATE_ON
     assert state.attributes.get("latest_version") == "v2.0"
@@ -400,7 +402,7 @@ async def test_update_state_restore(
         UPDATE_DOMAIN,
         SERVICE_INSTALL,
         {
-            ATTR_ENTITY_ID: "update.mock_dimmable_light",
+            ATTR_ENTITY_ID: "update.mock_dimmable_light_firmware",
         },
         blocking=True,
     )

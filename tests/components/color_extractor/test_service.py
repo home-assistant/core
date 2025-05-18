@@ -25,7 +25,7 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util
 
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -78,7 +78,7 @@ async def setup_light(hass: HomeAssistant):
     # Validate starting values
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 180
-    assert state.attributes.get(ATTR_RGB_COLOR) == (255, 63, 111)
+    assert state.attributes.get(ATTR_RGB_COLOR) == (255, 64, 112)
 
     await hass.services.async_call(
         LIGHT_DOMAIN,

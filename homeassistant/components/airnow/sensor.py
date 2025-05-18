@@ -21,11 +21,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AirNowConfigEntry, AirNowDataUpdateCoordinator
 from .const import (
     ATTR_API_AQI,
     ATTR_API_AQI_DESCRIPTION,
@@ -43,6 +42,7 @@ from .const import (
     DOMAIN,
     US_TZ_OFFSETS,
 )
+from .coordinator import AirNowConfigEntry, AirNowDataUpdateCoordinator
 
 ATTRIBUTION = "Data provided by AirNow"
 
@@ -130,7 +130,7 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AirNowConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AirNow sensor entities based on a config entry."""
     coordinator = config_entry.runtime_data

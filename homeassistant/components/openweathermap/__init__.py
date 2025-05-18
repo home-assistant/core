@@ -8,17 +8,10 @@ import logging
 from pyopenweathermap import create_owm_client
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_LANGUAGE,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_MODE,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_MODE, CONF_NAME
 from homeassistant.core import HomeAssistant
 
-from .const import CONFIG_FLOW_VERSION, OWM_MODE_V25, PLATFORMS
+from .const import CONFIG_FLOW_VERSION, DEFAULT_OWM_MODE, OWM_MODES, PLATFORMS
 from .coordinator import WeatherUpdateCoordinator
 from .repairs import async_create_issue, async_delete_issue
 from .utils import build_data_and_options
@@ -43,20 +36,16 @@ async def async_setup_entry(
     """Set up OpenWeatherMap as config entry."""
     name = entry.data[CONF_NAME]
     api_key = entry.data[CONF_API_KEY]
-    latitude = entry.data.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = entry.data.get(CONF_LONGITUDE, hass.config.longitude)
     language = entry.options[CONF_LANGUAGE]
     mode = entry.options[CONF_MODE]
 
-    if mode == OWM_MODE_V25:
+    if mode not in OWM_MODES:
         async_create_issue(hass, entry.entry_id)
     else:
         async_delete_issue(hass, entry.entry_id)
 
     owm_client = create_owm_client(api_key, mode, lang=language)
-    weather_coordinator = WeatherUpdateCoordinator(
-        owm_client, latitude, longitude, hass
-    )
+    weather_coordinator = WeatherUpdateCoordinator(hass, entry, owm_client)
 
     await weather_coordinator.async_config_entry_first_refresh()
 
@@ -69,7 +58,9 @@ async def async_setup_entry(
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: OpenweathermapConfigEntry
+) -> bool:
     """Migrate old entry."""
     config_entries = hass.config_entries
     data = entry.data
@@ -79,7 +70,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Migrating OpenWeatherMap entry from version %s", version)
 
     if version < 5:
-        combined_data = {**data, **options, CONF_MODE: OWM_MODE_V25}
+        combined_data = {**data, **options, CONF_MODE: DEFAULT_OWM_MODE}
         new_data, new_options = build_data_and_options(combined_data)
         config_entries.async_update_entry(
             entry,
@@ -93,7 +84,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_update_options(
+    hass: HomeAssistant, entry: OpenweathermapConfigEntry
+) -> None:
     """Update options."""
     await hass.config_entries.async_reload(entry.entry_id)
 

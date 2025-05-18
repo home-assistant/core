@@ -1,5 +1,6 @@
 """Config flow for Enigma2."""
 
+import logging
 from typing import Any, cast
 
 from aiohttp.client_exceptions import ClientError
@@ -62,6 +63,8 @@ CONFIG_SCHEMA = vol.Schema(
         ): selector.BooleanSelector(),
     }
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
@@ -130,10 +133,12 @@ class Enigma2ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             errors = {"base": "invalid_auth"}
         except ClientError:
             errors = {"base": "cannot_connect"}
-        except Exception:  # noqa: BLE001
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
             errors = {"base": "unknown"}
         else:
-            await self.async_set_unique_id(about["info"]["ifaces"][0]["mac"])
+            unique_id = about["info"]["ifaces"][0]["mac"] or self.unique_id
+            await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
 
         return errors

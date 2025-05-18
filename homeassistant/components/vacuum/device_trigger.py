@@ -19,7 +19,7 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, STATE_CLEANING, STATE_DOCKED
+from . import DOMAIN, VacuumActivity
 
 TRIGGER_TYPES = {"cleaning", "docked"}
 
@@ -77,9 +77,9 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     if config[CONF_TYPE] == "cleaning":
-        to_state = STATE_CLEANING
+        to_state = VacuumActivity.CLEANING
     else:
-        to_state = STATE_DOCKED
+        to_state = VacuumActivity.DOCKED
 
     state_config = {
         CONF_PLATFORM: "state",

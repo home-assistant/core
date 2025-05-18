@@ -43,15 +43,15 @@ async def test_scene_activate(
         await hass.services.async_call(
             DOMAIN_SCENE,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "scene.romantic"},
+            {ATTR_ENTITY_ID: "scene.testmodule_romantic"},
             blocking=True,
         )
 
-    state = hass.states.get("scene.romantic")
+    state = hass.states.get("scene.testmodule_romantic")
     assert state is not None
 
     activate_scene.assert_awaited_with(
-        0, 0, [OutputPort.OUTPUT1, OutputPort.OUTPUT2], [RelayPort.RELAY1], None
+        0, 0, [OutputPort.OUTPUT1, OutputPort.OUTPUT2], [RelayPort.RELAY1], 0.0
     )
 
 
@@ -60,5 +60,5 @@ async def test_unload_config_entry(hass: HomeAssistant, entry: MockConfigEntry) 
     await init_integration(hass, entry)
 
     await hass.config_entries.async_unload(entry.entry_id)
-    state = hass.states.get("scene.romantic")
+    state = hass.states.get("scene.testmodule_romantic")
     assert state.state == STATE_UNAVAILABLE

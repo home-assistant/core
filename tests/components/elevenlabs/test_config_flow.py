@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
+
 from homeassistant.components.elevenlabs.const import (
     CONF_CONFIGURE_VOICE,
     CONF_MODEL,
@@ -56,7 +58,10 @@ async def test_user_step(
 
 
 async def test_invalid_api_key(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_async_client_fail: AsyncMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_async_client_api_error: AsyncMock,
+    request: pytest.FixtureRequest,
 ) -> None:
     """Test user step with invalid api key."""
 
@@ -73,9 +78,27 @@ async def test_invalid_api_key(
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"]
+    assert result["errors"] == {"base": "invalid_api_key"}
 
     mock_setup_entry.assert_not_called()
+
+    # Use a working client
+    request.getfixturevalue("mock_async_client")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "api_key",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "ElevenLabs"
+    assert result["data"] == {
+        "api_key": "api_key",
+    }
+    assert result["options"] == {CONF_MODEL: DEFAULT_MODEL, CONF_VOICE: "voice1"}
+
+    mock_setup_entry.assert_called_once()
 
 
 async def test_options_flow_init(

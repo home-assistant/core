@@ -226,3 +226,37 @@ async def test_delete_cloud_hook(
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.LOADED
         assert (CONF_CLOUDHOOK_URL in config_entry.data) == should_cloudhook_exist
+
+
+async def test_remove_entry_on_user_remove(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test removing related config entry, when a user gets removed from HA."""
+
+    config_entry = MockConfigEntry(
+        data={
+            **REGISTER_CLEARTEXT,
+            CONF_WEBHOOK_ID: "test-webhook-id",
+            ATTR_DEVICE_NAME: "Test",
+            ATTR_DEVICE_ID: "Test",
+            CONF_USER_ID: hass_admin_user.id,
+            CONF_CLOUDHOOK_URL: "https://hook-url-already-exists",
+        },
+        domain=DOMAIN,
+        title="Test",
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+
+    await hass.auth.async_remove_user(hass_admin_user)
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 0

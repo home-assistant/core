@@ -114,7 +114,7 @@ class TotpAuthModule(MultiFactorAuthModule):
         self._users[user_id] = ota_secret  # type: ignore[index]
         return ota_secret
 
-    async def async_setup_flow(self, user_id: str) -> SetupFlow:
+    async def async_setup_flow(self, user_id: str) -> TotpSetupFlow:
         """Return a data entry flow handler for setup module.
 
         Mfa module should extend SetupFlow
@@ -174,20 +174,19 @@ class TotpAuthModule(MultiFactorAuthModule):
         return bool(pyotp.TOTP(ota_secret).verify(code, valid_window=1))
 
 
-class TotpSetupFlow(SetupFlow):
+class TotpSetupFlow(SetupFlow[TotpAuthModule]):
     """Handler for the setup flow."""
+
+    _ota_secret: str
+    _url: str
+    _image: str
 
     def __init__(
         self, auth_module: TotpAuthModule, setup_schema: vol.Schema, user: User
     ) -> None:
         """Initialize the setup flow."""
         super().__init__(auth_module, setup_schema, user.id)
-        # to fix typing complaint
-        self._auth_module: TotpAuthModule = auth_module
         self._user = user
-        self._ota_secret: str = ""
-        self._url: str | None = None
-        self._image: str | None = None
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -214,12 +213,11 @@ class TotpSetupFlow(SetupFlow):
             errors["base"] = "invalid_code"
 
         else:
-            hass = self._auth_module.hass
             (
                 self._ota_secret,
                 self._url,
                 self._image,
-            ) = await hass.async_add_executor_job(
+            ) = await self._auth_module.hass.async_add_executor_job(
                 _generate_secret_and_qr_code,
                 str(self._user.name),
             )

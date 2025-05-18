@@ -12,7 +12,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import DOMAIN
-from .helpers import handle_command, handle_vehicle_command, wake_up_vehicle
+from .helpers import handle_command, handle_vehicle_command
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 _LOGGER = logging.getLogger(__name__)
@@ -98,7 +98,7 @@ def async_get_energy_site_for_entry(
     return energy_data
 
 
-def async_register_services(hass: HomeAssistant) -> None:  # noqa: C901
+def async_register_services(hass: HomeAssistant) -> None:
     """Set up the Teslemetry services."""
 
     async def navigate_gps_request(call: ServiceCall) -> None:
@@ -107,7 +107,6 @@ def async_register_services(hass: HomeAssistant) -> None:  # noqa: C901
         config = async_get_config_for_device(hass, device)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
-        await wake_up_vehicle(vehicle)
         await handle_vehicle_command(
             vehicle.api.navigation_gps_request(
                 lat=call.data[ATTR_GPS][CONF_LATITUDE],
@@ -148,7 +147,6 @@ def async_register_services(hass: HomeAssistant) -> None:  # noqa: C901
                 translation_domain=DOMAIN, translation_key="set_scheduled_charging_time"
             )
 
-        await wake_up_vehicle(vehicle)
         await handle_vehicle_command(
             vehicle.api.set_scheduled_charging(enable=call.data["enable"], time=time)
         )
@@ -205,7 +203,6 @@ def async_register_services(hass: HomeAssistant) -> None:  # noqa: C901
                 translation_key="set_scheduled_departure_off_peak",
             )
 
-        await wake_up_vehicle(vehicle)
         await handle_vehicle_command(
             vehicle.api.set_scheduled_departure(
                 enable,
@@ -242,7 +239,6 @@ def async_register_services(hass: HomeAssistant) -> None:  # noqa: C901
         config = async_get_config_for_device(hass, device)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
-        await wake_up_vehicle(vehicle)
         await handle_vehicle_command(
             vehicle.api.set_valet_mode(
                 call.data.get("enable"), call.data.get("pin", "")
@@ -268,7 +264,6 @@ def async_register_services(hass: HomeAssistant) -> None:  # noqa: C901
         config = async_get_config_for_device(hass, device)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
-        await wake_up_vehicle(vehicle)
         enable = call.data.get("enable")
         if enable is True:
             await handle_vehicle_command(

@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.geo_json_events import DOMAIN
+from homeassistant.components.geo_json_events.const import DOMAIN
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS, CONF_URL
 
 from tests.common import MockConfigEntry

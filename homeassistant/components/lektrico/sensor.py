@@ -27,7 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import IntegrationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import LektricoConfigEntry, LektricoDeviceDataUpdateCoordinator
@@ -62,11 +62,13 @@ SENSORS_FOR_CHARGERS: tuple[LektricoSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=[
             "available",
+            "charging",
             "connected",
+            "error",
+            "locked",
             "need_auth",
             "paused",
-            "charging",
-            "error",
+            "paused_by_scheduler",
             "updating_firmware",
         ],
         translation_key="state",
@@ -281,7 +283,7 @@ SENSORS_FOR_LB_3_PHASE: tuple[LektricoSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LektricoConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Lektrico charger based on a config entry."""
     coordinator = entry.runtime_data

@@ -18,6 +18,20 @@
       },
       "fan_error": {
         "default": "mdi:fan-alert"
+      },
+      "local_connectivity": {
+        "default": "mdi:lan-pending",
+        "state": {
+          "on": "mdi:lan-connect",
+          "off": "mdi:lan-disconnect"
+        }
+      },
+      "cloud_connectivity": {
+        "default": "mdi:cloud-question",
+        "state": {
+          "on": "mdi:cloud-check-variant-outline",
+          "off": "mdi:cloud-alert-outline"
+        }
       }
     },
     "number": {

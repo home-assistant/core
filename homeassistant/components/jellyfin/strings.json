@@ -29,7 +29,8 @@
   "entity": {
     "sensor": {
       "watching": {
-        "name": "Active clients"
+        "name": "Active clients",
+        "unit_of_measurement": "clients"
       }
     }
   },

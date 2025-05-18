@@ -1,0 +1,123 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "dryer_wrinkle_prevent_active": {
+        "default": "mdi:tumble-dryer",
+        "state": {
+          "on": "mdi:tumble-dryer-alert"
+        }
+      },
+      "remote_control": {
+        "default": "mdi:remote-off",
+        "state": {
+          "on": "mdi:remote"
+        }
+      },
+      "child_lock": {
+        "default": "mdi:lock-open",
+        "state": {
+          "on": "mdi:lock"
+        }
+      },
+      "keep_fresh_mode": {
+        "default": "mdi:creation"
+      }
+    },
+    "button": {
+      "reset_water_filter": {
+        "default": "mdi:reload"
+      },
+      "stop": {
+        "default": "mdi:stop"
+      }
+    },
+    "number": {
+      "washer_rinse_cycles": {
+        "default": "mdi:waves-arrow-up"
+      },
+      "freezer_temperature": {
+        "default": "mdi:snowflake-thermometer"
+      }
+    },
+    "select": {
+      "operating_state": {
+        "state": {
+          "run": "mdi:play",
+          "pause": "mdi:pause",
+          "stop": "mdi:stop"
+        }
+      },
+      "lamp": {
+        "default": "mdi:lightbulb",
+        "state": {
+          "on": "mdi:lightbulb-on",
+          "off": "mdi:lightbulb-off"
+        }
+      },
+      "detergent_amount": {
+        "default": "mdi:car-coolant-level"
+      },
+      "flexible_detergent_amount": {
+        "default": "mdi:car-coolant-level"
+      }
+    },
+    "sensor": {
+      "cooktop_operating_state": {
+        "default": "mdi:stove",
+        "state": {
+          "ready": "mdi:play-speed",
+          "run": "mdi:play",
+          "paused": "mdi:pause",
+          "finished": "mdi:food-turkey"
+        }
+      },
+      "manual_level": {
+        "default": "mdi:radiator",
+        "state": {
+          "0": "mdi:radiator-off"
+        }
+      },
+      "heating_mode": {
+        "state": {
+          "off": "mdi:power",
+          "manual": "mdi:cog",
+          "boost": "mdi:flash",
+          "keep_warm": "mdi:fire",
+          "quick_preheat": "mdi:heat-wave",
+          "defrost": "mdi:car-defrost-rear",
+          "melt": "mdi:snowflake-melt",
+          "simmer": "mdi:fire"
+        }
+      }
+    },
+    "switch": {
+      "bubble_soak": {
+        "default": "mdi:water-off",
+        "state": {
+          "on": "mdi:water"
+        }
+      },
+      "wrinkle_prevent": {
+        "default": "mdi:tumble-dryer",
+        "state": {
+          "off": "mdi:tumble-dryer-off"
+        }
+      },
+      "keep_fresh_mode": {
+        "default": "mdi:creation"
+      },
+      "ice_maker": {
+        "default": "mdi:delete-variant"
+      },
+      "sanitize": {
+        "default": "mdi:lotion"
+      },
+      "auto_cycle_link": {
+        "default": "mdi:link-off",
+        "state": {
+          "on": "mdi:link"
+        }
+      }
+    }
+  }
+}

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import asyncio
 from asyncio import Event
-from collections.abc import AsyncGenerator, Awaitable, Callable, Coroutine
+from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, Protocol
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aioesphomeapi import (
@@ -17,6 +17,7 @@ from aioesphomeapi import (
     EntityInfo,
     EntityState,
     HomeassistantServiceCall,
+    LogLevel,
     ReconnectLogic,
     UserService,
     VoiceAssistantAnnounceFinished,
@@ -29,6 +30,7 @@ from zeroconf import Zeroconf
 from homeassistant.components.esphome import dashboard
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
+    CONF_BLUETOOTH_MAC_ADDRESS,
     CONF_DEVICE_NAME,
     CONF_NOISE_PSK,
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
@@ -41,6 +43,50 @@ from homeassistant.setup import async_setup_component
 from . import DASHBOARD_HOST, DASHBOARD_PORT, DASHBOARD_SLUG
 
 from tests.common import MockConfigEntry
+
+if TYPE_CHECKING:
+    from aioesphomeapi.api_pb2 import SubscribeLogsResponse
+
+
+class MockGenericDeviceEntryType(Protocol):
+    """Mock ESPHome device entry type."""
+
+    async def __call__(
+        self,
+        mock_client: APIClient,
+        entity_info: list[EntityInfo],
+        user_service: list[UserService],
+        states: list[EntityState],
+        mock_storage: bool = ...,
+    ) -> MockConfigEntry:
+        """Mock an ESPHome device entry."""
+
+
+class MockESPHomeDeviceType(Protocol):
+    """Mock ESPHome device type."""
+
+    async def __call__(
+        self,
+        mock_client: APIClient,
+        entity_info: list[EntityInfo] | None = ...,
+        user_service: list[UserService] | None = ...,
+        states: list[EntityState] | None = ...,
+        entry: MockConfigEntry | None = ...,
+        device_info: dict[str, Any] | None = ...,
+        mock_storage: bool = ...,
+    ) -> MockESPHomeDevice:
+        """Mock an ESPHome device."""
+
+
+class MockBluetoothEntryType(Protocol):
+    """Mock ESPHome bluetooth entry type."""
+
+    async def __call__(
+        self,
+        bluetooth_proxy_feature_flags: BluetoothProxyFeature,
+    ) -> MockESPHomeDevice:
+        """Mock an ESPHome bluetooth entry."""
+
 
 _ONE_SECOND = 16000 * 2  # 16Khz 16-bit
 
@@ -127,7 +173,7 @@ async def init_integration(
 
 
 @pytest.fixture
-def mock_client(mock_device_info) -> APIClient:
+def mock_client(mock_device_info) -> Generator[APIClient]:
     """Mock APIClient."""
     mock_client = Mock(spec=APIClient)
 
@@ -154,6 +200,7 @@ def mock_client(mock_device_info) -> APIClient:
     mock_client.device_info = AsyncMock(return_value=mock_device_info)
     mock_client.connect = AsyncMock()
     mock_client.disconnect = AsyncMock()
+    mock_client.subscribe_logs = Mock()
     mock_client.list_entities_services = AsyncMock(return_value=([], []))
     mock_client.address = "127.0.0.1"
     mock_client.api_version = APIVersion(99, 99)
@@ -222,7 +269,9 @@ class MockESPHomeDevice:
             ]
             | None
         )
+        self.on_log_message: Callable[[SubscribeLogsResponse], None]
         self.device_info = device_info
+        self.current_log_level = LogLevel.LOG_LEVEL_NONE
 
     def set_state_callback(self, state_callback: Callable[[EntityState], None]) -> None:
         """Set the state callback."""
@@ -249,6 +298,16 @@ class MockESPHomeDevice:
     async def mock_disconnect(self, expected_disconnect: bool) -> None:
         """Mock disconnecting."""
         await self.on_disconnect(expected_disconnect)
+
+    def set_on_log_message(
+        self, on_log_message: Callable[[SubscribeLogsResponse], None]
+    ) -> None:
+        """Set the log message callback."""
+        self.on_log_message = on_log_message
+
+    def mock_on_log_message(self, log_message: SubscribeLogsResponse) -> None:
+        """Mock on log message."""
+        self.on_log_message(log_message)
 
     def set_on_connect(self, on_connect: Callable[[], None]) -> None:
         """Set the connect callback."""
@@ -413,6 +472,14 @@ async def _mock_generic_device_entry(
             on_state_sub, on_state_request
         )
 
+    def _subscribe_logs(
+        on_log_message: Callable[[SubscribeLogsResponse], None], log_level: LogLevel
+    ) -> Callable[[], None]:
+        """Subscribe to log messages."""
+        mock_device.set_on_log_message(on_log_message)
+        mock_device.current_log_level = log_level
+        return lambda: None
+
     def _subscribe_voice_assistant(
         *,
         handle_start: Callable[
@@ -453,6 +520,7 @@ async def _mock_generic_device_entry(
     mock_client.subscribe_states = _subscribe_states
     mock_client.subscribe_service_calls = _subscribe_service_calls
     mock_client.subscribe_home_assistant_states = _subscribe_home_assistant_states
+    mock_client.subscribe_logs = _subscribe_logs
 
     try_connect_done = Event()
 
@@ -545,25 +613,44 @@ async def mock_voice_assistant_api_entry(mock_voice_assistant_entry) -> MockConf
 async def mock_bluetooth_entry(
     hass: HomeAssistant,
     mock_client: APIClient,
-):
+) -> MockBluetoothEntryType:
     """Set up an ESPHome entry with bluetooth."""
 
     async def _mock_bluetooth_entry(
         bluetooth_proxy_feature_flags: BluetoothProxyFeature,
     ) -> MockESPHomeDevice:
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_HOST: "test.local",
+                CONF_PORT: 6053,
+                CONF_PASSWORD: "",
+                CONF_BLUETOOTH_MAC_ADDRESS: "AA:BB:CC:DD:EE:FC",
+            },
+            options={
+                CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS
+            },
+        )
+        entry.add_to_hass(hass)
         return await _mock_generic_device_entry(
             hass,
             mock_client,
-            {"bluetooth_proxy_feature_flags": bluetooth_proxy_feature_flags},
+            {
+                "bluetooth_mac_address": "AA:BB:CC:DD:EE:FC",
+                "bluetooth_proxy_feature_flags": bluetooth_proxy_feature_flags,
+            },
             ([], []),
             [],
+            entry=entry,
         )
 
     return _mock_bluetooth_entry
 
 
 @pytest.fixture
-async def mock_bluetooth_entry_with_raw_adv(mock_bluetooth_entry) -> MockESPHomeDevice:
+async def mock_bluetooth_entry_with_raw_adv(
+    mock_bluetooth_entry: MockBluetoothEntryType,
+) -> MockESPHomeDevice:
     """Set up an ESPHome entry with bluetooth and raw advertisements."""
     return await mock_bluetooth_entry(
         bluetooth_proxy_feature_flags=BluetoothProxyFeature.PASSIVE_SCAN
@@ -577,7 +664,7 @@ async def mock_bluetooth_entry_with_raw_adv(mock_bluetooth_entry) -> MockESPHome
 
 @pytest.fixture
 async def mock_bluetooth_entry_with_legacy_adv(
-    mock_bluetooth_entry,
+    mock_bluetooth_entry: MockBluetoothEntryType,
 ) -> MockESPHomeDevice:
     """Set up an ESPHome entry with bluetooth with legacy advertisements."""
     return await mock_bluetooth_entry(
@@ -593,10 +680,7 @@ async def mock_bluetooth_entry_with_legacy_adv(
 async def mock_generic_device_entry(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
-) -> Callable[
-    [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-    Awaitable[MockConfigEntry],
-]:
+) -> MockGenericDeviceEntryType:
     """Set up an ESPHome entry and return the MockConfigEntry."""
 
     async def _mock_device_entry(
@@ -625,10 +709,7 @@ async def mock_generic_device_entry(
 async def mock_esphome_device(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
-) -> Callable[
-    [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-    Awaitable[MockESPHomeDevice],
-]:
+) -> MockESPHomeDeviceType:
     """Set up an ESPHome entry and return the MockESPHomeDevice."""
 
     async def _mock_device(

@@ -15,12 +15,14 @@ from homeassistant.components.switch import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AirGradientConfigEntry
 from .const import DOMAIN
 from .coordinator import AirGradientCoordinator
-from .entity import AirGradientEntity
+from .entity import AirGradientEntity, exception_handler
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -43,7 +45,7 @@ POST_DATA_TO_AIRGRADIENT = AirGradientSwitchEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AirGradientConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AirGradient switch entities based on a config entry."""
     coordinator = entry.runtime_data
@@ -99,11 +101,13 @@ class AirGradientSwitch(AirGradientEntity, SwitchEntity):
         """Return the state of the switch."""
         return self.entity_description.value_fn(self.coordinator.data.config)
 
+    @exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.entity_description.set_value_fn(self.coordinator.client, True)
         await self.coordinator.async_request_refresh()
 
+    @exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.entity_description.set_value_fn(self.coordinator.client, False)

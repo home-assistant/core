@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from enum import Enum
+from contextlib import suppress
+from enum import EnumType, IntEnum, IntFlag, StrEnum, _EnumDict
 import functools
 import inspect
 import logging
@@ -165,6 +166,30 @@ def _print_deprecation_warning_internal(
     *,
     log_when_no_integration_is_found: bool,
 ) -> None:
+    # Suppress ImportError due to use of deprecated enum in core.py
+    # Can be removed in HA Core 2025.1
+    with suppress(ImportError):
+        _print_deprecation_warning_internal_impl(
+            obj_name,
+            module_name,
+            replacement,
+            description,
+            verb,
+            breaks_in_ha_version,
+            log_when_no_integration_is_found=log_when_no_integration_is_found,
+        )
+
+
+def _print_deprecation_warning_internal_impl(
+    obj_name: str,
+    module_name: str,
+    replacement: str,
+    description: str,
+    verb: str,
+    breaks_in_ha_version: str | None,
+    *,
+    log_when_no_integration_is_found: bool,
+) -> None:
     # pylint: disable=import-outside-toplevel
     from homeassistant.core import async_get_hass_or_none
     from homeassistant.loader import async_suggest_report_issue
@@ -219,35 +244,35 @@ def _print_deprecation_warning_internal(
             )
 
 
-class DeprecatedConstant(NamedTuple):
+class DeprecatedConstant[T](NamedTuple):
     """Deprecated constant."""
 
-    value: Any
+    value: T
     replacement: str
     breaks_in_ha_version: str | None
 
 
-class DeprecatedConstantEnum(NamedTuple):
+class DeprecatedConstantEnum[T: (StrEnum | IntEnum | IntFlag)](NamedTuple):
     """Deprecated constant."""
 
-    enum: Enum
+    enum: T
     breaks_in_ha_version: str | None
 
 
-class DeprecatedAlias(NamedTuple):
+class DeprecatedAlias[T](NamedTuple):
     """Deprecated alias."""
 
-    value: Any
+    value: T
     replacement: str
     breaks_in_ha_version: str | None
 
 
-class DeferredDeprecatedAlias:
+class DeferredDeprecatedAlias[T]:
     """Deprecated alias with deferred evaluation of the value."""
 
     def __init__(
         self,
-        value_fn: Callable[[], Any],
+        value_fn: Callable[[], T],
         replacement: str,
         breaks_in_ha_version: str | None,
     ) -> None:
@@ -257,7 +282,7 @@ class DeferredDeprecatedAlias:
         self._value_fn = value_fn
 
     @functools.cached_property
-    def value(self) -> Any:
+    def value(self) -> T:
         """Return the value."""
         return self._value_fn()
 
@@ -281,7 +306,7 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
         replacement = deprecated_const.replacement
         breaks_in_ha_version = deprecated_const.breaks_in_ha_version
     elif isinstance(deprecated_const, DeprecatedConstantEnum):
-        value = deprecated_const.enum.value
+        value = deprecated_const.enum
         replacement = (
             f"{deprecated_const.enum.__class__.__name__}.{deprecated_const.enum.name}"
         )
@@ -338,3 +363,35 @@ def all_with_deprecated_constants(module_globals: dict[str, Any]) -> list[str]:
         for name in module_globals_keys
         if name.startswith(_PREFIX_DEPRECATED)
     ]
+
+
+class EnumWithDeprecatedMembers(EnumType):
+    """Enum with deprecated members."""
+
+    def __new__(
+        mcs,
+        cls: str,
+        bases: tuple[type, ...],
+        classdict: _EnumDict,
+        *,
+        deprecated: dict[str, tuple[str, str]],
+        **kwds: Any,
+    ) -> Any:
+        """Create a new class."""
+        classdict["__deprecated__"] = deprecated
+        return super().__new__(mcs, cls, bases, classdict, **kwds)
+
+    def __getattribute__(cls, name: str) -> Any:
+        """Warn if accessing a deprecated member."""
+        deprecated = super().__getattribute__("__deprecated__")
+        if name in deprecated:
+            _print_deprecation_warning_internal(
+                f"{cls.__name__}.{name}",
+                cls.__module__,
+                f"{deprecated[name][0]}",
+                "enum member",
+                "used",
+                deprecated[name][1],
+                log_when_no_integration_is_found=False,
+            )
+        return super().__getattribute__(name)

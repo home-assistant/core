@@ -8,8 +8,8 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import dialogflow, intent_script
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 

@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     volvo_data = VolvoData(hass, connection, entry)
 
-    coordinator = VolvoUpdateCoordinator(hass, volvo_data)
+    coordinator = VolvoUpdateCoordinator(hass, entry, volvo_data)
 
     await coordinator.async_config_entry_first_refresh()
 

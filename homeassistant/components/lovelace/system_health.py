@@ -1,12 +1,13 @@
 """Provide info to system health."""
 
 import asyncio
+from typing import Any
 
 from homeassistant.components import system_health
 from homeassistant.const import CONF_MODE
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DOMAIN, MODE_AUTO, MODE_STORAGE, MODE_YAML
+from .const import LOVELACE_DATA, MODE_AUTO, MODE_STORAGE, MODE_YAML
 
 
 @callback
@@ -17,15 +18,17 @@ def async_register(
     register.async_register_info(system_health_info, "/config/lovelace")
 
 
-async def system_health_info(hass):
+async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     """Get info for the info page."""
-    health_info = {"dashboards": len(hass.data[DOMAIN]["dashboards"])}
-    health_info.update(await hass.data[DOMAIN]["resources"].async_get_info())
+    health_info: dict[str, Any] = {
+        "dashboards": len(hass.data[LOVELACE_DATA].dashboards)
+    }
+    health_info.update(await hass.data[LOVELACE_DATA].resources.async_get_info())
 
     dashboards_info = await asyncio.gather(
         *(
-            hass.data[DOMAIN]["dashboards"][dashboard].async_get_info()
-            for dashboard in hass.data[DOMAIN]["dashboards"]
+            hass.data[LOVELACE_DATA].dashboards[dashboard].async_get_info()
+            for dashboard in hass.data[LOVELACE_DATA].dashboards
         )
     )
 
@@ -39,7 +42,7 @@ async def system_health_info(hass):
             else:
                 health_info[key] = dashboard[key]
 
-    if hass.data[DOMAIN][CONF_MODE] == MODE_YAML:
+    if hass.data[LOVELACE_DATA].mode == MODE_YAML:
         health_info[CONF_MODE] = MODE_YAML
     elif MODE_STORAGE in modes:
         health_info[CONF_MODE] = MODE_STORAGE

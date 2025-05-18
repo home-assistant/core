@@ -18,7 +18,6 @@ from homeassistant.auth.models import User
 from homeassistant.auth.providers import trusted_networks
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components import websocket_api
-from homeassistant.components.http import KEY_HASS
 from homeassistant.components.http.auth import (
     CONTENT_USER_NAME,
     DATA_SIGN_SECRET,
@@ -28,13 +27,13 @@ from homeassistant.components.http.auth import (
     async_sign_path,
     async_user_not_allowed_do_auth,
 )
-from homeassistant.components.http.const import KEY_AUTHENTICATED
 from homeassistant.components.http.forwarded import async_setup_forwarded
 from homeassistant.components.http.request_context import (
     current_request,
     setup_request_context,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.http import KEY_AUTHENTICATED, KEY_HASS
 from homeassistant.setup import async_setup_component
 
 from . import HTTP_HEADER_HA_AUTH
@@ -192,16 +191,16 @@ async def test_cannot_access_with_trusted_ip(
     for remote_addr in UNTRUSTED_ADDRESSES:
         set_mock_ip(remote_addr)
         resp = await client.get("/")
-        assert (
-            resp.status == HTTPStatus.UNAUTHORIZED
-        ), f"{remote_addr} shouldn't be trusted"
+        assert resp.status == HTTPStatus.UNAUTHORIZED, (
+            f"{remote_addr} shouldn't be trusted"
+        )
 
     for remote_addr in TRUSTED_ADDRESSES:
         set_mock_ip(remote_addr)
         resp = await client.get("/")
-        assert (
-            resp.status == HTTPStatus.UNAUTHORIZED
-        ), f"{remote_addr} shouldn't be trusted"
+        assert resp.status == HTTPStatus.UNAUTHORIZED, (
+            f"{remote_addr} shouldn't be trusted"
+        )
 
 
 async def test_auth_active_access_with_access_token_in_header(
@@ -256,16 +255,16 @@ async def test_auth_active_access_with_trusted_ip(
     for remote_addr in UNTRUSTED_ADDRESSES:
         set_mock_ip(remote_addr)
         resp = await client.get("/")
-        assert (
-            resp.status == HTTPStatus.UNAUTHORIZED
-        ), f"{remote_addr} shouldn't be trusted"
+        assert resp.status == HTTPStatus.UNAUTHORIZED, (
+            f"{remote_addr} shouldn't be trusted"
+        )
 
     for remote_addr in TRUSTED_ADDRESSES:
         set_mock_ip(remote_addr)
         resp = await client.get("/")
-        assert (
-            resp.status == HTTPStatus.UNAUTHORIZED
-        ), f"{remote_addr} shouldn't be trusted"
+        assert resp.status == HTTPStatus.UNAUTHORIZED, (
+            f"{remote_addr} shouldn't be trusted"
+        )
 
 
 async def test_auth_legacy_support_api_password_cannot_access(

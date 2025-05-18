@@ -4,13 +4,10 @@ from __future__ import annotations
 
 from aioambient.open_api import OpenAPI
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .coordinator import AmbientNetworkDataUpdateCoordinator
-
-type AmbientNetworkConfigEntry = ConfigEntry[AmbientNetworkDataUpdateCoordinator]
+from .coordinator import AmbientNetworkConfigEntry, AmbientNetworkDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -21,7 +18,7 @@ async def async_setup_entry(
     """Set up the Ambient Weather Network from a config entry."""
 
     api = OpenAPI()
-    coordinator = AmbientNetworkDataUpdateCoordinator(hass, api)
+    coordinator = AmbientNetworkDataUpdateCoordinator(hass, entry, api)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

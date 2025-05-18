@@ -6,11 +6,11 @@ from collections.abc import Mapping
 import logging
 from typing import Any, Final
 
-from aioswitcher.bridge import SwitcherBase
+from aioswitcher.device import SwitcherBase
 from aioswitcher.device.tools import validate_token
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN, CONF_USERNAME
 
 from .const import DOMAIN
@@ -21,8 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA: Final = vol.Schema(
     {
-        vol.Required(CONF_USERNAME, default=""): str,
-        vol.Required(CONF_TOKEN, default=""): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_TOKEN): str,
     }
 )
 
@@ -32,10 +32,12 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    entry: ConfigEntry | None = None
-    username: str | None = None
-    token: str | None = None
-    discovered_devices: dict[str, SwitcherBase] = {}
+    def __init__(self) -> None:
+        """Init the config flow."""
+        super().__init__()
+        self.discovered_devices: dict[str, SwitcherBase] = {}
+        self.username: str | None = None
+        self.token: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -82,7 +84,6 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -90,7 +91,6 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
-        assert self.entry is not None
 
         if user_input is not None:
             token_is_valid = await validate_token(
@@ -98,7 +98,7 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             if token_is_valid:
                 return self.async_update_reload_and_abort(
-                    self.entry, data={**self.entry.data, **user_input}
+                    self._get_reauth_entry(), data_updates=user_input
                 )
             errors["base"] = "invalid_auth"
 

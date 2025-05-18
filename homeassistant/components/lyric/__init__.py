@@ -95,6 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator[Lyric](
         hass,
         _LOGGER,
+        config_entry=entry,
         # Name of the data. For logging purposes.
         name="lyric_coordinator",
         update_method=async_update_data,

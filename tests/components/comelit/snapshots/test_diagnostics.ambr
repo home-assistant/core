@@ -1,0 +1,198 @@
+# serializer version: 1
+# name: test_entry_diagnostics_bridge
+  dict({
+    'device_info': dict({
+      'devices': list([
+        dict({
+          'clima': list([
+            dict({
+              '0': dict({
+                'human_status': 'off',
+                'name': 'Climate0',
+                'power': 0.0,
+                'power_unit': 'W',
+                'protected': 0,
+                'status': 0,
+                'val': list([
+                  list([
+                    221,
+                    0,
+                    'U',
+                    'M',
+                    50,
+                    0,
+                    0,
+                    'U',
+                  ]),
+                  list([
+                    650,
+                    0,
+                    'U',
+                    'M',
+                    500,
+                    0,
+                    0,
+                    'U',
+                  ]),
+                  list([
+                    0,
+                    0,
+                  ]),
+                ]),
+                'zone': 'Living room',
+              }),
+            }),
+          ]),
+        }),
+        dict({
+          'shutter': list([
+            dict({
+              '0': dict({
+                'human_status': 'stopped',
+                'name': 'Cover0',
+                'power': 0.0,
+                'power_unit': 'W',
+                'protected': 0,
+                'status': 0,
+                'val': 0,
+                'zone': 'Open space',
+              }),
+            }),
+          ]),
+        }),
+        dict({
+          'light': list([
+            dict({
+              '0': dict({
+                'human_status': 'off',
+                'name': 'Light0',
+                'power': 0.0,
+                'power_unit': 'W',
+                'protected': 0,
+                'status': 0,
+                'val': 0,
+                'zone': 'Bathroom',
+              }),
+            }),
+          ]),
+        }),
+        dict({
+          'other': list([
+            dict({
+              '0': dict({
+                'human_status': 'off',
+                'name': 'Switch0',
+                'power': 0.0,
+                'power_unit': 'W',
+                'protected': 0,
+                'status': 0,
+                'val': 0,
+                'zone': 'Bathroom',
+              }),
+            }),
+          ]),
+        }),
+        dict({
+          'irrigation': list([
+          ]),
+        }),
+        dict({
+          'scenario': list([
+          ]),
+        }),
+      ]),
+      'last_exception': 'None',
+      'last_update success': True,
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': 'fake_bridge_host',
+        'pin': '**REDACTED**',
+        'port': 80,
+        'type': 'Serial bridge',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'comelit',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': None,
+      'version': 1,
+    }),
+    'type': 'Serial bridge',
+  })
+# ---
+# name: test_entry_diagnostics_vedo
+  dict({
+    'device_info': dict({
+      'devices': list([
+        dict({
+          'alarm_areas': list([
+            dict({
+              '0': dict({
+                'alarm': False,
+                'alarm_memory': False,
+                'anomaly': False,
+                'armed': 0,
+                'human_status': 'disarmed',
+                'in_time': False,
+                'name': 'Area0',
+                'out_time': False,
+                'p1': True,
+                'p2': True,
+                'ready': False,
+                'sabotage': False,
+              }),
+            }),
+          ]),
+        }),
+        dict({
+          'alarm_zones': list([
+            dict({
+              '0': dict({
+                'human_status': 'rest',
+                'name': 'Zone0',
+                'status': 0,
+                'status_api': '0x000',
+              }),
+            }),
+          ]),
+        }),
+      ]),
+      'last_exception': 'None',
+      'last_update success': True,
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': 'fake_vedo_host',
+        'pin': '**REDACTED**',
+        'port': 8080,
+        'type': 'Vedo system',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'comelit',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': None,
+      'version': 1,
+    }),
+    'type': 'Vedo system',
+  })
+# ---

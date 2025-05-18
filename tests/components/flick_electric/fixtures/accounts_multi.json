@@ -1,0 +1,144 @@
+{
+  "data": [
+    {
+      "id": "134800",
+      "type": "customer_account",
+      "attributes": {
+        "account_number": "10123404",
+        "billing_name": "9973debf-963f-49b0-9a73-Ba9c3400cbed@Anonymised Example",
+        "billing_email": null,
+        "address": "123 Fake Street, Newtown, Wellington 6021",
+        "brand": "flick",
+        "vulnerability_state": "none",
+        "medical_dependency": false,
+        "status": "active",
+        "start_at": "2023-03-02T00:00:00.000+13:00",
+        "end_at": null,
+        "application_id": "5dfc4978-07de-4d18-8ef7-055603805ba6",
+        "active": true,
+        "on_join_journey": false,
+        "placeholder": false
+      },
+      "relationships": {
+        "user": {
+          "data": {
+            "id": "106676",
+            "type": "customer_user"
+          }
+        },
+        "sign_up": {
+          "data": {
+            "id": "877039",
+            "type": "customer_sign_up"
+          }
+        },
+        "main_customer": {
+          "data": {
+            "id": "108335",
+            "type": "customer_customer"
+          }
+        },
+        "main_consumer": {
+          "data": {
+            "id": "108291",
+            "type": "customer_icp_consumer"
+          }
+        },
+        "primary_contact": {
+          "data": {
+            "id": "121953",
+            "type": "customer_contact"
+          }
+        },
+        "default_payment_method": {
+          "data": {
+            "id": "602801",
+            "type": "customer_payment_method"
+          }
+        },
+        "phone_numbers": {
+          "data": [
+            {
+              "id": "111604",
+              "type": "customer_phone_number"
+            }
+          ]
+        },
+        "payment_methods": {
+          "data": [
+            {
+              "id": "602801",
+              "type": "customer_payment_method"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "123456",
+      "type": "customer_account",
+      "attributes": {
+        "account_number": "123123123",
+        "billing_name": "9973debf-963f-49b0-9a73-Ba9c3400cbed@Anonymised Example",
+        "billing_email": null,
+        "address": "456 Fake Street, Newtown, Wellington 6021",
+        "brand": "flick",
+        "vulnerability_state": "none",
+        "medical_dependency": false,
+        "status": "active",
+        "start_at": "2023-03-02T00:00:00.000+13:00",
+        "end_at": null,
+        "application_id": "5dfc4978-07de-4d18-8ef7-055603805ba6",
+        "active": true,
+        "on_join_journey": false,
+        "placeholder": false
+      },
+      "relationships": {
+        "main_consumer": {
+          "data": {
+            "id": "11223344",
+            "type": "customer_icp_consumer"
+          }
+        }
+      }
+    }
+  ],
+  "included": [
+    {
+      "id": "108291",
+      "type": "customer_icp_consumer",
+      "attributes": {
+        "start_date": "2023-03-02",
+        "end_date": null,
+        "icp_number": "0001234567UNB12",
+        "supply_node_ref": "/network/nz/supply_nodes/ed7617df-4b10-4c8a-a05d-deadbeef8299",
+        "physical_address": "123 FAKE STREET,NEWTOWN,WELLINGTON,6021"
+      }
+    },
+    {
+      "id": "11223344",
+      "type": "customer_icp_consumer",
+      "attributes": {
+        "start_date": "2023-03-02",
+        "end_date": null,
+        "icp_number": "9991234567UNB12",
+        "supply_node_ref": "/network/nz/supply_nodes/ed7617df-4b10-4c8a-a05d-deadbeef1234",
+        "physical_address": "456 FAKE STREET,NEWTOWN,WELLINGTON,6021"
+      }
+    }
+  ],
+  "meta": {
+    "verb": "get",
+    "type": "customer_account",
+    "params": [],
+    "permission": {
+      "uri": "flick:customer_app:resource:account:list",
+      "data_context": null
+    },
+    "host": "https://api.flickuat.com",
+    "service": "customer",
+    "path": "/accounts",
+    "description": "Returns the accounts viewable by the current user",
+    "respond_with_array": true
+  }
+}

@@ -28,24 +28,23 @@
       "invalid_mfa_code": "Invalid MFA code"
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "services": {
     "capture_image": {
       "name": "Capture image",
-      "description": "Request a new image capture from a camera device.",
+      "description": "Requests a new image capture from a camera device.",
       "fields": {
         "entity_id": {
           "name": "Entity",
-          "description": "Entity id of the camera to request an image."
+          "description": "Entity ID of the camera to request an image from."
         }
       }
     },
     "change_setting": {
       "name": "Change setting",
-      "description": "Change an Abode system setting.",
+      "description": "Changes an Abode system setting.",
       "fields": {
         "setting": {
           "name": "Setting",
@@ -59,11 +58,11 @@
     },
     "trigger_automation": {
       "name": "Trigger automation",
-      "description": "Trigger an Abode automation.",
+      "description": "Triggers an Abode automation.",
       "fields": {
         "entity_id": {
           "name": "Entity",
-          "description": "Entity id of the automation to trigger."
+          "description": "Entity ID of the automation to trigger."
         }
       }
     }

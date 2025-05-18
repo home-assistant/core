@@ -7,7 +7,7 @@ from aioautomower.model import make_name_string
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import AutomowerConfigEntry
@@ -15,18 +15,25 @@ from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AutomowerConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up lawn mower platform."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        AutomowerCalendarEntity(mower_id, coordinator) for mower_id in coordinator.data
-    )
+
+    def _async_add_new_devices(mower_ids: set[str]) -> None:
+        async_add_entities(
+            AutomowerCalendarEntity(mower_id, coordinator) for mower_id in mower_ids
+        )
+
+    coordinator.new_devices_callbacks.append(_async_add_new_devices)
+    _async_add_new_devices(set(coordinator.data))
 
 
 class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
@@ -60,8 +67,8 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
             ]
         return CalendarEvent(
             summary=make_name_string(work_area_name, program_event.schedule_no),
-            start=program_event.start.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE),
-            end=program_event.end.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE),
+            start=program_event.start,
+            end=program_event.end,
             rrule=program_event.rrule_str,
         )
 

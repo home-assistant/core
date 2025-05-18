@@ -22,7 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed, mock_restore_cache
 
@@ -42,6 +42,7 @@ class ReadResult:
         self.registers = register_words
         self.bits = register_words
         self.value = register_words
+        self.count = len(register_words) if register_words is not None else 0
 
     def isError(self):
         """Set error state."""
@@ -57,7 +58,7 @@ def check_config_loaded_fixture():
 @pytest.fixture(name="register_words")
 def register_words_fixture():
     """Set default for register_words."""
-    return [0x00, 0x00]
+    return [0x00]
 
 
 @pytest.fixture(name="config_addon")

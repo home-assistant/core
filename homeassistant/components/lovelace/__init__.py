@@ -1,6 +1,8 @@
 """Support for the Lovelace UI."""
 
+from dataclasses import dataclass
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -13,10 +15,12 @@ from homeassistant.const import CONF_FILENAME, CONF_MODE, CONF_RESOURCES
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, config_validation as cv
+from homeassistant.helpers.frame import report_usage
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
+from homeassistant.util import slugify
 
 from . import dashboard, resources, websocket
 from .const import (  # noqa: F401
@@ -30,6 +34,7 @@ from .const import (  # noqa: F401
     DEFAULT_ICON,
     DOMAIN,
     EVENT_LOVELACE_UPDATED,
+    LOVELACE_DATA,
     MODE_STORAGE,
     MODE_YAML,
     RESOURCE_CREATE_FIELDS,
@@ -39,11 +44,24 @@ from .const import (  # noqa: F401
     SERVICE_RELOAD_RESOURCES,
     STORAGE_DASHBOARD_CREATE_FIELDS,
     STORAGE_DASHBOARD_UPDATE_FIELDS,
-    url_slug,
 )
 from .system_health import system_health_info  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _validate_url_slug(value: Any) -> str:
+    """Validate value is a valid url slug."""
+    if value is None:
+        raise vol.Invalid("Slug should not be None")
+    if "-" not in value:
+        raise vol.Invalid("Url path needs to contain a hyphen (-)")
+    str_value = str(value)
+    slg = slugify(str_value, separator="-")
+    if str_value == slg:
+        return str_value
+    raise vol.Invalid(f"invalid slug {value} (try {slg})")
+
 
 CONF_DASHBOARDS = "dashboards"
 
@@ -64,7 +82,7 @@ CONFIG_SCHEMA = vol.Schema(
                 ),
                 vol.Optional(CONF_DASHBOARDS): cv.schema_with_slug_keys(
                     YAML_DASHBOARD_SCHEMA,
-                    slug_validator=url_slug,
+                    slug_validator=_validate_url_slug,
                 ),
                 vol.Optional(CONF_RESOURCES): [RESOURCE_SCHEMA],
             }
@@ -72,6 +90,44 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+
+@dataclass
+class LovelaceData:
+    """Dataclass to store information in hass.data."""
+
+    mode: str
+    dashboards: dict[str | None, dashboard.LovelaceConfig]
+    resources: resources.ResourceYAMLCollection | resources.ResourceStorageCollection
+    yaml_dashboards: dict[str | None, ConfigType]
+
+    def __getitem__(self, name: str) -> Any:
+        """Enable method for compatibility reason.
+
+        Following migration from an untyped dict to a dataclass in
+        https://github.com/home-assistant/core/pull/136313
+        """
+        report_usage(
+            f"accessed lovelace_data['{name}'] instead of lovelace_data.{name}",
+            breaks_in_ha_version="2026.2",
+            exclude_integrations={DOMAIN},
+        )
+        return getattr(self, name)
+
+    def get(self, name: str, default: Any = None) -> Any:
+        """Enable method for compatibility reason.
+
+        Following migration from an untyped dict to a dataclass in
+        https://github.com/home-assistant/core/pull/136313
+        """
+        report_usage(
+            f"accessed lovelace_data.get('{name}') instead of lovelace_data.{name}",
+            breaks_in_ha_version="2026.2",
+            exclude_integrations={DOMAIN},
+        )
+        if hasattr(self, name):
+            return getattr(self, name)
+        return default
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -101,9 +157,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         resource_collection = await create_yaml_resource_col(
             hass, config[DOMAIN].get(CONF_RESOURCES)
         )
-        hass.data[DOMAIN]["resources"] = resource_collection
+        hass.data[LOVELACE_DATA].resources = resource_collection
 
     default_config: dashboard.LovelaceConfig
+    resource_collection: (
+        resources.ResourceYAMLCollection | resources.ResourceStorageCollection
+    )
     if mode == MODE_YAML:
         default_config = dashboard.LovelaceYAML(hass, None, None)
         resource_collection = await create_yaml_resource_col(hass, yaml_resources)
@@ -152,28 +211,30 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, websocket.websocket_lovelace_delete_config
     )
 
-    hass.data[DOMAIN] = {
+    hass.data[LOVELACE_DATA] = LovelaceData(
+        mode=mode,
         # We store a dictionary mapping url_path: config. None is the default.
-        "mode": mode,
-        "dashboards": {None: default_config},
-        "resources": resource_collection,
-        "yaml_dashboards": config[DOMAIN].get(CONF_DASHBOARDS, {}),
-    }
+        dashboards={None: default_config},
+        resources=resource_collection,
+        yaml_dashboards=config[DOMAIN].get(CONF_DASHBOARDS, {}),
+    )
 
     if hass.config.recovery_mode:
         return True
 
-    async def storage_dashboard_changed(change_type, item_id, item):
+    async def storage_dashboard_changed(
+        change_type: str, item_id: str, item: dict
+    ) -> None:
         """Handle a storage dashboard change."""
         url_path = item[CONF_URL_PATH]
 
         if change_type == collection.CHANGE_REMOVED:
             frontend.async_remove_panel(hass, url_path)
-            await hass.data[DOMAIN]["dashboards"].pop(url_path).async_delete()
+            await hass.data[LOVELACE_DATA].dashboards.pop(url_path).async_delete()
             return
 
         if change_type == collection.CHANGE_ADDED:
-            existing = hass.data[DOMAIN]["dashboards"].get(url_path)
+            existing = hass.data[LOVELACE_DATA].dashboards.get(url_path)
 
             if existing:
                 _LOGGER.warning(
@@ -183,13 +244,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
                 return
 
-            hass.data[DOMAIN]["dashboards"][url_path] = dashboard.LovelaceStorage(
+            hass.data[LOVELACE_DATA].dashboards[url_path] = dashboard.LovelaceStorage(
                 hass, item
             )
 
             update = False
         else:
-            hass.data[DOMAIN]["dashboards"][url_path].config = item
+            hass.data[LOVELACE_DATA].dashboards[url_path].config = item
             update = True
 
         try:
@@ -198,10 +259,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.warning("Failed to %s panel %s from storage", change_type, url_path)
 
     # Process YAML dashboards
-    for url_path, dashboard_conf in hass.data[DOMAIN]["yaml_dashboards"].items():
+    for url_path, dashboard_conf in hass.data[LOVELACE_DATA].yaml_dashboards.items():
         # For now always mode=yaml
         lovelace_config = dashboard.LovelaceYAML(hass, url_path, dashboard_conf)
-        hass.data[DOMAIN]["dashboards"][url_path] = lovelace_config
+        hass.data[LOVELACE_DATA].dashboards[url_path] = lovelace_config
 
         try:
             _register_panel(hass, url_path, MODE_YAML, dashboard_conf, False)
@@ -210,9 +271,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Process storage dashboards
     dashboards_collection = dashboard.DashboardsCollection(hass)
-
-    # This can be removed when the map integration is removed
-    hass.data[DOMAIN]["dashboards_collection"] = dashboards_collection
 
     dashboards_collection.async_add_listener(storage_dashboard_changed)
     await dashboards_collection.async_load()
@@ -225,8 +283,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         STORAGE_DASHBOARD_UPDATE_FIELDS,
     ).async_setup(hass)
 
-    def create_map_dashboard():
-        hass.async_create_task(_create_map_dashboard(hass))
+    def create_map_dashboard() -> None:
+        """Create a map dashboard."""
+        hass.async_create_task(_create_map_dashboard(hass, dashboards_collection))
 
     if not onboarding.async_is_onboarded(hass):
         onboarding.async_add_listener(hass, create_map_dashboard)
@@ -234,7 +293,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def create_yaml_resource_col(hass, yaml_resources):
+async def create_yaml_resource_col(
+    hass: HomeAssistant, yaml_resources: list[ConfigType] | None
+) -> resources.ResourceYAMLCollection:
     """Create yaml resources collection."""
     if yaml_resources is None:
         default_config = dashboard.LovelaceYAML(hass, None, None)
@@ -254,7 +315,9 @@ async def create_yaml_resource_col(hass, yaml_resources):
 
 
 @callback
-def _register_panel(hass, url_path, mode, config, update):
+def _register_panel(
+    hass: HomeAssistant, url_path: str | None, mode: str, config: dict, update: bool
+) -> None:
     """Register a panel."""
     kwargs = {
         "frontend_url_path": url_path,
@@ -270,15 +333,15 @@ def _register_panel(hass, url_path, mode, config, update):
     frontend.async_register_built_in_panel(hass, DOMAIN, **kwargs)
 
 
-async def _create_map_dashboard(hass: HomeAssistant):
+async def _create_map_dashboard(
+    hass: HomeAssistant, dashboards_collection: dashboard.DashboardsCollection
+) -> None:
+    """Create a map dashboard."""
     translations = await async_get_translations(
         hass, hass.config.language, "dashboard", {onboarding.DOMAIN}
     )
     title = translations["component.onboarding.dashboard.map.title"]
 
-    dashboards_collection: dashboard.DashboardsCollection = hass.data[DOMAIN][
-        "dashboards_collection"
-    ]
     await dashboards_collection.async_create_item(
         {
             CONF_ALLOW_SINGLE_WORD: True,
@@ -288,5 +351,5 @@ async def _create_map_dashboard(hass: HomeAssistant):
         }
     )
 
-    map_store: dashboard.LovelaceStorage = hass.data[DOMAIN]["dashboards"]["map"]
+    map_store = hass.data[LOVELACE_DATA].dashboards["map"]
     await map_store.async_save({"strategy": {"type": "map"}})

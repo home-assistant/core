@@ -9,8 +9,8 @@ from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, entity_registry as er, restore_state
 
-from .const import DOMAIN, OPTION_PREFERRED
-from .pipeline import AssistDevice, PipelineData, PipelineStorageCollection
+from .const import OPTION_PREFERRED
+from .pipeline import KEY_ASSIST_PIPELINE, AssistDevice
 from .vad import VadSensitivity
 
 
@@ -30,7 +30,7 @@ def get_chosen_pipeline(
     if state is None or state.state == OPTION_PREFERRED:
         return None
 
-    pipeline_store: PipelineStorageCollection = hass.data[DOMAIN].pipeline_store
+    pipeline_store = hass.data[KEY_ASSIST_PIPELINE].pipeline_store
     return next(
         (item.id for item in pipeline_store.async_items() if item.name == state.state),
         None,
@@ -80,7 +80,7 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
         """When entity is added to Home Assistant."""
         await super().async_added_to_hass()
 
-        pipeline_data: PipelineData = self.hass.data[DOMAIN]
+        pipeline_data = self.hass.data[KEY_ASSIST_PIPELINE]
         pipeline_store = pipeline_data.pipeline_store
         self.async_on_remove(
             pipeline_store.async_add_change_set_listener(self._pipelines_updated)
@@ -116,9 +116,7 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
     @callback
     def _update_options(self) -> None:
         """Handle pipeline update."""
-        pipeline_store: PipelineStorageCollection = self.hass.data[
-            DOMAIN
-        ].pipeline_store
+        pipeline_store = self.hass.data[KEY_ASSIST_PIPELINE].pipeline_store
         options = [OPTION_PREFERRED]
         options.extend(sorted(item.name for item in pipeline_store.async_items()))
         self._attr_options = options

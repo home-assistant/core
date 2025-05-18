@@ -26,7 +26,12 @@ def command[_EntityT: CambridgeAudioEntity, **_P](
             await func(self, *args, **kwargs)
         except STREAM_MAGIC_EXCEPTIONS as exc:
             raise HomeAssistantError(
-                f"Error executing {func.__name__} on entity {self.entity_id},"
+                translation_domain=DOMAIN,
+                translation_key="command_error",
+                translation_placeholders={
+                    "function_name": func.__name__,
+                    "entity_id": self.entity_id,
+                },
             ) from exc
 
     return decorator
@@ -62,4 +67,4 @@ class CambridgeAudioEntity(Entity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove callbacks."""
-        await self.client.unregister_state_update_callbacks(self._state_update_callback)
+        self.client.unregister_state_update_callbacks(self._state_update_callback)

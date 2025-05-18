@@ -23,15 +23,15 @@
         },
         "subdir": {
           "name": "Subdirectory",
-          "description": "Download into subdirectory."
+          "description": "Relative download path."
         },
         "filename": {
           "name": "Filename",
-          "description": "Determine the filename."
+          "description": "Custom name for the downloaded file."
         },
         "overwrite": {
           "name": "Overwrite",
-          "description": "Whether to overwrite the file or not."
+          "description": "Overwrite file if it exists."
         }
       }
     }

@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from pydeako.deako import Deako, DeviceListTimeout, FindDevicesTimeout
-from pydeako.discover import DeakoDiscoverer
+from pydeako import Deako, DeakoDiscoverer, FindDevicesError
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
@@ -30,12 +29,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: DeakoConfigEntry) -> boo
     await connection.connect()
     try:
         await connection.find_devices()
-    except DeviceListTimeout as exc:  # device list never received
-        _LOGGER.warning("Device not responding to device list")
-        await connection.disconnect()
-        raise ConfigEntryNotReady(exc) from exc
-    except FindDevicesTimeout as exc:  # total devices expected not received
-        _LOGGER.warning("Device not responding to device requests")
+    except FindDevicesError as exc:
+        _LOGGER.warning("Error finding devices: %s", exc)
         await connection.disconnect()
         raise ConfigEntryNotReady(exc) from exc
 

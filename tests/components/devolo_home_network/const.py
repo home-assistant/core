@@ -14,7 +14,7 @@ from devolo_plc_api.device_api import (
 )
 from devolo_plc_api.plcnet_api import LOCAL, REMOTE, LogicalNetwork
 
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 IP = "192.0.2.1"
 IP_ALT = "192.0.2.2"

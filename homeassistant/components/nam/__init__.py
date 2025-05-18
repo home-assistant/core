@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
 
-from aiohttp.client_exceptions import ClientConnectorError, ClientError
+from aiohttp.client_exceptions import ClientError
 from nettigo_air_monitor import (
     ApiError,
     AuthFailedError,
@@ -14,7 +13,6 @@ from nettigo_air_monitor import (
 )
 
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -22,13 +20,11 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import ATTR_SDS011, ATTR_SPS30, DOMAIN
-from .coordinator import NAMDataUpdateCoordinator
+from .coordinator import NAMConfigEntry, NAMDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BUTTON, Platform.SENSOR]
-
-type NAMConfigEntry = ConfigEntry[NAMDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NAMConfigEntry) -> bool:
@@ -42,20 +38,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: NAMConfigEntry) -> bool:
     options = ConnectionOptions(host=host, username=username, password=password)
     try:
         nam = await NettigoAirMonitor.create(websession, options)
-    except (ApiError, ClientError, ClientConnectorError, TimeoutError) as err:
-        raise ConfigEntryNotReady from err
+    except (ApiError, ClientError) as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="device_communication_error",
+            translation_placeholders={"device": entry.title},
+        ) from err
 
     try:
         await nam.async_check_credentials()
-    except ApiError as err:
-        raise ConfigEntryNotReady from err
+    except (ApiError, ClientError) as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="device_communication_error",
+            translation_placeholders={"device": entry.title},
+        ) from err
     except AuthFailedError as err:
-        raise ConfigEntryAuthFailed from err
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_error",
+            translation_placeholders={"device": entry.title},
+        ) from err
 
-    if TYPE_CHECKING:
-        assert entry.unique_id
-
-    coordinator = NAMDataUpdateCoordinator(hass, nam, entry.unique_id)
+    coordinator = NAMDataUpdateCoordinator(hass, entry, nam)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator

@@ -17,7 +17,7 @@ class XS1DeviceEntity(Entity):
         """Initialize the XS1 device."""
         self.device = device
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Retrieve latest device state."""
         async with UPDATE_LOCK:
             await self.hass.async_add_executor_job(self.device.update)

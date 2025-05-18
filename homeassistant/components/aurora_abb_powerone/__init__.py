@@ -23,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AuroraAbbConfigEntry) ->
 
     comport = entry.data[CONF_PORT]
     address = entry.data[CONF_ADDRESS]
-    coordinator = AuroraAbbDataUpdateCoordinator(hass, comport, address)
+    coordinator = AuroraAbbDataUpdateCoordinator(hass, entry, comport, address)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator

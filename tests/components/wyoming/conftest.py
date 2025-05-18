@@ -13,7 +13,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import SATELLITE_INFO, STT_INFO, TTS_INFO, WAKE_WORD_INFO
+from . import (
+    HANDLE_INFO,
+    INTENT_INFO,
+    SATELLITE_INFO,
+    STT_INFO,
+    TTS_INFO,
+    WAKE_WORD_INFO,
+)
 
 from tests.common import MockConfigEntry
 
@@ -84,7 +91,39 @@ def wake_word_config_entry(hass: HomeAssistant) -> ConfigEntry:
 
 
 @pytest.fixture
-async def init_wyoming_stt(hass: HomeAssistant, stt_config_entry: ConfigEntry):
+def intent_config_entry(hass: HomeAssistant) -> ConfigEntry:
+    """Create a config entry."""
+    entry = MockConfigEntry(
+        domain="wyoming",
+        data={
+            "host": "1.2.3.4",
+            "port": 1234,
+        },
+        title="Test Intent",
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.fixture
+def handle_config_entry(hass: HomeAssistant) -> ConfigEntry:
+    """Create a config entry."""
+    entry = MockConfigEntry(
+        domain="wyoming",
+        data={
+            "host": "1.2.3.4",
+            "port": 1234,
+        },
+        title="Test Handle",
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.fixture
+async def init_wyoming_stt(
+    hass: HomeAssistant, stt_config_entry: ConfigEntry
+) -> ConfigEntry:
     """Initialize Wyoming STT."""
     with patch(
         "homeassistant.components.wyoming.data.load_wyoming_info",
@@ -92,9 +131,13 @@ async def init_wyoming_stt(hass: HomeAssistant, stt_config_entry: ConfigEntry):
     ):
         await hass.config_entries.async_setup(stt_config_entry.entry_id)
 
+    return stt_config_entry
+
 
 @pytest.fixture
-async def init_wyoming_tts(hass: HomeAssistant, tts_config_entry: ConfigEntry):
+async def init_wyoming_tts(
+    hass: HomeAssistant, tts_config_entry: ConfigEntry
+) -> ConfigEntry:
     """Initialize Wyoming TTS."""
     with patch(
         "homeassistant.components.wyoming.data.load_wyoming_info",
@@ -102,17 +145,49 @@ async def init_wyoming_tts(hass: HomeAssistant, tts_config_entry: ConfigEntry):
     ):
         await hass.config_entries.async_setup(tts_config_entry.entry_id)
 
+    return tts_config_entry
+
 
 @pytest.fixture
 async def init_wyoming_wake_word(
     hass: HomeAssistant, wake_word_config_entry: ConfigEntry
-):
+) -> ConfigEntry:
     """Initialize Wyoming Wake Word."""
     with patch(
         "homeassistant.components.wyoming.data.load_wyoming_info",
         return_value=WAKE_WORD_INFO,
     ):
         await hass.config_entries.async_setup(wake_word_config_entry.entry_id)
+
+    return wake_word_config_entry
+
+
+@pytest.fixture
+async def init_wyoming_intent(
+    hass: HomeAssistant, intent_config_entry: ConfigEntry
+) -> ConfigEntry:
+    """Initialize Wyoming intent recognizer."""
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=INTENT_INFO,
+    ):
+        await hass.config_entries.async_setup(intent_config_entry.entry_id)
+
+    return intent_config_entry
+
+
+@pytest.fixture
+async def init_wyoming_handle(
+    hass: HomeAssistant, handle_config_entry: ConfigEntry
+) -> ConfigEntry:
+    """Initialize Wyoming intent handler."""
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=HANDLE_INFO,
+    ):
+        await hass.config_entries.async_setup(handle_config_entry.entry_id)
+
+    return handle_config_entry
 
 
 @pytest.fixture
@@ -152,7 +227,7 @@ async def init_satellite(hass: HomeAssistant, satellite_config_entry: ConfigEntr
             return_value=SATELLITE_INFO,
         ),
         patch(
-            "homeassistant.components.wyoming.satellite.WyomingSatellite.run"
+            "homeassistant.components.wyoming.assist_satellite.WyomingAssistSatellite.run"
         ) as _run_mock,
     ):
         # _run_mock: satellite task does not actually run
@@ -164,4 +239,4 @@ async def satellite_device(
     hass: HomeAssistant, init_satellite, satellite_config_entry: ConfigEntry
 ) -> SatelliteDevice:
     """Get a satellite device fixture."""
-    return hass.data[DOMAIN][satellite_config_entry.entry_id].satellite.device
+    return hass.data[DOMAIN][satellite_config_entry.entry_id].device

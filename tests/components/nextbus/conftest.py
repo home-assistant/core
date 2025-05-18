@@ -1,9 +1,12 @@
 """Test helpers for NextBus tests."""
 
+from collections.abc import Generator
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
+
+from .const import BASIC_RESULTS
 
 
 @pytest.fixture(
@@ -128,3 +131,21 @@ def mock_nextbus_lists(
     instance.route_details.side_effect = route_details_side_effect
 
     return instance
+
+
+@pytest.fixture
+def mock_nextbus() -> Generator[MagicMock]:
+    """Create a mock py_nextbus module."""
+    with patch("homeassistant.components.nextbus.coordinator.NextBusClient") as client:
+        yield client
+
+
+@pytest.fixture
+def mock_nextbus_predictions(
+    mock_nextbus: MagicMock,
+) -> Generator[MagicMock]:
+    """Create a mock of NextBusClient predictions."""
+    instance = mock_nextbus.return_value
+    instance.predictions_for_stop.return_value = BASIC_RESULTS
+
+    return instance.predictions_for_stop

@@ -25,8 +25,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -109,7 +108,11 @@ def ids_from_device_description(
     """Return expected unique_id and entity_id for a give platform/device/description combination."""
 
     entity_name = normalize_name(device.display_name)
-    description_entity_name = normalize_name(str(description.name))
+
+    if description.name and isinstance(description.name, str):
+        description_entity_name = normalize_name(description.name)
+    else:
+        description_entity_name = normalize_name(description.key)
 
     unique_id = f"{device.mac}_{description.key}"
     entity_id = f"{platform.value}.{entity_name}_{description_entity_name}"
@@ -163,7 +166,6 @@ async def init_entry(
     ufp: MockUFPFixture,
     devices: Sequence[ProtectAdoptableDeviceModel],
     regenerate_ids: bool = True,
-    debug: bool = False,
 ) -> None:
     """Initialize Protect entry with given devices."""
 
@@ -171,14 +173,6 @@ async def init_entry(
     for device in devices:
         add_device(ufp.api.bootstrap, device, regenerate_ids)
 
-    if debug:
-        assert await async_setup_component(hass, "logger", {"logger": {}})
-        await hass.services.async_call(
-            "logger",
-            "set_level",
-            {"homeassistant.components.unifiprotect": "DEBUG"},
-            blocking=True,
-        )
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
 

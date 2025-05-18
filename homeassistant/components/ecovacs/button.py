@@ -2,16 +2,21 @@
 
 from dataclasses import dataclass
 
-from deebot_client.capabilities import CapabilityExecute, CapabilityLifeSpan
+from deebot_client.capabilities import (
+    CapabilityExecute,
+    CapabilityExecuteTypes,
+    CapabilityLifeSpan,
+)
+from deebot_client.commands import StationAction
 from deebot_client.events import LifeSpan
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EcovacsConfigEntry
-from .const import SUPPORTED_LIFESPANS
+from .const import SUPPORTED_LIFESPANS, SUPPORTED_STATION_ACTIONS
 from .entity import (
     EcovacsCapabilityEntityDescription,
     EcovacsDescriptionEntity,
@@ -35,6 +40,13 @@ class EcovacsLifespanButtonEntityDescription(ButtonEntityDescription):
     component: LifeSpan
 
 
+@dataclass(kw_only=True, frozen=True)
+class EcovacsStationActionButtonEntityDescription(ButtonEntityDescription):
+    """Ecovacs station action button entity description."""
+
+    action: StationAction
+
+
 ENTITY_DESCRIPTIONS: tuple[EcovacsButtonEntityDescription, ...] = (
     EcovacsButtonEntityDescription(
         capability_fn=lambda caps: caps.map.relocation if caps.map else None,
@@ -43,6 +55,16 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsButtonEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
     ),
 )
+
+STATION_ENTITY_DESCRIPTIONS = tuple(
+    EcovacsStationActionButtonEntityDescription(
+        action=action,
+        key=f"station_action_{action.name.lower()}",
+        translation_key=f"station_action_{action.name.lower()}",
+    )
+    for action in SUPPORTED_STATION_ACTIONS
+)
+
 
 LIFESPAN_ENTITY_DESCRIPTIONS = tuple(
     EcovacsLifespanButtonEntityDescription(
@@ -59,7 +81,7 @@ LIFESPAN_ENTITY_DESCRIPTIONS = tuple(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EcovacsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add entities for passed config_entry in HA."""
     controller = config_entry.runtime_data
@@ -73,6 +95,15 @@ async def async_setup_entry(
         for device in controller.devices
         for description in LIFESPAN_ENTITY_DESCRIPTIONS
         if description.component in device.capabilities.life_span.types
+    )
+    entities.extend(
+        EcovacsStationActionButtonEntity(
+            device, device.capabilities.station.action, description
+        )
+        for device in controller.devices
+        if device.capabilities.station
+        for description in STATION_ENTITY_DESCRIPTIONS
+        if description.action in device.capabilities.station.action.types
     )
     async_add_entities(entities)
 
@@ -102,4 +133,19 @@ class EcovacsResetLifespanButtonEntity(
         """Press the button."""
         await self._device.execute_command(
             self._capability.reset(self.entity_description.component)
+        )
+
+
+class EcovacsStationActionButtonEntity(
+    EcovacsDescriptionEntity[CapabilityExecuteTypes[StationAction]],
+    ButtonEntity,
+):
+    """Ecovacs station action button entity."""
+
+    entity_description: EcovacsStationActionButtonEntityDescription
+
+    async def async_press(self) -> None:
+        """Press the button."""
+        await self._device.execute_command(
+            self._capability.execute(self.entity_description.action)
         )

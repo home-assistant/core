@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SeventeenTrackError as err:
         raise ConfigEntryNotReady from err
 
-    seventeen_coordinator = SeventeenTrackCoordinator(hass, client)
+    seventeen_coordinator = SeventeenTrackCoordinator(hass, entry, client)
 
     await seventeen_coordinator.async_config_entry_first_refresh()
 

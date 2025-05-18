@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
-from nice_go import ApiError
+from nice_go import ApiError, AuthFailedError
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -12,16 +12,10 @@ from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
+    CoverState,
 )
 from homeassistant.components.nice_go.const import DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -107,16 +101,16 @@ async def test_update_cover_state(
 
     await setup_integration(hass, mock_config_entry, [Platform.COVER])
 
-    assert hass.states.get("cover.test_garage_1").state == STATE_CLOSED
-    assert hass.states.get("cover.test_garage_2").state == STATE_OPEN
+    assert hass.states.get("cover.test_garage_1").state == CoverState.CLOSED
+    assert hass.states.get("cover.test_garage_2").state == CoverState.OPEN
 
     device_update = load_json_object_fixture("device_state_update.json", DOMAIN)
     await mock_config_entry.runtime_data.on_data(device_update)
     device_update_1 = load_json_object_fixture("device_state_update_1.json", DOMAIN)
     await mock_config_entry.runtime_data.on_data(device_update_1)
 
-    assert hass.states.get("cover.test_garage_1").state == STATE_OPENING
-    assert hass.states.get("cover.test_garage_2").state == STATE_CLOSING
+    assert hass.states.get("cover.test_garage_1").state == CoverState.OPENING
+    assert hass.states.get("cover.test_garage_2").state == CoverState.CLOSING
 
 
 @pytest.mark.parametrize(
@@ -160,3 +154,86 @@ async def test_cover_exceptions(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
+
+
+async def test_auth_failed_error(
+    hass: HomeAssistant,
+    mock_nice_go: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that if an auth failed error occurs, the integration attempts a token refresh and a retry before throwing an error."""
+
+    await setup_integration(hass, mock_config_entry, [Platform.COVER])
+
+    def _open_side_effect(*args, **kwargs):
+        if mock_nice_go.open_barrier.call_count <= 3:
+            raise AuthFailedError
+        if mock_nice_go.open_barrier.call_count == 5:
+            raise AuthFailedError
+        if mock_nice_go.open_barrier.call_count == 6:
+            raise ApiError
+
+    def _close_side_effect(*args, **kwargs):
+        if mock_nice_go.close_barrier.call_count <= 3:
+            raise AuthFailedError
+        if mock_nice_go.close_barrier.call_count == 4:
+            raise ApiError
+
+    mock_nice_go.open_barrier.side_effect = _open_side_effect
+    mock_nice_go.close_barrier.side_effect = _close_side_effect
+
+    with pytest.raises(HomeAssistantError, match="Error opening the barrier"):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: "cover.test_garage_1"},
+            blocking=True,
+        )
+
+    assert mock_nice_go.authenticate.call_count == 1
+    assert mock_nice_go.open_barrier.call_count == 2
+
+    with pytest.raises(HomeAssistantError, match="Error closing the barrier"):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: "cover.test_garage_2"},
+            blocking=True,
+        )
+
+    assert mock_nice_go.authenticate.call_count == 2
+    assert mock_nice_go.close_barrier.call_count == 2
+
+    # Try again, but this time the auth failed error should not be raised
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: "cover.test_garage_1"},
+        blocking=True,
+    )
+
+    assert mock_nice_go.authenticate.call_count == 3
+    assert mock_nice_go.open_barrier.call_count == 4
+
+    # One more time but with an ApiError instead of AuthFailed
+
+    with pytest.raises(HomeAssistantError, match="Error opening the barrier"):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: "cover.test_garage_1"},
+            blocking=True,
+        )
+
+    with pytest.raises(HomeAssistantError, match="Error closing the barrier"):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: "cover.test_garage_2"},
+            blocking=True,
+        )
+
+    assert mock_nice_go.authenticate.call_count == 5
+    assert mock_nice_go.open_barrier.call_count == 6
+    assert mock_nice_go.close_barrier.call_count == 4

@@ -39,7 +39,7 @@ from simplipy.websocket import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_DEVICE_ID,
@@ -402,12 +402,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
-    loaded_entries = [
-        entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.state == ConfigEntryState.LOADED
-    ]
-    if len(loaded_entries) == 1:
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
         # If this is the last loaded instance of SimpliSafe, deregister any services
         # defined during integration setup:
         for service_name in SERVICES:
@@ -485,7 +480,7 @@ class SimpliSafe:
         except Exception as err:  # noqa: BLE001
             LOGGER.error("Unknown exception while connecting to websocket: %s", err)
 
-        LOGGER.warning("Reconnecting to websocket")
+        LOGGER.debug("Reconnecting to websocket")
         await self._async_cancel_websocket_loop()
         self._websocket_reconnect_task = self._hass.async_create_task(
             self._async_start_websocket_loop()

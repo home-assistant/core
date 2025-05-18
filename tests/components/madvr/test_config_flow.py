@@ -138,7 +138,7 @@ async def test_reconfigure_flow(
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"] == {}
 
     # define new host
@@ -204,7 +204,7 @@ async def test_reconfigure_flow_errors(
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     # Test CannotConnect error
     mock_madvr_client.open_connection.side_effect = TimeoutError

@@ -14,11 +14,12 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_MODE, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TimeSelector,
 )
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -106,7 +107,7 @@ OPTIONS_SCHEMA = vol.Schema(
                 translation_key=CONF_TIME_TYPE,
             )
         ),
-        vol.Optional(CONF_TIME, default=""): cv.string,
+        vol.Optional(CONF_TIME): TimeSelector(),
         vol.Optional(CONF_TRAFFIC_MODEL): SelectSelector(
             SelectSelectorConfig(
                 options=TRAFFIC_MODELS,
@@ -148,10 +149,6 @@ def default_options(hass: HomeAssistant) -> dict[str, str]:
 class GoogleOptionsFlow(OptionsFlow):
     """Handle an options flow for Google Travel Time."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize google options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
@@ -185,8 +182,7 @@ async def validate_input(
 ) -> dict[str, str] | None:
     """Validate the user input allows us to connect."""
     try:
-        await hass.async_add_executor_job(
-            validate_config_entry,
+        await validate_config_entry(
             hass,
             user_input[CONF_API_KEY],
             user_input[CONF_ORIGIN],
@@ -205,9 +201,7 @@ async def validate_input(
 class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Google Maps Travel Time."""
 
-    VERSION = 1
-
-    _context_entry: ConfigEntry
+    VERSION = 2
 
     @staticmethod
     @callback
@@ -215,7 +209,7 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> GoogleOptionsFlow:
         """Get the options flow for this handler."""
-        return GoogleOptionsFlow(config_entry)
+        return GoogleOptionsFlow()
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
@@ -240,27 +234,18 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
-        self._context_entry = self._get_reconfigure_entry()
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration."""
         errors: dict[str, str] | None = None
         if user_input is not None:
             errors = await validate_input(self.hass, user_input)
             if not errors:
                 return self.async_update_reload_and_abort(
-                    self._context_entry,
-                    data=user_input,
-                    reason="reconfigure_successful",
+                    self._get_reconfigure_entry(), data=user_input
                 )
 
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                RECONFIGURE_SCHEMA, self._context_entry.data.copy()
+                RECONFIGURE_SCHEMA, self._get_reconfigure_entry().data
             ),
             errors=errors,
         )

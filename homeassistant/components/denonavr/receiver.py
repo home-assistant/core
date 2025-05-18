@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import contextlib
 import logging
 
 from denonavr import DenonAVR
+from denonavr.exceptions import AvrProcessingError
 import httpx
 
 _LOGGER = logging.getLogger(__name__)
@@ -94,7 +96,8 @@ class ConnectDenonAVR:
         # Do an initial update if telnet is used.
         if self._use_telnet:
             for zone in receiver.zones.values():
-                await zone.async_update()
+                with contextlib.suppress(AvrProcessingError):
+                    await zone.async_update()
                 if self._update_audyssey:
                     await zone.async_update_audyssey()
             await receiver.async_telnet_connect()

@@ -2,25 +2,21 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import AsyncGenerator, Callable
 import json
 import logging
-import time
 from typing import Any, Literal
 
 import ollama
-import voluptuous as vol
 from voluptuous_openapi import convert
 
 from homeassistant.components import assist_pipeline, conversation
-from homeassistant.components.conversation import trace
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, TemplateError
-from homeassistant.helpers import intent, llm, template
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import ulid
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import intent, llm
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_KEEP_ALIVE,
@@ -32,7 +28,6 @@ from .const import (
     DEFAULT_MAX_HISTORY,
     DEFAULT_NUM_CTX,
     DOMAIN,
-    MAX_HISTORY_SECONDS,
 )
 from .models import MessageHistory, MessageRole
 
@@ -45,7 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up conversation entities."""
     agent = OllamaConversationEntity(config_entry)
@@ -93,6 +88,84 @@ def _parse_tool_args(arguments: dict[str, Any]) -> dict[str, Any]:
     return {k: _fix_invalid_arguments(v) for k, v in arguments.items() if v}
 
 
+def _convert_content(
+    chat_content: conversation.Content
+    | conversation.ToolResultContent
+    | conversation.AssistantContent,
+) -> ollama.Message:
+    """Create tool response content."""
+    if isinstance(chat_content, conversation.ToolResultContent):
+        return ollama.Message(
+            role=MessageRole.TOOL.value,
+            content=json.dumps(chat_content.tool_result),
+        )
+    if isinstance(chat_content, conversation.AssistantContent):
+        return ollama.Message(
+            role=MessageRole.ASSISTANT.value,
+            content=chat_content.content,
+            tool_calls=[
+                ollama.Message.ToolCall(
+                    function=ollama.Message.ToolCall.Function(
+                        name=tool_call.tool_name,
+                        arguments=tool_call.tool_args,
+                    )
+                )
+                for tool_call in chat_content.tool_calls or ()
+            ],
+        )
+    if isinstance(chat_content, conversation.UserContent):
+        return ollama.Message(
+            role=MessageRole.USER.value,
+            content=chat_content.content,
+        )
+    if isinstance(chat_content, conversation.SystemContent):
+        return ollama.Message(
+            role=MessageRole.SYSTEM.value,
+            content=chat_content.content,
+        )
+    raise TypeError(f"Unexpected content type: {type(chat_content)}")
+
+
+async def _transform_stream(
+    result: AsyncGenerator[ollama.Message],
+) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
+    """Transform the response stream into HA format.
+
+    An Ollama streaming response may come in chunks like this:
+
+    response: message=Message(role="assistant", content="Paris")
+    response: message=Message(role="assistant", content=".")
+    response: message=Message(role="assistant", content=""), done: True, done_reason: "stop"
+    response: message=Message(role="assistant", tool_calls=[...])
+    response: message=Message(role="assistant", content=""), done: True, done_reason: "stop"
+
+    This generator conforms to the chatlog delta stream expectations in that it
+    yields deltas, then the role only once the response is done.
+    """
+
+    new_msg = True
+    async for response in result:
+        _LOGGER.debug("Received response: %s", response)
+        response_message = response["message"]
+        chunk: conversation.AssistantContentDeltaDict = {}
+        if new_msg:
+            new_msg = False
+            chunk["role"] = "assistant"
+        if (tool_calls := response_message.get("tool_calls")) is not None:
+            chunk["tool_calls"] = [
+                llm.ToolInput(
+                    tool_name=tool_call["function"]["name"],
+                    tool_args=_parse_tool_args(tool_call["function"]["arguments"]),
+                )
+                for tool_call in tool_calls
+            ]
+        if (content := response_message.get("content")) is not None:
+            chunk["content"] = content
+        if response_message.get("done"):
+            new_msg = True
+        yield chunk
+
+
 class OllamaConversationEntity(
     conversation.ConversationEntity, conversation.AbstractConversationAgent
 ):
@@ -105,7 +178,6 @@ class OllamaConversationEntity(
         self.entry = entry
 
         # conversation id -> message history
-        self._history: dict[str, MessageHistory] = {}
         self._attr_name = entry.title
         self._attr_unique_id = entry.entry_id
         if self.entry.options.get(CONF_LLM_HASS_API):
@@ -134,212 +206,106 @@ class OllamaConversationEntity(
         """Return a list of supported languages."""
         return MATCH_ALL
 
-    async def async_process(
-        self, user_input: conversation.ConversationInput
+    async def _async_handle_message(
+        self,
+        user_input: conversation.ConversationInput,
+        chat_log: conversation.ChatLog,
     ) -> conversation.ConversationResult:
-        """Process a sentence."""
+        """Call the API."""
         settings = {**self.entry.data, **self.entry.options}
 
         client = self.hass.data[DOMAIN][self.entry.entry_id]
-        conversation_id = user_input.conversation_id or ulid.ulid_now()
         model = settings[CONF_MODEL]
-        intent_response = intent.IntentResponse(language=user_input.language)
-        llm_api: llm.APIInstance | None = None
-        tools: list[dict[str, Any]] | None = None
-        user_name: str | None = None
-        llm_context = llm.LLMContext(
-            platform=DOMAIN,
-            context=user_input.context,
-            user_prompt=user_input.text,
-            language=user_input.language,
-            assistant=conversation.DOMAIN,
-            device_id=user_input.device_id,
-        )
 
-        if settings.get(CONF_LLM_HASS_API):
-            try:
-                llm_api = await llm.async_get_api(
-                    self.hass,
-                    settings[CONF_LLM_HASS_API],
-                    llm_context,
-                )
-            except HomeAssistantError as err:
-                _LOGGER.error("Error getting LLM API: %s", err)
-                intent_response.async_set_error(
-                    intent.IntentResponseErrorCode.UNKNOWN,
-                    f"Error preparing LLM API: {err}",
-                )
-                return conversation.ConversationResult(
-                    response=intent_response, conversation_id=user_input.conversation_id
-                )
+        try:
+            await chat_log.async_update_llm_data(
+                DOMAIN,
+                user_input,
+                settings.get(CONF_LLM_HASS_API),
+                settings.get(CONF_PROMPT),
+            )
+        except conversation.ConverseError as err:
+            return err.as_conversation_result()
+
+        tools: list[dict[str, Any]] | None = None
+        if chat_log.llm_api:
             tools = [
-                _format_tool(tool, llm_api.custom_serializer) for tool in llm_api.tools
+                _format_tool(tool, chat_log.llm_api.custom_serializer)
+                for tool in chat_log.llm_api.tools
             ]
 
-        if (
-            user_input.context
-            and user_input.context.user_id
-            and (
-                user := await self.hass.auth.async_get_user(user_input.context.user_id)
-            )
-        ):
-            user_name = user.name
-
-        # Look up message history
-        message_history: MessageHistory | None = None
-        message_history = self._history.get(conversation_id)
-        if message_history is None:
-            # New history
-            #
-            # Render prompt and error out early if there's a problem
-            try:
-                prompt_parts = [
-                    template.Template(
-                        llm.BASE_PROMPT
-                        + settings.get(CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT),
-                        self.hass,
-                    ).async_render(
-                        {
-                            "ha_name": self.hass.config.location_name,
-                            "user_name": user_name,
-                            "llm_context": llm_context,
-                        },
-                        parse_result=False,
-                    )
-                ]
-
-            except TemplateError as err:
-                _LOGGER.error("Error rendering prompt: %s", err)
-                intent_response.async_set_error(
-                    intent.IntentResponseErrorCode.UNKNOWN,
-                    f"Sorry, I had a problem generating my prompt: {err}",
-                )
-                return conversation.ConversationResult(
-                    response=intent_response, conversation_id=conversation_id
-                )
-
-            if llm_api:
-                prompt_parts.append(llm_api.api_prompt)
-
-            prompt = "\n".join(prompt_parts)
-            _LOGGER.debug("Prompt: %s", prompt)
-            _LOGGER.debug("Tools: %s", tools)
-
-            message_history = MessageHistory(
-                timestamp=time.monotonic(),
-                messages=[
-                    ollama.Message(role=MessageRole.SYSTEM.value, content=prompt)
-                ],
-            )
-            self._history[conversation_id] = message_history
-        else:
-            # Bump timestamp so this conversation won't get cleaned up
-            message_history.timestamp = time.monotonic()
-
-        # Clean up old histories
-        self._prune_old_histories()
-
-        # Trim this message history to keep a maximum number of *user* messages
+        message_history: MessageHistory = MessageHistory(
+            [_convert_content(content) for content in chat_log.content]
+        )
         max_messages = int(settings.get(CONF_MAX_HISTORY, DEFAULT_MAX_HISTORY))
         self._trim_history(message_history, max_messages)
-
-        # Add new user message
-        message_history.messages.append(
-            ollama.Message(role=MessageRole.USER.value, content=user_input.text)
-        )
-
-        trace.async_conversation_trace_append(
-            trace.ConversationTraceEventType.AGENT_DETAIL,
-            {"messages": message_history.messages},
-        )
 
         # Get response
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
             try:
-                response = await client.chat(
+                response_generator = await client.chat(
                     model=model,
                     # Make a copy of the messages because we mutate the list later
                     messages=list(message_history.messages),
                     tools=tools,
-                    stream=False,
+                    stream=True,
                     # keep_alive requires specifying unit. In this case, seconds
                     keep_alive=f"{settings.get(CONF_KEEP_ALIVE, DEFAULT_KEEP_ALIVE)}s",
                     options={CONF_NUM_CTX: settings.get(CONF_NUM_CTX, DEFAULT_NUM_CTX)},
                 )
             except (ollama.RequestError, ollama.ResponseError) as err:
                 _LOGGER.error("Unexpected error talking to Ollama server: %s", err)
-                intent_response.async_set_error(
-                    intent.IntentResponseErrorCode.UNKNOWN,
-                    f"Sorry, I had a problem talking to the Ollama server: {err}",
-                )
-                return conversation.ConversationResult(
-                    response=intent_response, conversation_id=conversation_id
-                )
+                raise HomeAssistantError(
+                    f"Sorry, I had a problem talking to the Ollama server: {err}"
+                ) from err
 
-            response_message = response["message"]
-            message_history.messages.append(
-                ollama.Message(
-                    role=response_message["role"],
-                    content=response_message.get("content"),
-                    tool_calls=response_message.get("tool_calls"),
-                )
+            message_history.messages.extend(
+                [
+                    _convert_content(content)
+                    async for content in chat_log.async_add_delta_content_stream(
+                        user_input.agent_id, _transform_stream(response_generator)
+                    )
+                ]
             )
 
-            tool_calls = response_message.get("tool_calls")
-            if not tool_calls or not llm_api:
+            if not chat_log.unresponded_tool_results:
                 break
 
-            for tool_call in tool_calls:
-                tool_input = llm.ToolInput(
-                    tool_name=tool_call["function"]["name"],
-                    tool_args=_parse_tool_args(tool_call["function"]["arguments"]),
-                )
-                _LOGGER.debug(
-                    "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args
-                )
-
-                try:
-                    tool_response = await llm_api.async_call_tool(tool_input)
-                except (HomeAssistantError, vol.Invalid) as e:
-                    tool_response = {"error": type(e).__name__}
-                    if str(e):
-                        tool_response["error_text"] = str(e)
-
-                _LOGGER.debug("Tool response: %s", tool_response)
-                message_history.messages.append(
-                    ollama.Message(
-                        role=MessageRole.TOOL.value,
-                        content=json.dumps(tool_response),
-                    )
-                )
-
         # Create intent response
-        intent_response.async_set_speech(response_message["content"])
+        intent_response = intent.IntentResponse(language=user_input.language)
+        if not isinstance(chat_log.content[-1], conversation.AssistantContent):
+            raise TypeError(
+                f"Unexpected last message type: {type(chat_log.content[-1])}"
+            )
+        intent_response.async_set_speech(chat_log.content[-1].content or "")
         return conversation.ConversationResult(
-            response=intent_response, conversation_id=conversation_id
+            response=intent_response,
+            conversation_id=chat_log.conversation_id,
+            continue_conversation=chat_log.continue_conversation,
         )
 
-    def _prune_old_histories(self) -> None:
-        """Remove old message histories."""
-        now = time.monotonic()
-        self._history = {
-            conversation_id: message_history
-            for conversation_id, message_history in self._history.items()
-            if (now - message_history.timestamp) <= MAX_HISTORY_SECONDS
-        }
-
     def _trim_history(self, message_history: MessageHistory, max_messages: int) -> None:
-        """Trims excess messages from a single history."""
+        """Trims excess messages from a single history.
+
+        This sets the max history to allow a configurable size history may take
+        up in the context window.
+
+        Note that some messages in the history may not be from ollama only, and
+        may come from other anents, so the assumptions here may not strictly hold,
+        but generally should be effective.
+        """
         if max_messages < 1:
             # Keep all messages
             return
 
-        if message_history.num_user_messages >= max_messages:
+        # Ignore the in progress user message
+        num_previous_rounds = message_history.num_user_messages - 1
+        if num_previous_rounds >= max_messages:
             # Trim history but keep system prompt (first message).
             # Every other message should be an assistant message, so keep 2x
-            # message objects.
-            num_keep = 2 * max_messages
+            # message objects. Also keep the last in progress user message
+            num_keep = 2 * max_messages + 1
             drop_index = len(message_history.messages) - num_keep
             message_history.messages = [
                 message_history.messages[0]

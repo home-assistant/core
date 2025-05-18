@@ -1,16 +1,13 @@
 """Test the Kuler Sky lights."""
 
-from collections.abc import AsyncGenerator
-from unittest.mock import MagicMock, patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from bleak.backends.device import BLEDevice
 import pykulersky
 import pytest
 
-from homeassistant.components.kulersky.const import (
-    DATA_ADDRESSES,
-    DATA_DISCOVERY_SUBSCRIPTION,
-    DOMAIN,
-)
+from homeassistant.components.kulersky.const import DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
@@ -26,37 +23,55 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
+    CONF_ADDRESS,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
+def mock_ble_device() -> Generator[MagicMock]:
+    """Mock BLEDevice."""
+    with patch(
+        "homeassistant.components.kulersky.async_ble_device_from_address",
+        return_value=BLEDevice(
+            address="AA:BB:CC:11:22:33", name="Bedroom", rssi=-50, details={}
+        ),
+    ) as ble_device:
+        yield ble_device
+
+
+@pytest.fixture
 async def mock_entry() -> MockConfigEntry:
     """Create a mock light entity."""
-    return MockConfigEntry(domain=DOMAIN)
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_ADDRESS: "AA:BB:CC:11:22:33"},
+        title="Bedroom",
+        version=2,
+    )
 
 
 @pytest.fixture
 async def mock_light(
-    hass: HomeAssistant, mock_entry: MockConfigEntry
-) -> AsyncGenerator[MagicMock]:
-    """Create a mock light entity."""
-
-    light = MagicMock(spec=pykulersky.Light)
+    hass: HomeAssistant, mock_entry: MockConfigEntry, mock_ble_device: MagicMock
+) -> Generator[AsyncMock]:
+    """Mock pykulersky light."""
+    light = AsyncMock()
     light.address = "AA:BB:CC:11:22:33"
     light.name = "Bedroom"
     light.connect.return_value = True
     light.get_color.return_value = (0, 0, 0, 0)
+
     with patch(
-        "homeassistant.components.kulersky.light.pykulersky.discover",
-        return_value=[light],
+        "pykulersky.Light",
+        return_value=light,
     ):
         mock_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -67,7 +82,7 @@ async def mock_light(
         yield light
 
 
-async def test_init(hass: HomeAssistant, mock_light: MagicMock) -> None:
+async def test_init(hass: HomeAssistant, mock_light: AsyncMock) -> None:
     """Test platform setup."""
     state = hass.states.get("light.bedroom")
     assert state.state == STATE_OFF
@@ -83,24 +98,14 @@ async def test_init(hass: HomeAssistant, mock_light: MagicMock) -> None:
         ATTR_RGBW_COLOR: None,
     }
 
-    with patch.object(hass.loop, "stop"):
-        await hass.async_stop()
-        await hass.async_block_till_done()
-
-    assert mock_light.disconnect.called
-
 
 async def test_remove_entry(
     hass: HomeAssistant, mock_light: MagicMock, mock_entry: MockConfigEntry
 ) -> None:
     """Test platform setup."""
-    assert hass.data[DOMAIN][DATA_ADDRESSES] == {"AA:BB:CC:11:22:33"}
-    assert DATA_DISCOVERY_SUBSCRIPTION in hass.data[DOMAIN]
-
     await hass.config_entries.async_remove(mock_entry.entry_id)
 
     assert mock_light.disconnect.called
-    assert DOMAIN not in hass.data
 
 
 async def test_remove_entry_exceptions_caught(

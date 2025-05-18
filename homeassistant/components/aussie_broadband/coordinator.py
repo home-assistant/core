@@ -34,11 +34,20 @@ type AussieBroadbandConfigEntry = ConfigEntry[list[AussieBroadbandServiceData]]
 class AussieBroadbandDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Aussie Broadand data update coordinator."""
 
-    def __init__(self, hass: HomeAssistant, client: AussieBB, service_id: str) -> None:
+    config_entry: AussieBroadbandConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: AussieBroadbandConfigEntry,
+        client: AussieBB,
+        service_id: str,
+    ) -> None:
         """Initialize Atag coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=f"Aussie Broadband {service_id}",
             update_interval=timedelta(minutes=DEFAULT_UPDATE_INTERVAL),
         )

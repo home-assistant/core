@@ -1,12 +1,9 @@
 """Test ESPHome media_players."""
 
-from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from aioesphomeapi import (
     APIClient,
-    EntityInfo,
-    EntityState,
     MediaPlayerCommand,
     MediaPlayerEntityState,
     MediaPlayerFormatPurpose,
@@ -22,6 +19,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_EXTRA,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
@@ -37,17 +35,19 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .conftest import MockESPHomeDevice
+from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
 
 from tests.common import mock_platform
 from tests.typing import WebSocketGenerator
 
 
 async def test_media_player_entity(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic media_player entity."""
     entity_info = [
@@ -159,7 +159,7 @@ async def test_media_player_entity_with_source(
     hass: HomeAssistant,
     mock_client: APIClient,
     hass_ws_client: WebSocketGenerator,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic media_player entity media source."""
     await async_setup_component(hass, "media_source", {"media_source": {}})
@@ -292,13 +292,10 @@ async def test_media_player_proxy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a media_player entity with a proxy URL."""
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[
             MediaPlayerInfo(
@@ -414,3 +411,22 @@ async def test_media_player_proxy(
 
         media_args = mock_client.media_player_command.call_args.kwargs
         assert media_args["announcement"]
+
+        # test with bypass_proxy flag
+        mock_async_create_proxy_url.reset_mock()
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                ATTR_MEDIA_CONTENT_ID: media_url,
+                ATTR_MEDIA_EXTRA: {
+                    "bypass_proxy": True,
+                },
+            },
+            blocking=True,
+        )
+        mock_async_create_proxy_url.assert_not_called()
+        media_args = mock_client.media_player_command.call_args.kwargs
+        assert media_args["media_url"] == media_url

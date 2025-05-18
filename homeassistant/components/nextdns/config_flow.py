@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any
+import logging
+from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
 from nextdns import ApiError, InvalidApiKeyError, NextDns
 from tenacity import RetryError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_PROFILE_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -18,6 +19,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import CONF_PROFILE_ID, DOMAIN
 
 AUTH_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_init_nextdns(hass: HomeAssistant, api_key: str) -> NextDns:
@@ -36,7 +39,6 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.nextdns: NextDns
         self.api_key: str
-        self.entry: ConfigEntry | None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -52,7 +54,8 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_api_key"
             except (ApiError, ClientConnectorError, RetryError, TimeoutError):
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return await self.async_step_profiles()
@@ -97,7 +100,6 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -113,14 +115,12 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_api_key"
             except (ApiError, ClientConnectorError, RetryError, TimeoutError):
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if TYPE_CHECKING:
-                    assert self.entry is not None
-
                 return self.async_update_reload_and_abort(
-                    self.entry, data={**self.entry.data, **user_input}
+                    self._get_reauth_entry(), data_updates=user_input
                 )
 
         return self.async_show_form(

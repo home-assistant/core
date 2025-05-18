@@ -104,3 +104,22 @@ async def test_feeder_robot_sensor(
     sensor = hass.states.get("sensor.test_food_level")
     assert sensor.state == "10"
     assert sensor.attributes["unit_of_measurement"] == PERCENTAGE
+
+
+async def test_pet_weight_sensor(
+    hass: HomeAssistant, mock_account_with_pet: MagicMock
+) -> None:
+    """Tests pet weight sensors."""
+    await setup_integration(hass, mock_account_with_pet, PLATFORM_DOMAIN)
+    sensor = hass.states.get("sensor.kitty_weight")
+    assert sensor.state == "9.1"
+    assert sensor.attributes["unit_of_measurement"] == UnitOfMass.POUNDS
+
+
+async def test_litterhopper_sensor(
+    hass: HomeAssistant, mock_account_with_litterhopper: MagicMock
+) -> None:
+    """Tests LitterHopper sensors."""
+    await setup_integration(hass, mock_account_with_litterhopper, PLATFORM_DOMAIN)
+    sensor = hass.states.get("sensor.test_hopper_status")
+    assert sensor.state == "enabled"

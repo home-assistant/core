@@ -26,7 +26,7 @@ from homeassistant.components.calendar import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_CALENDAR_NAME, DOMAIN
@@ -36,11 +36,16 @@ _LOGGER = logging.getLogger(__name__)
 
 PRODID = "-//homeassistant.io//local_calendar 1.0//EN"
 
+# The calendar on disk is only changed when this entity is updated, so there
+# is no need to poll for changes. The calendar enttiy base class will handle
+# refreshing the entity state based on the start or end time of the event.
+SCAN_INTERVAL = timedelta(days=1)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the local calendar platform."""
     store = hass.data[DOMAIN][config_entry.entry_id]
@@ -89,20 +94,27 @@ class LocalCalendarEntity(CalendarEntity):
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        events = self._calendar.timeline_tz(start_date.tzinfo).overlapping(
-            start_date,
-            end_date,
-        )
-        return [_get_calendar_event(event) for event in events]
+
+        def events_in_range() -> list[CalendarEvent]:
+            events = self._calendar.timeline_tz(start_date.tzinfo).overlapping(
+                start_date,
+                end_date,
+            )
+            return [_get_calendar_event(event) for event in events]
+
+        return await self.hass.async_add_executor_job(events_in_range)
 
     async def async_update(self) -> None:
         """Update entity state with the next upcoming event."""
-        now = dt_util.now()
-        events = self._calendar.timeline_tz(now.tzinfo).active_after(now)
-        if event := next(events, None):
-            self._event = _get_calendar_event(event)
-        else:
-            self._event = None
+
+        def next_event() -> CalendarEvent | None:
+            now = dt_util.now()
+            events = self._calendar.timeline_tz(now.tzinfo).active_after(now)
+            if event := next(events, None):
+                return _get_calendar_event(event)
+            return None
+
+        self._event = await self.hass.async_add_executor_job(next_event)
 
     async def _async_store(self) -> None:
         """Persist the calendar to disk."""

@@ -6,8 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import notify
-from homeassistant.components.demo import DOMAIN
-import homeassistant.components.demo.notify as demo
+from homeassistant.components.demo import DOMAIN, notify as demo
 from homeassistant.const import Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.setup import async_setup_component

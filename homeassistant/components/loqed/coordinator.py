@@ -71,19 +71,20 @@ class StatusMessage(TypedDict):
 class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
     """Data update coordinator for the loqed platform."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         api: loqed.LoqedAPI,
         lock: loqed.Lock,
-        entry: ConfigEntry,
     ) -> None:
         """Initialize the Loqed Data Update coordinator."""
-        super().__init__(hass, _LOGGER, name="Loqed sensors")
+        super().__init__(hass, _LOGGER, config_entry=config_entry, name="Loqed sensors")
         self._api = api
-        self._entry = entry
         self.lock = lock
-        self.device_name = self._entry.data[CONF_NAME]
+        self.device_name = config_entry.data[CONF_NAME]
 
     async def _async_update_data(self) -> StatusMessage:
         """Fetch data from API endpoint."""
@@ -110,17 +111,19 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
 
     async def ensure_webhooks(self) -> None:
         """Register webhook on LOQED bridge."""
-        webhook_id = self._entry.data[CONF_WEBHOOK_ID]
+        webhook_id = self.config_entry.data[CONF_WEBHOOK_ID]
 
         webhook.async_register(
             self.hass, DOMAIN, "Loqed", webhook_id, self._handle_webhook
         )
 
         if cloud.async_active_subscription(self.hass):
-            webhook_url = await async_cloudhook_generate_url(self.hass, self._entry)
+            webhook_url = await async_cloudhook_generate_url(
+                self.hass, self.config_entry
+            )
         else:
             webhook_url = webhook.async_generate_url(
-                self.hass, self._entry.data[CONF_WEBHOOK_ID]
+                self.hass, self.config_entry.data[CONF_WEBHOOK_ID]
             )
 
         _LOGGER.debug("Webhook URL: %s", webhook_url)
@@ -140,10 +143,10 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
 
     async def remove_webhooks(self) -> None:
         """Remove webhook from LOQED bridge."""
-        webhook_id = self._entry.data[CONF_WEBHOOK_ID]
+        webhook_id = self.config_entry.data[CONF_WEBHOOK_ID]
 
-        if CONF_CLOUDHOOK_URL in self._entry.data:
-            webhook_url = self._entry.data[CONF_CLOUDHOOK_URL]
+        if CONF_CLOUDHOOK_URL in self.config_entry.data:
+            webhook_url = self.config_entry.data[CONF_CLOUDHOOK_URL]
         else:
             webhook_url = webhook.async_generate_url(self.hass, webhook_id)
 

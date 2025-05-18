@@ -17,7 +17,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import ATTR_NAME, CONF_API_KEY, CONF_ID, CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -65,7 +65,7 @@ def setup_platform(
         name = travel_time.get(CONF_NAME) or travel_time.get(CONF_ID)
         sensors.append(
             WashingtonStateTravelTimeSensor(
-                name, config.get(CONF_API_KEY), travel_time.get(CONF_ID)
+                name, config[CONF_API_KEY], travel_time.get(CONF_ID)
             )
         )
 
@@ -82,20 +82,20 @@ class WashingtonStateTransportSensor(SensorEntity):
 
     _attr_icon = ICON
 
-    def __init__(self, name, access_code):
+    def __init__(self, name: str, access_code: str) -> None:
         """Initialize the sensor."""
-        self._data = {}
+        self._data: dict[str, str | int | None] = {}
         self._access_code = access_code
         self._name = name
-        self._state = None
+        self._state: int | None = None
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def native_value(self):
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self._state
 
@@ -106,7 +106,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     _attr_attribution = ATTRIBUTION
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
-    def __init__(self, name, access_code, travel_time_id):
+    def __init__(self, name: str, access_code: str, travel_time_id: str) -> None:
         """Construct a travel time sensor."""
         self._travel_time_id = travel_time_id
         WashingtonStateTransportSensor.__init__(self, name, access_code)
@@ -123,13 +123,17 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
             _LOGGER.warning("Invalid response from WSDOT API")
         else:
             self._data = response.json()
-        self._state = self._data.get(ATTR_CURRENT_TIME)
+        _state = self._data.get(ATTR_CURRENT_TIME)
+        if not isinstance(_state, int):
+            self._state = None
+        else:
+            self._state = _state
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return other details about the sensor state."""
         if self._data is not None:
-            attrs = {}
+            attrs: dict[str, str | int | None | datetime] = {}
             for key in (
                 ATTR_AVG_TIME,
                 ATTR_NAME,
@@ -144,12 +148,15 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
         return None
 
 
-def _parse_wsdot_timestamp(timestamp):
+def _parse_wsdot_timestamp(timestamp: Any) -> datetime | None:
     """Convert WSDOT timestamp to datetime."""
-    if not timestamp:
+    if not isinstance(timestamp, str):
         return None
     # ex: Date(1485040200000-0800)
-    milliseconds, tzone = re.search(r"Date\((\d+)([+-]\d\d)\d\d\)", timestamp).groups()
+    timestamp_parts = re.search(r"Date\((\d+)([+-]\d\d)\d\d\)", timestamp)
+    if timestamp_parts is None:
+        return None
+    milliseconds, tzone = timestamp_parts.groups()
     return datetime.fromtimestamp(
         int(milliseconds) / 1000, tz=timezone(timedelta(hours=int(tzone)))
     )

@@ -87,7 +87,7 @@ async def validate_login(
         except LoginFailedException as err:
             raise InvalidAuth from err
 
-    LOGGER.debug(f"Connection successful - saving session to file {SESSION_FILE}")
+    LOGGER.debug("Connection successful - saving session to file %s", SESSION_FILE)
     LOGGER.debug("Obtaining subscription id")
     subs: MonarchSubscription = await monarch_client.get_subscription_details()
     assert subs is not None

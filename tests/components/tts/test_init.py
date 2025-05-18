@@ -4,7 +4,7 @@ import asyncio
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -20,16 +20,16 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import (
     DEFAULT_LANG,
-    SUPPORT_LANGUAGES,
+    MOCK_DATA,
     TEST_DOMAIN,
+    MockResultStream,
     MockTTS,
     MockTTSEntity,
     MockTTSProvider,
@@ -39,36 +39,10 @@ from .common import (
     retrieve_media,
 )
 
-from tests.common import (
-    MockModule,
-    async_mock_service,
-    mock_integration,
-    mock_platform,
-    mock_restore_cache,
-)
+from tests.common import MockModule, async_mock_service, mock_integration, mock_platform
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 ORIG_WRITE_TAGS = tts.SpeechManager.write_tags
-
-
-class DefaultEntity(tts.TextToSpeechEntity):
-    """Test entity."""
-
-    _attr_supported_languages = SUPPORT_LANGUAGES
-    _attr_default_language = DEFAULT_LANG
-
-
-async def test_default_entity_attributes() -> None:
-    """Test default entity attributes."""
-    entity = DefaultEntity()
-
-    assert entity.hass is None
-    assert entity.name is UNDEFINED
-    assert entity.default_language == DEFAULT_LANG
-    assert entity.supported_languages == SUPPORT_LANGUAGES
-    assert entity.supported_options is None
-    assert entity.default_options is None
-    assert entity.async_get_supported_voices("test") is None
 
 
 async def test_config_entry_unload(
@@ -120,24 +94,6 @@ async def test_config_entry_unload(
 
     state = hass.states.get(entity_id)
     assert state is None
-
-
-async def test_restore_state(
-    hass: HomeAssistant,
-    mock_tts_entity: MockTTSEntity,
-) -> None:
-    """Test we restore state in the integration."""
-    entity_id = f"{tts.DOMAIN}.{TEST_DOMAIN}"
-    timestamp = "2023-01-01T23:59:59+00:00"
-    mock_restore_cache(hass, (State(entity_id, timestamp),))
-
-    config_entry = await mock_config_entry_setup(hass, mock_tts_entity)
-    await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.LOADED
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == timestamp
 
 
 @pytest.mark.parametrize(
@@ -204,18 +160,20 @@ async def test_service(
         blocking=True,
     )
 
-    assert len(calls) == 1
-    assert calls[0].data[ATTR_MEDIA_ANNOUNCE] is True
-    assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
-    assert await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]) == (
-        "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-        f"_en-us_-_{expected_url_suffix}.mp3"
-    )
-    await hass.async_block_till_done()
-    assert (
-        mock_tts_cache_dir
-        / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_{expected_url_suffix}.mp3"
-    ).is_file()
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        assert len(calls) == 1
+        assert calls[0].data[ATTR_MEDIA_ANNOUNCE] is True
+        assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
+        assert await get_media_source_url(
+            hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
+        ) == ("/api/tts_proxy/test_token.mp3")
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert (
+            mock_tts_cache_dir
+            / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_{expected_url_suffix}.mp3"
+        ).is_file()
 
 
 @pytest.mark.parametrize(
@@ -266,17 +224,20 @@ async def test_service_default_language(
     )
     assert len(calls) == 1
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
-    assert await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]) == (
-        "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-        f"_de-de_-_{expected_url_suffix}.mp3"
-    )
-    await hass.async_block_till_done()
-    assert (
-        mock_tts_cache_dir
-        / (
-            f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de-de_-_{expected_url_suffix}.mp3"
-        )
-    ).is_file()
+
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        assert await get_media_source_url(
+            hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
+        ) == ("/api/tts_proxy/test_token.mp3")
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert (
+            mock_tts_cache_dir
+            / (
+                f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de-de_-_{expected_url_suffix}.mp3"
+            )
+        ).is_file()
 
 
 @pytest.mark.parametrize(
@@ -327,15 +288,18 @@ async def test_service_default_special_language(
     )
     assert len(calls) == 1
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
-    assert await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]) == (
-        "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-        f"_en-us_-_{expected_url_suffix}.mp3"
-    )
-    await hass.async_block_till_done()
-    assert (
-        mock_tts_cache_dir
-        / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_{expected_url_suffix}.mp3"
-    ).is_file()
+
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        assert await get_media_source_url(
+            hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
+        ) == ("/api/tts_proxy/test_token.mp3")
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert (
+            mock_tts_cache_dir
+            / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_{expected_url_suffix}.mp3"
+        ).is_file()
 
 
 @pytest.mark.parametrize(
@@ -384,15 +348,18 @@ async def test_service_language(
     )
     assert len(calls) == 1
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
-    assert await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]) == (
-        "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-        f"_de-de_-_{expected_url_suffix}.mp3"
-    )
-    await hass.async_block_till_done()
-    assert (
-        mock_tts_cache_dir
-        / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de-de_-_{expected_url_suffix}.mp3"
-    ).is_file()
+
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        assert await get_media_source_url(
+            hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
+        ) == ("/api/tts_proxy/test_token.mp3")
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert (
+            mock_tts_cache_dir
+            / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de-de_-_{expected_url_suffix}.mp3"
+        ).is_file()
 
 
 @pytest.mark.parametrize(
@@ -497,18 +464,21 @@ async def test_service_options(
 
     assert len(calls) == 1
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
-    assert await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]) == (
-        "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-        f"_de-de_{opt_hash}_{expected_url_suffix}.mp3"
-    )
-    await hass.async_block_till_done()
-    assert (
-        mock_tts_cache_dir
-        / (
-            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_de-de_{opt_hash}_{expected_url_suffix}.mp3"
-        )
-    ).is_file()
+
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        assert await get_media_source_url(
+            hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
+        ) == ("/api/tts_proxy/test_token.mp3")
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert (
+            mock_tts_cache_dir
+            / (
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491"
+                f"_de-de_{opt_hash}_{expected_url_suffix}.mp3"
+            )
+        ).is_file()
 
 
 class MockProviderWithDefaults(MockTTSProvider):
@@ -578,18 +548,21 @@ async def test_service_default_options(
 
     assert len(calls) == 1
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
-    assert await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]) == (
-        "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-        f"_de-de_{opt_hash}_{expected_url_suffix}.mp3"
-    )
-    await hass.async_block_till_done()
-    assert (
-        mock_tts_cache_dir
-        / (
-            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_de-de_{opt_hash}_{expected_url_suffix}.mp3"
-        )
-    ).is_file()
+
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        assert await get_media_source_url(
+            hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
+        ) == ("/api/tts_proxy/test_token.mp3")
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert (
+            mock_tts_cache_dir
+            / (
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491"
+                f"_de-de_{opt_hash}_{expected_url_suffix}.mp3"
+            )
+        ).is_file()
 
 
 @pytest.mark.parametrize(
@@ -649,18 +622,21 @@ async def test_merge_default_service_options(
 
     assert len(calls) == 1
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
-    assert await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]) == (
-        "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-        f"_de-de_{opt_hash}_{expected_url_suffix}.mp3"
-    )
-    await hass.async_block_till_done()
-    assert (
-        mock_tts_cache_dir
-        / (
-            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_de-de_{opt_hash}_{expected_url_suffix}.mp3"
-        )
-    ).is_file()
+
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        assert await get_media_source_url(
+            hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
+        ) == ("/api/tts_proxy/test_token.mp3")
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert (
+            mock_tts_cache_dir
+            / (
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491"
+                f"_de-de_{opt_hash}_{expected_url_suffix}.mp3"
+            )
+        ).is_file()
 
 
 @pytest.mark.parametrize(
@@ -768,7 +744,7 @@ async def test_service_clear_cache(
     # To make sure the file is persisted
     assert len(calls) == 1
     await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert (
         mock_tts_cache_dir
         / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_{expected_url_suffix}.mp3"
@@ -833,7 +809,7 @@ async def test_service_receive_voice(
     await hass.async_block_till_done()
     client = await hass_client()
     req = await client.get(url)
-    tts_data = b""
+    tts_data = MOCK_DATA
     tts_data = tts.SpeechManager.write_tags(
         f"42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_{expected_url_suffix}.mp3",
         tts_data,
@@ -904,7 +880,7 @@ async def test_service_receive_voice_german(
     await hass.async_block_till_done()
     client = await hass_client()
     req = await client.get(url)
-    tts_data = b""
+    tts_data = MOCK_DATA
     tts_data = tts.SpeechManager.write_tags(
         "42f18378fd4393d18c8dd11d03fa9563c1e54491_de-de_-_{expected_url_suffix}.mp3",
         tts_data,
@@ -1046,7 +1022,7 @@ async def test_setup_legacy_cache_dir(
     """Set up a TTS platform with cache and call service without cache."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-    tts_data = b""
+    tts_data = MOCK_DATA
     cache_file = (
         mock_tts_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3"
     )
@@ -1065,10 +1041,14 @@ async def test_setup_legacy_cache_dir(
     )
 
     assert len(calls) == 1
-    assert await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]) == (
-        "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3"
-    )
-    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        assert await get_media_source_url(
+            hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
+        ) == ("/api/tts_proxy/test_token.mp3")
+        await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize("mock_tts_entity", [MockEntityBoom(DEFAULT_LANG)])
@@ -1080,7 +1060,7 @@ async def test_setup_cache_dir(
     """Set up a TTS platform with cache and call service without cache."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-    tts_data = b""
+    tts_data = MOCK_DATA
     cache_file = mock_tts_cache_dir / (
         "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_tts.test.mp3"
     )
@@ -1100,10 +1080,13 @@ async def test_setup_cache_dir(
     )
 
     assert len(calls) == 1
-    assert await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]) == (
-        "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_tts.test.mp3"
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        assert await get_media_source_url(
+            hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
+        ) == ("/api/tts_proxy/test_token.mp3")
+        await hass.async_block_till_done()
 
 
 class MockProviderEmpty(MockTTSProvider):
@@ -1172,18 +1155,18 @@ async def test_service_get_tts_error(
     assert len(calls) == 1
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.NOT_FOUND
+        == HTTPStatus.INTERNAL_SERVER_ERROR
     )
 
 
-async def test_load_cache_legacy_retrieve_without_mem_cache(
+async def test_legacy_cannot_retrieve_without_token(
     hass: HomeAssistant,
     mock_provider: MockTTSProvider,
     mock_tts_cache_dir: Path,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Set up component and load cache and get without mem cache."""
-    tts_data = b""
+    """Verify that a TTS cannot be retrieved by filename directly."""
+    tts_data = MOCK_DATA
     cache_file = (
         mock_tts_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.mp3"
     )
@@ -1196,18 +1179,17 @@ async def test_load_cache_legacy_retrieve_without_mem_cache(
     url = "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.mp3"
 
     req = await client.get(url)
-    assert req.status == HTTPStatus.OK
-    assert await req.read() == tts_data
+    assert req.status == HTTPStatus.NOT_FOUND
 
 
-async def test_load_cache_retrieve_without_mem_cache(
+async def test_cannot_retrieve_without_token(
     hass: HomeAssistant,
     mock_tts_entity: MockTTSEntity,
     mock_tts_cache_dir: Path,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Set up component and load cache and get without mem cache."""
-    tts_data = b""
+    """Verify that a TTS cannot be retrieved by filename directly."""
+    tts_data = MOCK_DATA
     cache_file = mock_tts_cache_dir / (
         "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_tts.test.mp3"
     )
@@ -1220,45 +1202,37 @@ async def test_load_cache_retrieve_without_mem_cache(
     url = "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_tts.test.mp3"
 
     req = await client.get(url)
-    assert req.status == HTTPStatus.OK
-    assert await req.read() == tts_data
+    assert req.status == HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.parametrize(
-    ("setup", "data", "expected_url_suffix"),
+    ("setup", "data"),
     [
-        ("mock_setup", {"platform": "test"}, "test"),
-        ("mock_setup", {"engine_id": "test"}, "test"),
-        ("mock_config_entry_setup", {"engine_id": "tts.test"}, "tts.test"),
+        ("mock_setup", {"platform": "test"}),
+        ("mock_setup", {"engine_id": "test"}),
+        ("mock_config_entry_setup", {"engine_id": "tts.test"}),
     ],
     indirect=["setup"],
 )
 async def test_web_get_url(
-    hass_client: ClientSessionGenerator,
-    setup: str,
-    data: dict[str, Any],
-    expected_url_suffix: str,
+    hass_client: ClientSessionGenerator, setup: str, data: dict[str, Any]
 ) -> None:
     """Set up a TTS platform and receive file from web."""
     client = await hass_client()
 
-    url = "/api/tts_get_url"
-    data |= {"message": "There is someone at the door."}
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        url = "/api/tts_get_url"
+        data |= {"message": "There is someone at the door."}
 
-    req = await client.post(url, json=data)
-    assert req.status == HTTPStatus.OK
-    response = await req.json()
-    assert response == {
-        "url": (
-            "http://example.local:8123/api/tts_proxy/"
-            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_en-us_-_{expected_url_suffix}.mp3"
-        ),
-        "path": (
-            "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_en-us_-_{expected_url_suffix}.mp3"
-        ),
-    }
+        req = await client.post(url, json=data)
+        assert req.status == HTTPStatus.OK
+        response = await req.json()
+        assert response == {
+            "url": ("http://example.local:8123/api/tts_proxy/test_token.mp3"),
+            "path": ("/api/tts_proxy/test_token.mp3"),
+        }
 
 
 @pytest.mark.parametrize(
@@ -1404,29 +1378,6 @@ def test_resolve_engine(hass: HomeAssistant, setup: str, engine_id: str) -> None
         assert tts.async_resolve_engine(hass, None) is None
 
 
-@pytest.mark.parametrize(
-    ("setup", "engine_id"),
-    [
-        ("mock_setup", "test"),
-        ("mock_config_entry_setup", "tts.test"),
-    ],
-    indirect=["setup"],
-)
-async def test_support_options(hass: HomeAssistant, setup: str, engine_id: str) -> None:
-    """Test supporting options."""
-    assert await tts.async_support_options(hass, engine_id, "en_US") is True
-    assert await tts.async_support_options(hass, engine_id, "nl") is False
-    assert (
-        await tts.async_support_options(
-            hass, engine_id, "en_US", {"invalid_option": "yo"}
-        )
-        is False
-    )
-
-    with pytest.raises(HomeAssistantError):
-        await tts.async_support_options(hass, "non-existing")
-
-
 async def test_legacy_fetching_in_async(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
@@ -1569,6 +1520,45 @@ async def test_fetching_in_async(
         "mp3",
         b"test 2",
     )
+
+
+@pytest.mark.parametrize(
+    ("setup", "engine_id"),
+    [
+        ("mock_setup", "test"),
+    ],
+    indirect=["setup"],
+)
+async def test_ws_list_engines_filter_deprecated(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    setup: str,
+    engine_id: str,
+) -> None:
+    """Test listing tts engines and supported languages."""
+    client = await hass_ws_client()
+
+    await client.send_json_auto_id({"type": "tts/engine/list"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [
+            {
+                "name": "Test",
+                "engine_id": engine_id,
+                "supported_languages": ["de_CH", "de_DE", "en_GB", "en_US"],
+            }
+        ]
+    }
+
+    hass.data[tts.DATA_TTS_MANAGER].providers[engine_id].has_entity = True
+
+    await client.send_json_auto_id({"type": "tts/engine/list"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"providers": []}
 
 
 @pytest.mark.parametrize(
@@ -1819,99 +1809,15 @@ async def test_async_convert_audio_error(hass: HomeAssistant) -> None:
     """Test that ffmpeg failing during audio conversion will raise an error."""
     assert await async_setup_component(hass, ffmpeg.DOMAIN, {})
 
+    async def bad_data_gen():
+        yield bytes(0)
+
     with pytest.raises(RuntimeError):
         # Simulate a bad WAV file
-        await tts.async_convert_audio(hass, "wav", bytes(0), "mp3")
-
-
-async def test_ttsentity_subclass_properties(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test for errors when subclasses of the TextToSpeechEntity are missing required properties."""
-
-    class TestClass1(tts.TextToSpeechEntity):
-        _attr_default_language = DEFAULT_LANG
-        _attr_supported_languages = SUPPORT_LANGUAGES
-
-    await mock_config_entry_setup(hass, TestClass1())
-
-    class TestClass2(tts.TextToSpeechEntity):
-        @property
-        def default_language(self) -> str:
-            return DEFAULT_LANG
-
-        @property
-        def supported_languages(self) -> list[str]:
-            return SUPPORT_LANGUAGES
-
-    await mock_config_entry_setup(hass, TestClass2())
-
-    assert all(record.exc_info is None for record in caplog.records)
-
-    caplog.clear()
-
-    class TestClass3(tts.TextToSpeechEntity):
-        _attr_default_language = DEFAULT_LANG
-
-    await mock_config_entry_setup(hass, TestClass3())
-
-    assert (
-        "TTS entities must either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
-        in [
-            str(record.exc_info[1])
-            for record in caplog.records
-            if record.exc_info is not None
-        ]
-    )
-    caplog.clear()
-
-    class TestClass4(tts.TextToSpeechEntity):
-        _attr_supported_languages = SUPPORT_LANGUAGES
-
-    await mock_config_entry_setup(hass, TestClass4())
-
-    assert (
-        "TTS entities must either set the '_attr_default_language' attribute or override the 'default_language' property"
-        in [
-            str(record.exc_info[1])
-            for record in caplog.records
-            if record.exc_info is not None
-        ]
-    )
-    caplog.clear()
-
-    class TestClass5(tts.TextToSpeechEntity):
-        @property
-        def default_language(self) -> str:
-            return DEFAULT_LANG
-
-    await mock_config_entry_setup(hass, TestClass5())
-
-    assert (
-        "TTS entities must either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
-        in [
-            str(record.exc_info[1])
-            for record in caplog.records
-            if record.exc_info is not None
-        ]
-    )
-    caplog.clear()
-
-    class TestClass6(tts.TextToSpeechEntity):
-        @property
-        def supported_languages(self) -> list[str]:
-            return SUPPORT_LANGUAGES
-
-    await mock_config_entry_setup(hass, TestClass6())
-
-    assert (
-        "TTS entities must either set the '_attr_default_language' attribute or override the 'default_language' property"
-        in [
-            str(record.exc_info[1])
-            for record in caplog.records
-            if record.exc_info is not None
-        ]
-    )
+        async for _chunk in tts._async_convert_audio(
+            hass, "wav", bad_data_gen(), "mp3"
+        ):
+            pass
 
 
 async def test_default_engine_prefer_entity(
@@ -1970,3 +1876,136 @@ async def test_default_engine_prefer_cloud_entity(
     provider_engine = tts.async_resolve_engine(hass, "test")
     assert provider_engine == "test"
     assert tts.async_default_engine(hass) == "tts.cloud_tts_entity"
+
+
+async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> None:
+    """Test creating streams."""
+    await mock_config_entry_setup(hass, mock_tts_entity)
+
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    assert stream.language == mock_tts_entity.default_language
+    assert stream.options == (mock_tts_entity.default_options or {})
+    assert stream.supports_streaming_input is False
+    assert tts.async_get_stream(hass, stream.token) is stream
+    stream.async_set_message("beer")
+    result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
+    assert result_data == MOCK_DATA
+
+    async def async_stream_tts_audio(
+        request: tts.TTSAudioRequest,
+    ) -> tts.TTSAudioResponse:
+        """Mock stream TTS audio."""
+
+        async def gen_data():
+            async for msg in request.message_gen:
+                yield msg.encode()
+
+        return tts.TTSAudioResponse(
+            extension="mp3",
+            data_gen=gen_data(),
+        )
+
+    mock_tts_entity.async_stream_tts_audio = async_stream_tts_audio
+    mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
+
+    async def stream_message():
+        """Mock stream message."""
+        yield "he"
+        yield "ll"
+        yield "o"
+
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    assert stream.supports_streaming_input is True
+    stream.async_set_message_stream(stream_message())
+    result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
+    assert result_data == b"hello"
+
+    data = b"beer"
+    stream2 = MockResultStream(hass, "wav", data)
+    assert tts.async_get_stream(hass, stream2.token) is stream2
+    assert stream2.extension == "wav"
+    result_data = b"".join([chunk async for chunk in stream2.async_stream_result()])
+    assert result_data == data
+
+
+async def test_tts_cache() -> None:
+    """Test TTSCache."""
+
+    async def data_gen(queue: asyncio.Queue[bytes | None | Exception]):
+        while chunk := await queue.get():
+            if isinstance(chunk, Exception):
+                raise chunk
+            yield chunk
+
+    queue = asyncio.Queue()
+    cache = tts.TTSCache("test-key", "mp3", data_gen(queue))
+    assert cache.cache_key == "test-key"
+    assert cache.extension == "mp3"
+
+    for i in range(10):
+        queue.put_nowait(f"{i}".encode())
+    queue.put_nowait(None)
+
+    assert await cache.async_load_data() == b"0123456789"
+
+    with pytest.raises(RuntimeError):
+        await cache.async_load_data()
+
+    # When data is loaded, we get it all in 1 chunk
+    cur = 0
+    async for chunk in cache.async_stream_data():
+        assert chunk == b"0123456789"
+        cur += 1
+    assert cur == 1
+
+    # Show we can stream the data while it's still being generated
+    async def consume_cache(cache: tts.TTSCache):
+        return b"".join([chunk async for chunk in cache.async_stream_data()])
+
+    queue = asyncio.Queue()
+    cache = tts.TTSCache("test-key", "mp3", data_gen(queue))
+
+    load_data_task = asyncio.create_task(cache.async_load_data())
+    consume_pre_data_loaded_task = asyncio.create_task(consume_cache(cache))
+    queue.put_nowait(b"0")
+    await asyncio.sleep(0)
+    queue.put_nowait(b"1")
+    await asyncio.sleep(0)
+    consume_mid_data_task = asyncio.create_task(consume_cache(cache))
+    queue.put_nowait(b"2")
+    await asyncio.sleep(0)
+    queue.put_nowait(None)
+    consume_post_data_loaded_task = asyncio.create_task(consume_cache(cache))
+    await asyncio.sleep(0)
+    assert await load_data_task == b"012"
+    assert await consume_post_data_loaded_task == b"012"
+    assert await consume_mid_data_task == b"012"
+    assert await consume_pre_data_loaded_task == b"012"
+
+    # Now with errors
+    async def consume_cache(cache: tts.TTSCache):
+        return b"".join([chunk async for chunk in cache.async_stream_data()])
+
+    queue = asyncio.Queue()
+    cache = tts.TTSCache("test-key", "mp3", data_gen(queue))
+
+    load_data_task = asyncio.create_task(cache.async_load_data())
+    consume_pre_data_loaded_task = asyncio.create_task(consume_cache(cache))
+    queue.put_nowait(b"0")
+    await asyncio.sleep(0)
+    queue.put_nowait(b"1")
+    await asyncio.sleep(0)
+    consume_mid_data_task = asyncio.create_task(consume_cache(cache))
+    queue.put_nowait(ValueError("Boom!"))
+    await asyncio.sleep(0)
+    queue.put_nowait(None)
+    consume_post_data_loaded_task = asyncio.create_task(consume_cache(cache))
+    await asyncio.sleep(0)
+    with pytest.raises(ValueError):
+        assert await load_data_task == b"012"
+    with pytest.raises(ValueError):
+        assert await consume_post_data_loaded_task == b"012"
+    with pytest.raises(ValueError):
+        assert await consume_mid_data_task == b"012"
+    with pytest.raises(ValueError):
+        assert await consume_pre_data_loaded_task == b"012"

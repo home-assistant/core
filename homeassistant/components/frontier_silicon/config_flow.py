@@ -15,9 +15,9 @@ from afsapi import (
 )
 import voluptuous as vol
 
-from homeassistant.components import ssdp
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import (
     CONF_WEBFSAPI_URL,
@@ -58,7 +58,6 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _name: str
     _webfsapi_url: str
-    _reauth_entry: ConfigEntry | None = None  # Only used in reauth flows
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -88,7 +87,7 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Process entity discovered via SSDP."""
 
@@ -109,8 +108,8 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
             self._webfsapi_url = await AFSAPI.get_webfsapi_endpoint(device_url)
         except FSConnectionError:
             return self.async_abort(reason="cannot_connect")
-        except Exception as exception:  # noqa: BLE001
-            _LOGGER.debug(exception)
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
         # try to login with default pin
@@ -178,11 +177,6 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self._webfsapi_url = entry_data[CONF_WEBFSAPI_URL]
-
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-
         return await self.async_step_device_config()
 
     async def async_step_device_config(
@@ -213,13 +207,11 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            if self._reauth_entry:
-                self.hass.config_entries.async_update_entry(
-                    self._reauth_entry,
-                    data={CONF_PIN: user_input[CONF_PIN]},
+            if self.source == SOURCE_REAUTH:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={CONF_PIN: user_input[CONF_PIN]},
                 )
-                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
             try:
                 unique_id = await afsapi.get_radio_id()

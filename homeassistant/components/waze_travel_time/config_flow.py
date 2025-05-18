@@ -113,10 +113,6 @@ def default_options(hass: HomeAssistant) -> dict[str, str | bool | list[str]]:
 class WazeOptionsFlow(OptionsFlow):
     """Handle an options flow for Waze Travel Time."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize waze options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
@@ -142,15 +138,13 @@ class WazeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
-    _entry: ConfigEntry
-
     @staticmethod
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> WazeOptionsFlow:
         """Get the options flow for this handler."""
-        return WazeOptionsFlow(config_entry)
+        return WazeOptionsFlow()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -169,10 +163,9 @@ class WazeConfigFlow(ConfigFlow, domain=DOMAIN):
             ):
                 if self.source == SOURCE_RECONFIGURE:
                     return self.async_update_reload_and_abort(
-                        self._entry,
+                        self._get_reconfigure_entry(),
                         title=user_input[CONF_NAME],
                         data=user_input,
-                        reason="reconfigure_successful",
                     )
                 return self.async_create_entry(
                     title=user_input.get(CONF_NAME, DEFAULT_NAME),
@@ -194,9 +187,7 @@ class WazeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
-        self._entry = self._get_reconfigure_entry()
-
-        data = self._entry.data.copy()
+        data = self._get_reconfigure_entry().data.copy()
         data[CONF_REGION] = data[CONF_REGION].lower()
 
         return self.async_show_form(

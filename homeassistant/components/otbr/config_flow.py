@@ -13,14 +13,20 @@ from python_otbr_api.tlv_parser import MeshcopTLVType
 import voluptuous as vol
 import yarl
 
-from homeassistant.components.hassio import AddonError, AddonManager, HassioServiceInfo
+from homeassistant.components.hassio import AddonError, AddonManager
 from homeassistant.components.homeassistant_yellow import hardware as yellow_hardware
 from homeassistant.components.thread import async_get_preferred_dataset
-from homeassistant.config_entries import SOURCE_HASSIO, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_HASSIO,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .const import DEFAULT_CHANNEL, DOMAIN
 from .util import (
@@ -200,12 +206,23 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                     # we have to assume it's the first version
                     # This check can be removed in HA Core 2025.9
                     unique_id = discovery_info.uuid
+
+                if unique_id != discovery_info.uuid:
+                    continue
+
                 if (
-                    unique_id != discovery_info.uuid
-                    or current_url.host != config["host"]
+                    current_url.host != config["host"]
                     or current_url.port == config["port"]
                 ):
+                    # Reload the entry since OTBR has restarted
+                    if current_entry.state == ConfigEntryState.LOADED:
+                        assert current_entry.unique_id is not None
+                        await self.hass.config_entries.async_reload(
+                            current_entry.entry_id
+                        )
+
                     continue
+
                 # Update URL with the new port
                 self.hass.config_entries.async_update_entry(
                     current_entry,

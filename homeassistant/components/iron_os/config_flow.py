@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
+from bleak.exc import BleakError
 from habluetooth import BluetoothServiceInfoBleak
+from pynecil import CommunicationError, Pynecil
 import voluptuous as vol
 
 from homeassistant.components.bluetooth.api import async_discovered_service_info
@@ -12,6 +15,8 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 
 from .const import DISCOVERY_SVC_UUID, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class IronOSConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -36,32 +41,64 @@ class IronOSConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm discovery."""
+
+        errors: dict[str, str] = {}
+
         assert self._discovery_info is not None
         discovery_info = self._discovery_info
         title = discovery_info.name
 
         if user_input is not None:
-            return self.async_create_entry(title=title, data={})
+            device = Pynecil(discovery_info.address)
+            try:
+                await device.connect()
+            except (CommunicationError, BleakError, TimeoutError):
+                _LOGGER.debug("Cannot connect:", exc_info=True)
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception:")
+                errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(title=title, data={})
+            finally:
+                await device.disconnect()
 
         self._set_confirm_only()
         placeholders = {"name": title}
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
-            step_id="bluetooth_confirm", description_placeholders=placeholders
+            step_id="bluetooth_confirm",
+            description_placeholders=placeholders,
+            errors=errors,
         )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the user step to pick discovered device."""
+
+        errors: dict[str, str] = {}
+
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
             title = self._discovered_devices[address]
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
-            return self.async_create_entry(title=title, data={})
+            device = Pynecil(address)
+            try:
+                await device.connect()
+            except (CommunicationError, BleakError, TimeoutError):
+                _LOGGER.debug("Cannot connect:", exc_info=True)
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(title=title, data={})
+            finally:
+                await device.disconnect()
 
-        current_addresses = self._async_current_ids()
+        current_addresses = self._async_current_ids(include_ignore=False)
         for discovery_info in async_discovered_service_info(self.hass, True):
             address = discovery_info.address
             if (
@@ -80,4 +117,5 @@ class IronOSConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices)}
             ),
+            errors=errors,
         )

@@ -1,0 +1,42 @@
+# serializer version: 1
+# name: test_peblar_device_entry
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'http://127.0.0.127',
+    'connections': set({
+      tuple(
+        'mac',
+        '00:0f:11:58:86:97',
+      ),
+      tuple(
+        'mac',
+        '00:0f:11:58:86:99',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'peblar',
+        '23-45-A4O-MOF',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Peblar',
+    'model': 'WLAC1-H11R0WE0ICR00',
+    'model_id': '6004-2300-8002',
+    'name': 'Peblar EV Charger',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '23-45-A4O-MOF',
+    'suggested_area': None,
+    'sw_version': '1.6.1+1+WL-1',
+    'via_device_id': None,
+  })
+# ---

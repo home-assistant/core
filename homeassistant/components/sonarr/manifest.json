@@ -6,6 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/sonarr",
   "iot_class": "local_polling",
   "loggers": ["aiopyarr"],
-  "quality_scale": "silver",
   "requirements": ["aiopyarr==23.4.0"]
 }

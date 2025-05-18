@@ -1,0 +1,12 @@
+{
+  "domain": "iometer",
+  "name": "IOmeter",
+  "codeowners": ["@MaestroOnICe"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/iometer",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["iometer==0.1.0"],
+  "zeroconf": ["_iometer._tcp.local."]
+}

@@ -11,7 +11,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import LutronCasetaUpdatableEntity
 from .models import LutronCasetaConfigEntry
@@ -99,6 +99,7 @@ class LutronCasetaTiltOnlyBlind(LutronCasetaUpdatableEntity, CoverEntity):
 
 PYLUTRON_TYPE_TO_CLASSES = {
     "SerenaTiltOnlyWoodBlind": LutronCasetaTiltOnlyBlind,
+    "Tilt": LutronCasetaTiltOnlyBlind,
     "SerenaHoneycombShade": LutronCasetaShade,
     "SerenaRollerShade": LutronCasetaShade,
     "TriathlonHoneycombShade": LutronCasetaShade,
@@ -107,13 +108,14 @@ PYLUTRON_TYPE_TO_CLASSES = {
     "QsWirelessHorizontalSheerBlind": LutronCasetaShade,
     "Shade": LutronCasetaShade,
     "PalladiomWireFreeShade": LutronCasetaShade,
+    "SerenaEssentialsRollerShade": LutronCasetaShade,
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: LutronCasetaConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Lutron Caseta cover platform.
 

@@ -21,6 +21,7 @@
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "wrong_account": "Authenticated account does not match the account to be reauthenticated. Please log in with the correct account."
     },
     "create_entry": {
@@ -312,9 +313,9 @@
       "battery": {
         "name": "[%key:component::sensor::entity_component::battery::name%]",
         "state": {
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
       }
     }

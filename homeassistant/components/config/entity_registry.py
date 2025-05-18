@@ -279,9 +279,8 @@ def websocket_update_entity(
     result: dict[str, Any] = {"entity_entry": entity_entry.extended_dict}
     if "disabled_by" in changes and changes["disabled_by"] is None:
         # Enabling an entity requires a config entry reload, or HA restart
-        if (
-            not (config_entry_id := entity_entry.config_entry_id)
-            or (config_entry := hass.config_entries.async_get_entry(config_entry_id))
+        if not (config_entry_id := entity_entry.config_entry_id) or (
+            (config_entry := hass.config_entries.async_get_entry(config_entry_id))
             and not config_entry.supports_unload
         ):
             result["require_restart"] = True
