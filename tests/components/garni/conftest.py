@@ -44,7 +44,7 @@ def mock_garni() -> Generator[MagicMock]:
     """Return a mocked garni client."""
     with (
         patch(
-            "homeassistant.components.garni.coordinator.GarniDevice", autospec=True
+            "homeassistant.components.garni.coordinator.CCLDevice", autospec=True
         ) as garni_mock,
     ):
         garni = garni_mock.return_value

@@ -45,7 +45,7 @@ class GarniEntity(CoordinatorEntity, Entity):
             },
             model=self._device.model,
             name=self.device_name,
-            manufacturer="GARNI technology",
+            manufacturer="CCL Electronics",
             sw_version=self._device.fw_ver,
         )
 

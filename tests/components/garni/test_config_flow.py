@@ -1,4 +1,4 @@
-"""Test the GARNI Electronics config flow."""
+"""Test the GARNI config flow."""
 
 from unittest.mock import patch
 
