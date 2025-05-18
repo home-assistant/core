@@ -7,6 +7,9 @@
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Spotify integration needs to re-authenticate with Spotify for account: {account}"
+      },
+      "oauth_discovery": {
+        "description": "Home Assistant has found Spotify on your network. Press submit to continue setting up."
       }
     },
     "abort": {

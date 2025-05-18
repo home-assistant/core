@@ -38,13 +38,6 @@ async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "missing_credentials"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=BLANK_ZEROCONF_INFO
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "missing_credentials"
-
 
 async def test_zeroconf_abort_if_existing_entry(hass: HomeAssistant) -> None:
     """Check zeroconf flow aborts when an entry already exist."""
@@ -265,3 +258,18 @@ async def test_reauth_account_mismatch(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_account_mismatch"
+
+
+async def test_zeroconf(hass: HomeAssistant) -> None:
+    """Check zeroconf flow aborts when an entry already exist."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=BLANK_ZEROCONF_INFO
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "oauth_discovery"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "missing_credentials"
