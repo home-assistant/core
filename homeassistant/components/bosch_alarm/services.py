@@ -36,7 +36,7 @@ def setup_services(hass: HomeAssistant) -> None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="integration_not_found",
-                translation_placeholders={"target": DOMAIN},
+                translation_placeholders={"target": entry_id},
             )
         if config_entry.state is not ConfigEntryState.LOADED:
             raise HomeAssistantError(

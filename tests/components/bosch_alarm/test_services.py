@@ -15,6 +15,7 @@ from homeassistant.components.bosch_alarm.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
@@ -58,7 +59,10 @@ async def test_set_date_time_service_fails_bad_entity(
 ) -> None:
     """Test that the service calls fail if the service call is done for an incorrect entity."""
     await setup_integration(hass, mock_config_entry)
-    with pytest.raises(ServiceValidationError, match=".."):
+    with pytest.raises(
+        ServiceValidationError,
+        match='Integration "bad-config_id" not found in registry',
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_DATE_TIME,
@@ -78,7 +82,10 @@ async def test_set_date_time_service_fails_bad_params(
 ) -> None:
     """Test that the service calls fail if the service call is done with incorrect params."""
     await setup_integration(hass, mock_config_entry)
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(
+        vol.MultipleInvalid,
+        match=r"Invalid datetime specified:  for dictionary value @ data\['datetime'\]",
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_DATE_TIME,
@@ -98,9 +105,11 @@ async def test_set_date_time_service_fails_bad_year(
 ) -> None:
     """Test that the service calls fail if the panel fails the service call."""
     await setup_integration(hass, mock_config_entry)
-    # The panels only accept certain ranges of years due to how the years are encoded
     mock_panel.set_panel_date.side_effect = ValueError()
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(
+        ServiceValidationError,
+        match="Bosch alarm panels only support years between 2010 and 2037",
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_DATE_TIME,
@@ -121,7 +130,10 @@ async def test_set_date_time_service_fails_connection_error(
     """Test that the service calls fail if the panel fails the service call."""
     await setup_integration(hass, mock_config_entry)
     mock_panel.set_panel_date.side_effect = asyncio.InvalidStateError()
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError,
+        match=f'Could not connect to "{mock_config_entry.title}"',
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_DATE_TIME,
@@ -140,8 +152,12 @@ async def test_set_date_time_service_fails_unloaded(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that the service calls fail if the config entry is unloaded."""
+    await async_setup_component(hass, DOMAIN, {})
     mock_config_entry.add_to_hass(hass)
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"{mock_config_entry.title} is not loaded",
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_DATE_TIME,
