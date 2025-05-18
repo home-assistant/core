@@ -319,7 +319,7 @@ async def test_dhcp_discovery_if_panel_setup_config_flow(
     model_name: str,
     config_flow_data: dict[str, Any],
 ) -> None:
-    """Test DHCP discovery doesn't fail if a panel was set up via config flow."""
+    """Test DHCP discovery doesn't fail if a different panel was set up via config flow."""
     await setup_integration(hass, mock_config_entry)
 
     result = await hass.config_entries.flow.async_init(
@@ -397,6 +397,7 @@ async def test_dhcp_updates_mac(
 ) -> None:
     """Test DHCP discovery flow updates mac if the previous entry did not have a mac address."""
     await setup_integration(hass, mock_config_entry)
+    assert CONF_MAC not in mock_config_entry.data
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
