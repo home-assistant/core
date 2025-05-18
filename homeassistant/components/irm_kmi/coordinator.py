@@ -42,7 +42,6 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator):
             # Polling interval. Will only be polled if there are subscribers.
             update_interval=timedelta(minutes=7),
         )
-        self.config_entry: ConfigEntry = entry
         self._api = api_client
         self._zone = get_config_value(entry, CONF_ZONE)
         self.shared_device_info = DeviceInfo(
@@ -51,7 +50,7 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator):
             manufacturer=IRM_KMI_NAME.get(
                 preferred_language(self.hass, self.config_entry)
             ),
-            name=f"{entry.title}",
+            name=entry.title,
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -94,10 +93,14 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator):
         if self._api.get_city() in OUT_OF_BENELUX:
             _LOGGER.error(
                 "The zone %s is now out of Benelux and forecast is only available in Benelux. "
-                "Associated device is now disabled.  Move the zone back in Benelux and re-enable to fix "
+                "Associated device is now disabled. Move the zone back in Benelux and re-enable to fix "
                 "this",
                 self._zone,
             )
+
+            # This is always true but mypy complains that it might be None.
+            assert self.config_entry is not None
+
             disable_from_config(self.hass, self.config_entry)
 
             ir.async_create_issue(
