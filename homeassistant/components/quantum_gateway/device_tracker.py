@@ -39,7 +39,7 @@ def get_scanner(
 class QuantumGatewayDeviceScanner(DeviceScanner):
     """Class which queries a Quantum Gateway."""
 
-    def __init__(self, config):
+    def __init__(self, config) -> None:
         """Initialize the scanner."""
 
         self.host = config[CONF_HOST]
