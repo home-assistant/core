@@ -374,7 +374,7 @@ def test_include_dir_merge_named_recursive(mock_walk: Mock) -> None:
         }
 
 
-@patch("homeassistant.util.yaml.loader.open", create=True)
+@patch("annotatedyaml.loader.open", create=True)
 @pytest.mark.usefixtures("try_both_loaders")
 def test_load_yaml_encoding_error(mock_open: Mock) -> None:
     """Test raising a UnicodeDecodeError."""
@@ -598,7 +598,7 @@ def test_load_yaml_wrap_oserror(
 ) -> None:
     """Test load_yaml wraps OSError in HomeAssistantError."""
     with (
-        patch("homeassistant.util.yaml.loader.open", side_effect=open_exception),
+        patch("annotatedyaml.loader.open", side_effect=open_exception),
         pytest.raises(load_yaml_exception),
     ):
         yaml_loader.load_yaml("bla")

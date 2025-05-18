@@ -1,0 +1,290 @@
+# serializer version: 1
+# name: test_diagnostics[amax_3000-None]
+  dict({
+    'data': dict({
+      'areas': list([
+        dict({
+          'alarms': list([
+          ]),
+          'all_armed': False,
+          'all_ready': True,
+          'armed': False,
+          'arming': False,
+          'disarmed': True,
+          'faults': 0,
+          'id': 1,
+          'name': 'Area1',
+          'part_armed': False,
+          'part_ready': True,
+          'pending': False,
+          'triggered': False,
+        }),
+      ]),
+      'doors': list([
+        dict({
+          'id': 1,
+          'locked': True,
+          'name': 'Main Door',
+          'open': False,
+        }),
+      ]),
+      'firmware_version': '1.0.0',
+      'history_events': list([
+      ]),
+      'model': 'AMAX 3000',
+      'outputs': list([
+        dict({
+          'active': False,
+          'id': 1,
+          'name': 'Output A',
+        }),
+      ]),
+      'points': list([
+        dict({
+          'id': 0,
+          'name': 'Window',
+          'normal': True,
+          'open': False,
+        }),
+        dict({
+          'id': 1,
+          'name': 'Door',
+          'normal': True,
+          'open': False,
+        }),
+        dict({
+          'id': 2,
+          'name': 'Motion Detector',
+          'normal': True,
+          'open': False,
+        }),
+        dict({
+          'id': 3,
+          'name': 'CO Detector',
+          'normal': True,
+          'open': False,
+        }),
+        dict({
+          'id': 4,
+          'name': 'Smoke Detector',
+          'normal': True,
+          'open': False,
+        }),
+        dict({
+          'id': 5,
+          'name': 'Glassbreak Sensor',
+          'normal': True,
+          'open': False,
+        }),
+        dict({
+          'id': 6,
+          'name': 'Bedroom',
+          'normal': True,
+          'open': False,
+        }),
+      ]),
+      'protocol_version': '1.0.0',
+      'serial_number': None,
+    }),
+    'entry_data': dict({
+      'host': '0.0.0.0',
+      'installer_code': '**REDACTED**',
+      'mac': None,
+      'model': 'AMAX 3000',
+      'password': '**REDACTED**',
+      'port': 7700,
+    }),
+  })
+# ---
+# name: test_diagnostics[b5512-None]
+  dict({
+    'data': dict({
+      'areas': list([
+        dict({
+          'alarms': list([
+          ]),
+          'all_armed': False,
+          'all_ready': True,
+          'armed': False,
+          'arming': False,
+          'disarmed': True,
+          'faults': 0,
+          'id': 1,
+          'name': 'Area1',
+          'part_armed': False,
+          'part_ready': True,
+          'pending': False,
+          'triggered': False,
+        }),
+      ]),
+      'doors': list([
+        dict({
+          'id': 1,
+          'locked': True,
+          'name': 'Main Door',
+          'open': False,
+        }),
+      ]),
+      'firmware_version': '1.0.0',
+      'history_events': list([
+      ]),
+      'model': 'B5512 (US1B)',
+      'outputs': list([
+        dict({
+          'active': False,
+          'id': 1,
+          'name': 'Output A',
+        }),
+      ]),
+      'points': list([
+        dict({
+          'id': 0,
+          'name': 'Window',
+          'normal': True,
+          'open': False,
+        }),
+        dict({
+          'id': 1,
+          'name': 'Door',
+          'normal': True,
+          'open': False,
+        }),
+        dict({
+          'id': 2,
+          'name': 'Motion Detector',
+          'normal': True,
+          'open': False,
+        }),
+        dict({
+          'id': 3,
+          'name': 'CO Detector',
+          'normal': True,
+          'open': False,
+        }),
+        dict({
+          'id': 4,
+          'name': 'Smoke Detector',
+          'normal': True,
+          'open': False,
+        }),
+        dict({
+          'id': 5,
+          'name': 'Glassbreak Sensor',
+          'normal': True,
+          'open': False,
+        }),
+        dict({
+          'id': 6,
+          'name': 'Bedroom',
+          'normal': True,
+          'open': False,
+        }),
+      ]),
+      'protocol_version': '1.0.0',
+      'serial_number': '1234567890',
+    }),
+    'entry_data': dict({
+      'host': '0.0.0.0',
+      'mac': None,
+      'model': 'B5512 (US1B)',
+      'password': '**REDACTED**',
+      'port': 7700,
+    }),
+  })
+# ---
+# name: test_diagnostics[solution_3000-None]
+  dict({
+    'data': dict({
+      'areas': list([
+        dict({
+          'alarms': list([
+          ]),
+          'all_armed': False,
+          'all_ready': True,
+          'armed': False,
+          'arming': False,
+          'disarmed': True,
+          'faults': 0,
+          'id': 1,
+          'name': 'Area1',
+          'part_armed': False,
+          'part_ready': True,
+          'pending': False,
+          'triggered': False,
+        }),
+      ]),
+      'doors': list([
+        dict({
+          'id': 1,
+          'locked': True,
+          'name': 'Main Door',
+          'open': False,
+        }),
+      ]),
+      'firmware_version': '1.0.0',
+      'history_events': list([
+      ]),
+      'model': 'Solution 3000',
+      'outputs': list([
+        dict({
+          'active': False,
+          'id': 1,
+          'name': 'Output A',
+        }),
+      ]),
+      'points': list([
+        dict({
+          'id': 0,
+          'name': 'Window',
+          'normal': True,
+          'open': False,
+        }),
+        dict({
+          'id': 1,
+          'name': 'Door',
+          'normal': True,
+          'open': False,
+        }),
+        dict({
+          'id': 2,
+          'name': 'Motion Detector',
+          'normal': True,
+          'open': False,
+        }),
+        dict({
+          'id': 3,
+          'name': 'CO Detector',
+          'normal': True,
+          'open': False,
+        }),
+        dict({
+          'id': 4,
+          'name': 'Smoke Detector',
+          'normal': True,
+          'open': False,
+        }),
+        dict({
+          'id': 5,
+          'name': 'Glassbreak Sensor',
+          'normal': True,
+          'open': False,
+        }),
+        dict({
+          'id': 6,
+          'name': 'Bedroom',
+          'normal': True,
+          'open': False,
+        }),
+      ]),
+      'protocol_version': '1.0.0',
+      'serial_number': None,
+    }),
+    'entry_data': dict({
+      'host': '0.0.0.0',
+      'mac': None,
+      'model': 'Solution 3000',
+      'port': 7700,
+      'user_code': '**REDACTED**',
+    }),
+  })
+# ---

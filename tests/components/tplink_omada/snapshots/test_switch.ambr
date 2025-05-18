@@ -2,7 +2,7 @@
 # name: test_gateway_api_fail_disables_switch_entities
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Router Port 4 Internet Connected',
+      'friendly_name': 'Test Router Port 4 Internet connected',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_router_port_4_internet_connected',
@@ -15,7 +15,7 @@
 # name: test_gateway_connect_ipv4_switch
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Router Port 4 Internet Connected',
+      'friendly_name': 'Test Router Port 4 Internet connected',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_router_port_4_internet_connected',
@@ -28,7 +28,7 @@
 # name: test_gateway_port_change_disables_switch_entities
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Router Port 4 Internet Connected',
+      'friendly_name': 'Test Router Port 4 Internet connected',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_router_port_4_internet_connected',

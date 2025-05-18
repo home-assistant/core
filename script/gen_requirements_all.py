@@ -117,9 +117,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.67.1
-grpcio-status==1.67.1
-grpcio-reflection==1.67.1
+grpcio==1.71.0
+grpcio-status==1.71.0
+grpcio-reflection==1.71.0
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -139,7 +139,7 @@ uuid==1000000000.0.0
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.8.0
+anyio==4.9.0
 h11==0.14.0
 httpcore==1.0.7
 
@@ -159,7 +159,7 @@ multidict>=6.0.2
 backoff>=2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.10.6
+pydantic==2.11.3
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1
@@ -171,10 +171,6 @@ pubnub!=6.4.0
 # Package's __init__.pyi stub has invalid syntax and breaks mypy
 # https://github.com/dahlia/iso4217/issues/16
 iso4217!=1.10.20220401
-
-# pyOpenSSL 24.0.0 or later required to avoid import errors when
-# cryptography 42.0.0 is installed with botocore
-pyOpenSSL>=24.0.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
@@ -241,6 +237,16 @@ async-timeout==4.0.3
 # https://github.com/home-assistant/core/issues/122508
 # https://github.com/home-assistant/core/issues/118004
 aiofiles>=24.1.0
+
+# multidict < 6.4.0 has memory leaks
+# https://github.com/aio-libs/multidict/issues/1134
+# https://github.com/aio-libs/multidict/issues/1131
+multidict>=6.4.2
+
+# rpds-py > 0.25.0 requires cargo 1.84.0
+# Stable Alpine current only ships cargo 1.83.0
+# No wheels upstream available for armhf & armv7
+rpds-py==0.24.0
 """
 
 GENERATED_MESSAGE = (
@@ -266,7 +272,8 @@ def has_tests(module: str) -> bool:
     Test if exists: tests/components/hue/__init__.py
     """
     path = (
-        Path(module.replace(".", "/").replace("homeassistant", "tests")) / "__init__.py"
+        Path(module.replace(".", "/").replace("homeassistant", "tests", 1))
+        / "__init__.py"
     )
     return path.exists()
 

@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from aioshelly.block_device import Block
-from aioshelly.const import MODEL_2, MODEL_25, RPC_GENERATIONS
+from aioshelly.const import RPC_GENERATIONS
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_PLATFORM
 from homeassistant.components.switch import (
@@ -21,12 +21,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import CONF_SLEEP_PERIOD, MOTION_MODELS
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
     RpcEntityDescription,
-    ShellyBlockEntity,
+    ShellyBlockAttributeEntity,
     ShellyRpcAttributeEntity,
     ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
@@ -34,12 +33,13 @@ from .entity import (
 )
 from .utils import (
     async_remove_orphaned_entities,
-    async_remove_shelly_entity,
     get_device_entry_gen,
     get_virtual_component_ids,
-    is_block_channel_type_light,
+    is_block_exclude_from_relay,
     is_rpc_exclude_from_relay,
 )
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -47,11 +47,20 @@ class BlockSwitchDescription(BlockEntityDescription, SwitchEntityDescription):
     """Class to describe a BLOCK switch."""
 
 
-MOTION_SWITCH = BlockSwitchDescription(
-    key="sensor|motionActive",
-    name="Motion detection",
-    entity_category=EntityCategory.CONFIG,
-)
+BLOCK_RELAY_SWITCHES = {
+    ("relay", "output"): BlockSwitchDescription(
+        key="relay|output",
+        removal_condition=is_block_exclude_from_relay,
+    )
+}
+
+BLOCK_SLEEPING_MOTION_SWITCH = {
+    ("sensor", "motionActive"): BlockSwitchDescription(
+        key="sensor|motionActive",
+        name="Motion detection",
+        entity_category=EntityCategory.CONFIG,
+    )
+}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -120,46 +129,17 @@ def async_setup_block_entry(
     coordinator = config_entry.runtime_data.block
     assert coordinator
 
-    # Add Shelly Motion as a switch
-    if coordinator.model in MOTION_MODELS:
-        async_setup_entry_attribute_entities(
-            hass,
-            config_entry,
-            async_add_entities,
-            {("sensor", "motionActive"): MOTION_SWITCH},
-            BlockSleepingMotionSwitch,
-        )
-        return
+    async_setup_entry_attribute_entities(
+        hass, config_entry, async_add_entities, BLOCK_RELAY_SWITCHES, BlockRelaySwitch
+    )
 
-    if config_entry.data[CONF_SLEEP_PERIOD]:
-        return
-
-    # In roller mode the relay blocks exist but do not contain required info
-    if (
-        coordinator.model in [MODEL_2, MODEL_25]
-        and coordinator.device.settings["mode"] != "relay"
-    ):
-        return
-
-    relay_blocks = []
-    assert coordinator.device.blocks
-    for block in coordinator.device.blocks:
-        if block.type != "relay" or (
-            block.channel is not None
-            and is_block_channel_type_light(
-                coordinator.device.settings, int(block.channel)
-            )
-        ):
-            continue
-
-        relay_blocks.append(block)
-        unique_id = f"{coordinator.mac}-{block.type}_{block.channel}"
-        async_remove_shelly_entity(hass, "light", unique_id)
-
-    if not relay_blocks:
-        return
-
-    async_add_entities(BlockRelaySwitch(coordinator, block) for block in relay_blocks)
+    async_setup_entry_attribute_entities(
+        hass,
+        config_entry,
+        async_add_entities,
+        BLOCK_SLEEPING_MOTION_SWITCH,
+        BlockSleepingMotionSwitch,
+    )
 
 
 @callback
@@ -265,13 +245,22 @@ class BlockSleepingMotionSwitch(
             self.last_state = last_state
 
 
-class BlockRelaySwitch(ShellyBlockEntity, SwitchEntity):
+class BlockRelaySwitch(ShellyBlockAttributeEntity, SwitchEntity):
     """Entity that controls a relay on Block based Shelly devices."""
 
-    def __init__(self, coordinator: ShellyBlockCoordinator, block: Block) -> None:
+    entity_description: BlockSwitchDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyBlockCoordinator,
+        block: Block,
+        attribute: str,
+        description: BlockSwitchDescription,
+    ) -> None:
         """Initialize relay switch."""
-        super().__init__(coordinator, block)
+        super().__init__(coordinator, block, attribute, description)
         self.control_result: dict[str, Any] | None = None
+        self._attr_unique_id: str = f"{coordinator.mac}-{block.description}"
 
     @property
     def is_on(self) -> bool:

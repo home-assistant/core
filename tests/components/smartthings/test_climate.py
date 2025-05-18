@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, call
 
 from pysmartthings import Attribute, Capability, Command, Status
+from pysmartthings.models import HealthStatus
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -36,6 +37,8 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -45,6 +48,7 @@ from . import (
     set_attribute_value,
     setup_integration,
     snapshot_smartthings_entities,
+    trigger_health_update,
     trigger_update,
 )
 
@@ -115,7 +119,7 @@ async def test_ac_set_hvac_mode_off(
 @pytest.mark.parametrize(
     ("hvac_mode", "argument"),
     [
-        (HVACMode.HEAT_COOL, "auto"),
+        (HVACMode.AUTO, "auto"),
         (HVACMode.COOL, "cool"),
         (HVACMode.DRY, "dry"),
         (HVACMode.HEAT, "heat"),
@@ -170,7 +174,7 @@ async def test_ac_set_hvac_mode_turns_on(
         SERVICE_SET_HVAC_MODE,
         {
             ATTR_ENTITY_ID: "climate.ac_office_granit",
-            ATTR_HVAC_MODE: HVACMode.HEAT_COOL,
+            ATTR_HVAC_MODE: HVACMode.AUTO,
         },
         blocking=True,
     )
@@ -192,17 +196,19 @@ async def test_ac_set_hvac_mode_turns_on(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
-async def test_ac_set_hvac_mode_wind(
+@pytest.mark.parametrize("mode", ["fan", "wind"])
+async def test_ac_set_hvac_mode_fan(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    mode: str,
 ) -> None:
     """Test setting AC HVAC mode to wind if the device supports it."""
     set_attribute_value(
         devices,
         Capability.AIR_CONDITIONER_MODE,
         Attribute.SUPPORTED_AC_MODES,
-        ["auto", "cool", "dry", "heat", "wind"],
+        ["auto", "cool", "dry", "heat", mode],
     )
     set_attribute_value(devices, Capability.SWITCH, Attribute.SWITCH, "on")
 
@@ -219,7 +225,7 @@ async def test_ac_set_hvac_mode_wind(
         Capability.AIR_CONDITIONER_MODE,
         Command.SET_AIR_CONDITIONER_MODE,
         MAIN,
-        argument="wind",
+        argument=mode,
     )
 
 
@@ -262,7 +268,7 @@ async def test_ac_set_temperature_and_hvac_mode_while_off(
         {
             ATTR_ENTITY_ID: "climate.ac_office_granit",
             ATTR_TEMPERATURE: 23,
-            ATTR_HVAC_MODE: HVACMode.HEAT_COOL,
+            ATTR_HVAC_MODE: HVACMode.AUTO,
         },
         blocking=True,
     )
@@ -312,7 +318,7 @@ async def test_ac_set_temperature_and_hvac_mode(
         {
             ATTR_ENTITY_ID: "climate.ac_office_granit",
             ATTR_TEMPERATURE: 23,
-            ATTR_HVAC_MODE: HVACMode.HEAT_COOL,
+            ATTR_HVAC_MODE: HVACMode.AUTO,
         },
         blocking=True,
     )
@@ -619,7 +625,7 @@ async def test_thermostat_set_hvac_mode(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.asd", ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+        {ATTR_ENTITY_ID: "climate.asd", ATTR_HVAC_MODE: HVACMode.AUTO},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -817,10 +823,10 @@ async def test_updating_humidity(
         (
             Capability.THERMOSTAT_MODE,
             Attribute.SUPPORTED_THERMOSTAT_MODES,
-            ["coolClean", "dryClean"],
+            ["rush hour", "heat"],
             ATTR_HVAC_MODES,
-            [],
-            [HVACMode.COOL, HVACMode.DRY],
+            [HVACMode.AUTO],
+            [HVACMode.AUTO, HVACMode.HEAT],
         ),
     ],
     ids=[
@@ -857,3 +863,38 @@ async def test_thermostat_state_attributes_update(
     )
 
     assert hass.states.get("climate.asd").attributes[state_attribute] == expected_value
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_availability(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test availability."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("climate.ac_office_granit").state == STATE_OFF
+
+    await trigger_health_update(
+        hass, devices, "96a5ef74-5832-a84b-f1f7-ca799957065d", HealthStatus.OFFLINE
+    )
+
+    assert hass.states.get("climate.ac_office_granit").state == STATE_UNAVAILABLE
+
+    await trigger_health_update(
+        hass, devices, "96a5ef74-5832-a84b-f1f7-ca799957065d", HealthStatus.ONLINE
+    )
+
+    assert hass.states.get("climate.ac_office_granit").state == STATE_OFF
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_availability_at_start(
+    hass: HomeAssistant,
+    unavailable_device: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unavailable at boot."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("climate.ac_office_granit").state == STATE_UNAVAILABLE

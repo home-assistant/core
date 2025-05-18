@@ -85,7 +85,7 @@
         }
       },
       "secure_tunnel_manual": {
-        "title": "Secure tunnelling",
+        "title": "Secure tunneling",
         "description": "Please enter your IP Secure information.",
         "data": {
           "user_id": "User ID",
@@ -140,7 +140,7 @@
       "keyfile_not_found": "The specified `.knxkeys` file was not found in the path config/.storage/knx/",
       "no_router_discovered": "No KNXnet/IP router was discovered on the network.",
       "no_tunnel_discovered": "Could not find a KNX tunneling server on your network.",
-      "unsupported_tunnel_type": "Selected tunnelling type not supported by gateway."
+      "unsupported_tunnel_type": "Selected tunneling type not supported by gateway."
     }
   },
   "options": {
@@ -315,11 +315,11 @@
           "preset_mode": {
             "name": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::name%]",
             "state": {
-              "auto": "Auto",
+              "auto": "[%key:common::state::auto%]",
+              "building_protection": "Building protection",
               "comfort": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]",
-              "standby": "Standby",
               "economy": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
-              "building_protection": "Building protection"
+              "standby": "[%key:common::state::standby%]"
             }
           }
         }

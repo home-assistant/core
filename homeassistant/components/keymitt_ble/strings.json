@@ -34,7 +34,7 @@
   "services": {
     "calibrate": {
       "name": "Calibrate",
-      "description": "Calibration - Set depth, press & hold duration, and operation mode. Warning - this will send a push command to the device.",
+      "description": "Sets the depth, press or release duration, and operation mode. Warning - this will send a push command to the device.",
       "fields": {
         "entity_id": {
           "name": "Entity",
@@ -42,15 +42,15 @@
         },
         "depth": {
           "name": "Depth",
-          "description": "Depth in percent."
+          "description": "How far to extend the push arm."
         },
         "duration": {
           "name": "Duration",
-          "description": "Duration in seconds."
+          "description": "How long to press or release."
         },
         "mode": {
           "name": "[%key:common::config_flow::data::mode%]",
-          "description": "Normal | invert | toggle."
+          "description": "The operation mode of the arm."
         }
       }
     }

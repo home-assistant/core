@@ -25,7 +25,7 @@
       },
       "zeroconf_confirm": {
         "title": "Confirm setup for Slide",
-        "description": "Do you want to setup {host}?"
+        "description": "Do you want to set up {host}?"
       }
     },
     "abort": {

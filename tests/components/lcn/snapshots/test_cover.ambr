@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_setup_lcn_cover[cover.cover_outputs-entry]
+# name: test_setup_lcn_cover[cover.testmodule_cover_outputs-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,8 +12,8 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.cover_outputs',
-    'has_entity_name': False,
+    'entity_id': 'cover.testmodule_cover_outputs',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -29,26 +29,26 @@
     'previous_unique_id': None,
     'supported_features': <CoverEntityFeature: 11>,
     'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk.json-m000007-outputs',
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-outputs',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_lcn_cover[cover.cover_outputs-state]
+# name: test_setup_lcn_cover[cover.testmodule_cover_outputs-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'assumed_state': True,
-      'friendly_name': 'Cover_Outputs',
+      'friendly_name': 'TestModule Cover_Outputs',
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.cover_outputs',
+    'entity_id': 'cover.testmodule_cover_outputs',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
 # ---
-# name: test_setup_lcn_cover[cover.cover_relays-entry]
+# name: test_setup_lcn_cover[cover.testmodule_cover_relays-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -61,8 +61,8 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.cover_relays',
-    'has_entity_name': False,
+    'entity_id': 'cover.testmodule_cover_relays',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -78,19 +78,117 @@
     'previous_unique_id': None,
     'supported_features': <CoverEntityFeature: 11>,
     'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk.json-m000007-motor1',
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-motor1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_lcn_cover[cover.cover_relays-state]
+# name: test_setup_lcn_cover[cover.testmodule_cover_relays-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'assumed_state': True,
-      'friendly_name': 'Cover_Relays',
+      'friendly_name': 'TestModule Cover_Relays',
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.cover_relays',
+    'entity_id': 'cover.testmodule_cover_relays',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_setup_lcn_cover[cover.testmodule_cover_relays_bs4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.testmodule_cover_relays_bs4',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cover_Relays_BS4',
+    'platform': 'lcn',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-motor2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup_lcn_cover[cover.testmodule_cover_relays_bs4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'assumed_state': True,
+      'friendly_name': 'TestModule Cover_Relays_BS4',
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.testmodule_cover_relays_bs4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_setup_lcn_cover[cover.testmodule_cover_relays_module-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.testmodule_cover_relays_module',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cover_Relays_Module',
+    'platform': 'lcn',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-motor3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup_lcn_cover[cover.testmodule_cover_relays_module-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'assumed_state': True,
+      'friendly_name': 'TestModule Cover_Relays_Module',
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.testmodule_cover_relays_module',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

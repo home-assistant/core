@@ -1,6 +1,12 @@
 """Constants for VeSync Component."""
 
-from pyvesync.vesyncfan import VeSyncHumid200300S, VeSyncSuperior6000S
+from pyvesync.vesyncfan import (
+    VeSyncAir131,
+    VeSyncAirBaseV2,
+    VeSyncAirBypass,
+    VeSyncHumid200300S,
+    VeSyncSuperior6000S,
+)
 
 DOMAIN = "vesync"
 VS_DISCOVERY = "vesync_discovery_{}"
@@ -30,12 +36,41 @@ VS_HUMIDIFIER_MODE_HUMIDITY = "humidity"
 VS_HUMIDIFIER_MODE_MANUAL = "manual"
 VS_HUMIDIFIER_MODE_SLEEP = "sleep"
 
+VS_FAN_MODE_AUTO = "auto"
+VS_FAN_MODE_SLEEP = "sleep"
+VS_FAN_MODE_ADVANCED_SLEEP = "advancedSleep"
+VS_FAN_MODE_TURBO = "turbo"
+VS_FAN_MODE_PET = "pet"
+VS_FAN_MODE_MANUAL = "manual"
+VS_FAN_MODE_NORMAL = "normal"
+
+# not a full list as manual is used as speed not present
+VS_FAN_MODE_PRESET_LIST_HA = [
+    VS_FAN_MODE_AUTO,
+    VS_FAN_MODE_SLEEP,
+    VS_FAN_MODE_ADVANCED_SLEEP,
+    VS_FAN_MODE_TURBO,
+    VS_FAN_MODE_PET,
+    VS_FAN_MODE_NORMAL,
+]
 NIGHT_LIGHT_LEVEL_BRIGHT = "bright"
 NIGHT_LIGHT_LEVEL_DIM = "dim"
 NIGHT_LIGHT_LEVEL_OFF = "off"
 
+FAN_NIGHT_LIGHT_LEVEL_DIM = "dim"
+FAN_NIGHT_LIGHT_LEVEL_OFF = "off"
+FAN_NIGHT_LIGHT_LEVEL_ON = "on"
+
+HUMIDIFIER_NIGHT_LIGHT_LEVEL_BRIGHT = "bright"
+HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM = "dim"
+HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF = "off"
+
 VeSyncHumidifierDevice = VeSyncHumid200300S | VeSyncSuperior6000S
 """Humidifier device types"""
+
+VeSyncFanDevice = VeSyncAirBypass | VeSyncAirBypass | VeSyncAirBaseV2 | VeSyncAir131
+"""Fan device types"""
+
 
 DEV_TYPE_TO_HA = {
     "wifi-switch-1.3": "outlet",
@@ -93,6 +128,7 @@ SKU_TO_BASE_DEVICE = {
     "LAP-V102S-AASR": "Vital100S",  # Alt ID Model Vital100S
     "LAP-V102S-WEU": "Vital100S",  # Alt ID Model Vital100S
     "LAP-V102S-WUK": "Vital100S",  # Alt ID Model Vital100S
+    "LAP-V102S-AUSR": "Vital100S",  # Alt ID Model Vital100S
     "EverestAir": "EverestAir",
     "LAP-EL551S-AUS": "EverestAir",  # Alt ID Model EverestAir
     "LAP-EL551S-AEUR": "EverestAir",  # Alt ID Model EverestAir
