@@ -638,7 +638,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
                 f"{self.coordinator.mac}-{block.description}-{attribute}"
             )
             self._attr_name = get_block_entity_name(
-                self.coordinator.device, block, self.entity_description.name
+                coordinator.device, block, description.name
             )
         elif entry is not None:
             self._attr_unique_id = entry.unique_id
