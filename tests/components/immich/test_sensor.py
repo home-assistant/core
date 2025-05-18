@@ -28,3 +28,18 @@ async def test_sensors(
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_admin_sensors(
+    hass: HomeAssistant,
+    mock_non_admin_immich: Mock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the integration doesn't create admin sensors if not admin."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.mock_title_photos_count") is None
+    assert hass.states.get("sensor.mock_title_videos_count") is None
+    assert hass.states.get("sensor.mock_title_disk_used_by_photos") is None
+    assert hass.states.get("sensor.mock_title_disk_used_by_videos") is None

@@ -101,7 +101,7 @@ def mock_immich_user() -> AsyncMock:
         datetime.fromisoformat("2025-05-11T10:07:46.866Z"),
         "user",
         False,
-        False,
+        True,
         datetime.fromisoformat("2025-05-11T10:07:46.866Z"),
         None,
         None,
@@ -126,3 +126,10 @@ async def mock_immich(
         client.server = mock_immich_server
         client.users = mock_immich_user
         yield client
+
+
+@pytest.fixture
+async def mock_non_admin_immich(mock_immich: AsyncMock) -> AsyncMock:
+    """Mock the Immich API."""
+    mock_immich.users.async_get_my_user.return_value.is_admin = False
+    return mock_immich
