@@ -71,6 +71,7 @@ async def test_state_update(
         "issue_string",
         "entity_id",
         "expected_state",
+        "version",
     ),
     [
         (
@@ -80,6 +81,7 @@ async def test_state_update(
             "media_player",
             "sensor.tv_samsung_8_series_49_media_playback_status",
             STATE_UNKNOWN,
+            "2025.10.0",
         ),
         (
             "vd_stv_2017_k",
@@ -88,6 +90,7 @@ async def test_state_update(
             "media_player",
             "sensor.tv_samsung_8_series_49_volume",
             "13",
+            "2025.10.0",
         ),
         (
             "vd_stv_2017_k",
@@ -96,6 +99,7 @@ async def test_state_update(
             "media_player",
             "sensor.tv_samsung_8_series_49_media_input_source",
             "hdmi1",
+            "2025.10.0",
         ),
         (
             "im_speaker_ai_0001",
@@ -104,6 +108,7 @@ async def test_state_update(
             "media_player",
             "sensor.galaxy_home_mini_media_playback_repeat",
             "off",
+            "2025.10.0",
         ),
         (
             "im_speaker_ai_0001",
@@ -112,6 +117,25 @@ async def test_state_update(
             "media_player",
             "sensor.galaxy_home_mini_media_playback_shuffle",
             "disabled",
+            "2025.10.0",
+        ),
+        (
+            "da_ac_ehs_01001",
+            f"4165c51e-bf6b-c5b6-fd53-127d6248754b_{MAIN}_{Capability.TEMPERATURE_MEASUREMENT}_{Attribute.TEMPERATURE}_{Attribute.TEMPERATURE}",
+            "temperature",
+            "dhw",
+            "sensor.temperature",
+            "57",
+            "2025.12.0",
+        ),
+        (
+            "da_ac_ehs_01001",
+            f"4165c51e-bf6b-c5b6-fd53-127d6248754b_{MAIN}_{Capability.THERMOSTAT_COOLING_SETPOINT}_{Attribute.COOLING_SETPOINT}_{Attribute.COOLING_SETPOINT}",
+            "cooling_setpoint",
+            "dhw",
+            "sensor.cooling_setpoint",
+            "56",
+            "2025.12.0",
         ),
     ],
 )
@@ -126,6 +150,7 @@ async def test_create_issue_with_items(
     issue_string: str,
     entity_id: str,
     expected_state: str,
+    version: str,
 ) -> None:
     """Test we create an issue when an automation or script is using a deprecated entity."""
     issue_id = f"deprecated_{issue_string}_{entity_id}"
@@ -189,6 +214,7 @@ async def test_create_issue_with_items(
         "entity_name": suggested_object_id,
         "items": "- [test](/config/automation/edit/test)\n- [test](/config/script/edit/test)",
     }
+    assert issue.breaks_in_ha_version == version
 
     entity_registry.async_update_entity(
         entity_entry.entity_id,
@@ -211,6 +237,7 @@ async def test_create_issue_with_items(
         "issue_string",
         "entity_id",
         "expected_state",
+        "version",
     ),
     [
         (
@@ -220,6 +247,7 @@ async def test_create_issue_with_items(
             "media_player",
             "sensor.tv_samsung_8_series_49_media_playback_status",
             STATE_UNKNOWN,
+            "2025.10.0",
         ),
         (
             "vd_stv_2017_k",
@@ -228,6 +256,7 @@ async def test_create_issue_with_items(
             "media_player",
             "sensor.tv_samsung_8_series_49_volume",
             "13",
+            "2025.10.0",
         ),
         (
             "vd_stv_2017_k",
@@ -236,6 +265,7 @@ async def test_create_issue_with_items(
             "media_player",
             "sensor.tv_samsung_8_series_49_media_input_source",
             "hdmi1",
+            "2025.10.0",
         ),
         (
             "im_speaker_ai_0001",
@@ -244,6 +274,7 @@ async def test_create_issue_with_items(
             "media_player",
             "sensor.galaxy_home_mini_media_playback_repeat",
             "off",
+            "2025.10.0",
         ),
         (
             "im_speaker_ai_0001",
@@ -252,6 +283,25 @@ async def test_create_issue_with_items(
             "media_player",
             "sensor.galaxy_home_mini_media_playback_shuffle",
             "disabled",
+            "2025.10.0",
+        ),
+        (
+            "da_ac_ehs_01001",
+            f"4165c51e-bf6b-c5b6-fd53-127d6248754b_{MAIN}_{Capability.TEMPERATURE_MEASUREMENT}_{Attribute.TEMPERATURE}_{Attribute.TEMPERATURE}",
+            "temperature",
+            "dhw",
+            "sensor.temperature",
+            "57",
+            "2025.12.0",
+        ),
+        (
+            "da_ac_ehs_01001",
+            f"4165c51e-bf6b-c5b6-fd53-127d6248754b_{MAIN}_{Capability.THERMOSTAT_COOLING_SETPOINT}_{Attribute.COOLING_SETPOINT}_{Attribute.COOLING_SETPOINT}",
+            "cooling_setpoint",
+            "dhw",
+            "sensor.cooling_setpoint",
+            "56",
+            "2025.12.0",
         ),
     ],
 )
@@ -266,6 +316,7 @@ async def test_create_issue(
     issue_string: str,
     entity_id: str,
     expected_state: str,
+    version: str,
 ) -> None:
     """Test we create an issue when an automation or script is using a deprecated entity."""
     issue_id = f"deprecated_{issue_string}_{entity_id}"
@@ -290,6 +341,7 @@ async def test_create_issue(
         "entity_id": entity_id,
         "entity_name": suggested_object_id,
     }
+    assert issue.breaks_in_ha_version == version
 
     entity_registry.async_update_entity(
         entity_entry.entity_id,
