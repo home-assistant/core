@@ -1164,7 +1164,7 @@ home-assistant-frontend==20250516.0
 home-assistant-intents==2025.5.7
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.0.1.1.post1.dev14
+homematicip==2.0.3
 
 # homeassistant.components.horizon
 horimote==0.4.1
