@@ -37,7 +37,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'disk_available',
-    'unique_id': 'abcdef0123456789_disk_available',
+    'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e_disk_available',
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
@@ -95,7 +95,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'disk_size',
-    'unique_id': 'abcdef0123456789_disk_size',
+    'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e_disk_size',
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
@@ -147,7 +147,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'disk_usage',
-    'unique_id': 'abcdef0123456789_disk_usage',
+    'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e_disk_usage',
     'unit_of_measurement': '%',
   })
 # ---
@@ -204,7 +204,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'disk_use',
-    'unique_id': 'abcdef0123456789_disk_use',
+    'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e_disk_use',
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
@@ -262,7 +262,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'usage_by_photos',
-    'unique_id': 'abcdef0123456789_usage_by_photos',
+    'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e_usage_by_photos',
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
@@ -320,7 +320,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'usage_by_videos',
-    'unique_id': 'abcdef0123456789_usage_by_videos',
+    'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e_usage_by_videos',
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
@@ -372,7 +372,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'photos_count',
-    'unique_id': 'abcdef0123456789_photos_count',
+    'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e_photos_count',
     'unit_of_measurement': 'photos',
   })
 # ---
@@ -423,7 +423,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'videos_count',
-    'unique_id': 'abcdef0123456789_videos_count',
+    'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e_videos_count',
     'unit_of_measurement': 'videos',
   })
 # ---

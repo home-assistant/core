@@ -5,12 +5,11 @@ from unittest.mock import Mock, patch
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.immich.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .const import MOCK_CONFIG_ENTRY_DATA
+from . import setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -21,22 +20,11 @@ async def test_sensors(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     mock_immich: Mock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the Immich sensor platform."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=MOCK_CONFIG_ENTRY_DATA,
-        entry_id="abcdef0123456789",
-    )
-    entry.add_to_hass(hass)
 
-    with (
-        patch("homeassistant.components.fritzbox.PLATFORMS", [Platform.SENSOR]),
-        patch(
-            "homeassistant.components.immich.Immich",
-            return_value=mock_immich,
-        ),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
+    with patch("homeassistant.components.immich.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
 
-    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
