@@ -71,6 +71,7 @@ from homeassistant.components.websocket_api import (
     ActiveConnection,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -88,13 +89,16 @@ from .const import (
     DATA_CLIENT,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
+    LOGGER,
     RESTORE_NVM_DRIVER_READY_TIMEOUT,
     USER_AGENT,
 )
 from .helpers import (
+    CannotConnect,
     async_enable_statistics,
     async_get_node_from_device_id,
     async_get_provisioning_entry_from_device_id,
+    async_get_version_info,
     get_device_id,
 )
 
@@ -674,10 +678,18 @@ async def websocket_node_alerts(
             connection.send_error(msg[ID], ERR_NOT_LOADED, str(err))
         return
 
+    comments = node.device_config.metadata.comments
+    if node.in_interview:
+        comments.append(
+            {
+                "level": "warning",
+                "text": "This device is currently being interviewed and may not be fully operational.",
+            }
+        )
     connection.send_result(
         msg[ID],
         {
-            "comments": node.device_config.metadata.comments,
+            "comments": comments,
             "is_embedded": node.device_config.is_embedded,
         },
     )
@@ -2857,6 +2869,25 @@ async def websocket_hard_reset_controller(
         async with asyncio.timeout(HARD_RESET_CONTROLLER_DRIVER_READY_TIMEOUT):
             await wait_driver_ready.wait()
 
+    # When resetting the controller, the controller home id is also changed.
+    # The controller state in the client is stale after resetting the controller,
+    # so get the new home id with a new client using the helper function.
+    # The client state will be refreshed by reloading the config entry,
+    # after the unique id of the config entry has been updated.
+    try:
+        version_info = await async_get_version_info(hass, entry.data[CONF_URL])
+    except CannotConnect:
+        # Just log this error, as there's nothing to do about it here.
+        # The stale unique id needs to be handled by a repair flow,
+        # after the config entry has been reloaded.
+        LOGGER.error(
+            "Failed to get server version, cannot update config entry"
+            "unique id with new home id, after controller reset"
+        )
+    else:
+        hass.config_entries.async_update_entry(
+            entry, unique_id=str(version_info.home_id)
+        )
     await hass.config_entries.async_reload(entry.entry_id)
 
 

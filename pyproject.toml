@@ -23,7 +23,7 @@ classifiers = [
 ]
 requires-python = ">=3.13.2"
 dependencies = [
-  "aiodns==3.3.0",
+  "aiodns==3.4.0",
   # Integrations may depend on hassio integration without listing it to
   # change behavior based on presence of supervisor. Deprecated with #127228
   # Lib can be removed with 2025.11
@@ -82,10 +82,10 @@ dependencies = [
   "numpy==2.2.2",
   "PyJWT==2.10.1",
   # PyJWT has loose dependency. We want the latest one.
-  "cryptography==44.0.1",
+  "cryptography==45.0.1",
   "Pillow==11.2.1",
   "propcache==0.3.1",
-  "pyOpenSSL==25.0.0",
+  "pyOpenSSL==25.1.0",
   "orjson==3.10.18",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
@@ -120,7 +120,7 @@ dependencies = [
   "uv==0.7.1",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.6.0",
-  "voluptuous-openapi==0.0.7",
+  "voluptuous-openapi==0.1.0",
   "yarl==1.20.0",
   "webrtc-models==0.3.0",
   "zeroconf==0.147.0",

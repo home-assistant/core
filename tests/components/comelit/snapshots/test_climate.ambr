@@ -48,7 +48,7 @@
     'attributes': ReadOnlyDict({
       'current_temperature': 22.1,
       'friendly_name': 'Climate0',
-      'hvac_action': <HVACAction.HEATING: 'heating'>,
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
       'hvac_modes': list([
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.COOL: 'cool'>,
