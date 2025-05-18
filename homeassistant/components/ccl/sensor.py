@@ -29,7 +29,7 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import CCLConfigEntry
 from .coordinator import CCLCoordinator
@@ -169,7 +169,7 @@ CCL_SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: CCLConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add sensors for passed config entry in HA."""
     coordinator = entry.runtime_data
