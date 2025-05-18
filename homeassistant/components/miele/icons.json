@@ -87,6 +87,12 @@
       },
       "remaining_time": {
         "default": "mdi:clock-end"
+      },
+      "energy_forecast": {
+        "default": "mdi:lightning-bolt-outline"
+      },
+      "water_forecast": {
+        "default": "mdi:water-outline"
       }
     },
     "switch": {
