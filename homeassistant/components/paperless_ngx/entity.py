@@ -33,7 +33,7 @@ class PaperlessEntity(Entity):
         self.data = data
         self.entry = entry
         self.entity_description = description
-        self._attr_unique_id = f"{DOMAIN}_{self}_{data.client.base_url}_sensor_{description.key}_{entry.entry_id}"
+        self._attr_unique_id = f"{DOMAIN}_{entry.entry_id}_{description.key}"
 
     @property
     def device_info(self) -> DeviceInfo:

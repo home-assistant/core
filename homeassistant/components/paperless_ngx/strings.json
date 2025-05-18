@@ -17,23 +17,36 @@
     },
     "error": {
       "cannot_connect": "Failed to connect. Invalid URL or authentication token.",
-      "invalid_auth": "Authentication failed. Check if access token is correct.",
+      "invalid_auth": "Authentication failed. Access token is not valid.",
+      "user_inactive_or_deleted": "Authentication failed. The user is inactive or has been deleted.",
+      "forbidden": "Access forbidden. Your account does not have permission to access the API.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "entity": {
     "sensor": {
       "documents_total": {
-        "name": "Document total"
+        "name": "Documents total"
       },
       "documents_inbox": {
         "name": "Documents inbox"
       },
       "characters_count": {
-        "name": "Characters count"
+        "name": "Characters total"
+      },
+      "tag_count": {
+        "name": "Tag count"
+      },
+      "correspondent_count": {
+        "name": "Correspondent count"
+      },
+      "document_type_count": {
+        "name": "Document type count"
       },
       "storage_total": {
         "name": "Storage total"
@@ -95,11 +108,6 @@
           "unknown": "UNKNOWN"
         }
       }
-    },
-    "binary_sensor": {
-      "update_available": {
-        "name": "Update available"
-      }
     }
   },
   "exceptions": {
@@ -107,7 +115,13 @@
       "message": "Failed to connect. Invalid URL or authentication token."
     },
     "invalid_auth": {
-      "message": "Authentication failed. Check if access token is correct."
+      "message": "Authentication failed. Access token is not valid."
+    },
+    "user_inactive_or_deleted": {
+      "message": "Authentication failed. The user is inactive or has been deleted."
+    },
+    "forbidden": {
+      "message": "Access forbidden. Your account does not have permission to access the API."
     },
     "unknown": {
       "message": "[%key:common::config_flow::error::unknown%]"

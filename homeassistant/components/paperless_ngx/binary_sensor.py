@@ -14,7 +14,12 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, ENTITY_SENSOR_UPDATE_AVAILABLE
+from .const import (
+    DOMAIN,
+    ENTITY_ATTRIBUTE_LAST_CHECKED,
+    ENTITY_ATTRIBUTE_LATEST_VERSION,
+    ENTITY_BINARYSENSOR_UPDATE_AVAILABLE,
+)
 from .coordinator import (
     PaperlessConfigEntry,
     PaperlessCoordinator,
@@ -35,9 +40,8 @@ class PaperlessBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 BINARY_SENSOR_DESCRIPTIONS: tuple[PaperlessBinarySensorEntityDescription, ...] = (
     PaperlessBinarySensorEntityDescription(
-        key=ENTITY_SENSOR_UPDATE_AVAILABLE,
-        translation_key=ENTITY_SENSOR_UPDATE_AVAILABLE,
-        icon="mdi:update",
+        key=ENTITY_BINARYSENSOR_UPDATE_AVAILABLE,
+        translation_key=ENTITY_BINARYSENSOR_UPDATE_AVAILABLE,
         device_class=BinarySensorDeviceClass.UPDATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=build_state_fn(
@@ -46,10 +50,10 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[PaperlessBinarySensorEntityDescription, ...] =
             else None,
         ),
         attributes_fn=lambda data: {
-            "latest_version": str(data.remote_version.version)
+            ENTITY_ATTRIBUTE_LATEST_VERSION: str(data.remote_version.version)
             if data.remote_version is not None
             else None,
-            "last_checked": str(data.remote_version_last_checked),
+            ENTITY_ATTRIBUTE_LAST_CHECKED: str(data.remote_version_last_checked),
         },
     ),
 )

@@ -9,11 +9,15 @@ rules:
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not register custom actions yes.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  entity-event-setup: done
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not register custom events yes.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -26,17 +30,15 @@ rules:
     status: exempt
     comment: Integration does not register custom actions yes.
   config-entry-unloading: done
-  docs-configuration-parameters:
-    status: exempt
-    comment: Paperless does not have configuration parameters yes.
+  docs-configuration-parameters: done
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
+  log-when-unavailable: done
   parallel-updates:
     status: exempt
     comment: Integration uses a coordinator to fetch data
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: todo
 
   # Gold
@@ -61,8 +63,8 @@ rules:
   entity-disabled-by-default: todo
   entity-translations: done
   exception-translations: done
-  icon-translations: todo
-  reconfiguration-flow: todo
+  icon-translations: done
+  reconfiguration-flow: done
   repair-issues: todo
   stale-devices: todo
 

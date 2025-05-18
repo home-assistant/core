@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from enum import Enum
-from typing import Any, TypeVar
+from typing import TypeVar
 
 from homeassistant.const import UnitOfInformation
 from homeassistant.util.unit_conversion import InformationConverter
@@ -34,23 +34,7 @@ def build_state_fn(
     return extractor
 
 
-def build_attributes_fn(
-    **kwargs: Callable[[PaperlessData], Any],
-) -> Callable[[str, PaperlessData], dict[str, str]]:
-    """Create a function to extract and transform attributes from the status object."""
-
-    def attributes(key: str, data: PaperlessData) -> dict[str, str]:
-        result = {}
-        for name, fn in kwargs.items():
-            value = fn(data)
-            if value is not None:
-                result[name] = str(value)
-        return result
-
-    return attributes
-
-
-def enum_values_lower(enum_cls: type[Enum]) -> list[str]:
+def enum_values_to_lower(enum_cls: type[Enum]) -> list[str]:
     """Return a list of lowercase .value strings from an Enum class."""
     return [e.value.lower() for e in enum_cls]
 

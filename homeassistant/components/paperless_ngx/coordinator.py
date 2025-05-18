@@ -3,19 +3,23 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from aiohttp import ClientConnectionError, ClientConnectorError, ClientResponseError
 from pypaperless import Paperless
-from pypaperless.exceptions import BadJsonResponseError, InitializationError
+from pypaperless.exceptions import (
+    PaperlessForbiddenError,
+    PaperlessInactiveOrDeletedError,
+    PaperlessInvalidTokenError,
+)
 from pypaperless.models import RemoteVersion, Statistic
 from pypaperless.models.status import Status
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import now
 
-from .const import LOGGER, REMOTE_VERSION_UPDATE_INTERVAL_HOURS
+from .const import DOMAIN, LOGGER, REMOTE_VERSION_UPDATE_INTERVAL_HOURS
 
 type PaperlessConfigEntry = ConfigEntry[PaperlessRuntimeData]
 
@@ -46,116 +50,114 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
             always_update=True,
         )
         self.api = api
+        self.github_ratelimit_reached_logged: bool = False
+        self.status_forbidden_logged: bool = False
+        self.statistics_forbidden_logged: bool = False
 
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
         fetched_data = PaperlessData()
 
         try:
-            version_current_check_time = now()
-            version_last_checked_time = (
-                self.data.remote_version_last_checked if self.data is not None else None
-            )
+            (
+                fetched_data.remote_version,
+                fetched_data.remote_version_last_checked,
+            ) = await self._get_paperless_remote_version(self.api)
+            fetched_data.status = await self._get_paperless_status(self.api)
+            fetched_data.statistics = await self._get_paperless_statistics(self.api)
 
-            # GitHub enforces a rate limit of 60 API requests per hour if unauthorized.
-            # Fetch the version only once per day to avoid hitting the limit.
-            if version_last_checked_time is None or (
-                version_current_check_time - version_last_checked_time
-            ) >= timedelta(hours=REMOTE_VERSION_UPDATE_INTERVAL_HOURS):
-                fetched_data.remote_version = await self.get_paperless_remote_version(
-                    self.api
-                )
-                fetched_data.remote_version_last_checked = version_current_check_time
-            else:
-                fetched_data.remote_version = (
-                    self.data.remote_version if self.data else None
-                )
-                fetched_data.remote_version_last_checked = version_last_checked_time
-
-            fetched_data.status = await self.get_paperless_status(self.api)
-            fetched_data.statistics = await self.get_paperless_statistics(self.api)
-
-        except (
-            InitializationError,
-            ClientConnectorError,
-            ClientConnectionError,
-        ) as err:
-            LOGGER.error(
-                "Failed to connect to Paperless-ngx API: %s",
-                err,
-                exc_info=True,
-            )
-        except ClientResponseError as err:
-            if err.status == 401:
-                LOGGER.error(
-                    "Invalid authentication credentials for Paperless-ngx API: %s",
-                    err,
-                    exc_info=True,
-                )
-            elif err.status == 403:
-                LOGGER.error(
-                    "Access forbidden to Paperless-ngx API: %s",
-                    err,
-                    exc_info=True,
-                )
-            else:
-                LOGGER.error("Unexpected error: %s", err)
-        except Exception as err:  # noqa: BLE001
-            LOGGER.error(
-                "An error occurred while updating the Paperless-ngx sensor: %s",
-                err,
-                exc_info=True,
-            )
+        except PaperlessInvalidTokenError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
+        except PaperlessInactiveOrDeletedError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="user_inactive_or_deleted",
+            ) from err
 
         return fetched_data
 
-    async def get_paperless_remote_version(
+    async def _get_paperless_remote_version(
         self, api: Paperless
-    ) -> RemoteVersion | None:
-        """Get the remote version of Paperless-ngx."""
-        try:
-            version = await api.remote_version()
-            if version.version == "0.0.0":
+    ) -> tuple[RemoteVersion | None, datetime | None]:
+        """Fetch the latest version of Paperless-ngx if required."""
+
+        if not self._should_fetch_remote_version():
+            return (
+                self.data.remote_version if self.data else None,
+                self.data.remote_version_last_checked if self.data else None,
+            )
+
+        version = await api.remote_version()
+        if version.version == "0.0.0":
+            if not self.github_ratelimit_reached_logged:
                 LOGGER.warning(
-                    "Could not fetch remote version from Paperless-ngx API",
+                    "Received version '0.0.0' from Paperless-ngx API - this likely indicates "
+                    "the GitHub rate limit of 60 requests per hour is reached",
                     exc_info=True,
                 )
-                return None
-            return version  # noqa: TRY300
-        except Exception as err:  # noqa: BLE001
-            LOGGER.warning(
-                "Could not fetch remote version from Paperless-ngx API: %s",
-                err,
-                exc_info=True,
-            )
+                self.github_ratelimit_reached_logged = True
+            return None, now()
+
+        self.github_ratelimit_reached_logged = False
+        return version, now()
+
+    def _should_fetch_remote_version(self) -> bool:
+        """Determine whether the remote version of Paperless-ngx should be fetched.
+
+        GitHub enforces a rate limit of 60 API requests per hour if unauthorized.
+        To avoid hitting the limit, the remote version is fetched only once per day.
+        """
+
+        current_time = now()
+        last_checked = self.data.remote_version_last_checked if self.data else None
+
+        if last_checked is None:
+            return True
+        return (current_time - last_checked) >= timedelta(
+            hours=REMOTE_VERSION_UPDATE_INTERVAL_HOURS
+        )
+
+    async def _get_paperless_status(self, api: Paperless) -> Status | None:
+        """Get the status of Paperless-ngx."""
+        try:
+            status = await api.status()
+        except PaperlessForbiddenError as err:
+            if not self.status_forbidden_logged:
+                LOGGER.warning(
+                    "Could not fetch status from Paperless-ngx due missing permissions: %s",
+                    err,
+                    exc_info=True,
+                )
+                self.status_forbidden_logged = True
             return None
+        else:
+            self.statistics_forbidden_logged = False
+            return status
 
-    async def get_paperless_status(self, api: Paperless) -> Status | None:
+    async def _get_paperless_statistics(self, api: Paperless) -> Statistic | None:
         """Get the status of Paperless-ngx."""
         try:
-            return await api.status()
-        except (ClientResponseError, BadJsonResponseError) as err:
-            if (
-                isinstance(err, ClientResponseError) and err.status == 403
-            ) or isinstance(err, BadJsonResponseError):
-                return None
-            raise
-
-    async def get_paperless_statistics(self, api: Paperless) -> Statistic | None:
-        """Get the status of Paperless-ngx."""
-        try:
-            return await api.statistics()
-        except (ClientResponseError, BadJsonResponseError) as err:
-            if (
-                isinstance(err, ClientResponseError) and err.status == 403
-            ) or isinstance(err, BadJsonResponseError):
-                return None
-            raise
+            statistics = await api.statistics()
+        except PaperlessForbiddenError as err:
+            if not self.statistics_forbidden_logged:
+                LOGGER.warning(
+                    "Could not fetch statistics from Paperless-ngx due missing permissions: %s",
+                    err,
+                    exc_info=True,
+                )
+                self.statistics_forbidden_logged = True
+            return None
+        else:
+            self.statistics_forbidden_logged = False
+            return statistics
 
 
 @dataclass(kw_only=True)
 class PaperlessRuntimeData:
-    """Describes Paperless-ngx sensor entity."""
+    """Describes Paperless-ngx runtime data."""
 
     client: Paperless
     coordinator: PaperlessCoordinator

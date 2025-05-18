@@ -4,13 +4,17 @@ from __future__ import annotations
 
 from typing import cast
 
-from aiohttp import ClientConnectionError, ClientConnectorError, ClientResponseError
+from aiohttp import ClientConnectionError, ClientConnectorError
 from pypaperless import Paperless
-from pypaperless.exceptions import InitializationError
+from pypaperless.exceptions import (
+    InitializationError,
+    PaperlessInactiveOrDeletedError,
+    PaperlessInvalidTokenError,
+)
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, PLATFORMS
@@ -27,7 +31,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) ->
     try:
         aiohttp_session = async_get_clientsession(hass)
         client = Paperless(
-            url=data[CONF_HOST], token=data[CONF_ACCESS_TOKEN], session=aiohttp_session
+            url=data[CONF_HOST],
+            token=data[CONF_ACCESS_TOKEN],
+            session=aiohttp_session,
         )
 
         await client.initialize()
@@ -40,15 +46,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) ->
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
         ) from err
-    except ClientResponseError as err:
-        if err.status == 401:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-            ) from err
-        raise ConfigEntryNotReady(
+    except PaperlessInvalidTokenError as err:
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
-            translation_key="cannot_connect",
+            translation_key="invalid_auth",
+        ) from err
+    except PaperlessInactiveOrDeletedError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="user_inactive_or_deleted",
         ) from err
     except Exception as err:
         raise ConfigEntryNotReady(

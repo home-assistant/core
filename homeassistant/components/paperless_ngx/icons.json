@@ -1,0 +1,84 @@
+{
+  "entity": {
+    "sensor": {
+      "documents_total": {
+        "default": "mdi:file-document-multiple"
+      },
+      "documents_inbox": {
+        "default": "mdi:tray-full"
+      },
+      "characters_count": {
+        "default": "mdi:alphabet-latin"
+      },
+      "tag_count": {
+        "default": "mdi:tag"
+      },
+      "correspondent_count": {
+        "default": "mdi:account-group"
+      },
+      "document_type_count": {
+        "default": "mdi:format-list-bulleted-type"
+      },
+      "storage_total": {
+        "default": "mdi:harddisk"
+      },
+      "storage_available": {
+        "default": "mdi:harddisk"
+      },
+      "status_database": {
+        "default": "mdi:check-circle-outline",
+        "state": {
+          "ok": "mdi:check-circle",
+          "warning": "mdi:alert",
+          "error": "mdi:alert-circle",
+          "unknown": "mdi:help-circle"
+        }
+      },
+      "status_redis": {
+        "default": "mdi:check-circle-outline",
+        "state": {
+          "ok": "mdi:check-circle",
+          "warning": "mdi:alert",
+          "error": "mdi:alert-circle",
+          "unknown": "mdi:help-circle"
+        }
+      },
+      "status_celery": {
+        "default": "mdi:check-circle-outline",
+        "state": {
+          "ok": "mdi:check-circle",
+          "warning": "mdi:alert",
+          "error": "mdi:alert-circle",
+          "unknown": "mdi:help-circle"
+        }
+      },
+      "status_index": {
+        "default": "mdi:check-circle-outline",
+        "state": {
+          "ok": "mdi:check-circle",
+          "warning": "mdi:alert",
+          "error": "mdi:alert-circle",
+          "unknown": "mdi:help-circle"
+        }
+      },
+      "status_classifier": {
+        "default": "mdi:check-circle-outline",
+        "state": {
+          "ok": "mdi:check-circle",
+          "warning": "mdi:alert",
+          "error": "mdi:alert-circle",
+          "unknown": "mdi:help-circle"
+        }
+      },
+      "status_sanity": {
+        "default": "mdi:check-circle-outline",
+        "state": {
+          "ok": "mdi:check-circle",
+          "warning": "mdi:alert",
+          "error": "mdi:alert-circle",
+          "unknown": "mdi:help-circle"
+        }
+      }
+    }
+  }
+}
