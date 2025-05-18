@@ -14,7 +14,10 @@ class LLMTaskType(StrEnum):
     """LLM task types."""
 
     GENERATE = "generate"
+    """Generate content, which may target a higher quality result."""
+    
     SUMMARIZE = "summarize"
+    """Summarize existing content, which be able to use a more cost effective model."""
 
 
 @dataclass(slots=True)
