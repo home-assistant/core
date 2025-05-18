@@ -6,7 +6,7 @@ from collections.abc import Callable
 from datetime import datetime
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
@@ -330,22 +330,22 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     @property
     def media_title(self) -> str | None:
         """Title of current playing media."""
-        return str(self._player.title) if self._player.title else None
+        return cast(str | None, self._player.title)
 
     @property
     def media_channel(self) -> str | None:
         """Channel (e.g. webradio name) of current playing media."""
-        return str(self._player.remote_title) if self._player.remote_title else None
+        return cast(str | None, self._player.remote_title)
 
     @property
     def media_artist(self) -> str | None:
         """Artist of current playing media."""
-        return str(self._player.artist) if self._player.artist else None
+        return cast(str | None, self._player.artist)
 
     @property
     def media_album_name(self) -> str | None:
         """Album of current playing media."""
-        return str(self._player.album) if self._player.album else None
+        return cast(str | None, self._player.album)
 
     @property
     def repeat(self) -> RepeatMode:
