@@ -2,7 +2,7 @@ rules:
   # Bronze
   action-setup:
     status: done
-    comment: "No integration specific actions"
+    comment: No integration specific actions
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -11,7 +11,7 @@ rules:
   dependency-transparency: done
   docs-actions:
     status: done
-    comment: "No integration specific actions"
+    comment: No integration specific actions
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -26,7 +26,7 @@ rules:
   # Silver
   action-exceptions:
     status: done
-    comment: "No integration specific actions"
+    comment: No integration specific actions
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -42,10 +42,10 @@ rules:
   diagnostics: todo
   discovery-update-info:
     status: exempt
-    comment: "Service can't be discovered"
+    comment: Service can't be discovered
   discovery:
     status: exempt
-    comment: "Service can't be discovered"
+    comment: Service can't be discovered
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
@@ -55,7 +55,7 @@ rules:
   docs-use-cases: todo
   dynamic-devices:
     status: exempt
-    comment: "Only one device entry per config entry"
+    comment: Only one device entry per config entry
   entity-category: todo
   entity-device-class: done
   entity-disabled-by-default: done
@@ -65,10 +65,10 @@ rules:
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
-    comment: "No repair issues needed"
+    comment: No repair issues needed
   stale-devices:
     status: exempt
-    comment: "Only one device entry per config entry"
+    comment: Only one device entry per config entry
 
   # Platinum
   async-dependency: done
