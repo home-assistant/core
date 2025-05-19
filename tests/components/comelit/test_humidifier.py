@@ -146,7 +146,7 @@ async def test_humidifier_data_update_bad_data(
             status=0,
             human_status="off",
             type="climate",
-            val="bad_data",
+            val="bad_data",  # type: ignore[arg-type]
             protected=0,
             zone="Living room",
             power=0.0,
