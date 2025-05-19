@@ -68,8 +68,11 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
                                 "long": zone.attributes[ATTR_LONGITUDE],
                             }
                         )
-                except Exception:  # noqa: BLE001
+                except Exception:
                     errors["base"] = "api_error"
+                    _LOGGER.exception(
+                        "Encountered an unexpected error while configuring the integration"
+                    )
 
                 if api_data.get("cityName", None) in OUT_OF_BENELUX:
                     errors[CONF_ZONE] = "out_of_benelux"
