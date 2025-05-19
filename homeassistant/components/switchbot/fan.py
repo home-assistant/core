@@ -138,11 +138,6 @@ class SwitchBotAirPurifierEntity(SwitchbotEntity, FanEntity):
     _attr_translation_key = "air_purifier"
     _attr_name = None
 
-    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
-        """Initialize the switchbot."""
-        super().__init__(coordinator)
-        self._attr_is_on = False
-
     @property
     def is_on(self) -> bool | None:
         """Return true if device is on."""

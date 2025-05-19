@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from switchbot.const.air_purifier import AirQualityLevel
+
 from homeassistant.components.bluetooth import async_last_service_info
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -105,6 +107,8 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "aqi_level": SensorEntityDescription(
         key="aqi_level",
         translation_key="aqi_quality_level",
+        device_class=SensorDeviceClass.ENUM,
+        options=[member.name.lower() for member in AirQualityLevel],
     ),
 }
 
