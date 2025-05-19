@@ -249,7 +249,7 @@
       "rssi": -52,
       "ssid": "Wifi-Network-Name",
       "sta_ip": "192.168.2.24",
-      "sta_ip6": ["fe80::86fc:e6ff:fe36:5730"],
+      "sta_ip6": [],
       "status": "got ip"
     },
     "ws": {
