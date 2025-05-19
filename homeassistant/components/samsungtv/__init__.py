@@ -44,7 +44,7 @@ PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
 @callback
 def _async_get_device_bridge(
-    hass: HomeAssistant, data: dict[str, Any]
+    hass: HomeAssistant, data: Mapping[str, Any]
 ) -> SamsungTVBridge:
     """Get device bridge."""
     return SamsungTVBridge.get_bridge(
@@ -171,20 +171,18 @@ async def _async_create_bridge_with_updated_data(
     hass: HomeAssistant, entry: SamsungTVConfigEntry
 ) -> SamsungTVBridge:
     """Create a bridge object and update any missing data in the config entry."""
-    updated_data: dict[str, str | int] = {}
+    updated_data: dict[str, str] = {}
     host: str = entry.data[CONF_HOST]
     method: str = entry.data[CONF_METHOD]
-    load_info_attempted = False
     info: dict[str, Any] | None = None
 
-    bridge = _async_get_device_bridge(hass, {**entry.data, **updated_data})
+    bridge = _async_get_device_bridge(hass, entry.data)
 
     mac: str | None = entry.data.get(CONF_MAC)
     model: str | None = entry.data.get(CONF_MODEL)
+    # Incorrect MAC cleanup introduced in #110599, can be removed in 2026.3
     mac_is_incorrectly_formatted = mac and dr.format_mac(mac) != mac
-    if (
-        not mac or not model or mac_is_incorrectly_formatted
-    ) and not load_info_attempted:
+    if not mac or not model or mac_is_incorrectly_formatted:
         info = await bridge.async_device_info()
 
     if not mac or mac_is_incorrectly_formatted:
