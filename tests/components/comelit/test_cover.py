@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from aiocomelit.api import ComelitSerialBridgeObject
 from aiocomelit.const import COVER, WATT
 from freezegun.api import FrozenDateTimeFactory
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.comelit.const import SCAN_INTERVAL
 from homeassistant.components.cover import (
