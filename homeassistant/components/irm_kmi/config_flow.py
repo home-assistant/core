@@ -86,7 +86,6 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
                         title=state.name if state else "IRM KMI",
                         data={
                             CONF_ZONE: user_input[CONF_ZONE],
-                            CONF_LANGUAGE_OVERRIDE: user_input[CONF_LANGUAGE_OVERRIDE],
                         },
                     )
 
@@ -100,16 +99,7 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_ZONE): EntitySelector(
                         EntitySelectorConfig(domain=ZONE_DOMAIN)
-                    ),
-                    vol.Required(
-                        CONF_LANGUAGE_OVERRIDE, default="none"
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=CONF_LANGUAGE_OVERRIDE_OPTIONS,
-                            mode=SelectSelectorMode.DROPDOWN,
-                            translation_key=CONF_LANGUAGE_OVERRIDE,
-                        )
-                    ),
+                    )
                 }
             ),
         )
@@ -135,7 +125,7 @@ class IrmKmiOptionFlow(OptionsFlow):
                     vol.Optional(
                         CONF_LANGUAGE_OVERRIDE,
                         default=get_config_value(
-                            self.current_config_entry, CONF_LANGUAGE_OVERRIDE
+                            self.current_config_entry, CONF_LANGUAGE_OVERRIDE, "none"
                         ),
                     ): SelectSelector(
                         SelectSelectorConfig(
