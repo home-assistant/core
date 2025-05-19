@@ -84,7 +84,7 @@ async def test_climate_data_update(
     freezer: FrozenDateTimeFactory,
     mock_serial_bridge: AsyncMock,
     mock_serial_bridge_config_entry: MockConfigEntry,
-    val: list[Any, Any],
+    val: list[list[Any]],
     mode: HVACMode,
     temp: float,
 ) -> None:
