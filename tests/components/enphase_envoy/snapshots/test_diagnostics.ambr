@@ -896,8 +896,8 @@
       '/api/v1/production/inverters': 'Testing request replies.',
       '/api/v1/production/inverters_log': '{"headers":{"Hello":"World"},"code":200}',
       '/api/v1/production_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/home,': 'Testing request replies.',
-      '/home,_log': '{"headers":{"Hello":"World"},"code":200}',
+      '/home': 'Testing request replies.',
+      '/home_log': '{"headers":{"Hello":"World"},"code":200}',
       '/info': 'Testing request replies.',
       '/info_log': '{"headers":{"Hello":"World"},"code":200}',
       '/ivp/ensemble/dry_contacts': 'Testing request replies.',
@@ -1390,7 +1390,7 @@
       '/api/v1/production_log': dict({
         'Error': "EnvoyError('Test')",
       }),
-      '/home,_log': dict({
+      '/home_log': dict({
         'Error': "EnvoyError('Test')",
       }),
       '/info_log': dict({

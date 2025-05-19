@@ -13,6 +13,8 @@ from homeassistant.components.homeassistant import (
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.components.update import (
+    ATTR_IN_PROGRESS,
+    ATTR_UPDATE_PERCENTAGE,
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
     UpdateEntityFeature,
@@ -28,6 +30,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
+
+from tests.typing import WebSocketGenerator
+
+RELEASE_SUMMARY = "This is a release summary"
+RELEASE_URL = "https://esphome.io/changelog"
+ENTITY_ID = "update.test_myupdate"
 
 
 @pytest.fixture(autouse=True)
@@ -461,8 +469,8 @@ async def test_generic_device_update_entity(
             current_version="2024.6.0",
             latest_version="2024.6.0",
             title="ESPHome Project",
-            release_summary="This is a release summary",
-            release_url="https://esphome.io/changelog",
+            release_summary=RELEASE_SUMMARY,
+            release_url=RELEASE_URL,
         )
     ]
     user_service = []
@@ -472,7 +480,7 @@ async def test_generic_device_update_entity(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("update.test_myupdate")
+    state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_OFF
 
@@ -497,8 +505,8 @@ async def test_generic_device_update_entity_has_update(
             current_version="2024.6.0",
             latest_version="2024.6.1",
             title="ESPHome Project",
-            release_summary="This is a release summary",
-            release_url="https://esphome.io/changelog",
+            release_summary=RELEASE_SUMMARY,
+            release_url=RELEASE_URL,
         )
     ]
     user_service = []
@@ -508,14 +516,14 @@ async def test_generic_device_update_entity_has_update(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("update.test_myupdate")
+    state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_ON
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
         SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.test_myupdate"},
+        {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -528,25 +536,127 @@ async def test_generic_device_update_entity_has_update(
             current_version="2024.6.0",
             latest_version="2024.6.1",
             title="ESPHome Project",
-            release_summary="This is a release summary",
-            release_url="https://esphome.io/changelog",
+            release_summary=RELEASE_SUMMARY,
+            release_url=RELEASE_URL,
         )
     )
 
-    state = hass.states.get("update.test_myupdate")
+    state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_ON
-    assert state.attributes["in_progress"] is True
-    assert state.attributes["update_percentage"] == 50
-
+    assert state.attributes[ATTR_IN_PROGRESS] is True
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 50
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
         SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: "update.test_myupdate"},
+        {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
+    mock_device.set_state(
+        UpdateState(
+            key=1,
+            in_progress=True,
+            has_progress=False,
+            current_version="2024.6.0",
+            latest_version="2024.6.1",
+            title="ESPHome Project",
+            release_summary=RELEASE_SUMMARY,
+            release_url=RELEASE_URL,
+        )
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_IN_PROGRESS] is True
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+
     mock_client.update_command.assert_called_with(key=1, command=UpdateCommand.CHECK)
+
+
+async def test_update_entity_release_notes(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test ESPHome update entity release notes."""
+    entity_info = [
+        UpdateInfo(
+            object_id="myupdate",
+            key=1,
+            name="my update",
+            unique_id="my_update",
+        )
+    ]
+
+    user_service = []
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=[],
+    )
+
+    # release notes
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": ENTITY_ID,
+        }
+    )
+
+    result = await client.receive_json()
+    assert result["result"] is None
+
+    mock_device.set_state(
+        UpdateState(
+            key=1,
+            current_version="2024.6.0",
+            latest_version="2024.6.1",
+            title="ESPHome Project",
+            release_summary="",
+            release_url=RELEASE_URL,
+        )
+    )
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "update/release_notes",
+            "entity_id": ENTITY_ID,
+        }
+    )
+
+    result = await client.receive_json()
+    assert result["result"] is None
+
+    mock_device.set_state(
+        UpdateState(
+            key=1,
+            current_version="2024.6.0",
+            latest_version="2024.6.1",
+            title="ESPHome Project",
+            release_summary=RELEASE_SUMMARY,
+            release_url=RELEASE_URL,
+        )
+    )
+
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "update/release_notes",
+            "entity_id": ENTITY_ID,
+        }
+    )
+
+    result = await client.receive_json()
+    assert result["result"] == RELEASE_SUMMARY
 
 
 async def test_attempt_to_update_twice(

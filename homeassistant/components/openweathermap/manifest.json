@@ -1,7 +1,7 @@
 {
   "domain": "openweathermap",
   "name": "OpenWeatherMap",
-  "codeowners": ["@fabaff", "@freekode", "@nzapponi"],
+  "codeowners": ["@fabaff", "@freekode", "@nzapponi", "@wittypluck"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/openweathermap",
   "iot_class": "cloud_polling",

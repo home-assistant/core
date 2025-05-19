@@ -34,6 +34,9 @@ async def async_setup_entry(
     )
 
 
+PARALLEL_UPDATES = 0
+
+
 class AreaAlarmControlPanel(BoschAlarmAreaEntity, AlarmControlPanelEntity):
     """An alarm control panel entity for a bosch alarm panel."""
 
