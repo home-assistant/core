@@ -39,9 +39,9 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: IrmKmiConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(_config_entry: IrmKmiConfigEntry) -> OptionsFlow:
         """Create the options flow."""
-        return IrmKmiOptionFlow(config_entry)
+        return IrmKmiOptionFlow()
 
     async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Define the user step of the configuration flow."""
@@ -108,10 +108,6 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
 class IrmKmiOptionFlow(OptionsFlow):
     """Option flow for the IRM KMI integration, help change the options once the integration was configured."""
 
-    def __init__(self, config_entry: IrmKmiConfigEntry) -> None:
-        """Initialize options flow."""
-        self.current_config_entry = config_entry
-
     async def async_step_init(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
@@ -125,7 +121,7 @@ class IrmKmiOptionFlow(OptionsFlow):
                     vol.Optional(
                         CONF_LANGUAGE_OVERRIDE,
                         default=get_config_value(
-                            self.current_config_entry, CONF_LANGUAGE_OVERRIDE, "none"
+                            self.config_entry, CONF_LANGUAGE_OVERRIDE, "none"
                         ),
                     ): SelectSelector(
                         SelectSelectorConfig(
