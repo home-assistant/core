@@ -29,7 +29,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -37,7 +36,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     _LOGGER,
-    DOMAIN,
     UOM_DOUBLE_TEMP,
     UOM_FRIENDLY_NAME,
     UOM_INDEX,
@@ -46,7 +44,7 @@ from .const import (
 )
 from .entity import ISYNodeEntity
 from .helpers import convert_isy_value_to_hass
-from .models import IsyData
+from .models import IsyConfigEntry
 
 # Disable general purpose and redundant sensors by default
 AUX_DISABLED_BY_DEFAULT_MATCH = ["GV", "DO"]
@@ -109,13 +107,13 @@ ISY_CONTROL_TO_ENTITY_CATEGORY = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: IsyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ISY sensor platform."""
-    isy_data: IsyData = hass.data[DOMAIN][entry.entry_id]
+    isy_data = entry.runtime_data
     entities: list[ISYSensorEntity] = []
-    devices: dict[str, DeviceInfo] = isy_data.devices
+    devices = isy_data.devices
 
     for node in isy_data.nodes[Platform.SENSOR]:
         _LOGGER.debug("Loading %s", node.name)

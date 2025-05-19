@@ -5,7 +5,7 @@ from deebot_client.commands.json import SetWaterInfo
 from deebot_client.event_bus import EventBus
 from deebot_client.events.water_info import WaterAmount, WaterAmountEvent
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import select
 from homeassistant.components.ecovacs.const import DOMAIN
