@@ -22,7 +22,6 @@ from homeassistant.helpers.selector import (
 from .const import (
     CONF_LANGUAGE_OVERRIDE,
     CONF_LANGUAGE_OVERRIDE_OPTIONS,
-    CONFIG_FLOW_VERSION,
     DOMAIN,
     OUT_OF_BENELUX,
     USER_AGENT,
@@ -36,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
     """Configuration flow for the IRM KMI integration."""
 
-    VERSION = CONFIG_FLOW_VERSION
+    VERSION = 1
 
     @staticmethod
     @callback
