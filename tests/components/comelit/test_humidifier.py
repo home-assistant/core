@@ -7,7 +7,7 @@ from aiocomelit.api import ComelitSerialBridgeObject
 from aiocomelit.const import CLIMATE, WATT
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.comelit.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.humidifier import (
