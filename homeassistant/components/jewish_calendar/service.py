@@ -24,7 +24,6 @@ from homeassistant.util import dt as dt_util
 from .const import ATTR_AFTER_SUNSET, ATTR_DATE, ATTR_NUSACH, DOMAIN, SERVICE_COUNT_OMER
 
 _LOGGER = logging.getLogger(__name__)
-PARALLEL_UPDATES = 0
 OMER_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_DATE): cv.date,
