@@ -18,6 +18,9 @@
         "state": {
           "on": "mdi:lock"
         }
+      },
+      "keep_fresh_mode": {
+        "default": "mdi:creation"
       }
     },
     "button": {
@@ -31,6 +34,9 @@
     "number": {
       "washer_rinse_cycles": {
         "default": "mdi:waves-arrow-up"
+      },
+      "freezer_temperature": {
+        "default": "mdi:snowflake-thermometer"
       }
     },
     "select": {
@@ -39,6 +45,13 @@
           "run": "mdi:play",
           "pause": "mdi:pause",
           "stop": "mdi:stop"
+        }
+      },
+      "lamp": {
+        "default": "mdi:lightbulb",
+        "state": {
+          "on": "mdi:lightbulb-on",
+          "off": "mdi:lightbulb-off"
         }
       },
       "detergent_amount": {
@@ -90,8 +103,20 @@
           "off": "mdi:tumble-dryer-off"
         }
       },
+      "keep_fresh_mode": {
+        "default": "mdi:creation"
+      },
       "ice_maker": {
         "default": "mdi:delete-variant"
+      },
+      "sanitize": {
+        "default": "mdi:lotion"
+      },
+      "auto_cycle_link": {
+        "default": "mdi:link-off",
+        "state": {
+          "on": "mdi:link"
+        }
       }
     }
   }

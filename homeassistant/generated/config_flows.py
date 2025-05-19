@@ -288,6 +288,7 @@ FLOWS = {
         "imap",
         "imeon_inverter",
         "imgw_pib",
+        "immich",
         "improv_ble",
         "incomfort",
         "inkbird",

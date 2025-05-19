@@ -1,7 +1,7 @@
 """Tests for the diagnostics data provided by the Roku integration."""
 
 from rokuecp import Device as RokuDevice
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util

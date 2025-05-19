@@ -24,6 +24,7 @@ from .const import (
     CONF_RETRY_COUNT,
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
     DEFAULT_RETRY_COUNT,
+    DOMAIN,
     ENCRYPTED_MODELS,
     HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL,
     SupportedModels,
@@ -138,7 +139,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
     )
     if not ble_device:
         raise ConfigEntryNotReady(
-            f"Could not find Switchbot {sensor_type} with address {address}"
+            translation_domain=DOMAIN,
+            translation_key="device_not_found_error",
+            translation_placeholders={"sensor_type": sensor_type, "address": address},
         )
 
     cls = CLASS_BY_DEVICE.get(sensor_type, switchbot.SwitchbotDevice)
@@ -153,7 +156,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
             )
         except ValueError as error:
             raise ConfigEntryNotReady(
-                "Invalid encryption configuration provided"
+                translation_domain=DOMAIN,
+                translation_key="value_error",
+                translation_placeholders={"error": str(error)},
             ) from error
     else:
         device = cls(
@@ -174,7 +179,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
     )
     entry.async_on_unload(coordinator.async_start())
     if not await coordinator.async_wait_ready():
-        raise ConfigEntryNotReady(f"{address} is not advertising state")
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="advertising_state_error",
+            translation_placeholders={"address": address},
+        )
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     await hass.config_entries.async_forward_entry_setups(

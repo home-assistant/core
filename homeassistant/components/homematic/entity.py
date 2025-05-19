@@ -99,10 +99,10 @@ class HMDevice(Entity):
 
         return attr
 
-    def update(self):
+    def update(self) -> None:
         """Connect to HomeMatic init values."""
         if self._connected:
-            return True
+            return
 
         # Initialize
         self._homematic = self.hass.data[DATA_HOMEMATIC]

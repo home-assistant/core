@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from youtubeaio.types import UnauthorizedError, YouTubeBackendError
 
 from homeassistant import config_entries

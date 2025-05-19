@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 from matter_server.client.models.node import MatterNode
 from matter_server.common.models import EventType
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.matter.binary_sensor import (
     DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS,
