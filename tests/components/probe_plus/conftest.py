@@ -35,6 +35,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         unique_id="aa:bb:cc:dd:ee:ff",
     )
 
+
 @pytest.fixture
 def mock_probe_plus() -> MagicMock:
     """Mock the Probe Plus device."""

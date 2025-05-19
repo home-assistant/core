@@ -57,9 +57,8 @@ async def test_user_config_flow_creates_entry(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
     assert result["title"] == "FM210 aa:bb:cc:dd:ee:ff"
-    assert result["data"] == {
-        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff"
-    }
+    assert result["data"] == {CONF_ADDRESS: "aa:bb:cc:dd:ee:ff"}
+
 
 async def test_user_flow_already_configured(
     hass: HomeAssistant,

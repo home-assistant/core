@@ -62,7 +62,7 @@ SENSOR_DESCRIPTIONS: tuple[ProbePlusSensorEntityDescription, ...] = (
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.device_state.probe_rssi,
-        entity_registry_enabled_default=False
+        entity_registry_enabled_default=False,
     ),
     ProbePlusSensorEntityDescription(
         key="relay_voltage",
@@ -92,10 +92,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Probe Plus sensors."""
     coordinator = entry.runtime_data
-    async_add_entities([
-        ProbeSensor(coordinator=coordinator, entity_description=desc)
-        for desc in SENSOR_DESCRIPTIONS
-    ])
+    async_add_entities(
+        [
+            ProbeSensor(coordinator=coordinator, entity_description=desc)
+            for desc in SENSOR_DESCRIPTIONS
+        ]
+    )
 
 
 class ProbeSensor(ProbePlusEntity, RestoreSensor):

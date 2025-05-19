@@ -9,6 +9,7 @@ from .coordinator import ProbePlusConfigEntry, ProbePlusDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
+
 async def async_setup_entry(hass: HomeAssistant, entry: ProbePlusConfigEntry) -> bool:
     """Set up Probe Plus from a config entry."""
     coordinator = ProbePlusDataUpdateCoordinator(hass, entry)
