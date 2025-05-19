@@ -16,7 +16,7 @@ from freezegun import freeze_time
 import orjson
 import pytest
 from pytest_unordered import unordered
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant import config_entries

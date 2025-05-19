@@ -11,7 +11,7 @@ from music_assistant_models.enums import (
 )
 from music_assistant_models.media_items import Track
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import paths
 
 from homeassistant.components.media_player import (
