@@ -21,7 +21,9 @@ class ZimiEntity(Entity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, device: ControlPointDevice, api: ControlPoint) -> None:
+    def __init__(
+        self, device: ControlPointDevice, api: ControlPoint, use_device_name=True
+    ) -> None:
         """Initialize an HA Entity which is a ZimiDevice."""
 
         self._device = device
@@ -36,7 +38,8 @@ class ZimiEntity(Entity):
             suggested_area=device.room,
             via_device=(DOMAIN, api.mac),
         )
-        self._attr_name = device.name.strip()
+        if use_device_name:
+            self._attr_name = device.name.strip()
         self._attr_suggested_area = device.room
 
     @property

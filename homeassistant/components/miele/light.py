@@ -23,6 +23,8 @@ from .const import AMBIENT_LIGHT, DOMAIN, LIGHT, LIGHT_OFF, LIGHT_ON, MieleAppli
 from .coordinator import MieleConfigEntry
 from .entity import MieleDevice, MieleEntity
 
+PARALLEL_UPDATES = 1
+
 _LOGGER = logging.getLogger(__name__)
 
 
