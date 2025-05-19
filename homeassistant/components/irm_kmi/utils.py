@@ -42,12 +42,14 @@ def modify_from_config(hass: HomeAssistant, config_entry_id: str, enable: bool):
         )
 
 
-def get_config_value(config_entry: ConfigEntry, key: str) -> Any:
+def get_config_value(config_entry: ConfigEntry, key: str, default: Any = None) -> Any:
     """Get the value of key in the configuration.  If options were modified, they take priority."""
 
     if config_entry.options and key in config_entry.options:
         return config_entry.options[key]
-    return config_entry.data[key]
+    if config_entry.data and key in config_entry.data:
+        return config_entry.data[key]
+    return default
 
 
 def preferred_language(hass: HomeAssistant, config_entry: ConfigEntry | None) -> str:
