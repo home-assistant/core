@@ -11,17 +11,12 @@ from pypaperless.exceptions import (
     PaperlessInactiveOrDeletedError,
     PaperlessInvalidTokenError,
 )
-from pypaperless.models import RemoteVersion, Statistic
-from pypaperless.models.status import Status
+from pypaperless.models import RemoteVersion
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryError,
-    ConfigEntryNotReady,
-)
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import now
@@ -35,8 +30,6 @@ class PaperlessData:
 
     remote_version: RemoteVersion | None = None
     remote_version_last_checked: datetime | None = None
-    status: Status | None = None
-    statistics: Statistic | None = None
 
 
 class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
@@ -56,8 +49,6 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
             always_update=True,
         )
         self.github_ratelimit_reached_logged: bool = False
-        self.status_forbidden_logged: bool = False
-        self.statistics_forbidden_logged: bool = False
 
         aiohttp_session = async_get_clientsession(self.hass)
         self.api = Paperless(
@@ -76,17 +67,17 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
                 translation_key="cannot_connect",
             ) from err
         except PaperlessInvalidTokenError as err:
-            raise ConfigEntryAuthFailed(
+            raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_api_key",
             ) from err
         except PaperlessInactiveOrDeletedError as err:
-            raise ConfigEntryAuthFailed(
+            raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="user_inactive_or_deleted",
             ) from err
         except PaperlessForbiddenError as err:
-            raise ConfigEntryAuthFailed(
+            raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="forbidden",
             ) from err
@@ -105,16 +96,18 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
                 data.remote_version,
                 data.remote_version_last_checked,
             ) = await self._get_paperless_remote_version()
-            data.status = await self._get_paperless_status()
-            data.statistics = await self._get_paperless_statistics()
-
+        except PaperlessConnectionError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
         except PaperlessInvalidTokenError as err:
-            raise ConfigEntryAuthFailed(
+            raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_api_key",
             ) from err
         except PaperlessInactiveOrDeletedError as err:
-            raise ConfigEntryAuthFailed(
+            raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="user_inactive_or_deleted",
             ) from err
@@ -161,37 +154,3 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
         return (current_time - last_checked) >= timedelta(
             hours=REMOTE_VERSION_UPDATE_INTERVAL_HOURS
         )
-
-    async def _get_paperless_status(self) -> Status | None:
-        """Get the status of Paperless-ngx."""
-        try:
-            status = await self.api.status()
-        except PaperlessForbiddenError as err:
-            if not self.status_forbidden_logged:
-                LOGGER.warning(
-                    "Could not fetch status from Paperless-ngx due missing permissions: %s",
-                    err,
-                    exc_info=True,
-                )
-                self.status_forbidden_logged = True
-            return None
-        else:
-            self.statistics_forbidden_logged = False
-            return status
-
-    async def _get_paperless_statistics(self) -> Statistic | None:
-        """Get the status of Paperless-ngx."""
-        try:
-            statistics = await self.api.statistics()
-        except PaperlessForbiddenError as err:
-            if not self.statistics_forbidden_logged:
-                LOGGER.warning(
-                    "Could not fetch statistics from Paperless-ngx due missing permissions: %s",
-                    err,
-                    exc_info=True,
-                )
-                self.statistics_forbidden_logged = True
-            return None
-        else:
-            self.statistics_forbidden_logged = False
-            return statistics

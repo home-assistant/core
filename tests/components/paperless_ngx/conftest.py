@@ -1,21 +1,14 @@
 """Common fixtures for the Paperless-ngx tests."""
 
 from collections.abc import Generator
-from enum import Enum
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pypaperless.models import RemoteVersion, Statistic, Status
+from pypaperless.models import RemoteVersion
 import pytest
 
 from homeassistant.components.paperless_ngx.const import DOMAIN
 
-from .const import (
-    MOCK_REMOTE_VERSION_DATA,
-    MOCK_STATISTICS_DATA,
-    MOCK_STATUS_DATA,
-    PAPERLESS_IMPORT_PATHS,
-    USER_INPUT,
-)
+from .const import MOCK_REMOTE_VERSION_DATA, PAPERLESS_IMPORT_PATHS, USER_INPUT
 
 from tests.common import MockConfigEntry
 
@@ -41,28 +34,8 @@ def mock_remote_status_data() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(autouse=True)
-def mock_status_data() -> Generator[AsyncMock]:
-    """Mock Status response data."""
-    dummy_api = MagicMock()
-    return AsyncMock(
-        return_value=Status.create_with_data(dummy_api, data=MOCK_STATUS_DATA)
-    )
-
-
-@pytest.fixture(autouse=True)
-def mock_statistics_data() -> Generator[AsyncMock]:
-    """Mock StaStatistictus response data."""
-    dummy_api = MagicMock()
-    return AsyncMock(
-        return_value=Statistic.create_with_data(dummy_api, data=MOCK_STATISTICS_DATA)
-    )
-
-
-@pytest.fixture(autouse=True)
 def mock_client(
     mock_remote_status_data: AsyncMock,
-    mock_status_data: AsyncMock,
-    mock_statistics_data: AsyncMock,
 ) -> Generator[AsyncMock]:
     """Mock the pypaperless.Paperless client."""
     patchers = [patch(path, autospec=True) for path in PAPERLESS_IMPORT_PATHS]
@@ -71,8 +44,6 @@ def mock_client(
         mock_instance = AsyncMock()
 
         mock_instance.initialize = AsyncMock(return_value=None)
-        mock_instance.status = mock_status_data
-        mock_instance.statistics = mock_statistics_data
         mock_instance.remote_version = mock_remote_status_data
 
         for mock_paperless in (mock1, mock2):
@@ -80,8 +51,6 @@ def mock_client(
             mock_paperless.return_value.__aenter__.return_value = mock_instance
             mock_paperless.return_value.initialize = mock_instance.initialize
             mock_paperless.return_value.remote_version = mock_instance.remote_version
-            mock_paperless.return_value.status = mock_instance.status
-            mock_paperless.return_value.statistics = mock_instance.statistics
 
         yield mock_instance
 
@@ -95,11 +64,3 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data=USER_INPUT,
     )
-
-
-class TestEnum(Enum):
-    """Enum for lowercase conversion tests."""
-
-    OPTION_A = "Alpha"
-    OPTION_B = "Beta"
-    OPTION_C = "GAMMA"

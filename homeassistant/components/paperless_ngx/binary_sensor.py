@@ -17,7 +17,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .config_flow import PaperlessConfigEntry
 from .coordinator import PaperlessCoordinator, PaperlessData
 from .entity import PaperlessCoordinatorEntity
-from .helpers import build_state_fn
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -33,11 +32,9 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[PaperlessBinarySensorEntityDescription, ...] =
         translation_key="update_available",
         device_class=BinarySensorDeviceClass.UPDATE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=build_state_fn(
-            lambda data: data.remote_version.update_available
-            if data.remote_version is not None
-            else None,
-        ),
+        value_fn=lambda data: data.remote_version.update_available
+        if data.remote_version is not None
+        else None,
     ),
 )
 

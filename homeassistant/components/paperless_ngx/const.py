@@ -6,7 +6,7 @@ from homeassistant.const import Platform
 
 DOMAIN = "paperless_ngx"
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR]
 
 LOGGER = logging.getLogger(__package__)
 

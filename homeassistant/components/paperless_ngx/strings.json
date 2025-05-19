@@ -11,28 +11,6 @@
           "api_key": "API key to connect to Paperless-ngx API"
         },
         "title": "Add Paperless-ngx instance"
-      },
-      "reauth_confirm": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "data_description": {
-          "host": "Host to connect to Paperless-ngx API",
-          "api_key": "API key to connect to Paperless-ngx API"
-        },
-        "title": "Re-auth Paperless-ngx instance"
-      },
-      "reconfigure": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "data_description": {
-          "host": "Host to connect to Paperless-ngx API",
-          "api_key": "API key to connect to Paperless-ngx API"
-        },
-        "title": "Reconfigure Paperless-ngx instance"
       }
     },
     "error": {
@@ -43,9 +21,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "exceptions": {
@@ -63,121 +39,6 @@
     },
     "unknown": {
       "message": "[%key:common::config_flow::error::unknown%]"
-    }
-  },
-  "entity": {
-    "sensor": {
-      "documents_total": {
-        "name": "Documents total"
-      },
-      "documents_inbox": {
-        "name": "Documents inbox"
-      },
-      "characters_count": {
-        "name": "Characters total"
-      },
-      "tag_count": {
-        "name": "Tag count"
-      },
-      "correspondent_count": {
-        "name": "Correspondent count"
-      },
-      "document_type_count": {
-        "name": "Document type count"
-      },
-      "storage_total": {
-        "name": "Storage total"
-      },
-      "storage_available": {
-        "name": "Storage available"
-      },
-      "status_database": {
-        "name": "Status database",
-        "state": {
-          "ok": "OK",
-          "warning": "WARNING",
-          "error": "ERROR",
-          "unknown": "UNKNOWN"
-        }
-      },
-      "status_database_error": {
-        "name": "Error database"
-      },
-      "status_redis": {
-        "name": "Status Redis",
-        "state": {
-          "ok": "OK",
-          "warning": "WARNING",
-          "error": "ERROR",
-          "unknown": "UNKNOWN"
-        }
-      },
-      "status_redis_error": {
-        "name": "Error redis"
-      },
-      "status_celery": {
-        "name": "Status Celery",
-        "state": {
-          "ok": "OK",
-          "warning": "WARNING",
-          "error": "ERROR",
-          "unknown": "UNKNOWN"
-        }
-      },
-      "status_celery_error": {
-        "name": "Error celery"
-      },
-      "status_index": {
-        "name": "Status index",
-        "state": {
-          "ok": "OK",
-          "warning": "WARNING",
-          "error": "ERROR",
-          "unknown": "UNKNOWN"
-        }
-      },
-      "status_index_last_modified": {
-        "name": "Last run index"
-      },
-      "status_index_error": {
-        "name": "Error index"
-      },
-      "status_classifier": {
-        "name": "Status classifier",
-        "state": {
-          "ok": "OK",
-          "warning": "WARNING",
-          "error": "ERROR",
-          "unknown": "UNKNOWN"
-        }
-      },
-      "status_classifier_last_trained": {
-        "name": "Last run classifier"
-      },
-      "status_classifier_error": {
-        "name": "Error classifier"
-      },
-      "status_sanity": {
-        "name": "Status sanity",
-        "state": {
-          "ok": "OK",
-          "warning": "WARNING",
-          "error": "ERROR",
-          "unknown": "UNKNOWN"
-        }
-      },
-      "status_sanity_last_run": {
-        "name": "Last run sanity"
-      },
-      "status_sanity_error": {
-        "name": "Error sanity"
-      },
-      "latest_version": {
-        "name": "Latest version"
-      },
-      "latest_version_last_checked": {
-        "name": "Latest version last checked"
-      }
     }
   }
 }

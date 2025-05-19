@@ -38,7 +38,7 @@ rules:
   parallel-updates:
     status: exempt
     comment: Integration uses a coordinator to fetch data with own scan interval
-  reauthentication-flow: done
+  reauthentication-flow: todo
   test-coverage: done
 
   # Gold
@@ -63,8 +63,8 @@ rules:
   entity-disabled-by-default: todo
   entity-translations: done
   exception-translations: done
-  icon-translations: done
-  reconfiguration-flow: done
+  icon-translations: todo
+  reconfiguration-flow: todo
   repair-issues: todo
   stale-devices: todo
 
