@@ -100,15 +100,12 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
     @property
     def alarm(self) -> Alarm:
         """Return the alarm object."""
-        return self.coordinator.data.get("alarms", {}).get(self._alarm_id)
+        return self.coordinator.data["alarms"].get(self._alarm_id)
 
     @property
     def available(self) -> bool:
         """Return whether the alarm is available."""
-        return (
-            self.coordinator.data.get("alarms", {}).get(self._alarm_id)
-            and super().available
-        )
+        return self.coordinator.data["alarms"].get(self._alarm_id) and super().available
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
