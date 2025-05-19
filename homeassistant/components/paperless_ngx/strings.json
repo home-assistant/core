@@ -4,39 +4,33 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "scan_interval": "Scan interval (seconds)"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
           "host": "Host to connect to Paperless-ngx API",
-          "api_key": "API key to connect to Paperless-ngx API",
-          "scan_interval": "Interval in seconds to update the data from Paperless-ngx API"
+          "api_key": "API key to connect to Paperless-ngx API"
         },
         "title": "Add Paperless-ngx instance"
       },
       "reauth_confirm": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "scan_interval": "Scan interval (seconds)"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
           "host": "Host to connect to Paperless-ngx API",
-          "api_key": "API key to connect to Paperless-ngx API",
-          "scan_interval": "Interval in seconds to update the data from Paperless-ngx API"
+          "api_key": "API key to connect to Paperless-ngx API"
         },
         "title": "Re-auth Paperless-ngx instance"
       },
       "reconfigure": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "scan_interval": "Scan interval (seconds)"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
           "host": "Host to connect to Paperless-ngx API",
-          "api_key": "API key to connect to Paperless-ngx API",
-          "scan_interval": "Interval in seconds to update the data from Paperless-ngx API"
+          "api_key": "API key to connect to Paperless-ngx API"
         },
         "title": "Reconfigure Paperless-ngx instance"
       }
@@ -106,6 +100,9 @@
           "unknown": "UNKNOWN"
         }
       },
+      "status_database_error": {
+        "name": "Error database"
+      },
       "status_redis": {
         "name": "Status Redis",
         "state": {
@@ -114,6 +111,9 @@
           "error": "ERROR",
           "unknown": "UNKNOWN"
         }
+      },
+      "status_redis_error": {
+        "name": "Error redis"
       },
       "status_celery": {
         "name": "Status Celery",
@@ -124,6 +124,9 @@
           "unknown": "UNKNOWN"
         }
       },
+      "status_celery_error": {
+        "name": "Error celery"
+      },
       "status_index": {
         "name": "Status index",
         "state": {
@@ -132,6 +135,12 @@
           "error": "ERROR",
           "unknown": "UNKNOWN"
         }
+      },
+      "status_index_last_modified": {
+        "name": "Last run index"
+      },
+      "status_index_error": {
+        "name": "Error index"
       },
       "status_classifier": {
         "name": "Status classifier",
@@ -142,6 +151,12 @@
           "unknown": "UNKNOWN"
         }
       },
+      "status_classifier_last_trained": {
+        "name": "Last run classifier"
+      },
+      "status_classifier_error": {
+        "name": "Error classifier"
+      },
       "status_sanity": {
         "name": "Status sanity",
         "state": {
@@ -150,6 +165,18 @@
           "error": "ERROR",
           "unknown": "UNKNOWN"
         }
+      },
+      "status_sanity_last_run": {
+        "name": "Last run sanity"
+      },
+      "status_sanity_error": {
+        "name": "Error sanity"
+      },
+      "latest_version": {
+        "name": "Latest version"
+      },
+      "latest_version_last_checked": {
+        "name": "Latest version last checked"
       }
     }
   }

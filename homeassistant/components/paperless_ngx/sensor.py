@@ -22,33 +22,8 @@ from homeassistant.const import EntityCategory, UnitOfInformation
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    DOMAIN,
-    ENTITY_ATTRIBUTE_ERROR,
-    ENTITY_ATTRIBUTE_LAST_MODIFIED,
-    ENTITY_ATTRIBUTE_LAST_RUN,
-    ENTITY_ATTRIBUTE_LAST_TRAINED,
-    ENTITY_SENSOR_CHARACTERS_COUNT,
-    ENTITY_SENSOR_CORRESPONDENT_COUNT,
-    ENTITY_SENSOR_DOCUMENT_TYPE_COUNT,
-    ENTITY_SENSOR_DOCUMENTS_INBOX,
-    ENTITY_SENSOR_DOCUMENTS_TOTAL,
-    ENTITY_SENSOR_STATUS_CELERY,
-    ENTITY_SENSOR_STATUS_CLASSIFIER,
-    ENTITY_SENSOR_STATUS_DATABASE,
-    ENTITY_SENSOR_STATUS_INDEX,
-    ENTITY_SENSOR_STATUS_REDIS,
-    ENTITY_SENSOR_STATUS_SANITY,
-    ENTITY_SENSOR_STORAGE_AVAILABLE,
-    ENTITY_SENSOR_STORAGE_TOTAL,
-    ENTITY_SENSOR_TAG_COUNT,
-)
-from .coordinator import (
-    PaperlessConfigEntry,
-    PaperlessCoordinator,
-    PaperlessData,
-    PaperlessRuntimeData,
-)
+from .config_flow import PaperlessConfigEntry
+from .coordinator import PaperlessCoordinator, PaperlessData
 from .entity import PaperlessCoordinatorEntity
 from .helpers import build_state_fn, bytes_to_gb_converter, enum_values_to_lower
 
@@ -66,40 +41,40 @@ class PaperlessEntityDescription(SensorEntityDescription):
 
 SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
     PaperlessEntityDescription(
-        key=ENTITY_SENSOR_DOCUMENTS_TOTAL,
-        translation_key=ENTITY_SENSOR_DOCUMENTS_TOTAL,
+        key="documents_total",
+        translation_key="documents_total",
         state_class=SensorStateClass.TOTAL,
         value_fn=build_state_fn(
             lambda data: data.statistics.documents_total if data.statistics else None,
         ),
     ),
     PaperlessEntityDescription(
-        key=ENTITY_SENSOR_DOCUMENTS_INBOX,
-        translation_key=ENTITY_SENSOR_DOCUMENTS_INBOX,
+        key="documents_inbox",
+        translation_key="documents_inbox",
         state_class=SensorStateClass.TOTAL,
         value_fn=build_state_fn(
             lambda data: data.statistics.documents_inbox if data.statistics else None,
         ),
     ),
     PaperlessEntityDescription(
-        key=ENTITY_SENSOR_CHARACTERS_COUNT,
-        translation_key=ENTITY_SENSOR_CHARACTERS_COUNT,
+        key="characters_count",
+        translation_key="characters_count",
         state_class=SensorStateClass.TOTAL,
         value_fn=build_state_fn(
             lambda data: data.statistics.character_count if data.statistics else None,
         ),
     ),
     PaperlessEntityDescription(
-        key=ENTITY_SENSOR_TAG_COUNT,
-        translation_key=ENTITY_SENSOR_TAG_COUNT,
+        key="tag_count",
+        translation_key="tag_count",
         state_class=SensorStateClass.TOTAL,
         value_fn=build_state_fn(
             lambda data: data.statistics.tag_count if data.statistics else None,
         ),
     ),
     PaperlessEntityDescription(
-        key=ENTITY_SENSOR_CORRESPONDENT_COUNT,
-        translation_key=ENTITY_SENSOR_CORRESPONDENT_COUNT,
+        key="correspondent_count",
+        translation_key="correspondent_count",
         state_class=SensorStateClass.TOTAL,
         value_fn=build_state_fn(
             lambda data: data.statistics.correspondent_count
@@ -108,8 +83,8 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
         ),
     ),
     PaperlessEntityDescription(
-        key=ENTITY_SENSOR_DOCUMENT_TYPE_COUNT,
-        translation_key=ENTITY_SENSOR_DOCUMENT_TYPE_COUNT,
+        key="document_type_count",
+        translation_key="document_type_count",
         state_class=SensorStateClass.TOTAL,
         value_fn=build_state_fn(
             lambda data: data.statistics.document_type_count
@@ -118,8 +93,8 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
         ),
     ),
     PaperlessEntityDescription(
-        key=ENTITY_SENSOR_STORAGE_TOTAL,
-        translation_key=ENTITY_SENSOR_STORAGE_TOTAL,
+        key="storage_total",
+        translation_key="storage_total",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         state_class=SensorStateClass.MEASUREMENT,
@@ -131,8 +106,8 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
         ),
     ),
     PaperlessEntityDescription(
-        key=ENTITY_SENSOR_STORAGE_AVAILABLE,
-        translation_key=ENTITY_SENSOR_STORAGE_AVAILABLE,
+        key="storage_available",
+        translation_key="storage_available",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         state_class=SensorStateClass.MEASUREMENT,
@@ -144,8 +119,8 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
         ),
     ),
     PaperlessEntityDescription(
-        key=ENTITY_SENSOR_STATUS_DATABASE,
-        translation_key=ENTITY_SENSOR_STATUS_DATABASE,
+        key="status_database",
+        translation_key="status_database",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
         options=enum_values_to_lower(StatusType),
@@ -154,15 +129,21 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
             if data.status and data.status.database
             else None,
         ),
-        attributes_fn=lambda data: {
-            ENTITY_ATTRIBUTE_ERROR: str(data.status.database.error)
-            if data.status and data.status.database
-            else None,
-        },
     ),
     PaperlessEntityDescription(
-        key=ENTITY_SENSOR_STATUS_REDIS,
-        translation_key=ENTITY_SENSOR_STATUS_REDIS,
+        key="status_database_error",
+        translation_key="status_database_error",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=enum_values_to_lower(StatusType),
+        value_fn=build_state_fn(
+            lambda data: data.status.database.error
+            if data.status and data.status.database
+            else None,
+        ),
+    ),
+    PaperlessEntityDescription(
+        key="status_redis",
+        translation_key="status_redis",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
         options=enum_values_to_lower(StatusType),
@@ -171,15 +152,21 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
             if data.status and data.status.tasks
             else None,
         ),
-        attributes_fn=lambda data: {
-            ENTITY_ATTRIBUTE_ERROR: str(data.status.tasks.redis_error)
-            if data.status and data.status.tasks
-            else None,
-        },
     ),
     PaperlessEntityDescription(
-        key=ENTITY_SENSOR_STATUS_CELERY,
-        translation_key=ENTITY_SENSOR_STATUS_CELERY,
+        key="status_redis_error",
+        translation_key="status_redis_error",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=enum_values_to_lower(StatusType),
+        value_fn=build_state_fn(
+            lambda data: data.status.tasks.redis_error
+            if data.status and data.status.tasks
+            else None,
+        ),
+    ),
+    PaperlessEntityDescription(
+        key="status_celery",
+        translation_key="status_celery",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
         options=enum_values_to_lower(StatusType),
@@ -188,15 +175,21 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
             if data.status and data.status.tasks
             else None,
         ),
-        attributes_fn=lambda data: {
-            ENTITY_ATTRIBUTE_ERROR: str(data.status.tasks.celery_error)
-            if data.status and data.status.tasks
-            else None,
-        },
     ),
     PaperlessEntityDescription(
-        key=ENTITY_SENSOR_STATUS_INDEX,
-        translation_key=ENTITY_SENSOR_STATUS_INDEX,
+        key="status_celery_error",
+        translation_key="status_celery_error",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=enum_values_to_lower(StatusType),
+        value_fn=build_state_fn(
+            lambda data: data.status.tasks.celery_error
+            if data.status and data.status.tasks
+            else None,
+        ),
+    ),
+    PaperlessEntityDescription(
+        key="status_index",
+        translation_key="status_index",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
         options=enum_values_to_lower(StatusType),
@@ -205,18 +198,33 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
             if data.status and data.status.tasks
             else None,
         ),
-        attributes_fn=lambda data: {
-            ENTITY_ATTRIBUTE_LAST_MODIFIED: str(data.status.tasks.index_last_modified)
-            if data.status and data.status.tasks
-            else None,
-            ENTITY_ATTRIBUTE_ERROR: str(data.status.tasks.index_error)
-            if data.status and data.status.tasks
-            else None,
-        },
     ),
     PaperlessEntityDescription(
-        key=ENTITY_SENSOR_STATUS_CLASSIFIER,
-        translation_key=ENTITY_SENSOR_STATUS_CLASSIFIER,
+        key="status_index_last_modified",
+        translation_key="status_index_last_modified",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.DATE,
+        options=enum_values_to_lower(StatusType),
+        value_fn=build_state_fn(
+            lambda data: data.status.tasks.index_last_modified
+            if data.status and data.status.tasks
+            else None,
+        ),
+    ),
+    PaperlessEntityDescription(
+        key="status_index_error",
+        translation_key="status_index_error",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=enum_values_to_lower(StatusType),
+        value_fn=build_state_fn(
+            lambda data: data.status.tasks.index_error
+            if data.status and data.status.tasks
+            else None,
+        ),
+    ),
+    PaperlessEntityDescription(
+        key="status_classifier",
+        translation_key="status_classifier",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
         options=enum_values_to_lower(StatusType),
@@ -225,20 +233,33 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
             if data.status and data.status.tasks
             else None,
         ),
-        attributes_fn=lambda data: {
-            ENTITY_ATTRIBUTE_LAST_TRAINED: str(
-                data.status.tasks.classifier_last_trained
-            )
-            if data.status and data.status.tasks
-            else None,
-            ENTITY_ATTRIBUTE_ERROR: str(data.status.tasks.classifier_error)
-            if data.status and data.status.tasks
-            else None,
-        },
     ),
     PaperlessEntityDescription(
-        key=ENTITY_SENSOR_STATUS_SANITY,
-        translation_key=ENTITY_SENSOR_STATUS_SANITY,
+        key="status_classifier_last_trained",
+        translation_key="status_classifier_last_trained",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.DATE,
+        options=enum_values_to_lower(StatusType),
+        value_fn=build_state_fn(
+            lambda data: data.status.tasks.classifier_last_trained
+            if data.status and data.status.tasks
+            else None,
+        ),
+    ),
+    PaperlessEntityDescription(
+        key="status_classifier_error",
+        translation_key="status_classifier_error",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=enum_values_to_lower(StatusType),
+        value_fn=build_state_fn(
+            lambda data: data.status.tasks.classifier_error
+            if data.status and data.status.tasks
+            else None,
+        ),
+    ),
+    PaperlessEntityDescription(
+        key="status_sanity",
+        translation_key="status_sanity",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
         options=enum_values_to_lower(StatusType),
@@ -247,16 +268,68 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
             if data.status and data.status.tasks
             else None,
         ),
-        attributes_fn=lambda data: {
-            ENTITY_ATTRIBUTE_LAST_RUN: str(data.status.tasks.sanity_check_last_run)
+    ),
+    PaperlessEntityDescription(
+        key="status_sanity_last_run",
+        translation_key="status_sanity_last_run",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.DATE,
+        options=enum_values_to_lower(StatusType),
+        value_fn=build_state_fn(
+            lambda data: data.status.tasks.sanity_check_last_run
             if data.status and data.status.tasks
             else None,
-            ENTITY_ATTRIBUTE_ERROR: str(data.status.tasks.sanity_check_error)
+        ),
+    ),
+    PaperlessEntityDescription(
+        key="status_sanity_error",
+        translation_key="status_sanity_error",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=enum_values_to_lower(StatusType),
+        value_fn=build_state_fn(
+            lambda data: data.status.tasks.sanity_check_error
             if data.status and data.status.tasks
             else None,
-        },
+        ),
+    ),
+    PaperlessEntityDescription(
+        key="latest_version",
+        translation_key="latest_version",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=build_state_fn(
+            lambda data: data.remote_version.version
+            if data.remote_version is not None
+            else None,
+        ),
+    ),
+    PaperlessEntityDescription(
+        key="latest_version_last_checked",
+        translation_key="latest_version_last_checked",
+        device_class=SensorDeviceClass.DATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=build_state_fn(
+            lambda data: data.remote_version_last_checked if data is not None else None,
+        ),
     ),
 )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: PaperlessConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Paperless-ngx sensors."""
+    async_add_entities(
+        [
+            PaperlessSensor(
+                entry=entry,
+                coordinator=entry.runtime_data,
+                description=description,
+            )
+            for description in SENSOR_DESCRIPTIONS
+        ]
+    )
 
 
 class PaperlessSensor(
@@ -269,14 +342,16 @@ class PaperlessSensor(
 
     def __init__(
         self,
-        coordinator: PaperlessCoordinator,
-        data: PaperlessRuntimeData,
         entry: PaperlessConfigEntry,
+        coordinator: PaperlessCoordinator,
         description: PaperlessEntityDescription,
     ) -> None:
         """Initialize Paperless-ngx sensor."""
-        super().__init__(data, entry, description, coordinator)
-        self._attr_unique_id = f"{DOMAIN}__{entry.entry_id}_sensor_{description.key}"
+        super().__init__(
+            entry=entry,
+            coordinator=coordinator,
+            description=description,
+        )
 
     @property
     def available(self) -> bool:
@@ -292,29 +367,7 @@ class PaperlessSensor(
         state = value_fn(self.coordinator.data)
         return state.value.lower() if isinstance(state, Enum) else state
 
-    @property
-    def extra_state_attributes(self) -> dict[str, str | None]:
-        """Return additional state attributes."""
-        attributes_fn = self.entity_description.attributes_fn
-        return attributes_fn(self.coordinator.data) if attributes_fn else {}
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle coordinator update."""
         self.async_write_ha_state()
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: PaperlessConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up Paperless-ngx sensors."""
-    data = entry.runtime_data
-
-    async_add_entities(
-        [
-            PaperlessSensor(data.coordinator, data, entry, description)
-            for description in SENSOR_DESCRIPTIONS
-        ]
-    )

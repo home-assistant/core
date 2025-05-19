@@ -14,18 +14,8 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    DOMAIN,
-    ENTITY_ATTRIBUTE_LAST_CHECKED,
-    ENTITY_ATTRIBUTE_LATEST_VERSION,
-    ENTITY_BINARYSENSOR_UPDATE_AVAILABLE,
-)
-from .coordinator import (
-    PaperlessConfigEntry,
-    PaperlessCoordinator,
-    PaperlessData,
-    PaperlessRuntimeData,
-)
+from .config_flow import PaperlessConfigEntry
+from .coordinator import PaperlessCoordinator, PaperlessData
 from .entity import PaperlessCoordinatorEntity
 from .helpers import build_state_fn
 
@@ -35,13 +25,12 @@ class PaperlessBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Paperless-ngx binary sensor entity."""
 
     value_fn: Callable[[PaperlessData], bool | None]
-    attributes_fn: Callable[[PaperlessData], dict[str, str | None]] | None = None
 
 
 BINARY_SENSOR_DESCRIPTIONS: tuple[PaperlessBinarySensorEntityDescription, ...] = (
     PaperlessBinarySensorEntityDescription(
-        key=ENTITY_BINARYSENSOR_UPDATE_AVAILABLE,
-        translation_key=ENTITY_BINARYSENSOR_UPDATE_AVAILABLE,
+        key="update_available",
+        translation_key="update_available",
         device_class=BinarySensorDeviceClass.UPDATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=build_state_fn(
@@ -49,14 +38,27 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[PaperlessBinarySensorEntityDescription, ...] =
             if data.remote_version is not None
             else None,
         ),
-        attributes_fn=lambda data: {
-            ENTITY_ATTRIBUTE_LATEST_VERSION: str(data.remote_version.version)
-            if data.remote_version is not None
-            else None,
-            ENTITY_ATTRIBUTE_LAST_CHECKED: str(data.remote_version_last_checked),
-        },
     ),
 )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: PaperlessConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Paperless-ngx binary sensors."""
+
+    async_add_entities(
+        [
+            PaperlessBinarySensor(
+                entry=entry,
+                coordinator=entry.runtime_data,
+                description=description,
+            )
+            for description in BINARY_SENSOR_DESCRIPTIONS
+        ]
+    )
 
 
 class PaperlessBinarySensor(
@@ -70,15 +72,14 @@ class PaperlessBinarySensor(
     def __init__(
         self,
         coordinator: PaperlessCoordinator,
-        data: PaperlessRuntimeData,
         entry: PaperlessConfigEntry,
         description: PaperlessBinarySensorEntityDescription,
     ) -> None:
         """Initialize the binary sensor."""
-        super().__init__(data, entry, description, coordinator)
-        self.paperless_data = data
-        self._attr_unique_id = (
-            f"{DOMAIN}__{entry.entry_id}_binary_sensor_{description.key}"
+        super().__init__(
+            entry=entry,
+            coordinator=coordinator,
+            description=description,
         )
 
     @property
@@ -86,14 +87,6 @@ class PaperlessBinarySensor(
         """Return true if the binary sensor is on."""
         value_fn = self.entity_description.value_fn
         return value_fn(self.coordinator.data)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, str | None]:
-        """Return the state attributes."""
-        attributes_fn = self.entity_description.attributes_fn
-        if attributes_fn:
-            return attributes_fn(self.coordinator.data)
-        return {}
 
     @property
     def available(self) -> bool:
@@ -104,19 +97,3 @@ class PaperlessBinarySensor(
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.async_write_ha_state()
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: PaperlessConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up Paperless-ngx binary sensors."""
-    data = entry.runtime_data
-
-    async_add_entities(
-        [
-            PaperlessBinarySensor(data.coordinator, data, entry, description)
-            for description in BINARY_SENSOR_DESCRIPTIONS
-        ]
-    )

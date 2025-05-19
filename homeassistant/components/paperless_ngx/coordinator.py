@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 
 from pypaperless import Paperless
 from pypaperless.exceptions import (
+    InitializationError,
+    PaperlessConnectionError,
     PaperlessForbiddenError,
     PaperlessInactiveOrDeletedError,
     PaperlessInvalidTokenError,
@@ -13,15 +15,18 @@ from pypaperless.models import RemoteVersion, Statistic
 from pypaperless.models.status import Status
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import now
 
 from .const import DOMAIN, LOGGER, REMOTE_VERSION_UPDATE_INTERVAL_HOURS
-
-type PaperlessConfigEntry = ConfigEntry[PaperlessRuntimeData]
 
 
 @dataclass(kw_only=True)
@@ -38,23 +43,60 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
     """Coordinator to manage Paperless-ngx status updates."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: PaperlessConfigEntry, api: Paperless
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass,
             LOGGER,
             name="Paperless-ngx Coordinator",
-            config_entry=entry,
-            update_interval=timedelta(seconds=entry.data[CONF_SCAN_INTERVAL]),
+            update_interval=timedelta(seconds=120),
             always_update=True,
         )
-        self.api = api
         self.github_ratelimit_reached_logged: bool = False
         self.status_forbidden_logged: bool = False
         self.statistics_forbidden_logged: bool = False
 
-    async def _async_update_data(self):
+        aiohttp_session = async_get_clientsession(self.hass)
+        self.api = Paperless(
+            entry.data[CONF_HOST],
+            entry.data[CONF_API_KEY],
+            session=aiohttp_session,
+        )
+
+    async def _async_setup(self) -> None:
+        try:
+            await self.api.initialize()
+            await self.api.statistics()  # test permissions on api
+        except PaperlessConnectionError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
+        except PaperlessInvalidTokenError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_api_key",
+            ) from err
+        except PaperlessInactiveOrDeletedError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="user_inactive_or_deleted",
+            ) from err
+        except PaperlessForbiddenError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="forbidden",
+            ) from err
+        except InitializationError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
+
+    async def _async_update_data(self) -> PaperlessData:
         """Fetch data from API endpoint."""
         data = PaperlessData()
 
@@ -62,9 +104,9 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
             (
                 data.remote_version,
                 data.remote_version_last_checked,
-            ) = await self._get_paperless_remote_version(self.api)
-            data.status = await self._get_paperless_status(self.api)
-            data.statistics = await self._get_paperless_statistics(self.api)
+            ) = await self._get_paperless_remote_version()
+            data.status = await self._get_paperless_status()
+            data.statistics = await self._get_paperless_statistics()
 
         except PaperlessInvalidTokenError as err:
             raise ConfigEntryAuthFailed(
@@ -80,7 +122,7 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
         return data
 
     async def _get_paperless_remote_version(
-        self, api: Paperless
+        self,
     ) -> tuple[RemoteVersion | None, datetime | None]:
         """Fetch the latest version of Paperless-ngx if required."""
 
@@ -90,7 +132,7 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
                 self.data.remote_version_last_checked if self.data else None,
             )
 
-        version = await api.remote_version()
+        version = await self.api.remote_version()
         if version.version == "0.0.0":
             if not self.github_ratelimit_reached_logged:
                 LOGGER.warning(
@@ -120,10 +162,10 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
             hours=REMOTE_VERSION_UPDATE_INTERVAL_HOURS
         )
 
-    async def _get_paperless_status(self, api: Paperless) -> Status | None:
+    async def _get_paperless_status(self) -> Status | None:
         """Get the status of Paperless-ngx."""
         try:
-            status = await api.status()
+            status = await self.api.status()
         except PaperlessForbiddenError as err:
             if not self.status_forbidden_logged:
                 LOGGER.warning(
@@ -137,10 +179,10 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
             self.statistics_forbidden_logged = False
             return status
 
-    async def _get_paperless_statistics(self, api: Paperless) -> Statistic | None:
+    async def _get_paperless_statistics(self) -> Statistic | None:
         """Get the status of Paperless-ngx."""
         try:
-            statistics = await api.statistics()
+            statistics = await self.api.statistics()
         except PaperlessForbiddenError as err:
             if not self.statistics_forbidden_logged:
                 LOGGER.warning(
@@ -153,11 +195,3 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
         else:
             self.statistics_forbidden_logged = False
             return statistics
-
-
-@dataclass(kw_only=True)
-class PaperlessRuntimeData:
-    """Describes Paperless-ngx runtime data."""
-
-    client: Paperless
-    coordinator: PaperlessCoordinator

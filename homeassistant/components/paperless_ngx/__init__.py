@@ -2,82 +2,20 @@
 
 from __future__ import annotations
 
-from typing import cast
-
-from pypaperless import Paperless
-from pypaperless.exceptions import (
-    InitializationError,
-    PaperlessConnectionError,
-    PaperlessForbiddenError,
-    PaperlessInactiveOrDeletedError,
-    PaperlessInvalidTokenError,
-)
-
-from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryError,
-    ConfigEntryNotReady,
-)
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, PLATFORMS
-from .coordinator import (
-    PaperlessConfigEntry,
-    PaperlessCoordinator,
-    PaperlessRuntimeData,
-)
+from .config_flow import PaperlessConfigEntry
+from .const import PLATFORMS
+from .coordinator import PaperlessCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) -> bool:
     """Set up Paperless-ngx from a config entry."""
-    data = cast(dict, entry.data)
-    try:
-        aiohttp_session = async_get_clientsession(hass)
-        client = Paperless(
-            url=data[CONF_HOST],
-            token=data[CONF_API_KEY],
-            session=aiohttp_session,
-        )
 
-        await client.initialize()
+    coordinator = PaperlessCoordinator(hass, entry)
+    await coordinator.async_config_entry_first_refresh()
 
-        coordinator = PaperlessCoordinator(hass, entry, client)
-        await coordinator.async_config_entry_first_refresh()
-
-    except PaperlessConnectionError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="cannot_connect",
-        ) from err
-    except PaperlessInvalidTokenError as err:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN,
-            translation_key="invalid_api_key",
-        ) from err
-    except PaperlessInactiveOrDeletedError as err:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN,
-            translation_key="user_inactive_or_deleted",
-        ) from err
-    except PaperlessForbiddenError as err:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN,
-            translation_key="forbidden",
-        ) from err
-    except InitializationError as err:
-        raise ConfigEntryError(
-            translation_domain=DOMAIN,
-            translation_key="cannot_connect",
-        ) from err
-    except Exception as err:
-        raise ConfigEntryError(
-            translation_domain=DOMAIN,
-            translation_key="unknown",
-        ) from err
-
-    entry.runtime_data = PaperlessRuntimeData(client=client, coordinator=coordinator)
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

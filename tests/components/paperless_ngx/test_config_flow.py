@@ -16,7 +16,7 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import CONF_SCAN_INTERVAL, USER_INPUT
+from .const import USER_INPUT
 
 from tests.common import MockConfigEntry
 
@@ -117,7 +117,6 @@ async def test_full_reauth_flow_config(
         {
             CONF_HOST: mock_config_entry.data[CONF_HOST],
             CONF_API_KEY: "12345678",
-            CONF_SCAN_INTERVAL: mock_config_entry.data[CONF_SCAN_INTERVAL],
         },
     )
     await hass.async_block_till_done()
@@ -159,7 +158,6 @@ async def test_reauth_flow_error_handling(
         {
             CONF_HOST: mock_config_entry.data[CONF_HOST],
             CONF_API_KEY: "new-api-key",
-            CONF_SCAN_INTERVAL: mock_config_entry.data[CONF_SCAN_INTERVAL],
         },
     )
     await hass.async_block_till_done()
@@ -185,7 +183,6 @@ async def test_full_reconfigure_flow_config(
         {
             CONF_HOST: mock_config_entry.data[CONF_HOST],
             CONF_API_KEY: "12345678",
-            CONF_SCAN_INTERVAL: mock_config_entry.data[CONF_SCAN_INTERVAL],
         },
     )
     await hass.async_block_till_done()
@@ -227,7 +224,6 @@ async def test_reconfigure_flow_error_handling(
         {
             CONF_HOST: mock_config_entry.data[CONF_HOST],
             CONF_API_KEY: "new-api-key",
-            CONF_SCAN_INTERVAL: mock_config_entry.data[CONF_SCAN_INTERVAL],
         },
     )
     await hass.async_block_till_done()

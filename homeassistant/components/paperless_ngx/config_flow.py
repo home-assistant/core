@@ -15,29 +15,31 @@ from pypaperless.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_SCAN_INTERVAL
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+)
+from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
+from .coordinator import PaperlessCoordinator
+
+type PaperlessConfigEntry = ConfigEntry[PaperlessCoordinator]
+
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_API_KEY): str,
-        vol.Required(CONF_SCAN_INTERVAL, default=180): vol.All(
-            int,
-            vol.Range(min=10, max=3600),
-        ),
     }
 )
 
 
 class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Paperless-ngx."""
-
-    VERSION = 1
-    MINOR_VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -54,16 +56,16 @@ class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
         if user_input is not None:
+            aiohttp_session = async_get_clientsession(self.hass)
+            client = Paperless(
+                user_input[CONF_HOST],
+                user_input[CONF_API_KEY],
+                session=aiohttp_session,
+            )
+
             try:
-                aiohttp_session = async_get_clientsession(self.hass)
-                client = Paperless(
-                    user_input[CONF_HOST],
-                    user_input[CONF_API_KEY],
-                    session=aiohttp_session,
-                )
                 await client.initialize()
                 await client.statistics()
-
             except PaperlessConnectionError:
                 errors[CONF_HOST] = "cannot_connect"
             except PaperlessInvalidTokenError:
@@ -142,9 +144,6 @@ class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_HOST: user_input[CONF_HOST]
                     if user_input is not None
                     else reauth_entry.data[CONF_HOST],
-                    CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL]
-                    if user_input is not None
-                    else reauth_entry.data[CONF_SCAN_INTERVAL],
                 },
             ),
             errors=errors,

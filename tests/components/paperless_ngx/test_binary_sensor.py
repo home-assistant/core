@@ -20,11 +20,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 async def test_async_setup_entry_adds_all_binary_entities(hass: HomeAssistant) -> None:
     """Test that all PaperlessBinarySensor entities are added."""
 
-    mock_data = MagicMock()
-    mock_data.coordinator.data = MagicMock()
     mock_entry = MagicMock()
     mock_entry.entry_id = "mock_entry"
-    mock_entry.runtime_data = mock_data
+    mock_entry.runtime_data = MagicMock()
 
     add_entities_mock: AddConfigEntryEntitiesCallback = AsyncMock()
 
@@ -36,7 +34,7 @@ async def test_async_setup_entry_adds_all_binary_entities(hass: HomeAssistant) -
     assert len(added_entities) == len(BINARY_SENSOR_DESCRIPTIONS)
     for entity in added_entities:
         assert isinstance(entity, PaperlessBinarySensor)
-        assert entity.coordinator == mock_data.coordinator
+        assert entity.coordinator == mock_entry.runtime_data
         assert entity.entry == mock_entry
         assert entity.entity_description in BINARY_SENSOR_DESCRIPTIONS
 
@@ -53,12 +51,10 @@ async def test_paperless_binary_sensor_is_on_true() -> None:
     )
 
     coordinator = MagicMock()
-    coordinator.data = MagicMock()
 
     sensor = PaperlessBinarySensor(
-        coordinator=coordinator,
-        data=MagicMock(),
         entry=MagicMock(entry_id="123"),
+        coordinator=coordinator,
         description=description,
     )
 
@@ -78,12 +74,10 @@ async def test_paperless_binary_sensor_is_on_false() -> None:
     )
 
     coordinator = MagicMock()
-    coordinator.data = MagicMock()
 
     sensor = PaperlessBinarySensor(
-        coordinator=coordinator,
-        data=MagicMock(),
         entry=MagicMock(entry_id="123"),
+        coordinator=coordinator,
         description=description,
     )
 
@@ -103,70 +97,15 @@ async def test_paperless_binary_sensor_is_on_none() -> None:
     )
 
     coordinator = MagicMock()
-    coordinator.data = MagicMock()
 
     sensor = PaperlessBinarySensor(
-        coordinator=coordinator,
-        data=MagicMock(),
         entry=MagicMock(entry_id="123"),
+        coordinator=coordinator,
         description=description,
     )
 
     assert sensor.is_on is None
     assert sensor.available is False
-
-
-@pytest.mark.asyncio
-async def test_paperless_binary_sensor_extra_attributes_none() -> None:
-    """Test extra_state_attributes returns empty dict when attributes_fn is None."""
-
-    description = PaperlessBinarySensorEntityDescription(
-        key="test_binary_sensor",
-        value_fn=lambda data: True,
-        attributes_fn=None,
-    )
-
-    coordinator = MagicMock()
-    coordinator.data = MagicMock()
-
-    sensor = PaperlessBinarySensor(
-        coordinator=coordinator,
-        data=MagicMock(),
-        entry=MagicMock(entry_id="123"),
-        description=description,
-    )
-
-    assert sensor.extra_state_attributes == {}
-
-
-@pytest.mark.asyncio
-async def test_paperless_binary_sensor_extra_attributes() -> None:
-    """Test extra_state_attributes of binary sensor."""
-
-    description = PaperlessBinarySensorEntityDescription(
-        key="test_binary_sensor",
-        value_fn=lambda data: True,
-        attributes_fn=lambda data: {
-            "last_checked": "01.01.2025",
-            "latest_version": "2.15.3",
-        },
-    )
-
-    coordinator = MagicMock()
-    coordinator.data = MagicMock()
-
-    sensor = PaperlessBinarySensor(
-        coordinator=coordinator,
-        data=MagicMock(),
-        entry=MagicMock(entry_id="123"),
-        description=description,
-    )
-
-    attrs = sensor.extra_state_attributes
-    assert attrs == {
-        "last_checked": "01.01.2025",
-        "latest_version": "2.15.3",
-    }
 
 
 @pytest.mark.asyncio
@@ -184,9 +123,8 @@ async def test_paperless_binary_sensor_handle_coordinator_update_value_change() 
     coordinator.data = {"value": state}
 
     sensor = PaperlessBinarySensor(
-        coordinator=coordinator,
-        data=MagicMock(),
         entry=MagicMock(entry_id="123"),
+        coordinator=coordinator,
         description=description,
     )
 
@@ -195,8 +133,7 @@ async def test_paperless_binary_sensor_handle_coordinator_update_value_change() 
 
     sensor.async_write_ha_state = MagicMock()
 
-    state = True
-    coordinator.data = {"value": state}
+    coordinator.data = {"value": True}
 
     sensor._handle_coordinator_update()
 

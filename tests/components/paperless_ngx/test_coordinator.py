@@ -24,7 +24,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 @pytest.mark.asyncio
 async def test_coordinator_successful_update(
     hass: HomeAssistant,
-    mock_client,
     mock_config_entry,
     mock_remote_status_data,
     mock_status_data,
@@ -32,7 +31,7 @@ async def test_coordinator_successful_update(
 ) -> None:
     """Test coordinator fetches data successfully."""
     mock_config_entry.add_to_hass(hass)
-    coordinator = PaperlessCoordinator(hass, mock_config_entry, mock_client)
+    coordinator = PaperlessCoordinator(hass, mock_config_entry)
 
     data = await coordinator._async_update_data()
 
@@ -51,7 +50,7 @@ async def test_remote_version_github_rate_limit_response_none(
     """Test that Remote Version is none if GitHub rate limit is reached."""
     mock_config_entry.add_to_hass(hass)
     mock_client.remote_version.return_value.version = "0.0.0"
-    coordinator = PaperlessCoordinator(hass, mock_config_entry, mock_client)
+    coordinator = PaperlessCoordinator(hass, mock_config_entry)
 
     data = await coordinator._async_update_data()
 
@@ -67,7 +66,7 @@ async def test_statistics_forbidden_response_none(
     """Test that statistics is none if forbidden error is raised."""
     mock_config_entry.add_to_hass(hass)
     mock_client.statistics.side_effect = PaperlessForbiddenError()
-    coordinator = PaperlessCoordinator(hass, mock_config_entry, mock_client)
+    coordinator = PaperlessCoordinator(hass, mock_config_entry)
 
     data = await coordinator._async_update_data()
 
@@ -83,7 +82,7 @@ async def test_status_forbidden_response_none(
     """Test that status is none if forbidden error is raised."""
     mock_config_entry.add_to_hass(hass)
     mock_client.status.side_effect = PaperlessForbiddenError()
-    coordinator = PaperlessCoordinator(hass, mock_config_entry, mock_client)
+    coordinator = PaperlessCoordinator(hass, mock_config_entry)
 
     data = await coordinator._async_update_data()
 
@@ -96,7 +95,7 @@ async def test_remote_version_rate_limit_respected(
 ) -> None:
     """Test remote version is not fetched again if within the rate limit window."""
     mock_config_entry.add_to_hass(hass)
-    coordinator = PaperlessCoordinator(hass, mock_config_entry, mock_client)
+    coordinator = PaperlessCoordinator(hass, mock_config_entry)
     base_frozen_dt = datetime(2025, 5, 19, 12, 0, 0)
 
     with freeze_time(base_frozen_dt):
@@ -129,7 +128,7 @@ async def test_invalid_token_raises_auth_failed(
     mock_config_entry.add_to_hass(hass)
     mock_client.status.side_effect = PaperlessInvalidTokenError()
 
-    coordinator = PaperlessCoordinator(hass, mock_config_entry, mock_client)
+    coordinator = PaperlessCoordinator(hass, mock_config_entry)
 
     with pytest.raises(ConfigEntryAuthFailed):
         await coordinator._async_update_data()
@@ -143,7 +142,7 @@ async def test_inactive_or_deleted_user_raises_auth_failed(
     mock_config_entry.add_to_hass(hass)
     mock_client.status.side_effect = PaperlessInactiveOrDeletedError()
 
-    coordinator = PaperlessCoordinator(hass, mock_config_entry, mock_client)
+    coordinator = PaperlessCoordinator(hass, mock_config_entry)
 
     with pytest.raises(ConfigEntryAuthFailed):
         await coordinator._async_update_data()
@@ -160,9 +159,9 @@ async def test_forbidden_status_logged_only_once(
     mock_config_entry.add_to_hass(hass)
 
     mock_client.status.side_effect = PaperlessForbiddenError()
-    coordinator = PaperlessCoordinator(hass, mock_config_entry, mock_client)
+    coordinator = PaperlessCoordinator(hass, mock_config_entry)
 
-    await coordinator._get_paperless_status(mock_client)
+    await coordinator._get_paperless_status()
     assert (
         "Could not fetch status from Paperless-ngx due missing permissions"
         in caplog.text
@@ -170,7 +169,7 @@ async def test_forbidden_status_logged_only_once(
 
     caplog.clear()
 
-    await coordinator._get_paperless_status(mock_client)
+    await coordinator._get_paperless_status()
     assert (
         "Could not fetch status from Paperless-ngx due missing permissions"
         not in caplog.text
@@ -190,17 +189,17 @@ async def test_github_rate_limit_logged_only_once(
 
     mock_client.remote_version.return_value.version = "0.0.0"
 
-    coordinator = PaperlessCoordinator(hass, mock_config_entry, mock_client)
+    coordinator = PaperlessCoordinator(hass, mock_config_entry)
 
     with caplog.at_level("WARNING"):
-        await coordinator._get_paperless_remote_version(mock_client)
+        await coordinator._get_paperless_remote_version()
 
     assert "GitHub rate limit of 60 requests per hour is reached" in caplog.text
 
     caplog.clear()
 
     with caplog.at_level("WARNING"):
-        await coordinator._get_paperless_remote_version(mock_client)
+        await coordinator._get_paperless_remote_version()
 
     assert "GitHub rate limit of 60 requests per hour is reached" not in caplog.text
 
@@ -216,9 +215,9 @@ async def test_forbidden_statistics_logged_only_once(
     mock_config_entry.add_to_hass(hass)
 
     mock_client.statistics.side_effect = PaperlessForbiddenError()
-    coordinator = PaperlessCoordinator(hass, mock_config_entry, mock_client)
+    coordinator = PaperlessCoordinator(hass, mock_config_entry)
 
-    await coordinator._get_paperless_statistics(mock_client)
+    await coordinator._get_paperless_statistics()
     assert (
         "Could not fetch statistics from Paperless-ngx due missing permissions"
         in caplog.text
@@ -226,7 +225,7 @@ async def test_forbidden_statistics_logged_only_once(
 
     caplog.clear()
 
-    await coordinator._get_paperless_statistics(mock_client)
+    await coordinator._get_paperless_statistics()
     assert (
         "Could not fetch statistics from Paperless-ngx due missing permissions"
         not in caplog.text

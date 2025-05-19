@@ -2,17 +2,15 @@
 
 from pypaperless.models.common import StatusType
 
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_API_KEY, CONF_HOST
 
 USER_INPUT = {
     CONF_HOST: "192.168.69.16",
     CONF_API_KEY: "test_token",
-    CONF_SCAN_INTERVAL: 180,
 }
 
 PAPERLESS_IMPORT_PATHS = [
     "homeassistant.components.paperless_ngx.coordinator.Paperless",
-    "homeassistant.components.paperless_ngx.Paperless",
     "homeassistant.components.paperless_ngx.config_flow.Paperless",
 ]
 

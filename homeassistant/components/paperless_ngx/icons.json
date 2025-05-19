@@ -34,6 +34,9 @@
           "unknown": "mdi:help-circle"
         }
       },
+      "status_database_error": {
+        "default": "mdi:alert-circle"
+      },
       "status_redis": {
         "default": "mdi:check-circle-outline",
         "state": {
@@ -42,6 +45,9 @@
           "error": "mdi:alert-circle",
           "unknown": "mdi:help-circle"
         }
+      },
+      "status_redis_error": {
+        "default": "mdi:alert-circle"
       },
       "status_celery": {
         "default": "mdi:check-circle-outline",
@@ -52,6 +58,9 @@
           "unknown": "mdi:help-circle"
         }
       },
+      "status_celery_error": {
+        "default": "mdi:alert-circle"
+      },
       "status_index": {
         "default": "mdi:check-circle-outline",
         "state": {
@@ -60,6 +69,9 @@
           "error": "mdi:alert-circle",
           "unknown": "mdi:help-circle"
         }
+      },
+      "status_index_error": {
+        "default": "mdi:alert-circle"
       },
       "status_classifier": {
         "default": "mdi:check-circle-outline",
@@ -70,6 +82,9 @@
           "unknown": "mdi:help-circle"
         }
       },
+      "status_classifier_error": {
+        "default": "mdi:alert-circle"
+      },
       "status_sanity": {
         "default": "mdi:check-circle-outline",
         "state": {
@@ -78,6 +93,9 @@
           "error": "mdi:alert-circle",
           "unknown": "mdi:help-circle"
         }
+      },
+      "status_sanity_error": {
+        "default": "mdi:alert-circle"
       }
     }
   }

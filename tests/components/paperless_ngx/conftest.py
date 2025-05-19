@@ -67,7 +67,7 @@ def mock_client(
     """Mock the pypaperless.Paperless client."""
     patchers = [patch(path, autospec=True) for path in PAPERLESS_IMPORT_PATHS]
 
-    with patchers[0] as mock1, patchers[1] as mock2, patchers[2] as mock3:
+    with patchers[0] as mock1, patchers[1] as mock2:
         mock_instance = AsyncMock()
 
         mock_instance.initialize = AsyncMock(return_value=None)
@@ -75,7 +75,7 @@ def mock_client(
         mock_instance.statistics = mock_statistics_data
         mock_instance.remote_version = mock_remote_status_data
 
-        for mock_paperless in (mock1, mock2, mock3):
+        for mock_paperless in (mock1, mock2):
             mock_paperless.return_value = mock_instance
             mock_paperless.return_value.__aenter__.return_value = mock_instance
             mock_paperless.return_value.initialize = mock_instance.initialize

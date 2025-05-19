@@ -14,7 +14,6 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import PaperlessConfigEntry
 from .const import DOMAIN
-from .coordinator import PaperlessRuntimeData
 
 
 class PaperlessEntity(Entity):
@@ -25,15 +24,13 @@ class PaperlessEntity(Entity):
 
     def __init__(
         self,
-        data: PaperlessRuntimeData,
         entry: PaperlessConfigEntry,
         description: EntityDescription,
     ) -> None:
         """Initialize the Paperless-ngx entity."""
-        self.data = data
         self.entry = entry
         self.entity_description = description
-        self._attr_unique_id = f"{DOMAIN}_{entry.entry_id}_{description.key}"
+        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -44,8 +41,8 @@ class PaperlessEntity(Entity):
             identifiers={(DOMAIN, self.entry.entry_id)},
             manufacturer="Paperless-ngx",
             name="Paperless-ngx",
-            sw_version=self.data.client.host_version,
-            configuration_url=self.data.client.base_url,
+            sw_version=self.entry.runtime_data.api.host_version,
+            configuration_url=self.entry.runtime_data.api.base_url,
         )
 
 
@@ -61,11 +58,17 @@ class PaperlessCoordinatorEntity(
 
     def __init__(
         self,
-        data: PaperlessRuntimeData,
         entry: PaperlessConfigEntry,
-        description: EntityDescription,
         coordinator: TCoordinator,
+        description: EntityDescription,
     ) -> None:
         """Initialize the Paperless-ngx coordinator entity."""
-        CoordinatorEntity.__init__(self, coordinator)
-        PaperlessEntity.__init__(self, data, entry, description)
+        CoordinatorEntity.__init__(
+            self,
+            coordinator=coordinator,
+        )
+        PaperlessEntity.__init__(
+            self,
+            entry=entry,
+            description=description,
+        )
