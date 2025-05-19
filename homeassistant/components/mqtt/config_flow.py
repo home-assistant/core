@@ -2168,7 +2168,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         entities = [
             SelectOptionDict(
                 value=key,
-                label=f"{device_name} {component_data.get(CONF_NAME, '-')}"
+                label=f"{device_name} {component_data.get(CONF_NAME, '-') or '-'}"
                 f" ({component_data[CONF_PLATFORM]})",
             )
             for key, component_data in self._subentry_data["components"].items()
@@ -2400,7 +2400,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         self._component_id = None
         mqtt_device = self._subentry_data[CONF_DEVICE][CONF_NAME]
         mqtt_items = ", ".join(
-            f"{mqtt_device} {component_data.get(CONF_NAME, '-')} ({component_data[CONF_PLATFORM]})"
+            f"{mqtt_device} {component_data.get(CONF_NAME, '-') or '-'} "
+            f"({component_data[CONF_PLATFORM]})"
             for component_data in self._subentry_data["components"].values()
         )
         menu_options = [

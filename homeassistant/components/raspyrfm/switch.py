@@ -118,7 +118,7 @@ class RaspyRFMSwitch(SwitchEntity):
         return self._name
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return True when the current state cannot be queried."""
         return True
 

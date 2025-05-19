@@ -7,7 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 from fyta_cli.fyta_exceptions import FytaConnectionError, FytaPlantError
 from fyta_cli.fyta_models import Plant
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fyta.const import DOMAIN as FYTA_DOMAIN
 from homeassistant.components.image import ImageEntity

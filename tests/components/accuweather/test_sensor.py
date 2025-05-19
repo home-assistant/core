@@ -6,7 +6,7 @@ from accuweather import ApiError, InvalidApiKeyError, RequestsExceededError
 from aiohttp.client_exceptions import ClientConnectorError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.accuweather.const import (
     UPDATE_INTERVAL_DAILY_FORECAST,
