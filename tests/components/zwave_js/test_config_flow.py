@@ -17,7 +17,7 @@ from zwave_js_server.exceptions import FailedCommand
 from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.zwave_js.config_flow import TITLE
+from homeassistant.components.zwave_js.config_flow import TITLE, get_usb_ports
 from homeassistant.components.zwave_js.const import ADDON_SLUG, CONF_USB_PATH, DOMAIN
 from homeassistant.components.zwave_js.helpers import SERVER_VERSION_TIMEOUT
 from homeassistant.core import HomeAssistant
@@ -4661,3 +4661,31 @@ async def test_configure_addon_usb_ports_failure(
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "usb_ports_failed"
+
+
+async def test_get_usb_ports_sorting(hass: HomeAssistant) -> None:
+    """Test that get_usb_ports sorts ports with 'n/a' descriptions last."""
+    mock_ports = [
+        ListPortInfo("/dev/ttyUSB0"),
+        ListPortInfo("/dev/ttyUSB1"),
+        ListPortInfo("/dev/ttyUSB2"),
+        ListPortInfo("/dev/ttyUSB3"),
+    ]
+    mock_ports[0].description = "n/a"
+    mock_ports[1].description = "Device A"
+    mock_ports[2].description = "n/a"
+    mock_ports[3].description = "Device B"
+
+    with patch("serial.tools.list_ports.comports", return_value=mock_ports):
+        result = get_usb_ports()
+
+        descriptions = list(result.values())
+
+        # Verify that descriptions containing "n/a" are at the end
+        assert all("n/a" in desc for desc in descriptions[-2:])
+
+        assert not descriptions[0].startswith("n/a")
+        assert not descriptions[1].startswith("n/a")
+
+        assert "Device A" in descriptions[0]
+        assert "Device B" in descriptions[1]
