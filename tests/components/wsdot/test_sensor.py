@@ -1,35 +1,21 @@
 """The tests for the WSDOT platform."""
 
 from datetime import datetime, timedelta, timezone
-import json
-
-import pytest
-import wsdot
 
 from homeassistant.components.wsdot.sensor import (
     CONF_API_KEY,
     CONF_ID,
     CONF_NAME,
     CONF_TRAVEL_TIMES,
-    setup_platform,
+    async_setup_platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import load_fixture
 
 config = {
     CONF_API_KEY: "foo",
     CONF_TRAVEL_TIMES: [{CONF_ID: 96, CONF_NAME: "I90 EB"}],
 }
-
-
-@pytest.fixture
-def test_travel_time() -> wsdot.TravelTime:
-    """Return TravelTime data based on test fixture payload."""
-    test_data = load_fixture("wsdot/wsdot.json")
-    test_response = json.loads(test_data)
-    return wsdot.TravelTime(**test_response)
 
 
 async def test_setup_with_config(hass: HomeAssistant) -> None:
@@ -39,8 +25,7 @@ async def test_setup_with_config(hass: HomeAssistant) -> None:
 
 async def test_setup(
     hass: HomeAssistant,
-    monkeypatch: pytest.MonkeyPatch,
-    test_travel_time: wsdot.TravelTime,
+    mock_travel_time: None,
 ) -> None:
     """Test for operational WSDOT sensor with proper attributes."""
     entities = []
@@ -51,17 +36,9 @@ async def test_setup(
             entity.hass = hass
         entities.extend(new_entities)
 
-    async def fake_travel_time(id: str) -> wsdot.TravelTime:
-        return test_travel_time
-
-    setup_platform(hass, config, add_entities)
+    await async_setup_platform(hass, config, add_entities)
     for entity in entities:
-        assert isinstance(entity.wsdot_travel, wsdot.WsdotTravelTimes)
-        with monkeypatch.context() as external_api:
-            external_api.setattr(
-                entity._wsdot_travel, "get_travel_time", fake_travel_time
-            )
-            await entity.async_update()
+        await entity.async_update()
 
     assert len(entities) == 1
     sensor = entities[0]

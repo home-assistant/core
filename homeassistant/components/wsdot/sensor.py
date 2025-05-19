@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
@@ -48,11 +48,14 @@ def setup_platform(
 ) -> None:
     """Set up the WSDOT sensor."""
     sensors = []
+    session = async_get_clientsession(hass)
+    api_key = config[CONF_API_KEY]
+    wsdot_travel = wsdot.WsdotTravelTimes(api_key=api_key, session=session)
     for travel_time in config[CONF_TRAVEL_TIMES]:
         name = travel_time.get(CONF_NAME) or travel_time.get(CONF_ID)
         sensors.append(
             WashingtonStateTravelTimeSensor(
-                name, hass, config[CONF_API_KEY], travel_time.get(CONF_ID)
+                name, wsdot_travel, travel_time.get(CONF_ID)
             )
         )
 
@@ -92,30 +95,18 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
     def __init__(
-        self, name: str, hass: HomeAssistant, access_code: str, travel_time_id: str
+        self, name: str, wsdot_travel: wsdot.WsdotTravelTimes, travel_time_id: str
     ) -> None:
         """Construct a travel time sensor."""
         super().__init__(name)
         self._data: wsdot.TravelTime | None = None
         self._travel_time_id = travel_time_id
-        self._access_code = access_code
-        self.hass = hass
-        self._wsdot_travel: wsdot.WsdotTravelTimes | None = None
-
-    @property
-    def wsdot_travel(self) -> wsdot.WsdotTravelTimes:
-        """Return a cached WsdotTravelTimes object."""
-        if self._wsdot_travel is None:
-            session = async_get_clientsession(self.hass)
-            self._wsdot_travel = wsdot.WsdotTravelTimes(
-                api_key=self._access_code, session=session
-            )
-        return self._wsdot_travel
+        self._wsdot_travel = wsdot_travel
 
     async def async_update(self) -> None:
         """Get the latest data from WSDOT."""
         try:
-            travel_time = await self.wsdot_travel.get_travel_time(self._travel_time_id)
+            travel_time = await self._wsdot_travel.get_travel_time(self._travel_time_id)
         except wsdot.WsdotTravelError:
             _LOGGER.warning("Invalid response from WSDOT API")
         else:
