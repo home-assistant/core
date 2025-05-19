@@ -150,19 +150,26 @@ class KeeneticOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
-        router: KeeneticRouter = self.hass.data[DOMAIN][self.config_entry.entry_id][
-            ROUTER
-        ]
+        try:
+            router: KeeneticRouter = self.hass.data[DOMAIN][self.config_entry.entry_id][
+                ROUTER
+            ]
+        except KeyError:
+            return self.async_abort(reason="not_initialized")
 
-        interfaces: list[InterfaceInfo] = await self.hass.async_add_executor_job(
-            router.client.get_interfaces
-        )
+        try:
+            interfaces: list[InterfaceInfo] = await self.hass.async_add_executor_job(
+                router.client.get_interfaces
+            )
+        except ConnectionException:
+            return self.async_abort(reason="cannot_connect")
 
         self._interface_options = {
             interface.name: (interface.description or interface.name)
             for interface in interfaces
             if interface.type.lower() == "bridge"
         }
+
         return await self.async_step_user()
 
     async def async_step_user(
