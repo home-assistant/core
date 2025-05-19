@@ -4,7 +4,7 @@ from enum import Enum
 import logging
 from typing import Any
 
-from compit_inext_api import Device, Parameter
+from compit_inext_api import Device, Param, Parameter
 from propcache import cached_property
 
 from homeassistant.components.climate import (
@@ -33,7 +33,7 @@ CLIMATE_DEVICE_CLASS = 10
 
 
 class CompitHVACMode(Enum):
-    """Enum for avaiable HVAC modes."""
+    """Enum for available HVAC modes."""
 
     HEAT = 0
     OFF = 1
@@ -276,6 +276,6 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
             await self.coordinator.async_request_refresh()
             self.async_write_ha_state()
 
-    def get_parameter_value(self, value):
+    def get_parameter_value(self, value) -> Param | None:
         """Get the parameter value from the device state."""
         return self.coordinator.data[self.device_id].state.get_parameter_value(value)
