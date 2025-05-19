@@ -59,6 +59,37 @@ async def test_devices(
     assert device == snapshot
 
 
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_device_not_resetting_area(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test device not resetting area."""
+    await setup_integration(hass, mock_config_entry)
+
+    device_id = devices.get_devices.return_value[0].device_id
+
+    device = device_registry.async_get_device({(DOMAIN, device_id)})
+
+    assert device.area_id == "theater"
+
+    device_registry.async_update_device(device_id=device.id, area_id=None)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device({(DOMAIN, device_id)})
+
+    assert device.area_id is None
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device({(DOMAIN, device_id)})
+    assert device.area_id is None
+
+
 @pytest.mark.parametrize("device_fixture", ["button"])
 async def test_button_event(
     hass: HomeAssistant,

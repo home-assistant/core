@@ -1994,6 +1994,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
         SensorDeviceClass.PRECIPITATION_INTENSITY,
         SensorDeviceClass.PRECIPITATION,
         SensorDeviceClass.PRESSURE,
+        SensorDeviceClass.REACTIVE_ENERGY,
         SensorDeviceClass.REACTIVE_POWER,
         SensorDeviceClass.SIGNAL_STRENGTH,
         SensorDeviceClass.SOUND_PRESSURE,
