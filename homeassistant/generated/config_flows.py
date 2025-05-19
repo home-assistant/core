@@ -374,6 +374,7 @@ FLOWS = {
         "media_extractor",
         "melcloud",
         "melnor",
+        "meross_scan",
         "met",
         "met_eireann",
         "meteo_france",
