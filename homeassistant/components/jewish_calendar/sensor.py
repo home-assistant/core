@@ -24,6 +24,7 @@ from homeassistant.util import dt as dt_util
 from .entity import JewishCalendarConfigEntry, JewishCalendarEntity
 
 _LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 INFO_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
