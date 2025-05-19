@@ -24,9 +24,6 @@ class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -43,8 +40,12 @@ class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
                 await api.request_pairing_token("HomeAssistant", instance_uuid)
                 await api.refresh_token()
                 user_data = await api.get_user()
+            except ActronNeoAuthError:
+                errors["base"] = ERROR_INVALID_AUTH
+            except ActronNeoAPIError:
+                errors["base"] = ERROR_API_ERROR
+            else:
                 await self.async_set_unique_id(user_data["id"])
-
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=username,
@@ -52,10 +53,6 @@ class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_API_TOKEN: api.pairing_token,
                     },
                 )
-            except ActronNeoAuthError:
-                errors["base"] = ERROR_INVALID_AUTH
-            except ActronNeoAPIError:
-                errors["base"] = ERROR_API_ERROR
 
         return self.async_show_form(
             step_id="user",
