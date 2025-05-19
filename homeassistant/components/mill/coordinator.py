@@ -26,7 +26,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-TWO_YEARS = 2 * 365 * 24
+TWO_YEARS_DAYS = 2 * 365
 
 
 class MillDataUpdateCoordinator(DataUpdateCoordinator):
@@ -91,7 +91,7 @@ class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
             if not last_stats or not last_stats.get(statistic_id):
                 hourly_data = (
                     await self.mill_data_connection.fetch_historic_energy_usage(
-                        dev_id, n_days=TWO_YEARS
+                        dev_id, n_days=TWO_YEARS_DAYS
                     )
                 )
                 hourly_data = dict(sorted(hourly_data.items(), key=lambda x: x[0]))

@@ -6,7 +6,7 @@ from unittest.mock import Mock, _Call, call, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from requests.exceptions import HTTPError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,

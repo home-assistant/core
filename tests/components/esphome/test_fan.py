@@ -148,7 +148,7 @@ async def test_fan_entity_with_all_features_new_api(
             key=1,
             name="my fan",
             unique_id="my_fan",
-            supported_speed_levels=4,
+            supported_speed_count=4,
             supports_direction=True,
             supports_speed=True,
             supports_oscillation=True,
