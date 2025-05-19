@@ -88,9 +88,9 @@ from .const import (
     CONF_INSTALLER_MODE,
     DATA_CLIENT,
     DOMAIN,
+    DRIVER_READY_TIMEOUT,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     LOGGER,
-    RESTORE_NVM_DRIVER_READY_TIMEOUT,
     USER_AGENT,
 )
 from .helpers import (
@@ -188,8 +188,6 @@ STRATEGY = "strategy"
 
 # https://github.com/zwave-js/node-zwave-js/blob/master/packages/core/src/security/QR.ts#L41
 MINIMUM_QR_STRING_LENGTH = 52
-
-HARD_RESET_CONTROLLER_DRIVER_READY_TIMEOUT = 60
 
 
 # Helper schemas
@@ -2858,7 +2856,7 @@ async def websocket_hard_reset_controller(
     await driver.async_hard_reset()
 
     with suppress(TimeoutError):
-        async with asyncio.timeout(HARD_RESET_CONTROLLER_DRIVER_READY_TIMEOUT):
+        async with asyncio.timeout(DRIVER_READY_TIMEOUT):
             await wait_driver_ready.wait()
 
     # When resetting the controller, the controller home id is also changed.
@@ -3105,7 +3103,7 @@ async def websocket_restore_nvm(
     await controller.async_restore_nvm_base64(msg["data"])
 
     with suppress(TimeoutError):
-        async with asyncio.timeout(RESTORE_NVM_DRIVER_READY_TIMEOUT):
+        async with asyncio.timeout(DRIVER_READY_TIMEOUT):
             await wait_driver_ready.wait()
     await hass.config_entries.async_reload(entry.entry_id)
 
