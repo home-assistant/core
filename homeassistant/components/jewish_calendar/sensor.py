@@ -101,9 +101,11 @@ INFO_SENSORS: tuple[JewishCalendarSensorDescription, ...] = (
         translation_key="omer_count",
         icon="mdi:counter",
         entity_registry_enabled_default=False,
-        value_fn=lambda results: results.after_shkia_date.omer.total_days
-        if results.after_shkia_date.omer
-        else 0,
+        value_fn=lambda results: (
+            results.after_shkia_date.omer.total_days
+            if results.after_shkia_date.omer
+            else 0
+        ),
     ),
     JewishCalendarSensorDescription(
         key="daf_yomi",
