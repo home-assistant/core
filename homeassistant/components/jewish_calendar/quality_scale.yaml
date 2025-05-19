@@ -47,7 +47,7 @@ rules:
   devices:
     status: exempt
     comment: This integration does not represent physical devices.
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: This is a local calculation and does not require discovery.
