@@ -114,9 +114,13 @@ class AdaxDevice(CoordinatorEntity[AdaxCloudCoordinator], ClimateEntity):
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
-        await self._adax_data_handler.set_room_target_temperature(
-            self._device_id, temperature, True
-        )
+        if temperature == 0:
+            # Temp value of 0 should be treated as a 'turn-off' command
+            await self.async_turn_off()
+        else:
+            await self._adax_data_handler.set_room_target_temperature(
+                self._device_id, temperature, True
+            )
 
     @callback
     def _handle_coordinator_update(self) -> None:
