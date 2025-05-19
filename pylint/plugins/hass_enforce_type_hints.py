@@ -667,6 +667,7 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="should_poll",
         return_type="bool",
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="unique_id",
@@ -725,6 +726,7 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="force_update",
         return_type="bool",
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="supported_features",
@@ -733,10 +735,12 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="entity_registry_enabled_default",
         return_type="bool",
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="entity_registry_visible_default",
         return_type="bool",
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="attribution",
@@ -749,23 +753,28 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="async_removed_from_registry",
         return_type=None,
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="async_added_to_hass",
         return_type=None,
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="async_will_remove_from_hass",
         return_type=None,
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="async_registry_entry_updated",
         return_type=None,
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="update",
         return_type=None,
         has_async_counterpart=True,
+        mandatory=True,
     ),
 ]
 _RESTORE_ENTITY_MATCH: list[TypeHintMatch] = [
