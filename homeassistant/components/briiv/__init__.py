@@ -24,7 +24,7 @@ class BriivData:
 type BriivConfigEntry = ConfigEntry[BriivData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BriivConfigEntry) -> bool:
     """Set up Briiv from a config entry."""
     api = BriivAPI(
         host=entry.data["host"],
