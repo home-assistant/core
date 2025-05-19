@@ -18,7 +18,6 @@ from homeassistant.const import Platform, __version__
 
 DOMAIN: Final = "irm_kmi"
 PLATFORMS: Final = [Platform.WEATHER]
-CONFIG_FLOW_VERSION = 1
 
 OUT_OF_BENELUX: Final = [
     "außerhalb der Benelux (Brussels)",
