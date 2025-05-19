@@ -61,4 +61,4 @@ def preferred_language(hass: HomeAssistant, config_entry: ConfigEntry | None) ->
     ):
         return hass.config.language if hass.config.language in LANGS else "en"
 
-    return get_config_value(config_entry, CONF_LANGUAGE_OVERRIDE)
+    return get_config_value(config_entry, CONF_LANGUAGE_OVERRIDE, "en")
