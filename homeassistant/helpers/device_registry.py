@@ -440,8 +440,8 @@ class DeletedDeviceEntry:
                     "created_at": self.created_at,
                     "identifiers": list(self.identifiers),
                     "id": self.id,
-                    "orphaned_timestamp": self.orphaned_timestamp,
                     "modified_at": self.modified_at,
+                    "orphaned_timestamp": self.orphaned_timestamp,
                 }
             )
         )
