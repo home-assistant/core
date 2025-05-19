@@ -1,0 +1,80 @@
+{
+    "title": "Frisquet Connect",
+    "config": {
+        "error": {
+            "invalid_credentials": "Invalid credential"
+        },
+        "flow_title": "Frisquet Connect configuration",
+        "step": {
+            "user": {
+                "title": "Frisquet Connect 'Unofficial'",
+                "description": "Welcome to the configurator",
+                "data": {
+                    "email": "Email",
+                    "password": "Password",
+                    "selector": "Select the site"
+                }
+            }
+        }
+    },
+    "entity": {
+        "water_heater": {
+            "default_water_heater": {
+                "name": "Water heater"
+            }
+        },
+        "sensor": {
+            "boiler_last_update": {
+                "name": "Last update from boiler"
+            },
+            "current_boiler_datetime": {
+                "name": "Current datetime of the boiler"
+            },
+            "default_alarm": {
+                "name": "Alert",
+                "state": {
+                    "no_alarm": "No alert on going",
+                    "disconnected": "Frisquet Connect device disconnected",
+                    "unknown": "Unknown alert"
+                }
+            },
+            "inside_thermometer": {
+                "name": "Inside thermometer for {zone_name}"
+            },
+            "outside_thermometer": {
+                "name": "Outside thermometer"
+            },
+            "heating_consumption": {
+                "name": "Heating consumption"
+            },
+            "sanitary_consumption": {
+                "name": "Sanitary consumption"
+            }
+        },
+        "climate": {
+            "default_climate": {
+                "name": "Thermostat - {zone_name}",
+                "state_attributes": {
+                    "hvac_action": {
+                        "state": {
+                            "auto": "Auto",
+                            "heat": "Permanent",
+                            "off": "Frost protection"
+                        }
+                    },
+                    "preset_mode": {
+                        "state": {
+                            "boost": "Boost",
+                            "home": "Exemption comfort",
+                            "away": "Exemption reduced",
+                            "comfort": "Comfort",
+                            "sleep": "Reduced",
+                            "eco": "Frost protection",
+                            "none": "Auto - No exemption"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
