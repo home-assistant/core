@@ -3105,6 +3105,27 @@ async def websocket_restore_nvm(
     with suppress(TimeoutError):
         async with asyncio.timeout(DRIVER_READY_TIMEOUT):
             await wait_driver_ready.wait()
+
+    # When restoring the NVM to the controller, the controller home id is also changed.
+    # The controller state in the client is stale after restoring the NVM,
+    # so get the new home id with a new client using the helper function.
+    # The client state will be refreshed by reloading the config entry,
+    # after the unique id of the config entry has been updated.
+    try:
+        version_info = await async_get_version_info(hass, entry.data[CONF_URL])
+    except CannotConnect:
+        # Just log this error, as there's nothing to do about it here.
+        # The stale unique id needs to be handled by a repair flow,
+        # after the config entry has been reloaded.
+        LOGGER.error(
+            "Failed to get server version, cannot update config entry"
+            "unique id with new home id, after controller NVM restore"
+        )
+    else:
+        hass.config_entries.async_update_entry(
+            entry, unique_id=str(version_info.home_id)
+        )
+
     await hass.config_entries.async_reload(entry.entry_id)
 
     connection.send_message(
