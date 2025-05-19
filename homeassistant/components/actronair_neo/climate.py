@@ -15,9 +15,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ActronConfigEntry
 from .const import DOMAIN
-from .coordinator import ActronNeoDataUpdateCoordinator
+from .coordinator import ActronNeoConfigEntry, ActronNeoSystemCoordinator
 
 PARALLEL_UPDATES = 0
 
@@ -40,21 +39,20 @@ HVAC_MODE_MAPPING_REVERSE = {v: k for k, v in HVAC_MODE_MAPPING.items()}
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ActronConfigEntry,
+    entry: ActronNeoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Actron Air Neo climate entities."""
-    coordinator = entry.runtime_data
+    system_coordinators = entry.runtime_data.system_coordinators
     entities: list[ClimateEntity] = []
 
-    for system in coordinator.systems:
-        name = system["description"]
-        serial_number = system["serial"]
-        entities.append(ActronSystemClimate(coordinator, serial_number, name))
-        status = coordinator.api.state_manager.get_status(serial_number)
+    for coordinator in system_coordinators.values():
+        status = coordinator.data
+        name = status.ac_system.system_name
+        entities.append(ActronSystemClimate(coordinator, name))
 
         entities.extend(
-            ActronZoneClimate(coordinator, serial_number, zone)
+            ActronZoneClimate(coordinator, zone)
             for zone in status.remote_zone_info
             if zone.exists
         )
@@ -62,9 +60,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class BaseClimateEntity(
-    CoordinatorEntity[ActronNeoDataUpdateCoordinator], ClimateEntity
-):
+class BaseClimateEntity(CoordinatorEntity[ActronNeoSystemCoordinator], ClimateEntity):
     """Base class for Actron Air Neo climate entities."""
 
     _attr_has_entity_name = True
@@ -81,13 +77,12 @@ class BaseClimateEntity(
 
     def __init__(
         self,
-        coordinator: ActronNeoDataUpdateCoordinator,
-        serial_number: str,
+        coordinator: ActronNeoSystemCoordinator,
         name: str,
     ) -> None:
         """Initialize an Actron Air Neo unit."""
         super().__init__(coordinator)
-        self._serial_number = serial_number
+        self._serial_number = coordinator.serial_number
         self._name = name
 
     @property
@@ -117,12 +112,12 @@ class ActronSystemClimate(BaseClimateEntity):
 
     def __init__(
         self,
-        coordinator: ActronNeoDataUpdateCoordinator,
-        serial_number: str,
+        coordinator: ActronNeoSystemCoordinator,
         name: str,
     ) -> None:
         """Initialize an Actron Air Neo unit."""
-        super().__init__(coordinator, serial_number, name)
+        super().__init__(coordinator, name)
+        serial_number = coordinator.serial_number
         self._attr_unique_id: str = serial_number
         self._attr_device_info: DeviceInfo = DeviceInfo(
             identifiers={(DOMAIN, serial_number)},
@@ -140,7 +135,7 @@ class ActronSystemClimate(BaseClimateEntity):
     @property
     def _status(self) -> ActronAirNeoStatus:
         """Get the current status from the coordinator."""
-        return self.coordinator.get_status(self._serial_number)
+        return self.coordinator.data
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -203,12 +198,12 @@ class ActronZoneClimate(BaseClimateEntity):
 
     def __init__(
         self,
-        coordinator: ActronNeoDataUpdateCoordinator,
-        serial_number: str,
+        coordinator: ActronNeoSystemCoordinator,
         zone: ActronAirNeoZone,
     ) -> None:
         """Initialize an Actron Air Neo unit."""
-        super().__init__(coordinator, serial_number, zone.title)
+        super().__init__(coordinator, zone.title)
+        serial_number = coordinator.serial_number
         self._zone_id: int = zone.zone_id
         self._attr_unique_id: str = f"{serial_number}_zone_{zone.zone_id}"
         self._attr_device_info: DeviceInfo = DeviceInfo(
@@ -227,7 +222,7 @@ class ActronZoneClimate(BaseClimateEntity):
     @property
     def _zone(self) -> ActronAirNeoZone:
         """Get the current zone data from the coordinator."""
-        status = self.coordinator.get_status(self._serial_number)
+        status = self.coordinator.data
         return status.zones.get(self._zone_id)
 
     @property

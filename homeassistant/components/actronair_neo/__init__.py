@@ -1,33 +1,40 @@
 """The Actron Air Neo integration."""
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 
 from .const import PLATFORM
-from .coordinator import ActronNeoDataUpdateCoordinator
+from .coordinator import (
+    ActronNeoApiCoordinator,
+    ActronNeoConfigEntry,
+    ActronNeoRuntimeData,
+    ActronNeoSystemCoordinator,
+)
 
-type ActronConfigEntry = ConfigEntry[ActronNeoDataUpdateCoordinator]
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: ActronConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ActronNeoConfigEntry) -> bool:
     """Set up Actron Air Neo integration from a config entry."""
 
-    # Initialize the data coordinator
-    pairing_token = entry.data[CONF_API_TOKEN]
-    coordinator = ActronNeoDataUpdateCoordinator(hass, entry, pairing_token)
-    await coordinator.async_config_entry_first_refresh()
+    api_coordinator = ActronNeoApiCoordinator(hass, entry)
+    await api_coordinator.async_setup()
 
-    # Update the title with the current username
-    user_data = await coordinator.api.get_user()
+    system_coordinators: dict[str, ActronNeoSystemCoordinator] = {}
+    for system in api_coordinator.systems:
+        coordinator = ActronNeoSystemCoordinator(hass, entry, api_coordinator, system)
+        await coordinator.async_config_entry_first_refresh()
+        system_coordinators[system["serial"]] = coordinator
+
+    user_data = await api_coordinator.api.get_user()
     hass.config_entries.async_update_entry(entry, title=user_data["email"])
 
-    entry.runtime_data = coordinator
+    entry.runtime_data = ActronNeoRuntimeData(
+        api_coordinator=api_coordinator,
+        system_coordinators=system_coordinators,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORM)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ActronConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ActronNeoConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORM)
