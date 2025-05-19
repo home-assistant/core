@@ -266,7 +266,7 @@ async def test_browse_media_get_items(
     assert media_file.title == "filename.jpg"
     assert media_file.media_class == MediaClass.IMAGE
     assert media_file.media_content_type == "image/jpeg"
-    assert media_file.can_play
+    assert media_file.can_play is False
     assert not media_file.can_expand
     assert media_file.thumbnail == (
         "/immich/e7ef5713-9dab-4bd4-b899-715b0ca4379e/"
