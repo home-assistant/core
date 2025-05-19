@@ -171,7 +171,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Fan Speed',
+    'original_name': 'Fan speed',
     'platform': 'intellifire',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -184,7 +184,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by unpublished Intellifire API',
-      'friendly_name': 'IntelliFire Fan Speed',
+      'friendly_name': 'IntelliFire Fan speed',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,

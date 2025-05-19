@@ -355,6 +355,7 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         ("distance", UnitOfLength.MILLIMETERS): UnitOfLength.INCHES,
         # Convert non-USCS volumes of gas meters
         ("gas", UnitOfVolume.CUBIC_METERS): UnitOfVolume.CUBIC_FEET,
+        ("gas", UnitOfVolume.LITERS): UnitOfVolume.CUBIC_FEET,
         # Convert non-USCS precipitation
         ("precipitation", UnitOfLength.CENTIMETERS): UnitOfLength.INCHES,
         ("precipitation", UnitOfLength.MILLIMETERS): UnitOfLength.INCHES,

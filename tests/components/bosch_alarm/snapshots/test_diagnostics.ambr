@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_diagnostics[amax_3000]
+# name: test_diagnostics[amax_3000-None]
   dict({
     'data': dict({
       'areas': list([
@@ -11,8 +11,7 @@
           'armed': False,
           'arming': False,
           'disarmed': True,
-          'faults': list([
-          ]),
+          'faults': 0,
           'id': 1,
           'name': 'Area1',
           'part_armed': False,
@@ -90,13 +89,14 @@
     'entry_data': dict({
       'host': '0.0.0.0',
       'installer_code': '**REDACTED**',
+      'mac': None,
       'model': 'AMAX 3000',
       'password': '**REDACTED**',
       'port': 7700,
     }),
   })
 # ---
-# name: test_diagnostics[b5512]
+# name: test_diagnostics[b5512-None]
   dict({
     'data': dict({
       'areas': list([
@@ -108,8 +108,7 @@
           'armed': False,
           'arming': False,
           'disarmed': True,
-          'faults': list([
-          ]),
+          'faults': 0,
           'id': 1,
           'name': 'Area1',
           'part_armed': False,
@@ -182,17 +181,18 @@
         }),
       ]),
       'protocol_version': '1.0.0',
-      'serial_number': None,
+      'serial_number': '1234567890',
     }),
     'entry_data': dict({
       'host': '0.0.0.0',
+      'mac': None,
       'model': 'B5512 (US1B)',
       'password': '**REDACTED**',
       'port': 7700,
     }),
   })
 # ---
-# name: test_diagnostics[solution_3000]
+# name: test_diagnostics[solution_3000-None]
   dict({
     'data': dict({
       'areas': list([
@@ -204,8 +204,7 @@
           'armed': False,
           'arming': False,
           'disarmed': True,
-          'faults': list([
-          ]),
+          'faults': 0,
           'id': 1,
           'name': 'Area1',
           'part_armed': False,
@@ -278,10 +277,11 @@
         }),
       ]),
       'protocol_version': '1.0.0',
-      'serial_number': '1234567890',
+      'serial_number': None,
     }),
     'entry_data': dict({
       'host': '0.0.0.0',
+      'mac': None,
       'model': 'Solution 3000',
       'port': 7700,
       'user_code': '**REDACTED**',

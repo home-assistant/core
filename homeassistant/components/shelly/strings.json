@@ -34,7 +34,7 @@
         }
       },
       "confirm_discovery": {
-        "description": "Do you want to set up the {model} at {host}?\n\nBattery-powered devices that are password protected must be woken up before continuing with setting up.\nBattery-powered devices that are not password protected will be added when the device wakes up, you can now manually wake the device up using a button on it or wait for the next data update from the device."
+        "description": "Do you want to set up the {model} at {host}?\n\nBattery-powered devices that are password-protected must be woken up before continuing with setting up.\nBattery-powered devices that are not password-protected will be added when the device wakes up, you can now manually wake the device up using a button on it or wait for the next data update from the device."
       },
       "reconfigure": {
         "description": "Update configuration for {device_name}.\n\nBefore setup, battery-powered devices must be woken up, you can now wake the device up using a button on it.",
@@ -50,20 +50,21 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "firmware_not_fully_provisioned": "Device not fully provisioned. Please contact Shelly support",
       "custom_port_not_supported": "Gen1 device does not support custom port.",
-      "mac_address_mismatch": "The MAC address of the device does not match the one in the configuration, please reboot the device and try again."
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "mac_address_mismatch": "The MAC address of the device does not match the one in the configuration, please reboot the device and try again.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "another_device": "Re-configuration was unsuccessful, the IP address/hostname of another Shelly device was used.",
+      "firmware_not_fully_provisioned": "Device not fully provisioned. Please contact Shelly support",
+      "ipv6_not_supported": "IPv6 is not supported.",
+      "mac_address_mismatch": "[%key:component::shelly::config::error::mac_address_mismatch%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "another_device": "Re-configuration was unsuccessful, the IP address/hostname of another Shelly device was used.",
-      "ipv6_not_supported": "IPv6 is not supported.",
-      "mac_address_mismatch": "[%key:component::shelly::config::error::mac_address_mismatch%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "device_automation": {
@@ -103,7 +104,8 @@
     },
     "abort": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_scripts_support": "Device does not support scripts and cannot be used as a Bluetooth scanner."
+      "no_scripts_support": "Device does not support scripts and cannot be used as a Bluetooth scanner.",
+      "zigbee_enabled": "Device with Zigbee enabled cannot be used as a Bluetooth scanner. Please disable it to use the device as a Bluetooth scanner."
     }
   },
   "selector": {
@@ -174,16 +176,16 @@
       "operation": {
         "state": {
           "warmup": "Warm-up",
-          "normal": "Normal",
-          "fault": "Fault"
+          "normal": "[%key:common::state::normal%]",
+          "fault": "[%key:common::state::fault%]"
         },
         "state_attributes": {
           "self_test": {
             "state": {
-              "not_completed": "Not completed",
-              "completed": "Completed",
-              "running": "Running",
-              "pending": "Pending"
+              "not_completed": "[%key:component::shelly::entity::sensor::self_test::state::not_completed%]",
+              "completed": "[%key:component::shelly::entity::sensor::self_test::state::completed%]",
+              "running": "[%key:component::shelly::entity::sensor::self_test::state::running%]",
+              "pending": "[%key:component::shelly::entity::sensor::self_test::state::pending%]"
             }
           }
         }
@@ -260,6 +262,21 @@
     }
   },
   "issues": {
+    "ble_scanner_firmware_unsupported": {
+      "title": "{device_name} is running unsupported firmware",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "{device_name} is running unsupported firmware",
+            "description": "Your Shelly device {device_name} with IP address {ip_address} is running firmware {firmware} and acts as BLE scanner with active mode. This firmware version is not supported for BLE scanner active mode.\n\nSelect **Submit** button to start the OTA update to the latest stable firmware version."
+          }
+        },
+        "abort": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "update_not_available": "Device does not offer firmware update. Check internet connectivity (gateway, DNS, time) and restart the device."
+        }
+      }
+    },
     "device_not_calibrated": {
       "title": "Shelly device {device_name} is not calibrated",
       "description": "Shelly device {device_name} with IP address {ip_address} requires calibration. To calibrate the device, it must be rebooted after proper installation on the valve. You can reboot the device in its web panel, go to 'Settings' > 'Device Reboot'."

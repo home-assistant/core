@@ -651,6 +651,7 @@ async def test_media_player_supported_features(
         | MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SEARCH_MEDIA
     )
     assert state.attributes["supported_features"] == expected_features
     # remove power control capability from player, trigger subscription callback

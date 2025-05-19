@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
+from chip.clusters.Objects import NullValue
 from matter_server.client.models.node import MatterNode
 from matter_server.common.errors import MatterError
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
@@ -188,3 +189,46 @@ async def test_matter_exception_on_command(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize("node_fixture", ["silabs_evse_charging"])
+async def test_evse_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test evse sensors."""
+    state = hass.states.get("switch.evse_enable_charging")
+    assert state
+    assert state.state == "on"
+    # test switch service
+    await hass.services.async_call(
+        "switch",
+        "turn_off",
+        {"entity_id": "switch.evse_enable_charging"},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.EnergyEvse.Commands.Disable(),
+        timed_request_timeout_ms=3000,
+    )
+    await hass.services.async_call(
+        "switch",
+        "turn_on",
+        {"entity_id": "switch.evse_enable_charging"},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 2
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.EnergyEvse.Commands.EnableCharging(
+            chargingEnabledUntil=NullValue,
+            minimumChargeCurrent=0,
+            maximumChargeCurrent=0,
+        ),
+        timed_request_timeout_ms=3000,
+    )

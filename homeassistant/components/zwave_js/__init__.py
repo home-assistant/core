@@ -278,6 +278,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # and we'll handle the clean up below.
         await driver_events.setup(driver)
 
+    if (old_unique_id := entry.unique_id) is not None and old_unique_id != (
+        new_unique_id := str(driver.controller.home_id)
+    ):
+        device_registry = dr.async_get(hass)
+        controller_model = "Unknown model"
+        if (
+            (own_node := driver.controller.own_node)
+            and (
+                controller_device_entry := device_registry.async_get_device(
+                    identifiers={get_device_id(driver, own_node)}
+                )
+            )
+            and (model := controller_device_entry.model)
+        ):
+            controller_model = model
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"migrate_unique_id.{entry.entry_id}",
+            data={
+                "config_entry_id": entry.entry_id,
+                "config_entry_title": entry.title,
+                "controller_model": controller_model,
+                "new_unique_id": new_unique_id,
+                "old_unique_id": old_unique_id,
+            },
+            is_fixable=True,
+            severity=IssueSeverity.ERROR,
+            translation_key="migrate_unique_id",
+        )
+    else:
+        async_delete_issue(hass, DOMAIN, f"migrate_unique_id.{entry.entry_id}")
+
     # If the listen task is already failed, we need to raise ConfigEntryNotReady
     if listen_task.done():
         listen_error, error_message = _get_listen_task_error(listen_task)
@@ -363,11 +396,17 @@ class DriverEvents:
             self.dev_reg.async_get_device(identifiers={get_device_id(driver, node)})
             for node in controller.nodes.values()
         ]
+        provisioned_devices = [
+            self.dev_reg.async_get(entry.additional_properties["device_id"])
+            for entry in await controller.async_get_provisioning_entries()
+            if entry.additional_properties
+            and "device_id" in entry.additional_properties
+        ]
 
         # Devices that are in the device registry that are not known by the controller
         # can be removed
         for device in stored_devices:
-            if device not in known_devices:
+            if device not in known_devices and device not in provisioned_devices:
                 self.dev_reg.async_remove_device(device.id)
 
         # run discovery on controller node
@@ -448,6 +487,8 @@ class ControllerEvents:
             )
         )
 
+        await self.async_check_preprovisioned_device(node)
+
         if node.is_controller_node:
             # Create a controller status sensor for each device
             async_dispatcher_send(
@@ -497,7 +538,7 @@ class ControllerEvents:
 
         # we do submit the node to device registry so user has
         # some visual feedback that something is (in the process of) being added
-        self.register_node_in_dev_reg(node)
+        await self.async_register_node_in_dev_reg(node)
 
     @callback
     def async_on_node_removed(self, event: dict) -> None:
@@ -574,18 +615,52 @@ class ControllerEvents:
             f"{DOMAIN}.identify_controller.{dev_id[1]}",
         )
 
-    @callback
-    def register_node_in_dev_reg(self, node: ZwaveNode) -> dr.DeviceEntry:
+    async def async_check_preprovisioned_device(self, node: ZwaveNode) -> None:
+        """Check if the node was preprovisioned and update the device registry."""
+        provisioning_entry = (
+            await self.driver_events.driver.controller.async_get_provisioning_entry(
+                node.node_id
+            )
+        )
+        if (
+            provisioning_entry
+            and provisioning_entry.additional_properties
+            and "device_id" in provisioning_entry.additional_properties
+        ):
+            preprovisioned_device = self.dev_reg.async_get(
+                provisioning_entry.additional_properties["device_id"]
+            )
+
+            if preprovisioned_device:
+                dsk = provisioning_entry.dsk
+                dsk_identifier = (DOMAIN, f"provision_{dsk}")
+
+                # If the pre-provisioned device has the DSK identifier, remove it
+                if dsk_identifier in preprovisioned_device.identifiers:
+                    driver = self.driver_events.driver
+                    device_id = get_device_id(driver, node)
+                    device_id_ext = get_device_id_ext(driver, node)
+                    new_identifiers = preprovisioned_device.identifiers.copy()
+                    new_identifiers.remove(dsk_identifier)
+                    new_identifiers.add(device_id)
+                    if device_id_ext:
+                        new_identifiers.add(device_id_ext)
+                    self.dev_reg.async_update_device(
+                        preprovisioned_device.id,
+                        new_identifiers=new_identifiers,
+                    )
+
+    async def async_register_node_in_dev_reg(self, node: ZwaveNode) -> dr.DeviceEntry:
         """Register node in dev reg."""
         driver = self.driver_events.driver
         device_id = get_device_id(driver, node)
         device_id_ext = get_device_id_ext(driver, node)
         node_id_device = self.dev_reg.async_get_device(identifiers={device_id})
-        via_device_id = None
+        via_identifier = None
         controller = driver.controller
         # Get the controller node device ID if this node is not the controller
         if controller.own_node and controller.own_node != node:
-            via_device_id = get_device_id(driver, controller.own_node)
+            via_identifier = get_device_id(driver, controller.own_node)
 
         if device_id_ext:
             # If there is a device with this node ID but with a different hardware
@@ -632,7 +707,7 @@ class ControllerEvents:
             model=node.device_config.label,
             manufacturer=node.device_config.manufacturer,
             suggested_area=node.location if node.location else UNDEFINED,
-            via_device=via_device_id,
+            via_device=via_identifier,
         )
 
         async_dispatcher_send(self.hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
@@ -666,7 +741,7 @@ class NodeEvents:
         """Handle node ready event."""
         LOGGER.debug("Processing node %s", node)
         # register (or update) node in device registry
-        device = self.controller_events.register_node_in_dev_reg(node)
+        device = await self.controller_events.async_register_node_in_dev_reg(node)
 
         # Remove any old value ids if this is a reinterview.
         self.controller_events.discovered_value_ids.pop(device.id, None)

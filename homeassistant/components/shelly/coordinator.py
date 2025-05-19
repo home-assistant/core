@@ -33,7 +33,11 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
+from homeassistant.helpers.device_registry import (
+    CONNECTION_BLUETOOTH,
+    CONNECTION_NETWORK_MAC,
+    format_mac,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .bluetooth import async_connect_scanner
@@ -90,6 +94,7 @@ class ShellyEntryData:
     rpc_poll: ShellyRpcPollingCoordinator | None = None
     rpc_script_events: dict[int, list[str]] | None = None
     rpc_supports_scripts: bool | None = None
+    rpc_zigbee_enabled: bool | None = None
 
 
 type ShellyConfigEntry = ConfigEntry[ShellyEntryData]
@@ -159,6 +164,11 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         """Sleep period of the device."""
         return self.config_entry.data.get(CONF_SLEEP_PERIOD, 0)
 
+    @property
+    def connections(self) -> set[tuple[str, str]]:
+        """Connections of the device."""
+        return {(CONNECTION_NETWORK_MAC, self.mac)}
+
     def async_setup(self, pending_platforms: list[Platform] | None = None) -> None:
         """Set up the coordinator."""
         self._pending_platforms = pending_platforms
@@ -166,7 +176,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         device_entry = dev_reg.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             name=self.name,
-            connections={(CONNECTION_NETWORK_MAC, self.mac)},
+            connections=self.connections,
             identifiers={(DOMAIN, self.mac)},
             manufacturer="Shelly",
             model=get_shelly_model_name(self.model, self.sleep_period, self.device),
@@ -522,6 +532,14 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         """
         return format_mac(bluetooth_mac_from_primary_mac(self.mac)).upper()
 
+    @property
+    def connections(self) -> set[tuple[str, str]]:
+        """Connections of the device."""
+        connections = super().connections
+        if not self.sleep_period:
+            connections.add((CONNECTION_BLUETOOTH, self.bluetooth_source))
+        return connections
+
     async def async_device_online(self, source: str) -> None:
         """Handle device going online."""
         if not self.sleep_period:
@@ -717,7 +735,10 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         is updated.
         """
         if not self.sleep_period:
-            if self.config_entry.runtime_data.rpc_supports_scripts:
+            if (
+                self.config_entry.runtime_data.rpc_supports_scripts
+                and not self.config_entry.runtime_data.rpc_zigbee_enabled
+            ):
                 await self._async_connect_ble_scanner()
         else:
             await self._async_setup_outbound_websocket()

@@ -11,7 +11,7 @@ timer.
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Callable, Container, Hashable, KeysView, Mapping
+from collections.abc import Callable, Hashable, KeysView, Mapping
 from datetime import datetime, timedelta
 from enum import StrEnum
 import logging
@@ -164,7 +164,7 @@ def _protect_entity_options(
     return ReadOnlyDict({key: ReadOnlyDict(val) for key, val in data.items()})
 
 
-@attr.s(frozen=True, slots=True)
+@attr.s(frozen=True, kw_only=True, slots=True)
 class RegistryEntry:
     """Entity Registry Entry."""
 
@@ -175,35 +175,32 @@ class RegistryEntry:
     aliases: set[str] = attr.ib(factory=set)
     area_id: str | None = attr.ib(default=None)
     categories: dict[str, str] = attr.ib(factory=dict)
-    capabilities: Mapping[str, Any] | None = attr.ib(default=None)
-    config_entry_id: str | None = attr.ib(default=None)
-    config_subentry_id: str | None = attr.ib(default=None)
-    created_at: datetime = attr.ib(factory=utcnow)
+    capabilities: Mapping[str, Any] | None = attr.ib()
+    config_entry_id: str | None = attr.ib()
+    config_subentry_id: str | None = attr.ib()
+    created_at: datetime = attr.ib()
     device_class: str | None = attr.ib(default=None)
-    device_id: str | None = attr.ib(default=None)
+    device_id: str | None = attr.ib()
     domain: str = attr.ib(init=False, repr=False)
-    disabled_by: RegistryEntryDisabler | None = attr.ib(default=None)
-    entity_category: EntityCategory | None = attr.ib(default=None)
-    hidden_by: RegistryEntryHider | None = attr.ib(default=None)
+    disabled_by: RegistryEntryDisabler | None = attr.ib()
+    entity_category: EntityCategory | None = attr.ib()
+    has_entity_name: bool = attr.ib()
+    hidden_by: RegistryEntryHider | None = attr.ib()
     icon: str | None = attr.ib(default=None)
     id: str = attr.ib(
-        default=None,
-        converter=attr.converters.default_if_none(factory=uuid_util.random_uuid_hex),  # type: ignore[misc]
+        converter=attr.converters.default_if_none(factory=uuid_util.random_uuid_hex)  # type: ignore[misc]
     )
-    has_entity_name: bool = attr.ib(default=False)
     labels: set[str] = attr.ib(factory=set)
     modified_at: datetime = attr.ib(factory=utcnow)
     name: str | None = attr.ib(default=None)
-    options: ReadOnlyEntityOptionsType = attr.ib(
-        default=None, converter=_protect_entity_options
-    )
+    options: ReadOnlyEntityOptionsType = attr.ib(converter=_protect_entity_options)
     # As set by integration
-    original_device_class: str | None = attr.ib(default=None)
-    original_icon: str | None = attr.ib(default=None)
-    original_name: str | None = attr.ib(default=None)
-    supported_features: int = attr.ib(default=0)
-    translation_key: str | None = attr.ib(default=None)
-    unit_of_measurement: str | None = attr.ib(default=None)
+    original_device_class: str | None = attr.ib()
+    original_icon: str | None = attr.ib()
+    original_name: str | None = attr.ib()
+    supported_features: int = attr.ib()
+    translation_key: str | None = attr.ib()
+    unit_of_measurement: str | None = attr.ib()
     _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     @domain.default
@@ -790,26 +787,18 @@ class EntityRegistry(BaseRegistry):
         """Return known device ids."""
         return list(self.entities.get_device_ids())
 
-    def _entity_id_available(
-        self, entity_id: str, known_object_ids: Container[str] | None
-    ) -> bool:
+    def _entity_id_available(self, entity_id: str) -> bool:
         """Return True if the entity_id is available.
 
         An entity_id is available if:
         - It's not registered
-        - It's not known by the entity component adding the entity
-        - It's not in the state machine
+        - It's available (not in the state machine and not reserved)
 
         Note that an entity_id which belongs to a deleted entity is considered
         available.
         """
-        if known_object_ids is None:
-            known_object_ids = {}
-
-        return (
-            entity_id not in self.entities
-            and entity_id not in known_object_ids
-            and self.hass.states.async_available(entity_id)
+        return entity_id not in self.entities and self.hass.states.async_available(
+            entity_id
         )
 
     @callback
@@ -817,7 +806,6 @@ class EntityRegistry(BaseRegistry):
         self,
         domain: str,
         suggested_object_id: str,
-        known_object_ids: Container[str] | None = None,
     ) -> str:
         """Generate an entity ID that does not conflict.
 
@@ -829,11 +817,9 @@ class EntityRegistry(BaseRegistry):
             raise MaxLengthExceeded(domain, "domain", MAX_LENGTH_STATE_DOMAIN)
 
         test_string = preferred_string[:MAX_LENGTH_STATE_ENTITY_ID]
-        if known_object_ids is None:
-            known_object_ids = set()
 
         tries = 1
-        while not self._entity_id_available(test_string, known_object_ids):
+        while not self._entity_id_available(test_string):
             tries += 1
             len_suffix = len(str(tries)) + 1
             test_string = (
@@ -850,7 +836,6 @@ class EntityRegistry(BaseRegistry):
         unique_id: str,
         *,
         # To influence entity ID generation
-        known_object_ids: Container[str] | None = None,
         suggested_object_id: str | None = None,
         # To disable or hide an entity if it gets created
         disabled_by: RegistryEntryDisabler | None = None,
@@ -924,7 +909,6 @@ class EntityRegistry(BaseRegistry):
         entity_id = self.async_generate_entity_id(
             domain,
             suggested_object_id or f"{platform}_{unique_id}",
-            known_object_ids,
         )
 
         if (
@@ -1167,7 +1151,7 @@ class EntityRegistry(BaseRegistry):
             )
 
         if new_entity_id is not UNDEFINED and new_entity_id != old.entity_id:
-            if not self._entity_id_available(new_entity_id, None):
+            if not self._entity_id_available(new_entity_id):
                 raise ValueError("Entity with this ID is already registered")
 
             if not valid_entity_id(new_entity_id):

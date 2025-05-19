@@ -24,6 +24,7 @@ from homeassistant.util.dt import utc_from_timestamp
 from tests.common import (
     ANY,
     MockConfigEntry,
+    RegistryEntryWithDefaults,
     async_capture_events,
     async_fire_time_changed,
     flush_store,
@@ -122,9 +123,9 @@ def test_get_or_create_updates_data(
     assert set(entity_registry.async_device_ids()) == {orig_device_entry.id}
 
     assert orig_entry == er.RegistryEntry(
-        "light.hue_5678",
-        "5678",
-        "hue",
+        entity_id="light.hue_5678",
+        unique_id="5678",
+        platform="hue",
         capabilities={"max": 100},
         config_entry_id=orig_config_entry.entry_id,
         config_subentry_id=config_subentry_id,
@@ -139,6 +140,7 @@ def test_get_or_create_updates_data(
         id=orig_entry.id,
         modified_at=created,
         name=None,
+        options=None,
         original_device_class="mock-device-class",
         original_icon="initial-original_icon",
         original_name="initial-original_name",
@@ -177,9 +179,9 @@ def test_get_or_create_updates_data(
     )
 
     assert new_entry == er.RegistryEntry(
-        "light.hue_5678",
-        "5678",
-        "hue",
+        entity_id="light.hue_5678",
+        unique_id="5678",
+        platform="hue",
         aliases=set(),
         area_id=None,
         capabilities={"new-max": 150},
@@ -196,6 +198,7 @@ def test_get_or_create_updates_data(
         id=orig_entry.id,
         modified_at=modified,
         name=None,
+        options=None,
         original_device_class="new-mock-device-class",
         original_icon="updated-original_icon",
         original_name="updated-original_name",
@@ -228,13 +231,14 @@ def test_get_or_create_updates_data(
     )
 
     assert new_entry == er.RegistryEntry(
-        "light.hue_5678",
-        "5678",
-        "hue",
+        entity_id="light.hue_5678",
+        unique_id="5678",
+        platform="hue",
         aliases=set(),
         area_id=None,
         capabilities=None,
         config_entry_id=None,
+        config_subentry_id=None,
         created_at=created,
         device_class=None,
         device_id=None,
@@ -246,6 +250,7 @@ def test_get_or_create_updates_data(
         id=orig_entry.id,
         modified_at=modified,
         name=None,
+        options=None,
         original_device_class=None,
         original_icon=None,
         original_name=None,
@@ -2012,7 +2017,9 @@ async def test_disabled_entities_excluded_from_entity_list(
     ) == [entry1, entry2]
 
 
-async def test_entity_max_length_exceeded(entity_registry: er.EntityRegistry) -> None:
+async def test_entity_max_length_exceeded(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that an exception is raised when the max character length is exceeded."""
 
     long_domain_name = (
@@ -2037,20 +2044,13 @@ async def test_entity_max_length_exceeded(entity_registry: er.EntityRegistry) ->
         "1234567890123456789012345678901234567"
     )
 
-    known = []
-    new_id = entity_registry.async_generate_entity_id(
-        "sensor", long_entity_id_name, known
-    )
+    new_id = entity_registry.async_generate_entity_id("sensor", long_entity_id_name)
     assert new_id == "sensor." + long_entity_id_name[: 255 - 7]
-    known.append(new_id)
-    new_id = entity_registry.async_generate_entity_id(
-        "sensor", long_entity_id_name, known
-    )
+    hass.states.async_reserve(new_id)
+    new_id = entity_registry.async_generate_entity_id("sensor", long_entity_id_name)
     assert new_id == "sensor." + long_entity_id_name[: 255 - 7 - 2] + "_2"
-    known.append(new_id)
-    new_id = entity_registry.async_generate_entity_id(
-        "sensor", long_entity_id_name, known
-    )
+    hass.states.async_reserve(new_id)
+    new_id = entity_registry.async_generate_entity_id("sensor", long_entity_id_name)
     assert new_id == "sensor." + long_entity_id_name[: 255 - 7 - 2] + "_3"
 
 
@@ -2095,8 +2095,12 @@ def test_entity_registry_items() -> None:
     assert entities.get_entity_id(("a", "b", "c")) is None
     assert entities.get_entry("abc") is None
 
-    entry1 = er.RegistryEntry("test.entity1", "1234", "hue")
-    entry2 = er.RegistryEntry("test.entity2", "2345", "hue")
+    entry1 = RegistryEntryWithDefaults(
+        entity_id="test.entity1", unique_id="1234", platform="hue"
+    )
+    entry2 = RegistryEntryWithDefaults(
+        entity_id="test.entity2", unique_id="2345", platform="hue"
+    )
     entities["test.entity1"] = entry1
     entities["test.entity2"] = entry2
 

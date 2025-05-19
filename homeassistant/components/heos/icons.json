@@ -6,6 +6,9 @@
     "remove_from_queue": {
       "service": "mdi:playlist-remove"
     },
+    "move_queue_item": {
+      "service": "mdi:playlist-edit"
+    },
     "group_volume_set": {
       "service": "mdi:volume-medium"
     },

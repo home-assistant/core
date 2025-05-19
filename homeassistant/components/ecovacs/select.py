@@ -6,7 +6,8 @@ from typing import Any, Generic
 
 from deebot_client.capabilities import CapabilitySetTypes
 from deebot_client.device import Device
-from deebot_client.events import WaterInfoEvent, WorkModeEvent
+from deebot_client.events import WorkModeEvent
+from deebot_client.events.water_info import WaterAmountEvent
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -31,9 +32,9 @@ class EcovacsSelectEntityDescription(
 
 
 ENTITY_DESCRIPTIONS: tuple[EcovacsSelectEntityDescription, ...] = (
-    EcovacsSelectEntityDescription[WaterInfoEvent](
-        capability_fn=lambda caps: caps.water,
-        current_option_fn=lambda e: get_name_key(e.amount),
+    EcovacsSelectEntityDescription[WaterAmountEvent](
+        capability_fn=lambda caps: caps.water.amount if caps.water else None,
+        current_option_fn=lambda e: get_name_key(e.value),
         options_fn=lambda water: [get_name_key(amount) for amount in water.types],
         key="water_amount",
         translation_key="water_amount",

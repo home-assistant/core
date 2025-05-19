@@ -55,12 +55,12 @@
       "heater_mode": {
         "name": "Heater mode",
         "state": {
-          "auto": "Auto",
+          "off": "[%key:common::state::off%]",
+          "auto": "[%key:common::state::auto%]",
+          "manual": "[%key:common::state::manual%]",
           "extraenergy": "Extra energy",
           "ffr": "Fast frequency reserve",
           "legionella": "Legionella",
-          "manual": "Manual",
-          "off": "[%key:common::state::off%]",
           "powersave": "Power save",
           "voltage": "Voltage"
         }

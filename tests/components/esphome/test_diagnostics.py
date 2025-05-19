@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import ANY
 
+from aioesphomeapi import APIClient
 import pytest
 from syrupy import SnapshotAssertion
 from syrupy.filters import props
@@ -10,7 +11,8 @@ from syrupy.filters import props
 from homeassistant.components import bluetooth
 from homeassistant.core import HomeAssistant
 
-from .conftest import MockESPHomeDevice
+from .common import MockDashboardRefresh
+from .conftest import MockESPHomeDevice, MockESPHomeDeviceType
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -31,6 +33,37 @@ async def test_diagnostics(
     assert result == snapshot(exclude=props("created_at", "modified_at"))
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_diagnostics_with_dashboard_data(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_esphome_device: MockESPHomeDeviceType,
+    mock_dashboard: dict[str, Any],
+    mock_client: APIClient,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test diagnostics for config entry with dashboard data."""
+    mock_dashboard["configured"].append(
+        {
+            "name": "test",
+            "configuration": "test.yaml",
+            "current_version": "2023.1.0",
+        }
+    )
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+    )
+    await MockDashboardRefresh(hass).async_refresh()
+    result = await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_device.entry
+    )
+
+    assert result == snapshot(exclude=props("entry_id", "created_at", "modified_at"))
+
+
 async def test_diagnostics_with_bluetooth(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -43,6 +76,9 @@ async def test_diagnostics_with_bluetooth(
     entry = mock_bluetooth_entry_with_raw_adv.entry
     result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
     assert result == {
+        "dashboard": {
+            "configured": False,
+        },
         "bluetooth": {
             "available": True,
             "connections_free": 0,

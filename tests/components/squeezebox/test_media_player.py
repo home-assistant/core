@@ -799,6 +799,8 @@ async def test_squeezebox_server_discovery(
         """Mock the async_discover function of pysqueezebox."""
         return callback(lms_factory(2))
 
+    lms.async_prepared_status.return_value = {}
+
     with (
         patch(
             "homeassistant.components.squeezebox.Server",
