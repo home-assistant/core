@@ -8,7 +8,12 @@ import logging
 from typing import TYPE_CHECKING
 
 from aiontfy import Event, Notification
-from aiontfy.exceptions import NtfyConnectionError, NtfyHTTPError, NtfyTimeoutError
+from aiontfy.exceptions import (
+    NtfyConnectionError,
+    NtfyForbiddenError,
+    NtfyHTTPError,
+    NtfyTimeoutError,
+)
 
 from homeassistant.components.event import EventEntity, EventEntityDescription
 from homeassistant.config_entries import ConfigSubentry
@@ -86,6 +91,10 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
                 _LOGGER.exception(
                     "Connection to ntfy service was terminated unexpectedly"
                 )
+            self._connectivity_check = False
+        except NtfyForbiddenError:
+            if self._connectivity_check:
+                _LOGGER.exception("Failed to subscribe to topic. Topic is protected")
             self._connectivity_check = False
         except NtfyHTTPError as e:
             if self._connectivity_check:

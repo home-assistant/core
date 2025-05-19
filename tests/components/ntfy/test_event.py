@@ -1,15 +1,23 @@
 """Tests for the ntfy event platform."""
 
+import asyncio
 from collections.abc import AsyncGenerator
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+from aiontfy.exceptions import (
+    NtfyConnectionError,
+    NtfyForbiddenError,
+    NtfyHTTPError,
+    NtfyTimeoutError,
+    NtfyUnauthorizedAuthenticationError,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -69,3 +77,66 @@ async def test_event(
     assert (state := hass.states.get("event.mytopic"))
     assert state.state != STATE_UNKNOWN
     assert state.attributes == snapshot
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_state"),
+    [
+        (
+            NtfyHTTPError(41801, 418, "I'm a teapot", ""),
+            STATE_UNAVAILABLE,
+        ),
+        (
+            NtfyConnectionError,
+            STATE_UNAVAILABLE,
+        ),
+        (
+            NtfyTimeoutError,
+            STATE_UNAVAILABLE,
+        ),
+        (
+            NtfyUnauthorizedAuthenticationError(40101, 401, "unauthorized"),
+            STATE_UNAVAILABLE,
+        ),
+        (
+            NtfyForbiddenError(403, 403, "forbidden"),
+            STATE_UNAVAILABLE,
+        ),
+        (
+            asyncio.CancelledError,
+            STATE_UNAVAILABLE,
+        ),
+        (
+            asyncio.InvalidStateError,
+            STATE_UNKNOWN,
+        ),
+    ],
+)
+async def test_event_exceptions(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_aiontfy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    exception: Exception,
+    expected_state: str,
+) -> None:
+    """Test ntfy events exceptions."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    mock_aiontfy.subscribe.side_effect = exception
+
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("event.mytopic"))
+    assert state.state == expected_state
