@@ -1426,7 +1426,7 @@ class BackupManager:
             # No issues with agents or add-ons, but issues with folders
             self._create_automatic_backup_failed_issue(
                 "automatic_backup_failed_folders",
-                {"failed_folders": ", ".join(addon for addon in addon_errors)},
+                {"failed_folders": ", ".join(folder for folder in folder_errors)},
             )
         else:
             # Issues with agents, add-ons, and/or folders
