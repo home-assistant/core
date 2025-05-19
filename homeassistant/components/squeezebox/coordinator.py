@@ -118,7 +118,7 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         new_alarms: set[str] = set()
         received_alarms: set[str] = set()
 
-        if self.data["alarms"] and self.player.connected:
+        if self.data["alarms"] and self.available:
             received_alarms = set(self.data["alarms"])
             new_alarms = received_alarms - self.known_alarms
         removed_alarms = self.known_alarms - received_alarms
@@ -134,7 +134,7 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     self,
                 )
 
-        if removed_alarms:
+        if removed_alarms and self.available:
             for removed_alarm in removed_alarms:
                 _uid = f"{self.player_uuid}-alarm-{removed_alarm}"
                 _LOGGER.debug(
