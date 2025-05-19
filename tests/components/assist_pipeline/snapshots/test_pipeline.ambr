@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_chat_log_tts_streaming[to_stream_tts0]
+# name: test_chat_log_tts_streaming[to_stream_tts0-1]
   list([
     dict({
       'data': dict({
