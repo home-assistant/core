@@ -417,9 +417,7 @@ async def test_entry_unload_not_connected(
         )
         assert entry.state is ConfigEntryState.LOADED
 
-        assert (
-            state := hass.states.get("switch.test_name_12_34_56_78_9a_be_test_switch_0")
-        )
+        assert (state := hass.states.get("switch.test_name_test_switch_0"))
         assert state.state == STATE_ON
         assert not mock_stop_scanner.call_count
 
@@ -450,9 +448,7 @@ async def test_entry_unload_not_connected_but_we_think_we_are(
         )
         assert entry.state is ConfigEntryState.LOADED
 
-        assert (
-            state := hass.states.get("switch.test_name_12_34_56_78_9a_be_test_switch_0")
-        )
+        assert (state := hass.states.get("switch.test_name_test_switch_0"))
         assert state.state == STATE_ON
         assert not mock_stop_scanner.call_count
 
