@@ -2,6 +2,10 @@
 
 from pygti.gti import GTI, Auth
 
+from homeassistant.config_entries import ConfigEntry
+
+type HVVConfigEntry = ConfigEntry[GTIHub]
+
 
 class GTIHub:
     """GTI Hub."""
