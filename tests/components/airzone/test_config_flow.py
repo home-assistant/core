@@ -11,6 +11,7 @@ from aioairzone.exceptions import (
     SystemOutOfRange,
 )
 
+from homeassistant import config_entries
 from homeassistant.components.airzone.config_flow import short_mac
 from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
@@ -202,7 +203,11 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
         "homeassistant.components.airzone.AirzoneLocalApi.get_version",
         return_value=HVAC_VERSION_MOCK,
     ):
-        result = await DHCP_SERVICE_INFO.start_discovery_flow(hass, DOMAIN)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DHCP_SERVICE_INFO,
+            context={"source": config_entries.SOURCE_DHCP},
+        )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovered_connection"
@@ -256,7 +261,11 @@ async def test_dhcp_flow_error(hass: HomeAssistant) -> None:
         "homeassistant.components.airzone.AirzoneLocalApi.get_version",
         side_effect=AirzoneError,
     ):
-        result = await DHCP_SERVICE_INFO.start_discovery_flow(hass, DOMAIN)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DHCP_SERVICE_INFO,
+            context={"source": config_entries.SOURCE_DHCP},
+        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
@@ -269,7 +278,11 @@ async def test_dhcp_connection_error(hass: HomeAssistant) -> None:
         "homeassistant.components.airzone.AirzoneLocalApi.get_version",
         return_value=HVAC_VERSION_MOCK,
     ):
-        result = await DHCP_SERVICE_INFO.start_discovery_flow(hass, DOMAIN)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DHCP_SERVICE_INFO,
+            context={"source": config_entries.SOURCE_DHCP},
+        )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovered_connection"
@@ -341,7 +354,11 @@ async def test_dhcp_invalid_system_id(hass: HomeAssistant) -> None:
         "homeassistant.components.airzone.AirzoneLocalApi.get_version",
         return_value=HVAC_VERSION_MOCK,
     ):
-        result = await DHCP_SERVICE_INFO.start_discovery_flow(hass, DOMAIN)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DHCP_SERVICE_INFO,
+            context={"source": config_entries.SOURCE_DHCP},
+        )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovered_connection"

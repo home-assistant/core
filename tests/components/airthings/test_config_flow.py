@@ -151,7 +151,11 @@ async def test_dhcp_flow(
 ) -> None:
     """Test the DHCP discovery flow."""
 
-    result = await dhcp_service_info.start_discovery_flow(hass, DOMAIN)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=dhcp_service_info,
+        context={"source": config_entries.SOURCE_DHCP},
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
