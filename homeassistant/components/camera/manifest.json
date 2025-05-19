@@ -1,7 +1,7 @@
 {
   "domain": "camera",
   "name": "Camera",
-  "after_dependencies": ["media_player"],
+  "after_dependencies": ["go2rtc", "media_player"],
   "codeowners": ["@home-assistant/core"],
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/camera",
