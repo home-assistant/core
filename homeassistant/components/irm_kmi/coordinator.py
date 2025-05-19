@@ -11,7 +11,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     TimestampDataUpdateCoordinator,
     UpdateFailed,
@@ -19,7 +18,7 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN, IRM_KMI_NAME, OUT_OF_BENELUX
+from .const import DOMAIN, OUT_OF_BENELUX
 from .data import ProcessedCoordinatorData
 from .utils import disable_from_config, get_config_value, preferred_language
 
@@ -44,14 +43,6 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator):
         )
         self._api = api_client
         self._zone = get_config_value(entry, CONF_ZONE)
-        self.shared_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, entry.entry_id)},
-            manufacturer=IRM_KMI_NAME.get(
-                preferred_language(self.hass, self.config_entry)
-            ),
-            name=entry.title,
-        )
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint.
