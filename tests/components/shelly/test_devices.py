@@ -2,7 +2,7 @@
 
 from unittest.mock import Mock
 
-from aioshelly.const import MODEL_2PM_G3
+from aioshelly.const import MODEL_2PM_G3, MODEL_PRO_EM3
 import pytest
 
 from homeassistant.components.shelly.const import DOMAIN
@@ -292,3 +292,146 @@ async def test_shelly_2pm_gen3_cover_with_name(
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
     assert device_entry.name == "Test name"
+
+
+async def test_shelly_pro_3em(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    device_registry: DeviceRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test Shelly Pro 3EM.
+
+    We should get the main device and three subdevices, one subdevice per one phase.
+    """
+    device_fixture = load_json_object_fixture("pro_3em.json", DOMAIN)
+    monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
+    monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
+    monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
+
+    await init_integration(hass, gen=2, model=MODEL_PRO_EM3)
+
+    # Main device
+    entity_id = "sensor.test_name_total_active_power"
+
+    state = hass.states.get(entity_id)
+    assert state
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry
+    assert device_entry.name == "Test name"
+
+    # Phase A sub-device
+    entity_id = "sensor.phase_a_active_power"
+
+    state = hass.states.get(entity_id)
+    assert state
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry
+    assert device_entry.name == "Phase A"
+
+    # Phase B sub-device
+    entity_id = "sensor.phase_b_active_power"
+
+    state = hass.states.get(entity_id)
+    assert state
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry
+    assert device_entry.name == "Phase B"
+
+    # Phase C sub-device
+    entity_id = "sensor.phase_c_active_power"
+
+    state = hass.states.get(entity_id)
+    assert state
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry
+    assert device_entry.name == "Phase C"
+
+
+async def test_shelly_pro_3em_with_emeter_name(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    device_registry: DeviceRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test Shelly Pro 3EM when the name for Emeter is set.
+
+    We should get the main device and three subdevices, one subdevice per one phase.
+    """
+    device_fixture = load_json_object_fixture("pro_3em.json", DOMAIN)
+    device_fixture["config"]["em:0"]["name"] = "Emeter name"
+    monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
+    monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
+    monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
+
+    await init_integration(hass, gen=2, model=MODEL_PRO_EM3)
+
+    # Main device
+    entity_id = "sensor.test_name_total_active_power"
+
+    state = hass.states.get(entity_id)
+    assert state
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry
+    assert device_entry.name == "Test name"
+
+    # Phase A sub-device
+    entity_id = "sensor.phase_a_active_power"
+
+    state = hass.states.get(entity_id)
+    assert state
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry
+    assert device_entry.name == "Phase A"
+
+    # Phase B sub-device
+    entity_id = "sensor.phase_b_active_power"
+
+    state = hass.states.get(entity_id)
+    assert state
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry
+    assert device_entry.name == "Phase B"
+
+    # Phase C sub-device
+    entity_id = "sensor.phase_c_active_power"
+
+    state = hass.states.get(entity_id)
+    assert state
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry
+    assert device_entry.name == "Phase C"

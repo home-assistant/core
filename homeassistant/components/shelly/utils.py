@@ -401,7 +401,8 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     component = key.split(":")[0]
     component_id = key.split(":")[-1]
 
-    if key in device.config:
+    if key in device.config and key != "em:0":
+        # workaround for Pro 3EM, we don't want to get name for em:0
         if component_name := device.config[key].get("name"):
             if component in (*VIRTUAL_COMPONENTS, "script"):
                 return cast(str, component_name)
@@ -414,9 +415,12 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     return None
 
 
-def get_rpc_sub_device_name(device: RpcDevice, key: str) -> str:
+def get_rpc_sub_device_name(
+    device: RpcDevice, key: str, emeter_phase: str | None = None
+) -> str:
     """Get name based on device and channel name."""
-    if key in device.config:
+    if key in device.config and key != "em:0":
+        # workaround for Pro 3EM, we don't want to get name for em:0
         if entity_name := device.config[key].get("name"):
             return cast(str, entity_name)
 
@@ -430,6 +434,8 @@ def get_rpc_sub_device_name(device: RpcDevice, key: str) -> str:
         return f"{component.upper()} light {component_id}"
     if component == "em1":
         return f"Energy Meter {component_id}"
+    if component == "em" and emeter_phase is not None:
+        return f"Phase {emeter_phase}"
 
     return f"{component.title()} {component_id}"
 
@@ -747,6 +753,7 @@ def get_rpc_device_info(
     device: RpcDevice,
     mac: str,
     key: str | None = None,
+    emeter_phase: str | None = None,
 ) -> DeviceInfo:
     """Return device info for RPC device."""
     if key is None:
@@ -754,10 +761,20 @@ def get_rpc_device_info(
 
     # workaround for Pro EM50
     key = key.replace("em1data", "em1")
+    # workaround for Pro 3EM
+    key = key.replace("emdata", "em")
 
     key_parts = key.split(":")
     component = key_parts[0]
     idx = key_parts[1] if len(key_parts) > 1 else None
+
+    if emeter_phase is not None:
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"{mac}-{key}-{emeter_phase.lower()}")},
+            name=get_rpc_sub_device_name(device, key, emeter_phase),
+            manufacturer="Shelly",
+            via_device=(DOMAIN, mac),
+        )
 
     if (
         component not in (*All_LIGHT_TYPES, "cover", "em1", "switch")
