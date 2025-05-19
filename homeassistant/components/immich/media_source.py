@@ -5,10 +5,10 @@ from __future__ import annotations
 from logging import getLogger
 import mimetypes
 
-from aiohttp import web
+from aiohttp.web import HTTPNotFound, Request, Response
 from aioimmich.exceptions import ImmichError
 
-from homeassistant.components import http
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player import MediaClass
 from homeassistant.components.media_source import (
     BrowseError,
@@ -148,7 +148,7 @@ class ImmichMediaSource(MediaSource):
                 media_class=MediaClass.IMAGE,
                 media_content_type=asset.mime_type,
                 title=asset.file_name,
-                can_play=True,
+                can_play=False,
                 can_expand=False,
                 thumbnail=f"/immich/{identifier.unique_id}/{asset.asset_id}/{asset.file_name}/thumbnail",
             )
@@ -172,7 +172,7 @@ class ImmichMediaSource(MediaSource):
         )
 
 
-class ImmichMediaView(http.HomeAssistantView):
+class ImmichMediaView(HomeAssistantView):
     """Immich Media Finder View."""
 
     url = "/immich/{source_dir_id}/{location:.*}"
@@ -183,16 +183,16 @@ class ImmichMediaView(http.HomeAssistantView):
         self.hass = hass
 
     async def get(
-        self, request: web.Request, source_dir_id: str, location: str
-    ) -> web.Response:
+        self, request: Request, source_dir_id: str, location: str
+    ) -> Response:
         """Start a GET request."""
         if not self.hass.config_entries.async_loaded_entries(DOMAIN):
-            raise web.HTTPNotFound
+            raise HTTPNotFound
         asset_id, file_name, size = location.split("/")
 
         mime_type, _ = mimetypes.guess_type(file_name)
         if not isinstance(mime_type, str):
-            raise web.HTTPNotFound
+            raise HTTPNotFound
 
         entry: ImmichConfigEntry | None = (
             self.hass.config_entries.async_entry_for_domain_unique_id(
@@ -205,5 +205,5 @@ class ImmichMediaView(http.HomeAssistantView):
         try:
             image = await immich_api.assets.async_view_asset(asset_id, size)
         except ImmichError as exc:
-            raise web.HTTPNotFound from exc
-        return web.Response(body=image, content_type=mime_type)
+            raise HTTPNotFound from exc
+        return Response(body=image, content_type=mime_type)
