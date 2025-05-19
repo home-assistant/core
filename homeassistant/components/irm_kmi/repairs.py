@@ -1,10 +1,9 @@
 """Repairs for IRM KMI integration."""
 
-import asyncio
 import logging
 from typing import Any
 
-from irm_kmi_api import IrmKmiApiClient
+from irm_kmi_api import IrmKmiApiClient, IrmKmiApiError
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
@@ -64,18 +63,20 @@ class OutOfBeneluxRepairFlow(RepairsFlow):
                     assert zone is not None  # Assert is here for mypy linting.
                     api_data = {}
                     try:
-                        async with asyncio.timeout(10):
-                            api_data = await IrmKmiApiClient(
-                                session=async_get_clientsession(self.hass),
-                                user_agent=USER_AGENT,
-                            ).get_forecasts_coord(
-                                {
-                                    "lat": zone.attributes[ATTR_LATITUDE],
-                                    "long": zone.attributes[ATTR_LONGITUDE],
-                                }
-                            )
-                    except Exception:  # noqa: BLE001
+                        api_data = await IrmKmiApiClient(
+                            session=async_get_clientsession(self.hass),
+                            user_agent=USER_AGENT,
+                        ).get_forecasts_coord(
+                            {
+                                "lat": zone.attributes[ATTR_LATITUDE],
+                                "long": zone.attributes[ATTR_LONGITUDE],
+                            }
+                        )
+                    except IrmKmiApiError:
                         errors[REPAIR_SOLUTION] = "api_error"
+                        _LOGGER.exception(
+                            "Encountered an unexpected error while checking the location with the API"
+                        )
 
                     if api_data.get("cityName", None) in OUT_OF_BENELUX:
                         errors[REPAIR_SOLUTION] = "out_of_benelux"
