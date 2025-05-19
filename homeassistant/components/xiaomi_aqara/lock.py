@@ -40,15 +40,10 @@ class XiaomiAqaraLock(LockEntity, XiaomiDevice):
 
     def __init__(self, device, name, xiaomi_hub, config_entry):
         """Initialize the XiaomiAqaraLock."""
-        self._changed_by = 0
+        self._attr_changed_by = "0"
         self._verified_wrong_times = 0
 
         super().__init__(device, name, xiaomi_hub, config_entry)
-
-    @property
-    def changed_by(self) -> str:
-        """Last change triggered by."""
-        return self._changed_by
 
     @property
     def extra_state_attributes(self) -> dict[str, int]:
