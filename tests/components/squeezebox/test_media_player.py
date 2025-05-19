@@ -89,6 +89,18 @@ async def test_device_registry(
     assert reg_device == snapshot
 
 
+async def test_device_registry_server_merged(
+    hass: HomeAssistant,
+    device_registry: DeviceRegistry,
+    configured_players: MagicMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test squeezebox device registered in the device registry."""
+    reg_device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_MAC[2])})
+    assert reg_device is not None
+    assert reg_device == snapshot
+
+
 async def test_entity_registry(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
@@ -798,6 +810,8 @@ async def test_squeezebox_server_discovery(
     async def mock_async_discover(callback):
         """Mock the async_discover function of pysqueezebox."""
         return callback(lms_factory(2))
+
+    lms.async_prepared_status.return_value = {}
 
     with (
         patch(
