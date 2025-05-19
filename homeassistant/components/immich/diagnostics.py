@@ -6,12 +6,12 @@ from dataclasses import asdict
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from .coordinator import ImmichConfigEntry
 
-TO_REDACT = {CONF_API_KEY}
+TO_REDACT = {CONF_API_KEY, CONF_HOST}
 
 
 async def async_get_config_entry_diagnostics(

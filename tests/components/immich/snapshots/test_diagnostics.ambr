@@ -41,7 +41,7 @@
     'entry': dict({
       'data': dict({
         'api_key': '**REDACTED**',
-        'host': 'localhost',
+        'host': '**REDACTED**',
         'port': 80,
         'ssl': False,
         'verify_ssl': True,
