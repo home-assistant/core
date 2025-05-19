@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 from deebot_client.exceptions import DeebotError, InvalidAuthenticationError
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController

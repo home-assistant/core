@@ -2,7 +2,8 @@
   "common": {
     "unavailable": "Unavailable",
     "abort": "Abort",
-    "vehicle": "Vehicle"
+    "vehicle": "Vehicle",
+    "descr_pin": "4-digit code to enable or disable the setting"
   },
   "config": {
     "abort": {
@@ -489,6 +490,10 @@
       },
       "climate_state_passenger_temp_setting": {
         "name": "Passenger temperature setting"
+      },
+      "credit_balance": {
+        "name": "Teslemetry credits",
+        "unit_of_measurement": "credits"
       },
       "drive_state_active_route_destination": {
         "name": "Destination"
@@ -1016,6 +1021,12 @@
       "charge_rate_mile_per_hour": {
         "name": "Charge rate"
       },
+      "hvac_left_temperature_request": {
+        "name": "Left temperature request"
+      },
+      "hvac_right_temperature_request": {
+        "name": "Right temperature request"
+      },
       "hvac_power_state": {
         "name": "HVAC power state",
         "state": {
@@ -1198,8 +1209,8 @@
           "name": "[%key:common::action::enable%]"
         },
         "pin": {
-          "description": "4 digit PIN.",
-          "name": "PIN"
+          "description": "[%key:component::teslemetry::common::descr_pin%]",
+          "name": "[%key:common::config_flow::data::pin%]"
         }
       },
       "name": "Set speed limit"
@@ -1230,8 +1241,8 @@
           "name": "[%key:common::action::enable%]"
         },
         "pin": {
-          "description": "4 digit PIN.",
-          "name": "PIN"
+          "description": "[%key:component::teslemetry::common::descr_pin%]",
+          "name": "[%key:common::config_flow::data::pin%]"
         }
       },
       "name": "Set valet mode"

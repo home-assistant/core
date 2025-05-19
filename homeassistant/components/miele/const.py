@@ -11,6 +11,7 @@ ACTIONS = "actions"
 POWER_ON = "powerOn"
 POWER_OFF = "powerOff"
 PROCESS_ACTION = "processAction"
+PROGRAM_ID = "programId"
 VENTILATION_STEP = "ventilationStep"
 TARGET_TEMPERATURE = "targetTemperature"
 AMBIENT_LIGHT = "ambientLight"
@@ -298,7 +299,7 @@ STATE_PROGRAM_PHASE_ROBOT_VACUUM_CLEANER = {
     5910: "remote_controlled",
     65535: "not_running",
 }
-STATE_PROGRAM_PHASE_MICROWAVE_OVEN_COMBO = {
+STATE_PROGRAM_PHASE_STEAM_OVEN = {
     0: "not_running",
     3863: "steam_reduction",
     7938: "process_running",
@@ -315,16 +316,25 @@ STATE_PROGRAM_PHASE: dict[int, dict[int, str]] = {
     MieleAppliance.TUMBLE_DRYER: STATE_PROGRAM_PHASE_TUMBLE_DRYER,
     MieleAppliance.DRYER_PROFESSIONAL: STATE_PROGRAM_PHASE_TUMBLE_DRYER,
     MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL: STATE_PROGRAM_PHASE_TUMBLE_DRYER,
+    MieleAppliance.WASHER_DRYER: STATE_PROGRAM_PHASE_WASHING_MACHINE
+    | STATE_PROGRAM_PHASE_TUMBLE_DRYER,
     MieleAppliance.DISHWASHER: STATE_PROGRAM_PHASE_DISHWASHER,
     MieleAppliance.DISHWASHER_SEMI_PROFESSIONAL: STATE_PROGRAM_PHASE_DISHWASHER,
     MieleAppliance.DISHWASHER_PROFESSIONAL: STATE_PROGRAM_PHASE_DISHWASHER,
     MieleAppliance.OVEN: STATE_PROGRAM_PHASE_OVEN,
-    MieleAppliance.OVEN_MICROWAVE: STATE_PROGRAM_PHASE_MICROWAVE_OVEN_COMBO,
-    MieleAppliance.STEAM_OVEN: STATE_PROGRAM_PHASE_OVEN,
+    MieleAppliance.OVEN_MICROWAVE: STATE_PROGRAM_PHASE_MICROWAVE,
+    MieleAppliance.STEAM_OVEN: STATE_PROGRAM_PHASE_STEAM_OVEN,
+    MieleAppliance.STEAM_OVEN_COMBI: STATE_PROGRAM_PHASE_OVEN
+    | STATE_PROGRAM_PHASE_STEAM_OVEN,
+    MieleAppliance.STEAM_OVEN_MICRO: STATE_PROGRAM_PHASE_MICROWAVE
+    | STATE_PROGRAM_PHASE_STEAM_OVEN,
+    MieleAppliance.STEAM_OVEN_MK2: STATE_PROGRAM_PHASE_OVEN
+    | STATE_PROGRAM_PHASE_STEAM_OVEN,
     MieleAppliance.DIALOG_OVEN: STATE_PROGRAM_PHASE_OVEN,
     MieleAppliance.MICROWAVE: STATE_PROGRAM_PHASE_MICROWAVE,
     MieleAppliance.COFFEE_SYSTEM: STATE_PROGRAM_PHASE_COFFEE_SYSTEM,
     MieleAppliance.ROBOT_VACUUM_CLEANER: STATE_PROGRAM_PHASE_ROBOT_VACUUM_CLEANER,
+    MieleAppliance.DISH_WARMER: STATE_PROGRAM_PHASE_WARMING_DRAWER,
 }
 
 
@@ -336,7 +346,21 @@ class StateProgramType(MieleEnum):
     automatic_program = 2
     cleaning_care_program = 3
     maintenance_program = 4
-    unknown = -9999
+    missing2none = -9999
+
+
+class StateDryingStep(MieleEnum):
+    """Defines drying steps."""
+
+    extra_dry = 0
+    normal_plus = 1
+    normal = 2
+    slightly_dry = 3
+    hand_iron_1 = 4
+    hand_iron_2 = 5
+    machine_iron = 6
+    smoothing = 7
+    missing2none = -9999
 
 
 WASHING_MACHINE_PROGRAM_ID: dict[int, str] = {

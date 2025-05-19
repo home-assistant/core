@@ -56,7 +56,6 @@ from tests.common import (
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"
-PLATFORM = "test_platform"
 
 
 async def test_polling_only_updates_entities_it_should_poll(
