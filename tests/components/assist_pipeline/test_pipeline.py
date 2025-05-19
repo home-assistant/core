@@ -1559,18 +1559,21 @@ async def test_pipeline_language_used_instead_of_conversation_language(
 
 
 @pytest.mark.parametrize(
-    "to_stream_tts",
+    ("to_stream_tts", "expected_chunks"),
     [
-        [
-            "hello,",
-            " ",
-            "how",
-            " ",
-            "are",
-            " ",
-            "you",
-            "?",
-        ]
+        (
+            [
+                "hello,",
+                " ",
+                "how",
+                " ",
+                "are",
+                " ",
+                "you",
+                "?",
+            ],
+            1,
+        ),
     ],
 )
 async def test_chat_log_tts_streaming(
@@ -1582,6 +1585,7 @@ async def test_chat_log_tts_streaming(
     mock_tts_entity: MockTTSEntity,
     pipeline_data: assist_pipeline.pipeline.PipelineData,
     to_stream_tts: list[str],
+    expected_chunks: int,
 ) -> None:
     """Test that chat log events are streamed to the TTS entity."""
     events: list[assist_pipeline.PipelineEvent] = []
@@ -1625,6 +1629,7 @@ async def test_chat_log_tts_streaming(
         )
 
     mock_tts_entity.async_stream_tts_audio = async_stream_tts_audio
+    mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
 
     with patch(
         "homeassistant.components.assist_pipeline.pipeline.conversation.async_get_agent_info",
@@ -1692,7 +1697,7 @@ async def test_chat_log_tts_streaming(
 
     streamed_text = "".join(to_stream_tts)
     assert tts_result == streamed_text
-    assert len(received_tts) == 1
+    assert len(received_tts) == expected_chunks
     assert "".join(received_tts) == streamed_text
 
     assert process_events(events) == snapshot
