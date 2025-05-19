@@ -22,10 +22,10 @@ from .coordinator import ActronNeoDataUpdateCoordinator
 PARALLEL_UPDATES = 0
 
 FAN_MODE_MAPPING = {
-    "auto": "AUTO",
-    "low": "LOW",
-    "medium": "MED",
-    "high": "HIGH",
+    "AUTO": "auto",
+    "LOW": "low",
+    "MED": "medium",
+    "HIGH": "high",
 }
 FAN_MODE_MAPPING_REVERSE = {v: k for k, v in FAN_MODE_MAPPING.items()}
 HVAC_MODE_MAPPING = {
@@ -117,7 +117,7 @@ class ActronSystemClimate(
     def fan_mode(self) -> str | None:
         """Return the current fan mode."""
         fan_mode = self._status.user_aircon_settings.fan_mode
-        return FAN_MODE_MAPPING_REVERSE.get(fan_mode)
+        return FAN_MODE_MAPPING.get(fan_mode)
 
     @property
     def current_humidity(self) -> float:
@@ -146,7 +146,7 @@ class ActronSystemClimate(
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set a new fan mode."""
-        api_fan_mode = FAN_MODE_MAPPING.get(fan_mode.lower())
+        api_fan_mode = FAN_MODE_MAPPING_REVERSE.get(fan_mode.lower())
         await self._status.user_aircon_settings.set_fan_mode(api_fan_mode)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
