@@ -1,6 +1,9 @@
 """Support for Xiaomi aqara binary sensors."""
 
 import logging
+from typing import Any
+
+from xiaomi_gateway import XiaomiGateway
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -137,7 +140,15 @@ async def async_setup_entry(
 class XiaomiBinarySensor(XiaomiDevice, BinarySensorEntity):
     """Representation of a base XiaomiBinarySensor."""
 
-    def __init__(self, device, name, xiaomi_hub, data_key, device_class, config_entry):
+    def __init__(
+        self,
+        device: dict[str, Any],
+        name: str,
+        xiaomi_hub: XiaomiGateway,
+        data_key: str,
+        device_class: BinarySensorDeviceClass | None,
+        config_entry: ConfigEntry,
+    ) -> None:
         """Initialize the XiaomiSmokeSensor."""
         self._data_key = data_key
         self._attr_device_class = device_class
@@ -152,11 +163,21 @@ class XiaomiBinarySensor(XiaomiDevice, BinarySensorEntity):
 class XiaomiNatgasSensor(XiaomiBinarySensor):
     """Representation of a XiaomiNatgasSensor."""
 
-    def __init__(self, device, xiaomi_hub, config_entry):
+    def __init__(
+        self,
+        device: dict[str, Any],
+        xiaomi_hub: XiaomiGateway,
+        config_entry: ConfigEntry,
+    ) -> None:
         """Initialize the XiaomiSmokeSensor."""
         self._density = None
         super().__init__(
-            device, "Natgas Sensor", xiaomi_hub, "alarm", "gas", config_entry
+            device,
+            "Natgas Sensor",
+            xiaomi_hub,
+            "alarm",
+            BinarySensorDeviceClass.GAS,
+            config_entry,
         )
 
     @property
@@ -197,7 +218,13 @@ class XiaomiNatgasSensor(XiaomiBinarySensor):
 class XiaomiMotionSensor(XiaomiBinarySensor):
     """Representation of a XiaomiMotionSensor."""
 
-    def __init__(self, device, hass, xiaomi_hub, config_entry):
+    def __init__(
+        self,
+        device: dict[str, Any],
+        hass: HomeAssistant,
+        xiaomi_hub: XiaomiGateway,
+        config_entry: ConfigEntry,
+    ) -> None:
         """Initialize the XiaomiMotionSensor."""
         self._hass = hass
         self._no_motion_since = 0
@@ -207,7 +234,12 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         else:
             data_key = "motion_status"
         super().__init__(
-            device, "Motion Sensor", xiaomi_hub, data_key, "motion", config_entry
+            device,
+            "Motion Sensor",
+            xiaomi_hub,
+            data_key,
+            BinarySensorDeviceClass.MOTION,
+            config_entry,
         )
 
     @property
@@ -295,7 +327,12 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
 class XiaomiDoorSensor(XiaomiBinarySensor, RestoreEntity):
     """Representation of a XiaomiDoorSensor."""
 
-    def __init__(self, device, xiaomi_hub, config_entry):
+    def __init__(
+        self,
+        device: dict[str, Any],
+        xiaomi_hub: XiaomiGateway,
+        config_entry: ConfigEntry,
+    ) -> None:
         """Initialize the XiaomiDoorSensor."""
         self._open_since = 0
         if "proto" not in device or int(device["proto"][0:1]) == 1:
@@ -356,7 +393,12 @@ class XiaomiDoorSensor(XiaomiBinarySensor, RestoreEntity):
 class XiaomiWaterLeakSensor(XiaomiBinarySensor):
     """Representation of a XiaomiWaterLeakSensor."""
 
-    def __init__(self, device, xiaomi_hub, config_entry):
+    def __init__(
+        self,
+        device: dict[str, Any],
+        xiaomi_hub: XiaomiGateway,
+        config_entry: ConfigEntry,
+    ) -> None:
         """Initialize the XiaomiWaterLeakSensor."""
         if "proto" not in device or int(device["proto"][0:1]) == 1:
             data_key = "status"
@@ -402,11 +444,21 @@ class XiaomiWaterLeakSensor(XiaomiBinarySensor):
 class XiaomiSmokeSensor(XiaomiBinarySensor):
     """Representation of a XiaomiSmokeSensor."""
 
-    def __init__(self, device, xiaomi_hub, config_entry):
+    def __init__(
+        self,
+        device: dict[str, Any],
+        xiaomi_hub: XiaomiGateway,
+        config_entry: ConfigEntry,
+    ) -> None:
         """Initialize the XiaomiSmokeSensor."""
         self._density = 0
         super().__init__(
-            device, "Smoke Sensor", xiaomi_hub, "alarm", "smoke", config_entry
+            device,
+            "Smoke Sensor",
+            xiaomi_hub,
+            "alarm",
+            BinarySensorDeviceClass.SMOKE,
+            config_entry,
         )
 
     @property
@@ -446,7 +498,14 @@ class XiaomiSmokeSensor(XiaomiBinarySensor):
 class XiaomiVibration(XiaomiBinarySensor):
     """Representation of a Xiaomi Vibration Sensor."""
 
-    def __init__(self, device, name, data_key, xiaomi_hub, config_entry):
+    def __init__(
+        self,
+        device: dict[str, Any],
+        name: str,
+        data_key: str,
+        xiaomi_hub: XiaomiGateway,
+        config_entry: ConfigEntry,
+    ) -> None:
         """Initialize the XiaomiVibration."""
         self._last_action = None
         super().__init__(device, name, xiaomi_hub, data_key, None, config_entry)
@@ -485,7 +544,15 @@ class XiaomiVibration(XiaomiBinarySensor):
 class XiaomiButton(XiaomiBinarySensor):
     """Representation of a Xiaomi Button."""
 
-    def __init__(self, device, name, data_key, hass, xiaomi_hub, config_entry):
+    def __init__(
+        self,
+        device: dict[str, Any],
+        name: str,
+        data_key: str,
+        hass: HomeAssistant,
+        xiaomi_hub: XiaomiGateway,
+        config_entry: ConfigEntry,
+    ) -> None:
         """Initialize the XiaomiButton."""
         self._hass = hass
         self._last_action = None
@@ -545,7 +612,13 @@ class XiaomiButton(XiaomiBinarySensor):
 class XiaomiCube(XiaomiBinarySensor):
     """Representation of a Xiaomi Cube."""
 
-    def __init__(self, device, hass, xiaomi_hub, config_entry):
+    def __init__(
+        self,
+        device: dict[str, Any],
+        hass: HomeAssistant,
+        xiaomi_hub: XiaomiGateway,
+        config_entry: ConfigEntry,
+    ) -> None:
         """Initialize the Xiaomi Cube."""
         self._hass = hass
         self._last_action = None

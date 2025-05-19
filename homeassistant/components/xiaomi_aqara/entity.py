@@ -2,8 +2,11 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
+from xiaomi_gateway import XiaomiGateway
+
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, CONF_MAC
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
@@ -24,7 +27,13 @@ class XiaomiDevice(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, device, device_type, xiaomi_hub, config_entry):
+    def __init__(
+        self,
+        device: dict[str, Any],
+        device_type: str,
+        xiaomi_hub: XiaomiGateway,
+        config_entry: ConfigEntry,
+    ) -> None:
         """Initialize the Xiaomi device."""
         self._is_available = True
         self._sid = device["sid"]
@@ -50,6 +59,8 @@ class XiaomiDevice(Entity):
         if config_entry.data[CONF_MAC] == format_mac(self._sid):
             # this entity belongs to the gateway itself
             self._is_gateway = True
+            if TYPE_CHECKING:
+                assert config_entry.unique_id
             self._device_id = config_entry.unique_id
         else:
             # this entity is connected through zigbee
@@ -86,6 +97,8 @@ class XiaomiDevice(Entity):
                 model=self._model,
             )
         else:
+            if TYPE_CHECKING:
+                assert self._gateway_id is not None
             device_info = DeviceInfo(
                 connections={(dr.CONNECTION_ZIGBEE, self._device_id)},
                 identifiers={(DOMAIN, self._device_id)},
