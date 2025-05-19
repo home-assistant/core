@@ -68,7 +68,7 @@ class ActronSystemClimate(
     """Representation of the Actron Air Neo system."""
 
     _attr_has_entity_name = True
-    _attr_fan_modes = ["auto", "low", "medium", "high"]
+    _attr_fan_modes = list(FAN_MODE_MAPPING.values())
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
@@ -77,7 +77,7 @@ class ActronSystemClimate(
         | ClimateEntityFeature.TURN_OFF
     )
     _attr_name = None
-    _attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT, HVACMode.AUTO]
+    _attr_hvac_modes = list(HVAC_MODE_MAPPING.values())
 
     def __init__(
         self,
