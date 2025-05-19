@@ -24,7 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import dt as dt_util
 
 from . import NtfyConfigEntry
 from .const import CONF_TOPIC, DOMAIN
@@ -131,5 +130,3 @@ class NtfyNotifyEntity(NotifyEntity):
                 translation_key="publish_failed_exception",
                 translation_domain=DOMAIN,
             ) from e
-        self._NotifyEntity__set_state(dt_util.utcnow().isoformat())  # type: ignore[attr-defined]
-        self.async_write_ha_state()
