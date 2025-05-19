@@ -2577,9 +2577,11 @@ def from_hex(value: str) -> bytes:
     return bytes.fromhex(value)
 
 
-def base64_encode(value: str) -> str:
+def base64_encode(value: str | bytes) -> str:
     """Perform base64 encode."""
-    return base64.b64encode(value.encode("utf-8")).decode("utf-8")
+    if isinstance(value, str):
+        value = value.encode("utf-8")
+    return base64.b64encode(value).decode("utf-8")
 
 
 def base64_decode(value: str, encoding: str | None = "utf-8") -> str | bytes:
