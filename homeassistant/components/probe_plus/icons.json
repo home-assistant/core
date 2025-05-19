@@ -4,12 +4,6 @@
       "probe_temperature": {
         "default": "mdi:thermometer-bluetooth"
       },
-      "probe_battery": {
-        "default": "mdi:battery"
-      },
-      "relay_battery": {
-        "default": "mdi:battery"
-      },
       "probe_rssi": {
         "default": "mdi:bluetooth-connect"
       },

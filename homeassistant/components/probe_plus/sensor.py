@@ -3,7 +3,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from homeassistant import config_entries
 from homeassistant.components.sensor import (
     RestoreSensor,
     SensorDeviceClass,
@@ -20,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import ProbePlusDevice
+from .coordinator import ProbePlusConfigEntry, ProbePlusDevice
 from .entity import ProbePlusEntity
 
 # Coordinator is used to centralize the data updates
@@ -88,7 +87,7 @@ SENSOR_DESCRIPTIONS: tuple[ProbePlusSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: ProbePlusConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Probe Plus sensors."""

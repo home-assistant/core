@@ -36,11 +36,11 @@ class ProbePlusEntity(CoordinatorEntity[ProbePlusDataUpdateCoordinator]):
             f"{format_mac(coordinator.device.mac)}_{entity_description.key}"
         )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, format_mac(self.coordinator.device.mac))},
-            name=self.coordinator.device.name,
+            identifiers={(DOMAIN, format_mac(coordinator.device.mac))},
+            name=coordinator.device.name,
             manufacturer="Probe Plus",
             suggested_area="Kitchen",
-            connections={(CONNECTION_BLUETOOTH, self.coordinator.device.mac)},
+            connections={(CONNECTION_BLUETOOTH, coordinator.device.mac)},
         )
 
     @property
