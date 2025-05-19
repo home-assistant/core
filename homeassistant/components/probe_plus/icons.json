@@ -3,15 +3,6 @@
     "sensor": {
       "probe_temperature": {
         "default": "mdi:thermometer-bluetooth"
-      },
-      "probe_rssi": {
-        "default": "mdi:bluetooth-connect"
-      },
-      "probe_voltage": {
-        "default": "mdi:flash-triangle"
-      },
-      "relay_voltage": {
-        "default": "mdi:flash-triangle"
       }
     }
   }
