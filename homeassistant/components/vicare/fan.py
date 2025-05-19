@@ -127,6 +127,7 @@ class ViCareFan(ViCareEntity, FanEntity):
 
     _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
     _attr_translation_key = "ventilation"
+    _attributes: dict[str, Any] = {}
 
     def __init__(
         self,
@@ -155,7 +156,7 @@ class ViCareFan(ViCareEntity, FanEntity):
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
 
         # evaluate quickmodes
-        quickmodes: list[str] = (
+        self._attributes["vicare_quickmodes"] = quickmodes = list[str](
             device.getVentilationQuickmodes()
             if is_supported(
                 "getVentilationQuickmodes",
@@ -196,20 +197,23 @@ class ViCareFan(ViCareEntity, FanEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the entity is on."""
-        if self._api.getVentilationQuickmode(VentilationQuickmode.STANDBY):
+        if VentilationQuickmode.STANDBY in self._attributes[
+            "vicare_quickmodes"
+        ] and self._api.getVentilationQuickmode(VentilationQuickmode.STANDBY):
             return False
 
         return self.percentage is not None and self.percentage > 0
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-
         self._api.activateVentilationQuickmode(str(VentilationQuickmode.STANDBY))
 
     @property
     def icon(self) -> str | None:
         """Return the icon to use in the frontend."""
-        if self._api.getVentilationQuickmode(VentilationQuickmode.STANDBY):
+        if VentilationQuickmode.STANDBY in self._attributes[
+            "vicare_quickmodes"
+        ] and self._api.getVentilationQuickmode(VentilationQuickmode.STANDBY):
             return "mdi:fan-off"
         if hasattr(self, "_attr_preset_mode"):
             if self._attr_preset_mode == VentilationMode.VENTILATION:
@@ -236,7 +240,9 @@ class ViCareFan(ViCareEntity, FanEntity):
         """Set the speed of the fan, as a percentage."""
         if self._attr_preset_mode != str(VentilationMode.PERMANENT):
             self.set_preset_mode(VentilationMode.PERMANENT)
-        elif self._api.getVentilationQuickmode(VentilationQuickmode.STANDBY):
+        elif VentilationQuickmode.STANDBY in self._attributes[
+            "vicare_quickmodes"
+        ] and self._api.getVentilationQuickmode(VentilationQuickmode.STANDBY):
             self._api.deactivateVentilationQuickmode(str(VentilationQuickmode.STANDBY))
 
         level = percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)
@@ -248,3 +254,8 @@ class ViCareFan(ViCareEntity, FanEntity):
         target_mode = VentilationMode.to_vicare_mode(preset_mode)
         _LOGGER.debug("changing ventilation mode to %s", target_mode)
         self._api.activateVentilationMode(target_mode)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Show Device Attributes."""
+        return self._attributes

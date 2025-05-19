@@ -1,5 +1,7 @@
 """template conftest."""
 
+from enum import Enum
+
 import pytest
 
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -7,6 +9,14 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_mock_service
+
+
+class ConfigurationStyle(Enum):
+    """Configuration Styles for template testing."""
+
+    LEGACY = "Legacy"
+    MODERN = "Modern"
+    TRIGGER = "Trigger"
 
 
 @pytest.fixture

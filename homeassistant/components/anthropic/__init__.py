@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN, LOGGER
+from .const import CONF_CHAT_MODEL, DOMAIN, LOGGER, RECOMMENDED_CHAT_MODEL
 
 PLATFORMS = (Platform.CONVERSATION,)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -26,12 +26,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) ->
         partial(anthropic.AsyncAnthropic, api_key=entry.data[CONF_API_KEY])
     )
     try:
-        await client.messages.create(
-            model="claude-3-haiku-20240307",
-            max_tokens=1,
-            messages=[{"role": "user", "content": "Hi"}],
-            timeout=10.0,
-        )
+        model_id = entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        model = await client.models.retrieve(model_id=model_id, timeout=10.0)
+        LOGGER.debug("Anthropic model: %s", model.display_name)
     except anthropic.AuthenticationError as err:
         LOGGER.error("Invalid API key: %s", err)
         return False

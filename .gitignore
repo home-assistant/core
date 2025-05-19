@@ -69,6 +69,7 @@ test-reports/
 test-results.xml
 test-output.xml
 pytest-*.txt
+junit.xml
 
 # Translations
 *.mo

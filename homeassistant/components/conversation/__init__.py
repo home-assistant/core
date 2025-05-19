@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-import re
 from typing import Literal
 
 from hassil.recognize import RecognizeResult
@@ -90,8 +89,6 @@ __all__ = [
 ]
 
 _LOGGER = logging.getLogger(__name__)
-
-REGEX_TYPE = type(re.compile(""))
 
 SERVICE_PROCESS_SCHEMA = vol.Schema(
     {

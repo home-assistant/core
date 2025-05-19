@@ -62,12 +62,14 @@ class ConversationResult:
 
     response: intent.IntentResponse
     conversation_id: str | None = None
+    continue_conversation: bool = False
 
     def as_dict(self) -> dict[str, Any]:
         """Return result as a dict."""
         return {
             "response": self.response.as_dict(),
             "conversation_id": self.conversation_id,
+            "continue_conversation": self.continue_conversation,
         }
 
 

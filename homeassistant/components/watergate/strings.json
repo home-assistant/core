@@ -19,6 +19,42 @@
     }
   },
   "entity": {
+    "event": {
+      "auto_shut_off_volume": {
+        "name": "Volume auto shut-off",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "volume_threshold": "Volume",
+              "duration_threshold": "Duration"
+            }
+          },
+          "volume": {
+            "name": "[%key:component::watergate::entity::event::auto_shut_off_volume::state_attributes::event_type::state::volume_threshold%]"
+          },
+          "duration": {
+            "name": "[%key:component::watergate::entity::event::auto_shut_off_volume::state_attributes::event_type::state::duration_threshold%]"
+          }
+        }
+      },
+      "auto_shut_off_duration": {
+        "name": "Duration auto shut-off",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "volume_threshold": "[%key:component::watergate::entity::event::auto_shut_off_volume::state_attributes::event_type::state::volume_threshold%]",
+              "duration_threshold": "[%key:component::watergate::entity::event::auto_shut_off_volume::state_attributes::event_type::state::duration_threshold%]"
+            }
+          },
+          "volume": {
+            "name": "[%key:component::watergate::entity::event::auto_shut_off_volume::state_attributes::event_type::state::volume_threshold%]"
+          },
+          "duration": {
+            "name": "[%key:component::watergate::entity::event::auto_shut_off_volume::state_attributes::event_type::state::duration_threshold%]"
+          }
+        }
+      }
+    },
     "sensor": {
       "water_meter_volume": {
         "name": "Water meter volume"

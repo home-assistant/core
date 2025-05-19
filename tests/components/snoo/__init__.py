@@ -1,5 +1,11 @@
 """Tests for the Happiest Baby Snoo integration."""
 
+from collections.abc import Awaitable, Callable
+from unittest.mock import AsyncMock
+
+import pytest
+from python_snoo.containers import SnooData
+
 from homeassistant.components.snoo.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -36,3 +42,13 @@ async def async_init_integration(hass: HomeAssistant) -> ConfigEntry:
     await hass.async_block_till_done()
 
     return entry
+
+
+def find_update_callback(
+    mock: AsyncMock, serial_number: str
+) -> Callable[[SnooData], Awaitable[None]]:
+    """Find the update callback for a specific identifier."""
+    for call in mock.subscribe.call_args_list:
+        if call[0][0].serialNumber == serial_number:
+            return call[0][1]
+    pytest.fail(f"Callback for identifier {serial_number} not found")

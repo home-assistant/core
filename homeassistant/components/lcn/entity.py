@@ -3,18 +3,19 @@
 from collections.abc import Callable
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_RESOURCE
+from homeassistant.const import CONF_ADDRESS, CONF_DOMAIN, CONF_NAME
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import CONF_DOMAIN_DATA, DOMAIN
 from .helpers import (
     AddressType,
     DeviceConnectionType,
     InputType,
     generate_unique_id,
     get_device_connection,
+    get_resource,
 )
 
 
@@ -22,6 +23,7 @@ class LcnEntity(Entity):
     """Parent class for all entities associated with the LCN component."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
     device_connection: DeviceConnectionType
 
     def __init__(
@@ -48,7 +50,11 @@ class LcnEntity(Entity):
     def unique_id(self) -> str:
         """Return a unique ID."""
         return generate_unique_id(
-            self.config_entry.entry_id, self.address, self.config[CONF_RESOURCE]
+            self.config_entry.entry_id,
+            self.address,
+            get_resource(
+                self.config[CONF_DOMAIN], self.config[CONF_DOMAIN_DATA]
+            ).lower(),
         )
 
     async def async_added_to_hass(self) -> None:

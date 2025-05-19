@@ -102,8 +102,8 @@ class PlayerMockData:
         )
         player.presets = AsyncMock(
             return_value=[
-                Preset("preset1", "1", "url1", "image1", None),
-                Preset("preset2", "2", "url2", "image2", None),
+                Preset("preset1", 1, "url1", "image1", None),
+                Preset("preset2", 2, "url2", "image2", None),
             ]
         )
 

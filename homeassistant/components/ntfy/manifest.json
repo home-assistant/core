@@ -1,0 +1,11 @@
+{
+  "domain": "ntfy",
+  "name": "ntfy",
+  "codeowners": ["@tr4nt0r"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/ntfy",
+  "iot_class": "cloud_push",
+  "loggers": ["aionfty"],
+  "quality_scale": "bronze",
+  "requirements": ["aiontfy==0.5.2"]
+}

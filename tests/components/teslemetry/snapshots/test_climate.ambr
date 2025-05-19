@@ -1,10 +1,4 @@
 # serializer version: 1
-# name: test_asleep_or_offline[HomeAssistantError]
-  'Timed out trying to wake up vehicle'
-# ---
-# name: test_asleep_or_offline[InvalidCommand]
-  'Failed to wake up vehicle: The data request or command is unknown.'
-# ---
 # name: test_climate[climate.test_cabin_overheat_protection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -78,6 +72,10 @@
     }),
     'area_id': None,
     'capabilities': dict({
+      'fan_modes': list([
+        'off',
+        'bioweapon',
+      ]),
       'hvac_modes': list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.OFF: 'off'>,
@@ -113,7 +111,7 @@
     'original_name': 'Climate',
     'platform': 'teslemetry',
     'previous_unique_id': None,
-    'supported_features': <ClimateEntityFeature: 401>,
+    'supported_features': <ClimateEntityFeature: 409>,
     'translation_key': <TeslemetryClimateSide.DRIVER: 'driver_temp'>,
     'unique_id': 'LRW3F7EK4NC700000-driver_temp',
     'unit_of_measurement': None,
@@ -123,6 +121,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 30.0,
+      'fan_mode': 'off',
+      'fan_modes': list([
+        'off',
+        'bioweapon',
+      ]),
       'friendly_name': 'Test Climate',
       'hvac_modes': list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
@@ -137,7 +140,7 @@
         'dog',
         'camp',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
+      'supported_features': <ClimateEntityFeature: 409>,
       'temperature': 22.0,
     }),
     'context': <ANY>,
@@ -220,6 +223,10 @@
     }),
     'area_id': None,
     'capabilities': dict({
+      'fan_modes': list([
+        'off',
+        'bioweapon',
+      ]),
       'hvac_modes': list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.OFF: 'off'>,
@@ -255,7 +262,7 @@
     'original_name': 'Climate',
     'platform': 'teslemetry',
     'previous_unique_id': None,
-    'supported_features': <ClimateEntityFeature: 401>,
+    'supported_features': <ClimateEntityFeature: 409>,
     'translation_key': <TeslemetryClimateSide.DRIVER: 'driver_temp'>,
     'unique_id': 'LRW3F7EK4NC700000-driver_temp',
     'unit_of_measurement': None,
@@ -265,6 +272,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 30.0,
+      'fan_mode': 'off',
+      'fan_modes': list([
+        'off',
+        'bioweapon',
+      ]),
       'friendly_name': 'Test Climate',
       'hvac_modes': list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
@@ -279,7 +291,7 @@
         'dog',
         'camp',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
+      'supported_features': <ClimateEntityFeature: 409>,
       'temperature': 22.0,
     }),
     'context': <ANY>,
@@ -297,7 +309,9 @@
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
       ]),
       'max_temp': 40,
       'min_temp': 30,
@@ -339,6 +353,7 @@
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.OFF: 'off'>,
       ]),
       'max_temp': 28.0,
       'min_temp': 15.0,
@@ -373,4 +388,86 @@
 # ---
 # name: test_invalid_error[error]
   'Command returned exception: The data request or command is unknown.'
+# ---
+# name: test_select_streaming[climate.test_cabin_overheat_protection]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': None,
+      'friendly_name': 'Test Cabin overheat protection',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+      ]),
+      'max_temp': 40,
+      'min_temp': 30,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'target_temp_step': 5,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test_cabin_overheat_protection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cool',
+  })
+# ---
+# name: test_select_streaming[climate.test_climate LHD]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 26.0,
+      'friendly_name': 'Test Climate',
+      'hvac_modes': list([
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 28.0,
+      'min_temp': 15.0,
+      'preset_mode': None,
+      'preset_modes': list([
+        'off',
+        'keep',
+        'dog',
+        'camp',
+      ]),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 21.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test_climate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_select_streaming[climate.test_climate]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 26.0,
+      'friendly_name': 'Test Climate',
+      'hvac_modes': list([
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 28.0,
+      'min_temp': 15.0,
+      'preset_mode': None,
+      'preset_modes': list([
+        'off',
+        'keep',
+        'dog',
+        'camp',
+      ]),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 21.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test_climate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
 # ---

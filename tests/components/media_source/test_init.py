@@ -114,7 +114,6 @@ async def test_async_resolve_media(hass: HomeAssistant) -> None:
     assert media.mime_type == "audio/mpeg"
 
 
-@patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
 async def test_async_resolve_media_no_entity(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:

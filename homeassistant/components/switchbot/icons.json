@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "normal": "mdi:fan",
+              "natural": "mdi:leaf",
+              "sleep": "mdi:power-sleep",
+              "baby": "mdi:baby-face-outline"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,189 @@
+# serializer version: 1
+# name: test_button_states[platforms0][button.hood_stop-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.hood_stop',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Stop',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'stop',
+    'unique_id': 'DummyAppliance_18-stop',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_states[platforms0][button.hood_stop-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Hood Stop',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.hood_stop',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_states[platforms0][button.washing_machine_pause-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.washing_machine_pause',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pause',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pause',
+    'unique_id': 'Dummy_Appliance_3-pause',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_states[platforms0][button.washing_machine_pause-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Washing machine Pause',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.washing_machine_pause',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_states[platforms0][button.washing_machine_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.washing_machine_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Start',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'start',
+    'unique_id': 'Dummy_Appliance_3-start',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_states[platforms0][button.washing_machine_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Washing machine Start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.washing_machine_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_states[platforms0][button.washing_machine_stop-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.washing_machine_stop',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Stop',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'stop',
+    'unique_id': 'Dummy_Appliance_3-stop',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_states[platforms0][button.washing_machine_stop-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Washing machine Stop',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.washing_machine_stop',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

@@ -42,7 +42,6 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
     OWM_MODE_FREE_FORECAST,
-    OWM_MODE_V25,
     OWM_MODE_V30,
 )
 from .coordinator import WeatherUpdateCoordinator
@@ -80,6 +79,8 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordina
 
     _attr_attribution = ATTRIBUTION
     _attr_should_poll = False
+    _attr_has_entity_name = True
+    _attr_name = None
 
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
     _attr_native_pressure_unit = UnitOfPressure.HPA
@@ -96,17 +97,16 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordina
     ) -> None:
         """Initialize the sensor."""
         super().__init__(weather_coordinator)
-        self._attr_name = name
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, unique_id)},
             manufacturer=MANUFACTURER,
-            name=DEFAULT_NAME,
+            name=name,
         )
         self.mode = mode
 
-        if mode in (OWM_MODE_V30, OWM_MODE_V25):
+        if mode == OWM_MODE_V30:
             self._attr_supported_features = (
                 WeatherEntityFeature.FORECAST_DAILY
                 | WeatherEntityFeature.FORECAST_HOURLY

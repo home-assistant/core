@@ -51,7 +51,7 @@ async def test_services(
     ).device_id
 
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.navigation_gps_request",
+        "tesla_fleet_api.teslemetry.Vehicle.navigation_gps_request",
         return_value=COMMAND_OK,
     ) as navigation_gps_request:
         await hass.services.async_call(
@@ -66,7 +66,7 @@ async def test_services(
         navigation_gps_request.assert_called_once()
 
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.set_scheduled_charging",
+        "tesla_fleet_api.teslemetry.Vehicle.set_scheduled_charging",
         return_value=COMMAND_OK,
     ) as set_scheduled_charging:
         await hass.services.async_call(
@@ -93,7 +93,7 @@ async def test_services(
         )
 
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.set_scheduled_departure",
+        "tesla_fleet_api.teslemetry.Vehicle.set_scheduled_departure",
         return_value=COMMAND_OK,
     ) as set_scheduled_departure:
         await hass.services.async_call(
@@ -138,7 +138,7 @@ async def test_services(
         )
 
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.set_valet_mode",
+        "tesla_fleet_api.teslemetry.Vehicle.set_valet_mode",
         return_value=COMMAND_OK,
     ) as set_valet_mode:
         await hass.services.async_call(
@@ -154,7 +154,7 @@ async def test_services(
         set_valet_mode.assert_called_once()
 
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.speed_limit_activate",
+        "tesla_fleet_api.teslemetry.Vehicle.speed_limit_activate",
         return_value=COMMAND_OK,
     ) as speed_limit_activate:
         await hass.services.async_call(
@@ -170,7 +170,7 @@ async def test_services(
         speed_limit_activate.assert_called_once()
 
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.speed_limit_deactivate",
+        "tesla_fleet_api.teslemetry.Vehicle.speed_limit_deactivate",
         return_value=COMMAND_OK,
     ) as speed_limit_deactivate:
         await hass.services.async_call(
@@ -186,7 +186,7 @@ async def test_services(
         speed_limit_deactivate.assert_called_once()
 
     with patch(
-        "homeassistant.components.teslemetry.EnergySpecific.time_of_use_settings",
+        "tesla_fleet_api.teslemetry.EnergySite.time_of_use_settings",
         return_value=COMMAND_OK,
     ) as set_time_of_use:
         await hass.services.async_call(
@@ -202,7 +202,7 @@ async def test_services(
 
     with (
         patch(
-            "homeassistant.components.teslemetry.EnergySpecific.time_of_use_settings",
+            "tesla_fleet_api.teslemetry.EnergySite.time_of_use_settings",
             return_value=COMMAND_ERROR,
         ) as set_time_of_use,
         pytest.raises(HomeAssistantError),

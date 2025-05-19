@@ -1,0 +1,362 @@
+{
+  "components": {
+    "main": {
+      "samsungce.rechargeableBattery": {
+        "chargingStatus": {
+          "value": "charging",
+          "timestamp": "2025-02-18T05:20:27.966Z"
+        },
+        "battery": {
+          "value": 100,
+          "unit": "%",
+          "timestamp": "2025-02-22T04:50:19.633Z"
+        },
+        "resolution": {
+          "value": 1,
+          "timestamp": "2024-12-20T14:38:31.662Z"
+        }
+      },
+      "relativeHumidityMeasurement": {
+        "humidity": {
+          "value": 54,
+          "unit": "%",
+          "timestamp": "2025-03-21T07:26:16.872Z"
+        }
+      },
+      "refresh": {},
+      "carbonDioxideHealthConcern": {
+        "carbonDioxideHealthConcern": {
+          "value": "moderate",
+          "timestamp": "2025-03-21T13:40:56.560Z"
+        }
+      },
+      "execute": {
+        "data": {
+          "value": {
+            "payload": {
+              "rt": ["x.com.samsung.da.sensors"],
+              "if": ["oic.if.baseline", "oic.if.s"],
+              "x.com.samsung.da.cleanLevel": "2",
+              "x.com.samsung.da.refresh": "Off",
+              "x.com.samsung.da.lastSensingTime": "1740829045",
+              "x.com.samsung.da.items": [
+                {
+                  "x.com.samsung.da.id": "0",
+                  "x.com.samsung.da.description": "Sensor for CleanLevel",
+                  "x.com.samsung.da.type": "CleanLevel",
+                  "x.com.samsung.da.value": ["2"]
+                },
+                {
+                  "x.com.samsung.da.id": "1",
+                  "x.com.samsung.da.description": "Sensor for Odor",
+                  "x.com.samsung.da.type": "Odor",
+                  "x.com.samsung.da.value": ["2"]
+                },
+                {
+                  "x.com.samsung.da.id": "2",
+                  "x.com.samsung.da.description": "Sensor for Dust",
+                  "x.com.samsung.da.type": "Dust",
+                  "x.com.samsung.da.value": ["29", "1"]
+                },
+                {
+                  "x.com.samsung.da.id": "3",
+                  "x.com.samsung.da.description": "Sensor for FineDust",
+                  "x.com.samsung.da.type": "FineDust",
+                  "x.com.samsung.da.value": ["7", "1"]
+                },
+                {
+                  "x.com.samsung.da.id": "4",
+                  "x.com.samsung.da.description": "Sensor for SuperFineDust",
+                  "x.com.samsung.da.type": "SuperFineDust",
+                  "x.com.samsung.da.value": ["6", "1"]
+                },
+                {
+                  "x.com.samsung.da.id": "5",
+                  "x.com.samsung.da.description": "Sensor for CO2",
+                  "x.com.samsung.da.type": "CO2",
+                  "x.com.samsung.da.value": ["2527", "3"]
+                }
+              ]
+            }
+          },
+          "data": {
+            "href": "/sensors/vs/0"
+          },
+          "timestamp": "2025-03-01T11:37:26.334Z"
+        }
+      },
+      "carbonDioxideMeasurement": {
+        "carbonDioxide": {
+          "value": 1045,
+          "unit": "ppm",
+          "timestamp": "2025-03-21T15:05:44.312Z"
+        }
+      },
+      "samsungce.deviceIdentification": {
+        "micomAssayCode": {
+          "value": null
+        },
+        "modelName": {
+          "value": null
+        },
+        "serialNumber": {
+          "value": null
+        },
+        "serialNumberExtra": {
+          "value": null
+        },
+        "modelClassificationCode": {
+          "value": null
+        },
+        "description": {
+          "value": null
+        },
+        "releaseYear": {
+          "value": null
+        },
+        "binaryId": {
+          "value": "ASM-KR-TP1-22-ACMB1M",
+          "timestamp": "2025-03-20T23:08:07.388Z"
+        }
+      },
+      "airQualitySensor": {
+        "airQuality": {
+          "value": 2,
+          "unit": "CAQI",
+          "timestamp": "2025-03-21T15:06:39.609Z"
+        }
+      },
+      "fineDustHealthConcern": {
+        "fineDustHealthConcern": {
+          "value": "good",
+          "timestamp": "2025-03-21T10:25:04.548Z"
+        }
+      },
+      "ocf": {
+        "st": {
+          "value": null
+        },
+        "mndt": {
+          "value": null
+        },
+        "mnfv": {
+          "value": "ASM-KR-TP1-22-ACMB1M_16240426",
+          "timestamp": "2024-08-19T07:28:01.277Z"
+        },
+        "mnhw": {
+          "value": "Realtek",
+          "timestamp": "2024-08-19T07:28:01.277Z"
+        },
+        "di": {
+          "value": "a3a970ea-e09c-9c04-161b-94c934e21666",
+          "timestamp": "2024-08-19T07:28:01.277Z"
+        },
+        "mnsl": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2024-08-19T07:28:01.277Z"
+        },
+        "dmv": {
+          "value": "1.2.1",
+          "timestamp": "2024-08-19T07:28:01.277Z"
+        },
+        "n": {
+          "value": "Samsung AirMonitor",
+          "timestamp": "2024-08-19T07:28:01.277Z"
+        },
+        "mnmo": {
+          "value": "ASM-KR-TP1-22-ACMB1M|10243041|75000000001611C40800020000080000",
+          "timestamp": "2024-08-19T07:28:01.277Z"
+        },
+        "vid": {
+          "value": "DA-AC-AIRSENSOR-01001",
+          "timestamp": "2024-08-19T07:28:01.277Z"
+        },
+        "mnmn": {
+          "value": "Samsung Electronics",
+          "timestamp": "2024-08-19T07:28:01.277Z"
+        },
+        "mnml": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2024-08-19T07:28:01.277Z"
+        },
+        "mnpv": {
+          "value": "DAWIT 2.0",
+          "timestamp": "2024-08-19T07:28:01.277Z"
+        },
+        "mnos": {
+          "value": "TizenRT 4.0",
+          "timestamp": "2024-08-19T07:28:01.277Z"
+        },
+        "pi": {
+          "value": "a3a970ea-e09c-9c04-161b-94c934e21666",
+          "timestamp": "2024-08-19T07:28:01.277Z"
+        },
+        "icv": {
+          "value": "core.1.1.0",
+          "timestamp": "2024-08-19T07:28:01.277Z"
+        }
+      },
+      "odorSensor": {
+        "odorLevel": {
+          "value": 1,
+          "timestamp": "2025-03-21T13:29:15.650Z"
+        }
+      },
+      "veryFineDustHealthConcern": {
+        "veryFineDustHealthConcern": {
+          "value": "good",
+          "timestamp": "2025-03-21T02:56:21.007Z"
+        }
+      },
+      "samsungce.doNotDisturb": {
+        "settable": {
+          "value": true,
+          "timestamp": "2024-12-20T14:38:31.895Z"
+        },
+        "dayOfWeek": {
+          "value": null
+        },
+        "repeatMode": {
+          "value": null
+        },
+        "startTime": {
+          "value": "14:00:00Z",
+          "timestamp": "2024-12-20T14:38:31.895Z"
+        },
+        "endTime": {
+          "value": "22:00:00Z",
+          "timestamp": "2024-12-20T14:38:31.895Z"
+        },
+        "activated": {
+          "value": false,
+          "timestamp": "2024-12-20T14:38:31.895Z"
+        }
+      },
+      "custom.disabledCapabilities": {
+        "disabledCapabilities": {
+          "value": [],
+          "timestamp": "2025-03-01T11:37:26.334Z"
+        }
+      },
+      "samsungce.driverVersion": {
+        "versionNumber": {
+          "value": 22100101,
+          "timestamp": "2023-12-09T04:05:59.505Z"
+        }
+      },
+      "samsungce.softwareUpdate": {
+        "targetModule": {
+          "value": null
+        },
+        "otnDUID": {
+          "value": "EXCHUODPSCTZY",
+          "timestamp": "2024-12-20T14:38:31.716Z"
+        },
+        "lastUpdatedDate": {
+          "value": null
+        },
+        "availableModules": {
+          "value": [],
+          "timestamp": "2024-12-20T14:38:31.716Z"
+        },
+        "newVersionAvailable": {
+          "value": false,
+          "timestamp": "2024-12-20T14:38:31.716Z"
+        },
+        "operatingState": {
+          "value": null
+        },
+        "progress": {
+          "value": null
+        }
+      },
+      "sec.diagnosticsInformation": {
+        "logType": {
+          "value": ["errCode", "dump"],
+          "timestamp": "2024-12-20T14:38:31.716Z"
+        },
+        "endpoint": {
+          "value": "SSM",
+          "timestamp": "2024-12-20T14:38:31.716Z"
+        },
+        "minVersion": {
+          "value": "1.0",
+          "timestamp": "2024-12-20T14:38:31.716Z"
+        },
+        "signinPermission": {
+          "value": null
+        },
+        "setupId": {
+          "value": "AM0",
+          "timestamp": "2024-12-20T14:38:31.716Z"
+        },
+        "protocolType": {
+          "value": "wifi_https",
+          "timestamp": "2024-12-20T14:38:31.716Z"
+        },
+        "tsId": {
+          "value": null
+        },
+        "mnId": {
+          "value": "0AJT",
+          "timestamp": "2024-12-20T14:38:31.716Z"
+        },
+        "dumpType": {
+          "value": "file",
+          "timestamp": "2024-12-20T14:38:31.716Z"
+        }
+      },
+      "temperatureMeasurement": {
+        "temperatureRange": {
+          "value": null
+        },
+        "temperature": {
+          "value": 23.0,
+          "unit": "C",
+          "timestamp": "2025-03-21T04:40:33.951Z"
+        }
+      },
+      "dustSensor": {
+        "dustLevel": {
+          "value": 31,
+          "unit": "\u03bcg/m^3",
+          "timestamp": "2025-03-21T15:06:39.609Z"
+        },
+        "fineDustLevel": {
+          "value": 7,
+          "unit": "\u03bcg/m^3",
+          "timestamp": "2025-03-21T15:06:28.515Z"
+        }
+      },
+      "veryFineDustSensor": {
+        "veryFineDustLevel": {
+          "value": 6,
+          "unit": "\u03bcg/m^3",
+          "timestamp": "2025-03-21T15:06:28.515Z"
+        }
+      },
+      "custom.deviceReportStateConfiguration": {
+        "reportStateRealtimePeriod": {
+          "value": "enabled",
+          "timestamp": "2024-12-20T14:38:31.769Z"
+        },
+        "reportStateRealtime": {
+          "value": {
+            "state": "disabled"
+          },
+          "timestamp": "2025-03-20T22:02:48.215Z"
+        },
+        "reportStatePeriod": {
+          "value": "enabled",
+          "timestamp": "2024-12-20T14:38:31.769Z"
+        }
+      },
+      "dustHealthConcern": {
+        "dustHealthConcern": {
+          "value": "moderate",
+          "timestamp": "2025-03-21T15:06:39.609Z"
+        }
+      }
+    }
+  }
+}

@@ -5,13 +5,50 @@
       'devices': list([
         dict({
           'clima': list([
+            dict({
+              '0': dict({
+                'human_status': 'off',
+                'name': 'Climate0',
+                'power': 0.0,
+                'power_unit': 'W',
+                'protected': 0,
+                'status': 0,
+                'val': list([
+                  list([
+                    221,
+                    0,
+                    'U',
+                    'M',
+                    50,
+                    0,
+                    0,
+                    'U',
+                  ]),
+                  list([
+                    650,
+                    0,
+                    'U',
+                    'M',
+                    500,
+                    0,
+                    0,
+                    'U',
+                  ]),
+                  list([
+                    0,
+                    0,
+                  ]),
+                ]),
+                'zone': 'Living room',
+              }),
+            }),
           ]),
         }),
         dict({
           'shutter': list([
             dict({
               '0': dict({
-                'human_status': 'closed',
+                'human_status': 'stopped',
                 'name': 'Cover0',
                 'power': 0.0,
                 'power_unit': 'W',
@@ -41,6 +78,18 @@
         }),
         dict({
           'other': list([
+            dict({
+              '0': dict({
+                'human_status': 'off',
+                'name': 'Switch0',
+                'power': 0.0,
+                'power_unit': 'W',
+                'protected': 0,
+                'status': 0,
+                'val': 0,
+                'zone': 'Bathroom',
+              }),
+            }),
           ]),
         }),
         dict({
@@ -57,9 +106,10 @@
     }),
     'entry': dict({
       'data': dict({
-        'host': 'fake_host',
+        'host': 'fake_bridge_host',
         'pin': '**REDACTED**',
         'port': 80,
+        'type': 'Serial bridge',
       }),
       'disabled_by': None,
       'discovery_keys': dict({
@@ -85,19 +135,19 @@
     'device_info': dict({
       'devices': list([
         dict({
-          'aree': list([
+          'alarm_areas': list([
             dict({
               '0': dict({
                 'alarm': False,
                 'alarm_memory': False,
                 'anomaly': False,
-                'armed': False,
-                'human_status': 'unknown',
+                'armed': 0,
+                'human_status': 'disarmed',
                 'in_time': False,
                 'name': 'Area0',
                 'out_time': False,
                 'p1': True,
-                'p2': False,
+                'p2': True,
                 'ready': False,
                 'sabotage': False,
               }),
@@ -105,7 +155,7 @@
           ]),
         }),
         dict({
-          'zone': list([
+          'alarm_zones': list([
             dict({
               '0': dict({
                 'human_status': 'rest',

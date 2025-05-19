@@ -11,7 +11,9 @@
       "unexpected_response": "Unexpected response from whois server",
       "unknown_date_format": "Unknown date format in whois server response",
       "unknown_tld": "The given TLD is unknown or not available to this integration",
-      "whois_command_failed": "Whois command failed: could not retrieve whois information"
+      "whois_command_failed": "Whois command failed: could not retrieve whois information",
+      "private_registry": "The given domain is registered in a private registry and cannot be monitored",
+      "quota_exceeded": "Your whois quota has been exceeded for this TLD"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
@@ -45,6 +47,34 @@
       },
       "reseller": {
         "name": "Reseller"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "add_period": "Add period",
+          "auto_renew_period": "Auto renew period",
+          "inactive": "Inactive",
+          "ok": "Active",
+          "active": "Active",
+          "pending_create": "Pending create",
+          "pending_renew": "Pending renew",
+          "pending_restore": "Pending restore",
+          "pending_transfer": "Pending transfer",
+          "pending_update": "Pending update",
+          "redemption_period": "Redemption period",
+          "renew_period": "Renew period",
+          "server_delete_prohibited": "Server delete prohibited",
+          "server_hold": "Server hold",
+          "server_renew_prohibited": "Server renew prohibited",
+          "server_transfer_prohibited": "Server transfer prohibited",
+          "server_update_prohibited": "Server update prohibited",
+          "transfer_period": "Transfer period",
+          "client_delete_prohibited": "Client delete prohibited",
+          "client_hold": "Client hold",
+          "client_renew_prohibited": "Client renew prohibited",
+          "client_transfer_prohibited": "Client transfer prohibited",
+          "client_update_prohibited": "Client update prohibited"
+        }
       }
     }
   }

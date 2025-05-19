@@ -21,7 +21,10 @@ play_media:
           options:
             - artist
             - album
+            - audiobook
+            - folder
             - playlist
+            - podcast
             - track
             - radio
     artist:
@@ -118,7 +121,9 @@ search:
           options:
             - artist
             - album
+            - audiobook
             - playlist
+            - podcast
             - track
             - radio
     artist:
@@ -160,7 +165,9 @@ get_library:
           options:
             - artist
             - album
+            - audiobook
             - playlist
+            - podcast
             - track
             - radio
     favorite:

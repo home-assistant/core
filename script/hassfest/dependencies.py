@@ -84,37 +84,6 @@ class ImportCollector(ast.NodeVisitor):
             if name_node.name.startswith("homeassistant.components."):
                 self._add_reference(name_node.name.split(".")[2])
 
-    def visit_Attribute(self, node: ast.Attribute) -> None:
-        """Visit Attribute node."""
-        # hass.components.hue.async_create()
-        # Name(id=hass)
-        #   .Attribute(attr=hue)
-        #   .Attribute(attr=async_create)
-
-        # self.hass.components.hue.async_create()
-        # Name(id=self)
-        #   .Attribute(attr=hass) or .Attribute(attr=_hass)
-        #   .Attribute(attr=hue)
-        #   .Attribute(attr=async_create)
-        if (
-            isinstance(node.value, ast.Attribute)
-            and node.value.attr == "components"
-            and (
-                (
-                    isinstance(node.value.value, ast.Name)
-                    and node.value.value.id == "hass"
-                )
-                or (
-                    isinstance(node.value.value, ast.Attribute)
-                    and node.value.value.attr in ("hass", "_hass")
-                )
-            )
-        ):
-            self._add_reference(node.attr)
-        else:
-            # Have it visit other kids
-            self.generic_visit(node)
-
 
 ALLOWED_USED_COMPONENTS = {
     *{platform.value for platform in Platform},
@@ -153,8 +122,6 @@ ALLOWED_USED_COMPONENTS = {
 }
 
 IGNORE_VIOLATIONS = {
-    # Has same requirement, gets defaults.
-    ("sql", "recorder"),
     # Sharing a base class
     ("lutron_caseta", "lutron"),
     ("ffmpeg_noise", "ffmpeg_motion"),
@@ -175,10 +142,6 @@ IGNORE_VIOLATIONS = {
     "logbook",
     # Temporary needed for migration until 2024.10
     ("conversation", "assist_pipeline"),
-    # The onboarding integration provides a limited backup API used during
-    # onboarding. The onboarding integration waits for the backup manager
-    # to be ready before calling any backup functionality.
-    ("onboarding", "backup"),
 }
 
 

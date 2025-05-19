@@ -4346,6 +4346,7 @@
       ],
       "Album": "ALBUM",
       "AlbumId": "ALBUM-UUID",
+      "AlbumPrimaryImageTag": "ALBUM-PRIMARY-IMAGE-TAG",
       "AlbumArtist": "Album Artist",
       "AlbumArtists": [
         { "Name": "Album Artist", "Id": "9a65b2c222ddb34e51f5cae360fad3a1" }

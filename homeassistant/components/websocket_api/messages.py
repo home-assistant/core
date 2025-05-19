@@ -207,7 +207,7 @@ def _state_diff_event(
         additions[COMPRESSED_STATE_STATE] = new_state.state
     if old_state.last_changed != new_state.last_changed:
         additions[COMPRESSED_STATE_LAST_CHANGED] = new_state.last_changed_timestamp
-    elif old_state.last_updated != new_state.last_updated:
+    elif old_state.last_updated_timestamp != new_state.last_updated_timestamp:
         additions[COMPRESSED_STATE_LAST_UPDATED] = new_state.last_updated_timestamp
     if old_state_context.parent_id != new_state_context.parent_id:
         additions[COMPRESSED_STATE_CONTEXT] = {"parent_id": new_state_context.parent_id}

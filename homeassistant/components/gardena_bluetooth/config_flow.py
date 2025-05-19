@@ -41,6 +41,8 @@ def _is_supported(discovery_info: BluetoothServiceInfo):
         ProductType.PUMP,
         ProductType.VALVE,
         ProductType.WATER_COMPUTER,
+        ProductType.AUTOMATS,
+        ProductType.PRESSURE_TANKS,
     ):
         _LOGGER.debug("Unsupported device: %s", manufacturer_data)
         return False

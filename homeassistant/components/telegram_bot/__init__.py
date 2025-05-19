@@ -548,7 +548,7 @@ class TelegramNotificationService:
         """Initialize the service."""
         self.allowed_chat_ids = allowed_chat_ids
         self._default_user = self.allowed_chat_ids[0]
-        self._last_message_id = {user: None for user in self.allowed_chat_ids}
+        self._last_message_id = dict.fromkeys(self.allowed_chat_ids)
         self._parsers = {
             PARSER_HTML: ParseMode.HTML,
             PARSER_MD: ParseMode.MARKDOWN,

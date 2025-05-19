@@ -333,6 +333,12 @@ class DPCode(StrEnum):
     TEMP_CONTROLLER = "temp_controller"
     TEMP_CURRENT = "temp_current"  # Current temperature in °C
     TEMP_CURRENT_F = "temp_current_f"  # Current temperature in °F
+    TEMP_CURRENT_EXTERNAL = (
+        "temp_current_external"  # Current external temperature in Celsius
+    )
+    TEMP_CURRENT_EXTERNAL_F = (
+        "temp_current_external_f"  # Current external temperature in Fahrenheit
+    )
     TEMP_INDOOR = "temp_indoor"  # Indoor temperature in °C
     TEMP_SET = "temp_set"  # Set the temperature in °C
     TEMP_SET_F = "temp_set_f"  # Set the temperature in °F

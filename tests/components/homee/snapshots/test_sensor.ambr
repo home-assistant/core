@@ -82,8 +82,8 @@
     'platform': 'homee',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'battery',
-    'unique_id': '00055511EECC-1-4',
+    'translation_key': 'battery_instance',
+    'unique_id': '00055511EECC-1-34',
     'unit_of_measurement': '%',
   })
 # ---
@@ -516,6 +516,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '51.0',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_multisensor_illuminance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_multisensor_illuminance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Illuminance',
+    'platform': 'homee',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'brightness',
+    'unique_id': '00055511EECC-1-4',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_multisensor_illuminance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test MultiSensor Illuminance',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_multisensor_illuminance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100.0',
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_illuminance_1-entry]
@@ -1538,57 +1589,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '6.0',
-  })
-# ---
-# name: test_sensor_snapshot[sensor.test_multisensor_valve_position-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_multisensor_valve_position',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Valve position',
-    'platform': 'homee',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'valve_position',
-    'unique_id': '00055511EECC-1-9',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensor_snapshot[sensor.test_multisensor_valve_position-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Test MultiSensor Valve position',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_multisensor_valve_position',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '70.0',
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_voltage_1-entry]

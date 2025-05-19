@@ -1,6 +1,5 @@
 """The tests the for Meraki device tracker."""
 
-from asyncio import AbstractEventLoop
 from http import HTTPStatus
 import json
 
@@ -22,31 +21,25 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
-def meraki_client(
-    event_loop: AbstractEventLoop,
+async def meraki_client(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
 ) -> TestClient:
     """Meraki mock client."""
-    loop = event_loop
+    assert await async_setup_component(
+        hass,
+        device_tracker.DOMAIN,
+        {
+            device_tracker.DOMAIN: {
+                CONF_PLATFORM: "meraki",
+                CONF_VALIDATOR: "validator",
+                CONF_SECRET: "secret",
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
-    async def setup_and_wait():
-        result = await async_setup_component(
-            hass,
-            device_tracker.DOMAIN,
-            {
-                device_tracker.DOMAIN: {
-                    CONF_PLATFORM: "meraki",
-                    CONF_VALIDATOR: "validator",
-                    CONF_SECRET: "secret",
-                }
-            },
-        )
-        await hass.async_block_till_done()
-        return result
-
-    assert loop.run_until_complete(setup_and_wait())
-    return loop.run_until_complete(hass_client())
+    return await hass_client()
 
 
 async def test_invalid_or_missing_data(

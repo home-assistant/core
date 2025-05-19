@@ -9,7 +9,7 @@
       "deviceManufacturerCode": "Sonos",
       "locationId": "eed0e167-e793-459b-80cb-a0b02e2b86c2",
       "ownerId": "2c69cc36-85ae-c41a-9981-a4ee96cd9137",
-      "roomId": "105e6d1a-52a4-4797-a235-5a48d7d433c8",
+      "roomId": "7715151d-0314-457a-a82c-5ce48900e065",
       "components": [
         {
           "id": "main",
@@ -61,7 +61,6 @@
         }
       ],
       "createTime": "2025-02-02T13:18:28.570Z",
-      "parentDeviceId": "2f7f7d2b-e683-48ae-86f7-e57df6a0bce2",
       "profile": {
         "id": "0443d359-3f76-383f-82a4-6fc4a879ef1d"
       },

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterable, Generator
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -24,7 +24,7 @@ from homeassistant.components.assist_pipeline.pipeline import (
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import chat_session, device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 
@@ -37,7 +37,7 @@ from tests.common import (
     mock_platform,
 )
 from tests.components.stt.common import MockSTTProvider, MockSTTProviderEntity
-from tests.components.tts.common import MockTTSProvider
+from tests.components.tts.common import MockTTSEntity, MockTTSProvider
 
 _TRANSCRIPT = "test transcript"
 
@@ -66,6 +66,15 @@ async def mock_tts_provider() -> MockTTSProvider:
     provider = MockTTSProvider("en")
     provider._supported_languages = ["en-US"]
     return provider
+
+
+@pytest.fixture
+def mock_tts_entity() -> MockTTSEntity:
+    """Test TTS entity."""
+    entity = MockTTSEntity("en")
+    entity._attr_unique_id = "test_tts"
+    entity._attr_supported_languages = ["en-US"]
+    return entity
 
 
 @pytest.fixture
@@ -198,6 +207,7 @@ async def init_supporting_components(
     mock_stt_provider: MockSTTProvider,
     mock_stt_provider_entity: MockSTTProviderEntity,
     mock_tts_provider: MockTTSProvider,
+    mock_tts_entity: MockTTSEntity,
     mock_wake_word_provider_entity: MockWakeWordEntity,
     mock_wake_word_provider_entity2: MockWakeWordEntity2,
     config_flow_fixture,
@@ -209,7 +219,7 @@ async def init_supporting_components(
     ) -> bool:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
-            config_entry, [Platform.STT, Platform.WAKE_WORD]
+            config_entry, [Platform.STT, Platform.TTS, Platform.WAKE_WORD]
         )
         return True
 
@@ -229,6 +239,14 @@ async def init_supporting_components(
     ) -> None:
         """Set up test stt platform via config entry."""
         async_add_entities([mock_stt_provider_entity])
+
+    async def async_setup_entry_tts_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Set up test tts platform via config entry."""
+        async_add_entities([mock_tts_entity])
 
     async def async_setup_entry_wake_word_platform(
         hass: HomeAssistant,
@@ -253,6 +271,7 @@ async def init_supporting_components(
         "test.tts",
         MockTTSPlatform(
             async_get_engine=AsyncMock(return_value=mock_tts_provider),
+            async_setup_entry=async_setup_entry_tts_platform,
         ),
     )
     mock_platform(
@@ -379,3 +398,14 @@ def pipeline_storage(pipeline_data) -> PipelineStorageCollection:
 def make_10ms_chunk(header: bytes) -> bytes:
     """Return 10ms of zeros with the given header."""
     return header + bytes(BYTES_PER_CHUNK - len(header))
+
+
+@pytest.fixture
+def mock_chat_session(hass: HomeAssistant) -> Generator[chat_session.ChatSession]:
+    """Mock the ulid of chat sessions."""
+    # pylint: disable-next=contextmanager-generator-missing-cleanup
+    with (
+        patch("homeassistant.helpers.chat_session.ulid_now", return_value="mock-ulid"),
+        chat_session.async_get_chat_session(hass) as session,
+    ):
+        yield session

@@ -41,6 +41,7 @@ type SelectCluster = (
     | clusters.DishwasherMode
     | clusters.EnergyEvseMode
     | clusters.DeviceEnergyManagementMode
+    | clusters.WaterHeaterMode
 )
 
 

@@ -28,10 +28,10 @@
         "state_attributes": {
           "fan_mode": {
             "state": {
-              "auto_high": "Auto High",
-              "auto_low": "Auto Low",
-              "on_high": "On High",
-              "on_low": "On Low"
+              "auto_high": "Auto high",
+              "auto_low": "Auto low",
+              "on_high": "On high",
+              "on_low": "On low"
             }
           },
           "swing_mode": {
@@ -39,14 +39,14 @@
               "1": "1",
               "2": "2",
               "3": "3",
-              "auto": "Auto",
+              "auto": "[%key:common::state::auto%]",
               "off": "[%key:common::state::off%]"
             }
           },
           "swing_horizontal_mode": {
             "state": {
               "rangefull": "Full range",
-              "auto": "Auto",
+              "auto": "[%key:common::state::auto%]",
               "off": "[%key:common::state::off%]"
             }
           }
@@ -58,7 +58,7 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "auto": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::auto%]",
+              "auto": "[%key:common::state::auto%]",
               "sleep": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::sleep%]",
               "smart": "Smart",
               "on": "[%key:common::state::on%]"
@@ -78,12 +78,23 @@
         }
       }
     },
+    "light": {
+      "bed_light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "rainbow": "Rainbow"
+            }
+          }
+        }
+      }
+    },
     "select": {
       "speed": {
         "state": {
-          "light_speed": "Light Speed",
-          "ludicrous_speed": "Ludicrous Speed",
-          "ridiculous_speed": "Ridiculous Speed"
+          "light_speed": "Light speed",
+          "ludicrous_speed": "Ludicrous speed",
+          "ridiculous_speed": "Ridiculous speed"
         }
       }
     },
@@ -102,7 +113,7 @@
       "model_s": {
         "state_attributes": {
           "cleaned_area": {
-            "name": "Cleaned Area"
+            "name": "Cleaned area"
           }
         }
       }

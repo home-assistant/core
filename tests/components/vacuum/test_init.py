@@ -5,7 +5,6 @@ from __future__ import annotations
 from enum import Enum
 from types import ModuleType
 from typing import Any
-from unittest.mock import patch
 
 import pytest
 
@@ -25,7 +24,6 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import frame
 
 from . import MockVacuum, help_async_setup_entry_init, help_async_unload_entry
 from .common import async_start
@@ -326,7 +324,6 @@ async def test_vacuum_not_log_deprecated_state_warning(
 
 
 @pytest.mark.usefixtures("mock_as_custom_component")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_vacuum_log_deprecated_state_warning_using_state_prop(
     hass: HomeAssistant,
     config_flow_fixture: None,
@@ -356,6 +353,7 @@ async def test_vacuum_log_deprecated_state_warning_using_state_prop(
             async_setup_entry=help_async_setup_entry_init,
             async_unload_entry=help_async_unload_entry,
         ),
+        built_in=False,
     )
     setup_test_component_platform(hass, VACUUM_DOMAIN, [entity], from_config_entry=True)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -370,7 +368,6 @@ async def test_vacuum_log_deprecated_state_warning_using_state_prop(
 
 
 @pytest.mark.usefixtures("mock_as_custom_component")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_vacuum_log_deprecated_state_warning_using_attr_state_attr(
     hass: HomeAssistant,
     config_flow_fixture: None,
@@ -399,6 +396,7 @@ async def test_vacuum_log_deprecated_state_warning_using_attr_state_attr(
             async_setup_entry=help_async_setup_entry_init,
             async_unload_entry=help_async_unload_entry,
         ),
+        built_in=False,
     )
     setup_test_component_platform(hass, VACUUM_DOMAIN, [entity], from_config_entry=True)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -427,8 +425,7 @@ async def test_vacuum_log_deprecated_state_warning_using_attr_state_attr(
 
 
 @pytest.mark.usefixtures("mock_as_custom_component")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
-async def test_alarm_control_panel_deprecated_state_does_not_break_state(
+async def test_vacuum_deprecated_state_does_not_break_state(
     hass: HomeAssistant,
     config_flow_fixture: None,
     caplog: pytest.LogCaptureFixture,
@@ -463,6 +460,7 @@ async def test_alarm_control_panel_deprecated_state_does_not_break_state(
             async_setup_entry=help_async_setup_entry_init,
             async_unload_entry=help_async_unload_entry,
         ),
+        built_in=False,
     )
     setup_test_component_platform(hass, VACUUM_DOMAIN, [entity], from_config_entry=True)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
