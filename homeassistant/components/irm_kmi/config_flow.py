@@ -1,9 +1,8 @@
 """Config flow to set up IRM KMI integration via the UI."""
 
-import asyncio
 import logging
 
-from irm_kmi_api import IrmKmiApiClient
+from irm_kmi_api import IrmKmiApiClient, IrmKmiApiError
 import voluptuous as vol
 
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
@@ -58,17 +57,16 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
                 assert zone is not None  # Assert is here for mypy linting.
                 api_data = {}
                 try:
-                    async with asyncio.timeout(60):
-                        api_data = await IrmKmiApiClient(
-                            session=async_get_clientsession(self.hass),
-                            user_agent=USER_AGENT,
-                        ).get_forecasts_coord(
-                            {
-                                "lat": zone.attributes[ATTR_LATITUDE],
-                                "long": zone.attributes[ATTR_LONGITUDE],
-                            }
-                        )
-                except Exception:
+                    api_data = await IrmKmiApiClient(
+                        session=async_get_clientsession(self.hass),
+                        user_agent=USER_AGENT,
+                    ).get_forecasts_coord(
+                        {
+                            "lat": zone.attributes[ATTR_LATITUDE],
+                            "long": zone.attributes[ATTR_LONGITUDE],
+                        }
+                    )
+                except IrmKmiApiError:
                     errors["base"] = "api_error"
                     _LOGGER.exception(
                         "Encountered an unexpected error while configuring the integration"

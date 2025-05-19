@@ -1,6 +1,5 @@
 """DataUpdateCoordinator for the IRM KMI integration."""
 
-import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
@@ -55,14 +54,12 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator):
         if (zone := self.hass.states.get(self._zone)) is None:
             raise UpdateFailed(f"Zone '{self._zone}' not found")
         try:
-            # Note: asyncio.TimeoutError and aiohttp.ClientError are already handled by the data update coordinator.
-            async with asyncio.timeout(60):
-                await self._api.refresh_forecasts_coord(
-                    {
-                        "lat": zone.attributes[ATTR_LATITUDE],
-                        "long": zone.attributes[ATTR_LONGITUDE],
-                    }
-                )
+            await self._api.refresh_forecasts_coord(
+                {
+                    "lat": zone.attributes[ATTR_LATITUDE],
+                    "long": zone.attributes[ATTR_LONGITUDE],
+                }
+            )
 
         except IrmKmiApiError as err:
             if (
