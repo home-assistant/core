@@ -108,6 +108,7 @@ class AccuWeatherDailyForecastDataUpdateCoordinator(
             assert self.location_key is not None
 
         self.device_info = _get_device_info(self.location_key, name)
+
         super().__init__(
             hass,
             _LOGGER,
