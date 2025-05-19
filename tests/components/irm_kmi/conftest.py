@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 from irm_kmi_api import IrmKmiApiError
 import pytest
 
-from homeassistant.components.irm_kmi.const import CONF_LANGUAGE_OVERRIDE, DOMAIN
+from homeassistant.components.irm_kmi.const import DOMAIN
 from homeassistant.const import CONF_ZONE
 
 from tests.common import MockConfigEntry, load_fixture
@@ -21,7 +21,7 @@ def mock_config_entry() -> MockConfigEntry:
     entry = MockConfigEntry(
         title="Home",
         domain=DOMAIN,
-        data={CONF_ZONE: "zone.home", CONF_LANGUAGE_OVERRIDE: "none"},
+        data={CONF_ZONE: "zone.home"},
         unique_id="zone.home",
     )
     entry.runtime_data = MagicMock()
