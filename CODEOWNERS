@@ -202,8 +202,8 @@ build.json @home-assistant/supervisor
 /tests/components/blebox/ @bbx-a @swistakm
 /homeassistant/components/blink/ @fronzbot @mkmer
 /tests/components/blink/ @fronzbot @mkmer
-/homeassistant/components/blue_current/ @Floris272 @gleeuwen
-/tests/components/blue_current/ @Floris272 @gleeuwen
+/homeassistant/components/blue_current/ @gleeuwen @NickKoepr @jtodorova23
+/tests/components/blue_current/ @gleeuwen @NickKoepr @jtodorova23
 /homeassistant/components/bluemaestro/ @bdraco
 /tests/components/bluemaestro/ @bdraco
 /homeassistant/components/blueprint/ @home-assistant/core
