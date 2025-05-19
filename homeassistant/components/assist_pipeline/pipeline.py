@@ -20,9 +20,6 @@ import hass_nabucasa
 import voluptuous as vol
 
 from homeassistant.components import conversation, stt, tts, wake_word, websocket_api
-from homeassistant.components.tts import (
-    generate_media_source_id as tts_generate_media_source_id,
-)
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -125,7 +122,7 @@ SAVE_DELAY = 10
 @callback
 def _async_local_fallback_intent_filter(result: RecognizeResult) -> bool:
     """Filter out intents that are not local fallback."""
-    return result.intent.name in (intent.INTENT_GET_STATE, intent.INTENT_NEVERMIND)
+    return result.intent.name in (intent.INTENT_GET_STATE)
 
 
 @callback
@@ -649,6 +646,7 @@ class PipelineRun:
             data["runner_data"] = self.runner_data
         if self.tts_stream:
             data["tts_output"] = {
+                "token": self.tts_stream.token,
                 "url": self.tts_stream.url,
                 "mime_type": self.tts_stream.content_type,
             }
@@ -1275,26 +1273,11 @@ class PipelineRun:
             )
         )
 
-        try:
-            # Synthesize audio and get URL
-            tts_media_id = tts_generate_media_source_id(
-                self.hass,
-                tts_input,
-                engine=self.tts_stream.engine,
-                language=self.tts_stream.language,
-                options=self.tts_stream.options,
-            )
-        except Exception as src_error:
-            _LOGGER.exception("Unexpected error during text-to-speech")
-            raise TextToSpeechError(
-                code="tts-failed",
-                message="Unexpected error during text-to-speech",
-            ) from src_error
-
         self.tts_stream.async_set_message(tts_input)
 
         tts_output = {
-            "media_id": tts_media_id,
+            "media_id": self.tts_stream.media_source_id,
+            "token": self.tts_stream.token,
             "url": self.tts_stream.url,
             "mime_type": self.tts_stream.content_type,
         }

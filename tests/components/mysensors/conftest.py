@@ -320,6 +320,21 @@ def hvac_node_heat(
     return nodes[1]
 
 
+@pytest.fixture(name="hvac_node_only_hvac_state", scope="package")
+def hvac_node_only_hvac_state_fixture() -> dict:
+    """Load the hvac node only hvac state."""
+    return load_nodes_state("hvac_node_only_hvac_state.json")
+
+
+@pytest.fixture
+def hvac_node_only_hvac(
+    gateway_nodes: dict[int, Sensor], hvac_node_only_hvac_state: dict
+) -> Sensor:
+    """Load the hvac only hvac child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(hvac_node_only_hvac_state))
+    return nodes[1]
+
+
 @pytest.fixture(name="power_sensor_state", scope="package")
 def power_sensor_state_fixture() -> dict:
     """Load the power sensor state."""

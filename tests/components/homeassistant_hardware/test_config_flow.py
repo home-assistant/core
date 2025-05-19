@@ -381,6 +381,32 @@ async def test_config_flow_zigbee_skip_step_if_installed(hass: HomeAssistant) ->
         assert result["step_id"] == "confirm_zigbee"
 
 
+async def test_config_flow_auto_confirm_if_running(hass: HomeAssistant) -> None:
+    """Test the config flow skips the confirmation step the hardware is already used."""
+    with patch(
+        "homeassistant.components.homeassistant_hardware.firmware_config_flow.guess_firmware_info",
+        return_value=FirmwareInfo(
+            device=TEST_DEVICE,
+            firmware_type=ApplicationType.EZSP,
+            firmware_version="7.4.4.0",
+            owners=[Mock(is_running=AsyncMock(return_value=True))],
+            source="guess",
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            TEST_DOMAIN, context={"source": "hardware"}
+        )
+
+    # There are no steps, the config entry is automatically created
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    config_entry = result["result"]
+    assert config_entry.data == {
+        "firmware": "ezsp",
+        "device": TEST_DEVICE,
+        "hardware": TEST_HARDWARE_NAME,
+    }
+
+
 async def test_config_flow_thread(hass: HomeAssistant) -> None:
     """Test the config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -558,6 +584,7 @@ async def test_config_flow_zigbee_not_hassio(hass: HomeAssistant) -> None:
     assert zha_flow["step_id"] == "confirm"
 
 
+@pytest.mark.usefixtures("addon_store_info")
 async def test_options_flow_zigbee_to_thread(hass: HomeAssistant) -> None:
     """Test the options flow, migrating Zigbee to Thread."""
     config_entry = MockConfigEntry(
@@ -649,6 +676,7 @@ async def test_options_flow_zigbee_to_thread(hass: HomeAssistant) -> None:
         assert config_entry.data["firmware"] == "spinel"
 
 
+@pytest.mark.usefixtures("addon_store_info")
 async def test_options_flow_thread_to_zigbee(hass: HomeAssistant) -> None:
     """Test the options flow, migrating Thread to Zigbee."""
     config_entry = MockConfigEntry(

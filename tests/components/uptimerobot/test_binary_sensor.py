@@ -34,8 +34,8 @@ async def test_presentation(hass: HomeAssistant) -> None:
     assert entity.attributes["target"] == MOCK_UPTIMEROBOT_MONITOR["url"]
 
 
-async def test_unaviable_on_update_failure(hass: HomeAssistant) -> None:
-    """Test entity unaviable on update failure."""
+async def test_unavailable_on_update_failure(hass: HomeAssistant) -> None:
+    """Test entity unavailable on update failure."""
     await setup_uptimerobot_integration(hass)
 
     entity = hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY)

@@ -98,6 +98,7 @@
         'humidifier',
         'input_boolean',
         'input_select',
+        'lawn_mower',
         'light',
         'lock',
         'media_player',

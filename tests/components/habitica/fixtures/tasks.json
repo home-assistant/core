@@ -605,13 +605,67 @@
       "startDate": "2024-09-20T23:00:00.000Z",
       "daysOfMonth": [],
       "weeksOfMonth": [3],
-      "checklist": [],
+      "checklist": [
+        {
+          "completed": false,
+          "id": "a2a6702d-58e1-46c2-a3ce-422d525cc0b6",
+          "text": "Checklist-item1"
+        },
+        {
+          "completed": true,
+          "id": "9f64e1cd-b0ab-4577-8344-c7a5e1827997",
+          "text": "Checklist-item2"
+        }
+      ],
       "reminders": [],
       "createdAt": "2024-10-10T15:57:14.304Z",
       "updatedAt": "2024-11-27T23:47:29.986Z",
       "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
       "isDue": false,
       "id": "6e53f1f5-a315-4edd-984d-8d762e4a08ef"
+    },
+    {
+      "repeat": {
+        "m": false,
+        "t": false,
+        "w": false,
+        "th": false,
+        "f": false,
+        "s": false,
+        "su": true
+      },
+      "challenge": {},
+      "group": {
+        "completedBy": {},
+        "assignedUsers": []
+      },
+      "_id": "369afeed-61e3-4bf7-9747-66e05807134c",
+      "frequency": "monthly",
+      "everyX": 1,
+      "streak": 1,
+      "nextDue": ["2024-12-14T23:00:00.000Z", "2025-01-18T23:00:00.000Z"],
+      "yesterDaily": true,
+      "history": [],
+      "completed": false,
+      "collapseChecklist": false,
+      "type": "daily",
+      "text": "Monatliche Finanzübersicht erstellen",
+      "notes": "Setze dich einmal im Monat hin, um deine Einnahmen und Ausgaben zu überprüfen und dein Budget zu planen.",
+      "tags": [],
+      "value": -0.9215181434950852,
+      "priority": 1,
+      "attribute": "str",
+      "byHabitica": false,
+      "startDate": "2024-04-04T22:00:00.000Z",
+      "daysOfMonth": [],
+      "weeksOfMonth": [0],
+      "checklist": [],
+      "reminders": [],
+      "createdAt": "2024-04-04T22:00:00.000Z",
+      "updatedAt": "2024-04-04T22:00:00.000Z",
+      "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
+      "isDue": false,
+      "id": "369afeed-61e3-4bf7-9747-66e05807134c"
     },
     {
       "repeat": {

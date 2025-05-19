@@ -929,7 +929,7 @@ async def check_translations(
         ignored_domains = set(ignore_translations_for_mock_domains)
 
     # Set all ignored translation keys to "unused"
-    translation_errors = {k: "unused" for k in ignore_missing_translations}
+    translation_errors = dict.fromkeys(ignore_missing_translations, "unused")
 
     translation_coros = set()
 

@@ -176,7 +176,7 @@
   },
   "config_panel": {
     "zha_options": {
-      "title": "Global Options",
+      "title": "Global options",
       "enhanced_light_transition": "Enable enhanced light color/temperature transition from an off-state",
       "light_transitioning_flag": "Enable enhanced brightness slider during light transition",
       "group_members_assume_state": "Group members assume state of group",
@@ -187,7 +187,7 @@
       "consider_unavailable_battery": "Consider battery powered devices unavailable after (seconds)"
     },
     "zha_alarm_options": {
-      "title": "Alarm Control Panel Options",
+      "title": "Alarm control panel options",
       "alarm_master_code": "Master code for the alarm control panel(s)",
       "alarm_failed_tries": "The number of consecutive failed code entries to trigger an alarm",
       "alarm_arm_requires_code": "Code required for arming actions"
@@ -610,6 +610,12 @@
       },
       "flow_switch": {
         "name": "Flow switch"
+      },
+      "water_leak": {
+        "name": "Water leak"
+      },
+      "water_supply": {
+        "name": "Water supply"
       }
     },
     "button": {
@@ -1101,6 +1107,36 @@
       },
       "shutdown_timer": {
         "name": "Shutdown timer"
+      },
+      "calibration_vertical_run_time_up": {
+        "name": "Calibration vertical run time up"
+      },
+      "calibration_vertical_run_time_down": {
+        "name": "Calibration vertical run time down"
+      },
+      "calibration_rotation_run_time_up": {
+        "name": "Calibration rotation run time up"
+      },
+      "calibration_rotation_run_time_down": {
+        "name": "Calibration rotation run time down"
+      },
+      "impulse_mode_duration": {
+        "name": "Impulse mode duration"
+      },
+      "water_duration": {
+        "name": "Water duration"
+      },
+      "water_interval": {
+        "name": "Water interval"
+      },
+      "hush_duration": {
+        "name": "Hush duration"
+      },
+      "temperature_control_accuracy": {
+        "name": "Temperature control accuracy"
+      },
+      "external_temperature_sensor_value": {
+        "name": "External temperature sensor value"
       }
     },
     "select": {
@@ -1144,10 +1180,10 @@
         "name": "Switch type"
       },
       "led_scaling_mode": {
-        "name": "Led scaling mode"
+        "name": "LED scaling mode"
       },
       "smart_fan_led_display_levels": {
-        "name": "Smart fan led display levels"
+        "name": "Smart fan LED display levels"
       },
       "increased_non_neutral_output": {
         "name": "Non neutral output"
@@ -1319,6 +1355,18 @@
       },
       "hysteresis_mode": {
         "name": "Hysteresis mode"
+      },
+      "speed": {
+        "name": "Speed"
+      },
+      "led_brightness": {
+        "name": "LED brightness"
+      },
+      "alarm_sound_level": {
+        "name": "Alarm sound level"
+      },
+      "alarm_sound_mode": {
+        "name": "Alarm sound mode"
       }
     },
     "sensor": {
@@ -1457,7 +1505,7 @@
       "adaptation_run_status": {
         "name": "Adaptation run status",
         "state": {
-          "nothing": "Idle",
+          "nothing": "[%key:common::state::idle%]",
           "something": "State"
         },
         "state_attributes": {
@@ -1479,7 +1527,7 @@
         "name": "Software error",
         "state": {
           "nothing": "Good",
-          "something": "Error"
+          "something": "[%key:common::state::error%]"
         },
         "state_attributes": {
           "top_pcb_sensor_error": {
@@ -1560,7 +1608,7 @@
         "name": "Floor temperature"
       },
       "self_test": {
-        "name": "Self test result"
+        "name": "Self-test result"
       },
       "voc_index": {
         "name": "VOC index"
@@ -1666,6 +1714,12 @@
       },
       "last_watering_duration": {
         "name": "Last watering duration"
+      },
+      "device_status": {
+        "name": "Device status"
+      },
+      "lifetime": {
+        "name": "Lifetime"
       }
     },
     "switch": {
@@ -1808,7 +1862,7 @@
         "name": "Mute siren"
       },
       "self_test_switch": {
-        "name": "Self test"
+        "name": "Self-test"
       },
       "output_switch": {
         "name": "Output switch"
@@ -1875,6 +1929,12 @@
       },
       "auto_clean": {
         "name": "Auto clean"
+      },
+      "test_mode": {
+        "name": "Test mode"
+      },
+      "external_temperature_sensor": {
+        "name": "External temperature sensor"
       }
     }
   }

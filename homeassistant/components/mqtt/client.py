@@ -15,6 +15,7 @@ import socket
 import ssl
 import time
 from typing import TYPE_CHECKING, Any
+from uuid import uuid4
 
 import certifi
 
@@ -292,7 +293,7 @@ class MqttClientSetup:
         """
         # We don't import on the top because some integrations
         # should be able to optionally rely on MQTT.
-        import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
+        from paho.mqtt import client as mqtt  # pylint: disable=import-outside-toplevel
 
         # pylint: disable-next=import-outside-toplevel
         from .async_client import AsyncMQTTClient
@@ -309,9 +310,10 @@ class MqttClientSetup:
             clean_session = True
 
         if (client_id := config.get(CONF_CLIENT_ID)) is None:
-            # PAHO MQTT relies on the MQTT server to generate random client IDs.
-            # However, that feature is not mandatory so we generate our own.
-            client_id = None
+            # PAHO MQTT relies on the MQTT server to generate random client ID
+            # for protocol version 3.1, however, that feature is not mandatory
+            # so we generate our own.
+            client_id = mqtt._base62(uuid4().int, padding=22)  # noqa: SLF001
         transport: str = config.get(CONF_TRANSPORT, DEFAULT_TRANSPORT)
         self._client = AsyncMQTTClient(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
@@ -1020,8 +1022,6 @@ class MQTT:
         Resubscribe to all topics we were subscribed to and publish birth
         message.
         """
-        # pylint: disable-next=import-outside-toplevel
-
         if reason_code.is_failure:
             # 24: Continue authentication
             # 25: Re-authenticate

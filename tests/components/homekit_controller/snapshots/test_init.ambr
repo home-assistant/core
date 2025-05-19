@@ -86,7 +86,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'preset_modes': None,
+              'preset_modes': list([
+                'auto',
+              ]),
             }),
             'categories': dict({
             }),
@@ -110,7 +112,7 @@
             'original_name': 'Airversa AP2 1808 AirPurifier',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <FanEntityFeature: 49>,
+            'supported_features': <FanEntityFeature: 57>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_32832',
             'unit_of_measurement': None,
@@ -120,9 +122,11 @@
               'friendly_name': 'Airversa AP2 1808 AirPurifier',
               'percentage': 0,
               'percentage_step': 20.0,
-              'preset_mode': None,
-              'preset_modes': None,
-              'supported_features': <FanEntityFeature: 49>,
+              'preset_mode': 'auto',
+              'preset_modes': list([
+                'auto',
+              ]),
+              'supported_features': <FanEntityFeature: 57>,
             }),
             'entity_id': 'fan.airversa_ap2_1808_airpurifier',
             'state': 'off',
@@ -4195,6 +4199,3464 @@
     }),
   ])
 # ---
+# name: test_snapshots[ecobee3_lite]
+  list([
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:4295608960',
+          ]),
+        ]),
+        'is_new': False,
+        'labels': list([
+        ]),
+        'manufacturer': 'ecobee Inc.',
+        'model': 'EBRSE4',
+        'model_id': None,
+        'name': 'Basement',
+        'name_by_user': None,
+        'primary_config_entry': 'TestData',
+        'serial_number': '**REDACTED**',
+        'suggested_area': None,
+        'sw_version': '1.0.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.basement_motion',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+            'original_icon': None,
+            'original_name': 'Basement Motion',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4295608960_56',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'motion',
+              'friendly_name': 'Basement Motion',
+            }),
+            'entity_id': 'binary_sensor.basement_motion',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.basement_occupancy',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
+            'original_icon': None,
+            'original_name': 'Basement Occupancy',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4295608960_57',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'occupancy',
+              'friendly_name': 'Basement Occupancy',
+            }),
+            'entity_id': 'binary_sensor.basement_occupancy',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.basement_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+            'original_icon': None,
+            'original_name': 'Basement Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4295608960_1_6',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'identify',
+              'friendly_name': 'Basement Identify',
+            }),
+            'entity_id': 'button.basement_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'sensor.basement_battery',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+            'original_icon': 'mdi:battery-unknown',
+            'original_name': 'Basement Battery',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4295608960_192',
+            'unit_of_measurement': '%',
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'battery',
+              'friendly_name': 'Basement Battery',
+              'icon': 'mdi:battery',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': '%',
+            }),
+            'entity_id': 'sensor.basement_battery',
+            'state': '100',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.basement_temperature',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+            'original_icon': None,
+            'original_name': 'Basement Temperature',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4295608960_208',
+            'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'temperature',
+              'friendly_name': 'Basement Temperature',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+            }),
+            'entity_id': 'sensor.basement_temperature',
+            'state': '20.3',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:4298360914',
+          ]),
+        ]),
+        'is_new': False,
+        'labels': list([
+        ]),
+        'manufacturer': 'ecobee Inc.',
+        'model': 'EBDWC01',
+        'model_id': None,
+        'name': 'Basement Window 1',
+        'name_by_user': None,
+        'primary_config_entry': 'TestData',
+        'serial_number': '**REDACTED**',
+        'suggested_area': None,
+        'sw_version': '1.0.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.basement_window_1_contact',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+            'original_icon': None,
+            'original_name': 'Basement Window 1 Contact',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298360914_224',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'opening',
+              'friendly_name': 'Basement Window 1 Contact',
+            }),
+            'entity_id': 'binary_sensor.basement_window_1_contact',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.basement_window_1_motion',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+            'original_icon': None,
+            'original_name': 'Basement Window 1 Motion',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298360914_56',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'motion',
+              'friendly_name': 'Basement Window 1 Motion',
+            }),
+            'entity_id': 'binary_sensor.basement_window_1_motion',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.basement_window_1_occupancy',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
+            'original_icon': None,
+            'original_name': 'Basement Window 1 Occupancy',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298360914_57',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'occupancy',
+              'friendly_name': 'Basement Window 1 Occupancy',
+            }),
+            'entity_id': 'binary_sensor.basement_window_1_occupancy',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.basement_window_1_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+            'original_icon': None,
+            'original_name': 'Basement Window 1 Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298360914_1_6',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'identify',
+              'friendly_name': 'Basement Window 1 Identify',
+            }),
+            'entity_id': 'button.basement_window_1_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'sensor.basement_window_1_battery',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+            'original_icon': 'mdi:battery-unknown',
+            'original_name': 'Basement Window 1 Battery',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298360914_192',
+            'unit_of_measurement': '%',
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'battery',
+              'friendly_name': 'Basement Window 1 Battery',
+              'icon': 'mdi:battery',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': '%',
+            }),
+            'entity_id': 'sensor.basement_window_1_battery',
+            'state': '100',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:4298360921',
+          ]),
+        ]),
+        'is_new': False,
+        'labels': list([
+        ]),
+        'manufacturer': 'ecobee Inc.',
+        'model': 'EBDWC01',
+        'model_id': None,
+        'name': 'Deck Door',
+        'name_by_user': None,
+        'primary_config_entry': 'TestData',
+        'serial_number': '**REDACTED**',
+        'suggested_area': None,
+        'sw_version': '1.0.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.deck_door_contact',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+            'original_icon': None,
+            'original_name': 'Deck Door Contact',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298360921_224',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'opening',
+              'friendly_name': 'Deck Door Contact',
+            }),
+            'entity_id': 'binary_sensor.deck_door_contact',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.deck_door_motion',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+            'original_icon': None,
+            'original_name': 'Deck Door Motion',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298360921_56',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'motion',
+              'friendly_name': 'Deck Door Motion',
+            }),
+            'entity_id': 'binary_sensor.deck_door_motion',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.deck_door_occupancy',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
+            'original_icon': None,
+            'original_name': 'Deck Door Occupancy',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298360921_57',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'occupancy',
+              'friendly_name': 'Deck Door Occupancy',
+            }),
+            'entity_id': 'binary_sensor.deck_door_occupancy',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.deck_door_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+            'original_icon': None,
+            'original_name': 'Deck Door Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298360921_1_6',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'identify',
+              'friendly_name': 'Deck Door Identify',
+            }),
+            'entity_id': 'button.deck_door_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'sensor.deck_door_battery',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+            'original_icon': 'mdi:battery-unknown',
+            'original_name': 'Deck Door Battery',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298360921_192',
+            'unit_of_measurement': '%',
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'battery',
+              'friendly_name': 'Deck Door Battery',
+              'icon': 'mdi:battery',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': '%',
+            }),
+            'entity_id': 'sensor.deck_door_battery',
+            'state': '100',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:4298527970',
+          ]),
+        ]),
+        'is_new': False,
+        'labels': list([
+        ]),
+        'manufacturer': 'ecobee Inc.',
+        'model': 'EBDWC01',
+        'model_id': None,
+        'name': 'Front Door',
+        'name_by_user': None,
+        'primary_config_entry': 'TestData',
+        'serial_number': '**REDACTED**',
+        'suggested_area': None,
+        'sw_version': '1.0.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.front_door_contact',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+            'original_icon': None,
+            'original_name': 'Front Door Contact',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298527970_224',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'opening',
+              'friendly_name': 'Front Door Contact',
+            }),
+            'entity_id': 'binary_sensor.front_door_contact',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.front_door_motion',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+            'original_icon': None,
+            'original_name': 'Front Door Motion',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298527970_56',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'motion',
+              'friendly_name': 'Front Door Motion',
+            }),
+            'entity_id': 'binary_sensor.front_door_motion',
+            'state': 'on',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.front_door_occupancy',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
+            'original_icon': None,
+            'original_name': 'Front Door Occupancy',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298527970_57',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'occupancy',
+              'friendly_name': 'Front Door Occupancy',
+            }),
+            'entity_id': 'binary_sensor.front_door_occupancy',
+            'state': 'on',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.front_door_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+            'original_icon': None,
+            'original_name': 'Front Door Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298527970_1_6',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'identify',
+              'friendly_name': 'Front Door Identify',
+            }),
+            'entity_id': 'button.front_door_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'sensor.front_door_battery',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+            'original_icon': 'mdi:battery-unknown',
+            'original_name': 'Front Door Battery',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298527970_192',
+            'unit_of_measurement': '%',
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'battery',
+              'friendly_name': 'Front Door Battery',
+              'icon': 'mdi:battery',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': '%',
+            }),
+            'entity_id': 'sensor.front_door_battery',
+            'state': '100',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:4298527962',
+          ]),
+        ]),
+        'is_new': False,
+        'labels': list([
+        ]),
+        'manufacturer': 'ecobee Inc.',
+        'model': 'EBDWC01',
+        'model_id': None,
+        'name': 'Garage Door',
+        'name_by_user': None,
+        'primary_config_entry': 'TestData',
+        'serial_number': '**REDACTED**',
+        'suggested_area': None,
+        'sw_version': '1.0.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.garage_door_contact',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+            'original_icon': None,
+            'original_name': 'Garage Door Contact',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298527962_224',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'opening',
+              'friendly_name': 'Garage Door Contact',
+            }),
+            'entity_id': 'binary_sensor.garage_door_contact',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.garage_door_motion',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+            'original_icon': None,
+            'original_name': 'Garage Door Motion',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298527962_56',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'motion',
+              'friendly_name': 'Garage Door Motion',
+            }),
+            'entity_id': 'binary_sensor.garage_door_motion',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.garage_door_occupancy',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
+            'original_icon': None,
+            'original_name': 'Garage Door Occupancy',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298527962_57',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'occupancy',
+              'friendly_name': 'Garage Door Occupancy',
+            }),
+            'entity_id': 'binary_sensor.garage_door_occupancy',
+            'state': 'on',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.garage_door_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+            'original_icon': None,
+            'original_name': 'Garage Door Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298527962_1_6',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'identify',
+              'friendly_name': 'Garage Door Identify',
+            }),
+            'entity_id': 'button.garage_door_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'sensor.garage_door_battery',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+            'original_icon': 'mdi:battery-unknown',
+            'original_name': 'Garage Door Battery',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298527962_192',
+            'unit_of_measurement': '%',
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'battery',
+              'friendly_name': 'Garage Door Battery',
+              'icon': 'mdi:battery',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': '%',
+            }),
+            'entity_id': 'sensor.garage_door_battery',
+            'state': '100',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:4295016858',
+          ]),
+        ]),
+        'is_new': False,
+        'labels': list([
+        ]),
+        'manufacturer': 'ecobee Inc.',
+        'model': 'EBRSE4',
+        'model_id': None,
+        'name': 'Living Room',
+        'name_by_user': None,
+        'primary_config_entry': 'TestData',
+        'serial_number': '**REDACTED**',
+        'suggested_area': None,
+        'sw_version': '1.0.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.living_room_motion',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+            'original_icon': None,
+            'original_name': 'Living Room Motion',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4295016858_56',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'motion',
+              'friendly_name': 'Living Room Motion',
+            }),
+            'entity_id': 'binary_sensor.living_room_motion',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.living_room_occupancy',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
+            'original_icon': None,
+            'original_name': 'Living Room Occupancy',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4295016858_57',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'occupancy',
+              'friendly_name': 'Living Room Occupancy',
+            }),
+            'entity_id': 'binary_sensor.living_room_occupancy',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.living_room_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+            'original_icon': None,
+            'original_name': 'Living Room Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4295016858_1_6',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'identify',
+              'friendly_name': 'Living Room Identify',
+            }),
+            'entity_id': 'button.living_room_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'sensor.living_room_battery',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+            'original_icon': 'mdi:battery-unknown',
+            'original_name': 'Living Room Battery',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4295016858_192',
+            'unit_of_measurement': '%',
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'battery',
+              'friendly_name': 'Living Room Battery',
+              'icon': 'mdi:battery',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': '%',
+            }),
+            'entity_id': 'sensor.living_room_battery',
+            'state': '100',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.living_room_temperature',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+            'original_icon': None,
+            'original_name': 'Living Room Temperature',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4295016858_208',
+            'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'temperature',
+              'friendly_name': 'Living Room Temperature',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+            }),
+            'entity_id': 'sensor.living_room_temperature',
+            'state': '21.0',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:4298360712',
+          ]),
+        ]),
+        'is_new': False,
+        'labels': list([
+        ]),
+        'manufacturer': 'ecobee Inc.',
+        'model': 'EBDWC01',
+        'model_id': None,
+        'name': 'Living Room Window 1',
+        'name_by_user': None,
+        'primary_config_entry': 'TestData',
+        'serial_number': '**REDACTED**',
+        'suggested_area': None,
+        'sw_version': '1.0.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.living_room_window_1_contact',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+            'original_icon': None,
+            'original_name': 'Living Room Window 1 Contact',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298360712_224',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'opening',
+              'friendly_name': 'Living Room Window 1 Contact',
+            }),
+            'entity_id': 'binary_sensor.living_room_window_1_contact',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.living_room_window_1_motion',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+            'original_icon': None,
+            'original_name': 'Living Room Window 1 Motion',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298360712_56',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'motion',
+              'friendly_name': 'Living Room Window 1 Motion',
+            }),
+            'entity_id': 'binary_sensor.living_room_window_1_motion',
+            'state': 'on',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.living_room_window_1_occupancy',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
+            'original_icon': None,
+            'original_name': 'Living Room Window 1 Occupancy',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298360712_57',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'occupancy',
+              'friendly_name': 'Living Room Window 1 Occupancy',
+            }),
+            'entity_id': 'binary_sensor.living_room_window_1_occupancy',
+            'state': 'on',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.living_room_window_1_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+            'original_icon': None,
+            'original_name': 'Living Room Window 1 Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298360712_1_6',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'identify',
+              'friendly_name': 'Living Room Window 1 Identify',
+            }),
+            'entity_id': 'button.living_room_window_1_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'sensor.living_room_window_1_battery',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+            'original_icon': 'mdi:battery-unknown',
+            'original_name': 'Living Room Window 1 Battery',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298360712_192',
+            'unit_of_measurement': '%',
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'battery',
+              'friendly_name': 'Living Room Window 1 Battery',
+              'icon': 'mdi:battery',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': '%',
+            }),
+            'entity_id': 'sensor.living_room_window_1_battery',
+            'state': '100',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:4298649931',
+          ]),
+        ]),
+        'is_new': False,
+        'labels': list([
+        ]),
+        'manufacturer': 'ecobee Inc.',
+        'model': 'EBDWC01',
+        'model_id': None,
+        'name': 'Loft window',
+        'name_by_user': None,
+        'primary_config_entry': 'TestData',
+        'serial_number': '**REDACTED**',
+        'suggested_area': None,
+        'sw_version': '1.0.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.loft_window_contact',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+            'original_icon': None,
+            'original_name': 'Loft window Contact',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298649931_224',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'opening',
+              'friendly_name': 'Loft window Contact',
+            }),
+            'entity_id': 'binary_sensor.loft_window_contact',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.loft_window_motion',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+            'original_icon': None,
+            'original_name': 'Loft window Motion',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298649931_56',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'motion',
+              'friendly_name': 'Loft window Motion',
+            }),
+            'entity_id': 'binary_sensor.loft_window_motion',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.loft_window_occupancy',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
+            'original_icon': None,
+            'original_name': 'Loft window Occupancy',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298649931_57',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'occupancy',
+              'friendly_name': 'Loft window Occupancy',
+            }),
+            'entity_id': 'binary_sensor.loft_window_occupancy',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.loft_window_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+            'original_icon': None,
+            'original_name': 'Loft window Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298649931_1_6',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'identify',
+              'friendly_name': 'Loft window Identify',
+            }),
+            'entity_id': 'button.loft_window_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'sensor.loft_window_battery',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+            'original_icon': 'mdi:battery-unknown',
+            'original_name': 'Loft window Battery',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298649931_192',
+            'unit_of_measurement': '%',
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'battery',
+              'friendly_name': 'Loft window Battery',
+              'icon': 'mdi:battery',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': '%',
+            }),
+            'entity_id': 'sensor.loft_window_battery',
+            'state': '100',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:4295608971',
+          ]),
+        ]),
+        'is_new': False,
+        'labels': list([
+        ]),
+        'manufacturer': 'ecobee Inc.',
+        'model': 'EBRSE4',
+        'model_id': None,
+        'name': 'Master BR',
+        'name_by_user': None,
+        'primary_config_entry': 'TestData',
+        'serial_number': '**REDACTED**',
+        'suggested_area': None,
+        'sw_version': '1.0.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.master_br_motion',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+            'original_icon': None,
+            'original_name': 'Master BR Motion',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4295608971_56',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'motion',
+              'friendly_name': 'Master BR Motion',
+            }),
+            'entity_id': 'binary_sensor.master_br_motion',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.master_br_occupancy',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
+            'original_icon': None,
+            'original_name': 'Master BR Occupancy',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4295608971_57',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'occupancy',
+              'friendly_name': 'Master BR Occupancy',
+            }),
+            'entity_id': 'binary_sensor.master_br_occupancy',
+            'state': 'on',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.master_br_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+            'original_icon': None,
+            'original_name': 'Master BR Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4295608971_1_6',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'identify',
+              'friendly_name': 'Master BR Identify',
+            }),
+            'entity_id': 'button.master_br_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'sensor.master_br_battery',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+            'original_icon': 'mdi:battery-unknown',
+            'original_name': 'Master BR Battery',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4295608971_192',
+            'unit_of_measurement': '%',
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'battery',
+              'friendly_name': 'Master BR Battery',
+              'icon': 'mdi:battery',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': '%',
+            }),
+            'entity_id': 'sensor.master_br_battery',
+            'state': '100',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.master_br_temperature',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+            'original_icon': None,
+            'original_name': 'Master BR Temperature',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4295608971_208',
+            'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'temperature',
+              'friendly_name': 'Master BR Temperature',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+            }),
+            'entity_id': 'sensor.master_br_temperature',
+            'state': '22.4',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:4298584118',
+          ]),
+        ]),
+        'is_new': False,
+        'labels': list([
+        ]),
+        'manufacturer': 'ecobee Inc.',
+        'model': 'EBDWC01',
+        'model_id': None,
+        'name': 'Master BR Window',
+        'name_by_user': None,
+        'primary_config_entry': 'TestData',
+        'serial_number': '**REDACTED**',
+        'suggested_area': None,
+        'sw_version': '1.0.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.master_br_window_contact',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+            'original_icon': None,
+            'original_name': 'Master BR Window Contact',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298584118_224',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'opening',
+              'friendly_name': 'Master BR Window Contact',
+            }),
+            'entity_id': 'binary_sensor.master_br_window_contact',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.master_br_window_motion',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+            'original_icon': None,
+            'original_name': 'Master BR Window Motion',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298584118_56',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'motion',
+              'friendly_name': 'Master BR Window Motion',
+            }),
+            'entity_id': 'binary_sensor.master_br_window_motion',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.master_br_window_occupancy',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
+            'original_icon': None,
+            'original_name': 'Master BR Window Occupancy',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298584118_57',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'occupancy',
+              'friendly_name': 'Master BR Window Occupancy',
+            }),
+            'entity_id': 'binary_sensor.master_br_window_occupancy',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.master_br_window_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+            'original_icon': None,
+            'original_name': 'Master BR Window Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298584118_1_6',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'identify',
+              'friendly_name': 'Master BR Window Identify',
+            }),
+            'entity_id': 'button.master_br_window_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'sensor.master_br_window_battery',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+            'original_icon': 'mdi:battery-unknown',
+            'original_name': 'Master BR Window Battery',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298584118_192',
+            'unit_of_measurement': '%',
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'battery',
+              'friendly_name': 'Master BR Window Battery',
+              'icon': 'mdi:battery',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': '%',
+            }),
+            'entity_id': 'sensor.master_br_window_battery',
+            'state': '100',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:1',
+          ]),
+        ]),
+        'is_new': False,
+        'labels': list([
+        ]),
+        'manufacturer': 'ecobee Inc.',
+        'model': 'ecobee3 lite',
+        'model_id': None,
+        'name': 'Thermostat',
+        'name_by_user': None,
+        'primary_config_entry': 'TestData',
+        'serial_number': '**REDACTED**',
+        'suggested_area': None,
+        'sw_version': '4.8.70226',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': None,
+            'entity_id': 'button.thermostat_clear_hold',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'Thermostat Clear Hold',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_16_48',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Thermostat Clear Hold',
+            }),
+            'entity_id': 'button.thermostat_clear_hold',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.thermostat_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+            'original_icon': None,
+            'original_name': 'Thermostat Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_1_6',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'identify',
+              'friendly_name': 'Thermostat Identify',
+            }),
+            'entity_id': 'button.thermostat_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'fan_modes': list([
+                'on',
+                'auto',
+              ]),
+              'hvac_modes': list([
+                <HVACMode.OFF: 'off'>,
+                <HVACMode.HEAT: 'heat'>,
+                <HVACMode.COOL: 'cool'>,
+                <HVACMode.HEAT_COOL: 'heat_cool'>,
+              ]),
+              'max_temp': 35,
+              'min_temp': 7,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'climate',
+            'entity_category': None,
+            'entity_id': 'climate.thermostat',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'Thermostat',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': <ClimateEntityFeature: 395>,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_16',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'current_humidity': 45.0,
+              'current_temperature': 21.2,
+              'fan_mode': 'on',
+              'fan_modes': list([
+                'on',
+                'auto',
+              ]),
+              'friendly_name': 'Thermostat',
+              'hvac_action': <HVACAction.FAN: 'fan'>,
+              'hvac_modes': list([
+                <HVACMode.OFF: 'off'>,
+                <HVACMode.HEAT: 'heat'>,
+                <HVACMode.COOL: 'cool'>,
+                <HVACMode.HEAT_COOL: 'heat_cool'>,
+              ]),
+              'max_temp': 35,
+              'min_temp': 7,
+              'supported_features': <ClimateEntityFeature: 395>,
+              'target_temp_high': None,
+              'target_temp_low': None,
+              'temperature': None,
+            }),
+            'entity_id': 'climate.thermostat',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'options': list([
+                'home',
+                'sleep',
+                'away',
+              ]),
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'select',
+            'entity_category': None,
+            'entity_id': 'select.thermostat_current_mode',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'Thermostat Current Mode',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': 'ecobee_mode',
+            'unique_id': '00:00:00:00:00:00_1_16_33',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Thermostat Current Mode',
+              'options': list([
+                'home',
+                'sleep',
+                'away',
+              ]),
+            }),
+            'entity_id': 'select.thermostat_current_mode',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'options': list([
+                'celsius',
+                'fahrenheit',
+              ]),
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'select',
+            'entity_category': <EntityCategory.CONFIG: 'config'>,
+            'entity_id': 'select.thermostat_temperature_display_units',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'Thermostat Temperature Display Units',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': 'temperature_display_units',
+            'unique_id': '00:00:00:00:00:00_1_16_21',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Thermostat Temperature Display Units',
+              'options': list([
+                'celsius',
+                'fahrenheit',
+              ]),
+            }),
+            'entity_id': 'select.thermostat_temperature_display_units',
+            'state': 'fahrenheit',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.thermostat_current_humidity',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+            'original_icon': None,
+            'original_name': 'Thermostat Current Humidity',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_16_24',
+            'unit_of_measurement': '%',
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'humidity',
+              'friendly_name': 'Thermostat Current Humidity',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': '%',
+            }),
+            'entity_id': 'sensor.thermostat_current_humidity',
+            'state': '45.0',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.thermostat_current_temperature',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+            'original_icon': None,
+            'original_name': 'Thermostat Current Temperature',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_16_19',
+            'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'temperature',
+              'friendly_name': 'Thermostat Current Temperature',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+            }),
+            'entity_id': 'sensor.thermostat_current_temperature',
+            'state': '21.2',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:4295016969',
+          ]),
+        ]),
+        'is_new': False,
+        'labels': list([
+        ]),
+        'manufacturer': 'ecobee Inc.',
+        'model': 'EBRSE4',
+        'model_id': None,
+        'name': 'Upstairs BR',
+        'name_by_user': None,
+        'primary_config_entry': 'TestData',
+        'serial_number': '**REDACTED**',
+        'suggested_area': None,
+        'sw_version': '1.0.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.upstairs_br_motion',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+            'original_icon': None,
+            'original_name': 'Upstairs BR Motion',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4295016969_56',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'motion',
+              'friendly_name': 'Upstairs BR Motion',
+            }),
+            'entity_id': 'binary_sensor.upstairs_br_motion',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.upstairs_br_occupancy',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
+            'original_icon': None,
+            'original_name': 'Upstairs BR Occupancy',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4295016969_57',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'occupancy',
+              'friendly_name': 'Upstairs BR Occupancy',
+            }),
+            'entity_id': 'binary_sensor.upstairs_br_occupancy',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.upstairs_br_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+            'original_icon': None,
+            'original_name': 'Upstairs BR Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4295016969_1_6',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'identify',
+              'friendly_name': 'Upstairs BR Identify',
+            }),
+            'entity_id': 'button.upstairs_br_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'sensor.upstairs_br_battery',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+            'original_icon': 'mdi:battery-unknown',
+            'original_name': 'Upstairs BR Battery',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4295016969_192',
+            'unit_of_measurement': '%',
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'battery',
+              'friendly_name': 'Upstairs BR Battery',
+              'icon': 'mdi:battery',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': '%',
+            }),
+            'entity_id': 'sensor.upstairs_br_battery',
+            'state': '100',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.upstairs_br_temperature',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+            'original_icon': None,
+            'original_name': 'Upstairs BR Temperature',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4295016969_208',
+            'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'temperature',
+              'friendly_name': 'Upstairs BR Temperature',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+            }),
+            'entity_id': 'sensor.upstairs_br_temperature',
+            'state': '21.6',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:4298568508',
+          ]),
+        ]),
+        'is_new': False,
+        'labels': list([
+        ]),
+        'manufacturer': 'ecobee Inc.',
+        'model': 'EBDWC01',
+        'model_id': None,
+        'name': 'Upstairs BR Window',
+        'name_by_user': None,
+        'primary_config_entry': 'TestData',
+        'serial_number': '**REDACTED**',
+        'suggested_area': None,
+        'sw_version': '1.0.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.upstairs_br_window_contact',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+            'original_icon': None,
+            'original_name': 'Upstairs BR Window Contact',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298568508_224',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'opening',
+              'friendly_name': 'Upstairs BR Window Contact',
+            }),
+            'entity_id': 'binary_sensor.upstairs_br_window_contact',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.upstairs_br_window_motion',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+            'original_icon': None,
+            'original_name': 'Upstairs BR Window Motion',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298568508_56',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'motion',
+              'friendly_name': 'Upstairs BR Window Motion',
+            }),
+            'entity_id': 'binary_sensor.upstairs_br_window_motion',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': None,
+            'entity_id': 'binary_sensor.upstairs_br_window_occupancy',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
+            'original_icon': None,
+            'original_name': 'Upstairs BR Window Occupancy',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298568508_57',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'occupancy',
+              'friendly_name': 'Upstairs BR Window Occupancy',
+            }),
+            'entity_id': 'binary_sensor.upstairs_br_window_occupancy',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.upstairs_br_window_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+            'original_icon': None,
+            'original_name': 'Upstairs BR Window Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298568508_1_6',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'identify',
+              'friendly_name': 'Upstairs BR Window Identify',
+            }),
+            'entity_id': 'button.upstairs_br_window_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'sensor.upstairs_br_window_battery',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+            'original_icon': 'mdi:battery-unknown',
+            'original_name': 'Upstairs BR Window Battery',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_4298568508_192',
+            'unit_of_measurement': '%',
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'battery',
+              'friendly_name': 'Upstairs BR Window Battery',
+              'icon': 'mdi:battery',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': '%',
+            }),
+            'entity_id': 'sensor.upstairs_br_window_battery',
+            'state': '100',
+          }),
+        }),
+      ]),
+    }),
+  ])
+# ---
 # name: test_snapshots[ecobee3_no_sensors]
   list([
     dict({
@@ -7104,7 +10566,8 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
             }),
             'categories': dict({
             }),
@@ -7139,7 +10602,8 @@
               'percentage': 66,
               'percentage_step': 33.333333333333336,
               'preset_mode': None,
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
               'supported_features': <FanEntityFeature: 49>,
             }),
             'entity_id': 'fan.haa_c718b3',
@@ -7790,7 +11254,8 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
             }),
             'categories': dict({
             }),
@@ -7825,7 +11290,8 @@
               'percentage': 0,
               'percentage_step': 1.0,
               'preset_mode': None,
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
               'supported_features': <FanEntityFeature: 49>,
             }),
             'entity_id': 'fan.ceiling_fan',
@@ -8000,7 +11466,8 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
             }),
             'categories': dict({
             }),
@@ -8036,7 +11503,8 @@
               'percentage': 0,
               'percentage_step': 1.0,
               'preset_mode': None,
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
               'supported_features': <FanEntityFeature: 53>,
             }),
             'entity_id': 'fan.living_room_fan',
@@ -8197,7 +11665,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'preset_modes': None,
+              'preset_modes': list([
+                'auto',
+              ]),
             }),
             'categories': dict({
             }),
@@ -8221,7 +11691,7 @@
             'original_name': '89 Living Room',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <FanEntityFeature: 51>,
+            'supported_features': <FanEntityFeature: 59>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1233851541_175',
             'unit_of_measurement': None,
@@ -8233,8 +11703,10 @@
               'percentage': 33,
               'percentage_step': 33.333333333333336,
               'preset_mode': None,
-              'preset_modes': None,
-              'supported_features': <FanEntityFeature: 51>,
+              'preset_modes': list([
+                'auto',
+              ]),
+              'supported_features': <FanEntityFeature: 59>,
             }),
             'entity_id': 'fan.89_living_room',
             'state': 'on',
@@ -9245,7 +12717,8 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
             }),
             'categories': dict({
             }),
@@ -9280,7 +12753,8 @@
               'percentage': 0,
               'percentage_step': 1.0,
               'preset_mode': None,
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
               'supported_features': <FanEntityFeature: 49>,
             }),
             'entity_id': 'fan.ceiling_fan',
@@ -9455,7 +12929,8 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
             }),
             'categories': dict({
             }),
@@ -9492,7 +12967,8 @@
               'percentage': 0,
               'percentage_step': 1.0,
               'preset_mode': None,
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
               'supported_features': <FanEntityFeature: 55>,
             }),
             'entity_id': 'fan.living_room_fan',
@@ -9671,7 +13147,8 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
             }),
             'categories': dict({
             }),
@@ -9708,7 +13185,8 @@
               'percentage': 0,
               'percentage_step': 1.0,
               'preset_mode': None,
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
               'supported_features': <FanEntityFeature: 55>,
             }),
             'entity_id': 'fan.living_room_fan',
@@ -9878,7 +13356,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'preset_modes': None,
+              'preset_modes': list([
+                'auto',
+              ]),
             }),
             'categories': dict({
             }),
@@ -9902,7 +13382,7 @@
             'original_name': '89 Living Room',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <FanEntityFeature: 51>,
+            'supported_features': <FanEntityFeature: 59>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1233851541_175',
             'unit_of_measurement': None,
@@ -9914,8 +13394,10 @@
               'percentage': 33,
               'percentage_step': 33.333333333333336,
               'preset_mode': None,
-              'preset_modes': None,
-              'supported_features': <FanEntityFeature: 51>,
+              'preset_modes': list([
+                'auto',
+              ]),
+              'supported_features': <FanEntityFeature: 59>,
             }),
             'entity_id': 'fan.89_living_room',
             'state': 'on',
@@ -14352,7 +17834,7 @@
             'original_name': 'LG webOS TV AF80',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <MediaPlayerEntityFeature: 18433>,
+            'supported_features': <MediaPlayerEntityFeature: 18817>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_48',
             'unit_of_measurement': None,
@@ -14371,7 +17853,7 @@
                 'AV',
                 'HDMI 4',
               ]),
-              'supported_features': <MediaPlayerEntityFeature: 18433>,
+              'supported_features': <MediaPlayerEntityFeature: 18817>,
             }),
             'entity_id': 'media_player.lg_webos_tv_af80',
             'state': 'on',
@@ -14509,7 +17991,8 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
             }),
             'categories': dict({
             }),
@@ -14544,7 +18027,8 @@
               'percentage': 0,
               'percentage_step': 25.0,
               'preset_mode': None,
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
               'supported_features': <FanEntityFeature: 49>,
             }),
             'entity_id': 'fan.caseta_r_wireless_fan_speed_control',
@@ -18319,7 +21803,8 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
             }),
             'categories': dict({
             }),
@@ -18355,7 +21840,8 @@
               'percentage': 0,
               'percentage_step': 25.0,
               'preset_mode': None,
-              'preset_modes': None,
+              'preset_modes': list([
+              ]),
               'supported_features': <FanEntityFeature: 53>,
             }),
             'entity_id': 'fan.simpleconnect_fan_06f674_hunter_fan',

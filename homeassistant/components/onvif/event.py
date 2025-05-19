@@ -174,11 +174,20 @@ class EventManager:
                     UNHANDLED_TOPICS.add(topic)
                 continue
 
-            event = await parser(unique_id, msg)
+            try:
+                event = await parser(unique_id, msg)
+                error = None
+            except (AttributeError, KeyError) as e:
+                event = None
+                error = e
 
             if not event:
                 LOGGER.warning(
-                    "%s: Unable to parse event from %s: %s", self.name, unique_id, msg
+                    "%s: Unable to parse event from %s: %s: %s",
+                    self.name,
+                    unique_id,
+                    error,
+                    msg,
                 )
                 return
 

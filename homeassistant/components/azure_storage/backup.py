@@ -175,7 +175,8 @@ class AzureStorageBackupAgent(BackupAgent):
         """Find a blob by backup id."""
         async for blob in self._client.list_blobs(include="metadata"):
             if (
-                backup_id == blob.metadata.get("backup_id", "")
+                blob.metadata is not None
+                and backup_id == blob.metadata.get("backup_id", "")
                 and blob.metadata.get("metadata_version") == METADATA_VERSION
             ):
                 return blob

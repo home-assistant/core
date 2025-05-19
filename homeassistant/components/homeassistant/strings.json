@@ -188,7 +188,7 @@
     },
     "reload_all": {
       "name": "Reload all",
-      "description": "Reload all YAML configuration that can be reloaded without restarting Home Assistant."
+      "description": "Reloads all YAML configuration that can be reloaded without restarting Home Assistant."
     }
   },
   "exceptions": {

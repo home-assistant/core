@@ -168,7 +168,10 @@ async def test_get_triggers_for_invalid_device_id(
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
-    with pytest.raises(InvalidDeviceAutomationConfig):
+    with pytest.raises(
+        InvalidDeviceAutomationConfig,
+        match="not found while configuring device automation triggers",
+    ):
         await async_get_device_automations(
             hass, DeviceAutomationType.TRIGGER, invalid_device.id
         )
@@ -384,7 +387,10 @@ async def test_validate_trigger_invalid_triggers(
         },
     )
 
-    assert "Invalid (type,subtype): ('single', 'button3')" in caplog.text
+    assert (
+        "Invalid device automation trigger (type, subtype): ('single', 'button3')"
+        in caplog.text
+    )
 
 
 async def test_rpc_no_runtime_data(

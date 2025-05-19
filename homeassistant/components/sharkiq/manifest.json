@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/sharkiq",
   "iot_class": "cloud_polling",
   "loggers": ["sharkiq"],
-  "requirements": ["sharkiq==1.0.2"]
+  "requirements": ["sharkiq==1.1.0"]
 }
