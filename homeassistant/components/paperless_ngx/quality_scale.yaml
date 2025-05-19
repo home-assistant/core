@@ -37,7 +37,7 @@ rules:
   log-when-unavailable: done
   parallel-updates:
     status: exempt
-    comment: Integration uses a coordinator to fetch data
+    comment: Integration uses a coordinator to fetch data with own scan interval
   reauthentication-flow: done
   test-coverage: done
 
