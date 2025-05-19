@@ -3,7 +3,6 @@
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.jewish_calendar.diagnostics import TO_REDACT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -12,9 +11,7 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.parametrize(
-    ("location_data"),
-    ["Jerusalem", "New York", None],
-    indirect=True,
+    ("location_data"), ["Jerusalem", "New York", None], indirect=True
 )
 async def test_diagnostics(
     hass: HomeAssistant,
@@ -31,17 +28,4 @@ async def test_diagnostics(
         hass, hass_client, config_entry
     )
 
-    # Verify that location data is redacted in entry_data
-    for key in TO_REDACT:
-        if key in diagnostics_data["entry_data"]:
-            assert diagnostics_data["entry_data"][key] == "**REDACTED**"
-
-    # Verify the runtime_data is included and location properties are redacted
-    assert "data" in diagnostics_data
-    if "location" in diagnostics_data["data"]:
-        for key in TO_REDACT:
-            assert key in diagnostics_data["data"]["location"]
-            assert diagnostics_data["data"]["location"][key] == "**REDACTED**"
-
-    # Complete snapshot test
     assert diagnostics_data == snapshot
