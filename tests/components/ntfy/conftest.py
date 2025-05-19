@@ -76,7 +76,9 @@ def mock_aiontfy() -> Generator[AsyncMock]:
             "content_type": None,
         }
 
-        async def mock_ws(topics: list[str], callback: Callable[[Notification], None]):
+        async def mock_ws(
+            topics: list[str], callback: Callable[[Notification], None], **kwargs
+        ):
             callback(resp)
             while True:
                 await asyncio.sleep(1)
