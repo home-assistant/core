@@ -205,6 +205,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "connectable": False,
         "domain": "govee_ble",
+        "local_name": "GVH5110*",
+    },
+    {
+        "connectable": False,
+        "domain": "govee_ble",
         "manufacturer_id": 1,
         "service_uuid": "0000ec88-0000-1000-8000-00805f9b34fb",
     },
@@ -370,6 +375,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "connectable": False,
         "domain": "inkbird",
         "local_name": "ITH-21-B",
+    },
+    {
+        "connectable": False,
+        "domain": "inkbird",
+        "local_name": "IBS-P02B",
     },
     {
         "connectable": True,

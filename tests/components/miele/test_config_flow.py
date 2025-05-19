@@ -7,7 +7,7 @@ from pymiele import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 import pytest
 
 from homeassistant.components.miele.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -154,7 +154,7 @@ async def test_flow_reconfigure_abort(
     access_token: str,
     expires_at: float,
 ) -> None:
-    """Test reauth step with correct params and mismatches."""
+    """Test reconfigure step with correct params."""
 
     CURRENT_TOKEN = {
         "auth_implementation": DOMAIN,
@@ -212,3 +212,55 @@ async def test_flow_reconfigure_abort(
     assert result.get("reason") == "reconfigure_successful"
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_zeroconf_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_setup_entry: Generator[AsyncMock],
+) -> None:
+    """Test zeroconf flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": REDIRECT_URL,
+        },
+    )
+
+    assert result["url"] == (
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
+        f"&redirect_uri={REDIRECT_URL}"
+        f"&state={state}"
+        "&vg=sv-SE"
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    assert result.get("type") is FlowResultType.EXTERNAL_STEP
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    config_entry = result["result"]
+    assert config_entry.domain == "miele"

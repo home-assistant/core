@@ -120,7 +120,7 @@ class HomeFactory:
 
         await self.hass.async_block_till_done()
 
-        hap = self.hass.data[HMIPC_DOMAIN][HAPID]
+        hap = self.hmip_config_entry.runtime_data
         mock_home.on_update(hap.async_update)
         mock_home.on_create(hap.async_create_entity)
         return hap

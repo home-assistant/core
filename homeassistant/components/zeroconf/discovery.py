@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import contextlib
 from fnmatch import translate
-from functools import lru_cache
+from functools import lru_cache, partial
 from ipaddress import IPv4Address, IPv6Address
 import logging
 import re
@@ -24,7 +25,7 @@ from homeassistant.helpers.service_info.zeroconf import (
 from homeassistant.loader import HomeKitDiscoveredIntegration, ZeroconfMatcher
 from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN
+from .const import DOMAIN, REQUEST_TIMEOUT
 
 if TYPE_CHECKING:
     from .models import HaZeroconf
@@ -190,6 +191,26 @@ class ZeroconfDiscovery:
         self.homekit_model_lookups = homekit_model_lookups
         self.homekit_model_matchers = homekit_model_matchers
         self.async_service_browser: AsyncServiceBrowser | None = None
+        self._service_update_listeners: set[Callable[[AsyncServiceInfo], None]] = set()
+        self._service_removed_listeners: set[Callable[[str], None]] = set()
+
+    @callback
+    def async_register_service_update_listener(
+        self,
+        listener: Callable[[AsyncServiceInfo], None],
+    ) -> Callable[[], None]:
+        """Register a service update listener."""
+        self._service_update_listeners.add(listener)
+        return partial(self._service_update_listeners.remove, listener)
+
+    @callback
+    def async_register_service_removed_listener(
+        self,
+        listener: Callable[[str], None],
+    ) -> Callable[[], None]:
+        """Register a service removed listener."""
+        self._service_removed_listeners.add(listener)
+        return partial(self._service_removed_listeners.remove, listener)
 
     async def async_setup(self) -> None:
         """Start discovery."""
@@ -258,6 +279,8 @@ class ZeroconfDiscovery:
 
         if state_change is ServiceStateChange.Removed:
             self._async_dismiss_discoveries(name)
+            for listener in self._service_removed_listeners:
+                listener(name)
             return
 
         self._async_service_update(zeroconf, service_type, name)
@@ -296,7 +319,7 @@ class ZeroconfDiscovery:
         name: str,
     ) -> None:
         """Update and process a zeroconf update."""
-        await async_service_info.async_request(zeroconf, 3000)
+        await async_service_info.async_request(zeroconf, REQUEST_TIMEOUT)
         self._async_process_service_update(async_service_info, service_type, name)
 
     @callback
@@ -304,6 +327,8 @@ class ZeroconfDiscovery:
         self, async_service_info: AsyncServiceInfo, service_type: str, name: str
     ) -> None:
         """Process a zeroconf update."""
+        for listener in self._service_update_listeners:
+            listener(async_service_info)
         info = info_from_service(async_service_info)
         if not info:
             # Prevent the browser thread from collapsing

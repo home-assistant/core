@@ -42,6 +42,8 @@ from .utils import (
     get_virtual_component_ids,
 )
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class BlockNumberDescription(BlockEntityDescription, NumberEntityDescription):
@@ -66,6 +68,8 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
     """Represent a RPC number entity."""
 
     entity_description: RpcNumberDescription
+    attribute_value: float | None
+    _id: int | None
 
     def __init__(
         self,
@@ -93,9 +97,6 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """Return value of number."""
-        if TYPE_CHECKING:
-            assert isinstance(self.attribute_value, float | None)
-
         return self.attribute_value
 
     @rpc_call
@@ -104,7 +105,6 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
         method = getattr(self.coordinator.device, self.entity_description.method)
 
         if TYPE_CHECKING:
-            assert isinstance(self._id, int)
             assert method is not None
 
         await method(self._id, value)

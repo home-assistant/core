@@ -1,7 +1,6 @@
 """Test ESPHome manager."""
 
 import asyncio
-from collections.abc import Awaitable, Callable
 import logging
 from unittest.mock import AsyncMock, Mock, call
 
@@ -10,8 +9,6 @@ from aioesphomeapi import (
     APIConnectionError,
     DeviceInfo,
     EncryptionPlaintextAPIError,
-    EntityInfo,
-    EntityState,
     HomeassistantServiceCall,
     InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
@@ -34,6 +31,7 @@ from homeassistant.components.esphome.const import (
     STABLE_BLE_VERSION_STR,
 )
 from homeassistant.components.esphome.manager import DEVICE_CONFLICT_ISSUE_FORMAT
+from homeassistant.components.tag import DOMAIN as TAG_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -43,11 +41,15 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
 
-from .conftest import MockESPHomeDevice
+from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
 
 from tests.common import (
     MockConfigEntry,
@@ -60,10 +62,7 @@ from tests.common import (
 async def test_esphome_device_subscribe_logs(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test configuring a device to subscribe to logs."""
@@ -78,7 +77,7 @@ async def test_esphome_device_subscribe_logs(
         options={CONF_SUBSCRIBE_LOGS: True},
     )
     entry.add_to_hass(hass)
-    device: MockESPHomeDevice = await mock_esphome_device(
+    device = await mock_esphome_device(
         mock_client=mock_client,
         entry=entry,
         entity_info=[],
@@ -137,10 +136,7 @@ async def test_esphome_device_subscribe_logs(
 async def test_esphome_device_service_calls_not_allowed(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
     caplog: pytest.LogCaptureFixture,
     issue_registry: ir.IssueRegistry,
 ) -> None:
@@ -148,7 +144,7 @@ async def test_esphome_device_service_calls_not_allowed(
     entity_info = []
     states = []
     user_service = []
-    device: MockESPHomeDevice = await mock_esphome_device(
+    device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
         user_service=user_service,
@@ -180,22 +176,19 @@ async def test_esphome_device_service_calls_allowed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
     caplog: pytest.LogCaptureFixture,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a device with service calls are allowed."""
-    await async_setup_component(hass, "tag", {})
+    await async_setup_component(hass, TAG_DOMAIN, {})
     entity_info = []
     states = []
     user_service = []
     hass.config_entries.async_update_entry(
         mock_config_entry, options={CONF_ALLOW_SERVICE_CALLS: True}
     )
-    device: MockESPHomeDevice = await mock_esphome_device(
+    device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
         user_service=user_service,
@@ -340,10 +333,7 @@ async def test_esphome_device_service_calls_allowed(
 async def test_esphome_device_with_old_bluetooth(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a device with old bluetooth creates an issue."""
@@ -370,10 +360,7 @@ async def test_esphome_device_with_old_bluetooth(
 async def test_esphome_device_with_password(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a device with legacy password creates an issue."""
@@ -413,10 +400,7 @@ async def test_esphome_device_with_password(
 async def test_esphome_device_with_current_bluetooth(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a device with recent bluetooth does not create an issue."""
@@ -445,7 +429,9 @@ async def test_esphome_device_with_current_bluetooth(
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_unique_id_updated_to_mac(hass: HomeAssistant, mock_client) -> None:
+async def test_unique_id_updated_to_mac(
+    hass: HomeAssistant, mock_client: APIClient
+) -> None:
     """Test we update config entry unique ID to MAC address."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -866,13 +852,10 @@ async def test_failure_during_connect(
 async def test_state_subscription(
     mock_client: APIClient,
     hass: HomeAssistant,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test ESPHome subscribes to state changes."""
-    device: MockESPHomeDevice = await mock_esphome_device(
+    device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
         user_service=[],
@@ -929,13 +912,10 @@ async def test_state_subscription(
 async def test_state_request(
     mock_client: APIClient,
     hass: HomeAssistant,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test ESPHome requests state change."""
-    device: MockESPHomeDevice = await mock_esphome_device(
+    device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
         user_service=[],
@@ -957,10 +937,7 @@ async def test_state_request(
 async def test_debug_logging(
     mock_client: APIClient,
     hass: HomeAssistant,
-    mock_generic_device_entry: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockConfigEntry],
-    ],
+    mock_generic_device_entry: MockGenericDeviceEntryType,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test enabling and disabling debug logging."""
@@ -986,10 +963,7 @@ async def test_debug_logging(
 async def test_esphome_device_with_dash_in_name_user_services(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a device with user services and a dash in the name."""
     entity_info = []
@@ -1058,10 +1032,7 @@ async def test_esphome_device_with_dash_in_name_user_services(
 async def test_esphome_user_services_ignores_invalid_arg_types(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a device with user services and a dash in the name."""
     entity_info = []
@@ -1123,10 +1094,7 @@ async def test_esphome_user_services_ignores_invalid_arg_types(
 async def test_esphome_user_service_fails(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test executing a user service fails due to disconnect."""
     entity_info = []
@@ -1182,10 +1150,7 @@ async def test_esphome_user_service_fails(
 async def test_esphome_user_services_changes(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a device with user services that change arguments."""
     entity_info = []
@@ -1264,10 +1229,7 @@ async def test_esphome_device_with_suggested_area(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a device with suggested area."""
     device = await mock_esphome_device(
@@ -1289,10 +1251,7 @@ async def test_esphome_device_with_project(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a device with a project."""
     device = await mock_esphome_device(
@@ -1316,10 +1275,7 @@ async def test_esphome_device_with_manufacturer(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a device with a manufacturer."""
     device = await mock_esphome_device(
@@ -1341,10 +1297,7 @@ async def test_esphome_device_with_web_server(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a device with a web server."""
     device = await mock_esphome_device(
@@ -1366,10 +1319,7 @@ async def test_esphome_device_with_ipv6_web_server(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a device with a web server."""
     entry = MockConfigEntry(
@@ -1402,10 +1352,7 @@ async def test_esphome_device_with_compilation_time(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a device with a compilation_time."""
     device = await mock_esphome_device(
@@ -1426,10 +1373,7 @@ async def test_esphome_device_with_compilation_time(
 async def test_disconnects_at_close_event(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test the device is disconnected at the close event."""
     await mock_esphome_device(
@@ -1460,10 +1404,7 @@ async def test_disconnects_at_close_event(
 async def test_start_reauth(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
     error: Exception,
 ) -> None:
     """Test exceptions on connect error trigger reauth."""
@@ -1488,10 +1429,7 @@ async def test_start_reauth(
 async def test_no_reauth_wrong_mac(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test exceptions on connect error trigger reauth."""
@@ -1524,10 +1462,7 @@ async def test_no_reauth_wrong_mac(
 async def test_entry_missing_unique_id(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test the unique id is added from storage if available."""
     entry = MockConfigEntry(
@@ -1549,10 +1484,7 @@ async def test_entry_missing_unique_id(
 async def test_entry_missing_bluetooth_mac_address(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test the bluetooth_mac_address is added if available."""
     entry = MockConfigEntry(
@@ -1578,16 +1510,13 @@ async def test_entry_missing_bluetooth_mac_address(
 async def test_device_adds_friendly_name(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a device with user services that change arguments."""
     entity_info = []
     states = []
-    device: MockESPHomeDevice = await mock_esphome_device(
+    device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
         user_service=[],
@@ -1621,3 +1550,53 @@ async def test_device_adds_friendly_name(
     assert (
         "No `friendly_name` set in the `esphome:` section of the YAML config for device"
     ) not in caplog.text
+
+
+async def test_assist_in_progress_issue_deleted(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test assist in progress entity and issue is deleted.
+
+    Remove this cleanup after 2026.4
+    """
+    entry = entity_registry.async_get_or_create(
+        domain=DOMAIN,
+        platform="binary_sensor",
+        unique_id="11:22:33:44:55:AA-assist_in_progress",
+    )
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"assist_in_progress_deprecated_{entry.id}",
+        is_fixable=True,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="assist_in_progress_deprecated",
+        translation_placeholders={
+            "integration_name": "ESPHome",
+        },
+    )
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        device_info={},
+        states=[],
+        mock_storage=True,
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            DOMAIN, "binary_sensor", "11:22:33:44:55:AA-assist_in_progress"
+        )
+        is None
+    )
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"assist_in_progress_deprecated_{entry.id}"
+        )
+        is None
+    )

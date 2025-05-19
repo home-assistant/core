@@ -37,6 +37,9 @@
       "next_scheduled_automatic_backup": {
         "name": "Next scheduled automatic backup"
       },
+      "last_attempted_automatic_backup": {
+        "name": "Last attempted automatic backup"
+      },
       "last_successful_automatic_backup": {
         "name": "Last successful automatic backup"
       }

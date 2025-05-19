@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2025
-MINOR_VERSION: Final = 5
+MINOR_VERSION: Final = 6
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -115,6 +115,7 @@ SUN_EVENT_SUNRISE: Final = "sunrise"
 CONF_ABOVE: Final = "above"
 CONF_ACCESS_TOKEN: Final = "access_token"
 CONF_ACTION: Final = "action"
+CONF_ACTIONS: Final = "actions"
 CONF_ADDRESS: Final = "address"
 CONF_AFTER: Final = "after"
 CONF_ALIAS: Final = "alias"
@@ -633,6 +634,14 @@ class UnitOfEnergy(StrEnum):
     GIGA_CALORIE = "Gcal"
 
 
+# Reactive energy units
+class UnitOfReactiveEnergy(StrEnum):
+    """Reactive energy units."""
+
+    VOLT_AMPERE_REACTIVE_HOUR = "varh"
+    KILO_VOLT_AMPERE_REACTIVE_HOUR = "kvarh"
+
+
 # Energy Distance units
 class UnitOfEnergyDistance(StrEnum):
     """Energy Distance units."""
@@ -766,8 +775,11 @@ class UnitOfVolumeFlowRate(StrEnum):
     """Volume flow rate units."""
 
     CUBIC_METERS_PER_HOUR = "m³/h"
+    CUBIC_METERS_PER_SECOND = "m³/s"
     CUBIC_FEET_PER_MINUTE = "ft³/min"
+    LITERS_PER_HOUR = "L/h"
     LITERS_PER_MINUTE = "L/min"
+    LITERS_PER_SECOND = "L/s"
     GALLONS_PER_MINUTE = "gal/min"
     MILLILITERS_PER_SECOND = "mL/s"
 

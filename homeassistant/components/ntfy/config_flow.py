@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 import random
 import re
@@ -26,11 +27,13 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.const import (
+    ATTR_CREDENTIALS,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_TOKEN,
     CONF_URL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -52,6 +55,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
                 autocomplete="url",
             ),
         ),
+        vol.Required(CONF_VERIFY_SSL, default=True): bool,
         vol.Required(SECTION_AUTH): data_entry_flow.section(
             vol.Schema(
                 {
@@ -71,6 +75,18 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
             ),
             {"collapsed": True},
         ),
+    }
+)
+
+STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Exclusive(CONF_PASSWORD, ATTR_CREDENTIALS): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            ),
+        ),
+        vol.Exclusive(CONF_TOKEN, ATTR_CREDENTIALS): str,
     }
 )
 
@@ -109,7 +125,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_USERNAME: username,
                 }
             )
-            session = async_get_clientsession(self.hass)
+            session = async_get_clientsession(self.hass, user_input[CONF_VERIFY_SSL])
             if username:
                 ntfy = Ntfy(
                     user_input[CONF_URL],
@@ -146,6 +162,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_URL: url.human_repr(),
                         CONF_USERNAME: username,
                         CONF_TOKEN: token,
+                        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
                     },
                 )
 
@@ -155,6 +172,76 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=STEP_USER_DATA_SCHEMA, suggested_values=user_input
             ),
             errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication dialog."""
+        errors: dict[str, str] = {}
+
+        entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            session = async_get_clientsession(self.hass)
+            if token := user_input.get(CONF_TOKEN):
+                ntfy = Ntfy(
+                    entry.data[CONF_URL],
+                    session,
+                    token=user_input[CONF_TOKEN],
+                )
+            else:
+                ntfy = Ntfy(
+                    entry.data[CONF_URL],
+                    session,
+                    username=entry.data[CONF_USERNAME],
+                    password=user_input[CONF_PASSWORD],
+                )
+
+            try:
+                account = await ntfy.account()
+                token = (
+                    (await ntfy.generate_token("Home Assistant")).token
+                    if not user_input.get(CONF_TOKEN)
+                    else user_input[CONF_TOKEN]
+                )
+            except NtfyUnauthorizedAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except NtfyHTTPError as e:
+                _LOGGER.debug("Error %s: %s [%s]", e.code, e.error, e.link)
+                errors["base"] = "cannot_connect"
+            except NtfyException:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                if entry.data[CONF_USERNAME] != account.username:
+                    return self.async_abort(
+                        reason="account_mismatch",
+                        description_placeholders={
+                            CONF_USERNAME: entry.data[CONF_USERNAME],
+                            "wrong_username": account.username,
+                        },
+                    )
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={CONF_TOKEN: token},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_REAUTH_DATA_SCHEMA, suggested_values=user_input
+            ),
+            errors=errors,
+            description_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]},
         )
 
 

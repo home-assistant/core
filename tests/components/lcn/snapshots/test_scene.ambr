@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_setup_lcn_scene[scene.romantic-entry]
+# name: test_setup_lcn_scene[scene.testmodule_romantic-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,8 +12,8 @@
     'disabled_by': None,
     'domain': 'scene',
     'entity_category': None,
-    'entity_id': 'scene.romantic',
-    'has_entity_name': False,
+    'entity_id': 'scene.testmodule_romantic',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -33,20 +33,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_lcn_scene[scene.romantic-state]
+# name: test_setup_lcn_scene[scene.testmodule_romantic-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Romantic',
+      'friendly_name': 'TestModule Romantic',
     }),
     'context': <ANY>,
-    'entity_id': 'scene.romantic',
+    'entity_id': 'scene.testmodule_romantic',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_lcn_scene[scene.romantic_transition-entry]
+# name: test_setup_lcn_scene[scene.testmodule_romantic_transition-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -59,8 +59,8 @@
     'disabled_by': None,
     'domain': 'scene',
     'entity_category': None,
-    'entity_id': 'scene.romantic_transition',
-    'has_entity_name': False,
+    'entity_id': 'scene.testmodule_romantic_transition',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -80,13 +80,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_lcn_scene[scene.romantic_transition-state]
+# name: test_setup_lcn_scene[scene.testmodule_romantic_transition-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Romantic Transition',
+      'friendly_name': 'TestModule Romantic Transition',
     }),
     'context': <ANY>,
-    'entity_id': 'scene.romantic_transition',
+    'entity_id': 'scene.testmodule_romantic_transition',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
