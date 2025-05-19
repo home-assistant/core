@@ -1,27 +1,52 @@
 {
   "config": {
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "email_required": "[%key:common::config_flow::error::email_required%]",
+      "password_required": "[%key:common::config_flow::error::password_required%]"
+    },
     "step": {
       "user": {
         "title": "User configuration",
-        "description": "Please enter your email address.",
+        "description": "Please enter your credentials to connect to the Redgtech API.",
         "data": {
-          "email": {
-            "label": "Email",
-            "description": "Enter your email address for authentication."
-          },
-          "password": {
-            "label": "Password",
-            "description": "Enter your password for authentication."
-          }
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
         },
-        "errors": {
-          "invalid_auth": "Invalid authentication.",
-          "invalid_email": "Invalid email address.",
-          "invalid_password": "Invalid password.",
-          "email_required": "Email is required.",
-          "password_required": "Password is required."
+        "data_description": {
+          "email": "[%key:common::config_flow::data_description::email%]",
+          "password": "[%key:common::config_flow::data_description::password%]"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Re-authentication required. Please enter your password again.",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:common::config_flow::data_description::password%]"
         }
       }
+    }
+  },
+  "entity": {
+    "switch": {
+      "device_switch": {
+        "name": "Device Switch"
+      }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "Error while communicating with the Redgtech API"
+    },
+    "authentication_failed": {
+      "message": "Authentication failed. Please check your credentials."
     }
   }
 }

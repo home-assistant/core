@@ -50,27 +50,40 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]])
     async def login(self, email: str, password: str) -> str:
         """Login to the Redgtech API and return the access token."""
         try:
-            access_token = await self.api.login(email, password)
-            self.access_token = access_token
-            return access_token
+            access_token = await self.api.login(email, password)          
         except Exception as e:
             raise ConfigEntryError("Unexpected error during login") from e
+        self.access_token = access_token
+        return access_token
+
+    async def renew_token(self, email: str, password: str) -> None:
+        """Renew the access token."""
+        self.access_token = await self.api.login(email, password)
+        _LOGGER.debug("Access token renewed successfully")
 
     async def _async_update_data(self) -> list[RedgtechDevice]:
         """Fetch data from the API on demand."""
         _LOGGER.debug("Fetching data from Redgtech API on demand")
         try:
             if not self.access_token:
-             self.access_token = await self.api.login(self.email, self.password)
+                self.access_token = await self.api.login(self.email, self.password)
 
             data = await self.api.get_data(self.access_token)
         except RedgtechAuthError:
-            await self.renew_token(self.config_entry.data[CONF_EMAIL], self.config_entry.data[CONF_PASSWORD])
-            data = await self.api.get_data(self.access_token)
+            _LOGGER.warning("Auth failed, trying to renew token")
+            try:
+                await self.renew_token(
+                    self.config_entry.data[CONF_EMAIL],
+                    self.config_entry.data[CONF_PASSWORD]
+                )
+                data = await self.api.get_data(self.access_token)
+            except RedgtechAuthError as e:
+                raise ConfigEntryError("Authentication error while renewing access token") from e
+            except RedgtechConnectionError as e:
+                raise UpdateFailed("Connection error during token renewal") from e
+
         except RedgtechConnectionError as e:
             raise UpdateFailed("Failed to connect to Redgtech API") from e
-        except HomeAssistantError as e:
-            raise UpdateFailed("Home Assistant-specific error while fetching data") from e
 
         devices: list[RedgtechDevice] = []
 
@@ -84,15 +97,3 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]])
             devices.append(device)
 
         return devices
-
-    async def renew_token(self) -> None:
-        """Renew the access token."""
-        try:
-            self.access_token = await self.api.login(self.email, self.password)
-            _LOGGER.debug("Access token renewed successfully")
-        except RedgtechAuthError as e:
-            raise ConfigEntryError("Authentication error while renewing access token") from e
-        except RedgtechConnectionError as e:
-            raise ConfigEntryNotReady("Connection error while renewing access token") from e
-        except Exception as e:
-            raise HomeAssistantError("Unexpected error while renewing access token") from e

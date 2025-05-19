@@ -6,11 +6,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from .const import DOMAIN
 from .coordinator import RedgtechDataUpdateCoordinator, RedgtechConfigEntry
+from redgtech_api.api import RedgtechAPI
 
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORMS: list[Platform] = [Platform.SWITCH]
+PLATFORMS = [Platform.SWITCH]
 
 async def async_setup_entry(hass: HomeAssistant, entry: RedgtechConfigEntry) -> bool:
     """Set up Redgtech from a config entry."""
@@ -29,3 +30,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: RedgtechConfigEntry) ->
     """Unload a config entry."""
     _LOGGER.debug("Unloading Redgtech entry: %s", entry.entry_id)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+__ALL__ = ["RedgtechApi"]

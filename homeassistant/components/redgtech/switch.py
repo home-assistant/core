@@ -50,24 +50,33 @@ class RedgtechSwitch(ToggleEntity):
         new_state = not self.is_on    
         try:
             if not self.coordinator.access_token:
-                await self.coordinator.login(self.coordinator.email, self.coordinator.password)
+                self.coordinator.access_token = await self.coordinator.login(
+                    self.coordinator.email, self.coordinator.password
+                )
 
-            await self.coordinator.api.set_switch_state(self.device.id, new_state, self.coordinator.access_token)
-            self.device.state = STATE_ON if new_state else STATE_OFF
-            self.async_write_ha_state()
+            await self.coordinator.api.set_switch_state(
+                self.device.id, new_state, self.coordinator.access_token
+            )
         except RedgtechAuthError:
             try:
-                await self.coordinator.renew_token()
-                await self.coordinator.api.set_switch_state(self.device.id, new_state, self.coordinator.access_token)
+                await self.coordinator.renew_token(
+                    self.coordinator.email, self.coordinator.password
+                )
+                await self.coordinator.api.set_switch_state(
+                    self.device.id, new_state, self.coordinator.access_token
+                )
                 self.device.state = STATE_ON if new_state else STATE_OFF
                 self.async_write_ha_state()
             except RedgtechAuthError as e:
                 raise HomeAssistantError("Failed to set switch state due to authentication error") from e
         except RedgtechConnectionError as e:
-            raise HomeAssistantError("conection error while setting switch state") from e
+            raise HomeAssistantError("Connection error while setting switch state") from e
         except Exception as e:
             raise HomeAssistantError("Unexpected error while toggling switch state") from e
     
+        self.device.state = STATE_ON if new_state else STATE_OFF
+        self.async_write_ha_state()
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         if not self.is_on:
@@ -77,7 +86,3 @@ class RedgtechSwitch(ToggleEntity):
         """Turn the switch off."""
         if self.is_on:
             await self.async_toggle()
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
