@@ -216,28 +216,6 @@
       "oven_end_time_lower": {
         "name": "Lower oven end time"
       }
-    },
-    "binary_sensor": {
-      "oven_door": {
-        "name": "Oven door"
-      },
-      "oven_door_upper": {
-        "name": "Upper oven door"
-      },
-      "oven_door_lower": {
-        "name": "Lower oven door"
-      }
-    },
-    "light": {
-      "oven_light": {
-        "name": "Oven light"
-      },
-      "oven_light_upper": {
-        "name": "Upper oven light"
-      },
-      "oven_light_lower": {
-        "name": "Lower oven light"
-      }
     }
   },
   "exceptions": {
