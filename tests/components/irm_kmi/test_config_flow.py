@@ -31,10 +31,7 @@ async def test_full_user_flow(
     )
     assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "test home"
-    assert result2.get("data") == {
-        CONF_ZONE: ENTITY_ID_HOME,
-        CONF_LANGUAGE_OVERRIDE: "none",
-    }
+    assert result2.get("data") == {CONF_ZONE: ENTITY_ID_HOME}
 
 
 async def test_config_flow_out_benelux_zone(
