@@ -874,7 +874,7 @@ gios==6.0.0
 glances-api==0.8.0
 
 # homeassistant.components.go2rtc
-go2rtc-client==0.1.2
+go2rtc-client==0.1.3b0
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
