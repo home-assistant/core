@@ -1,0 +1,437 @@
+# serializer version: 1
+# name: test_entities[Leak Detector][binary_sensor.test_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'switchbot',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aabbccddeeff-leak',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[Leak Detector][binary_sensor.test_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'moisture',
+      'friendly_name': 'test-name',
+      'last_run_success': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[Roller Shade][binary_sensor.test_name_calibration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_name_calibration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Calibration',
+    'platform': 'switchbot',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'calibration',
+    'unique_id': 'aabbccddeeff-calibration',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[Roller Shade][binary_sensor.test_name_calibration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-name Calibration',
+      'last_run_success': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_name_calibration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[WoBlindTilt][binary_sensor.test_name_calibration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_name_calibration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Calibration',
+    'platform': 'switchbot',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'calibration',
+    'unique_id': 'aabbccddeeff-calibration',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[WoBlindTilt][binary_sensor.test_name_calibration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-name Calibration',
+      'last_run_success': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_name_calibration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[WoCurtain][binary_sensor.test_name_calibration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_name_calibration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Calibration',
+    'platform': 'switchbot',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'calibration',
+    'unique_id': 'aabbccddeeff-calibration',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[WoCurtain][binary_sensor.test_name_calibration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-name Calibration',
+      'last_run_success': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_name_calibration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[WoLockPro][binary_sensor.test_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'switchbot',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aabbccddeeff-door_open',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[WoLockPro][binary_sensor.test_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'test-name',
+      'last_run_success': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[WoLockPro][binary_sensor.test_name_auto_lock_paused-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_name_auto_lock_paused',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Auto-lock paused',
+    'platform': 'switchbot',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_auto_lock_paused',
+    'unique_id': 'aabbccddeeff-auto_lock_paused',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[WoLockPro][binary_sensor.test_name_auto_lock_paused-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-name Auto-lock paused',
+      'last_run_success': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_name_auto_lock_paused',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[WoLockPro][binary_sensor.test_name_calibration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_name_calibration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Calibration',
+    'platform': 'switchbot',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'calibration',
+    'unique_id': 'aabbccddeeff-calibration',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[WoLockPro][binary_sensor.test_name_calibration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-name Calibration',
+      'last_run_success': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_name_calibration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[WoLockPro][binary_sensor.test_name_unclosed_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_name_unclosed_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Unclosed alarm',
+    'platform': 'switchbot',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_unclosed_alarm',
+    'unique_id': 'aabbccddeeff-unclosed_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[WoLockPro][binary_sensor.test_name_unclosed_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'test-name Unclosed alarm',
+      'last_run_success': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_name_unclosed_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[WoLockPro][binary_sensor.test_name_unlocked_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_name_unlocked_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Unlocked alarm',
+    'platform': 'switchbot',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_unlocked_alarm',
+    'unique_id': 'aabbccddeeff-unlocked_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[WoLockPro][binary_sensor.test_name_unlocked_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'test-name Unlocked alarm',
+      'last_run_success': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_name_unlocked_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

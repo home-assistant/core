@@ -4,6 +4,7 @@ from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.vacuum import (
@@ -11,8 +12,9 @@ from homeassistant.components.vacuum import (
     SERVICE_RETURN_TO_BASE,
     SERVICE_START,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import (
     K10_POR_COMBO_VACUUM_SERVICE_INFO,
@@ -20,10 +22,26 @@ from . import (
     K10_VACUUM_SERVICE_INFO,
     K20_VACUUM_SERVICE_INFO,
     S10_VACUUM_SERVICE_INFO,
+    setup_integration,
+    snapshot_switchbot_entities,
 )
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_entities(
+    hass: HomeAssistant,
+    switchbot_device: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the Switchbot entities."""
+    await setup_integration(hass, mock_config_entry)
+
+    snapshot_switchbot_entities(hass, entity_registry, snapshot, Platform.VACUUM)
 
 
 @pytest.mark.parametrize(
