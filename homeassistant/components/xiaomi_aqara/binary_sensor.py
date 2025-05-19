@@ -141,7 +141,6 @@ class XiaomiBinarySensor(XiaomiDevice, BinarySensorEntity):
         """Initialize the XiaomiSmokeSensor."""
         self._data_key = data_key
         self._attr_device_class = device_class
-        self._density = 0
         super().__init__(device, name, xiaomi_hub, config_entry)
 
     def update(self) -> None:
