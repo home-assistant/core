@@ -10,7 +10,7 @@ from pydeconz.models.sensor.presence import (
     PresenceConfigTriggerDistance,
 )
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
     ATTR_OPTION,

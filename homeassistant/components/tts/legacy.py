@@ -7,7 +7,7 @@ from collections.abc import Coroutine, Mapping
 from functools import partial
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, final
 
 import voluptuous as vol
 
@@ -252,3 +252,15 @@ class Provider:
         return await self.hass.async_add_executor_job(
             partial(self.get_tts_audio, message, language, options=options)
         )
+
+    @final
+    async def async_internal_get_tts_audio(
+        self, message: str, language: str, options: dict[str, Any]
+    ) -> TtsAudioType:
+        """Load tts audio file from provider.
+
+        Proxies request to mimic the entity interface.
+
+        Return a tuple of file extension and data as bytes.
+        """
+        return await self.async_get_tts_audio(message, language, options)

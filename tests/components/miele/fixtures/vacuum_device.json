@@ -15,7 +15,10 @@
         "matNumber": "11686510",
         "swids": ["<swid1>", "<swid2>", "<swid3>", "<...>"]
       },
-      "xkmIdentLabel": { "techType": "", "releaseVersion": "" }
+      "xkmIdentLabel": {
+        "techType": "",
+        "releaseVersion": ""
+      }
     },
     "state": {
       "ProgramID": {
@@ -34,9 +37,7 @@
         "key_localized": "Program type"
       },
       "programPhase": {
-        "xvalue_raw": 5889,
-        "zvalue_raw": 5904,
-        "value_raw": 5893,
+        "value_raw": 5889,
         "value_localized": "in the base station",
         "key_localized": "Program phase"
       },

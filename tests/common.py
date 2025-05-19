@@ -32,7 +32,7 @@ from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F4
 from annotatedyaml import load_yaml_dict, loader as yaml_loader
 import attr
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant import auth, bootstrap, config_entries, loader
