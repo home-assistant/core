@@ -397,11 +397,11 @@ class DeletedDeviceEntry:
     config_entries: set[str] = attr.ib()
     config_entries_subentries: dict[str, set[str | None]] = attr.ib()
     connections: set[tuple[str, str]] = attr.ib()
+    created_at: datetime = attr.ib()
     identifiers: set[tuple[str, str]] = attr.ib()
     id: str = attr.ib()
     orphaned_timestamp: float | None = attr.ib()
-    created_at: datetime = attr.ib(factory=utcnow)
-    modified_at: datetime = attr.ib(factory=utcnow)
+    modified_at: datetime = attr.ib()
     _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     def to_device_entry(
@@ -1244,6 +1244,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             created_at=device.created_at,
             identifiers=device.identifiers,
             id=device.id,
+            modified_at=utcnow(),
             orphaned_timestamp=None,
         )
         for other_device in list(self.devices.values()):
