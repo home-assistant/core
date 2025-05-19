@@ -2,19 +2,33 @@
 
 import logging
 
+from irm_kmi_api import IrmKmiApiClientHa
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import PLATFORMS
-from .types import IrmKmiConfigEntry, RuntimeData
+from .const import IRM_KMI_TO_HA_CONDITION_MAP, PLATFORMS, USER_AGENT
+from .coordinator import IrmKmiCoordinator
+from .types import IrmKmiConfigEntry, IrmKmiData
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IrmKmiConfigEntry) -> bool:
     """Set up this integration using UI."""
-    entry.runtime_data = RuntimeData(hass, entry)
+    api_client = IrmKmiApiClientHa(
+        session=async_get_clientsession(hass),
+        user_agent=USER_AGENT,
+        cdt_map=IRM_KMI_TO_HA_CONDITION_MAP,
+    )
+
+    entry.runtime_data = IrmKmiData(
+        api_client=api_client,
+        # If I don't put the api_client in the coordinator this way, I get circular dependencies.
+        coordinator=IrmKmiCoordinator(hass, entry, api_client),
+    )
 
     try:
         await entry.runtime_data.coordinator.async_config_entry_first_refresh()
