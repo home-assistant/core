@@ -398,10 +398,10 @@ class DeletedDeviceEntry:
     config_entries_subentries: dict[str, set[str | None]] = attr.ib()
     connections: set[tuple[str, str]] = attr.ib()
     created_at: datetime = attr.ib()
-    identifiers: set[tuple[str, str]] = attr.ib()
     id: str = attr.ib()
-    orphaned_timestamp: float | None = attr.ib()
+    identifiers: set[tuple[str, str]] = attr.ib()
     modified_at: datetime = attr.ib()
+    orphaned_timestamp: float | None = attr.ib()
     _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     def to_device_entry(
