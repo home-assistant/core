@@ -100,20 +100,17 @@ async def test_remote_version_rate_limit_respected(
     base_frozen_dt = datetime(2025, 5, 19, 12, 0, 0)
 
     with freeze_time(base_frozen_dt):
-        # First fetch - should fetch remote version
         await coordinator._async_refresh()
         assert mock_client.remote_version.call_count == 1
 
     frozen_dt = base_frozen_dt + timedelta(minutes=30)
     with freeze_time(frozen_dt):
         await coordinator._async_refresh()
-        # Should not have called again due to rate limit
         assert mock_client.remote_version.call_count == 1
 
     frozen_dt = base_frozen_dt + timedelta(hours=REMOTE_VERSION_UPDATE_INTERVAL_HOURS)
     with freeze_time(frozen_dt):
         await coordinator._async_refresh()
-        # Should call again
         assert mock_client.remote_version.call_count == 2
 
     frozen_dt = base_frozen_dt + timedelta(
@@ -121,7 +118,6 @@ async def test_remote_version_rate_limit_respected(
     )
     with freeze_time(frozen_dt):
         await coordinator._async_refresh()
-        # Should call again
         assert mock_client.remote_version.call_count == 2
 
 
@@ -166,7 +162,6 @@ async def test_forbidden_status_logged_only_once(
     mock_client.status.side_effect = PaperlessForbiddenError()
     coordinator = PaperlessCoordinator(hass, mock_config_entry, mock_client)
 
-    # First call logs warning
     await coordinator._get_paperless_status(mock_client)
     assert (
         "Could not fetch status from Paperless-ngx due missing permissions"
@@ -175,7 +170,6 @@ async def test_forbidden_status_logged_only_once(
 
     caplog.clear()
 
-    # Second call does not log again
     await coordinator._get_paperless_status(mock_client)
     assert (
         "Could not fetch status from Paperless-ngx due missing permissions"
@@ -224,7 +218,6 @@ async def test_forbidden_statistics_logged_only_once(
     mock_client.statistics.side_effect = PaperlessForbiddenError()
     coordinator = PaperlessCoordinator(hass, mock_config_entry, mock_client)
 
-    # First call logs warning
     await coordinator._get_paperless_statistics(mock_client)
     assert (
         "Could not fetch statistics from Paperless-ngx due missing permissions"
@@ -233,7 +226,6 @@ async def test_forbidden_statistics_logged_only_once(
 
     caplog.clear()
 
-    # Second call does not log again
     await coordinator._get_paperless_statistics(mock_client)
     assert (
         "Could not fetch statistics from Paperless-ngx due missing permissions"

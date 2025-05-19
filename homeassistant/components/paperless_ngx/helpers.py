@@ -1,4 +1,4 @@
-"""Helper function for Paperless-ngx sensors."""
+"""Helper functions for Paperless-ngx sensors."""
 
 from collections.abc import Callable
 from enum import Enum
