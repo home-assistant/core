@@ -535,26 +535,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return
         modes_str: str = ", ".join(modes) if modes else ""
         translation_key = f"not_valid_{mode_type}_mode"
-        if mode_type == "hvac":
-            report_issue = async_suggest_report_issue(
-                self.hass,
-                integration_domain=self.platform.platform_name,
-                module=type(self).__module__,
-            )
-            _LOGGER.warning(
-                (
-                    "%s::%s sets the hvac_mode %s which is not "
-                    "valid for this entity with modes: %s. "
-                    "This will stop working in 2025.4 and raise an error instead. "
-                    "Please %s"
-                ),
-                self.platform.platform_name,
-                self.__class__.__name__,
-                mode,
-                modes_str,
-                report_issue,
-            )
-            return
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key=translation_key,
