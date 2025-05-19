@@ -52,7 +52,7 @@ def mock_client() -> Generator[AsyncMock]:
             )
         )
 
-        for mock_paperless in tuple(mock1, mock2, mock3):
+        for mock_paperless in (mock1, mock2, mock3):
             mock_paperless.return_value = mock_instance
             mock_paperless.return_value.__aenter__.return_value = mock_instance
             mock_paperless.return_value.initialize = mock_instance.initialize
