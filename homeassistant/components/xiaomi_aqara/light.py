@@ -97,7 +97,7 @@ class XiaomiGatewayLight(XiaomiDevice, LightEntity):
         """Return the hs color value."""
         return self._hs
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if ATTR_HS_COLOR in kwargs:
             self._hs = kwargs[ATTR_HS_COLOR]
@@ -107,8 +107,8 @@ class XiaomiGatewayLight(XiaomiDevice, LightEntity):
 
         rgb = color_util.color_hs_to_RGB(*self._hs)
         rgba = (self._brightness, *rgb)
-        rgbhex = binascii.hexlify(struct.pack("BBBB", *rgba)).decode("ASCII")
-        rgbhex = int(rgbhex, 16)
+        rgbhex_str = binascii.hexlify(struct.pack("BBBB", *rgba)).decode("ASCII")
+        rgbhex = int(rgbhex_str, 16)
 
         if self._write_to_hub(self._sid, **{self._data_key: rgbhex}):
             self._state = True
