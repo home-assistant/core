@@ -1023,6 +1023,7 @@ jobs:
           overwrite: true
       - name: Beautify test results
         # For easier identification of parsing errors
+        if: needs.info.outputs.skip_coverage != 'true'
         run: |
           xmllint --format "junit.xml" > "junit.xml-tmp"
           mv "junit.xml-tmp" "junit.xml"
@@ -1163,6 +1164,7 @@ jobs:
           overwrite: true
       - name: Beautify test results
         # For easier identification of parsing errors
+        if: needs.info.outputs.skip_coverage != 'true'
         run: |
           xmllint --format "junit.xml" > "junit.xml-tmp"
           mv "junit.xml-tmp" "junit.xml"
@@ -1305,6 +1307,7 @@ jobs:
           overwrite: true
       - name: Beautify test results
         # For easier identification of parsing errors
+        if: needs.info.outputs.skip_coverage != 'true'
         run: |
           xmllint --format "junit.xml" > "junit.xml-tmp"
           mv "junit.xml-tmp" "junit.xml"
@@ -1457,6 +1460,7 @@ jobs:
           overwrite: true
       - name: Beautify test results
         # For easier identification of parsing errors
+        if: needs.info.outputs.skip_coverage != 'true'
         run: |
           xmllint --format "junit.xml" > "junit.xml-tmp"
           mv "junit.xml-tmp" "junit.xml"
