@@ -62,13 +62,12 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ActronSystemClimate(
+class BaseClimateEntity(
     CoordinatorEntity[ActronNeoDataUpdateCoordinator], ClimateEntity
 ):
-    """Representation of the Actron Air Neo system."""
+    """Base class for Actron Air Neo climate entities."""
 
     _attr_has_entity_name = True
-    _attr_fan_modes = list(FAN_MODE_MAPPING.values())
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
@@ -77,6 +76,7 @@ class ActronSystemClimate(
         | ClimateEntityFeature.TURN_OFF
     )
     _attr_name = None
+    _attr_fan_modes = list(FAN_MODE_MAPPING.values())
     _attr_hvac_modes = list(HVAC_MODE_MAPPING.values())
 
     def __init__(
@@ -89,6 +89,40 @@ class ActronSystemClimate(
         super().__init__(coordinator)
         self._serial_number = serial_number
         self._name = name
+
+    @property
+    def min_temp(self) -> float:
+        """Return the minimum temperature that can be set."""
+        return self._this_device().min_temp
+
+    @property
+    def max_temp(self) -> float:
+        """Return the maximum temperature that can be set."""
+        return self._this_device().max_temp
+
+    def _this_device(self):
+        """Get the device this entity represents (to be implemented by subclasses)."""
+        raise NotImplementedError
+
+
+class ActronSystemClimate(BaseClimateEntity):
+    """Representation of the Actron Air Neo system."""
+
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.TURN_OFF
+    )
+
+    def __init__(
+        self,
+        coordinator: ActronNeoDataUpdateCoordinator,
+        serial_number: str,
+        name: str,
+    ) -> None:
+        """Initialize an Actron Air Neo unit."""
+        super().__init__(coordinator, serial_number, name)
         self._attr_unique_id: str = serial_number
         self._attr_device_info: DeviceInfo = DeviceInfo(
             identifiers={(DOMAIN, serial_number)},
@@ -98,6 +132,10 @@ class ActronSystemClimate(
             sw_version=self._status.ac_system.master_wc_firmware_version,
             serial_number=serial_number,
         )
+
+    def _this_device(self):
+        """Get the device this entity represents."""
+        return self._status
 
     @property
     def _status(self) -> ActronAirNeoStatus:
@@ -134,16 +172,6 @@ class ActronSystemClimate(
         """Return the target temperature."""
         return self._status.user_aircon_settings.temperature_setpoint_cool_c
 
-    @property
-    def min_temp(self) -> float:
-        """Return the minimum temperature that can be set."""
-        return self._status.min_temp
-
-    @property
-    def max_temp(self) -> float:
-        """Return the maximum temperature that can be set."""
-        return self._status.max_temp
-
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set a new fan mode."""
         api_fan_mode = FAN_MODE_MAPPING_REVERSE.get(fan_mode.lower())
@@ -164,20 +192,14 @@ class ActronSystemClimate(
         await self._status.user_aircon_settings.set_continuous_mode(enabled=continuous)
 
 
-class ActronZoneClimate(
-    CoordinatorEntity[ActronNeoDataUpdateCoordinator], ClimateEntity
-):
+class ActronZoneClimate(BaseClimateEntity):
     """Representation of a zone within the Actron Air system."""
 
-    _attr_has_entity_name = True
-    _attr_fan_modes = ["auto", "low", "medium", "high"]
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TURN_ON
         | ClimateEntityFeature.TURN_OFF
     )
-    _attr_name = None
 
     def __init__(
         self,
@@ -186,8 +208,7 @@ class ActronZoneClimate(
         zone: ActronAirNeoZone,
     ) -> None:
         """Initialize an Actron Air Neo unit."""
-        super().__init__(coordinator)
-        self._serial_number = serial_number
+        super().__init__(coordinator, serial_number, zone.title)
         self._zone_id: int = zone.zone_id
         self._attr_unique_id: str = f"{serial_number}_zone_{zone.zone_id}"
         self._attr_device_info: DeviceInfo = DeviceInfo(
@@ -198,6 +219,10 @@ class ActronZoneClimate(
             suggested_area=zone.title,
             via_device=(DOMAIN, serial_number),
         )
+
+    def _this_device(self):
+        """Get the device this entity represents."""
+        return self._zone
 
     @property
     def _zone(self) -> ActronAirNeoZone:
@@ -214,11 +239,6 @@ class ActronZoneClimate(
         return HVACMode.OFF
 
     @property
-    def hvac_modes(self) -> list[HVACMode]:
-        """Return HVAC Modes."""
-        return [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT, HVACMode.AUTO]
-
-    @property
     def current_humidity(self) -> float | None:
         """Return the current humidity."""
         return self._zone.humidity
@@ -232,16 +252,6 @@ class ActronZoneClimate(
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
         return self._zone.temperature_setpoint_cool_c
-
-    @property
-    def min_temp(self) -> float:
-        """Return the minimum temperature that can be set."""
-        return self._zone.min_temp
-
-    @property
-    def max_temp(self) -> float:
-        """Return the maximum temperature that can be set."""
-        return self._zone.max_temp
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
