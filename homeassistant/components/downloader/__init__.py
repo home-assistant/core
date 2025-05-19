@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from email.parser import HeaderParser
 from http import HTTPStatus
 import os
-import re
 import threading
 
 import requests
@@ -77,12 +77,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
                 else:
                     if filename is None and "content-disposition" in req.headers:
-                        match = re.findall(
-                            r"filename=(\S+)", req.headers["content-disposition"]
+                        parser = HeaderParser()
+                        content_disposition_value = req.headers["content-disposition"]
+                        msg = parser.parsestr(
+                            f"Content-Disposition: {content_disposition_value}"
                         )
-
-                        if match:
-                            filename = match[0].strip("'\" ")
+                        filename = msg.get_filename()
 
                     if not filename:
                         filename = os.path.basename(url).strip()
