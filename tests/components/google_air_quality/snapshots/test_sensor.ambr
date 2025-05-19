@@ -1,0 +1,205 @@
+# serializer version: 1
+# name: test_sensor_snapshot[sensor.48_9_category-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.48_9_category',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Category',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'category',
+    'unique_id': 'category_48_9',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.48_9_category-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'LQI (DE)': 'Good air quality',
+      'device_class': 'enum',
+      'friendly_name': '48_9 Category',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.48_9_category',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Excellent air quality',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.48_9_pm10-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.48_9_pm10',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
+    'original_icon': None,
+    'original_name': 'PM10',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'pm10_48_9',
+    'unit_of_measurement': 'µg/m³',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.48_9_pm10-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pm10',
+      'friendly_name': '48_9 PM10',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'µg/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.48_9_pm10',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '21.95',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.48_9_pm2_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.48_9_pm2_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
+    'original_icon': None,
+    'original_name': 'PM2.5',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'pm25_48_9',
+    'unit_of_measurement': 'µg/m³',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.48_9_pm2_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pm25',
+      'friendly_name': '48_9 PM2.5',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'µg/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.48_9_pm2_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.6',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.48_9_universal_air_quality_index-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.48_9_universal_air_quality_index',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.AQI: 'aqi'>,
+    'original_icon': None,
+    'original_name': 'Universal Air Quality Index',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'uaqi',
+    'unique_id': 'uaqi_48_9',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.48_9_universal_air_quality_index-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'aqi',
+      'friendly_name': '48_9 Universal Air Quality Index',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.48_9_universal_air_quality_index',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80',
+  })
+# ---

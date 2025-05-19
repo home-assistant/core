@@ -73,6 +73,9 @@ def mock_config_entry(
         data={
             "auth_implementation": DOMAIN,
             "token": token_entry,
+            "latitude": 48,
+            "longitude": 9,
+            "region_code": "de",
         },
         title="Account Name",
     )
@@ -177,3 +180,4 @@ async def mock_setup_integration(
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+        yield

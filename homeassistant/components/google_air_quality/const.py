@@ -7,5 +7,4 @@ OAUTH2_TOKEN = "https://oauth2.googleapis.com/token"
 
 OAUTH2_SCOPES = [
     "https://www.googleapis.com/auth/cloud-platform",
-    "https://www.googleapis.com/auth/userinfo.profile",
 ]

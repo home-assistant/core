@@ -4,10 +4,10 @@ import http
 import time
 
 from aiohttp import ClientError
-from google_photos_library_api.exceptions import GooglePhotosApiError
+from google_air_quality_api.exceptions import GooglePhotosApiError
 import pytest
 
-from homeassistant.components.google_photos.const import OAUTH2_TOKEN
+from homeassistant.components.google_air_quality.const import OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -83,7 +83,7 @@ async def test_expired_token_refresh_success(
             time.time() - 3600,
             http.HTTPStatus.UNAUTHORIZED,
             None,
-            ConfigEntryState.SETUP_ERROR,  # Reauth
+            ConfigEntryState.SETUP_ERROR,  # Reauth will be implemented later
         ),
         (
             time.time() - 3600,
