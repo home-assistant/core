@@ -109,8 +109,8 @@
         "profile": "switch"
       },
       "location": {
-        "lat": 52.2201,
-        "lon": 21.0121,
+        "lat": 15.2201,
+        "lon": 33.0121,
         "tz": "Europe/Warsaw"
       },
       "rpc_udp": {
