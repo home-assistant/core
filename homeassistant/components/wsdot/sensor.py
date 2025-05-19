@@ -7,7 +7,7 @@ import logging
 from typing import Any
 
 import voluptuous as vol
-import wsdot
+from wsdot import TravelTime, WsdotTravelError, WsdotTravelTimes
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -27,6 +27,7 @@ ATTRIBUTION = "Data provided by WSDOT"
 CONF_TRAVEL_TIMES = "travel_time"
 
 ICON = "mdi:car"
+DOMAIN = "wsdot"
 
 SCAN_INTERVAL = timedelta(minutes=3)
 
@@ -50,7 +51,7 @@ async def async_setup_platform(
     sensors = []
     session = async_get_clientsession(hass)
     api_key = config[CONF_API_KEY]
-    wsdot_travel = wsdot.WsdotTravelTimes(api_key=api_key, session=session)
+    wsdot_travel = WsdotTravelTimes(api_key=api_key, session=session)
     for travel_time in config[CONF_TRAVEL_TIMES]:
         name = travel_time.get(CONF_NAME) or travel_time.get(CONF_ID)
         sensors.append(
@@ -95,11 +96,11 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
     def __init__(
-        self, name: str, wsdot_travel: wsdot.WsdotTravelTimes, travel_time_id: str
+        self, name: str, wsdot_travel: WsdotTravelTimes, travel_time_id: str
     ) -> None:
         """Construct a travel time sensor."""
         super().__init__(name)
-        self._data: wsdot.TravelTime | None = None
+        self._data: TravelTime | None = None
         self._travel_time_id = travel_time_id
         self._wsdot_travel = wsdot_travel
 
@@ -107,7 +108,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
         """Get the latest data from WSDOT."""
         try:
             travel_time = await self._wsdot_travel.get_travel_time(self._travel_time_id)
-        except wsdot.WsdotTravelError:
+        except WsdotTravelError:
             _LOGGER.warning("Invalid response from WSDOT API")
         else:
             self._data = travel_time
@@ -117,5 +118,5 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return other details about the sensor state."""
         if self._data is not None:
-            return self._data.dict()
+            return self._data.model_dump()
         return None

@@ -1,25 +1,24 @@
 """Provide common WSDOT fixtures."""
 
-import json
+from collections.abc import AsyncGenerator
+from unittest.mock import patch
 
 import pytest
-import wsdot
+from wsdot import TravelTime
 
-from tests.common import load_fixture
+from homeassistant.components.wsdot.sensor import DOMAIN
+
+from tests.common import load_json_object_fixture
 
 
 @pytest.fixture
-def mock_travel_time(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def mock_travel_time() -> AsyncGenerator[TravelTime]:
     """WsdotTravelTimes.get_travel_time is mocked to return a TravelTime data based on test fixture payload."""
-    test_data = load_fixture("wsdot/wsdot.json")
-    test_response = json.loads(test_data)
-    test_travel_time = wsdot.TravelTime(**test_response)
-
-    async def fake_travel_time(
-        self: wsdot.WsdotTravelTimes, id: str
-    ) -> wsdot.TravelTime:
-        return test_travel_time
-
-    monkeypatch.setattr(wsdot.WsdotTravelTimes, "get_travel_time", fake_travel_time)
+    with patch(
+        "homeassistant.components.wsdot.sensor.WsdotTravelTimes", autospec=True
+    ) as mock:
+        client = mock.return_value
+        client.get_travel_time.return_value = TravelTime(
+            **load_json_object_fixture("wsdot.json", DOMAIN)
+        )
+        yield mock
