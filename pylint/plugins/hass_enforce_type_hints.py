@@ -707,6 +707,7 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="assumed_state",
         return_type="bool",
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="force_update",
