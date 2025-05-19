@@ -101,6 +101,7 @@ homeassistant.components.asuswrt.*
 homeassistant.components.autarco.*
 homeassistant.components.auth.*
 homeassistant.components.automation.*
+homeassistant.components.autoskope.*
 homeassistant.components.awair.*
 homeassistant.components.axis.*
 homeassistant.components.azure_storage.*

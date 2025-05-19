@@ -1,0 +1,91 @@
+# serializer version: 1
+# name: test_vehicle_from_api_invalid_types
+  dict({
+    'battery_voltage': 4.3,
+    'external_voltage': 12.3,
+    'gps_quality': 1.3,
+    'id': 'v_inv_pos',
+    'imei': 'I_INV_POS',
+    'model': 'AutoskopeX',
+    'name': 'Inv Pos',
+    'position': None,
+  })
+# ---
+# name: test_vehicle_from_api_missing_data
+  dict({
+    'battery_voltage': 4.0,
+    'external_voltage': 12.1,
+    'gps_quality': 1.1,
+    'id': 'v1_complete',
+    'imei': 'I1',
+    'model': 'AutoskopeX',
+    'name': 'Test Vehicle Complete',
+    'position': None,
+  })
+# ---
+# name: test_vehicle_from_api_missing_data.1
+  dict({
+    'battery_voltage': 4.2,
+    'external_voltage': 12.2,
+    'gps_quality': 1.2,
+    'id': 'v2',
+    'imei': None,
+    'model': 'Autoskope',
+    'name': 'Minimal Vehicle',
+    'position': None,
+  })
+# ---
+# name: test_vehicle_from_api_position_edge_cases
+  dict({
+    'battery_voltage': 4.5,
+    'external_voltage': 12.5,
+    'gps_quality': 1.5,
+    'id': 'v_pos_edge',
+    'imei': 'I_EDGE',
+    'model': 'AutoskopeX',
+    'name': 'Position Edge Case',
+    'position': None,
+  })
+# ---
+# name: test_vehicle_from_api_position_edge_cases.1
+  dict({
+    'battery_voltage': 4.5,
+    'external_voltage': 12.5,
+    'gps_quality': 1.5,
+    'id': 'v_pos_edge',
+    'imei': 'I_EDGE',
+    'model': 'AutoskopeX',
+    'name': 'Position Edge Case',
+    'position': None,
+  })
+# ---
+# name: test_vehicle_from_api_position_edge_cases.2
+  dict({
+    'battery_voltage': 4.5,
+    'external_voltage': 12.5,
+    'gps_quality': 1.5,
+    'id': 'v_pos_edge',
+    'imei': 'I_EDGE',
+    'model': 'AutoskopeX',
+    'name': 'Position Edge Case',
+    'position': None,
+  })
+# ---
+# name: test_vehicle_from_api_position_edge_cases.3
+  dict({
+    'battery_voltage': 4.5,
+    'external_voltage': 12.5,
+    'gps_quality': 1.5,
+    'id': 'v_pos_edge',
+    'imei': 'I_EDGE',
+    'model': 'AutoskopeX',
+    'name': 'Position Edge Case',
+    'position': dict({
+      'latitude': 2.0,
+      'longitude': 1.0,
+      'park_mode': False,
+      'speed': 10.0,
+      'timestamp': '2023-01-01T00:00:00Z',
+    }),
+  })
+# ---
