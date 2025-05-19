@@ -721,7 +721,7 @@ def _collect_errors(
             continue
         for grandchild in child_job.child_jobs:
             if (
-                job.name != grandchild_job_name
+                grandchild.name != grandchild_job_name
                 or not grandchild.errors
                 or not grandchild.reference
             ):
