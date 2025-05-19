@@ -64,7 +64,7 @@ class XiaomiAqaraLock(LockEntity, XiaomiDevice):
 
         for key in (FINGER_KEY, PASSWORD_KEY, CARD_KEY):
             if (value := data.get(key)) is not None:
-                self._changed_by = int(value)
+                self._attr_changed_by = str(int(value))
                 self._verified_wrong_times = 0
                 self._attr_is_locked = False
                 async_call_later(
