@@ -21,7 +21,7 @@ class BriivData:
 
 
 # Type alias for the config entry
-BriivConfigEntry = ConfigEntry[BriivData]
+type BriivConfigEntry = ConfigEntry[BriivData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
