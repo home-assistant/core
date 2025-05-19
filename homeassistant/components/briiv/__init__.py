@@ -49,7 +49,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BriivConfigEntry) -> boo
 async def async_unload_entry(hass: HomeAssistant, entry: BriivConfigEntry) -> bool:
     """Unload a config entry."""
     # Access the api from runtime_data
-    api: BriivAPI = entry.runtime_data.api
-    await api.stop_listening()
+    await entry.runtime_data.api.stop_listening()
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
