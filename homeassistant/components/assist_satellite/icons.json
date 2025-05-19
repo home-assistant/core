@@ -10,6 +10,9 @@
     },
     "start_conversation": {
       "service": "mdi:forum"
+    },
+    "get_response": {
+      "service": "mdi:microphone-question"
     }
   }
 }
