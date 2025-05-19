@@ -1,6 +1,7 @@
 """Common fixtures for the Paperless-ngx tests."""
 
 from collections.abc import Generator
+from enum import Enum
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pypaperless.models import RemoteVersion, Statistic, Status
@@ -29,28 +30,50 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(autouse=True)
-def mock_client() -> Generator[AsyncMock]:
+def mock_remote_status_data() -> Generator[AsyncMock]:
+    """Mock Remote Version response data."""
+    dummy_api = MagicMock()
+    return AsyncMock(
+        return_value=RemoteVersion.create_with_data(
+            dummy_api, data=MOCK_REMOTE_VERSION_DATA
+        )
+    )
+
+
+@pytest.fixture(autouse=True)
+def mock_status_data() -> Generator[AsyncMock]:
+    """Mock Status response data."""
+    dummy_api = MagicMock()
+    return AsyncMock(
+        return_value=Status.create_with_data(dummy_api, data=MOCK_STATUS_DATA)
+    )
+
+
+@pytest.fixture(autouse=True)
+def mock_statistics_data() -> Generator[AsyncMock]:
+    """Mock StaStatistictus response data."""
+    dummy_api = MagicMock()
+    return AsyncMock(
+        return_value=Statistic.create_with_data(dummy_api, data=MOCK_STATISTICS_DATA)
+    )
+
+
+@pytest.fixture(autouse=True)
+def mock_client(
+    mock_remote_status_data: AsyncMock,
+    mock_status_data: AsyncMock,
+    mock_statistics_data: AsyncMock,
+) -> Generator[AsyncMock]:
     """Mock the pypaperless.Paperless client."""
     patchers = [patch(path, autospec=True) for path in PAPERLESS_IMPORT_PATHS]
 
     with patchers[0] as mock1, patchers[1] as mock2, patchers[2] as mock3:
         mock_instance = AsyncMock()
-        dummy_api = MagicMock()
 
         mock_instance.initialize = AsyncMock(return_value=None)
-        mock_instance.status = AsyncMock(
-            return_value=Status.create_with_data(dummy_api, data=MOCK_STATUS_DATA)
-        )
-        mock_instance.statistics = AsyncMock(
-            return_value=Statistic.create_with_data(
-                dummy_api, data=MOCK_STATISTICS_DATA
-            )
-        )
-        mock_instance.remote_version = AsyncMock(
-            return_value=RemoteVersion.create_with_data(
-                dummy_api, data=MOCK_REMOTE_VERSION_DATA
-            )
-        )
+        mock_instance.status = mock_status_data
+        mock_instance.statistics = mock_statistics_data
+        mock_instance.remote_version = mock_remote_status_data
 
         for mock_paperless in (mock1, mock2, mock3):
             mock_paperless.return_value = mock_instance
@@ -72,3 +95,11 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data=USER_INPUT,
     )
+
+
+class TestEnum(Enum):
+    """Enum for lowercase conversion tests."""
+
+    OPTION_A = "Alpha"
+    OPTION_B = "Beta"
+    OPTION_C = "GAMMA"
