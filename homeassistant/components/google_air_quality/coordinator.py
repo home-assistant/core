@@ -5,7 +5,7 @@ import logging
 from typing import Final
 
 from google_air_quality_api.api import GoogleAirQualityApi
-from google_air_quality_api.exceptions import GooglePhotosApiError
+from google_air_quality_api.exceptions import GoogleAirQualityApiError
 from google_air_quality_api.model import AirQualityData
 
 from homeassistant.config_entries import ConfigEntry
@@ -53,6 +53,6 @@ class GoogleAirQualityUpdateCoordinator(DataUpdateCoordinator[AirQualityData]):
                 self.config_entry.data[CONF_LATITUDE],
                 self.config_entry.data[CONF_LONGITUDE],
             )
-        except GooglePhotosApiError as err:
+        except GoogleAirQualityApiError as err:
             _LOGGER.debug("Error listing air qulaity: %s", err)
             raise UpdateFailed(f"Error listing albums: {err}") from err

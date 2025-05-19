@@ -5,7 +5,7 @@ from typing import Any
 
 from google_air_quality_api.api import GoogleAirQualityApi
 from google_air_quality_api.exceptions import (
-    GooglePhotosApiError,
+    GoogleAirQualityApiError,
     NoDataForLocationError,
 )
 import voluptuous as vol
@@ -31,7 +31,7 @@ SCOPE_CLOUD = "https://www.googleapis.com/auth/cloud-platform"
 class OAuth2FlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
 ):
-    """Config flow to handle Google Photos OAuth2 authentication."""
+    """Config flow to handle Google Air Quality OAuth2 authentication."""
 
     DOMAIN = DOMAIN
 
@@ -111,7 +111,7 @@ class OAuth2FlowHandler(
                     ),
                     errors={"base": "no_data_for_location"},
                 )
-            except GooglePhotosApiError as ex:
+            except GoogleAirQualityApiError as ex:
                 return self.async_abort(
                     reason="access_not_configured",
                     description_placeholders={"message": str(ex)},
