@@ -99,7 +99,7 @@ def test_regex_a_or_b(
     "code",
     [
         """
-    async def setup( #@
+    async def async_turn_on( #@
         arg1, arg2
     ):
         pass
@@ -115,7 +115,7 @@ def test_ignore_no_annotations(
 
     func_node = astroid.extract_node(
         code,
-        "homeassistant.components.pylint_test",
+        "homeassistant.components.pylint_test.light",
     )
     type_hint_checker.visit_module(func_node.parent)
 

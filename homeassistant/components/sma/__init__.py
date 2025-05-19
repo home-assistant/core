@@ -20,7 +20,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -63,6 +63,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         pysma.exceptions.SmaConnectionException,
     ) as exc:
         raise ConfigEntryNotReady from exc
+    except pysma.exceptions.SmaAuthenticationException as exc:
+        raise ConfigEntryAuthFailed from exc
 
     if TYPE_CHECKING:
         assert entry.unique_id

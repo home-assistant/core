@@ -7,5 +7,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["pysuez", "regex"],
   "quality_scale": "bronze",
-  "requirements": ["pysuezV2==2.0.4"]
+  "requirements": ["pysuezV2==2.0.5"]
 }

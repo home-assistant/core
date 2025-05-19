@@ -9,7 +9,7 @@ from unittest.mock import ANY, Mock, call, patch
 
 import axis as axislib
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import axis
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN

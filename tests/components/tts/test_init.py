@@ -4,7 +4,7 @@ import asyncio
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -1885,6 +1885,7 @@ async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> No
     stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
     assert stream.language == mock_tts_entity.default_language
     assert stream.options == (mock_tts_entity.default_options or {})
+    assert stream.supports_streaming_input is False
     assert tts.async_get_stream(hass, stream.token) is stream
     stream.async_set_message("beer")
     result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
@@ -1905,6 +1906,7 @@ async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> No
         )
 
     mock_tts_entity.async_stream_tts_audio = async_stream_tts_audio
+    mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
 
     async def stream_message():
         """Mock stream message."""
@@ -1913,6 +1915,7 @@ async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> No
         yield "o"
 
     stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    assert stream.supports_streaming_input is True
     stream.async_set_message_stream(stream_message())
     result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
     assert result_data == b"hello"

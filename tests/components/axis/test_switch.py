@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from axis.models.api import CONTEXT
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
