@@ -92,10 +92,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Probe Plus sensors."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        ProbeSensor(coordinator, desc)
-        for desc in SENSOR_DESCRIPTIONS
-    )
+    async_add_entities(ProbeSensor(coordinator, desc) for desc in SENSOR_DESCRIPTIONS)
 
 
 class ProbeSensor(ProbePlusEntity, RestoreSensor):
