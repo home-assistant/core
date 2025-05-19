@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NtfyConfigEntry
+from .const import CONF_MESSAGE, CONF_PRIORITY, CONF_TAGS, CONF_TITLE
 from .entity import NtfyBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -111,7 +112,12 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
                 self._ws = self.config_entry.async_create_background_task(
                     hass=self.hass,
                     target=self.ntfy.subscribe(
-                        topics=[self.topic], callback=self._async_handle_event
+                        topics=[self.topic],
+                        callback=self._async_handle_event,
+                        title=self.subentry.data.get(CONF_TITLE),
+                        message=self.subentry.data.get(CONF_MESSAGE),
+                        priority=self.subentry.data.get(CONF_PRIORITY),
+                        tags=self.subentry.data.get(CONF_TAGS),
                     ),
                     name="ntfy_websocket",
                 )

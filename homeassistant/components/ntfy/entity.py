@@ -38,3 +38,4 @@ class NtfyBaseEntity(Entity):
         )
         self.ntfy = config_entry.runtime_data
         self.config_entry = config_entry
+        self.subentry = subentry
