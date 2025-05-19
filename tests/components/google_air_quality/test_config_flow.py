@@ -1,11 +1,11 @@
-"""Test the Google Photos config flow."""
+"""Test the Google Air Quality config flow."""
 
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import Mock, patch
 
 from google_air_quality_api.exceptions import (
-    GooglePhotosApiError,
+    GoogleAirQualityApiError,
     NoDataForLocationError,
 )
 import pytest
@@ -149,7 +149,7 @@ async def test_full_flow(
 @pytest.mark.parametrize(
     ("api_error", "reason"),
     [
-        (GooglePhotosApiError("some error"), "access_not_configured"),
+        (GoogleAirQualityApiError("some error"), "access_not_configured"),
         (Exception("some error"), "unknown"),
     ],
 )

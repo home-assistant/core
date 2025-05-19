@@ -1,1 +1,1 @@
-"""Tests for the Google Photos integration."""
+"""Tests for the Google Air Quality integration."""

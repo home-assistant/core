@@ -1,4 +1,4 @@
-"""Test the Google Photos media source."""
+"""Test the Google Air Quality media source."""
 
 from unittest.mock import patch
 

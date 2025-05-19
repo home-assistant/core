@@ -1,4 +1,4 @@
-"""Test fixtures for Google Photos."""
+"""Test fixtures for Google Air Quality."""
 
 from collections.abc import Awaitable, Callable, Generator
 import time
@@ -27,8 +27,6 @@ FAKE_ACCESS_TOKEN = "some-access-token"
 FAKE_REFRESH_TOKEN = "some-refresh-token"
 EXPIRES_IN = 3600
 USERINFO_URL = "https://www.googleapis.com/oauth2/v1/userinfo"
-PHOTOS_BASE_URL = "https://photoslibrary.googleapis.com"
-MEDIA_ITEMS_URL = f"{PHOTOS_BASE_URL}/v1/mediaItems"
 
 
 @pytest.fixture(name="expires_at")
@@ -110,54 +108,18 @@ def mock_api_error() -> Exception | None:
     return None
 
 
-# @pytest.fixture(name="mock_api")
-# def mock_client_api(
-#     fixture_name: str | None,
-#     user_identifier: str,
-#     api_error: Exception,
-# ) -> Generator[Mock]:
-#     """Set up fake Google Photos API responses from fixtures."""
-#     mock_api = AsyncMock(spec=GoogleAirQualityApi, autospec=True)
-
-#     # user_identifier, api_error wie gehabt …
-#     # Fixture-Name nur nutzen, wenn vorhanden:
-#     if fixture_name:
-#         responses = load_json_object_fixture(fixture_name, DOMAIN)
-#     else:
-#         responses = load_json_object_fixture("air_quality_data.json", DOMAIN)
-
-#     if api_error:
-#         mock_api.async_air_quality.side_effect = api_error
-#     else:
-#         mock_api.async_air_quality.return_value = AirQualityData.from_dict(responses)
-
-#     mock_api.get_user_info.return_value = UserInfoResult(
-#         id=user_identifier,
-#         name="Test Name",
-#     )
-
-#     yield mock_api
-
-#     return mock_api
-
-
 @pytest.fixture(name="mock_api")
 def mock_client_api(
     fixture_name: str,
     user_identifier: str,
     api_error: Exception,
 ) -> Generator[Mock]:
-    """Set up fake Google Photos API responses from fixtures."""
+    """Set up fake Google Air Quality API responses from fixtures."""
     mock_api = AsyncMock(GoogleAirQualityApi, autospec=True)
     mock_api.get_user_info.return_value = UserInfoResult(
         id=user_identifier,
         name="Test Name",
     )
-    # responses = (
-    #     load_json_object_fixture(fixture_name, DOMAIN)
-    #     if fixture_name
-    #     else load_json_object_fixture("air_quality_data.json", DOMAIN)
-    # )
     responses = load_json_object_fixture("air_quality_data.json", DOMAIN)
     mock_api.async_air_quality.return_value = AirQualityData.from_dict(responses)
     mock_api.async_air_quality.side_effect = api_error

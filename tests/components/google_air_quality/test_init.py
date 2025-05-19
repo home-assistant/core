@@ -1,10 +1,10 @@
-"""Tests for Google Photos."""
+"""Tests for Google Air Quality."""
 
 import http
 import time
 
 from aiohttp import ClientError
-from google_air_quality_api.exceptions import GooglePhotosApiError
+from google_air_quality_api.exceptions import GoogleAirQualityApiError
 import pytest
 
 from homeassistant.components.google_air_quality.const import OAUTH2_TOKEN
@@ -111,7 +111,7 @@ async def test_expired_token_refresh_failure(
 
 
 @pytest.mark.usefixtures("setup_integration")
-@pytest.mark.parametrize("api_error", [GooglePhotosApiError("some error")])
+@pytest.mark.parametrize("api_error", [GoogleAirQualityApiError("some error")])
 async def test_coordinator_init_failure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
