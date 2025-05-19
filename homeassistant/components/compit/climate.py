@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from compit_inext_api import Device, Param, Parameter
-from propcache import cached_property
+from propcache.api import cached_property
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -125,7 +125,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         """Return the current temperature."""
         value = self.get_parameter_value(PARAM_CURRENT_TEMPERATURE)
         if value is None:
-            _LOGGER.warning("current_temperature is None")
+            _LOGGER.warning("The current_temperature is None")
             return None
         return float(value.value)
 
@@ -134,7 +134,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         """Return the temperature we try to reach."""
         value = self.get_parameter_value(PARAM_TARGET_TEMPERATURE)
         if value is None:
-            _LOGGER.warning("target_temperature is None")
+            _LOGGER.warning("The target_temperature is None")
             return None
         return float(value.value)
 
@@ -168,7 +168,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         if preset_mode is None:
             return None
         if self.available_presets is None or self.available_presets.details is None:
-            _LOGGER.warning("available_presets is None")
+            _LOGGER.warning("The available_presets is None")
             return None
 
         val = next(
@@ -192,7 +192,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
             return None
 
         if self.available_fan_modes is None or self.available_fan_modes.details is None:
-            _LOGGER.warning("available_fan_modes is None")
+            _LOGGER.warning("The available_fan_modes is None")
             return None
 
         val = next(
@@ -229,12 +229,12 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         if not (mode := HVAC_MODE_TO_COMCOMPIT_MODE.get(hvac_mode)):
             raise ValueError(f"Invalid hvac mode {hvac_mode}")
 
-        await self.async_call_api(PARAM_HVAC_MODE, mode)
+        await self.async_call_api(PARAM_HVAC_MODE, mode.value)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         if self.available_presets is None or self.available_presets.details is None:
-            _LOGGER.debug("available_presets is None")
+            _LOGGER.debug("The available_presets is None")
             return
         value = next(
             (
@@ -276,6 +276,6 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
             await self.coordinator.async_request_refresh()
             self.async_write_ha_state()
 
-    def get_parameter_value(self, value) -> Param | None:
+    def get_parameter_value(self, value: str) -> Param | None:
         """Get the parameter value from the device state."""
         return self.coordinator.data[self.device_id].state.get_parameter_value(value)
