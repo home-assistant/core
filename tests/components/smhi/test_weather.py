@@ -23,6 +23,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
     UnitOfSpeed,
 )
 from homeassistant.core import HomeAssistant
@@ -36,27 +37,17 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
 
+@pytest.mark.parametrize(
+    "load_platforms",
+    [[Platform.WEATHER]],
+)
 async def test_setup_hass(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    api_response: str,
+    load_int: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test for successfully setting up the smhi integration."""
-    uri = API_POINT_FORECAST.format(
-        TEST_CONFIG["location"]["longitude"], TEST_CONFIG["location"]["latitude"]
-    )
-    aioclient_mock.get(uri, text=api_response)
 
-    entry = MockConfigEntry(domain="smhi", title="test", data=TEST_CONFIG, version=3)
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert aioclient_mock.call_count == 1
-
-    #  Testing the actual entity state for
-    #  deeper testing than normal unity test
     state = hass.states.get(ENTITY_ID)
 
     assert state
@@ -64,28 +55,23 @@ async def test_setup_hass(
     assert state.attributes == snapshot
 
 
+@pytest.mark.parametrize(
+    "load_platforms",
+    [[Platform.WEATHER]],
+)
+@pytest.mark.parametrize(
+    "to_load",
+    [1],
+)
 @freeze_time(datetime(2023, 8, 7, 1, tzinfo=dt_util.UTC))
 async def test_clear_night(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    api_response_night: str,
+    load_int: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test for successfully setting up the smhi integration."""
     hass.config.latitude = "59.32624"
     hass.config.longitude = "17.84197"
-    uri = API_POINT_FORECAST.format(
-        TEST_CONFIG["location"]["longitude"], TEST_CONFIG["location"]["latitude"]
-    )
-    aioclient_mock.get(uri, text=api_response_night)
-
-    entry = MockConfigEntry(domain="smhi", title="test", data=TEST_CONFIG, version=3)
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert aioclient_mock.call_count == 1
-
     state = hass.states.get(ENTITY_ID)
 
     assert state

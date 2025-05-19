@@ -43,6 +43,8 @@ async def load_int(
     load_platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up the SMHI integration."""
+    hass.config.latitude = "59.32624"
+    hass.config.longitude = "17.84197"
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=TEST_CONFIG,
@@ -83,7 +85,7 @@ async def get_client(
 async def get_data_from_library(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    load_json: tuple[dict[str, Any], dict[str, Any], dict[str, Any]],
+    load_json: dict[str, Any],
 ) -> AsyncGenerator[tuple[list[SMHIForecast], list[SMHIForecast], list[SMHIForecast]]]:
     """Get data from api."""
     client = SMHIPointForecast(
@@ -94,7 +96,7 @@ async def get_data_from_library(
     with patch.object(
         client._api,
         "async_get_data",
-        return_value=load_json[0],
+        return_value=load_json,
     ):
         data_daily = await client.async_get_daily_forecast()
         data_twice_daily = await client.async_get_twice_daily_forecast()
@@ -107,13 +109,10 @@ async def get_data_from_library(
 @pytest.fixture(name="load_json")
 def load_json_from_fixture(
     load_data: tuple[str, str, str],
-) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    to_load: int,
+) -> dict[str, Any]:
     """Load fixture with json data and return."""
-    return [
-        json.loads(load_data[0]),
-        json.loads(load_data[1]),
-        json.loads(load_data[2]),
-    ]
+    return json.loads(load_data[to_load])
 
 
 @pytest.fixture(name="load_data", scope="package")
@@ -124,3 +123,9 @@ def load_data_from_fixture() -> tuple[str, str, str]:
         load_fixture("smhi_night.json", "smhi"),
         load_fixture("smhi_short.json", "smhi"),
     )
+
+
+@pytest.fixture
+def to_load() -> int:
+    """Fixture to load."""
+    return 0
