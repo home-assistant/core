@@ -549,6 +549,7 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     function_name="async_step_*",
                     arg_types={},
                     return_type="FlowResult",
+                    mandatory=True,
                 ),
             ],
         ),
@@ -561,6 +562,7 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         0: "ConfigEntry",
                     },
                     return_type="OptionsFlow",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_step_dhcp",
@@ -568,6 +570,7 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         1: "DhcpServiceInfo",
                     },
                     return_type="ConfigFlowResult",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_step_hassio",
@@ -575,6 +578,7 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         1: "HassioServiceInfo",
                     },
                     return_type="ConfigFlowResult",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_step_homekit",
@@ -582,6 +586,7 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         1: "ZeroconfServiceInfo",
                     },
                     return_type="ConfigFlowResult",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_step_mqtt",
@@ -589,6 +594,7 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         1: "MqttServiceInfo",
                     },
                     return_type="ConfigFlowResult",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_step_reauth",
@@ -596,6 +602,7 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         1: "Mapping[str, Any]",
                     },
                     return_type="ConfigFlowResult",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_step_ssdp",
@@ -603,6 +610,7 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         1: "SsdpServiceInfo",
                     },
                     return_type="ConfigFlowResult",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_step_usb",
@@ -610,6 +618,7 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         1: "UsbServiceInfo",
                     },
                     return_type="ConfigFlowResult",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_step_zeroconf",
@@ -617,11 +626,13 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         1: "ZeroconfServiceInfo",
                     },
                     return_type="ConfigFlowResult",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_step_*",
                     arg_types={},
                     return_type="ConfigFlowResult",
+                    mandatory=True,
                 ),
             ],
         ),
@@ -632,6 +643,7 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     function_name="async_step_*",
                     arg_types={},
                     return_type="ConfigFlowResult",
+                    mandatory=True,
                 ),
             ],
         ),
@@ -642,6 +654,7 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     function_name="async_step_*",
                     arg_types={},
                     return_type="SubentryFlowResult",
+                    mandatory=True,
                 ),
             ],
         ),
