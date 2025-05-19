@@ -1,15 +1,17 @@
 """Diagnostics support for Jewish Calendar integration."""
 
+from dataclasses import asdict
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
+from .const import CONF_ALTITUDE
 from .entity import JewishCalendarConfigEntry
 
 TO_REDACT = [
-    CONF_ELEVATION,
+    CONF_ALTITUDE,
     CONF_LATITUDE,
     CONF_LONGITUDE,
 ]
@@ -22,5 +24,5 @@ async def async_get_config_entry_diagnostics(
 
     return {
         "entry_data": async_redact_data(entry.data, TO_REDACT),
-        "data": entry.runtime_data,
+        "data": async_redact_data(asdict(entry.runtime_data), TO_REDACT),
     }
