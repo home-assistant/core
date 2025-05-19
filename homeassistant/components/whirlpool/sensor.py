@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from typing import override
 
 from whirlpool.appliance import Appliance
-from whirlpool.oven import CAVITY_PREFIX_MAP, Cavity, CavityState, CookMode, Oven
+from whirlpool.oven import Cavity as OvenCavity, CavityState, CookMode, Oven
 from whirlpool.washerdryer import MachineState, WasherDryer
 
 from homeassistant.components.sensor import (
@@ -170,7 +170,7 @@ WASHER_DRYER_TIME_SENSORS: tuple[SensorEntityDescription] = (
 class WhirlpoolOvenCavitySensorEntityDescription(SensorEntityDescription):
     """Describes a Whirlpool oven cavity sensor entity."""
 
-    value_fn: Callable[[Oven, Cavity], str | int | float | None]
+    value_fn: Callable[[Oven, OvenCavity], str | int | float | None]
 
 
 OVEN_CAVITY_SENSORS: tuple[WhirlpoolOvenCavitySensorEntityDescription, ...] = (
@@ -218,16 +218,6 @@ OVEN_CAVITY_SENSORS: tuple[WhirlpoolOvenCavitySensorEntityDescription, ...] = (
     ),
 )
 
-OVEN_CAVITY_TIME_SENSORS: tuple[WhirlpoolOvenCavitySensorEntityDescription] = (
-    WhirlpoolOvenCavitySensorEntityDescription(
-        key="oven_end_time",
-        translation_key="oven_end_time",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        icon="mdi:progress-clock",
-        value_fn=lambda oven, cavity: (None),
-    ),
-)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -254,19 +244,14 @@ async def async_setup_entry(
         )
     for oven in appliances_manager.ovens:
         cavities = []
-        if oven.get_oven_cavity_exists(Cavity.Upper):
-            cavities.append(Cavity.Upper)
-        if oven.get_oven_cavity_exists(Cavity.Lower):
-            cavities.append(Cavity.Lower)
+        if oven.get_oven_cavity_exists(OvenCavity.Upper):
+            cavities.append(OvenCavity.Upper)
+        if oven.get_oven_cavity_exists(OvenCavity.Lower):
+            cavities.append(OvenCavity.Lower)
         entities.extend(
             WhirlpoolOvenCavitySensor(oven, cavity, description)
             for cavity in cavities
             for description in OVEN_CAVITY_SENSORS
-        )
-        entities.extend(
-            WhirlpoolOvenCavityTimeSensor(oven, cavity, description)
-            for cavity in cavities
-            for description in OVEN_CAVITY_TIME_SENSORS
         )
     async_add_entities(entities)
 
@@ -345,97 +330,18 @@ class WhirlpoolOvenCavitySensor(WhirlpoolOvenEntity, SensorEntity):
     def __init__(
         self,
         oven: Oven,
-        cavity: Cavity,
+        cavity: OvenCavity,
         description: WhirlpoolOvenCavitySensorEntityDescription,
     ) -> None:
         """Initialize the oven cavity sensor."""
-        super().__init__(oven)
-        cavity_key_suffix = self.get_cavity_key_suffix(cavity)
+        translation_key_base = description.translation_key or description.key
+        super().__init__(oven, cavity, translation_key_base, f"-{description.key}")
         self.cavity = cavity
         self.entity_description: WhirlpoolOvenCavitySensorEntityDescription = (
             description
         )
-        self._attr_unique_id = f"{oven.said}_{description.key}{cavity_key_suffix}"
-        self._attr_translation_key = f"{description.key}{cavity_key_suffix}"
-        self._attr_device_class = getattr(description, "device_class", None)
-        self._attr_state_class = getattr(description, "state_class", None)
-        self._attr_native_unit_of_measurement = getattr(
-            description, "native_unit_of_measurement", None
-        )
-        self._attr_options = getattr(description, "options", None)
 
     @property
     def native_value(self) -> StateType | str | int | float | None:
         """Return native value of sensor."""
-        return self.entity_description.value_fn(self.oven, self.cavity)
-
-
-class WhirlpoolOvenCavityTimeSensor(WhirlpoolOvenEntity, RestoreSensor):
-    """A timestamp class for a Whirlpool oven cavity."""
-
-    _attr_should_poll = True
-
-    def __init__(
-        self,
-        oven: Oven,
-        cavity: Cavity,
-        description: WhirlpoolOvenCavitySensorEntityDescription,
-    ) -> None:
-        """Initialize the oven cavity time sensor."""
-        super().__init__(oven)
-        cavity_key_suffix = self.get_cavity_key_suffix(cavity)
-        self.cavity = cavity
-        self.entity_description: WhirlpoolOvenCavitySensorEntityDescription = (
-            description
-        )
-        self._attr_unique_id = f"{oven.said}_{description.key}{cavity_key_suffix}"
-        self._attr_translation_key = f"{description.key}{cavity_key_suffix}"
-        self.cook_time_duration: int = 0
-        self.cook_time_elapsed: int = 0
-        self.value: datetime | None = None
-
-    async def async_added_to_hass(self) -> None:
-        """Register attribute updates callback."""
-        restored_data = await self.async_get_last_sensor_data()
-        if restored_data and isinstance(restored_data.native_value, datetime):
-            self.value = restored_data.native_value
-        self.oven.register_attr_callback(self.on_attr_change)
-        await super().async_added_to_hass()
-
-    def on_attr_change(self) -> None:
-        """Handle attribute changes."""
-        now = utcnow()
-        cook_time_duration = self.oven._get_attribute(  # noqa: SLF001
-            f"{CAVITY_PREFIX_MAP[self.cavity]}_TimeSetCookTimeSet"
-        )
-        cook_time_duration = int(cook_time_duration) if cook_time_duration else 0
-
-        # If the duration of the timed cook changed, then recalculate a new end time
-        if self.cook_time_duration != cook_time_duration:
-            # Calculate the end time if the duration is not None or 0
-            if cook_time_duration:
-                self.value = now + timedelta(seconds=cook_time_duration)
-            elif cook_time_duration == 0:
-                # If the duration changed to 0, then we know the timed cook ended
-                self.value = now
-            self.cook_time_duration = cook_time_duration
-
-        cook_time_elapsed = self.oven.get_cook_time(self.cavity)
-
-        # If the elapsed time of the timed cook changed, then we know a timed cook is underway
-        if self.cook_time_elapsed != cook_time_elapsed:
-            # If the sensor value is in the past, but the elapsed time is not None, then
-            # we know a timed cook started while Home Assistant was not running.  Since we
-            # don't know when the cook started, we will set the end time to None.
-            if self.value and self.value < now and cook_time_elapsed:
-                self.value = None
-            self.cook_time_elapsed = cook_time_elapsed
-
-    async def async_update(self) -> None:
-        """Update status of the oven."""
-        await self.oven.fetch_data()
-
-    @property
-    def native_value(self) -> datetime | None:
-        """Calculate the time stamp for completion."""
-        return self.value
+        return self.entity_description.value_fn(self._appliance, self.cavity)
