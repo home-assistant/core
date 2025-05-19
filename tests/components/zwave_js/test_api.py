@@ -5680,8 +5680,6 @@ async def test_restore_nvm(
     assert msg["success"] is True
 
     assert client.async_send_command.call_count == 3
-    # The first call is the relevant hard reset command.
-    # 25 is the require_schema parameter.
     assert client.async_send_command.call_args_list[0] == call(
         {
             "command": "controller.restore_nvm",
