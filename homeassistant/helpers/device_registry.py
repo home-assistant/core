@@ -423,9 +423,11 @@ class DeletedDeviceEntry:
             config_entries_subentries={config_entry_id: {config_subentry_id}},
             connections=self.connections & connections,  # type: ignore[arg-type]
             created_at=self.created_at,
-            disabled_by=self.disabled_by
-            if self.disabled_by == DeviceEntryDisabler.USER
-            else None,
+            disabled_by=(
+                self.disabled_by
+                if self.disabled_by == DeviceEntryDisabler.USER
+                else None
+            ),
             identifiers=self.identifiers & identifiers,  # type: ignore[arg-type]
             id=self.id,
             is_new=True,
