@@ -730,7 +730,7 @@ class TelegramNotificationService:
             _LOGGER.error(
                 "%s: %s. Args: %s, kwargs: %s", msg_error, exc, args_msg, kwargs_msg
             )
-            return None
+            raise
         return out
 
     async def send_message(self, message="", target=None, context=None, **kwargs):
@@ -756,8 +756,7 @@ class TelegramNotificationService:
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
-            if msg is not None:
-                msg_ids[chat_id] = msg.id
+            msg_ids[chat_id] = msg.id
         return msg_ids
 
     async def delete_message(self, chat_id=None, context=None, **kwargs):
@@ -765,7 +764,7 @@ class TelegramNotificationService:
         chat_id = self._get_target_chat_ids(chat_id)[0]
         message_id, _ = self._get_msg_ids(kwargs, chat_id)
         _LOGGER.debug("Delete message %s in chat ID %s", message_id, chat_id)
-        deleted = await self._send_msg(
+        await self._send_msg(
             self.bot.delete_message,
             "Error deleting message",
             None,
@@ -777,7 +776,6 @@ class TelegramNotificationService:
         if self._last_message_id[chat_id] is not None:
             # change last msg_id for deque(n_msgs)?
             self._last_message_id[chat_id] -= 1
-        return deleted
 
     async def edit_message(self, type_edit, chat_id=None, context=None, **kwargs):
         """Edit a previously sent message."""
@@ -795,7 +793,7 @@ class TelegramNotificationService:
             title = kwargs.get(ATTR_TITLE)
             text = f"{title}\n{message}" if title else message
             _LOGGER.debug("Editing message with ID %s", message_id or inline_message_id)
-            return await self._send_msg(
+            await self._send_msg(
                 self.bot.edit_message_text,
                 "Error editing text message",
                 params[ATTR_MESSAGE_TAG],
@@ -978,8 +976,7 @@ class TelegramNotificationService:
                         context=context,
                     )
 
-                if msg is not None:
-                    msg_ids[chat_id] = msg.id
+                msg_ids[chat_id] = msg.id
                 file_content.seek(0)
         else:
             _LOGGER.error("Can't send file with kwargs: %s", kwargs)
@@ -1007,8 +1004,7 @@ class TelegramNotificationService:
                     message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                     context=context,
                 )
-                if msg is not None:
-                    msg_ids[chat_id] = msg.id
+                msg_ids[chat_id] = msg.id
             return msg_ids
         return await self.send_file(SERVICE_SEND_STICKER, target, **kwargs)
 
@@ -1037,8 +1033,7 @@ class TelegramNotificationService:
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
-            if msg is not None:
-                msg_ids[chat_id] = msg.id
+            msg_ids[chat_id] = msg.id
         return msg_ids
 
     async def send_poll(
@@ -1073,15 +1068,14 @@ class TelegramNotificationService:
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
-            if msg is not None:
-                msg_ids[chat_id] = msg.id
+            msg_ids[chat_id] = msg.id
         return msg_ids
 
     async def leave_chat(self, chat_id=None, context=None):
         """Remove bot from chat."""
         chat_id = self._get_target_chat_ids(chat_id)[0]
         _LOGGER.debug("Leave from chat ID %s", chat_id)
-        return await self._send_msg(
+        await self._send_msg(
             self.bot.leave_chat, "Error leaving chat", None, chat_id, context=context
         )
 

@@ -2,6 +2,7 @@
 
 import base64
 import io
+import logging
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
@@ -115,14 +116,9 @@ async def test_send_message(
 )
 def _read_file_as_bytesio_mock(file_path):
     """Convert file to BytesIO for testing."""
-    _file = None
-
-    with open(file_path, encoding="utf8") as file_handler:
-        _file = io.BytesIO(file_handler.read())
-
+    _file = io.BytesIO(b"dummydata")
     _file.name = "dummy"
     _file.seek(0)
-
     return _file
 
 
@@ -468,77 +464,78 @@ async def test_webhook_endpoint_invalid_secret_token_is_denied(
     assert response.status == 401
 
 
-async def test_send_file_handles_none_response(
-    hass: HomeAssistant, webhook_platform
-) -> None:
-    """Test the send_file service correctly handles None responses from _send_msg."""
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        (SERVICE_SEND_PHOTO, {ATTR_FILE: "/media/dummy"}),
+        (SERVICE_SEND_ANIMATION, {ATTR_FILE: "/media/dummy"}),
+        (SERVICE_SEND_VIDEO, {ATTR_FILE: "/media/dummy"}),
+        (SERVICE_SEND_VOICE, {ATTR_FILE: "/media/dummy"}),
+        (SERVICE_SEND_DOCUMENT, {ATTR_FILE: "/media/dummy"}),
+    ],
+)
+async def test_send_file_method_log_on_telegram_error(
+    hass, webhook_platform, service, service_data, caplog
+):
+    """Test that file-based telegram services log and raise on TelegramError."""
     context = Context()
-    events = async_capture_events(hass, "telegram_sent")
+    hass.config.allowlist_external_dirs.add("/media/")
+    patcher = patch(
+        "homeassistant.components.telegram_bot._read_file_as_bytesio",
+        _read_file_as_bytesio_mock,
+    )
 
-    # Mock the file handler read with our base64 encoded dummy file
-    with (
-        patch(
-            "homeassistant.components.telegram_bot._read_file_as_bytesio",
-            _read_file_as_bytesio_mock,
-        ),
-        # Simulate an API error by making send_photo return None
-        patch(
-            "homeassistant.components.telegram_bot.TelegramNotificationService._send_msg",
-            return_value=None,
-        ),
-    ):
-        # This should not raise an AttributeError
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SEND_PHOTO,
-            {ATTR_FILE: "/media/dummy"},
-            blocking=True,
-            context=context,
+    def fake_send_msg(self, *args, **kwargs):
+        logging.getLogger("homeassistant.components.telegram_bot").error(
+            "Error sending (test)"
         )
-        await hass.async_block_till_done()
+        raise TelegramError("API error")
 
-    # No events should be fired since the API call failed
-    assert len(events) == 0
+    with patcher, caplog.at_level("ERROR", logger="homeassistant.components.telegram_bot"), patch(
+        "homeassistant.components.telegram_bot.TelegramNotificationService._send_msg",
+        fake_send_msg,
+    ):
+        with pytest.raises(TelegramError):
+            await hass.services.async_call(
+                DOMAIN,
+                service,
+                service_data,
+                blocking=True,
+                context=context,
+            )
+        assert "Error sending" in caplog.text or "API error" in caplog.text
 
 
 @pytest.mark.parametrize(
-    "service",
+    ("service", "service_data"),
     [
-        SERVICE_SEND_STICKER,
-        SERVICE_SEND_LOCATION,
-        SERVICE_SEND_POLL,
+        (SERVICE_SEND_STICKER, {ATTR_STICKER_ID: "test_sticker_id"}),
+        (SERVICE_SEND_LOCATION, {ATTR_LONGITUDE: "1.123", ATTR_LATITUDE: "1.123"}),
+        (SERVICE_SEND_POLL, {ATTR_QUESTION: "Question", ATTR_OPTIONS: ["Yes", "No"]}),
     ],
 )
-async def test_other_send_methods_handle_none_response(
-    hass: HomeAssistant, webhook_platform, service: str
-) -> None:
-    """Test that other send methods also handle None responses correctly."""
+async def test_send_nonfile_methods_log_on_telegram_error(
+    hass, webhook_platform, service, service_data, caplog
+):
+    """Test that non-file telegram services log and raise on TelegramError."""
     context = Context()
-    events = async_capture_events(hass, "telegram_sent")
 
-    # Prepare service_data based on the service type
-    service_data = {}
-    if service == SERVICE_SEND_STICKER:
-        service_data = {ATTR_STICKER_ID: "test_sticker_id"}
-    elif service == SERVICE_SEND_LOCATION:
-        service_data = {ATTR_LONGITUDE: "1.123", ATTR_LATITUDE: "1.123"}
-    elif service == SERVICE_SEND_POLL:
-        service_data = {ATTR_QUESTION: "Question", ATTR_OPTIONS: ["Yes", "No"]}
-
-    # Simulate an API error by making _send_msg return None
-    with patch(
-        "homeassistant.components.telegram_bot.TelegramNotificationService._send_msg",
-        return_value=None,
-    ):
-        # This should not raise an AttributeError
-        await hass.services.async_call(
-            DOMAIN,
-            service,
-            service_data,
-            blocking=True,
-            context=context,
+    def fake_send_msg(self, *args, **kwargs):
+        logging.getLogger("homeassistant.components.telegram_bot").error(
+            "Error sending (test)"
         )
-        await hass.async_block_till_done()
+        raise TelegramError("API error")
 
-    # No events should be fired since the API call failed
-    assert len(events) == 0
+    with caplog.at_level("ERROR", logger="homeassistant.components.telegram_bot"), patch(
+        "homeassistant.components.telegram_bot.TelegramNotificationService._send_msg",
+        fake_send_msg,
+    ):
+        with pytest.raises(TelegramError):
+            await hass.services.async_call(
+                DOMAIN,
+                service,
+                service_data,
+                blocking=True,
+                context=context,
+            )
+        assert "Error sending" in caplog.text or "API error" in caplog.text
