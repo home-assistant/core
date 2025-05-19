@@ -3,6 +3,7 @@
   "name": "Immich",
   "codeowners": ["@mib1185"],
   "config_flow": true,
+  "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/immich",
   "iot_class": "local_polling",
   "loggers": ["aioimmich"],
