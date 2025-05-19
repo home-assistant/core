@@ -88,6 +88,11 @@ class HistoryStats:
         utc_now = dt_util.utcnow()
         now_timestamp = floored_timestamp(utc_now)
 
+        # If we end up querying data from the recorder when we get triggered by a new state
+        # change event, it is possible this function could be reentered a second time before
+        # the first recorder query returns. In that case a second recorder query will be done
+        # and we need to hold the new event so that we can append it after the second query.
+        # Otherwise the event will be dropped.
         if event:
             self._pending_events.append(event)
 
@@ -159,7 +164,7 @@ class HistoryStats:
             self._has_recorder_data = True
 
         if self._query_count == 0:
-            self._pending_events = []
+            self._pending_events.clear()
 
         seconds_matched, match_count = self._async_compute_seconds_and_changes(
             now_timestamp,
