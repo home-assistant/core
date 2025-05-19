@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any
 from pysqueezebox import Player, Server
 from pysqueezebox.player import Alarm
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import format_mac
@@ -105,7 +106,7 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.player = player
         self.available = True
-        self.known_alarms: dict[str, str | None] = {}
+        self.known_alarms: set[str] = set()
         self._remove_dispatcher: Callable | None = None
         self.player_uuid = format_mac(player.player_id)
         self.server_uuid = server_uuid
@@ -129,7 +130,7 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             elif self.player.alarms:
                 for alarm in self.player.alarms:
                     if alarm["id"] not in self.known_alarms:
-                        self.known_alarms[alarm["id"]] = None
+                        self.known_alarms.add(alarm["id"])
                         async_dispatcher_send(
                             self.hass, SIGNAL_ALARM_DISCOVERED, alarm, self
                         )
@@ -137,22 +138,24 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
             for known_alarm in self.known_alarms.copy():
                 if known_alarm not in alarm_dict:
+                    _uid = f"{self.player_uuid}-alarm-{known_alarm}"
                     _LOGGER.debug(
-                        "Alarm %s with entity_id %s needs to be deleted",
+                        "Alarm %s with unique_id %s needs to be deleted",
                         known_alarm,
-                        self.known_alarms[known_alarm],
+                        _uid,
                     )
 
                     entity_registry = er.async_get(self.hass)
-                    if entity_registry.async_get(str(self.known_alarms[known_alarm])):
-                        entity_registry.async_remove(
-                            str(self.known_alarms[known_alarm])
-                        )
-                        del self.known_alarms[known_alarm]
+                    _entity_id = entity_registry.async_get_entity_id(
+                        Platform.SWITCH,
+                        DOMAIN,
+                        _uid,
+                    )
+                    if _entity_id:
+                        entity_registry.async_remove(_entity_id)
+                        self.known_alarms.remove(known_alarm)
 
-        if alarm_dict:
-            return {"alarms": alarm_dict}
-        return {}
+        return {"alarms": alarm_dict}
 
     @callback
     def rediscovered(self, unique_id: str, connected: bool) -> None:

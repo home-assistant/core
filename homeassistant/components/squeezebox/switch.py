@@ -2,7 +2,7 @@
 
 import datetime
 import logging
-from typing import Any
+from typing import Any, cast
 
 from pysqueezebox.player import Alarm
 
@@ -39,7 +39,7 @@ async def async_setup_entry(
             alarm["id"],
             coordinator.player,
         )
-        async_add_entities([SqueezeBoxAlarmEntity(alarm["id"], coordinator)])
+        async_add_entities([SqueezeBoxAlarmEntity(coordinator, alarm["id"])])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_ALARM_DISCOVERED, _alarm_discovered)
@@ -66,11 +66,11 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
-        self, alarm_id: str, coordinator: SqueezeBoxPlayerUpdateCoordinator
+        self, coordinator: SqueezeBoxPlayerUpdateCoordinator, alarm_id: str
     ) -> None:
         """Initialize the Squeezebox alarm switch."""
         super().__init__(coordinator)
-        self._alarm_id: str | None = alarm_id
+        self._alarm_id = alarm_id
         self._attr_available = True
         self._attr_translation_placeholders = {"alarm_id": self._alarm_id}
         self._attr_unique_id: str = (
@@ -96,7 +96,6 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
                 self.hass, async_write_state_daily, hour=0, minute=0, second=0
             )
         )
-        self.coordinator.known_alarms[str(self._alarm_id)] = self.entity_id
 
     @property
     def alarm(self) -> Alarm:
@@ -119,13 +118,7 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the switch."""
-        return self.alarm is not None and self.alarm["enabled"]
-
-    @property
-    def _is_today(self) -> bool:
-        """Return whether this alarm is scheduled for today."""
-        daynum = datetime.datetime.today().weekday()
-        return daynum in self.alarm["dow"]
+        return cast(bool, self.alarm["enabled"])
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
@@ -152,15 +145,10 @@ class SqueezeBoxAlarmsEnabledEntity(SqueezeboxEntity, SwitchEntity):
             f"{format_mac(self._player.player_id)}-alarms-enabled"
         )
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self.async_write_ha_state()
-
     @property
     def is_on(self) -> bool:
         """Return the state of the switch."""
-        return self.coordinator.player.alarms_enabled is True
+        return cast(bool, self.coordinator.player.alarms_enabled)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
