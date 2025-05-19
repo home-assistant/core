@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime
+from typing import cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -24,6 +27,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from .const import DEVICE_DATA_DEVICES, DEVICE_DATA_ID
 from .coordinator import RehlkoConfigEntry
@@ -37,7 +41,8 @@ PARALLEL_UPDATES = 0
 class RehlkoSensorEntityDescription(SensorEntityDescription):
     """Class describing Rehlko sensor entities."""
 
-    use_device_key: bool = False
+    document_key: str | None = None
+    value_fn: Callable[[str], datetime | None] | None = None
 
 
 SENSORS: tuple[RehlkoSensorEntityDescription, ...] = (
@@ -116,7 +121,7 @@ SENSORS: tuple[RehlkoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        use_device_key=True,
+        document_key="device",
     ),
     RehlkoSensorEntityDescription(
         key="runtimeSinceLastMaintenanceHours",
@@ -132,7 +137,7 @@ SENSORS: tuple[RehlkoSensorEntityDescription, ...] = (
         translation_key="device_ip_address",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        use_device_key=True,
+        document_key="device",
     ),
     RehlkoSensorEntityDescription(
         key="serverIpAddress",
@@ -171,7 +176,7 @@ SENSORS: tuple[RehlkoSensorEntityDescription, ...] = (
     RehlkoSensorEntityDescription(
         key="status",
         translation_key="generator_status",
-        use_device_key=True,
+        document_key="device",
     ),
     RehlkoSensorEntityDescription(
         key="engineState",
@@ -180,6 +185,50 @@ SENSORS: tuple[RehlkoSensorEntityDescription, ...] = (
     RehlkoSensorEntityDescription(
         key="powerSource",
         translation_key="power_source",
+    ),
+    RehlkoSensorEntityDescription(
+        key="lastRanTimestamp",
+        translation_key="last_run",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda value: datetime.fromisoformat(value).replace(tzinfo=UTC),
+    ),
+    RehlkoSensorEntityDescription(
+        key="lastMaintenanceTimestamp",
+        translation_key="last_maintainance",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        document_key="device",
+        value_fn=lambda value: datetime.fromisoformat(value).replace(
+            tzinfo=dt_util.get_default_time_zone()
+        ),
+        entity_registry_enabled_default=False,
+    ),
+    RehlkoSensorEntityDescription(
+        key="nextMaintenanceTimestamp",
+        translation_key="next_maintainance",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        document_key="device",
+        value_fn=lambda value: datetime.fromisoformat(value).replace(
+            tzinfo=dt_util.get_default_time_zone()
+        ),
+        entity_registry_enabled_default=False,
+    ),
+    RehlkoSensorEntityDescription(
+        key="lastStartTimestamp",
+        translation_key="last_exercise",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        document_key="exercise",
+        value_fn=lambda value: datetime.fromisoformat(value).replace(tzinfo=UTC),
+        entity_registry_enabled_default=False,
+    ),
+    RehlkoSensorEntityDescription(
+        key="nextStartTimestamp",
+        translation_key="next_exercise",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        document_key="exercise",
+        value_fn=lambda value: datetime.fromisoformat(value).replace(
+            tzinfo=dt_util.get_default_time_zone()
+        ),
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -199,7 +248,7 @@ async def async_setup_entry(
             device_data[DEVICE_DATA_ID],
             device_data,
             sensor_description,
-            sensor_description.use_device_key,
+            sensor_description.document_key,
         )
         for home_data in homes
         for device_data in home_data[DEVICE_DATA_DEVICES]
@@ -211,6 +260,9 @@ class RehlkoSensorEntity(RehlkoEntity, SensorEntity):
     """Representation of a Rehlko sensor."""
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the sensor state."""
+        desc = cast(RehlkoSensorEntityDescription, self.entity_description)
+        if desc.value_fn:
+            return desc.value_fn(self._rehlko_value)
         return self._rehlko_value
