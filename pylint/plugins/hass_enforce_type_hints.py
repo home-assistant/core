@@ -51,7 +51,7 @@ class TypeHintMatch:
     """kwargs_type is for the special case `**kwargs`"""
     has_async_counterpart: bool = False
     """`function_name` and `async_function_name` share arguments and return type"""
-    compulsory: bool = False
+    mandatory: bool = False
     """bypass ignore_missing_annotations"""
 
     def need_to_check_function(self, node: nodes.FunctionDef) -> bool:
@@ -187,7 +187,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="bool",
             has_async_counterpart=True,
-            compulsory=True,
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_setup_entry",
@@ -196,7 +196,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigEntry",
             },
             return_type="bool",
-            compulsory=True,
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_remove_entry",
@@ -205,7 +205,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigEntry",
             },
             return_type=None,
-            compulsory=True,
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_unload_entry",
@@ -214,7 +214,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigEntry",
             },
             return_type="bool",
-            compulsory=True,
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_migrate_entry",
@@ -223,7 +223,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigEntry",
             },
             return_type="bool",
-            compulsory=True,
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_remove_config_entry_device",
@@ -233,7 +233,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 2: "DeviceEntry",
             },
             return_type="bool",
-            compulsory=True,
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_reset_platform",
@@ -242,7 +242,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "str",
             },
             return_type=None,
-            compulsory=True,
+            mandatory=True,
         ),
     ],
     "__any_platform__": [
@@ -256,7 +256,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=None,
             has_async_counterpart=True,
-            compulsory=True,
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_setup_entry",
@@ -266,7 +266,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 2: "AddConfigEntryEntitiesCallback",
             },
             return_type=None,
-            compulsory=True,
+            mandatory=True,
         ),
     ],
     "application_credentials": [
@@ -3220,7 +3220,7 @@ class HassTypeHintChecker(BaseChecker):
             # some modules have checks forced
             and self._module_platform not in _FORCE_ANNOTATION_PLATFORMS
             # some matches have checks forced
-            and not match.compulsory
+            and not match.mandatory
             # other modules are only checked ignore_missing_annotations
             and self.linter.config.ignore_missing_annotations
             and node.returns is None
