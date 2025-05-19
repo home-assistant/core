@@ -1,5 +1,6 @@
 """Module contains the CompitClimate class for controlling climate entities."""
 
+from enum import Enum
 import logging
 from typing import Any
 
@@ -11,7 +12,6 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -19,8 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANURFACER_NAME
-from .coordinator import CompitDataUpdateCoordinator
-from .enums import CompitHVACMode
+from .coordinator import CompitConfigEntry, CompitDataUpdateCoordinator
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 ATTR_TEMPERATURE = "temperature"
@@ -32,6 +31,15 @@ PARAM_TARGET_TEMPERATURE = "__tpokzadana"
 PARAM_SET_TARGET_TEMPERATURE = "__tempzadpracareczna"
 CLIMATE_DEVICE_CLASS = 10
 
+
+class CompitHVACMode(Enum):
+    """Enum for avaiable HVAC modes."""
+
+    HEAT = 0
+    OFF = 1
+    COOL = 2
+
+
 COMPIT_MODE_MAP = {
     CompitHVACMode.COOL: HVACMode.COOL,
     CompitHVACMode.HEAT: HVACMode.HEAT,
@@ -39,8 +47,6 @@ COMPIT_MODE_MAP = {
 }
 
 HVAC_MODE_TO_COMCOMPIT_MODE = {v: k for k, v in COMPIT_MODE_MAP.items()}
-
-type CompitConfigEntry = ConfigEntry[CompitDataUpdateCoordinator]
 
 
 async def async_setup_entry(
@@ -101,12 +107,10 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         super().__init__(coordinator)
         self._attr_unique_id = f"{device.label}_{device.id}"
         self._attr_device_info = DeviceInfo(
-            {
-                "identifiers": {(DOMAIN, str(device.id))},
-                "name": device.label,
-                "manufacturer": MANURFACER_NAME,
-                "model": device_name,
-            }
+            identifiers={(DOMAIN, str(device.id))},
+            name=device.label,
+            manufacturer=MANURFACER_NAME,
+            model=device_name,
         )
 
         parametersDict = {

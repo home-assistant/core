@@ -11,6 +11,7 @@ from compit_inext_api import (
     Gate,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -18,6 +19,8 @@ from .const import DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=30)
 _LOGGER: logging.Logger = logging.getLogger(__package__)
+
+type CompitConfigEntry = ConfigEntry[CompitDataUpdateCoordinator]
 
 
 class CompitDataUpdateCoordinator(DataUpdateCoordinator[dict[int, DeviceInstance]]):

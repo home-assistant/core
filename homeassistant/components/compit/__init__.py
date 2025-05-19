@@ -12,7 +12,7 @@ from compit_inext_api import (
     SystemInfo,
 )
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -21,12 +21,13 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import PLATFORMS
-from .coordinator import CompitDataUpdateCoordinator
+from .coordinator import CompitConfigEntry, CompitDataUpdateCoordinator
+
+PLATFORMS = [
+    Platform.CLIMATE,
+]
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
-
-type CompitConfigEntry = ConfigEntry[CompitDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: CompitConfigEntry) -> bool:
