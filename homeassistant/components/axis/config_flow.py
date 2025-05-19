@@ -47,7 +47,7 @@ from .const import (
     CONF_VIDEO_SOURCE,
     DEFAULT_STREAM_PROFILE,
     DEFAULT_VIDEO_SOURCE,
-    DOMAIN as AXIS_DOMAIN,
+    DOMAIN,
 )
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import AxisHub, get_axis_api
@@ -58,7 +58,7 @@ DEFAULT_PROTOCOL = "https"
 PROTOCOL_CHOICES = ["https", "http"]
 
 
-class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
+class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Axis config flow."""
 
     VERSION = 3
@@ -146,7 +146,7 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
         model = self.config[CONF_MODEL]
         same_model = [
             entry.data[CONF_NAME]
-            for entry in self.hass.config_entries.async_entries(AXIS_DOMAIN)
+            for entry in self.hass.config_entries.async_entries(DOMAIN)
             if entry.source != SOURCE_IGNORE and entry.data[CONF_MODEL] == model
         ]
 
