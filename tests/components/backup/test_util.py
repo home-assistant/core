@@ -167,14 +167,37 @@ def test_validate_password_no_homeassistant() -> None:
         assert validate_password(mock_path, "hunter2") is False
 
 
-async def test_decrypted_backup_streamer(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("addons", "padding_size", "decrypted_backup"),
+    [
+        (
+            [
+                AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+                AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
+            ],
+            40960,  # 4 x 10240 byte of padding
+            "test_backups/c0cb53bd.tar.decrypted",
+        ),
+        (
+            [
+                AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+            ],
+            30720,  # 3 x 10240 byte of padding
+            "test_backups/c0cb53bd.tar.decrypted_skip_core2",
+        ),
+    ],
+)
+async def test_decrypted_backup_streamer(
+    hass: HomeAssistant,
+    addons: list[AddonInfo],
+    padding_size: int,
+    decrypted_backup: str,
+) -> None:
     """Test the decrypted backup streamer."""
-    decrypted_backup_path = get_fixture_path(
-        "test_backups/c0cb53bd.tar.decrypted", DOMAIN
-    )
+    decrypted_backup_path = get_fixture_path(decrypted_backup, DOMAIN)
     encrypted_backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
     backup = AgentBackup(
-        addons=["addon_1", "addon_2"],
+        addons=addons,
         backup_id="1234",
         date="2024-12-02T07:23:58.261875-05:00",
         database_included=False,
@@ -186,7 +209,7 @@ async def test_decrypted_backup_streamer(hass: HomeAssistant) -> None:
         protected=True,
         size=encrypted_backup_path.stat().st_size,
     )
-    expected_padding = b"\0" * 40960  # 4 x 10240 byte of padding
+    expected_padding = b"\0" * padding_size
 
     async def send_backup() -> AsyncIterator[bytes]:
         f = encrypted_backup_path.open("rb")
@@ -218,7 +241,10 @@ async def test_decrypted_backup_streamer_interrupt_stuck_reader(
     """Test the decrypted backup streamer."""
     encrypted_backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
     backup = AgentBackup(
-        addons=["addon_1", "addon_2"],
+        addons=[
+            AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+            AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
+        ],
         backup_id="1234",
         date="2024-12-02T07:23:58.261875-05:00",
         database_included=False,
@@ -253,7 +279,10 @@ async def test_decrypted_backup_streamer_interrupt_stuck_writer(
     """Test the decrypted backup streamer."""
     encrypted_backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
     backup = AgentBackup(
-        addons=["addon_1", "addon_2"],
+        addons=[
+            AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+            AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
+        ],
         backup_id="1234",
         date="2024-12-02T07:23:58.261875-05:00",
         database_included=False,
@@ -283,7 +312,10 @@ async def test_decrypted_backup_streamer_wrong_password(hass: HomeAssistant) -> 
     """Test the decrypted backup streamer with wrong password."""
     encrypted_backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
     backup = AgentBackup(
-        addons=["addon_1", "addon_2"],
+        addons=[
+            AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+            AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
+        ],
         backup_id="1234",
         date="2024-12-02T07:23:58.261875-05:00",
         database_included=False,
@@ -313,14 +345,39 @@ async def test_decrypted_backup_streamer_wrong_password(hass: HomeAssistant) -> 
     assert isinstance(decryptor._workers[0].error, securetar.SecureTarReadError)
 
 
-async def test_encrypted_backup_streamer(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("addons", "padding_size", "encrypted_backup"),
+    [
+        (
+            [
+                AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+                AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
+            ],
+            40960,  # 4 x 10240 byte of padding
+            "test_backups/c0cb53bd.tar",
+        ),
+        (
+            [
+                AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+            ],
+            30720,  # 3 x 10240 byte of padding
+            "test_backups/c0cb53bd.tar.encrypted_skip_core2",
+        ),
+    ],
+)
+async def test_encrypted_backup_streamer(
+    hass: HomeAssistant,
+    addons: list[AddonInfo],
+    padding_size: int,
+    encrypted_backup: str,
+) -> None:
     """Test the encrypted backup streamer."""
     decrypted_backup_path = get_fixture_path(
         "test_backups/c0cb53bd.tar.decrypted", DOMAIN
     )
-    encrypted_backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
+    encrypted_backup_path = get_fixture_path(encrypted_backup, DOMAIN)
     backup = AgentBackup(
-        addons=["addon_1", "addon_2"],
+        addons=addons,
         backup_id="1234",
         date="2024-12-02T07:23:58.261875-05:00",
         database_included=False,
@@ -332,7 +389,7 @@ async def test_encrypted_backup_streamer(hass: HomeAssistant) -> None:
         protected=False,
         size=decrypted_backup_path.stat().st_size,
     )
-    expected_padding = b"\0" * 40960  # 4 x 10240 byte of padding
+    expected_padding = b"\0" * padding_size
 
     async def send_backup() -> AsyncIterator[bytes]:
         f = decrypted_backup_path.open("rb")
@@ -353,15 +410,16 @@ async def test_encrypted_backup_streamer(hass: HomeAssistant) -> None:
             bytes.fromhex("00000000000000000000000000000000"),
         )
         encryptor = EncryptedBackupStreamer(hass, backup, open_backup, "hunter2")
-    assert encryptor.backup() == dataclasses.replace(
-        backup, protected=True, size=backup.size + len(expected_padding)
-    )
 
-    encrypted_stream = await encryptor.open_stream()
-    encrypted_output = b""
-    async for chunk in encrypted_stream:
-        encrypted_output += chunk
-    await encryptor.wait()
+        assert encryptor.backup() == dataclasses.replace(
+            backup, protected=True, size=backup.size + len(expected_padding)
+        )
+
+        encrypted_stream = await encryptor.open_stream()
+        encrypted_output = b""
+        async for chunk in encrypted_stream:
+            encrypted_output += chunk
+        await encryptor.wait()
 
     # Expect the output to match the stored encrypted backup file, with additional
     # padding.
@@ -377,7 +435,10 @@ async def test_encrypted_backup_streamer_interrupt_stuck_reader(
         "test_backups/c0cb53bd.tar.decrypted", DOMAIN
     )
     backup = AgentBackup(
-        addons=["addon_1", "addon_2"],
+        addons=[
+            AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+            AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
+        ],
         backup_id="1234",
         date="2024-12-02T07:23:58.261875-05:00",
         database_included=False,
@@ -414,7 +475,10 @@ async def test_encrypted_backup_streamer_interrupt_stuck_writer(
         "test_backups/c0cb53bd.tar.decrypted", DOMAIN
     )
     backup = AgentBackup(
-        addons=["addon_1", "addon_2"],
+        addons=[
+            AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+            AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
+        ],
         backup_id="1234",
         date="2024-12-02T07:23:58.261875-05:00",
         database_included=False,
@@ -447,7 +511,10 @@ async def test_encrypted_backup_streamer_random_nonce(hass: HomeAssistant) -> No
     )
     encrypted_backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
     backup = AgentBackup(
-        addons=["addon_1", "addon_2"],
+        addons=[
+            AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+            AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
+        ],
         backup_id="1234",
         date="2024-12-02T07:23:58.261875-05:00",
         database_included=False,
@@ -490,7 +557,7 @@ async def test_encrypted_backup_streamer_random_nonce(hass: HomeAssistant) -> No
     await encryptor1.wait()
     await encryptor2.wait()
 
-    # Output from the two streames should differ but have the same length.
+    # Output from the two streams should differ but have the same length.
     assert encrypted_output1 != encrypted_output3
     assert len(encrypted_output1) == len(encrypted_output3)
 
@@ -508,7 +575,10 @@ async def test_encrypted_backup_streamer_error(hass: HomeAssistant) -> None:
         "test_backups/c0cb53bd.tar.decrypted", DOMAIN
     )
     backup = AgentBackup(
-        addons=["addon_1", "addon_2"],
+        addons=[
+            AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+            AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
+        ],
         backup_id="1234",
         date="2024-12-02T07:23:58.261875-05:00",
         database_included=False,

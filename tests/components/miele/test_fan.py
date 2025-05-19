@@ -25,14 +25,13 @@ ENTITY_ID = "fan.hood_fan"
 async def test_fan_states(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    setup_platform: None,
+    setup_platform: MockConfigEntry,
 ) -> None:
     """Test fan entity state."""
 
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
 
 @pytest.mark.parametrize("load_device_file", ["fan_devices.json"])
@@ -46,7 +45,7 @@ async def test_fan_states(
 async def test_fan_control(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
-    setup_platform: None,
+    setup_platform: MockConfigEntry,
     service: str,
     expected_argument: dict[str, Any],
 ) -> None:
@@ -74,7 +73,7 @@ async def test_fan_control(
 async def test_fan_set_speed(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
-    setup_platform: None,
+    setup_platform: MockConfigEntry,
     service: str,
     percentage: int,
     expected_argument: dict[str, Any],
@@ -102,7 +101,7 @@ async def test_fan_set_speed(
 async def test_api_failure(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
-    setup_platform: None,
+    setup_platform: MockConfigEntry,
     service: str,
 ) -> None:
     """Test handling of exception from API."""

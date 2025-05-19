@@ -24,21 +24,20 @@ ENTITY_ID = "button.washing_machine_start"
 async def test_button_states(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    setup_platform: None,
+    setup_platform: MockConfigEntry,
 ) -> None:
     """Test button entity state."""
 
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_button_press(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
-    setup_platform: None,
+    setup_platform: MockConfigEntry,
 ) -> None:
     """Test button press."""
 
@@ -54,7 +53,7 @@ async def test_button_press(
 async def test_api_failure(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
-    setup_platform: None,
+    setup_platform: MockConfigEntry,
 ) -> None:
     """Test handling of exception from API."""
     mock_miele_client.send_action.side_effect = ClientResponseError("test", "Test")

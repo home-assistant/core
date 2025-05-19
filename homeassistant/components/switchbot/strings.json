@@ -180,6 +180,23 @@
           }
         }
       }
+    },
+    "vacuum": {
+      "vacuum": {
+        "state_attributes": {
+          "last_run_success": {
+            "state": {
+              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "operation_error": {
+      "message": "An error occurred while performing the action: {error}"
     }
   }
 }

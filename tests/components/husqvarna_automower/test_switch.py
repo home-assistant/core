@@ -133,8 +133,7 @@ async def test_stay_out_zone_switch_commands(
     )
     values[TEST_MOWER_ID].stay_out_zones.zones[TEST_ZONE_ID].enabled = boolean
     mock_automower_client.get_status.return_value = values
-    mocked_method = AsyncMock()
-    setattr(mock_automower_client.commands, "switch_stay_out_zone", mocked_method)
+    mocked_method = mock_automower_client.commands.switch_stay_out_zone
     await hass.services.async_call(
         domain=SWITCH_DOMAIN,
         service=service,
