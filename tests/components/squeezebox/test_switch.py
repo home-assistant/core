@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.squeezebox.const import SENSOR_UPDATE_INTERVAL
 from homeassistant.core import HomeAssistant
