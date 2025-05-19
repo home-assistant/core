@@ -115,7 +115,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth flow."""
-        self.context["title_placeholders"] = {"host": entry_data[CONF_HOST]}
+        self.context["title_placeholders"] = {CONF_HOST: entry_data[CONF_HOST]}
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
