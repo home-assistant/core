@@ -76,7 +76,7 @@ class ActronSystemClimate(
         | ClimateEntityFeature.TURN_ON
         | ClimateEntityFeature.TURN_OFF
     )
-    _attr_name: None = None
+    _attr_name = None
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT, HVACMode.AUTO]
 
     def __init__(
@@ -87,8 +87,8 @@ class ActronSystemClimate(
     ) -> None:
         """Initialize an Actron Air Neo unit."""
         super().__init__(coordinator)
-        self._serial_number: str = serial_number
-        self._name: str = name
+        self._serial_number = serial_number
+        self._name = name
         self._attr_unique_id: str = serial_number
         self._attr_device_info: DeviceInfo = DeviceInfo(
             identifiers={(DOMAIN, serial_number)},
@@ -177,6 +177,7 @@ class ActronZoneClimate(
         | ClimateEntityFeature.TURN_ON
         | ClimateEntityFeature.TURN_OFF
     )
+    _attr_name = None
 
     def __init__(
         self,
@@ -188,7 +189,6 @@ class ActronZoneClimate(
         super().__init__(coordinator)
         self._serial_number = serial_number
         self._zone_id: int = zone.zone_id
-        self._attr_name: None = None
         self._attr_unique_id: str = f"{serial_number}_zone_{zone.zone_id}"
         self._attr_device_info: DeviceInfo = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
