@@ -149,7 +149,7 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
     component_fn: Callable[[str], bool] | None = None
     exists_fn: Callable[[Status], bool] | None = None
     use_temperature_unit: bool = False
-    deprecated: Callable[[ComponentStatus], str | None] | None = None
+    deprecated: Callable[[ComponentStatus], tuple[str, str] | None] | None = None
 
 
 CAPABILITY_TO_SENSORS: dict[
@@ -207,7 +207,7 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="audio_volume",
                 native_unit_of_measurement=PERCENTAGE,
                 deprecated=(
-                    lambda status: "media_player"
+                    lambda status: ("2025.10.0", "media_player")
                     if Capability.AUDIO_MUTE in status
                     else None
                 ),
@@ -519,7 +519,7 @@ CAPABILITY_TO_SENSORS: dict[
                 device_class=SensorDeviceClass.ENUM,
                 options_attribute=Attribute.SUPPORTED_INPUT_SOURCES,
                 value_fn=lambda value: value.lower() if value else None,
-                deprecated=lambda _: "media_player",
+                deprecated=lambda _: ("2025.10.0", "media_player"),
             )
         ]
     },
@@ -528,7 +528,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.PLAYBACK_REPEAT_MODE,
                 translation_key="media_playback_repeat",
-                deprecated=lambda _: "media_player",
+                deprecated=lambda _: ("2025.10.0", "media_player"),
             )
         ]
     },
@@ -537,7 +537,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.PLAYBACK_SHUFFLE,
                 translation_key="media_playback_shuffle",
-                deprecated=lambda _: "media_player",
+                deprecated=lambda _: ("2025.10.0", "media_player"),
             )
         ]
     },
@@ -556,7 +556,7 @@ CAPABILITY_TO_SENSORS: dict[
                 ],
                 device_class=SensorDeviceClass.ENUM,
                 value_fn=lambda value: MEDIA_PLAYBACK_STATE_MAP.get(value, value),
-                deprecated=lambda _: "media_player",
+                deprecated=lambda _: ("2025.10.0", "media_player"),
             )
         ]
     },
@@ -633,7 +633,7 @@ CAPABILITY_TO_SENSORS: dict[
                 device_class=SensorDeviceClass.TEMPERATURE,
                 use_temperature_unit=True,
                 # Set the value to None if it is 0 F (-17 C)
-                value_fn=lambda value: None if value in {0, -17} else value,
+                value_fn=lambda value: None if value in {-17, 0, 1} else value,
             )
         ]
     },
@@ -837,6 +837,11 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.TEMPERATURE,
                 device_class=SensorDeviceClass.TEMPERATURE,
                 state_class=SensorStateClass.MEASUREMENT,
+                deprecated=(
+                    lambda status: ("2025.12.0", "dhw")
+                    if Capability.CUSTOM_OUTING_MODE in status
+                    else None
+                ),
             )
         ]
     },
@@ -854,6 +859,11 @@ CAPABILITY_TO_SENSORS: dict[
                     },
                     THERMOSTAT_CAPABILITIES,
                 ],
+                deprecated=(
+                    lambda status: ("2025.12.0", "dhw")
+                    if Capability.CUSTOM_OUTING_MODE in status
+                    else None
+                ),
             )
         ]
     },
@@ -1109,18 +1119,20 @@ async def async_setup_entry(
                                 if (
                                     description.deprecated
                                     and (
-                                        reason := description.deprecated(
+                                        deprecation_info := description.deprecated(
                                             device.status[MAIN]
                                         )
                                     )
                                     is not None
                                 ):
+                                    version, reason = deprecation_info
                                     if deprecate_entity(
                                         hass,
                                         entity_registry,
                                         SENSOR_DOMAIN,
                                         f"{device.device.device_id}_{MAIN}_{capability}_{attribute}_{description.key}",
                                         f"deprecated_{reason}",
+                                        version,
                                     ):
                                         entities.append(
                                             SmartThingsSensor(

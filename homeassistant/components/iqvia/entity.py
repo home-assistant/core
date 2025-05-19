@@ -2,28 +2,23 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_ZIP_CODE, DOMAIN, TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_OUTLOOK
+from .coordinator import IqviaConfigEntry, IqviaUpdateCoordinator
 
 
-class IQVIAEntity(CoordinatorEntity[DataUpdateCoordinator[dict[str, Any]]]):
+class IQVIAEntity(CoordinatorEntity[IqviaUpdateCoordinator]):
     """Define a base IQVIA entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[dict[str, Any]],
-        entry: ConfigEntry,
+        coordinator: IqviaUpdateCoordinator,
+        entry: IqviaConfigEntry,
         description: EntityDescription,
     ) -> None:
         """Initialize."""
