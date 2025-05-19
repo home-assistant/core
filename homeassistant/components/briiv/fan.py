@@ -21,7 +21,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Briiv fan based on config entry."""
-    api: BriivAPI = entry.runtime_data.api  # Updated to use runtime_data
+    api = entry.runtime_data.api  # Updated to use runtime_data
     async_add_entities([BriivFan(api, entry.data["serial_number"])])
 
 
