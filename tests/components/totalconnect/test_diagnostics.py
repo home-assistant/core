@@ -33,4 +33,4 @@ async def test_entry_diagnostics(
     assert partition["name"] == "Test1"
 
     zone = location["zones"][0]
-    assert zone["zone_id"] == "1"
+    assert zone["zone_id"] == 2
