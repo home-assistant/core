@@ -32,6 +32,7 @@ FLOWS = {
         "adguard",
         "advantage_air",
         "aemet",
+        "aeroflex",
         "aftership",
         "agent_dvr",
         "airgradient",
