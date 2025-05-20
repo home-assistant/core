@@ -37,7 +37,7 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize a new config flow instance."""
-        self.auth = None
+        self.auth: Authenticator = Authenticator.generate_login()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -56,8 +56,6 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(self.auth.account_id)
                 self._abort_if_unique_id_configured()
                 return await self.async_step_configure()
-        if self.auth is None:
-            self.auth = Authenticator.generate_login()
         return self.async_show_form(
             step_id="user",
             description_placeholders={"link": self.auth.login_url},

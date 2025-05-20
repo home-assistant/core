@@ -39,7 +39,9 @@ class NintendoUpdateCoordinator(DataUpdateCoordinator):
             hass=hass,
             logger=_LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(config_entry.data.get(CONF_UPDATE_INTERVAL), 60),
+            update_interval=timedelta(
+                seconds=config_entry.data.get(CONF_UPDATE_INTERVAL, 60)
+            ),
             config_entry=config_entry,
         )
         self.api = NintendoParental(
