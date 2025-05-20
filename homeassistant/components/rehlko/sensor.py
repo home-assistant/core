@@ -29,7 +29,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .const import DEVICE_DATA_DEVICES, DEVICE_DATA_ID, GENERATOR_DATA_DEVICE
+from .const import (
+    DEVICE_DATA_DEVICES,
+    DEVICE_DATA_ID,
+    GENERATOR_DATA_DEVICE,
+    GENERATOR_DATA_EXERCISE,
+)
 from .coordinator import RehlkoConfigEntry
 from .entity import RehlkoEntity
 
@@ -219,7 +224,7 @@ SENSORS: tuple[RehlkoSensorEntityDescription, ...] = (
         key="lastStartTimestamp",
         translation_key="last_exercise",
         device_class=SensorDeviceClass.TIMESTAMP,
-        document_key="exercise",
+        document_key=GENERATOR_DATA_EXERCISE,
         # Reports in UTC.
         value_fn=lambda value: datetime.fromisoformat(value).replace(tzinfo=UTC),
         entity_registry_enabled_default=False,
@@ -228,7 +233,7 @@ SENSORS: tuple[RehlkoSensorEntityDescription, ...] = (
         key="nextStartTimestamp",
         translation_key="next_exercise",
         device_class=SensorDeviceClass.TIMESTAMP,
-        document_key="exercise",
+        document_key=GENERATOR_DATA_EXERCISE,
         # Reports in local time.
         value_fn=lambda value: datetime.fromisoformat(value).replace(
             tzinfo=dt_util.get_default_time_zone()
