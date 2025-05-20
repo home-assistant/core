@@ -1,38 +1,46 @@
 rules:
   # Bronze
   action-setup: todo
-  appropriate-polling: todo
+  appropriate-polling: done
   brands: todo
-  common-modules: todo
+  common-modules: done
   config-flow-test-coverage: todo
-  config-flow: todo
-  dependency-transparency: todo
-  docs-actions: todo
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: 
+    comments: No actions in integration
+    status: exempt
   docs-high-level-description: todo
   docs-installation-instructions: todo
   docs-removal-instructions: todo
-  entity-event-setup: todo
-  entity-unique-id: todo
-  has-entity-name: todo
-  runtime-data: todo
-  test-before-configure: todo
-  test-before-setup: todo
-  unique-config-entry: todo
+  entity-event-setup:
+    comments: No events in integration
+    status: exempt
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
-  config-entry-unloading: todo
-  docs-configuration-parameters: todo
+  action-exceptions:
+    comments: No actions in integration
+    status: exempt
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    comments: No configuration parameters in integration
+    status: exempt
   docs-installation-parameters: todo
   entity-unavailable: todo
-  integration-owner: todo
-  log-when-unavailable: todo
+  integration-owner: done
+  log-when-unavailable: done
   parallel-updates: todo
   reauthentication-flow: todo
   test-coverage: todo
 
   # Gold
-  devices: todo
+  devices: done
   diagnostics: todo
   discovery-update-info: todo
   discovery: todo
@@ -44,17 +52,21 @@ rules:
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices: todo
-  entity-category: todo
-  entity-device-class: todo
+  entity-category: done
+  entity-device-class: done
   entity-disabled-by-default: todo
-  entity-translations: todo
-  exception-translations: todo
-  icon-translations: todo
+  entity-translations: done
+  exception-translations: done
+  icon-translations:
+    comments: No extra icons in integration
+    status: exempt
   reconfiguration-flow: todo
-  repair-issues: todo
+  repair-issues:
+    comments: No issues in integration
+    status: exempt
   stale-devices: todo
 
   # Platinum
-  async-dependency: todo
+  async-dependency: done
   inject-websession: todo
   strict-typing: todo

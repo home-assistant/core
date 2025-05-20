@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from pynintendoparental import Authenticator
+from pynintendoparental.exceptions import HttpException, InvalidSessionTokenException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -42,28 +43,31 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        if not user_input:
-            self.auth = Authenticator.generate_login()
-            return await self.async_step_nintendo_website_auth()
-        return self.async_show_form(step_id="user")
-
-    async def async_step_nintendo_website_auth(
-        self, user_input=None
-    ) -> ConfigFlowResult:
-        """Begin authentication flow with Nintendo website."""
+        errors = {}
         if user_input is not None:
-            await self.auth.complete_login(self.auth, user_input[CONF_API_TOKEN], False)
-            return await ()
+            try:
+                await self.auth.complete_login(
+                    self.auth, user_input[CONF_API_TOKEN], False
+                )
+            except (ValueError, InvalidSessionTokenException, HttpException):
+                errors["base"] = "invalid_auth"
+            else:
+                assert self.auth.account_id
+                await self.async_set_unique_id(self.auth.account_id)
+                self._abort_if_unique_id_configured()
+                return await self.async_step_configure()
+        if self.auth is None:
+            self.auth = Authenticator.generate_login()
         return self.async_show_form(
-            step_id="nintendo_website_auth",
+            step_id="user",
             description_placeholders={"link": self.auth.login_url},
             data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
+            errors=errors,
         )
 
     async def async_step_configure(self, user_input=None) -> ConfigFlowResult:
         """Configure the update interval and create config entry."""
         if user_input is not None:
-            assert self.auth.account_id
             return self.async_create_entry(
                 title=self.auth.account_id,
                 data={
