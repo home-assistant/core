@@ -93,7 +93,7 @@
         "name": "Internal temperature"
       },
       "last_self_test": {
-        "name": "Last self test"
+        "name": "Last self-test"
       },
       "last_transfer": {
         "name": "Last transfer"
@@ -177,7 +177,7 @@
         "name": "Restore requirement"
       },
       "self_test_result": {
-        "name": "Self test result"
+        "name": "Self-test result"
       },
       "sensitivity": {
         "name": "Sensitivity"
@@ -195,7 +195,7 @@
         "name": "Status"
       },
       "self_test_interval": {
-        "name": "Self test interval"
+        "name": "Self-test interval"
       },
       "time_left": {
         "name": "Time left"

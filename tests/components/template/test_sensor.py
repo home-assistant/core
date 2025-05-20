@@ -2303,6 +2303,61 @@ async def test_trigger_conditional_action(hass: HomeAssistant) -> None:
     assert len(events) == 1
 
 
+@pytest.mark.parametrize("trigger_field", ["trigger", "triggers"])
+@pytest.mark.parametrize("condition_field", ["condition", "conditions"])
+@pytest.mark.parametrize("action_field", ["action", "actions"])
+async def test_legacy_and_new_config_schema(
+    hass: HomeAssistant, trigger_field: str, condition_field: str, action_field: str
+) -> None:
+    """Tests that both old and new config schema (singular -> plural) work."""
+
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "unique_id": "listening-test-event",
+                    f"{trigger_field}": {
+                        "platform": "event",
+                        "event_type": "beer_event",
+                    },
+                    f"{condition_field}": [
+                        {
+                            "condition": "template",
+                            "value_template": "{{ trigger.event.data.beer >= 42 }}",
+                        }
+                    ],
+                    f"{action_field}": [
+                        {"event": "test_event_by_action"},
+                    ],
+                    "sensor": [
+                        {
+                            "name": "Unimportant",
+                            "state": "Uninteresting",
+                        }
+                    ],
+                },
+            ],
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    event = "test_event_by_action"
+    events = async_capture_events(hass, event)
+
+    hass.bus.async_fire("beer_event", {"beer": 1})
+    await hass.async_block_till_done()
+
+    assert len(events) == 0
+
+    hass.bus.async_fire("beer_event", {"beer": 42})
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+
+
 async def test_device_id(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

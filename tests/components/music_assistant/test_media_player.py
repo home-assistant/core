@@ -11,7 +11,7 @@ from music_assistant_models.enums import (
 )
 from music_assistant_models.media_items import Track
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import paths
 
 from homeassistant.components.media_player import (
@@ -651,6 +651,7 @@ async def test_media_player_supported_features(
         | MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SEARCH_MEDIA
     )
     assert state.attributes["supported_features"] == expected_features
     # remove power control capability from player, trigger subscription callback

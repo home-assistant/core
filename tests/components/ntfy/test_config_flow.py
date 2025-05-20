@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_URL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -33,17 +34,24 @@ from tests.common import MockConfigEntry
         (
             {
                 CONF_URL: "https://ntfy.sh",
+                CONF_VERIFY_SSL: True,
                 SECTION_AUTH: {CONF_USERNAME: "username", CONF_PASSWORD: "password"},
             },
             {
                 CONF_URL: "https://ntfy.sh/",
+                CONF_VERIFY_SSL: True,
                 CONF_USERNAME: "username",
                 CONF_TOKEN: "token",
             },
         ),
         (
-            {CONF_URL: "https://ntfy.sh", SECTION_AUTH: {}},
-            {CONF_URL: "https://ntfy.sh/", CONF_USERNAME: None, CONF_TOKEN: "token"},
+            {CONF_URL: "https://ntfy.sh", CONF_VERIFY_SSL: True, SECTION_AUTH: {}},
+            {
+                CONF_URL: "https://ntfy.sh/",
+                CONF_VERIFY_SSL: True,
+                CONF_USERNAME: None,
+                CONF_TOKEN: "token",
+            },
         ),
     ],
 )
@@ -109,6 +117,7 @@ async def test_form_errors(
         result["flow_id"],
         {
             CONF_URL: "https://ntfy.sh",
+            CONF_VERIFY_SSL: True,
             SECTION_AUTH: {CONF_USERNAME: "username", CONF_PASSWORD: "password"},
         },
     )
@@ -121,6 +130,7 @@ async def test_form_errors(
         result["flow_id"],
         {
             CONF_URL: "https://ntfy.sh",
+            CONF_VERIFY_SSL: True,
             SECTION_AUTH: {CONF_USERNAME: "username", CONF_PASSWORD: "password"},
         },
     )
@@ -130,6 +140,7 @@ async def test_form_errors(
     assert result["title"] == "ntfy.sh"
     assert result["data"] == {
         CONF_URL: "https://ntfy.sh/",
+        CONF_VERIFY_SSL: True,
         CONF_USERNAME: "username",
         CONF_TOKEN: "token",
     }
@@ -151,7 +162,11 @@ async def test_form_already_configured(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_URL: "https://ntfy.sh", SECTION_AUTH: {}},
+        user_input={
+            CONF_URL: "https://ntfy.sh",
+            CONF_VERIFY_SSL: True,
+            SECTION_AUTH: {},
+        },
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -163,7 +178,7 @@ async def test_add_topic_flow(hass: HomeAssistant) -> None:
     """Test add topic subentry flow."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_URL: "https://ntfy.sh/", CONF_USERNAME: None},
+        data={CONF_URL: "https://ntfy.sh/", CONF_VERIFY_SSL: True, CONF_USERNAME: None},
     )
     config_entry.add_to_hass(hass)
 
@@ -211,7 +226,7 @@ async def test_generated_topic(hass: HomeAssistant, mock_random: AsyncMock) -> N
     """Test add topic subentry flow with generated topic name."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_URL: "https://ntfy.sh/"},
+        data={CONF_URL: "https://ntfy.sh/", CONF_VERIFY_SSL: True},
     )
     config_entry.add_to_hass(hass)
 
@@ -265,7 +280,7 @@ async def test_invalid_topic(hass: HomeAssistant, mock_random: AsyncMock) -> Non
     """Test add topic subentry flow with invalid topic name."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_URL: "https://ntfy.sh/"},
+        data={CONF_URL: "https://ntfy.sh/", CONF_VERIFY_SSL: True},
     )
     config_entry.add_to_hass(hass)
 

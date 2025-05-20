@@ -40,12 +40,12 @@ rules:
   discovery:
     status: exempt
     comment: Discovery not possible
-  docs-data-update: todo
+  docs-data-update: done
   docs-examples: todo
-  docs-known-limitations: todo
+  docs-known-limitations: done
   docs-supported-devices: todo
   docs-supported-functions: todo
-  docs-troubleshooting: todo
+  docs-troubleshooting: done
   docs-use-cases: todo
   dynamic-devices: todo
   entity-category: done
@@ -54,7 +54,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues: done
   stale-devices: done
 

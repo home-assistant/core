@@ -18,5 +18,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/sensorpro",
   "iot_class": "local_push",
-  "requirements": ["sensorpro-ble==0.5.3"]
+  "requirements": ["sensorpro-ble==0.7.0"]
 }

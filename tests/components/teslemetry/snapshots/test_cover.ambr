@@ -713,11 +713,11 @@
   'unknown'
 # ---
 # name: test_cover_streaming[cover.test_windows-closed]
-  'unknown'
+  'closed'
 # ---
 # name: test_cover_streaming[cover.test_windows-open]
-  'unknown'
+  'open'
 # ---
 # name: test_cover_streaming[cover.test_windows-unknown]
-  'unknown'
+  'open'
 # ---

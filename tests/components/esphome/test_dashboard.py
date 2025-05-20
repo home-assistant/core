@@ -1,6 +1,5 @@
 """Test ESPHome dashboard features."""
 
-from datetime import datetime
 from typing import Any
 from unittest.mock import patch
 
@@ -8,34 +7,16 @@ from aioesphomeapi import APIClient, DeviceInfo, InvalidAuthAPIError
 import pytest
 
 from homeassistant.components.esphome import CONF_NOISE_PSK, DOMAIN, dashboard
-from homeassistant.components.esphome.coordinator import REFRESH_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
 from . import VALID_NOISE_PSK
+from .common import MockDashboardRefresh
 from .conftest import MockESPHomeDeviceType
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
-
-class MockDashboardRefresh:
-    """Mock dashboard refresh."""
-
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize the mock dashboard refresh."""
-        self.hass = hass
-        self.last_time: datetime | None = None
-
-    async def async_refresh(self) -> None:
-        """Refresh the dashboard."""
-        if self.last_time is None:
-            self.last_time = dt_util.utcnow()
-        self.last_time += REFRESH_INTERVAL
-        async_fire_time_changed(self.hass, self.last_time)
-        await self.hass.async_block_till_done()
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("init_integration", "mock_dashboard")

@@ -13,7 +13,7 @@ from aiontfy.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TOKEN, CONF_URL, Platform
+from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -30,7 +30,7 @@ type NtfyConfigEntry = ConfigEntry[Ntfy]
 async def async_setup_entry(hass: HomeAssistant, entry: NtfyConfigEntry) -> bool:
     """Set up ntfy from a config entry."""
 
-    session = async_get_clientsession(hass)
+    session = async_get_clientsession(hass, entry.data.get(CONF_VERIFY_SSL, True))
     ntfy = Ntfy(entry.data[CONF_URL], session, token=entry.data.get(CONF_TOKEN))
 
     try:

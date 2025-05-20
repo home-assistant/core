@@ -8,15 +8,17 @@
       "user": {
         "description": "Set up **ntfy** push notification service",
         "data": {
-          "url": "Service URL"
+          "url": "Service URL",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "url": "Address of the ntfy service. Modify this if you want to use a different server"
+          "url": "Address of the ntfy service. Modify this if you want to use a different server",
+          "verify_ssl": "Enable SSL certificate verification for secure connections. Disable only if connecting to a ntfy instance using a self-signed certificate"
         },
         "sections": {
           "auth": {
             "name": "Authentication",
-            "description": "Depending on whether the server is configured to support access control, some topics may be read/write protected so that only users with the correct credentials can subscribe or publish to them. To publish/subscribe to protected topics, you can provide a username and password.",
+            "description": "Depending on whether the server is configured to support access control, some topics may be read/write protected so that only users with the correct credentials can subscribe or publish to them. To publish/subscribe to protected topics, you can provide a username and password. Home Assistant will automatically generate an access token to authenticate with ntfy.",
             "data": {
               "username": "[%key:common::config_flow::data::username%]",
               "password": "[%key:common::config_flow::data::password%]"
@@ -49,7 +51,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "account_mismatch": "The provided access token corresponds to the account {wrong_username}. Please re-authenticate with with the account **{username}**"
+      "account_mismatch": "The provided access token corresponds to the account {wrong_username}. Please re-authenticate with the account **{username}**"
     }
   },
   "config_subentries": {

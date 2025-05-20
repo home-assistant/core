@@ -15,6 +15,7 @@ from .coordinator import InvalidAuth, WallboxCoordinator, async_validate_input
 PLATFORMS = [
     Platform.LOCK,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,

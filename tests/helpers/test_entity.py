@@ -13,6 +13,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from propcache.api import cached_property
 import pytest
+from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
@@ -393,7 +394,7 @@ async def test_async_parallel_updates_with_zero_on_sync_update(
             await asyncio.sleep(0)
 
         assert len(updates) == 2
-        assert updates == [1, 2]
+        assert updates == unordered([1, 2])
     finally:
         test_lock.set()
         await asyncio.sleep(0)

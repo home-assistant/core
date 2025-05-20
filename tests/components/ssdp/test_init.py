@@ -1,14 +1,11 @@
 """Test the SSDP integration."""
 
-from datetime import datetime
 from ipaddress import IPv4Address
 from typing import Any
 from unittest.mock import ANY, AsyncMock, patch
 
 from async_upnp_client.server import UpnpServer
-from async_upnp_client.ssdp import udn_from_headers
 from async_upnp_client.ssdp_listener import SsdpListener
-from async_upnp_client.utils import CaseInsensitiveDict
 import pytest
 
 from homeassistant import config_entries
@@ -39,8 +36,9 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_UPC,
     SsdpServiceInfo,
 )
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+
+from . import _ssdp_headers, init_ssdp_component
 
 from tests.common import (
     MockConfigEntry,
@@ -50,19 +48,6 @@ from tests.common import (
     mock_integration,
 )
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-
-def _ssdp_headers(headers):
-    ssdp_headers = CaseInsensitiveDict(headers, _timestamp=datetime.now())
-    ssdp_headers["_udn"] = udn_from_headers(ssdp_headers)
-    return ssdp_headers
-
-
-async def init_ssdp_component(hass: HomeAssistant) -> SsdpListener:
-    """Initialize ssdp component and get SsdpListener."""
-    await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
-    await hass.async_block_till_done()
-    return hass.data[ssdp.DOMAIN][ssdp.SSDP_SCANNER]._ssdp_listeners[0]
 
 
 @patch(

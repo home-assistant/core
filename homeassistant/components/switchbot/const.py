@@ -37,6 +37,12 @@ class SupportedModels(StrEnum):
     REMOTE = "remote"
     ROLLER_SHADE = "roller_shade"
     HUBMINI_MATTER = "hubmini_matter"
+    CIRCULATOR_FAN = "circulator_fan"
+    K20_VACUUM = "k20_vacuum"
+    S10_VACUUM = "s10_vacuum"
+    K10_VACUUM = "k10_vacuum"
+    K10_PRO_VACUUM = "k10_pro_vacuum"
+    K10_PRO_COMBO_VACUUM = "k10_pro_combo_vacumm"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -54,6 +60,12 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.RELAY_SWITCH_1PM: SupportedModels.RELAY_SWITCH_1PM,
     SwitchbotModel.RELAY_SWITCH_1: SupportedModels.RELAY_SWITCH_1,
     SwitchbotModel.ROLLER_SHADE: SupportedModels.ROLLER_SHADE,
+    SwitchbotModel.CIRCULATOR_FAN: SupportedModels.CIRCULATOR_FAN,
+    SwitchbotModel.K20_VACUUM: SupportedModels.K20_VACUUM,
+    SwitchbotModel.S10_VACUUM: SupportedModels.S10_VACUUM,
+    SwitchbotModel.K10_VACUUM: SupportedModels.K10_VACUUM,
+    SwitchbotModel.K10_PRO_VACUUM: SupportedModels.K10_PRO_VACUUM,
+    SwitchbotModel.K10_PRO_COMBO_VACUUM: SupportedModels.K10_PRO_COMBO_VACUUM,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
