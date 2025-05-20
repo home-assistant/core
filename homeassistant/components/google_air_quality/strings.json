@@ -16,7 +16,7 @@
           "location": "[%key:common::config_flow::data::location%]"
         },
         "data_description": {
-          "location": "Test"
+          "location": "[%key:common::config_flow::data::location%]"
         }
       }
     },

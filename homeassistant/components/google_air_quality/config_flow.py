@@ -68,69 +68,77 @@ class OAuth2FlowHandler(
                 },
             )
 
-        suggested = {
-            CONF_LOCATION: {
-                CONF_LATITUDE: self.hass.config.latitude,
-                CONF_LONGITUDE: self.hass.config.longitude,
-            }
-        }
-        return self.async_show_form(
-            step_id="coordinates",
-            data_schema=self.add_suggested_values_to_schema(self.schema, suggested),
-            errors={},
-        )
+        return self._show_form_user()
 
     async def async_step_coordinates(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle coordinate input and create the config entry."""
-        if user_input is not None:
-            session = aiohttp_client.async_get_clientsession(self.hass)
-            auth = api.AsyncConfigFlowAuth(
-                session, self._oauth_data[CONF_TOKEN][CONF_ACCESS_TOKEN]
+        if not user_input:
+            return self._show_form_user()
+
+        session = aiohttp_client.async_get_clientsession(self.hass)
+        auth = api.AsyncConfigFlowAuth(
+            session, self._oauth_data[CONF_TOKEN][CONF_ACCESS_TOKEN]
+        )
+        client = GoogleAirQualityApi(auth)
+        location = user_input[CONF_LOCATION]
+        lat = location[CONF_LATITUDE]
+        lon = location[CONF_LONGITUDE]
+
+        try:
+            user_resource_info = await client.async_air_quality(lat, lon)
+        except NoDataForLocationError:
+            return self._show_form_user(
+                user_input,
+                errors={"base": "no_data_for_location"},
             )
-            client = GoogleAirQualityApi(auth)
-            location = user_input[CONF_LOCATION]
-            lat = location[CONF_LATITUDE]
-            lon = location[CONF_LONGITUDE]
-            suggested = {
-                CONF_LOCATION: {
-                    CONF_LATITUDE: lat,
-                    CONF_LONGITUDE: lon,
-                }
+        except GoogleAirQualityApiError as ex:
+            return self.async_abort(
+                reason="access_not_configured",
+                description_placeholders={"message": str(ex)},
+            )
+        except Exception:
+            self.logger.exception("Unknown error occurred")
+            return self.async_abort(reason="unknown")
+
+        unique_id = f"{lat}_{lon}"
+
+        await self.async_set_unique_id(unique_id)
+        self._oauth_data.update(
+            {
+                CONF_LATITUDE: lat,
+                CONF_LONGITUDE: lon,
+                "region_code": user_resource_info.region_code,
             }
+        )
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(
+            title=f"Coordinates {lat}, {lon}", data=self._oauth_data
+        )
 
-            try:
-                user_resource_info = await client.async_air_quality(lat, lon)
-            except NoDataForLocationError:
-                return self.async_show_form(
-                    step_id="coordinates",
-                    data_schema=self.add_suggested_values_to_schema(
-                        self.schema, suggested
-                    ),
-                    errors={"base": "no_data_for_location"},
-                )
-            except GoogleAirQualityApiError as ex:
-                return self.async_abort(
-                    reason="access_not_configured",
-                    description_placeholders={"message": str(ex)},
-                )
-            except Exception:
-                self.logger.exception("Unknown error occurred")
-                return self.async_abort(reason="unknown")
-
-            unique_id = f"{lat}_{lon}"
-
-            await self.async_set_unique_id(unique_id)
-            self._oauth_data.update(
+    def _show_form_user(
+        self,
+        user_input: dict[str, Any] | None = None,
+        errors: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        if user_input is None:
+            user_input = {}
+        return self.async_show_form(
+            step_id="coordinates",
+            data_schema=vol.Schema(
                 {
-                    CONF_LATITUDE: lat,
-                    CONF_LONGITUDE: lon,
-                    "region_code": user_resource_info.region_code,
+                    vol.Required(
+                        CONF_LOCATION,
+                        default=user_input.get(
+                            CONF_LOCATION,
+                            {
+                                "latitude": self.hass.config.latitude,
+                                "longitude": self.hass.config.longitude,
+                            },
+                        ),
+                    ): LocationSelector()
                 }
-            )
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(
-                title=f"Coordinates {lat}, {lon}", data=self._oauth_data
-            )
-        return await self.async_step_coordinates()
+            ),
+            errors=errors,
+        )
