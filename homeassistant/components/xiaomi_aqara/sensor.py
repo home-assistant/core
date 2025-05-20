@@ -206,7 +206,7 @@ class XiaomiBatterySensor(XiaomiDevice, SensorEntity):
         succeed = super().parse_voltage(data)
         if not succeed:
             return False
-        battery_level = int(self._extra_state_attributes.pop(ATTR_BATTERY_LEVEL))
+        battery_level = int(self._attr_extra_state_attributes.pop(ATTR_BATTERY_LEVEL))
         if battery_level <= 0 or battery_level > 100:
             return False
         self._attr_native_value = battery_level
