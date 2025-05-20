@@ -1077,7 +1077,6 @@ DISCOVERY_SCHEMAS = [
             key="PumpControlMode",
             translation_key="pump_control_mode",
             device_class=SensorDeviceClass.ENUM,
-            # entity_category=EntityCategory.DIAGNOSTIC,
             options=list(PUMP_CONTROL_MODE_MAP.values()),
             measurement_to_ha=PUMP_CONTROL_MODE_MAP.get,
         ),

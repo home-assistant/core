@@ -413,7 +413,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'pump_fault',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-Pump_fault-512-16',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-PumpFault-512-16',
     'unit_of_measurement': None,
   })
 # ---
