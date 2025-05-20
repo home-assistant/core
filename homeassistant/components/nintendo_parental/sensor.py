@@ -44,11 +44,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     if entry.runtime_data.api.devices is not None:
-        for device in entry.runtime_data.api.devices.values():
-            async_add_devices(
-                NintendoParentalSensor(entry.runtime_data, device, sensor)
-                for sensor in SENSOR_DESCRIPTIONS
-            )
+        async_add_devices(
+            NintendoParentalSensor(entry.runtime_data, device, sensor)
+            for device in entry.runtime_data.api.devices.values()
+            for sensor in SENSOR_DESCRIPTIONS
+        )
 
 
 class NintendoParentalSensor(NintendoDevice, SensorEntity):
