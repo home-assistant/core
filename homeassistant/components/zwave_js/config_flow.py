@@ -1163,6 +1163,12 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Failed to get USB ports: %s", err)
             return self.async_abort(reason="usb_ports_failed")
 
+        addon_info = await self._async_get_addon_info()
+        addon_config = addon_info.options
+        old_usb_path = addon_config.get(CONF_ADDON_DEVICE, "")
+        # Remove the old controller from the ports list.
+        ports.pop(old_usb_path, None)
+
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_USB_PATH): vol.In(ports),
