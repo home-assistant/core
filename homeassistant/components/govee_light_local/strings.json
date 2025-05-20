@@ -4,7 +4,7 @@
       "user": {
         "description": "Please make a choice",
         "data": {
-          "auto_discovery": "Auto discovery enabled"
+          "auto_discovery": "Auto-discovery enabled"
         }
       },
       "discovery_confirm": {
