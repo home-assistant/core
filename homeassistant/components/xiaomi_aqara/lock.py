@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from typing import Any
+
+from xiaomi_gateway import XiaomiGateway
+
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -38,7 +42,13 @@ async def async_setup_entry(
 class XiaomiAqaraLock(LockEntity, XiaomiDevice):
     """Representation of a XiaomiAqaraLock."""
 
-    def __init__(self, device, name, xiaomi_hub, config_entry):
+    def __init__(
+        self,
+        device: dict[str, Any],
+        name: str,
+        xiaomi_hub: XiaomiGateway,
+        config_entry: ConfigEntry,
+    ) -> None:
         """Initialize the XiaomiAqaraLock."""
         self._attr_changed_by = "0"
         self._verified_wrong_times = 0
