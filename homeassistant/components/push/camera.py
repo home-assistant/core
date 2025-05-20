@@ -61,7 +61,7 @@ async def async_setup_platform(
     if PUSH_CAMERA_DATA not in hass.data:
         hass.data[PUSH_CAMERA_DATA] = {}
 
-    webhook_id = config.get(CONF_WEBHOOK_ID)
+    webhook_id = config[CONF_WEBHOOK_ID]
 
     cameras = [
         PushCamera(
@@ -104,7 +104,15 @@ class PushCamera(Camera):
     _attr_motion_detection_enabled = False
     name: str
 
-    def __init__(self, hass, name, buffer_size, timeout, image_field, webhook_id):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        name: str,
+        buffer_size: int,
+        timeout: timedelta,
+        image_field: str,
+        webhook_id: str,
+    ) -> None:
         """Initialize push camera component."""
         super().__init__()
         self._attr_name = name
@@ -112,8 +120,8 @@ class PushCamera(Camera):
         self._filename = None
         self._expired_listener = None
         self._timeout = timeout
-        self.queue = deque([], buffer_size)
-        self._current_image = None
+        self.queue: deque[bytes] = deque([], buffer_size)
+        self._current_image: bytes | None = None
         self._image_field = image_field
         self.webhook_id = webhook_id
         self.webhook_url = webhook.async_generate_url(hass, webhook_id)
