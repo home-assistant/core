@@ -1,148 +1,117 @@
 """Test the Nintendo Switch Parental Controls config flow."""
 
-from unittest.mock import AsyncMock, patch
-
 from homeassistant import config_entries
-from homeassistant.components.nintendo_parental.config_flow import (
-    CannotConnect,
-    InvalidAuth,
+from homeassistant.components.nintendo_parental.const import (
+    CONF_SESSION_TOKEN,
+    CONF_UPDATE_INTERVAL,
+    DOMAIN,
 )
-from homeassistant.components.nintendo_parental.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
 
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test we get the form."""
+mock_config_entry = MockConfigEntry(
+    domain=DOMAIN,
+    data={CONF_SESSION_TOKEN: "valid_token", CONF_UPDATE_INTERVAL: 60},
+    unique_id="aabbccddee112233",
+)
+
+
+async def test_full_flow(hass: HomeAssistant, mock_authenticator_client) -> None:
+    """Test a full and successful config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result is not None
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result["step_id"] == "user"
+    assert "link" in result["description_placeholders"]
 
-    with patch(
-        "homeassistant.components.nintendo_parental.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_TOKEN: "aaaabbbbcccc"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_UPDATE_INTERVAL: 60}
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert result["title"] == "aabbccddee112233"
+    assert result["data"][CONF_SESSION_TOKEN] == "valid_token"
+    assert result["data"][CONF_UPDATE_INTERVAL] == 60
+    assert result["result"].unique_id == "aabbccddee112233"
 
 
-async def test_form_invalid_auth(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+async def test_already_configured(
+    hass: HomeAssistant, mock_authenticator_client
 ) -> None:
-    """Test we handle invalid auth."""
+    """Ensure only one instance of an account can be configured."""
+    mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result is not None
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert "link" in result["description_placeholders"]
 
-    with patch(
-        "homeassistant.components.nintendo_parental.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidAuth,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_TOKEN: "aaaabbbbcccc"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_invalid_api_token(
+    hass: HomeAssistant, mock_request_handler, mock_authenticator_client
+) -> None:
+    """Test to ensure an error is shown if the API token is invalid."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result is not None
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert "link" in result["description_placeholders"]
+
+    mock_request_handler.return_value = {
+        "status": 400,
+        "text": "ERROR",
+        "json": {},
+        "headers": {"Content-Type": "application/json"},
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_TOKEN: "aaaabbbbcccc"}
+    )
 
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
-    with patch(
-        "homeassistant.components.nintendo_parental.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
+    # clear the error and test retry
+    mock_request_handler.return_value = {
+        "status": 200,
+        "text": "OK",
+        "json": {
+            "session_token": "valid_token",
+            "expires_in": 3500,
+            "id": "aabbccddee112233",
+            "name": "Home Assistant Tester",
+        },
+        "headers": {"Content-Type": "application/json"},
     }
-    assert len(mock_setup_entry.mock_calls) == 1
 
-
-async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_TOKEN: "aaaabbbbcccc"}
     )
 
-    with patch(
-        "homeassistant.components.nintendo_parental.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
-
-    with patch(
-        "homeassistant.components.nintendo_parental.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert result["step_id"] == "configure"
+    # no need to continue tests here because the other tests are sufficient at this point
