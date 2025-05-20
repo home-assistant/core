@@ -2,21 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Any, Generic, TypeVar
-
 from homeassistant.components.sensor import EntityDescription
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import PaperlessConfigEntry
 from .const import DOMAIN
+from .coordinator import PaperlessConfigEntry, PaperlessCoordinator
 
 
-class PaperlessEntity(Entity):
+class PaperlessEntity(CoordinatorEntity[PaperlessCoordinator]):
     """Defines a base Paperless-ngx entity."""
 
     _attr_has_entity_name = True
@@ -25,50 +19,24 @@ class PaperlessEntity(Entity):
     def __init__(
         self,
         entry: PaperlessConfigEntry,
+        coordinator: PaperlessCoordinator,
         description: EntityDescription,
     ) -> None:
         """Initialize the Paperless-ngx entity."""
+        CoordinatorEntity.__init__(
+            self,
+            coordinator=coordinator,
+        )
+
         self.entry = entry
         self.entity_description = description
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this Paperless-ngx instance."""
-
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self.entry.entry_id)},
             manufacturer="Paperless-ngx",
             name="Paperless-ngx",
             sw_version=self.entry.runtime_data.api.host_version,
             configuration_url=self.entry.runtime_data.api.base_url,
-        )
-
-
-TCoordinator = TypeVar("TCoordinator", bound=DataUpdateCoordinator[Any])
-
-
-class PaperlessCoordinatorEntity(
-    Generic[TCoordinator],
-    CoordinatorEntity[TCoordinator],
-    PaperlessEntity,
-):
-    """Defines a base Paperless-ngx coordinator entity."""
-
-    def __init__(
-        self,
-        entry: PaperlessConfigEntry,
-        coordinator: TCoordinator,
-        description: EntityDescription,
-    ) -> None:
-        """Initialize the Paperless-ngx coordinator entity."""
-        CoordinatorEntity.__init__(
-            self,
-            coordinator=coordinator,
-        )
-        PaperlessEntity.__init__(
-            self,
-            entry=entry,
-            description=description,
         )

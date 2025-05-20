@@ -3,12 +3,14 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pypaperless.models import RemoteVersion
+from pypaperless.models import RemoteVersion, Statistic
 import pytest
 
 from homeassistant.components.paperless_ngx.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
-from .const import MOCK_REMOTE_VERSION_DATA, PAPERLESS_IMPORT_PATHS, USER_INPUT
+from . import setup_integration
+from .const import MOCK_REMOTE_VERSION_DATA_NO_UPDATE, MOCK_STATISTICS_DATA, USER_INPUT
 
 from tests.common import MockConfigEntry
 
@@ -23,36 +25,35 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(autouse=True)
-def mock_remote_status_data() -> Generator[AsyncMock]:
-    """Mock Remote Version response data."""
-    dummy_api = MagicMock()
-    return AsyncMock(
-        return_value=RemoteVersion.create_with_data(
-            dummy_api, data=MOCK_REMOTE_VERSION_DATA
-        )
-    )
-
-
-@pytest.fixture(autouse=True)
-def mock_client(
-    mock_remote_status_data: AsyncMock,
-) -> Generator[AsyncMock]:
+def mock_paperless() -> Generator[AsyncMock]:
     """Mock the pypaperless.Paperless client."""
-    patchers = [patch(path, autospec=True) for path in PAPERLESS_IMPORT_PATHS]
+    with (
+        patch(
+            "homeassistant.components.paperless_ngx.coordinator.Paperless",
+            autospec=True,
+        ) as paperless_mock,
+        patch(
+            "homeassistant.components.paperless_ngx.config_flow.Paperless",
+            new=paperless_mock,
+        ),
+    ):
+        paperless = paperless_mock.return_value
 
-    with patchers[0] as mock1, patchers[1] as mock2:
-        mock_instance = AsyncMock()
+        paperless.base_url = "http://paperless.example.com/"
+        paperless.host_version = "2.3.0"
+        paperless.initialize = AsyncMock(return_value=None)
+        paperless.remote_version = AsyncMock(
+            return_value=RemoteVersion.create_with_data(
+                paperless, data=MOCK_REMOTE_VERSION_DATA_NO_UPDATE, fetched=True
+            )
+        )
+        paperless.statistics = AsyncMock(
+            return_value=Statistic.create_with_data(
+                paperless, data=MOCK_STATISTICS_DATA, fetched=True
+            )
+        )
 
-        mock_instance.initialize = AsyncMock(return_value=None)
-        mock_instance.remote_version = mock_remote_status_data
-
-        for mock_paperless in (mock1, mock2):
-            mock_paperless.return_value = mock_instance
-            mock_paperless.return_value.__aenter__.return_value = mock_instance
-            mock_paperless.return_value.initialize = mock_instance.initialize
-            mock_paperless.return_value.remote_version = mock_instance.remote_version
-
-        yield mock_instance
+        yield paperless
 
 
 @pytest.fixture
@@ -64,3 +65,13 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data=USER_INPUT,
     )
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_paperless: MagicMock
+) -> MockConfigEntry:
+    """Set up the Tedee integration for testing."""
+    await setup_integration(hass, mock_config_entry)
+
+    return mock_config_entry

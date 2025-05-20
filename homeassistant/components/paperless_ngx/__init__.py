@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from homeassistant.core import HomeAssistant
 
-from .config_flow import PaperlessConfigEntry
 from .const import PLATFORMS
-from .coordinator import PaperlessCoordinator
+from .coordinator import PaperlessConfigEntry, PaperlessCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) -> bool:

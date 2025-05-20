@@ -49,13 +49,13 @@ async def test_load_unload_config_entry(
 async def test_setup_config_error_handling(
     hass: HomeAssistant,
     mock_config_entry,
-    mock_client,
+    mock_paperless,
     side_effect,
     expected_state,
     expected_error_key,
 ) -> None:
     """Test all initialization error paths during setup."""
-    mock_client.initialize.side_effect = side_effect
+    mock_paperless.initialize.side_effect = side_effect
 
     await setup_integration(hass, mock_config_entry)
 

@@ -6,8 +6,8 @@ from homeassistant.const import Platform
 
 DOMAIN = "paperless_ngx"
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR]
+PLATFORMS: list[Platform] = [Platform.UPDATE]
 
 LOGGER = logging.getLogger(__package__)
 
-REMOTE_VERSION_UPDATE_INTERVAL_HOURS = 24
+PAPERLESS_CHANGELOGS = "https://docs.paperless-ngx.com/changelog/"

@@ -1,5 +1,7 @@
 """Paperless-ngx Status coordinator."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
@@ -18,10 +20,15 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import now
 
-from .const import DOMAIN, LOGGER, REMOTE_VERSION_UPDATE_INTERVAL_HOURS
+from .const import DOMAIN, LOGGER
+
+type PaperlessConfigEntry = ConfigEntry[PaperlessCoordinator]
+
+UPDATE_INTERVAL = 120
+REMOTE_VERSION_UPDATE_INTERVAL_HOURS = 24
 
 
 @dataclass(kw_only=True)
@@ -29,7 +36,6 @@ class PaperlessData:
     """Describes Paperless-ngx sensor entity."""
 
     remote_version: RemoteVersion | None = None
-    remote_version_last_checked: datetime | None = None
 
 
 class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
@@ -38,23 +44,23 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: PaperlessConfigEntry,
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass,
             LOGGER,
             name="Paperless-ngx Coordinator",
-            update_interval=timedelta(seconds=120),
+            update_interval=timedelta(seconds=UPDATE_INTERVAL),
             always_update=True,
         )
+        self.remote_version_last_checked: datetime | None = None
         self.github_ratelimit_reached_logged: bool = False
 
-        aiohttp_session = async_get_clientsession(self.hass)
         self.api = Paperless(
             entry.data[CONF_HOST],
             entry.data[CONF_API_KEY],
-            session=aiohttp_session,
+            session=async_get_clientsession(self.hass),
         )
 
     async def _async_setup(self) -> None:
@@ -94,10 +100,10 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
         try:
             (
                 data.remote_version,
-                data.remote_version_last_checked,
+                self.remote_version_last_checked,
             ) = await self._get_paperless_remote_version()
         except PaperlessConnectionError as err:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             ) from err
@@ -122,7 +128,7 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
         if not self._should_fetch_remote_version():
             return (
                 self.data.remote_version if self.data else None,
-                self.data.remote_version_last_checked if self.data else None,
+                self.remote_version_last_checked if self.data else None,
             )
 
         version = await self.api.remote_version()
@@ -147,7 +153,7 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
         """
 
         current_time = now()
-        last_checked = self.data.remote_version_last_checked if self.data else None
+        last_checked = self.remote_version_last_checked if self.data else None
 
         if last_checked is None:
             return True

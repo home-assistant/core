@@ -32,10 +32,10 @@
       "message": "[%key:common::config_flow::error::invalid_api_key%]"
     },
     "user_inactive_or_deleted": {
-      "message": "Authentication failed. The user is inactive or has been deleted."
+      "message": "[%key:component::paperless_ngx::config::error::user_inactive_or_deleted%]"
     },
     "forbidden": {
-      "message": "Access forbidden. Your account does not have permission to access the API."
+      "message": "[%key:component::paperless_ngx::config::error::forbidden%]"
     },
     "unknown": {
       "message": "[%key:common::config_flow::error::unknown%]"

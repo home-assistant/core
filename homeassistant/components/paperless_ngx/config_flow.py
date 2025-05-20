@@ -14,15 +14,11 @@ from pypaperless.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
-from .coordinator import PaperlessCoordinator
-
-type PaperlessConfigEntry = ConfigEntry[PaperlessCoordinator]
-
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -50,11 +46,10 @@ class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            aiohttp_session = async_get_clientsession(self.hass)
             client = Paperless(
                 user_input[CONF_HOST],
                 user_input[CONF_API_KEY],
-                session=aiohttp_session,
+                session=async_get_clientsession(self.hass),
             )
 
             try:
