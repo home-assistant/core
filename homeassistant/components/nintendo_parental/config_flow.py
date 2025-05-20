@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pynintendoparental import Authenticator
 from pynintendoparental.exceptions import HttpException, InvalidSessionTokenException
@@ -11,25 +11,10 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import selector
 
-from .const import CONF_SESSION_TOKEN, CONF_UPDATE_INTERVAL, DOMAIN
+from .const import CONF_SESSION_TOKEN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-STEP_CONFIGURE_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_UPDATE_INTERVAL, default=60): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=30,
-                step=1,
-                unit_of_measurement="s",
-                mode=selector.NumberSelectorMode.BOX,
-            )
-        )
-    }
-)
 
 
 class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -51,30 +36,23 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except (ValueError, InvalidSessionTokenException, HttpException):
                 errors["base"] = "invalid_auth"
+            except Exception as exc:
+                _LOGGER.exception("Unknown error during setup", exc_info=exc)
+                errors["base"] = "unknown"
             else:
                 if TYPE_CHECKING:
                     assert self.auth.account_id
                 await self.async_set_unique_id(self.auth.account_id)
                 self._abort_if_unique_id_configured()
-                return await self.async_step_configure()
+                return self.async_create_entry(
+                    title=self.auth.account_id,
+                    data={
+                        CONF_SESSION_TOKEN: self.auth.get_session_token,
+                    },
+                )
         return self.async_show_form(
             step_id="user",
             description_placeholders={"link": self.auth.login_url},
             data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
             errors=errors,
         )
-
-    async def async_step_configure(self, user_input=None) -> ConfigFlowResult:
-        """Configure the update interval and create config entry."""
-        if user_input is not None:
-            return self.async_create_entry(
-                title=self.auth.account_id,
-                data={
-                    CONF_SESSION_TOKEN: self.auth.get_session_token,
-                    CONF_UPDATE_INTERVAL: user_input[CONF_UPDATE_INTERVAL],
-                },
-            )
-        return self.async_show_form(
-            step_id="configure", data_schema=STEP_CONFIGURE_DATA_SCHEMA
-        )
-
