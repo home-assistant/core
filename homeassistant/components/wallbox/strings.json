@@ -96,7 +96,7 @@
       "ecosmart": {
         "name": "Solar charging",
         "state": {
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "eco_mode": "Eco mode",
           "full_solar": "Full solar"
         }
