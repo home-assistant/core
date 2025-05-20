@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from pynintendoparental import Device
 
-import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
