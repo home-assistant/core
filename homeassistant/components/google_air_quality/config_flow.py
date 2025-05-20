@@ -36,8 +36,6 @@ class OAuth2FlowHandler(
 
     _oauth_data: dict[str, Any]
 
-    schema = vol.Schema({vol.Required(CONF_LOCATION): LocationSelector()})
-
     @property
     def logger(self) -> logging.Logger:
         """Return logger."""

@@ -11,9 +11,9 @@
         "title": "Link Google Account"
       },
       "coordinates": {
-        "description": "Select a location for the air quality data.",
+        "description": "Air quality data location",
         "data": {
-          "location": "[%key:common::config_flow::data::location%]"
+          "location": "Select the cooordinates, for which you want to create an entry."
         },
         "data_description": {
           "location": "[%key:common::config_flow::data::location%]"
