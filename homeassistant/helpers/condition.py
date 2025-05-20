@@ -94,12 +94,7 @@ INPUT_ENTITY_ID = re.compile(
 
 
 class ConditionProtocol(Protocol):
-    """Define the format of device_condition modules.
-
-    Each module must define either CONDITION_SCHEMA or async_validate_condition_config.
-    """
-
-    CONDITION_SCHEMA: vol.Schema
+    """Define the format of condition modules."""
 
     async def async_validate_condition_config(
         self, hass: HomeAssistant, config: ConfigType
@@ -952,9 +947,7 @@ async def async_validate_condition_config(
 
     platform = await _async_get_condition_platform(hass, config)
     if platform is not None:
-        if hasattr(platform, "async_validate_condition_config"):
-            return await platform.async_validate_condition_config(hass, config)
-        return cast(ConfigType, platform.CONDITION_SCHEMA(config))
+        return await platform.async_validate_condition_config(hass, config)
     if platform is None and condition in ("numeric_state", "state"):
         validator = cast(
             Callable[[HomeAssistant, ConfigType], ConfigType],

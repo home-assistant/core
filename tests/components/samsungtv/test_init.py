@@ -1,43 +1,31 @@
 """Tests for the Samsung TV Integration."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from typing import Any
+from unittest.mock import Mock, patch
 
 import pytest
-from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.media_player import (
-    DOMAIN as MP_DOMAIN,
-    MediaPlayerEntityFeature,
-)
 from homeassistant.components.samsungtv.const import (
     CONF_SESSION_ID,
     CONF_SSDP_MAIN_TV_AGENT_LOCATION,
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DOMAIN,
+    METHOD_ENCRYPTED_WEBSOCKET,
+    METHOD_LEGACY,
     METHOD_WEBSOCKET,
     UPNP_SVC_MAIN_TV_AGENT,
     UPNP_SVC_RENDERING_CONTROL,
 )
-from homeassistant.components.samsungtv.media_player import SUPPORT_SAMSUNGTV
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_METHOD,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_TOKEN,
-    SERVICE_VOLUME_UP,
-)
+from homeassistant.const import CONF_MAC, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr
 
 from . import setup_samsungtv_entry
 from .const import (
     ENTRYDATA_ENCRYPTED_WEBSOCKET,
+    ENTRYDATA_LEGACY,
     ENTRYDATA_WEBSOCKET,
     MOCK_SSDP_DATA_MAIN_TV_AGENT_ST,
     MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
@@ -45,38 +33,34 @@ from .const import (
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
-ENTITY_ID = f"{MP_DOMAIN}.mock_title"
-MOCK_CONFIG = {
-    CONF_HOST: "fake_host",
-    CONF_NAME: "fake_name",
-    CONF_METHOD: METHOD_WEBSOCKET,
-    CONF_PORT: 8001,
-}
 
-
-@pytest.mark.usefixtures(
-    "remote_websocket", "remote_encrypted_websocket_failing", "rest_api"
+@pytest.mark.parametrize(
+    "entry_data",
+    [ENTRYDATA_LEGACY, ENTRYDATA_ENCRYPTED_WEBSOCKET, ENTRYDATA_WEBSOCKET],
+    ids=[METHOD_LEGACY, METHOD_ENCRYPTED_WEBSOCKET, METHOD_WEBSOCKET],
 )
-async def test_setup(hass: HomeAssistant) -> None:
-    """Test Samsung TV integration is setup."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
-    state = hass.states.get(ENTITY_ID)
+@pytest.mark.usefixtures(
+    "remote_encrypted_websocket",
+    "remote_legacy",
+    "remote_websocket",
+    "rest_api_failing",
+)
+async def test_setup(
+    hass: HomeAssistant,
+    entry_data: dict[str, Any],
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test Samsung TV integration loads and fill device registry."""
+    entry = await setup_samsungtv_entry(hass, entry_data)
 
-    # test name and turn_on
-    assert state
-    assert state.name == "Mock Title"
-    assert (
-        state.attributes[ATTR_SUPPORTED_FEATURES]
-        == SUPPORT_SAMSUNGTV | MediaPlayerEntityFeature.TURN_ON
-    )
+    assert entry.state is ConfigEntryState.LOADED
 
-    # Ensure service is registered
-    await hass.services.async_call(
-        MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
-    )
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    assert device_entries == snapshot
 
 
-@pytest.mark.usefixtures("remote_websocket", "remote_encrypted_websocket_failing")
+@pytest.mark.usefixtures("remote_websocket")
 async def test_setup_h_j_model(
     hass: HomeAssistant, rest_api: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -84,22 +68,25 @@ async def test_setup_h_j_model(
     rest_api.rest_device_info.return_value = load_json_object_fixture(
         "device_info_UE48JU6400.json", DOMAIN
     )
-    await setup_samsungtv_entry(hass, MOCK_CONFIG)
-    await hass.async_block_till_done()
-    state = hass.states.get(ENTITY_ID)
-    assert state
+    entry = await setup_samsungtv_entry(
+        hass, {**ENTRYDATA_WEBSOCKET, CONF_MODEL: "UE48JU6400"}
+    )
+
+    assert entry.state is ConfigEntryState.LOADED
+
     assert "H and J series use an encrypted protocol" in caplog.text
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api")
-async def test_setup_updates_from_ssdp(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
-) -> None:
+@pytest.mark.usefixtures("remote_websocket")
+async def test_setup_updates_from_ssdp(hass: HomeAssistant) -> None:
     """Test setting up the entry fetches data from ssdp cache."""
     entry = MockConfigEntry(
         domain="samsungtv", data=ENTRYDATA_WEBSOCKET, entry_id="sample-entry-id"
     )
     entry.add_to_hass(hass)
+
+    assert not entry.data.get(CONF_SSDP_MAIN_TV_AGENT_LOCATION)
+    assert not entry.data.get(CONF_SSDP_RENDERING_CONTROL_LOCATION)
 
     async def _mock_async_get_discovery_info_by_st(hass: HomeAssistant, mock_st: str):
         if mock_st == UPNP_SVC_RENDERING_CONTROL:
@@ -113,11 +100,7 @@ async def test_setup_updates_from_ssdp(
         _mock_async_get_discovery_info_by_st,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
 
-    assert hass.states.get("media_player.mock_title") == snapshot
-    assert entity_registry.async_get("media_player.mock_title") == snapshot
     assert (
         entry.data[CONF_SSDP_MAIN_TV_AGENT_LOCATION] == "http://10.10.12.34:7676/smp_2_"
     )
@@ -147,28 +130,13 @@ async def test_reauth_triggered_encrypted(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("remote_websocket", "rest_api")
 async def test_incorrectly_formatted_mac_fixed(hass: HomeAssistant) -> None:
     """Test incorrectly formatted mac is corrected."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote"
-    ) as remote_class:
-        remote = Mock(SamsungTVWSAsyncRemote)
-        remote.__aenter__ = AsyncMock(return_value=remote)
-        remote.__aexit__ = AsyncMock()
-        remote.token = "123456789"
-        remote_class.return_value = remote
+    # Incorrect MAC cleanup introduced in #110599, can be removed in 2026.3
+    await setup_samsungtv_entry(
+        hass,
+        {**ENTRYDATA_WEBSOCKET, CONF_MAC: "aabbaaaaaaaa"},
+    )
+    await hass.async_block_till_done()
 
-        await setup_samsungtv_entry(
-            hass,
-            {
-                CONF_HOST: "fake_host",
-                CONF_NAME: "fake",
-                CONF_PORT: 8001,
-                CONF_TOKEN: "123456789",
-                CONF_METHOD: METHOD_WEBSOCKET,
-                CONF_MAC: "aabbaaaaaaaa",
-            },
-        )
-        await hass.async_block_till_done()
-
-        config_entries = hass.config_entries.async_entries(DOMAIN)
-        assert len(config_entries) == 1
-        assert config_entries[0].data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
+    config_entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(config_entries) == 1
+    assert config_entries[0].data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"

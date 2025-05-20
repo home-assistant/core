@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_chat_log_tts_streaming[to_stream_tts0]
+# name: test_chat_log_tts_streaming[to_stream_tts0-1]
   list([
     dict({
       'data': dict({
@@ -139,7 +139,7 @@
     dict({
       'data': dict({
         'tts_output': dict({
-          'media_id': 'media-source://tts/tts.test?message=hello,+how+are+you?&language=en_US&tts_options=%7B%7D',
+          'media_id': 'media-source://tts/-stream-/mocked-token.mp3',
           'mime_type': 'audio/mpeg',
           'token': 'mocked-token.mp3',
           'url': '/api/tts_proxy/mocked-token.mp3',
