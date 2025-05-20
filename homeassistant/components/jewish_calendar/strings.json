@@ -1,4 +1,13 @@
 {
+  "common": {
+    "diaspora": "Outside of Israel?",
+    "time_zone": "Time zone",
+    "descr_diaspora": "Is the location outside of Israel?",
+    "descr_location": "Location to use for the Jewish calendar calculations. By default, the location is set to the Home Assistant location.",
+    "descr_time_zone": "If you specify a location, make sure to specify the time zone for correct calendar times calculations",
+    "descr_elevation": "Elevation in meters above sea level. This is used to calculate the times correctly.",
+    "descr_language": "Language to use when displaying values in the UI. This does not affect the Hebrew date."
+  },
   "entity": {
     "binary_sensor": {
       "issur_melacha_in_effect": {
@@ -90,17 +99,36 @@
   },
   "config": {
     "step": {
-      "user": {
+      "reconfigure": {
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "diaspora": "Outside of Israel?",
-          "language": "Language for holidays and dates",
           "location": "[%key:common::config_flow::data::location%]",
           "elevation": "[%key:common::config_flow::data::elevation%]",
-          "time_zone": "Time zone"
+          "time_zone": "[%key:component::jewish_calendar::common::time_zone%]",
+          "diaspora": "[%key:component::jewish_calendar::common::diaspora%]",
+          "language": "[%key:common::config_flow::data::language%]"
         },
         "data_description": {
-          "time_zone": "If you specify a location, make sure to specify the time zone for correct calendar times calculations"
+          "location": "[%key:component::jewish_calendar::common::descr_location%]",
+          "elevation": "[%key:component::jewish_calendar::common::descr_elevation%]",
+          "time_zone": "[%key:component::jewish_calendar::common::descr_time_zone%]",
+          "diaspora": "[%key:component::jewish_calendar::common::descr_diaspora%]",
+          "language": "[%key:component::jewish_calendar::common::descr_language%]"
+        }
+      },
+      "user": {
+        "data": {
+          "location": "[%key:common::config_flow::data::location%]",
+          "elevation": "[%key:common::config_flow::data::elevation%]",
+          "time_zone": "[%key:component::jewish_calendar::common::time_zone%]",
+          "diaspora": "[%key:component::jewish_calendar::common::diaspora%]",
+          "language": "[%key:common::config_flow::data::language%]"
+        },
+        "data_description": {
+          "location": "[%key:component::jewish_calendar::common::descr_location%]",
+          "elevation": "[%key:component::jewish_calendar::common::descr_elevation%]",
+          "time_zone": "[%key:component::jewish_calendar::common::descr_time_zone%]",
+          "diaspora": "[%key:component::jewish_calendar::common::descr_diaspora%]",
+          "language": "[%key:component::jewish_calendar::common::descr_language%]"
         }
       }
     },

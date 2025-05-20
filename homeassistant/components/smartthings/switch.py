@@ -71,7 +71,14 @@ CAPABILITY_TO_COMMAND_SWITCHES: dict[
         status_attribute=Attribute.DRYER_WRINKLE_PREVENT,
         command=Command.SET_DRYER_WRINKLE_PREVENT,
         entity_category=EntityCategory.CONFIG,
-    )
+    ),
+    Capability.SAMSUNG_CE_STEAM_CLOSET_AUTO_CYCLE_LINK: SmartThingsCommandSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_STEAM_CLOSET_AUTO_CYCLE_LINK,
+        translation_key="auto_cycle_link",
+        status_attribute=Attribute.STEAM_CLOSET_AUTO_CYCLE_LINK,
+        command=Command.SET_STEAM_CLOSET_AUTO_CYCLE_LINK,
+        entity_category=EntityCategory.CONFIG,
+    ),
 }
 CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescription] = {
     Capability.SAMSUNG_CE_WASHER_BUBBLE_SOAK: SmartThingsSwitchEntityDescription(
@@ -91,6 +98,18 @@ CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescriptio
         key=Capability.SAMSUNG_CE_SABBATH_MODE,
         translation_key="sabbath_mode",
         status_attribute=Attribute.STATUS,
+    ),
+    Capability.SAMSUNG_CE_STEAM_CLOSET_SANITIZE_MODE: SmartThingsSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_STEAM_CLOSET_SANITIZE_MODE,
+        translation_key="sanitize",
+        status_attribute=Attribute.STATUS,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    Capability.SAMSUNG_CE_STEAM_CLOSET_KEEP_FRESH_MODE: SmartThingsSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_STEAM_CLOSET_KEEP_FRESH_MODE,
+        translation_key="keep_fresh_mode",
+        status_attribute=Attribute.STATUS,
+        entity_category=EntityCategory.CONFIG,
     ),
 }
 
