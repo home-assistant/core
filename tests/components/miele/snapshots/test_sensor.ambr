@@ -716,7 +716,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'Dummy_Appliance_1-state_temperature_1',
+    'unique_id': 'Dummy_Appliance_1-state_temperature_1-1',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -913,59 +913,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_sensor_states[platforms0][sensor.oven_core_target_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.oven_core_target_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Core target temperature',
-    'platform': 'miele',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'core_target_temperature',
-    'unique_id': 'DummyAppliance_12-state_core_target_temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensor_states[platforms0][sensor.oven_core_target_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Oven Core target temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.oven_core_target_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'in_use',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_core_temperature-entry]
@@ -1017,7 +965,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '22.0',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_elapsed_time-entry]
@@ -1193,7 +1141,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'no_program',
+    'state': 'defrost',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_program_phase-entry]
@@ -1256,7 +1204,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'not_running',
+    'state': 'heating_up',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_program_type-entry]
@@ -1319,7 +1267,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'normal_operation_mode',
+    'state': 'own_program',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_remaining_time-entry]
@@ -1368,7 +1316,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '5',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_start_in-entry]
@@ -1458,7 +1406,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'target_temperature',
-    'unique_id': 'DummyAppliance_12-state_target_temperature',
+    'unique_id': 'DummyAppliance_12-state_target_temperature-1',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1475,7 +1423,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '25.0',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_temperature-entry]
@@ -1510,7 +1458,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'DummyAppliance_12-state_temperature_1',
+    'unique_id': 'DummyAppliance_12-state_temperature_1-1',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1527,7 +1475,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '19.54',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.refrigerator-entry]
@@ -1652,7 +1600,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'Dummy_Appliance_2-state_temperature_1',
+    'unique_id': 'Dummy_Appliance_2-state_temperature_1-1',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2937,7 +2885,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'target_temperature',
-    'unique_id': 'DummyAppliance_45-state_target_temperature',
+    'unique_id': 'DummyAppliance_45-state_target_temperature-1',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2989,7 +2937,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'DummyAppliance_45-state_temperature_1',
+    'unique_id': 'DummyAppliance_45-state_temperature_1-1',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3659,7 +3607,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'target_temperature',
-    'unique_id': 'Dummy_Appliance_3-state_target_temperature',
+    'unique_id': 'Dummy_Appliance_3-state_target_temperature-1',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---

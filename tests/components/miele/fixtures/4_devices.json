@@ -490,31 +490,31 @@
     },
     "state": {
       "ProgramID": {
-        "value_raw": 0,
-        "value_localized": "",
+        "value_raw": 356,
+        "value_localized": "Defrost",
         "key_localized": "Program name"
       },
       "status": {
-        "value_raw": 1,
-        "value_localized": "Off",
+        "value_raw": 5,
+        "value_localized": "In use",
         "key_localized": "status"
       },
       "programType": {
-        "value_raw": 0,
-        "value_localized": "",
+        "value_raw": 1,
+        "value_localized": "Program",
         "key_localized": "Program type"
       },
       "programPhase": {
-        "value_raw": 0,
-        "value_localized": "",
+        "value_raw": 3073,
+        "value_localized": "Heating-up phase",
         "key_localized": "Program phase"
       },
-      "remainingTime": [0, 0],
+      "remainingTime": [0, 5],
       "startTime": [0, 0],
       "targetTemperature": [
         {
-          "value_raw": -32768,
-          "value_localized": null,
+          "value_raw": 2500,
+          "value_localized": 25.0,
           "unit": "Celsius"
         },
         {
@@ -537,8 +537,8 @@
       ],
       "temperature": [
         {
-          "value_raw": -32768,
-          "value_localized": null,
+          "value_raw": 1954,
+          "value_localized": 19.54,
           "unit": "Celsius"
         },
         {
@@ -554,8 +554,8 @@
       ],
       "coreTemperature": [
         {
-          "value_raw": -32768,
-          "value_localized": null,
+          "value_raw": 2200,
+          "value_localized": 22.0,
           "unit": "Celsius"
         }
       ],
@@ -565,10 +565,10 @@
       "remoteEnable": {
         "fullRemoteControl": true,
         "smartGrid": false,
-        "mobileStart": false
+        "mobileStart": true
       },
       "ambientLight": null,
-      "light": 2,
+      "light": 1,
       "elapsedTime": [0, 0],
       "spinningSpeed": {
         "unit": "rpm",

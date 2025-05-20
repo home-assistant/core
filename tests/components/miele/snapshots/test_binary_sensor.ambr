@@ -613,7 +613,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.oven_notification_active-entry]

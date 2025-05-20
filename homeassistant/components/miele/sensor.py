@@ -24,11 +24,13 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
     DISABLED_TEMP_ENTITIES,
+    DOMAIN,
     STATE_PROGRAM_ID,
     STATE_PROGRAM_PHASE,
     STATE_STATUS_TAGS,
@@ -105,7 +107,17 @@ class MieleSensorDescription(SensorEntityDescription):
     """Class describing Miele sensor entities."""
 
     value_fn: Callable[[MieleDevice], StateType]
-    zone: int = 1
+    zone: int | None = None
+
+    def get_unique_id(self, device_id: str) -> str:
+        """Generate the unique ID for the entity."""
+        if self.zone:
+            return f"{device_id}-{self.key}-{self.zone}"
+        return f"{device_id}-{self.key}"
+
+    def get_zone_number(self) -> int:
+        """Typed get the zone for the entity."""
+        return self.zone if self.zone else 0
 
 
 @dataclass
@@ -390,6 +402,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
         ),
         description=MieleSensorDescription(
             key="state_temperature_1",
+            zone=1,
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,
@@ -540,10 +553,58 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     coordinator = config_entry.runtime_data
-    added_devices: set[str] = set()
+    added_devices: set[str] = set()  # device_id
+    added_entities: set[str] = set()  # unique_id
 
-    def _async_add_new_devices() -> None:
-        nonlocal added_devices
+    def _get_entity_class(definition: MieleSensorDefinition) -> type[MieleSensor]:
+        """Get the entity class for the sensor."""
+        match definition.description.key:
+            case "state_status":
+                return MieleStatusSensor
+            case "state_program_id":
+                return MieleProgramIdSensor
+            case "state_program_phase":
+                return MielePhaseSensor
+            case "state_plate_step":
+                return MielePlateSensor
+        if definition.description.device_class == SensorDeviceClass.TEMPERATURE:
+            return MieleTemperatureSensor
+        return MieleSensor
+
+    def _is_entity_registered(unique_id: str) -> bool:
+        """Check if the entity is already registered."""
+        entity_registry = er.async_get(hass)
+        return any(
+            entry.platform == DOMAIN and entry.unique_id == unique_id
+            for entry in entity_registry.entities.values()
+        )
+
+    def _is_sensor_enabled(
+        definition: MieleSensorDefinition,
+        device: MieleDevice,
+        unique_id: str,
+    ) -> bool:
+        """Check if the sensor is enabled."""
+        if (
+            definition.description.device_class == SensorDeviceClass.TEMPERATURE
+            and definition.description.value_fn(device) in DISABLED_TEMP_ENTITIES
+            and definition.description.zone != 1
+        ):
+            # all appliances supporting temperature have at least zone 1, for other zones
+            # don't create entity if API signals that datapoint is disabled, unless the sensor
+            # already appeared in the past (= it provided a valid value)
+            return _is_entity_registered(unique_id)
+        if (
+            definition.description.key == "state_plate_step"
+            and definition.description.get_zone_number()
+            > _get_plate_count(device.tech_type)
+        ):
+            # don't create plate entity if not expected by the appliance tech type
+            return False
+        return True
+
+    def _async_add_devices() -> None:
+        nonlocal added_devices, added_entities
         entities: list = []
         entity_class: type[MieleSensor]
         new_devices_set, current_devices = coordinator.async_add_devices(added_devices)
@@ -551,48 +612,29 @@ async def async_setup_entry(
 
         for device_id, device in coordinator.data.devices.items():
             for definition in SENSOR_TYPES:
-                if (
-                    device_id in new_devices_set
-                    and device.device_type in definition.types
-                ):
-                    match definition.description.key:
-                        case "state_status":
-                            entity_class = MieleStatusSensor
-                        case "state_program_id":
-                            entity_class = MieleProgramIdSensor
-                        case "state_program_phase":
-                            entity_class = MielePhaseSensor
-                        case "state_plate_step":
-                            entity_class = MielePlateSensor
-                        case _:
-                            entity_class = MieleSensor
-                    if (
-                        definition.description.device_class
-                        == SensorDeviceClass.TEMPERATURE
-                    ):
-                        entity_class = MieleTemperatureSensor
-                        if (
-                            definition.description.value_fn(device)
-                            in DISABLED_TEMP_ENTITIES
-                            and definition.description.zone > 1
-                        ):
-                            # All appliances supporting temperature have at least zone 1 (including core temperature)
-                            # Don't create entity if API signals that datapoint is disabled (other zones)
-                            continue
-                    if (
-                        definition.description.key == "state_plate_step"
-                        and definition.description.zone
-                        > _get_plate_count(device.tech_type)
-                    ):
-                        # Don't create plate entity if not expected by the appliance tech type
-                        continue
-                    entities.append(
-                        entity_class(coordinator, device_id, definition.description)
-                    )
+                # device is not supported, skip
+                if device.device_type not in definition.types:
+                    continue
+
+                entity_class = _get_entity_class(definition)
+                unique_id = definition.description.get_unique_id(device_id)
+
+                # entity was already added, skip
+                if device_id not in new_devices_set and unique_id in added_entities:
+                    continue
+
+                # sensors is not enabled, skip
+                if not _is_sensor_enabled(definition, device, unique_id):
+                    continue
+
+                added_entities.add(unique_id)
+                entities.append(
+                    entity_class(coordinator, device_id, definition.description)
+                )
         async_add_entities(entities)
 
-    config_entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
-    _async_add_new_devices()
+    config_entry.async_on_unload(coordinator.async_add_listener(_async_add_devices))
+    _async_add_devices()
 
 
 APPLIANCE_ICONS = {
@@ -635,28 +677,25 @@ class MieleSensor(MieleEntity, SensorEntity):
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.device)
 
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID of the entity."""
+        return self.entity_description.get_unique_id(self._device_id)
+
 
 class MielePlateSensor(MieleSensor):
     """Representation of a Sensor."""
 
     entity_description: MieleSensorDescription
 
-    def __init__(
-        self,
-        coordinator: MieleDataUpdateCoordinator,
-        device_id: str,
-        description: MieleSensorDescription,
-    ) -> None:
-        """Initialize the plate sensor."""
-        super().__init__(coordinator, device_id, description)
-        self._attr_unique_id = f"{device_id}-{description.key}-{description.zone}"
-
     @property
     def native_value(self) -> StateType:
         """Return the state of the plate sensor."""
         # state_plate_step is [] if all zones are off
         plate_power = (
-            self.device.state_plate_step[self.entity_description.zone - 1].value_raw
+            self.device.state_plate_step[
+                self.entity_description.get_zone_number() - 1
+            ].value_raw
             if self.device.state_plate_step
             else 0
         )

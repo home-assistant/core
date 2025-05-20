@@ -26,7 +26,6 @@ class MieleEntity(CoordinatorEntity[MieleDataUpdateCoordinator]):
         super().__init__(coordinator)
         self._device_id = device_id
         self.entity_description = description
-        self._attr_unique_id = f"{device_id}-{description.key}"
 
         device = self.device
         appliance_type = DEVICE_TYPE_TAGS.get(MieleAppliance(device.device_type))
@@ -65,3 +64,8 @@ class MieleEntity(CoordinatorEntity[MieleDataUpdateCoordinator]):
             and self._device_id in self.coordinator.data.devices
             and (self.device.state_status is not StateStatus.NOT_CONNECTED)
         )
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID of the entity."""
+        return f"{self._device_id}-{self.entity_description.key}"
