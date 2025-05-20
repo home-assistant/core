@@ -49,9 +49,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up climate entity for the thermostat in the tub."""
 
-    coordinator = entry.runtime_data.coordinator
+    controller = entry.runtime_data
 
-    entities = [SmartTubThermostat(coordinator, spa) for spa in entry.runtime_data.spas]
+    entities = [
+        SmartTubThermostat(controller.coordinator, spa) for spa in controller.spas
+    ]
 
     async_add_entities(entities)
 
