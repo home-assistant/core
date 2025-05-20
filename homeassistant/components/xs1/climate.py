@@ -29,8 +29,8 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the XS1 thermostat platform."""
-    actuators = hass.data[DOMAIN][ACTUATORS]
-    sensors = hass.data[DOMAIN][SENSORS]
+    actuators: list[XS1Actuator] = hass.data[DOMAIN][ACTUATORS]
+    sensors: list[XS1Sensor] = hass.data[DOMAIN][SENSORS]
 
     thermostat_entities = []
     for actuator in actuators:
