@@ -91,7 +91,7 @@ class RaspberryCamera(Camera):
         """Initialize Raspberry Pi camera component."""
         super().__init__()
 
-        self._name = device_info[CONF_NAME]
+        self._attr_name = device_info[CONF_NAME]
         self._config = device_info
 
         # Kill if there's raspistill instance
@@ -150,11 +150,6 @@ class RaspberryCamera(Camera):
             return file.read()
 
     @property
-    def name(self):
-        """Return the name of this camera."""
-        return self._name
-
-    @property
-    def frame_interval(self):
+    def frame_interval(self) -> float:
         """Return the interval between frames of the stream."""
         return self._config[CONF_TIMELAPSE] / 1000
