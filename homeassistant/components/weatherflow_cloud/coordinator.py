@@ -160,6 +160,7 @@ class WeatherFlowCloudDataCallbackCoordinator[
 
         self._ws_data[station_id][device_id] = processed_data
         self.async_set_updated_data(self._ws_data)
+        return
 
     async def async_setup(self) -> None:
         """Set up the websocket connection."""
