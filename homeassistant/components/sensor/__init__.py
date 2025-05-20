@@ -721,9 +721,10 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return None
 
     def _get_adjusted_display_precision(self) -> int | None:
+        display_precision = self.suggested_display_precision
         device_class = self.device_class
         if device_class is None:
-            return None
+            return display_precision
 
         def _calculate_precision_from_ratio(
             from_unit: str, to_unit: str, base_precision: int
@@ -742,17 +743,21 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             self.suggested_unit_of_measurement or self.native_unit_of_measurement
         )
         if default_unit_of_measurement is None:
-            return None
+            return display_precision
 
         unit_of_measurement = self.unit_of_measurement
         if unit_of_measurement is None:
-            return None
+            return display_precision
 
-        display_precision = self.suggested_display_precision
         if display_precision is not None:
             if default_unit_of_measurement != unit_of_measurement:
-                return _calculate_precision_from_ratio(
-                    default_unit_of_measurement, unit_of_measurement, display_precision
+                return (
+                    _calculate_precision_from_ratio(
+                        default_unit_of_measurement,
+                        unit_of_measurement,
+                        display_precision,
+                    )
+                    or display_precision
                 )
             return display_precision
 
