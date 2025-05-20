@@ -33,3 +33,20 @@ MOCK_STATISTICS_DATA = {
     "storage_path_count": 9,
     "current_asn": 99,
 }
+
+MOCK_STATISTICS_DATA_UPDATE = {
+    "documents_total": 420,
+    "documents_inbox": 3,
+    "inbox_tag": 5,
+    "inbox_tags": [5],
+    "document_file_type_counts": [
+        {"mime_type": "application/pdf", "mime_type_count": 419},
+        {"mime_type": "image/png", "mime_type_count": 1},
+    ],
+    "character_count": 34453,
+    "tag_count": 45,
+    "correspondent_count": 23,
+    "document_type_count": 45,
+    "storage_path_count": 2,
+    "current_asn": 456,
+}

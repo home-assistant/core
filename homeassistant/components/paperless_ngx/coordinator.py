@@ -13,7 +13,7 @@ from pypaperless.exceptions import (
     PaperlessInactiveOrDeletedError,
     PaperlessInvalidTokenError,
 )
-from pypaperless.models import RemoteVersion
+from pypaperless.models import RemoteVersion, Statistic
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST
@@ -36,6 +36,7 @@ class PaperlessData:
     """Describes Paperless-ngx sensor entity."""
 
     remote_version: RemoteVersion | None = None
+    statistic: Statistic | None = None
 
 
 class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
@@ -56,6 +57,7 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
         )
         self.remote_version_last_checked: datetime | None = None
         self.github_ratelimit_reached_logged: bool = False
+        self.statistic_forbidden_logged: bool = False
 
         self.api = Paperless(
             entry.data[CONF_HOST],
@@ -102,6 +104,7 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
                 data.remote_version,
                 self.remote_version_last_checked,
             ) = await self._get_paperless_remote_version()
+            data.statistic = await self._get_paperless_statistics()
         except PaperlessConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -160,3 +163,20 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
         return (current_time - last_checked) >= timedelta(
             hours=REMOTE_VERSION_UPDATE_INTERVAL_HOURS
         )
+
+    async def _get_paperless_statistics(self) -> Statistic | None:
+        """Get the status of Paperless-ngx."""
+        try:
+            statistics = await self.api.statistics()
+        except PaperlessForbiddenError as err:
+            if not self.statistic_forbidden_logged:
+                LOGGER.warning(
+                    "Could not fetch statistics from Paperless-ngx due missing permissions: %s",
+                    err,
+                    exc_info=True,
+                )
+                self.statistic_forbidden_logged = True
+            return None
+        else:
+            self.statistic_forbidden_logged = False
+            return statistics

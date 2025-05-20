@@ -49,7 +49,6 @@ class PaperlessUpdateEntity(PaperlessEntity, UpdateEntity):
     """Defines a Paperless-ngx update entity."""
 
     _attr_supported_features = UpdateEntityFeature(0)
-    coordinator: PaperlessCoordinator
 
     def __init__(
         self,

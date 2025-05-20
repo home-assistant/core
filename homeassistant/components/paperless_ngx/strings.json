@@ -24,6 +24,33 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "entity": {
+    "todo": {
+      "shopping_cart": {
+        "name": "Shopping cart"
+      }
+    },
+    "sensor": {
+      "documents_total": {
+        "name": "Documents total"
+      },
+      "documents_inbox": {
+        "name": "Documents inbox"
+      },
+      "characters_count": {
+        "name": "Characters total"
+      },
+      "tag_count": {
+        "name": "Tags total"
+      },
+      "correspondent_count": {
+        "name": "Correspondents total"
+      },
+      "document_type_count": {
+        "name": "Document types total"
+      }
+    }
+  },
   "exceptions": {
     "cannot_connect": {
       "message": "[%key:common::config_flow::error::invalid_host%]"
