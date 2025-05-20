@@ -67,7 +67,7 @@ class NintendoParentalSensor(NintendoDevice, SensorEntity):
             coordinator=coordinator, device=device, entity_id=description.key
         )
         self.entity_description = description
-        self._attr_translation_placeholders = {"DEV_NAME": device.name}
+        self._attr_translation_placeholders = {"dev_name": device.name}
 
     @property
     def native_value(self) -> int | float | None:
