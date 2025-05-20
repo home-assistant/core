@@ -8,9 +8,11 @@ import pytest
 from switchbot import ColorMode as switchbotColorMode
 from switchbot.devices.device import SwitchbotOperationError
 
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
+    ATTR_EFFECT,
     ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
@@ -20,7 +22,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import WOSTRIP_SERVICE_INFO
+from . import STRIP_LIGHT_3_SERVICE_INFO, WOSTRIP_SERVICE_INFO
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
@@ -62,17 +64,17 @@ from tests.components.bluetooth import inject_bluetooth_service_info
         ),
         (
             SERVICE_TURN_ON,
-            {ATTR_RGB_COLOR: (255, 0, 0)},
+            {ATTR_BRIGHTNESS: 128, ATTR_RGB_COLOR: (255, 0, 0)},
             "set_rgb",
-            (round(255 / 255 * 100), 255, 0, 0),
+            (round(128 / 255 * 100), 255, 0, 0),
             {switchbotColorMode.RGB},
             switchbotColorMode.RGB,
         ),
         (
             SERVICE_TURN_ON,
-            {ATTR_COLOR_TEMP_KELVIN: 4000},
+            {ATTR_BRIGHTNESS: 128, ATTR_COLOR_TEMP_KELVIN: 4000},
             "set_color_temp",
-            (100, 4000),
+            (round(128 / 255 * 100), 4000),
             {switchbotColorMode.COLOR_TEMP},
             switchbotColorMode.COLOR_TEMP,
         ),
@@ -201,3 +203,50 @@ async def test_exception_handling_light_service(
                 {**service_data, ATTR_ENTITY_ID: entity_id},
                 blocking=True,
             )
+
+
+@pytest.mark.parametrize(
+    ("sensor_type", "service_info"),
+    [
+        ("strip_light_3", STRIP_LIGHT_3_SERVICE_INFO),
+        # ("floor_lamp", FLOOR_LAMP_SERVICE_INFO)
+    ],
+)
+@pytest.mark.parametrize(
+    ("service", "service_data", "mock_method", "expected_args"),
+    [(SERVICE_TURN_ON, {ATTR_EFFECT: "Ocean"}, "set_effect", ("Ocean",))],
+)
+async def test_effect(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    sensor_type: str,
+    service_info: BluetoothServiceInfoBleak,
+    service: str,
+    service_data: dict,
+    mock_method: str,
+    expected_args: Any,
+) -> None:
+    """Test the effect service for a specific sensor type."""
+    inject_bluetooth_service_info(hass, service_info)
+
+    entry = mock_entry_encrypted_factory(sensor_type=sensor_type)
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name"
+
+    mocked_instance = AsyncMock(return_value=True)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotStripLight3",
+        update=AsyncMock(return_value=None),
+        **{mock_method: mocked_instance},
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            service,
+            {**service_data, ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    mocked_instance.assert_awaited_once_with(*expected_args)
