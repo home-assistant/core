@@ -18,17 +18,3 @@ def normalize_descriptor(descriptor: PriceDescriptor | None) -> str | None:
     if descriptor in descriptor_map:
         return descriptor_map[descriptor]
     return None
-
-
-def format_cents_to_dollars(cents: float) -> float:
-    """Return a formatted conversion from cents to dollars."""
-    return round(cents / 100, 2)
-
-
-def friendly_channel_type(channel_type: str) -> str:
-    """Return a human readable version of the channel type."""
-    if channel_type == "controlled_load":
-        return "Controlled Load"
-    if channel_type == "feed_in":
-        return "Feed In"
-    return "General"

@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
-from .formatters import normalize_descriptor
+from .helpers import normalize_descriptor
 
 type AmberConfigEntry = ConfigEntry[AmberUpdateCoordinator]
 
