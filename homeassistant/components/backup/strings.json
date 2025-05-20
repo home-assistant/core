@@ -36,6 +36,20 @@
     }
   },
   "entity": {
+    "event": {
+      "automatic_backup_event": {
+        "name": "Automatic backup",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "completed": "successful completed",
+              "failed": "failed",
+              "in_progress": "in progress"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "backup_manager_state": {
         "name": "Backup Manager state",
