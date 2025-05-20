@@ -1,12 +1,12 @@
 """Test fixtures for Google Air Quality."""
 
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import AsyncGenerator, Generator
 import time
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from google_air_quality_api.api import GoogleAirQualityApi
-from google_air_quality_api.model import AirQualityData, UserInfoResult
+from google_air_quality_api.model import AirQualityData
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -116,10 +116,6 @@ def mock_client_api(
 ) -> Generator[Mock]:
     """Set up fake Google Air Quality API responses from fixtures."""
     mock_api = AsyncMock(GoogleAirQualityApi, autospec=True)
-    mock_api.get_user_info.return_value = UserInfoResult(
-        id=user_identifier,
-        name="Test Name",
-    )
     responses = load_json_object_fixture("air_quality_data.json", DOMAIN)
     mock_api.async_air_quality.return_value = AirQualityData.from_dict(responses)
     mock_api.async_air_quality.side_effect = api_error
@@ -132,7 +128,7 @@ async def mock_setup_integration(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_api: Mock,
-) -> Callable[[], Awaitable[bool]]:
+) -> AsyncGenerator[Any, Any]:
     """Fixture to set up the integration."""
     config_entry.add_to_hass(hass)
 
