@@ -19,12 +19,5 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
-  },
-  "entity": {
-    "sensor": {
-      "playing_time": {
-        "name": "{DEV_NAME} used screen time"
-      }
-    }
   }
 }
