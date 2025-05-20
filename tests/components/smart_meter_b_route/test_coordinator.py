@@ -4,7 +4,7 @@ from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
 from momonga import MomongaError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.smart_meter_b_route.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
