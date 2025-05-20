@@ -12,12 +12,13 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
 )
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
-from homeassistant.components.switchbot_cloud.climate import RestoreEntity
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, State
 
 from . import configure_integration
+
+from tests.common import mock_restore_cache
 
 
 async def test_air_conditioner_set_hvac_mode(
@@ -146,18 +147,14 @@ async def test_air_conditioner_restore_state(
         },
     )
 
-    with patch.object(
-        RestoreEntity,
-        "async_get_last_state",
-        return_value=mock_state,
-    ):
-        entry = await configure_integration(hass)
-        assert entry.state is ConfigEntryState.LOADED
-        entity_id = "climate.climate_1"
-        state = hass.states.get(entity_id)
-        assert state.state == "cool"
-        assert state.attributes["fan_mode"] == "high"
-        assert state.attributes["temperature"] == 25
+    mock_restore_cache(hass, (mock_state,))
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    entity_id = "climate.climate_1"
+    state = hass.states.get(entity_id)
+    assert state.state == "cool"
+    assert state.attributes["fan_mode"] == "high"
+    assert state.attributes["temperature"] == 25
 
 
 async def test_air_conditioner_no_last_state(
