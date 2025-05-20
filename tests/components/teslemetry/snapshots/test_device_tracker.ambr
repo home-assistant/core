@@ -145,7 +145,7 @@
   'unknown'
 # ---
 # name: test_device_tracker_streaming[device_tracker.test_origin-state]
-  'unknown'
+  'unavailable'
 # ---
 # name: test_device_tracker_streaming[device_tracker.test_route-restore]
   'not_home'
