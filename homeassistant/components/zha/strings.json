@@ -905,7 +905,7 @@
         "name": "Fade time"
       },
       "regulator_set_point": {
-        "name": "Regulator set point"
+        "name": "Regulator setpoint"
       },
       "detection_delay": {
         "name": "Detection delay"
@@ -1207,7 +1207,7 @@
         "name": "Decoupled mode"
       },
       "detection_sensitivity": {
-        "name": "Detection Sensitivity"
+        "name": "Detection sensitivity"
       },
       "keypad_lockout": {
         "name": "Keypad lockout"
@@ -1638,7 +1638,7 @@
         "name": "Total power factor"
       },
       "self_test_result": {
-        "name": "Self test result"
+        "name": "Self-test result"
       },
       "lower_explosive_limit": {
         "name": "% Lower explosive limit"

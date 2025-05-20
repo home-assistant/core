@@ -23,6 +23,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
 from .entity import ComelitBridgeBaseEntity
+from .utils import bridge_api_call
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -155,6 +156,7 @@ class ComelitClimateEntity(ComelitBridgeBaseEntity, ClimateEntity):
         self._update_attributes()
         super()._handle_coordinator_update()
 
+    @bridge_api_call
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (
@@ -171,6 +173,7 @@ class ComelitClimateEntity(ComelitBridgeBaseEntity, ClimateEntity):
         self._attr_target_temperature = target_temp
         self.async_write_ha_state()
 
+    @bridge_api_call
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
 

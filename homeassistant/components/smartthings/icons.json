@@ -18,6 +18,9 @@
         "state": {
           "on": "mdi:lock"
         }
+      },
+      "keep_fresh_mode": {
+        "default": "mdi:creation"
       }
     },
     "button": {
@@ -100,8 +103,20 @@
           "off": "mdi:tumble-dryer-off"
         }
       },
+      "keep_fresh_mode": {
+        "default": "mdi:creation"
+      },
       "ice_maker": {
         "default": "mdi:delete-variant"
+      },
+      "sanitize": {
+        "default": "mdi:lotion"
+      },
+      "auto_cycle_link": {
+        "default": "mdi:link-off",
+        "state": {
+          "on": "mdi:link"
+        }
       }
     }
   }
