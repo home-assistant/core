@@ -2643,7 +2643,18 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'energy_save',
+        'heating',
+        'heating_up_phase',
+        'not_running',
+        'process_finished',
+        'process_running',
+        'steam_reduction',
+        'waiting_for_start',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -2677,13 +2688,23 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Steam oven micro Program phase',
+      'options': list([
+        'energy_save',
+        'heating',
+        'heating_up_phase',
+        'not_running',
+        'process_finished',
+        'process_running',
+        'steam_reduction',
+        'waiting_for_start',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.steam_oven_micro_program_phase',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'not_running',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.steam_oven_micro_program_type-entry]
