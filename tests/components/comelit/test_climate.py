@@ -7,7 +7,7 @@ from aiocomelit.api import ComelitSerialBridgeObject
 from aiocomelit.const import CLIMATE, WATT
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -42,7 +42,7 @@ async def test_all_entities(
     await snapshot_platform(
         hass,
         entity_registry,
-        snapshot(),
+        snapshot,
         mock_serial_bridge_config_entry.entry_id,
     )
 
@@ -84,7 +84,7 @@ async def test_climate_data_update(
     freezer: FrozenDateTimeFactory,
     mock_serial_bridge: AsyncMock,
     mock_serial_bridge_config_entry: MockConfigEntry,
-    val: list[Any, Any],
+    val: list[list[Any]],
     mode: HVACMode,
     temp: float,
 ) -> None:
@@ -139,7 +139,7 @@ async def test_climate_data_update_bad_data(
             status=0,
             human_status="off",
             type="climate",
-            val="bad_data",
+            val="bad_data",  # type: ignore[arg-type]
             protected=0,
             zone="Living room",
             power=0.0,

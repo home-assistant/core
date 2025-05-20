@@ -101,6 +101,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         except openai.OpenAIError as err:
             raise HomeAssistantError(f"Error generating image: {err}") from err
 
+        if not response.data or not response.data[0].url:
+            raise HomeAssistantError("No image returned")
+
         return response.data[0].model_dump(exclude={"b64_json"})
 
     async def send_prompt(call: ServiceCall) -> ServiceResponse:
@@ -137,7 +140,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     content.append(
                         ResponseInputImageParam(
                             type="input_image",
-                            file_id=filename,
                             image_url=f"data:{mime_type};base64,{base64_file}",
                             detail="auto",
                         )

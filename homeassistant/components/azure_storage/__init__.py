@@ -39,11 +39,20 @@ async def async_setup_entry(
     session = async_create_clientsession(
         hass, timeout=ClientTimeout(connect=10, total=12 * 60 * 60)
     )
-    container_client = ContainerClient(
-        account_url=f"https://{entry.data[CONF_ACCOUNT_NAME]}.blob.core.windows.net/",
-        container_name=entry.data[CONF_CONTAINER_NAME],
-        credential=entry.data[CONF_STORAGE_ACCOUNT_KEY],
-        transport=AioHttpTransport(session=session),
+
+    def create_container_client() -> ContainerClient:
+        """Create a ContainerClient."""
+
+        return ContainerClient(
+            account_url=f"https://{entry.data[CONF_ACCOUNT_NAME]}.blob.core.windows.net/",
+            container_name=entry.data[CONF_CONTAINER_NAME],
+            credential=entry.data[CONF_STORAGE_ACCOUNT_KEY],
+            transport=AioHttpTransport(session=session),
+        )
+
+    # has a blocking call to open in cpython
+    container_client: ContainerClient = await hass.async_add_executor_job(
+        create_container_client
     )
 
     try:

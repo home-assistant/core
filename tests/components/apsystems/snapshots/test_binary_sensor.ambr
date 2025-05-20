@@ -120,7 +120,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Off grid status',
+    'original_name': 'Off-grid status',
     'platform': 'apsystems',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -133,7 +133,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Mock Title Off grid status',
+      'friendly_name': 'Mock Title Off-grid status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_off_grid_status',

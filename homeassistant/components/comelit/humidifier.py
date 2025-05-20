@@ -19,10 +19,11 @@ from homeassistant.components.humidifier import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
+from .entity import ComelitBridgeBaseEntity
+from .utils import bridge_api_call
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -92,14 +93,13 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], HumidifierEntity):
+class ComelitHumidifierEntity(ComelitBridgeBaseEntity, HumidifierEntity):
     """Humidifier device."""
 
     _attr_supported_features = HumidifierEntityFeature.MODES
     _attr_available_modes = [MODE_NORMAL, MODE_AUTO]
     _attr_min_humidity = 10
     _attr_max_humidity = 90
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -112,13 +112,8 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
         device_class: HumidifierDeviceClass,
     ) -> None:
         """Init light entity."""
-        self._api = coordinator.api
-        self._device = device
-        super().__init__(coordinator)
-        # Use config_entry.entry_id as base for unique_id
-        # because no serial number or mac is available
+        super().__init__(coordinator, device, config_entry_entry_id)
         self._attr_unique_id = f"{config_entry_entry_id}-{device.index}-{device_class}"
-        self._attr_device_info = coordinator.platform_device_info(device, device_class)
         self._attr_device_class = device_class
         self._attr_translation_key = device_class.value
         self._active_mode = active_mode
@@ -160,6 +155,7 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
         self._update_attributes()
         super()._handle_coordinator_update()
 
+    @bridge_api_call
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         if not self._attr_is_on:
@@ -177,6 +173,7 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
         self._attr_target_humidity = humidity
         self.async_write_ha_state()
 
+    @bridge_api_call
     async def async_set_mode(self, mode: str) -> None:
         """Set humidifier mode."""
         await self.coordinator.api.set_humidity_status(
@@ -185,6 +182,7 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
         self._attr_mode = mode
         self.async_write_ha_state()
 
+    @bridge_api_call
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on."""
         await self.coordinator.api.set_humidity_status(
@@ -193,6 +191,7 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @bridge_api_call
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off."""
         await self.coordinator.api.set_humidity_status(

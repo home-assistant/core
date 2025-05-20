@@ -67,9 +67,6 @@
       },
       "auto_shutdown": {
         "name": "Auto shutdown"
-      },
-      "temperature": {
-        "name": "Current temperature"
       }
     },
     "switch": {
@@ -83,11 +80,11 @@
   },
   "services": {
     "set_auto_off": {
-      "name": "Set auto off",
-      "description": "Updates Switcher device auto off setting.",
+      "name": "Set auto-off",
+      "description": "Updates Switcher device auto-off setting.",
       "fields": {
         "auto_off": {
-          "name": "Auto off",
+          "name": "Auto-off",
           "description": "Time period string containing hours and minutes."
         }
       }
@@ -98,7 +95,7 @@
       "fields": {
         "timer_minutes": {
           "name": "Timer",
-          "description": "Time to turn on."
+          "description": "Duration to turn on the Switcher."
         }
       }
     }

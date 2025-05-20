@@ -1,0 +1,127 @@
+# serializer version: 1
+# name: test_climate_states[platforms0-freezer][climate.freezer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': -14,
+      'min_temp': -28,
+      'target_temp_step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.freezer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 1>,
+    'translation_key': 'freezer',
+    'unique_id': 'Dummy_Appliance_1-thermostat-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate_states[platforms0-freezer][climate.freezer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': -18,
+      'friendly_name': 'Freezer',
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': -14,
+      'min_temp': -28,
+      'supported_features': <ClimateEntityFeature: 1>,
+      'target_temp_step': 1.0,
+      'temperature': -18,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.freezer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cool',
+  })
+# ---
+# name: test_climate_states[platforms0-freezer][climate.refrigerator-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': -14,
+      'min_temp': -28,
+      'target_temp_step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.refrigerator',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 1>,
+    'translation_key': 'refrigerator',
+    'unique_id': 'Dummy_Appliance_2-thermostat-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate_states[platforms0-freezer][climate.refrigerator-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 4,
+      'friendly_name': 'Refrigerator',
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': -14,
+      'min_temp': -28,
+      'supported_features': <ClimateEntityFeature: 1>,
+      'target_temp_step': 1.0,
+      'temperature': 4,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.refrigerator',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cool',
+  })
+# ---
