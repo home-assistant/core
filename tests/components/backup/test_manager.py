@@ -35,6 +35,7 @@ from homeassistant.components.backup import (
 from homeassistant.components.backup.agent import BackupAgentError
 from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.components.backup.manager import (
+    AddonError,
     BackupManagerError,
     BackupManagerExceptionGroup,
     BackupManagerState,
@@ -1118,7 +1119,11 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote"],
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
-            {"test_addon": [("test_error", "Boom!")]},
+            {
+                "test_addon": AddonError(
+                    name="Test Add-on", errors=[("test_error", "Boom!")]
+                )
+            },
             {},
             None,
             None,
@@ -1128,7 +1133,11 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote"],
             {"type": "backup/generate_with_automatic_settings"},
-            {"test_addon": [("test_error", "Boom!")]},
+            {
+                "test_addon": AddonError(
+                    name="Test Add-on", errors=[("test_error", "Boom!")]
+                )
+            },
             {},
             None,
             None,
@@ -1136,7 +1145,7 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             {
                 (DOMAIN, "automatic_backup_failed"): {
                     "translation_key": "automatic_backup_failed_addons",
-                    "translation_placeholders": {"failed_addons": "test_addon"},
+                    "translation_placeholders": {"failed_addons": "Test Add-on"},
                 }
             },
         ),
@@ -1170,7 +1179,11 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote"],
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
-            {"test_addon": [("test_error", "Boom!")]},
+            {
+                "test_addon": AddonError(
+                    name="Test Add-on", errors=[("test_error", "Boom!")]
+                )
+            },
             {Folder.MEDIA: [("test_error", "Boom!")]},
             None,
             None,
@@ -1180,7 +1193,11 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote"],
             {"type": "backup/generate_with_automatic_settings"},
-            {"test_addon": [("test_error", "Boom!")]},
+            {
+                "test_addon": AddonError(
+                    name="Test Add-on", errors=[("test_error", "Boom!")]
+                )
+            },
             {Folder.MEDIA: [("test_error", "Boom!")]},
             None,
             None,
@@ -1189,7 +1206,7 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
                 (DOMAIN, "automatic_backup_failed"): {
                     "translation_key": "automatic_backup_failed_agents_addons_folders",
                     "translation_placeholders": {
-                        "failed_addons": "test_addon",
+                        "failed_addons": "Test Add-on",
                         "failed_agents": "-",
                         "failed_folders": "media",
                     },
@@ -1200,7 +1217,11 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote", "test.unknown"],
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
-            {"test_addon": [("test_error", "Boom!")]},
+            {
+                "test_addon": AddonError(
+                    name="Test Add-on", errors=[("test_error", "Boom!")]
+                )
+            },
             {Folder.MEDIA: [("test_error", "Boom!")]},
             None,
             None,
@@ -1218,7 +1239,11 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote", "test.unknown"],
             {"type": "backup/generate_with_automatic_settings"},
-            {"test_addon": [("test_error", "Boom!")]},
+            {
+                "test_addon": AddonError(
+                    name="Test Add-on", errors=[("test_error", "Boom!")]
+                )
+            },
             {Folder.MEDIA: [("test_error", "Boom!")]},
             None,
             None,
@@ -1227,7 +1252,7 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
                 (DOMAIN, "automatic_backup_failed"): {
                     "translation_key": "automatic_backup_failed_agents_addons_folders",
                     "translation_placeholders": {
-                        "failed_addons": "test_addon",
+                        "failed_addons": "Test Add-on",
                         "failed_agents": "test.unknown",
                         "failed_folders": "media",
                     },

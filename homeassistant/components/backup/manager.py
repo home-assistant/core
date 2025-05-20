@@ -107,10 +107,18 @@ class ManagerBackup(BaseBackup):
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
+class AddonError:
+    """Addon error class."""
+
+    name: str
+    errors: list[tuple[str, str]]
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
 class WrittenBackup:
     """Written backup class."""
 
-    addon_errors: dict[str, list[tuple[str, str]]]
+    addon_errors: dict[str, AddonError]
     backup: AgentBackup
     folder_errors: dict[Folder, list[tuple[str, str]]]
     open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]]
@@ -1389,14 +1397,12 @@ class BackupManager:
         """Update issue registry after a backup is uploaded to agents."""
 
         addon_errors = written_backup.addon_errors
+        failed_agents = unavailable_agents + [
+            self.backup_agents[agent_id].name for agent_id in agent_errors
+        ]
         folder_errors = written_backup.folder_errors
 
-        if (
-            not agent_errors
-            and not unavailable_agents
-            and not addon_errors
-            and not folder_errors
-        ):
+        if not failed_agents and not addon_errors and not folder_errors:
             # No issues to report, clear previous error
             ir.async_delete_issue(self.hass, DOMAIN, "automatic_backup_failed")
             return
@@ -1404,23 +1410,13 @@ class BackupManager:
             # No issues with add-ons or folders, but issues with agents
             self._create_automatic_backup_failed_issue(
                 "automatic_backup_failed_upload_agents",
-                {
-                    "failed_agents": ", ".join(
-                        chain(
-                            (
-                                self.backup_agents[agent_id].name
-                                for agent_id in agent_errors
-                            ),
-                            unavailable_agents,
-                        )
-                    )
-                },
+                {"failed_agents": ", ".join(failed_agents)},
             )
         elif addon_errors and not (agent_errors or unavailable_agents or folder_errors):
             # No issues with agents or folders, but issues with add-ons
             self._create_automatic_backup_failed_issue(
                 "automatic_backup_failed_addons",
-                {"failed_addons": ", ".join(addon for addon in addon_errors)},
+                {"failed_addons": ", ".join(val.name for val in addon_errors.values())},
             )
         elif folder_errors and not (agent_errors or unavailable_agents or addon_errors):
             # No issues with agents or add-ons, but issues with folders
@@ -1433,19 +1429,12 @@ class BackupManager:
             self._create_automatic_backup_failed_issue(
                 "automatic_backup_failed_agents_addons_folders",
                 {
-                    "failed_agents": ", ".join(
-                        chain(
-                            (
-                                self.backup_agents[agent_id].name
-                                for agent_id in agent_errors
-                            ),
-                            unavailable_agents,
-                        )
+                    "failed_agents": ", ".join(failed_agents) or "-",
+                    "failed_addons": ", ".join(
+                        val.name for val in addon_errors.values()
                     )
                     or "-",
-                    "failed_addons": ", ".join(addon for addon in addon_errors) or "-",
-                    "failed_folders": ", ".join(folder for folder in folder_errors)
-                    or "-",
+                    "failed_folders": ", ".join(f for f in folder_errors) or "-",
                 },
             )
 

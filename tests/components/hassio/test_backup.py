@@ -988,14 +988,21 @@ async def test_reader_writer_create(
     assert response["event"] == {"manager_state": "idle"}
 
 
-@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
+@pytest.mark.usefixtures("addon_info", "hassio_client", "setup_backup_integration")
+@pytest.mark.parametrize(
+    "addon_info_side_effect",
+    # Getting info fails for one of the addons, should fall back to slug
+    [[Mock(), SupervisorError("Boom")]],
+)
 async def test_reader_writer_create_addon_folder_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
     supervisor_client: AsyncMock,
+    addon_info_side_effect: list[Any],
 ) -> None:
     """Test generating a backup."""
+    addon_info_side_effect[0].name = "Advanced SSH & Web Terminal"
     assert dt.datetime.__name__ == "HAFakeDatetime"
     assert dt.HAFakeDatetime.__name__ == "HAFakeDatetime"
     client = await hass_ws_client(hass)
@@ -1097,7 +1104,7 @@ async def test_reader_writer_create_addon_folder_error(
     issue = issue_registry.issues[("backup", "automatic_backup_failed")]
     assert issue.translation_key == "automatic_backup_failed_agents_addons_folders"
     assert issue.translation_placeholders == {
-        "failed_addons": "core_ssh, core_whisper",
+        "failed_addons": "Advanced SSH & Web Terminal, core_whisper",
         "failed_agents": "-",
         "failed_folders": "share, ssl, media",
     }

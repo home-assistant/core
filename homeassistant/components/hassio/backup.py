@@ -26,6 +26,7 @@ from aiohasupervisor.models.backups import LOCATION_CLOUD_BACKUP, LOCATION_LOCAL
 
 from homeassistant.components.backup import (
     DATA_MANAGER,
+    AddonError,
     AddonInfo,
     AgentBackup,
     BackupAgent,
@@ -404,9 +405,18 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
 
         # The backup was created successfully, check for non critical errors
         full_status = await self._client.jobs.get_job(backup.job_id)
-        addon_errors = _collect_errors(
+        _addon_errors = _collect_errors(
             full_status, "backup_store_addons", "backup_addon_save"
         )
+        addon_errors: dict[str, AddonError] = {}
+        for slug, errors in _addon_errors.items():
+            try:
+                addon_info = await self._client.addons.addon_info(slug)
+                addon_errors[slug] = AddonError(name=addon_info.name, errors=errors)
+            except SupervisorError as err:
+                _LOGGER.debug("Error getting addon %s: %s", slug, err)
+                addon_errors[slug] = AddonError(name=slug, errors=errors)
+
         _folder_errors = _collect_errors(
             full_status, "backup_store_folders", "backup_folder_save"
         )
