@@ -258,32 +258,28 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
             _LOGGER.error("Failed to change the operation mode")
         return success
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature."""
         set_temp = True
-        operation_mode = kwargs.get(ATTR_HVAC_MODE)
-        temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
-        temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-        temperature = kwargs.get(ATTR_TEMPERATURE)
+        operation_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
+        temp_low: float | None = kwargs.get(ATTR_TARGET_TEMP_LOW)
+        temp_high: float | None = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        temperature: float | None = kwargs.get(ATTR_TEMPERATURE)
 
-        if operation_mode and self._mode_map.get(operation_mode) != self._client.mode:
+        client_mode = self._client.mode
+        if (
+            operation_mode
+            and (new_mode := self._mode_map.get(operation_mode)) != client_mode
+        ):
             set_temp = self._set_operation_mode(operation_mode)
+            client_mode = new_mode
 
         if set_temp:
-            if (
-                self._mode_map.get(operation_mode, self._client.mode)
-                == self._client.MODE_HEAT
-            ):
+            if client_mode == self._client.MODE_HEAT:
                 success = self._client.set_setpoints(temperature, self._client.cooltemp)
-            elif (
-                self._mode_map.get(operation_mode, self._client.mode)
-                == self._client.MODE_COOL
-            ):
+            elif client_mode == self._client.MODE_COOL:
                 success = self._client.set_setpoints(self._client.heattemp, temperature)
-            elif (
-                self._mode_map.get(operation_mode, self._client.mode)
-                == self._client.MODE_AUTO
-            ):
+            elif client_mode == self._client.MODE_AUTO:
                 success = self._client.set_setpoints(temp_low, temp_high)
             else:
                 success = False
