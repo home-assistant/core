@@ -378,10 +378,8 @@ class WeatherFlowSensorEntity(SensorEntity):
             return None
 
         # Convert native_value to int if possible
-        if (
-            self.native_value is not None
-            and self.native_value != "none"
-            and isinstance(self.native_value, (int, float, str))
+        if self.native_value is not None and isinstance(
+            self.native_value, (int, float, str)
         ):
             value = int(self.native_value)
             return self.entity_description.icon_fn(value)
