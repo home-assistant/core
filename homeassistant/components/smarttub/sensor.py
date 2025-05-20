@@ -127,7 +127,7 @@ class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
         return self.cycle.status.name.lower()
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             ATTR_DURATION: self.cycle.duration,
@@ -167,7 +167,7 @@ class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
         return self.cycle.status.name.lower()
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             ATTR_CYCLE_LAST_UPDATED: self.cycle.last_updated.isoformat(),
