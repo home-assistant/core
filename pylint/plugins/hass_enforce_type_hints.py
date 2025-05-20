@@ -941,12 +941,13 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=[
                 TypeHintMatch(
                     function_name="device_class",
-                    return_type=["ButtonDeviceClass", "str", None],
+                    return_type=["ButtonDeviceClass", None],
                 ),
                 TypeHintMatch(
                     function_name="press",
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
             ],
         ),
