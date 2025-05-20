@@ -33,7 +33,7 @@ SENSOR_DESCRIPTIONS: tuple[NintendoParentalSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.today_playing_time,
-    )
+    ),
 )
 
 
