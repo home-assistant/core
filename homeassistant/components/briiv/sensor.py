@@ -10,7 +10,7 @@ from homeassistant.components.sensor import SensorEntity, SensorEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BriivConfigEntry  # Add this import
 from .const import DOMAIN, LOGGER, SENSOR_TYPES
@@ -19,7 +19,7 @@ from .const import DOMAIN, LOGGER, SENSOR_TYPES
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BriivConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Briiv sensors."""
     api: BriivAPI = entry.runtime_data.api

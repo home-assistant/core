@@ -2,33 +2,29 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from pybriiv import BriivAPI, BriivError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_SERIAL_NUMBER, PLATFORMS
+from .const import CONF_HOST, CONF_PORT, CONF_SERIAL_NUMBER, PLATFORMS
 
 
-@dataclass
 class BriivData:
     """Class to store Briiv API data."""
 
     api: BriivAPI
 
 
-# Type alias for the config entry
 type BriivConfigEntry = ConfigEntry[BriivData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BriivConfigEntry) -> bool:
     """Set up Briiv from a config entry."""
     api = BriivAPI(
-        host=entry.data["host"],
-        port=entry.data["port"],
+        host=entry.data[CONF_HOST],
+        port=entry.data[CONF_PORT],
         serial_number=entry.data[CONF_SERIAL_NUMBER],
     )
 
@@ -39,8 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BriivConfigEntry) -> boo
         await api.stop_listening()
         raise ConfigEntryNotReady from err
 
-    # Store the API in runtime_data instead of hass.data
-    entry.runtime_data = BriivData(api=api)
+    entry.runtime_data = api
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

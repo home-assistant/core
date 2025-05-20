@@ -22,6 +22,8 @@ DISCOVERY_TIMEOUT = 15
 DEFAULT_PORT: Final = 3334
 PLATFORMS = [Platform.FAN, Platform.SENSOR]
 LOGGER = logging.getLogger(__name__)
+CONF_HOST: Final = "host"
+CONF_PORT: Final = "port"
 CONF_SERIAL_NUMBER: Final = "serial_number"
 
 PRESET_MODE_BOOST = "boost"

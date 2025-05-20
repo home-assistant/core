@@ -9,7 +9,7 @@ from pybriiv import BriivAPI
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BriivConfigEntry  # Add this import
 from .const import DOMAIN, LOGGER, PRESET_MODE_BOOST
@@ -17,8 +17,8 @@ from .const import DOMAIN, LOGGER, PRESET_MODE_BOOST
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: BriivConfigEntry,  # Updated to use the type alias
-    async_add_entities: AddEntitiesCallback,
+    entry: BriivConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Briiv fan based on config entry."""
     api = entry.runtime_data.api  # Updated to use runtime_data
@@ -30,25 +30,24 @@ class BriivFan(FanEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_preset_modes = [PRESET_MODE_BOOST]
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.TURN_ON
+        | FanEntityFeature.TURN_OFF
+    )
 
     def __init__(self, api: BriivAPI, serial_number: str) -> None:
         """Initialize the fan."""
         self._api = api
         self._serial = serial_number
-        self._attr_unique_id = f"{serial_number}_fan"
+        self._attr_unique_id = f"{serial_number}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial_number)},
             name=f"Briiv {serial_number}",
             manufacturer="Briiv",
             model="Air Filter",
-        )
-
-        self._attr_preset_modes = [PRESET_MODE_BOOST]
-        self._attr_supported_features = (
-            FanEntityFeature.SET_SPEED
-            | FanEntityFeature.PRESET_MODE
-            | FanEntityFeature.TURN_ON
-            | FanEntityFeature.TURN_OFF
         )
 
         self._attr_is_on = False
@@ -57,9 +56,17 @@ class BriivFan(FanEntity):
         self._fan_speed = 0
 
         LOGGER.debug("Initializing Briiv fan with serial: %s", serial_number)
+
+    async def async_added_to_hass(self) -> None:
+        """Register callback when entity is added to Home Assistant."""
+        LOGGER.debug("Registering callback for Briiv fan with serial: %s", self._serial)
         self._api.register_callback(self._handle_update)
 
-    # The rest of the class remains unchanged
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove callback when entity is removed from Home Assistant."""
+        LOGGER.debug("Removing callback for Briiv fan with serial: %s", self._serial)
+        self._api.remove_callback(self._handle_update)
+
     async def _handle_update(self, data: dict[str, Any]) -> None:
         """Handle updated data from device."""
         LOGGER.debug("Received update data: %s", data)
@@ -214,7 +221,3 @@ class BriivFan(FanEntity):
                 await self._api.set_fan_speed(self._fan_speed)
 
         self.async_write_ha_state()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Remove callback when entity is being removed."""
-        self._api.remove_callback(self._handle_update)
