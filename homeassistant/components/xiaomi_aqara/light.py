@@ -5,6 +5,8 @@ import logging
 import struct
 from typing import Any
 
+from xiaomi_gateway import XiaomiGateway
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
@@ -45,7 +47,13 @@ class XiaomiGatewayLight(XiaomiDevice, LightEntity):
     _attr_color_mode = ColorMode.HS
     _attr_supported_color_modes = {ColorMode.HS}
 
-    def __init__(self, device, name, xiaomi_hub, config_entry):
+    def __init__(
+        self,
+        device: dict[str, Any],
+        name: str,
+        xiaomi_hub: XiaomiGateway,
+        config_entry: ConfigEntry,
+    ) -> None:
         """Initialize the XiaomiGatewayLight."""
         self._data_key = "rgb"
         self._hs = (0, 0)
