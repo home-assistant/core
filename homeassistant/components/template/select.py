@@ -141,7 +141,8 @@ class TemplateSelect(TemplateEntity, SelectEntity):
         super().__init__(hass, config=config, unique_id=unique_id)
         assert self._attr_name is not None
         self._value_template = config[CONF_STATE]
-        if select_option := config.get(CONF_SELECT_OPTION):
+        # Scripts can be an empty list, therefore we need to check for None
+        if (select_option := config.get(CONF_SELECT_OPTION)) is not None:
             self.add_script(CONF_SELECT_OPTION, select_option, self._attr_name, DOMAIN)
         self._options_template = config[ATTR_OPTIONS]
         self._attr_assumed_state = self._optimistic = config.get(CONF_OPTIMISTIC, False)
@@ -197,7 +198,8 @@ class TriggerSelectEntity(TriggerEntity, SelectEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(hass, coordinator, config)
-        if select_option := config.get(CONF_SELECT_OPTION):
+        # Scripts can be an empty list, therefore we need to check for None
+        if (select_option := config.get(CONF_SELECT_OPTION)) is not None:
             self.add_script(
                 CONF_SELECT_OPTION,
                 select_option,

@@ -20,9 +20,12 @@ async def async_get_config_entry_diagnostics(
 
     return {
         "data": {
-            k: async_redact_data(v.to_dict(), TO_REDACT)
-            for k, v in config_entry.runtime_data.data.items()
+            k: v.to_dict() for k, v in config_entry.runtime_data.data.data.items()
         },
-        "lists": [lst.to_dict() for lst in config_entry.runtime_data.lists],
-        "user_settings": config_entry.runtime_data.user_settings.to_dict(),
+        "activity": {
+            k: async_redact_data(v.to_dict(), TO_REDACT)
+            for k, v in config_entry.runtime_data.activity.data.items()
+        },
+        "lists": [lst.to_dict() for lst in config_entry.runtime_data.data.lists],
+        "user_settings": config_entry.runtime_data.data.user_settings.to_dict(),
     }

@@ -8,6 +8,7 @@
         'homes': list([
           dict({
             'altitude': 112,
+            'cooling_mode': 'schedule',
             'coordinates': '**REDACTED**',
             'country': 'DE',
             'id': '91763b24c43d3e344f424e8b',
@@ -539,7 +540,7 @@
                 'name': '**REDACTED**',
                 'selected': True,
                 'timetable': '**REDACTED**',
-                'type': 'therm',
+                'type': 'cooling',
                 'zones': '**REDACTED**',
               }),
               dict({
@@ -552,6 +553,7 @@
                 'zones': '**REDACTED**',
               }),
             ]),
+            'temperature_control_mode': 'cooling',
             'therm_mode': 'schedule',
             'therm_setpoint_default_duration': 120,
             'timezone': 'Europe/Berlin',

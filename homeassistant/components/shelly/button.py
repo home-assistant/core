@@ -32,6 +32,8 @@ from .const import DOMAIN, LOGGER, SHELLY_GAS_MODELS
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .utils import get_device_entry_gen, get_rpc_key_ids
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class ShellyButtonDescription[
@@ -193,8 +195,7 @@ class ShellyBaseButton(
                 translation_key="device_communication_action_error",
                 translation_placeholders={
                     "entity": self.entity_id,
-                    "device": self.coordinator.device.name,
-                    "error": repr(err),
+                    "device": self.coordinator.name,
                 },
             ) from err
         except RpcCallError as err:
@@ -203,8 +204,7 @@ class ShellyBaseButton(
                 translation_key="rpc_call_action_error",
                 translation_placeholders={
                     "entity": self.entity_id,
-                    "device": self.coordinator.device.name,
-                    "error": repr(err),
+                    "device": self.coordinator.name,
                 },
             ) from err
         except InvalidAuthError:

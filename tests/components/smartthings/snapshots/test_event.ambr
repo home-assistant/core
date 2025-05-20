@@ -1,0 +1,361 @@
+# serializer version: 1
+# name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'pushed',
+        'held',
+        'down_hold',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.livingroom_smart_switch_button1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'button1',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '5e5b97f3-3094-44e6-abc0-f61283412d6a_button1_button',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'pushed',
+        'held',
+        'down_hold',
+      ]),
+      'friendly_name': 'Livingroom smart switch button1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.livingroom_smart_switch_button1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'pushed',
+        'held',
+        'down_hold',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.livingroom_smart_switch_button2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'button2',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '5e5b97f3-3094-44e6-abc0-f61283412d6a_button2_button',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'pushed',
+        'held',
+        'down_hold',
+      ]),
+      'friendly_name': 'Livingroom smart switch button2',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.livingroom_smart_switch_button2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'pushed',
+        'held',
+        'down_hold',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.livingroom_smart_switch_button3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'button3',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '5e5b97f3-3094-44e6-abc0-f61283412d6a_button3_button',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'pushed',
+        'held',
+        'down_hold',
+      ]),
+      'friendly_name': 'Livingroom smart switch button3',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.livingroom_smart_switch_button3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'pushed',
+        'held',
+        'down_hold',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.livingroom_smart_switch_button4',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'button4',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '5e5b97f3-3094-44e6-abc0-f61283412d6a_button4_button',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'pushed',
+        'held',
+        'down_hold',
+      ]),
+      'friendly_name': 'Livingroom smart switch button4',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.livingroom_smart_switch_button4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'pushed',
+        'held',
+        'down_hold',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.livingroom_smart_switch_button5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'button5',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '5e5b97f3-3094-44e6-abc0-f61283412d6a_button5_button',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'pushed',
+        'held',
+        'down_hold',
+      ]),
+      'friendly_name': 'Livingroom smart switch button5',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.livingroom_smart_switch_button5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button6-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'pushed',
+        'held',
+        'down_hold',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.livingroom_smart_switch_button6',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'button6',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '5e5b97f3-3094-44e6-abc0-f61283412d6a_button6_button',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button6-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'pushed',
+        'held',
+        'down_hold',
+      ]),
+      'friendly_name': 'Livingroom smart switch button6',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.livingroom_smart_switch_button6',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
