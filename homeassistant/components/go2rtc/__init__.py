@@ -18,7 +18,7 @@ import voluptuous as vol
 from homeassistant.components.default_config import DOMAIN as DEFAULT_CONFIG_DOMAIN
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -239,6 +239,15 @@ async def _get_binary(hass: HomeAssistant) -> str | None:
     return await hass.async_add_executor_job(shutil.which, "go2rtc")
 
 
+@callback
+def async_is_supported(stream_source: str | None) -> bool:
+    """Check if the stream source is supported by go2rtc."""
+    return (
+        stream_source is not None
+        and stream_source.partition(":")[0] in _SUPPORTED_STREAMS
+    )
+
+
 async def create_go2rtc_client(
     camera: Camera, client_remove_fn: Callable[[], None]
 ) -> Go2RtcClient | None:
@@ -249,8 +258,7 @@ async def create_go2rtc_client(
         return None
 
     stream_source = await camera.stream_source()
-    if not stream_source or stream_source.partition(":")[0] not in _SUPPORTED_STREAMS:
-        # Not supported by go2rtc
+    if not async_is_supported(stream_source):
         return None
 
     # Keep import here so that we can import stream integration without installing reqs

@@ -24,7 +24,7 @@ from homeassistant.components.camera.webrtc import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from . import Go2RtcData
+from . import Go2RtcData, async_is_supported
 
 if TYPE_CHECKING:
     from homeassistant.components.camera import Camera, WebRTCMessage, WebRTCSendMessage
@@ -54,6 +54,10 @@ class Go2RtcClient:
         """Update the stream source in go2rtc config if needed."""
         if not (stream_source := await camera.stream_source()):
             raise HomeAssistantError("Camera has no stream source")
+
+        if not async_is_supported(stream_source):
+            await self.teardown()
+            raise HomeAssistantError("Stream source is not supported by go2rtc")
 
         streams = await self._data.rest_client.streams.list()
 
