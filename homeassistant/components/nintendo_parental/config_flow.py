@@ -52,7 +52,8 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
             except (ValueError, InvalidSessionTokenException, HttpException):
                 errors["base"] = "invalid_auth"
             else:
-                assert self.auth.account_id
+                if TYPE_CHECKING:
+                    assert self.auth.account_id
                 await self.async_set_unique_id(self.auth.account_id)
                 self._abort_if_unique_id_configured()
                 return await self.async_step_configure()
