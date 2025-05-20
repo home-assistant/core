@@ -108,11 +108,12 @@ class MieleSensorDescription(SensorEntityDescription):
 
     value_fn: Callable[[MieleDevice], StateType]
     zone: int | None = None
+    unique_id_fn: Callable[[str, MieleSensorDescription], str] | None = None
 
     def get_unique_id(self, device_id: str) -> str:
         """Generate the unique ID for the entity."""
-        if self.zone:
-            return f"{device_id}-{self.key}-{self.zone}"
+        if self.unique_id_fn:
+            return self.unique_id_fn(device_id, self)
         return f"{device_id}-{self.key}"
 
     def get_zone_number(self) -> int:
@@ -522,6 +523,8 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
                 device_class=SensorDeviceClass.ENUM,
                 options=PLATE_POWERS,
                 value_fn=lambda value: value.state_plate_step[0].value_raw,
+                unique_id_fn=lambda device_id,
+                description: f"{device_id}-{description.key}-{description.zone}",
             ),
         )
         for i in range(1, 7)

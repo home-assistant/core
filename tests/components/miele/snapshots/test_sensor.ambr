@@ -716,7 +716,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'Dummy_Appliance_1-state_temperature_1-1',
+    'unique_id': 'Dummy_Appliance_1-state_temperature_1',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1406,7 +1406,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'target_temperature',
-    'unique_id': 'DummyAppliance_12-state_target_temperature-1',
+    'unique_id': 'DummyAppliance_12-state_target_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1458,7 +1458,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'DummyAppliance_12-state_temperature_1-1',
+    'unique_id': 'DummyAppliance_12-state_temperature_1',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1600,7 +1600,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'Dummy_Appliance_2-state_temperature_1-1',
+    'unique_id': 'Dummy_Appliance_2-state_temperature_1',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2885,7 +2885,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'target_temperature',
-    'unique_id': 'DummyAppliance_45-state_target_temperature-1',
+    'unique_id': 'DummyAppliance_45-state_target_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2937,7 +2937,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'DummyAppliance_45-state_temperature_1-1',
+    'unique_id': 'DummyAppliance_45-state_temperature_1',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3607,7 +3607,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'target_temperature',
-    'unique_id': 'Dummy_Appliance_3-state_target_temperature-1',
+    'unique_id': 'Dummy_Appliance_3-state_target_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
