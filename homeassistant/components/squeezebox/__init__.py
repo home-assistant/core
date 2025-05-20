@@ -151,6 +151,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
                 player_coordinator = SqueezeBoxPlayerUpdateCoordinator(
                     hass, entry, player, lms.uuid
                 )
+                await player_coordinator.async_refresh()
                 known_players.append(player.player_id)
                 async_dispatcher_send(
                     hass, SIGNAL_PLAYER_DISCOVERED, player_coordinator
