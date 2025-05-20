@@ -18,6 +18,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     AreaConverter,
     BloodGlucoseConcentrationConverter,
+    ConcentrationConverter,
     ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
@@ -62,6 +63,7 @@ UNIT_SCHEMA = vol.Schema(
         vol.Optional("blood_glucose_concentration"): vol.In(
             BloodGlucoseConcentrationConverter.VALID_UNITS
         ),
+        vol.Optional("concentration"): vol.In(ConcentrationConverter.VALID_UNITS),
         vol.Optional("conductivity"): vol.In(ConductivityConverter.VALID_UNITS),
         vol.Optional("data_rate"): vol.In(DataRateConverter.VALID_UNITS),
         vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
