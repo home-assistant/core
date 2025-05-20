@@ -23,7 +23,7 @@ from .const import DATA_MANAGER, DOMAIN
 from .coordinator import BackupConfigEntry, BackupDataUpdateCoordinator
 from .http import async_register_http_views
 from .manager import (
-    AddonError,
+    AddonErrorData,
     BackupManager,
     BackupManagerError,
     BackupPlatformEvent,
@@ -49,7 +49,7 @@ from .util import suggested_filename, suggested_filename_from_name_date
 from .websocket import async_register_websocket_handlers
 
 __all__ = [
-    "AddonError",
+    "AddonErrorData",
     "AddonInfo",
     "AgentBackup",
     "BackupAgent",

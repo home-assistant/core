@@ -107,7 +107,7 @@ class ManagerBackup(BaseBackup):
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
-class AddonError:
+class AddonErrorData:
     """Addon error class."""
 
     name: str
@@ -118,7 +118,7 @@ class AddonError:
 class WrittenBackup:
     """Written backup class."""
 
-    addon_errors: dict[str, AddonError]
+    addon_errors: dict[str, AddonErrorData]
     backup: AgentBackup
     folder_errors: dict[Folder, list[tuple[str, str]]]
     open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]]

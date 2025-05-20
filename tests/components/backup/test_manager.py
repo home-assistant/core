@@ -35,7 +35,7 @@ from homeassistant.components.backup import (
 from homeassistant.components.backup.agent import BackupAgentError
 from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.components.backup.manager import (
-    AddonError,
+    AddonErrorData,
     BackupManagerError,
     BackupManagerExceptionGroup,
     BackupManagerState,
@@ -1120,7 +1120,7 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             ["test.remote"],
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
             {
-                "test_addon": AddonError(
+                "test_addon": AddonErrorData(
                     name="Test Add-on", errors=[("test_error", "Boom!")]
                 )
             },
@@ -1134,7 +1134,7 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             ["test.remote"],
             {"type": "backup/generate_with_automatic_settings"},
             {
-                "test_addon": AddonError(
+                "test_addon": AddonErrorData(
                     name="Test Add-on", errors=[("test_error", "Boom!")]
                 )
             },
@@ -1180,7 +1180,7 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             ["test.remote"],
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
             {
-                "test_addon": AddonError(
+                "test_addon": AddonErrorData(
                     name="Test Add-on", errors=[("test_error", "Boom!")]
                 )
             },
@@ -1194,7 +1194,7 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             ["test.remote"],
             {"type": "backup/generate_with_automatic_settings"},
             {
-                "test_addon": AddonError(
+                "test_addon": AddonErrorData(
                     name="Test Add-on", errors=[("test_error", "Boom!")]
                 )
             },
@@ -1218,7 +1218,7 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             ["test.remote", "test.unknown"],
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
             {
-                "test_addon": AddonError(
+                "test_addon": AddonErrorData(
                     name="Test Add-on", errors=[("test_error", "Boom!")]
                 )
             },
@@ -1240,7 +1240,7 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             ["test.remote", "test.unknown"],
             {"type": "backup/generate_with_automatic_settings"},
             {
-                "test_addon": AddonError(
+                "test_addon": AddonErrorData(
                     name="Test Add-on", errors=[("test_error", "Boom!")]
                 )
             },
