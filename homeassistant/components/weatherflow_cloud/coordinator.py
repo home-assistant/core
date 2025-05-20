@@ -95,7 +95,7 @@ class WeatherFlowCloudUpdateCoordinatorREST(
                 raise ConfigEntryAuthFailed(err) from err
             raise UpdateFailed(f"Update failed: {err}") from err
 
-    def get_station(self, station_id: int):
+    def get_station(self, station_id: int) -> WeatherFlowDataREST:
         """Return station for id."""
         return self.data[station_id]
 
