@@ -7,6 +7,7 @@ import os
 import shutil
 import subprocess
 from tempfile import NamedTemporaryFile
+from typing import Any
 
 from homeassistant.components.camera import Camera
 from homeassistant.const import CONF_FILE_PATH, CONF_NAME, EVENT_HOMEASSISTANT_STOP
@@ -87,7 +88,7 @@ def setup_platform(
 class RaspberryCamera(Camera):
     """Representation of a Raspberry Pi camera."""
 
-    def __init__(self, device_info):
+    def __init__(self, device_info: dict[str, Any]) -> None:
         """Initialize Raspberry Pi camera component."""
         super().__init__()
 
