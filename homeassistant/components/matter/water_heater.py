@@ -108,8 +108,8 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
             await self.send_device_command(
                 clusters.WaterHeaterManagement.Commands.Boost(boostInfo=boost_info)
             )
-        # Trigger CancelBoost command
-        if operation_mode == STATE_ECO:
+        # Trigger CancelBoost command for other modes
+        else:
             await self.send_device_command(
                 clusters.WaterHeaterManagement.Commands.CancelBoost()
             )
