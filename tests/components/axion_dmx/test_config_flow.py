@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.axion_dmx.config_flow import (
     AxionDmxAuthError,
@@ -22,7 +24,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -44,9 +46,8 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
                 CONF_LIGHT_TYPE: "rgb",
             },
         )
-        await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Axion DMX Light - Channel 1"
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -57,17 +58,27 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (AxionDmxAuthError, "invalid_auth"),
+        (AxionDmxConnectionError, "cannot_connect"),
+    ],
+)
+async def test_form_errors(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    side_effect: Exception,
+    expected_error: str,
 ) -> None:
-    """Test we handle invalid auth."""
+    """Test config flow handles auth and connection errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
         "homeassistant.components.axion_dmx.config_flow.AxionDmxApi.authenticate",
-        side_effect=AxionDmxAuthError,
+        side_effect=side_effect,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -80,64 +91,7 @@ async def test_form_invalid_auth(
         )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-
-    with (
-        patch(
-            "homeassistant.components.axion_dmx.AxionDmxApi.authenticate",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.axion_dmx.AxionDmxApi._send_tcp_command",
-            return_value="OK",
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_PASSWORD: "test-password",
-                CONF_CHANNEL: 1,
-                CONF_LIGHT_TYPE: "rgb",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Axion DMX Light - Channel 1"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_PASSWORD: "test-password",
-        CONF_CHANNEL: 1,
-        CONF_LIGHT_TYPE: "rgb",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.axion_dmx.config_flow.AxionDmxApi.authenticate",
-        side_effect=AxionDmxConnectionError,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_PASSWORD: "test-password",
-                CONF_CHANNEL: 1,
-                CONF_LIGHT_TYPE: "rgb",
-            },
-        )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": expected_error}
 
     with (
         patch(
