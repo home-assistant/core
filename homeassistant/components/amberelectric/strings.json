@@ -28,12 +28,12 @@
       "description": "Retrieve price forecasts",
       "fields": {
         "site_id": {
-          "description": "The site to get forecasts from.",
-          "name": "Site"
+          "name": "Site",
+          "description": "The site to get forecasts from."
         },
         "channel_type": {
-          "description": "The channel to get forecasts for.",
-          "name": "Channel type"
+          "name": "Channel type",
+          "description": "The channel to get forecasts for."
         }
       }
     }
@@ -56,12 +56,6 @@
         "controlled_load": "Controlled load",
         "feed_in": "Feed in"
       }
-    }
-  },
-  "issues": {
-    "deprecated_forecast_sensor": {
-      "description": "The forecast sensor `{entity}` is deprecated and is used in the following automations or scripts:\n{items}\n\nThe get_forecasts action is available and should be used going forward; Please use it on the above automations or scripts to fix this issue.",
-      "title": "Deprecated forecast sensor detected in some automations or scripts"
     }
   }
 }
