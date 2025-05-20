@@ -487,6 +487,7 @@ FLOWS = {
         "powerfox",
         "powerwall",
         "private_ble_device",
+        "probe_plus",
         "profiler",
         "progettihwsw",
         "prosegur",

@@ -149,7 +149,14 @@ def get_usb_ports() -> dict[str, str]:
             pid,
         )
         port_descriptions[dev_path] = human_name
-    return port_descriptions
+
+    # Sort the dictionary by description, putting "n/a" last
+    return dict(
+        sorted(
+            port_descriptions.items(),
+            key=lambda x: x[1].lower().startswith("n/a"),
+        )
+    )
 
 
 async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
