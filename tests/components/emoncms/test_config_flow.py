@@ -82,10 +82,11 @@ async def test_reconfigure_api_error(
         result["flow_id"],
         USER_INPUT,
     )
-
+    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "api_error"}
     assert result["description_placeholders"]["details"] == "failure"
+    assert result["step_id"] == "reconfigure"
 
 
 async def test_user_flow(
