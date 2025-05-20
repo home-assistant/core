@@ -89,8 +89,8 @@ KEY_ASSIST_PIPELINE: HassKey[PipelineData] = HassKey(DOMAIN)
 KEY_PIPELINE_CONVERSATION_DATA: HassKey[dict[str, PipelineConversationData]] = HassKey(
     "pipeline_conversation_data"
 )
-# Number of response chunks to handle before considering to stream the response
-STREAM_RESPONSE_CHUNKS = 15
+# Number of response parts to handle before streaming the response
+STREAM_RESPONSE_CHARS = 45
 
 
 def validate_language(data: dict[str, Any]) -> Any:
@@ -1155,6 +1155,7 @@ class PipelineRun:
             else:
                 tts_input_stream = None
             chat_log_role = None
+            delta_character_count = 0
 
             @callback
             def chat_log_delta_listener(
@@ -1185,10 +1186,13 @@ class PipelineRun:
 
                 tts_input_stream.put_nowait(content)
 
-                if (
-                    self._streamed_response_text
-                    or tts_input_stream.qsize() < STREAM_RESPONSE_CHUNKS
-                ):
+                if self._streamed_response_text:
+                    return
+
+                nonlocal delta_character_count
+
+                delta_character_count += len(content)
+                if delta_character_count < STREAM_RESPONSE_CHARS:
                     return
 
                 # Streamed responses are not cached. We only start streaming text after
