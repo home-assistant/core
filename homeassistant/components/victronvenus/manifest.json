@@ -1,0 +1,16 @@
+{
+  "domain": "victronvenus",
+  "name": "Victron Venus OS integration",
+  "codeowners": ["@johanslab"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/victronvenus",
+  "iot_class": "local_push",
+  "quality_scale": "bronze",
+  "requirements": ["victronvenusclient==0.1.3"],
+  "ssdp": [
+    {
+      "manufacturer": "Victron Energy",
+      "X_MqttOnLan": "1"
+    }
+  ]
+}
