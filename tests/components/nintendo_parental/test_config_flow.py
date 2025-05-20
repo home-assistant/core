@@ -1,11 +1,7 @@
 """Test the Nintendo Switch Parental Controls config flow."""
 
 from homeassistant import config_entries
-from homeassistant.components.nintendo_parental.const import (
-    CONF_SESSION_TOKEN,
-    CONF_UPDATE_INTERVAL,
-    DOMAIN,
-)
+from homeassistant.components.nintendo_parental.const import CONF_SESSION_TOKEN, DOMAIN
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -14,7 +10,7 @@ from tests.common import MockConfigEntry
 
 mock_config_entry = MockConfigEntry(
     domain=DOMAIN,
-    data={CONF_SESSION_TOKEN: "valid_token", CONF_UPDATE_INTERVAL: 60},
+    data={CONF_SESSION_TOKEN: "valid_token"},
     unique_id="aabbccddee112233",
 )
 
@@ -33,17 +29,9 @@ async def test_full_flow(hass: HomeAssistant, mock_authenticator_client) -> None
         result["flow_id"], user_input={CONF_API_TOKEN: "aaaabbbbcccc"}
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "configure"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_UPDATE_INTERVAL: 60}
-    )
-
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "aabbccddee112233"
     assert result["data"][CONF_SESSION_TOKEN] == "valid_token"
-    assert result["data"][CONF_UPDATE_INTERVAL] == 60
     assert result["result"].unique_id == "aabbccddee112233"
 
 
@@ -112,6 +100,7 @@ async def test_invalid_api_token(
         result["flow_id"], user_input={CONF_API_TOKEN: "aaaabbbbcccc"}
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "configure"
-    # no need to continue tests here because the other tests are sufficient at this point
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "aabbccddee112233"
+    assert result["data"][CONF_SESSION_TOKEN] == "valid_token"
+    assert result["result"].unique_id == "aabbccddee112233"

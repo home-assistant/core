@@ -17,6 +17,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import NintendoParentalConfigEntry, NintendoUpdateCoordinator
 from .entity import Device, NintendoDevice
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 class NintendoParentalSensorEntityDescription(SensorEntityDescription):
     """Description for Nintendo Parental sensor entities."""

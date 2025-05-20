@@ -18,11 +18,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_UPDATE_INTERVAL, DOMAIN
+from .const import DOMAIN
 
 type NintendoParentalConfigEntry = ConfigEntry[NintendoUpdateCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
+UPDATE_INTERVAL = timedelta(seconds=60)
 
 
 class NintendoUpdateCoordinator(DataUpdateCoordinator):
@@ -39,9 +40,7 @@ class NintendoUpdateCoordinator(DataUpdateCoordinator):
             hass=hass,
             logger=_LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(
-                seconds=config_entry.data.get(CONF_UPDATE_INTERVAL, 60)
-            ),
+            update_interval=UPDATE_INTERVAL,
             config_entry=config_entry,
         )
         self.api = NintendoParental(
