@@ -42,7 +42,7 @@
       "configure_auto_discovery": {
         "description": "Enable or disable automatic discovery",
         "data": {
-          "auto_discovery": "Auto discovery enabled"
+          "auto_discovery": "[%key:component::govee_light_local::config::step::user::data::auto_discovery%]"
         }
       }
     },
