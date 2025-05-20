@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -257,10 +256,11 @@ async def async_setup_entry(
 class RehlkoSensorEntity(RehlkoEntity, SensorEntity):
     """Representation of a Rehlko sensor."""
 
+    entity_description: RehlkoSensorEntityDescription
+
     @property
     def native_value(self) -> StateType | datetime:
         """Return the sensor state."""
-        desc = cast(RehlkoSensorEntityDescription, self.entity_description)
-        if desc.value_fn:
-            return desc.value_fn(self._rehlko_value)
+        if self.entity_description.value_fn:
+            return self.entity_description.value_fn(self._rehlko_value)
         return self._rehlko_value
