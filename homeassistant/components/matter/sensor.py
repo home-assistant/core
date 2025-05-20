@@ -284,8 +284,8 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="FlowSensor",
+            translation_key="flow",
             native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
-            translation_key="flow_sensor",
             measurement_to_ha=lambda x: x / 10,
             state_class=SensorStateClass.MEASUREMENT,
         ),

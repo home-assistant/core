@@ -2713,7 +2713,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.mock_pump_control_mode',
     'has_entity_name': True,
     'hidden_by': None,

@@ -57,7 +57,7 @@
       "bat_replacement_description": {
         "default": "mdi:battery-sync"
       },
-      "flow_sensor": {
+      "flow": {
         "default": "mdi:pipe"
       },
       "hepa_filter_condition": {
