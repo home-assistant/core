@@ -1,17 +1,18 @@
 """Test the Blue Current config flow."""
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.blue_current import DOMAIN
+from homeassistant.components.blue_current import CARD, DOMAIN, Connector
 from homeassistant.components.blue_current.config_flow import (
     AlreadyConnected,
     InvalidApiToken,
     RequestLimitReached,
     WebsocketError,
 )
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -160,3 +161,32 @@ async def test_reauth(
         assert config_entry.data["api_token"] == expected_api_token
 
         await hass.async_block_till_done()
+
+
+async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Test the Blue Current options flow."""
+    config_entry.add_to_hass(hass)
+
+    # Create a mock connector that is bind to the runtime_data value of config_entry.
+    mock_card = {"uid": "MOCK_UID", CONF_ID: "MOCK_ID"}
+    mock_card_list = {"MOCK_UID": mock_card}
+    user_input = {CARD: "MOCK_ID"}
+
+    mock_connector = Mock(spec=Connector)
+    mock_connector.selected_charge_card = mock_card
+    mock_connector.charge_cards = mock_card_list
+
+    config_entry.runtime_data = mock_connector
+
+    with patch("homeassistant.components.blue_current.async_setup_entry"):
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            flow_id=result["flow_id"], user_input=user_input
+        )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert config_entry.options == {CARD: mock_card}
