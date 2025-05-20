@@ -321,7 +321,8 @@ async def test_dhcp_discovery_if_panel_setup_config_flow(
 ) -> None:
     """Test DHCP discovery doesn't fail if a different panel was set up via config flow."""
     await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.unique_id == serial_number
+
+    # change out the serial number so we can test discovery for a different panel
     mock_panel.serial_number = "789101112"
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -353,6 +354,7 @@ async def test_dhcp_discovery_if_panel_setup_config_flow(
         CONF_MODEL: model_name,
         **config_flow_data,
     }
+    assert mock_config_entry.unique_id == serial_number
     assert result["result"].unique_id == "789101112"
 
 
