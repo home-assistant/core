@@ -12,7 +12,6 @@ from homeassistant.components.squeezebox.browse_media import (
     SQUEEZEBOX_ID_BY_TYPE,
 )
 from homeassistant.components.squeezebox.const import (
-    SIGNAL_PLAYER_DISCOVERED,
     STATUS_QUERY_LIBRARYNAME,
     STATUS_QUERY_MAC,
     STATUS_QUERY_UUID,
@@ -29,15 +28,11 @@ from homeassistant.components.squeezebox.const import (
     STATUS_UPDATE_NEWPLUGINS,
     STATUS_UPDATE_NEWVERSION,
 )
-from homeassistant.components.squeezebox.coordinator import (
-    SqueezeBoxPlayerUpdateCoordinator,
-)
+
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-# from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 CONF_VOLUME_STEP = "volume_step"
