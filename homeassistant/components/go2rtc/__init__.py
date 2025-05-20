@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
 from awesomeversion import AwesomeVersion
+from go2rtc_client import Go2RtcRestClient
+from go2rtc_client.exceptions import Go2RtcClientError, Go2RtcVersionError
 import voluptuous as vol
 
 from homeassistant.components.default_config import DOMAIN as DEFAULT_CONFIG_DOMAIN
@@ -40,8 +42,6 @@ from .const import (
 from .server import Server
 
 if TYPE_CHECKING:
-    from go2rtc_client import Go2RtcRestClient
-
     from homeassistant.components.camera import Camera
 
     from .client import Go2RtcClient
@@ -160,13 +160,6 @@ async def _remove_go2rtc_entries(hass: HomeAssistant) -> None:
 async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bool:
     """Set up go2rtc from a config entry."""
 
-    # Keep import here so that we can import go2rtc integration without installing reqs
-    # pylint: disable-next=import-outside-toplevel
-    from go2rtc_client import Go2RtcRestClient
-
-    # pylint: disable-next=import-outside-toplevel
-    from go2rtc_client.exceptions import Go2RtcClientError, Go2RtcVersionError
-
     url = hass.data[_DATA_GO2RTC]
     session = async_get_clientsession(hass)
     client = Go2RtcRestClient(session, url)
@@ -261,7 +254,7 @@ async def create_go2rtc_client(
     if not async_is_supported(stream_source):
         return None
 
-    # Keep import here so that we can import stream integration without installing reqs
+    # To avoid circular import with the camera component
     # pylint: disable-next=import-outside-toplevel
     from .client import Go2RtcClient
 

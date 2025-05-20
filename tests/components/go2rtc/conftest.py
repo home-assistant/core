@@ -32,7 +32,9 @@ GO2RTC_PATH = "homeassistant.components.go2rtc"
 def rest_client() -> Generator[AsyncMock]:
     """Mock a go2rtc rest client."""
     with (
-        patch("go2rtc_client.Go2RtcRestClient", autospec=True) as mock_client,
+        patch(
+            "homeassistant.components.go2rtc.Go2RtcRestClient", autospec=True
+        ) as mock_client,
         patch("homeassistant.components.go2rtc.server.Go2RtcRestClient", mock_client),
     ):
         client = mock_client.return_value
