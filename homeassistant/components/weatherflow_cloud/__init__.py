@@ -55,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Define Rest Coordinator
     rest_data_coordinator = WeatherFlowCloudUpdateCoordinatorREST(
-        hass=hass, rest_api=rest_api, stations=stations
+        hass=hass, config_entry=entry, rest_api=rest_api, stations=stations
     )
 
     # Initialize the stations
@@ -76,6 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         WebsocketObservation, WebsocketObservation, ListenStartMessage
     ](
         hass=hass,
+        config_entry=entry,
         rest_api=rest_api,
         websocket_api=websocket_api,
         stations=stations,
@@ -87,6 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         EventDataRapidWind, EventDataRapidWind, RapidWindListenStartMessage
     ](
         hass=hass,
+        config_entry=entry,
         stations=stations,
         rest_api=rest_api,
         websocket_api=websocket_api,
