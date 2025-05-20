@@ -8,9 +8,9 @@ from pynintendoparental.exceptions import (
     InvalidSessionTokenException,
 )
 
-from homeassistant.config_entries import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 
 from .const import CONF_SESSION_TOKEN
 from .coordinator import NintendoParentalConfigEntry, NintendoUpdateCoordinator
