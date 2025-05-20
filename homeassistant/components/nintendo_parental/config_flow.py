@@ -78,10 +78,3 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="configure", data_schema=STEP_CONFIGURE_DATA_SCHEMA
         )
 
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
