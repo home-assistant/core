@@ -610,7 +610,7 @@ async def test_sensor_unit(
     EntityMetric(
         metric_name="sensor_unit_u0xb5g_per_mu0xb3",
         domain="sensor",
-        friendly_name="SPS30 PM <1μm Weight concentration",
+        friendly_name="SPS30 PM <1µm Weight concentration",
         entity="sensor.sps30_pm_1um_weight_concentration",
     ).withValue(3.7069).assert_in_metrics(body)
 
@@ -1920,7 +1920,7 @@ async def sensor_fixture(
         unique_id="sensor_7",
         unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         suggested_object_id="sps30_pm_1um_weight_concentration",
-        original_name="SPS30 PM <1μm Weight concentration",
+        original_name="SPS30 PM <1µm Weight concentration",
     )
     set_state_with_entry(hass, sensor_7, 3.7069)
     data["sensor_7"] = sensor_7
