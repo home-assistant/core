@@ -261,7 +261,6 @@ class NtfySensorEntity(CoordinatorEntity[NtfyDataUpdateCoordinator], SensorEntit
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="ntfy LLC",
             model="ntfy",
-            name=coordinator.config_entry.title,
             configuration_url=URL(coordinator.config_entry.data[CONF_URL]) / "app",
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
         )
