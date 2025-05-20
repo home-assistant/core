@@ -58,8 +58,7 @@ async def test_reconfigure(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    entry = hass.config_entries.async_get_entry(config_entry.entry_id)
-    assert entry.data == new_input
+    assert config_entry.data == new_input
 
 
 async def test_reconfigure_api_error(
