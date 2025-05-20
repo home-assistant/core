@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from switchbot.devices.device import SwitchbotOperationError
 
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
@@ -20,7 +21,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import BULB_SERVICE_INFO, CEILING_LIGHT_SERVICE_INFO, WOSTRIP_SERVICE_INFO
+from . import BULB_SERVICE_INFO, CEILING_LIGHT_SERVICE_INFO, STRIP_LIGHT_3_SERVICE_INFO, WOSTRIP_SERVICE_INFO
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
@@ -317,3 +318,50 @@ async def test_strip_light_services_exception(
                 {**service_data, ATTR_ENTITY_ID: entity_id},
                 blocking=True,
             )
+
+
+@pytest.mark.parametrize(
+    ("sensor_type", "service_info"),
+    [
+        ("strip_light_3", STRIP_LIGHT_3_SERVICE_INFO),
+        # ("floor_lamp", FLOOR_LAMP_SERVICE_INFO)
+    ],
+)
+@pytest.mark.parametrize(
+    ("service", "service_data", "mock_method", "expected_args"),
+    [(SERVICE_TURN_ON, {ATTR_EFFECT: "Ocean"}, "set_effect", ("Ocean",))],
+)
+async def test_effect(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    sensor_type: str,
+    service_info: BluetoothServiceInfoBleak,
+    service: str,
+    service_data: dict,
+    mock_method: str,
+    expected_args: Any,
+) -> None:
+    """Test the effect service for a specific sensor type."""
+    inject_bluetooth_service_info(hass, service_info)
+
+    entry = mock_entry_encrypted_factory(sensor_type=sensor_type)
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name"
+
+    mocked_instance = AsyncMock(return_value=True)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotStripLight3",
+        update=AsyncMock(return_value=None),
+        **{mock_method: mocked_instance},
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            service,
+            {**service_data, ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    mocked_instance.assert_awaited_once_with(*expected_args)
