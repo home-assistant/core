@@ -101,10 +101,13 @@ async def handle_webhook(
 class PushCamera(Camera):
     """The representation of a Push camera."""
 
+    _attr_motion_detection_enabled = False
+    name: str
+
     def __init__(self, hass, name, buffer_size, timeout, image_field, webhook_id):
         """Initialize push camera component."""
         super().__init__()
-        self._name = name
+        self._attr_name = name
         self._last_trip = None
         self._filename = None
         self._expired_listener = None
@@ -170,16 +173,6 @@ class PushCamera(Camera):
             self._current_image = self.queue[0]
 
         return self._current_image
-
-    @property
-    def name(self):
-        """Return the name of this camera."""
-        return self._name
-
-    @property
-    def motion_detection_enabled(self):
-        """Camera Motion Detection Status."""
-        return False
 
     @property
     def extra_state_attributes(self):
