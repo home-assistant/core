@@ -220,7 +220,7 @@ SENSOR_DESCRIPTIONS: tuple[NtfySensorEntityDescription, ...] = (
     NtfySensorEntityDescription(
         key=NtfySensor.TIER,
         translation_key=NtfySensor.TIER,
-        value_fn=lambda account: account.tier.name if account.tier else None,
+        value_fn=lambda account: account.tier.name if account.tier else "free",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),

@@ -123,7 +123,7 @@
   "entity": {
     "sensor": {
       "messages": {
-        "name": "Published messages",
+        "name": "Messages published",
         "unit_of_measurement": "messages"
       },
       "messages_remaining": {
@@ -192,7 +192,13 @@
         "name": "Attachment bandwidth limit"
       },
       "tier": {
-        "name": "Subscription tier"
+        "name": "Subscription tier",
+        "state": {
+          "free": "Free",
+          "supporter": "Supporter",
+          "pro": "Pro",
+          "business": "Business"
+        }
       }
     }
   },
