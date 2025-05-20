@@ -10,6 +10,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'stream_response': False,
       'token': 'test_token.mp3',
       'url': '/api/tts_proxy/test_token.mp3',
     }),
@@ -80,7 +81,7 @@
 # name: test_audio_pipeline.6
   dict({
     'tts_output': dict({
-      'media_id': "media-source://tts/tts.test?message=Sorry,+I+couldn't+understand+that&language=en_US&tts_options=%7B%7D",
+      'media_id': 'media-source://tts/-stream-/test_token.mp3',
       'mime_type': 'audio/mpeg',
       'token': 'test_token.mp3',
       'url': '/api/tts_proxy/test_token.mp3',
@@ -101,6 +102,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'stream_response': False,
       'token': 'test_token.mp3',
       'url': '/api/tts_proxy/test_token.mp3',
     }),
@@ -171,7 +173,7 @@
 # name: test_audio_pipeline_debug.6
   dict({
     'tts_output': dict({
-      'media_id': "media-source://tts/tts.test?message=Sorry,+I+couldn't+understand+that&language=en_US&tts_options=%7B%7D",
+      'media_id': 'media-source://tts/-stream-/test_token.mp3',
       'mime_type': 'audio/mpeg',
       'token': 'test_token.mp3',
       'url': '/api/tts_proxy/test_token.mp3',
@@ -204,6 +206,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'stream_response': False,
       'token': 'test_token.mp3',
       'url': '/api/tts_proxy/test_token.mp3',
     }),
@@ -274,7 +277,7 @@
 # name: test_audio_pipeline_with_enhancements.6
   dict({
     'tts_output': dict({
-      'media_id': "media-source://tts/tts.test?message=Sorry,+I+couldn't+understand+that&language=en_US&tts_options=%7B%7D",
+      'media_id': 'media-source://tts/-stream-/test_token.mp3',
       'mime_type': 'audio/mpeg',
       'token': 'test_token.mp3',
       'url': '/api/tts_proxy/test_token.mp3',
@@ -295,6 +298,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'stream_response': False,
       'token': 'test_token.mp3',
       'url': '/api/tts_proxy/test_token.mp3',
     }),
@@ -387,7 +391,7 @@
 # name: test_audio_pipeline_with_wake_word_no_timeout.8
   dict({
     'tts_output': dict({
-      'media_id': "media-source://tts/tts.test?message=Sorry,+I+couldn't+understand+that&language=en_US&tts_options=%7B%7D",
+      'media_id': 'media-source://tts/-stream-/test_token.mp3',
       'mime_type': 'audio/mpeg',
       'token': 'test_token.mp3',
       'url': '/api/tts_proxy/test_token.mp3',
@@ -408,6 +412,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'stream_response': False,
       'token': 'test_token.mp3',
       'url': '/api/tts_proxy/test_token.mp3',
     }),
@@ -616,6 +621,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'stream_response': False,
       'token': 'mocked-token.mp3',
       'url': '/api/tts_proxy/mocked-token.mp3',
     }),
@@ -670,6 +676,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'stream_response': False,
       'token': 'mocked-token.mp3',
       'url': '/api/tts_proxy/mocked-token.mp3',
     }),
@@ -686,6 +693,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'stream_response': False,
       'token': 'mocked-token.mp3',
       'url': '/api/tts_proxy/mocked-token.mp3',
     }),
@@ -702,6 +710,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'stream_response': False,
       'token': 'mocked-token.mp3',
       'url': '/api/tts_proxy/mocked-token.mp3',
     }),
@@ -718,6 +727,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'stream_response': False,
       'token': 'mocked-token.mp3',
       'url': '/api/tts_proxy/mocked-token.mp3',
     }),
@@ -734,6 +744,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'stream_response': False,
       'token': 'mocked-token.mp3',
       'url': '/api/tts_proxy/mocked-token.mp3',
     }),
@@ -868,6 +879,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'stream_response': False,
       'token': 'mocked-token.mp3',
       'url': '/api/tts_proxy/mocked-token.mp3',
     }),
@@ -884,6 +896,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'stream_response': False,
       'token': 'mocked-token.mp3',
       'url': '/api/tts_proxy/mocked-token.mp3',
     }),
@@ -941,6 +954,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'stream_response': False,
       'token': 'mocked-token.mp3',
       'url': '/api/tts_proxy/mocked-token.mp3',
     }),
@@ -957,6 +971,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'stream_response': False,
       'token': 'mocked-token.mp3',
       'url': '/api/tts_proxy/mocked-token.mp3',
     }),
@@ -1017,6 +1032,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'stream_response': False,
       'token': 'mocked-token.mp3',
       'url': '/api/tts_proxy/mocked-token.mp3',
     }),
@@ -1033,6 +1049,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'stream_response': False,
       'token': 'mocked-token.mp3',
       'url': '/api/tts_proxy/mocked-token.mp3',
     }),

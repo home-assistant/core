@@ -313,6 +313,7 @@ class EnergyDistanceConverter(BaseUnitConverter):
     UNIT_CLASS = "energy_distance"
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM: 1,
+        UnitOfEnergyDistance.WATT_HOUR_PER_KM: 10,
         UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR: 100 * _KM_TO_M / _MILE_TO_M,
         UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR: 100,
     }
@@ -433,7 +434,7 @@ class PressureConverter(BaseUnitConverter):
 class ReactiveEnergyConverter(BaseUnitConverter):
     """Utility to convert reactive energy values."""
 
-    UNIT_CLASS = "energy"
+    UNIT_CLASS = "reactive_energy"
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR: 1,
         UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR: 1 / 1e3,

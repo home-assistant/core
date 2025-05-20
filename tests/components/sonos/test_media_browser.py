@@ -3,7 +3,7 @@
 from functools import partial
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
 from homeassistant.components.sonos.media_browser import (
