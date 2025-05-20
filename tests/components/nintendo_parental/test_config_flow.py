@@ -104,3 +104,49 @@ async def test_invalid_api_token(
     assert result["title"] == "aabbccddee112233"
     assert result["data"][CONF_SESSION_TOKEN] == "valid_token"
     assert result["result"].unique_id == "aabbccddee112233"
+
+
+async def test_general_error(
+    hass: HomeAssistant, mock_request_handler, mock_authenticator_client
+) -> None:
+    """Test catching of general Exceptions."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result is not None
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert "link" in result["description_placeholders"]
+
+    # produce some bogus data in the request handler that cannot be processed
+    mock_request_handler.return_value = 0x01
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_TOKEN: "aaaabbbbcccc"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "unknown"}
+
+    # clear the error and test retry
+    mock_request_handler.return_value = {
+        "status": 200,
+        "text": "OK",
+        "json": {
+            "session_token": "valid_token",
+            "expires_in": 3500,
+            "id": "aabbccddee112233",
+            "name": "Home Assistant Tester",
+        },
+        "headers": {"Content-Type": "application/json"},
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_TOKEN: "aaaabbbbcccc"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "aabbccddee112233"
+    assert result["data"][CONF_SESSION_TOKEN] == "valid_token"
+    assert result["result"].unique_id == "aabbccddee112233"
