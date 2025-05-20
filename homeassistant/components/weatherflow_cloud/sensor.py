@@ -405,8 +405,7 @@ class WeatherFlowSensorBase(WeatherFlowCloudEntity, SensorEntity, ABC):
                 and self.coordinator.data[self.station_id][self.device_id] is not None
             )
 
-        # Check availability of a REST based sensor
-        return bool(self.coordinator.data)
+        return True
 
 
 class WeatherFlowWebsocketSensorObservation(WeatherFlowSensorBase):
