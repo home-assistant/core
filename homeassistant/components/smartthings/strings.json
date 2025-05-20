@@ -405,7 +405,7 @@
         }
       },
       "oven_setpoint": {
-        "name": "Set point"
+        "name": "Setpoint"
       },
       "energy_difference": {
         "name": "Energy difference"
@@ -472,13 +472,13 @@
         }
       },
       "thermostat_cooling_setpoint": {
-        "name": "Cooling set point"
+        "name": "Cooling setpoint"
       },
       "thermostat_fan_mode": {
         "name": "Fan mode"
       },
       "thermostat_heating_setpoint": {
-        "name": "Heating set point"
+        "name": "Heating setpoint"
       },
       "thermostat_mode": {
         "name": "Mode"
