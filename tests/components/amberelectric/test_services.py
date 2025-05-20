@@ -1,6 +1,9 @@
 """Test the Amber Service object."""
 
+import re
+
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.amberelectric.const import DOMAIN, GET_FORECASTS_SERVICE
 from homeassistant.components.amberelectric.services import (
@@ -112,7 +115,10 @@ async def test_incorrect_channel_type(
     await setup_integration(hass, general_only_site_id_amber_config_entry)
 
     with pytest.raises(
-        ServiceValidationError, match="There is no incorrect channel at this site"
+        vol.error.MultipleInvalid,
+        match=re.escape(
+            "value must be one of ['controlled_load', 'feed_in', 'general'] for dictionary value @ data['channel_type']"
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,

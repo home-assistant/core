@@ -3,6 +3,7 @@
 from typing import Any, cast
 
 from amberelectric.models.channel import ChannelType
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import (
@@ -16,6 +17,13 @@ from homeassistant.exceptions import ServiceValidationError
 from .const import ATTR_CHANNEL_TYPE, ATTR_SITE_ID, DOMAIN, GET_FORECASTS_SERVICE
 from .coordinator import AmberConfigEntry
 from .helpers import normalize_descriptor
+
+GET_FORECASTS_SCHEMA = vol.Schema(
+    {
+        "site_id": vol.Any(str),
+        "channel_type": vol.In(["general", "controlled_load", "feed_in"]),
+    }
+)
 
 
 def format_cents_to_dollars(cents: float) -> float:
@@ -102,6 +110,6 @@ def setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         GET_FORECASTS_SERVICE,
         handle_get_forecasts,
-        None,
+        GET_FORECASTS_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
