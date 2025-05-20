@@ -41,5 +41,12 @@ MOCK_ALBUM_WITH_ASSETS = ImmichAlbum(
     "This is my first great album",
     "0d03a7ad-ddc7-45a6-adee-68d322a6d2f5",
     1,
-    [ImmichAsset("2e94c203-50aa-4ad2-8e29-56dd74e0eff4", "filename.jpg", "image/jpeg")],
+    [
+        ImmichAsset(
+            "2e94c203-50aa-4ad2-8e29-56dd74e0eff4", "filename.jpg", "image/jpeg"
+        ),
+        ImmichAsset(
+            "2e65a5f2-db83-44c4-81ab-f5ff20c9bd7b", "filename.mp4", "video/mp4"
+        ),
+    ],
 )
