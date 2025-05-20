@@ -14,7 +14,6 @@ class PaperlessEntity(CoordinatorEntity[PaperlessCoordinator]):
     """Defines a base Paperless-ngx entity."""
 
     _attr_has_entity_name = True
-    _attr_available = True
 
     def __init__(
         self,

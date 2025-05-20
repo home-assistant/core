@@ -59,7 +59,7 @@ async def test_update_sensor_state(
 ) -> None:
     """Ensure update entities are added automatically."""
     # initialize with no new update
-    state = hass.states.get("update.paperless_ngx_software")
+    state = hass.states.get("update.paperless_ngx_firmware")
     assert state.state == STATE_OFF
 
     # update available
@@ -73,7 +73,7 @@ async def test_update_sensor_state(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("update.paperless_ngx_software")
+    state = hass.states.get("update.paperless_ngx_firmware")
     assert state.state == STATE_ON
 
     # no new update available
@@ -87,7 +87,7 @@ async def test_update_sensor_state(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("update.paperless_ngx_software")
+    state = hass.states.get("update.paperless_ngx_firmware")
     assert state.state == STATE_OFF
 
     # paperless return none -> unavailable
@@ -101,7 +101,7 @@ async def test_update_sensor_state(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("update.paperless_ngx_software")
+    state = hass.states.get("update.paperless_ngx_firmware")
     assert state.state == STATE_UNAVAILABLE
 
     # fetch no new update within fetching limit stays unavailable
@@ -115,7 +115,7 @@ async def test_update_sensor_state(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("update.paperless_ngx_software")
+    state = hass.states.get("update.paperless_ngx_firmware")
     assert state.state == STATE_UNAVAILABLE
 
     # return back available
@@ -129,7 +129,7 @@ async def test_update_sensor_state(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("update.paperless_ngx_software")
+    state = hass.states.get("update.paperless_ngx_firmware")
     assert state.state == STATE_ON
 
     # fetch github api limit reached
@@ -143,7 +143,7 @@ async def test_update_sensor_state(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("update.paperless_ngx_software")
+    state = hass.states.get("update.paperless_ngx_firmware")
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -156,7 +156,7 @@ async def test_update_sensor_state_on_error(
 ) -> None:
     """Ensure update entities are added automatically."""
     # initialize with no new update
-    state = hass.states.get("update.paperless_ngx_software")
+    state = hass.states.get("update.paperless_ngx_firmware")
     assert state.state == STATE_OFF
 
     # PaperlessConnectionError
@@ -166,7 +166,7 @@ async def test_update_sensor_state_on_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("update.paperless_ngx_software")
+    state = hass.states.get("update.paperless_ngx_firmware")
     assert state.state == STATE_UNAVAILABLE
 
     # recover from PaperlessConnectionError
@@ -176,7 +176,7 @@ async def test_update_sensor_state_on_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("update.paperless_ngx_software")
+    state = hass.states.get("update.paperless_ngx_firmware")
     assert state.state == STATE_OFF
 
     # PaperlessInvalidAuthError
@@ -186,7 +186,7 @@ async def test_update_sensor_state_on_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("update.paperless_ngx_software")
+    state = hass.states.get("update.paperless_ngx_firmware")
     assert state.state == STATE_UNAVAILABLE
 
     # recover from PaperlessInvalidTokenError
@@ -196,7 +196,7 @@ async def test_update_sensor_state_on_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("update.paperless_ngx_software")
+    state = hass.states.get("update.paperless_ngx_firmware")
     assert state.state == STATE_OFF
 
     # PaperlessInactiveOrDeletedError
@@ -206,7 +206,7 @@ async def test_update_sensor_state_on_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("update.paperless_ngx_software")
+    state = hass.states.get("update.paperless_ngx_firmware")
     assert state.state == STATE_UNAVAILABLE
 
     # recover from PaperlessInactiveOrDeletedError
@@ -216,5 +216,5 @@ async def test_update_sensor_state_on_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("update.paperless_ngx_software")
+    state = hass.states.get("update.paperless_ngx_firmware")
     assert state.state == STATE_OFF

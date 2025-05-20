@@ -1,11 +1,11 @@
 """The Paperless-ngx integration."""
 
-from __future__ import annotations
-
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import PLATFORMS
 from .coordinator import PaperlessConfigEntry, PaperlessCoordinator
+
+PLATFORMS: list[Platform] = [Platform.UPDATE]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) -> bool:

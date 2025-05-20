@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_update_platfom[update.paperless_ngx_software-entry]
+# name: test_update_platfom[update.paperless_ngx_firmware-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.paperless_ngx_software',
+    'entity_id': 'update.paperless_ngx_firmware',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -22,9 +22,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <UpdateDeviceClass.SOFTWARE: 'software'>,
+    'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
     'original_icon': None,
-    'original_name': 'Software',
+    'original_name': 'Firmware',
     'platform': 'paperless_ngx',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -33,26 +33,26 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_update_platfom[update.paperless_ngx_software-state]
+# name: test_update_platfom[update.paperless_ngx_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
-      'device_class': 'software',
+      'device_class': 'firmware',
       'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/paperless_ngx/icon.png',
-      'friendly_name': 'Paperless-ngx Software',
+      'friendly_name': 'Paperless-ngx Firmware',
       'in_progress': False,
       'installed_version': '2.3.0',
       'latest_version': '2.3.0',
       'release_summary': None,
-      'release_url': None,
+      'release_url': 'https://docs.paperless-ngx.com/changelog/',
       'skipped_version': None,
       'supported_features': <UpdateEntityFeature: 0>,
       'title': None,
       'update_percentage': None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.paperless_ngx_software',
+    'entity_id': 'update.paperless_ngx_firmware',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

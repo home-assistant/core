@@ -15,15 +15,6 @@ from .const import MOCK_REMOTE_VERSION_DATA_NO_UPDATE, MOCK_STATISTICS_DATA, USE
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.paperless_ngx.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
-
-
 @pytest.fixture(autouse=True)
 def mock_paperless() -> Generator[AsyncMock]:
     """Mock the pypaperless.Paperless client."""
@@ -71,7 +62,7 @@ def mock_config_entry() -> MockConfigEntry:
 async def init_integration(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_paperless: MagicMock
 ) -> MockConfigEntry:
-    """Set up the Tedee integration for testing."""
+    """Set up the Paperless-ngx integration for testing."""
     await setup_integration(hass, mock_config_entry)
 
     return mock_config_entry

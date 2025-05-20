@@ -1,5 +1,7 @@
 """Test the Paperless-ngx integration initialization."""
 
+from unittest.mock import AsyncMock
+
 from pypaperless.exceptions import (
     InitializationError,
     PaperlessConnectionError,
@@ -48,11 +50,11 @@ async def test_load_unload_config_entry(
 )
 async def test_setup_config_error_handling(
     hass: HomeAssistant,
-    mock_config_entry,
-    mock_paperless,
-    side_effect,
-    expected_state,
-    expected_error_key,
+    mock_config_entry: MockConfigEntry,
+    mock_paperless: AsyncMock,
+    side_effect: Exception,
+    expected_state: ConfigEntryState,
+    expected_error_key: str,
 ) -> None:
     """Test all initialization error paths during setup."""
     mock_paperless.initialize.side_effect = side_effect

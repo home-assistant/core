@@ -1,5 +1,8 @@
 """Tests for the Paperless-ngx config flow."""
 
+from collections.abc import Generator
+from unittest.mock import AsyncMock
+
 from pypaperless.exceptions import (
     InitializationError,
     PaperlessConnectionError,
@@ -18,17 +21,41 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .const import USER_INPUT
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, patch
 
 
-async def test_show_config_form(hass: HomeAssistant) -> None:
-    """Test that the setup form is served."""
+@pytest.fixture(autouse=True)
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.paperless_ngx.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+async def test_full_config_flow(hass: HomeAssistant) -> None:
+    """Test registering an integration and finishing flow works."""
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
+    assert result
+    assert result["flow_id"]
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+
+    config_entry = result["result"]
+    assert config_entry.title == "Paperless-ngx"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.data == USER_INPUT
+    assert config_entry.data[CONF_HOST] == USER_INPUT[CONF_HOST]
+    assert config_entry.data[CONF_API_KEY] == USER_INPUT[CONF_API_KEY]
 
 
 @pytest.mark.parametrize(
@@ -44,9 +71,9 @@ async def test_show_config_form(hass: HomeAssistant) -> None:
 )
 async def test_config_flow_error_handling(
     hass: HomeAssistant,
-    mock_paperless,
-    side_effect,
-    expected_error,
+    mock_paperless: AsyncMock,
+    side_effect: Exception,
+    expected_error: dict[str, str],
 ) -> None:
     """Test user step shows correct error for various client initialization issues."""
     mock_paperless.initialize.side_effect = side_effect
@@ -73,31 +100,6 @@ async def test_config_flow_error_handling(
     assert result["data"] == USER_INPUT
     assert result["data"][CONF_HOST] == USER_INPUT[CONF_HOST]
     assert result["data"][CONF_API_KEY] == USER_INPUT[CONF_API_KEY]
-
-
-async def test_full_config_flow(hass: HomeAssistant) -> None:
-    """Test registering an integration and finishing flow works."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result
-    assert result["flow_id"]
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        USER_INPUT,
-    )
-
-    config_entry = result["result"]
-    assert config_entry.title == "Paperless-ngx"
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.data == USER_INPUT
-    assert config_entry.data[CONF_HOST] == USER_INPUT[CONF_HOST]
-    assert config_entry.data[CONF_API_KEY] == USER_INPUT[CONF_API_KEY]
 
 
 async def test_config_already_exists(hass: HomeAssistant) -> None:

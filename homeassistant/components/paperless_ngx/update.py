@@ -11,9 +11,11 @@ from homeassistant.components.update import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import PAPERLESS_CHANGELOGS
 from .coordinator import PaperlessConfigEntry, PaperlessCoordinator
 from .entity import PaperlessEntity
+
+PAPERLESS_CHANGELOGS = "https://docs.paperless-ngx.com/changelog/"
+
 
 PARALLEL_UPDATES = 0
 
