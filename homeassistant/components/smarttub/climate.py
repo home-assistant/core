@@ -14,13 +14,14 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN, SMARTTUB_CONTROLLER
+from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
+from .controller import SmartTubConfigEntry
 from .entity import SmartTubEntity
 
 PRESET_DAY = "day"
@@ -43,12 +44,12 @@ HVAC_ACTIONS = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SmartTubConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up climate entity for the thermostat in the tub."""
 
-    controller = hass.data[DOMAIN][entry.entry_id][SMARTTUB_CONTROLLER]
+    controller = entry.runtime_data
 
     entities = [
         SmartTubThermostat(controller.coordinator, spa) for spa in controller.spas
@@ -71,7 +72,9 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_preset_modes = list(PRESET_MODES.values())
 
-    def __init__(self, coordinator, spa):
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[dict[str, Any]], spa: Spa
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, spa, "Thermostat")
 
