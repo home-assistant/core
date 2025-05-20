@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.climate import (
@@ -111,8 +113,11 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
 
     _attr_fan_modes = [FAN_ON, FAN_AUTO]
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF, HVACMode.AUTO]
+    _attr_preset_modes = [PRESET_NONE, PRESET_AWAY, HOLD_MODE_TEMPERATURE]
     _attr_precision = PRECISION_HALVES
     _attr_name = None
+    _attr_min_humidity = 0  # Hardcoded to 0 in API.
+    _attr_max_humidity = 60  # Hardcoded to 60 in API.
 
     def __init__(
         self,
@@ -155,12 +160,12 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         return UnitOfTemperature.CELSIUS
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._client.get_indoor_temp()
 
     @property
-    def current_humidity(self):
+    def current_humidity(self) -> float | None:
         """Return the current humidity."""
         return self._client.get_indoor_humidity()
 
@@ -187,14 +192,14 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         return HVACAction.OFF
 
     @property
-    def fan_mode(self):
+    def fan_mode(self) -> str:
         """Return the current fan mode."""
         if self._client.fan == self._client.FAN_ON:
             return FAN_ON
         return FAN_AUTO
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         return {
             ATTR_FAN_STATE: self._client.fanstate,
@@ -202,7 +207,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         }
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the target temperature we try to reach."""
         if self._client.mode == self._client.MODE_HEAT:
             return self._client.heattemp
@@ -211,47 +216,32 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         return None
 
     @property
-    def target_temperature_low(self):
+    def target_temperature_low(self) -> float | None:
         """Return the lower bound temp if auto mode is on."""
         if self._client.mode == self._client.MODE_AUTO:
             return self._client.heattemp
         return None
 
     @property
-    def target_temperature_high(self):
+    def target_temperature_high(self) -> float | None:
         """Return the upper bound temp if auto mode is on."""
         if self._client.mode == self._client.MODE_AUTO:
             return self._client.cooltemp
         return None
 
     @property
-    def target_humidity(self):
+    def target_humidity(self) -> float | None:
         """Return the humidity we try to reach."""
         return self._client.hum_setpoint
 
     @property
-    def min_humidity(self):
-        """Return the minimum humidity. Hardcoded to 0 in API."""
-        return 0
-
-    @property
-    def max_humidity(self):
-        """Return the maximum humidity. Hardcoded to 60 in API."""
-        return 60
-
-    @property
-    def preset_mode(self):
+    def preset_mode(self) -> str:
         """Return current preset."""
         if self._client.away:
             return PRESET_AWAY
         if self._client.schedule == 0:
             return HOLD_MODE_TEMPERATURE
         return PRESET_NONE
-
-    @property
-    def preset_modes(self):
-        """Return valid preset modes."""
-        return [PRESET_NONE, PRESET_AWAY, HOLD_MODE_TEMPERATURE]
 
     def _set_operation_mode(self, operation_mode: HVACMode):
         """Change the operation mode (internal)."""
