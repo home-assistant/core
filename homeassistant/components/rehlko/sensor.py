@@ -29,7 +29,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .const import DEVICE_DATA_DEVICES, DEVICE_DATA_ID
+from .const import DEVICE_DATA_DEVICES, DEVICE_DATA_ID, GENERATOR_DATA_DEVICE
 from .coordinator import RehlkoConfigEntry
 from .entity import RehlkoEntity
 
@@ -121,7 +121,7 @@ SENSORS: tuple[RehlkoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        document_key="device",
+        document_key=GENERATOR_DATA_DEVICE,
     ),
     RehlkoSensorEntityDescription(
         key="runtimeSinceLastMaintenanceHours",
@@ -137,7 +137,7 @@ SENSORS: tuple[RehlkoSensorEntityDescription, ...] = (
         translation_key="device_ip_address",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        document_key="device",
+        document_key=GENERATOR_DATA_DEVICE,
     ),
     RehlkoSensorEntityDescription(
         key="serverIpAddress",
@@ -176,7 +176,7 @@ SENSORS: tuple[RehlkoSensorEntityDescription, ...] = (
     RehlkoSensorEntityDescription(
         key="status",
         translation_key="generator_status",
-        document_key="device",
+        document_key=GENERATOR_DATA_DEVICE,
     ),
     RehlkoSensorEntityDescription(
         key="engineState",
@@ -190,13 +190,15 @@ SENSORS: tuple[RehlkoSensorEntityDescription, ...] = (
         key="lastRanTimestamp",
         translation_key="last_run",
         device_class=SensorDeviceClass.TIMESTAMP,
+        # Reports in UTC.
         value_fn=lambda value: datetime.fromisoformat(value).replace(tzinfo=UTC),
     ),
     RehlkoSensorEntityDescription(
         key="lastMaintenanceTimestamp",
         translation_key="last_maintainance",
         device_class=SensorDeviceClass.TIMESTAMP,
-        document_key="device",
+        document_key=GENERATOR_DATA_DEVICE,
+        # Reports in local time.
         value_fn=lambda value: datetime.fromisoformat(value).replace(
             tzinfo=dt_util.get_default_time_zone()
         ),
@@ -206,7 +208,8 @@ SENSORS: tuple[RehlkoSensorEntityDescription, ...] = (
         key="nextMaintenanceTimestamp",
         translation_key="next_maintainance",
         device_class=SensorDeviceClass.TIMESTAMP,
-        document_key="device",
+        document_key=GENERATOR_DATA_DEVICE,
+        # Reports in local time.
         value_fn=lambda value: datetime.fromisoformat(value).replace(
             tzinfo=dt_util.get_default_time_zone()
         ),
@@ -217,6 +220,7 @@ SENSORS: tuple[RehlkoSensorEntityDescription, ...] = (
         translation_key="last_exercise",
         device_class=SensorDeviceClass.TIMESTAMP,
         document_key="exercise",
+        # Reports in UTC.
         value_fn=lambda value: datetime.fromisoformat(value).replace(tzinfo=UTC),
         entity_registry_enabled_default=False,
     ),
@@ -225,6 +229,7 @@ SENSORS: tuple[RehlkoSensorEntityDescription, ...] = (
         translation_key="next_exercise",
         device_class=SensorDeviceClass.TIMESTAMP,
         document_key="exercise",
+        # Reports in local time.
         value_fn=lambda value: datetime.fromisoformat(value).replace(
             tzinfo=dt_util.get_default_time_zone()
         ),
