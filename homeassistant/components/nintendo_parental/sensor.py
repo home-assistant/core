@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -21,21 +22,32 @@ from .entity import Device, NintendoDevice
 PARALLEL_UPDATES = 0
 
 
+@dataclass(kw_only=True, frozen=True)
 class NintendoParentalSensorEntityDescription(SensorEntityDescription):
     """Description for Nintendo Parental sensor entities."""
 
     value_fn: Callable[[Device], int | float | None]
-    state_attributes: str
+    state_attributes_fn: Callable[[Device], Mapping[str, Any] | None]
 
 
 SENSOR_DESCRIPTIONS: tuple[NintendoParentalSensorEntityDescription, ...] = (
     NintendoParentalSensorEntityDescription(
         key="playing_time",
+        name="used screen time",
         native_unit_of_measurement="min",
-        state_attributes="daily_summaries",
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.today_playing_time,
+        state_attributes_fn=lambda device: {"daily": device.daily_summaries[0:5]},
+    ),
+    NintendoParentalSensorEntityDescription(
+        key="time_remaining",
+        name="time remaining",
+        native_unit_of_measurement="min",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.today_time_remaining,
+        state_attributes_fn=lambda device: None,
     ),
 )
 
@@ -70,7 +82,6 @@ class NintendoParentalSensor(NintendoDevice, SensorEntity):
             coordinator=coordinator, device=device, entity_id=description.key
         )
         self.entity_description = description
-        self._attr_translation_placeholders = {"dev_name": device.name}
 
     @property
     def native_value(self) -> int | float | None:
@@ -80,6 +91,4 @@ class NintendoParentalSensor(NintendoDevice, SensorEntity):
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return extra state attributes."""
-        if self.entity_description.state_attributes == "daily_summaries":
-            return {"daily": self._device.daily_summaries[0:5]}
-        return None
+        return self.entity_description.state_attributes_fn(self._device)

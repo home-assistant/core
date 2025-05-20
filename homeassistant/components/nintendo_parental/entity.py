@@ -33,3 +33,8 @@ class NintendoDevice(CoordinatorEntity):
         """When entity is loaded."""
         await super().async_added_to_hass()
         self._device.add_device_callback(self.async_write_ha_state)
+
+    @property
+    def name(self) -> str:
+        """Return the name of the sensor."""
+        return f"{self._device.name} {self.entity_description.name}"
