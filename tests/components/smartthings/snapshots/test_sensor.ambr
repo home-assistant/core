@@ -3660,7 +3660,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Set point',
+    'original_name': 'Setpoint',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -3673,7 +3673,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Microwave Set point',
+      'friendly_name': 'Microwave Setpoint',
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -4058,7 +4058,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Set point',
+    'original_name': 'Setpoint',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -4071,7 +4071,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Oven Set point',
+      'friendly_name': 'Oven Setpoint',
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -4513,7 +4513,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Set point',
+    'original_name': 'Setpoint',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -4526,7 +4526,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Vulcan Set point',
+      'friendly_name': 'Vulcan Setpoint',
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -11399,7 +11399,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Cooling set point',
+    'original_name': 'Cooling setpoint',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -11412,7 +11412,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Office Cooling set point',
+      'friendly_name': 'Office Cooling setpoint',
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
