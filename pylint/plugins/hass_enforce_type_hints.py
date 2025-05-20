@@ -50,6 +50,9 @@ class TypeHintMatch:
     kwargs_type: str | None = None
     """kwargs_type is for the special case `**kwargs`"""
     has_async_counterpart: bool = False
+    """`function_name` and `async_function_name` share arguments and return type"""
+    mandatory: bool = False
+    """bypass ignore_missing_annotations"""
 
     def need_to_check_function(self, node: nodes.FunctionDef) -> bool:
         """Confirm if function should be checked."""
@@ -184,6 +187,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="bool",
             has_async_counterpart=True,
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_setup_entry",
@@ -192,6 +196,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigEntry",
             },
             return_type="bool",
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_remove_entry",
@@ -200,6 +205,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigEntry",
             },
             return_type=None,
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_unload_entry",
@@ -208,6 +214,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigEntry",
             },
             return_type="bool",
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_migrate_entry",
@@ -216,6 +223,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigEntry",
             },
             return_type="bool",
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_remove_config_entry_device",
@@ -225,6 +233,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 2: "DeviceEntry",
             },
             return_type="bool",
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_reset_platform",
@@ -233,6 +242,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "str",
             },
             return_type=None,
+            mandatory=True,
         ),
     ],
     "__any_platform__": [
@@ -246,6 +256,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=None,
             has_async_counterpart=True,
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_setup_entry",
@@ -255,6 +266,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 2: "AddConfigEntryEntitiesCallback",
             },
             return_type=None,
+            mandatory=True,
         ),
     ],
     "application_credentials": [
@@ -266,6 +278,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 2: "ClientCredential",
             },
             return_type="AbstractOAuth2Implementation",
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_get_authorization_server",
@@ -273,6 +286,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 0: "HomeAssistant",
             },
             return_type="AuthorizationServer",
+            mandatory=True,
         ),
     ],
     "backup": [
@@ -282,6 +296,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 0: "HomeAssistant",
             },
             return_type=None,
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_post_backup",
@@ -289,6 +304,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 0: "HomeAssistant",
             },
             return_type=None,
+            mandatory=True,
         ),
     ],
     "cast": [
@@ -299,6 +315,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "str",
             },
             return_type="list[BrowseMedia]",
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_browse_media",
@@ -309,6 +326,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 3: "str",
             },
             return_type=["BrowseMedia", "BrowseMedia | None"],
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_play_media",
@@ -320,6 +338,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 4: "str",
             },
             return_type="bool",
+            mandatory=True,
         ),
     ],
     "config_flow": [
@@ -329,6 +348,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 0: "HomeAssistant",
             },
             return_type="bool",
+            mandatory=True,
         ),
     ],
     "device_action": [
@@ -339,6 +359,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigType",
             },
             return_type="ConfigType",
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_call_action_from_config",
@@ -349,6 +370,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 3: "Context | None",
             },
             return_type=None,
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_get_action_capabilities",
@@ -357,6 +379,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigType",
             },
             return_type="dict[str, Schema]",
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_get_actions",
@@ -365,6 +388,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "str",
             },
             return_type=["list[dict[str, str]]", "list[dict[str, Any]]"],
+            mandatory=True,
         ),
     ],
     "device_condition": [
@@ -375,6 +399,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigType",
             },
             return_type="ConfigType",
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_condition_from_config",
@@ -383,6 +408,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigType",
             },
             return_type="ConditionCheckerType",
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_get_condition_capabilities",
@@ -391,6 +417,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigType",
             },
             return_type="dict[str, Schema]",
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_get_conditions",
@@ -399,6 +426,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "str",
             },
             return_type=["list[dict[str, str]]", "list[dict[str, Any]]"],
+            mandatory=True,
         ),
     ],
     "device_tracker": [
@@ -411,6 +439,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 3: "DiscoveryInfoType | None",
             },
             return_type="bool",
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_setup_scanner",
@@ -421,6 +450,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 3: "DiscoveryInfoType | None",
             },
             return_type="bool",
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="get_scanner",
@@ -430,6 +460,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=["DeviceScanner", None],
             has_async_counterpart=True,
+            mandatory=True,
         ),
     ],
     "device_trigger": [
@@ -440,6 +471,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigType",
             },
             return_type="ConfigType",
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_attach_trigger",
@@ -450,6 +482,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 3: "TriggerInfo",
             },
             return_type="CALLBACK_TYPE",
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_get_trigger_capabilities",
@@ -458,6 +491,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigType",
             },
             return_type="dict[str, Schema]",
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_get_triggers",
@@ -466,6 +500,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "str",
             },
             return_type=["list[dict[str, str]]", "list[dict[str, Any]]"],
+            mandatory=True,
         ),
     ],
     "diagnostics": [
@@ -476,6 +511,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigEntry",
             },
             return_type="Mapping[str, Any]",
+            mandatory=True,
         ),
         TypeHintMatch(
             function_name="async_get_device_diagnostics",
@@ -485,6 +521,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 2: "DeviceEntry",
             },
             return_type="Mapping[str, Any]",
+            mandatory=True,
         ),
     ],
     "notify": [
@@ -497,6 +534,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=["BaseNotificationService", None],
             has_async_counterpart=True,
+            mandatory=True,
         ),
     ],
 }
@@ -664,6 +702,7 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="available",
         return_type="bool",
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="assumed_state",
@@ -3195,8 +3234,11 @@ class HassTypeHintChecker(BaseChecker):
 
         self._class_matchers.reverse()
 
-    def _ignore_function(
-        self, node: nodes.FunctionDef, annotations: list[nodes.NodeNG | None]
+    def _ignore_function_match(
+        self,
+        node: nodes.FunctionDef,
+        annotations: list[nodes.NodeNG | None],
+        match: TypeHintMatch,
     ) -> bool:
         """Check if we can skip the function validation."""
         return (
@@ -3204,6 +3246,8 @@ class HassTypeHintChecker(BaseChecker):
             not self._in_test_module
             # some modules have checks forced
             and self._module_platform not in _FORCE_ANNOTATION_PLATFORMS
+            # some matches have checks forced
+            and not match.mandatory
             # other modules are only checked ignore_missing_annotations
             and self.linter.config.ignore_missing_annotations
             and node.returns is None
@@ -3246,7 +3290,7 @@ class HassTypeHintChecker(BaseChecker):
                     continue
 
                 annotations = _get_all_annotations(function_node)
-                if self._ignore_function(function_node, annotations):
+                if self._ignore_function_match(function_node, annotations, match):
                     continue
 
                 self._check_function(function_node, match, annotations)
@@ -3255,8 +3299,6 @@ class HassTypeHintChecker(BaseChecker):
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
         """Apply relevant type hint checks on a FunctionDef node."""
         annotations = _get_all_annotations(node)
-        if self._ignore_function(node, annotations):
-            return
 
         # Check method or function matchers.
         if node.is_method():
@@ -3277,14 +3319,15 @@ class HassTypeHintChecker(BaseChecker):
             matchers = self._function_matchers
 
         # Check that common arguments are correctly typed.
-        for arg_name, expected_type in _COMMON_ARGUMENTS.items():
-            arg_node, annotation = _get_named_annotation(node, arg_name)
-            if arg_node and not _is_valid_type(expected_type, annotation):
-                self.add_message(
-                    "hass-argument-type",
-                    node=arg_node,
-                    args=(arg_name, expected_type, node.name),
-                )
+        if not self.linter.config.ignore_missing_annotations:
+            for arg_name, expected_type in _COMMON_ARGUMENTS.items():
+                arg_node, annotation = _get_named_annotation(node, arg_name)
+                if arg_node and not _is_valid_type(expected_type, annotation):
+                    self.add_message(
+                        "hass-argument-type",
+                        node=arg_node,
+                        args=(arg_name, expected_type, node.name),
+                    )
 
         for match in matchers:
             if not match.need_to_check_function(node):
@@ -3299,6 +3342,8 @@ class HassTypeHintChecker(BaseChecker):
         match: TypeHintMatch,
         annotations: list[nodes.NodeNG | None],
     ) -> None:
+        if self._ignore_function_match(node, annotations, match):
+            return
         # Check that all positional arguments are correctly annotated.
         if match.arg_types:
             for key, expected_type in match.arg_types.items():
