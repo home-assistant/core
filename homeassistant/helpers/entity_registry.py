@@ -1556,12 +1556,29 @@ class EntityRegistry(BaseRegistry):
                 categories = entry.categories.copy()
                 del categories[scope]
                 self.async_update_entity(entity_id, categories=categories)
+        for key, deleted_entity in list(self.deleted_entities.items()):
+            if (
+                existing_category_id := deleted_entity.categories.get(scope)
+            ) and category_id == existing_category_id:
+                categories = deleted_entity.categories.copy()
+                del categories[scope]
+                self.deleted_entities[key] = attr.evolve(
+                    deleted_entity, categories=categories
+                )
+                self.async_schedule_save()
 
     @callback
     def async_clear_label_id(self, label_id: str) -> None:
         """Clear label from registry entries."""
         for entry in self.entities.get_entries_for_label(label_id):
             self.async_update_entity(entry.entity_id, labels=entry.labels - {label_id})
+        for key, deleted_entity in list(self.deleted_entities.items()):
+            if label_id not in deleted_entity.labels:
+                continue
+            self.deleted_entities[key] = attr.evolve(
+                deleted_entity, labels=deleted_entity.labels - {label_id}
+            )
+            self.async_schedule_save()
 
     @callback
     def async_clear_config_entry(self, config_entry_id: str) -> None:
@@ -1626,6 +1643,11 @@ class EntityRegistry(BaseRegistry):
         """Clear area id from registry entries."""
         for entry in self.entities.get_entries_for_area_id(area_id):
             self.async_update_entity(entry.entity_id, area_id=None)
+        for key, deleted_entity in list(self.deleted_entities.items()):
+            if deleted_entity.area_id != area_id:
+                continue
+            self.deleted_entities[key] = attr.evolve(deleted_entity, area_id=None)
+            self.async_schedule_save()
 
 
 @callback

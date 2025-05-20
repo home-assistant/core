@@ -890,6 +890,33 @@ async def test_removing_area_id(entity_registry: er.EntityRegistry) -> None:
     assert entry_w_area != entry_wo_area
 
 
+async def test_removing_area_id_deleted_entity(
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Make sure we can clear area id."""
+    entry1 = entity_registry.async_get_or_create("light", "hue", "5678")
+    entry2 = entity_registry.async_get_or_create("light", "hue", "1234")
+
+    entry1_w_area = entity_registry.async_update_entity(
+        entry1.entity_id, area_id="12345A"
+    )
+    entry2_w_area = entity_registry.async_update_entity(
+        entry2.entity_id, area_id="12345B"
+    )
+
+    entity_registry.async_remove(entry1.entity_id)
+    entity_registry.async_remove(entry2.entity_id)
+
+    entity_registry.async_clear_area_id("12345A")
+    entry1_restored = entity_registry.async_get_or_create("light", "hue", "5678")
+    entry2_restored = entity_registry.async_get_or_create("light", "hue", "1234")
+
+    assert not entry1_restored.area_id
+    assert entry2_restored.area_id == "12345B"
+    assert entry1_w_area != entry1_restored
+    assert entry2_w_area != entry2_restored
+
+
 @pytest.mark.parametrize("load_registries", [False])
 async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) -> None:
     """Test migration from version 1.1."""
@@ -2791,6 +2818,49 @@ async def test_removing_labels(entity_registry: er.EntityRegistry) -> None:
     assert not entry_cleared_label2.labels
 
 
+async def test_removing_labels_deleted_entity(
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Make sure we can clear labels."""
+    entry1 = entity_registry.async_get_or_create(
+        domain="light", platform="hue", unique_id="5678"
+    )
+    entry1 = entity_registry.async_update_entity(
+        entry1.entity_id, labels={"label1", "label2"}
+    )
+    entry2 = entity_registry.async_get_or_create(
+        domain="light", platform="hue", unique_id="1234"
+    )
+    entry2 = entity_registry.async_update_entity(entry2.entity_id, labels={"label3"})
+
+    entity_registry.async_remove(entry1.entity_id)
+    entity_registry.async_remove(entry2.entity_id)
+    entity_registry.async_clear_label_id("label1")
+    entry1_cleared_label1 = entity_registry.async_get_or_create(
+        domain="light", platform="hue", unique_id="5678"
+    )
+
+    entity_registry.async_remove(entry1.entity_id)
+    entity_registry.async_clear_label_id("label2")
+    entry1_cleared_label2 = entity_registry.async_get_or_create(
+        domain="light", platform="hue", unique_id="5678"
+    )
+    entry2_restored = entity_registry.async_get_or_create(
+        domain="light", platform="hue", unique_id="1234"
+    )
+
+    assert entry1_cleared_label1
+    assert entry1_cleared_label2
+    assert entry1 != entry1_cleared_label1
+    assert entry1 != entry1_cleared_label2
+    assert entry1_cleared_label1 != entry1_cleared_label2
+    assert entry1.labels == {"label1", "label2"}
+    assert entry1_cleared_label1.labels == {"label2"}
+    assert not entry1_cleared_label2.labels
+    assert entry2 != entry2_restored
+    assert entry2.labels == {"label3"}
+
+
 async def test_entries_for_label(entity_registry: er.EntityRegistry) -> None:
     """Test getting entity entries by label."""
     entity_registry.async_get_or_create(
@@ -2847,6 +2917,39 @@ async def test_removing_categories(entity_registry: er.EntityRegistry) -> None:
 
     entity_registry.async_clear_category_id("scope2", "id")
     entry_cleared_scope2 = entity_registry.async_get(entry.entity_id)
+
+    assert entry_cleared_scope1
+    assert entry_cleared_scope2
+    assert entry != entry_cleared_scope1
+    assert entry != entry_cleared_scope2
+    assert entry_cleared_scope1 != entry_cleared_scope2
+    assert entry.categories == {"scope1": "id", "scope2": "id"}
+    assert entry_cleared_scope1.categories == {"scope2": "id"}
+    assert not entry_cleared_scope2.categories
+
+
+async def test_removing_categories_deleted_entity(
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Make sure we can clear categories."""
+    entry = entity_registry.async_get_or_create(
+        domain="light", platform="hue", unique_id="5678"
+    )
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, categories={"scope1": "id", "scope2": "id"}
+    )
+
+    entity_registry.async_remove(entry.entity_id)
+    entity_registry.async_clear_category_id("scope1", "id")
+    entry_cleared_scope1 = entity_registry.async_get_or_create(
+        domain="light", platform="hue", unique_id="5678"
+    )
+
+    entity_registry.async_remove(entry.entity_id)
+    entity_registry.async_clear_category_id("scope2", "id")
+    entry_cleared_scope2 = entity_registry.async_get_or_create(
+        domain="light", platform="hue", unique_id="5678"
+    )
 
     assert entry_cleared_scope1
     assert entry_cleared_scope2
