@@ -1,0 +1,4 @@
+register_irk:
+  fields:
+    irk:
+      example: "00000000000000000000000000000000"
