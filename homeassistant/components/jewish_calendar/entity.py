@@ -2,9 +2,8 @@
 
 from abc import abstractmethod
 import datetime as dt
-import logging
 
-from hdate import HDateInfo, Zmanim
+from hdate import Zmanim
 from hdate.translator import set_language
 
 from homeassistant.core import CALLBACK_TYPE, callback
@@ -14,9 +13,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .coordinator import JewishCalendarConfigEntry, JewishCalendarDataResults
-
-_LOGGER = logging.getLogger(__name__)
+from .coordinator import JewishCalendarConfigEntry
 
 
 class JewishCalendarEntity(Entity):
@@ -60,7 +57,7 @@ class JewishCalendarEntity(Entity):
     def _schedule_update(self) -> None:
         """Schedule the next update of the sensor."""
         now = dt_util.now()
-        zmanim = self.coordinator.data.results.zmanim
+        zmanim = self.coordinator.data.zmanim
         update = dt_util.start_of_local_day() + dt.timedelta(days=1)
 
         for update_time in self._update_times(zmanim):
@@ -78,17 +75,4 @@ class JewishCalendarEntity(Entity):
         """Update the sensor data."""
         self._update_unsub = None
         self._schedule_update()
-        self.create_results(now)
         self.async_write_ha_state()
-
-    def create_results(self, now: dt.datetime | None = None) -> None:
-        """Create the results for the sensor."""
-        if now is None:
-            now = dt_util.now()
-
-        _LOGGER.debug("Now: %s Location: %r", now, self.coordinator.data.location)
-
-        today = now.date()
-        zmanim = self.coordinator.data.results.zmanim
-        dateinfo = HDateInfo(today, diaspora=self.coordinator.data.diaspora)
-        self.coordinator.data.results = JewishCalendarDataResults(dateinfo, zmanim)
