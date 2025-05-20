@@ -801,18 +801,21 @@ _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
         kwargs_type="Any",
         return_type=None,
         has_async_counterpart=True,
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="turn_off",
         kwargs_type="Any",
         return_type=None,
         has_async_counterpart=True,
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="toggle",
         kwargs_type="Any",
         return_type=None,
         has_async_counterpart=True,
+        mandatory=True,
     ),
 ]
 _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
@@ -840,10 +843,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="code_arm_required",
                     return_type="bool",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_features",
                     return_type="AlarmControlPanelEntityFeature",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="alarm_disarm",
@@ -852,6 +857,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     },
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="alarm_arm_home",
@@ -860,6 +866,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     },
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="alarm_arm_away",
@@ -868,6 +875,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     },
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="alarm_arm_night",
@@ -876,6 +884,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     },
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="alarm_arm_vacation",
@@ -884,6 +893,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     },
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="alarm_trigger",
@@ -892,6 +902,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     },
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="alarm_arm_custom_bypass",
@@ -900,6 +911,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     },
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
             ],
         ),
@@ -941,12 +953,13 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=[
                 TypeHintMatch(
                     function_name="device_class",
-                    return_type=["ButtonDeviceClass", "str", None],
+                    return_type=["ButtonDeviceClass", None],
                 ),
                 TypeHintMatch(
                     function_name="press",
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
             ],
         ),
@@ -975,6 +988,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         3: "datetime",
                     },
                     return_type="list[CalendarEvent]",
+                    mandatory=True,
                 ),
             ],
         ),
