@@ -233,6 +233,15 @@
       "laundry_washer_spin_speed": {
         "name": "Spin speed"
       },
+      "pump_operation_mode": {
+        "name": "mode",
+        "state": {
+          "local": "Local",
+          "maximum": "Maximum",
+          "minimum": "Minimum",
+          "normal": "[%key:common::state::normal%]"
+        }
+      },
       "water_heater_mode": {
         "name": "Water heater mode"
       }
@@ -340,6 +349,9 @@
       },
       "pump_speed": {
         "name": "Rotation speed"
+      },
+      "pump_operation_mode": {
+        "name": "Pump mode"
       },
       "evse_circuit_capacity": {
         "name": "Circuit capacity"

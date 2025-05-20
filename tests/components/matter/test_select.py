@@ -198,3 +198,22 @@ async def test_map_select_entities(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("select.laundrywasher_number_of_rinses")
     assert state.state == "normal"
+
+
+@pytest.mark.parametrize("node_fixture", ["pump"])
+async def test_pump(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test MatterMapSelectEntity entities are discovered and working from a laundrywasher fixture."""
+    # OperationMode
+    state = hass.states.get("select.mock_pump_mode")
+    assert state
+    assert state.state == "normal"
+    assert state.attributes["options"] == ["normal", "minimum", "maximum", "local"]
+
+    set_node_attribute(matter_node, 1, 512, 32, 3)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("select.mock_pump_mode")
+    assert state.state == "local"
