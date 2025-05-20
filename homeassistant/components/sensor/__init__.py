@@ -733,6 +733,12 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 return None
             converter = UNIT_CONVERTERS[device_class]
 
+            if (
+                from_unit not in converter.VALID_UNITS
+                or to_unit not in converter.VALID_UNITS
+            ):
+                return None
+
             # Scale the precision when converting to a larger or smaller unit
             # For example 1.1 Wh should be rendered as 0.0011 kWh, not 0.0 kWh
             ratio_log = log10(converter.get_unit_ratio(from_unit, to_unit))
