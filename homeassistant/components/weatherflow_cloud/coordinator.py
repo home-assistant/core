@@ -20,10 +20,10 @@ from weatherflow4py.models.ws.websocket_response import (
 )
 from weatherflow4py.ws import WeatherFlowWebsocketAPI
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.ssl import client_context
 
 from .const import DOMAIN, LOGGER
 
@@ -34,6 +34,7 @@ class BaseWeatherFlowCoordinator[T](DataUpdateCoordinator[dict[int, T]], ABC):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         rest_api: WeatherFlowRestAPI,
         stations: StationsResponseREST,
         update_interval: timedelta | None = None,
@@ -47,11 +48,10 @@ class BaseWeatherFlowCoordinator[T](DataUpdateCoordinator[dict[int, T]], ABC):
 
         self.device_ids = list(stations.device_station_map.keys())
 
-        self._ssl_context = client_context()
-
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             always_update=always_update,
             update_interval=update_interval,
@@ -70,6 +70,7 @@ class WeatherFlowCloudUpdateCoordinatorREST(
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         rest_api: WeatherFlowRestAPI,
         stations: StationsResponseREST,
     ) -> None:
@@ -77,6 +78,7 @@ class WeatherFlowCloudUpdateCoordinatorREST(
 
         super().__init__(
             hass,
+            config_entry,
             rest_api,
             stations,
             update_interval=timedelta(seconds=60),
@@ -97,7 +99,7 @@ class WeatherFlowCloudUpdateCoordinatorREST(
         """Return station for id."""
         return self.data[station_id]
 
-    def get_station_name(self, station_id: int):
+    def get_station_name(self, station_id: int) -> str:
         """Return station name for id."""
         return self.data[station_id].station.name
 
@@ -118,6 +120,7 @@ class WeatherFlowCloudDataCallbackCoordinator[
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         rest_api: WeatherFlowRestAPI,
         websocket_api: WeatherFlowWebsocketAPI,
         stations: StationsResponseREST,
@@ -126,7 +129,9 @@ class WeatherFlowCloudDataCallbackCoordinator[
     ) -> None:
         """Initialize Coordinator."""
 
-        super().__init__(hass=hass, rest_api=rest_api, stations=stations)
+        super().__init__(
+            hass=hass, config_entry=config_entry, rest_api=rest_api, stations=stations
+        )
 
         self._event_type = event_type
         self.websocket_api = websocket_api
@@ -142,13 +147,23 @@ class WeatherFlowCloudDataCallbackCoordinator[
         """Handle incoming websocket data - RapidWindWS data will be parsed from the ob field, whereas ObservationTempestWS will be parsed directly."""
         device_id = data.device_id
         station_id = self.device_to_station_map[device_id]
-        self._ws_data[station_id][device_id] = getattr(data, "ob", data)
+
+        # Handle possible message types with isinstance
+        if isinstance(data, RapidWindWS):
+            processed_data = data.ob
+        elif isinstance(data, ObservationTempestWS):
+            processed_data = data
+        else:
+            LOGGER.warning("Unknown message type received: %s", type(data))
+            return
+
+        self._ws_data[station_id][device_id] = processed_data
         self.async_set_updated_data(self._ws_data)
 
     async def async_setup(self) -> None:
         """Set up the websocket connection."""
         assert self.websocket_api is not None
-        await self.websocket_api.connect(self._ssl_context)
+        await self.websocket_api.connect()
         # Register callback
         self.websocket_api.register_callback(
             message_type=self._event_type,
