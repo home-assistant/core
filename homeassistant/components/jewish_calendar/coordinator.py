@@ -21,14 +21,6 @@ type JewishCalendarConfigEntry = ConfigEntry[JewishCalendarUpdateCoordinator]
 
 
 @dataclass
-class JewishCalendarDataResults:
-    """Jewish Calendar results dataclass."""
-
-    dateinfo: HDateInfo
-    zmanim: Zmanim
-
-
-@dataclass
 class JewishCalendarData:
     """Jewish Calendar runtime dataclass."""
 
@@ -37,7 +29,8 @@ class JewishCalendarData:
     location: Location
     candle_lighting_offset: int
     havdalah_offset: int
-    results: JewishCalendarDataResults | None = None
+    dateinfo: HDateInfo | None = None
+    zmanim: Zmanim | None = None
 
 
 class JewishCalendarUpdateCoordinator(DataUpdateCoordinator[JewishCalendarData]):
@@ -71,16 +64,14 @@ class JewishCalendarUpdateCoordinator(DataUpdateCoordinator[JewishCalendarData])
 
         today = now.date()
 
-        dateinfo = HDateInfo(today, self.config_data.diaspora)
-        zmanim = Zmanim(
+        self.config_data.dateinfo = HDateInfo(today, self.config_data.diaspora)
+        self.config_data.zmanim = Zmanim(
             date=today,
             location=self.config_data.location,
             candle_lighting_offset=self.config_data.candle_lighting_offset,
             havdalah_offset=self.config_data.havdalah_offset,
         )
         self.async_schedule_future_update()
-
-        self.config_data.results = JewishCalendarDataResults(dateinfo, zmanim)
         return self.config_data
 
     @callback
