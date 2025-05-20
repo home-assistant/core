@@ -300,7 +300,7 @@ async def test_service_hvac_mode_turn_on(
         (
             SERVICE_SET_HVAC_MODE,
             {ATTR_HVAC_MODE: HVACMode.DRY},
-            ValueError,
+            ServiceValidationError,
         ),
         (
             SERVICE_SET_FAN_MODE,
