@@ -110,7 +110,7 @@ PUMP_CONTROL_MODE_MAP = {
     clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kConstantFlow: "constant_flow",
     clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kConstantTemperature: "constant_temperature",
     clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kAutomatic: "automatic",
-    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kUnknownEnumValue: "unknown",
+    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kUnknownEnumValue: None,
 }
 
 
@@ -1078,7 +1078,9 @@ DISCOVERY_SCHEMAS = [
             key="PumpControlMode",
             translation_key="pump_control_mode",
             device_class=SensorDeviceClass.ENUM,
-            options=list(PUMP_CONTROL_MODE_MAP.values()),
+            options=[
+                mode for mode in PUMP_CONTROL_MODE_MAP.values() if mode is not None
+            ],
             measurement_to_ha=PUMP_CONTROL_MODE_MAP.get,
         ),
         entity_class=MatterSensor,
