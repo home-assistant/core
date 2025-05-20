@@ -5,6 +5,7 @@ from __future__ import annotations
 from bring_api import BringNotificationType
 import voluptuous as vol
 
+from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -23,17 +24,19 @@ def async_get_entities(hass: HomeAssistant) -> dict[str, Entity]:
     """Get entities for a domain."""
     entities: dict[str, Entity] = {}
     for platform in async_get_platforms(hass, DOMAIN):
-        entities.update(platform.entities)
+        if platform.domain == TODO_DOMAIN:
+            entities.update(platform.entities)
     return entities
+
+
+async def _async_send_message(call: ServiceCall) -> None:
+    await entity_service_call(
+        call.hass, async_get_entities(call.hass), "async_send_message", call
+    )
 
 
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up actions for bring integration."""
-
-    async def _async_send_message(call: ServiceCall) -> None:
-        await entity_service_call(
-            hass, async_get_entities(hass), "async_send_message", call
-        )
 
     hass.services.async_register(
         domain=DOMAIN,
