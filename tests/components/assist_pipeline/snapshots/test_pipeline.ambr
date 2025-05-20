@@ -154,7 +154,7 @@
     }),
   ])
 # ---
-# name: test_chat_log_tts_streaming[to_stream_tts1-21-hello, how are you? I'm doing well, thank you.]
+# name: test_chat_log_tts_streaming[to_stream_tts1-16-hello, how are you? I'm doing well, thank you. What about you?]
   list([
     dict({
       'data': dict({
@@ -192,7 +192,7 @@
     dict({
       'data': dict({
         'chat_log_delta': dict({
-          'content': 'hello,',
+          'content': 'hello, ',
         }),
       }),
       'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
@@ -200,7 +200,7 @@
     dict({
       'data': dict({
         'chat_log_delta': dict({
-          'content': ' ',
+          'content': 'how ',
         }),
       }),
       'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
@@ -208,7 +208,7 @@
     dict({
       'data': dict({
         'chat_log_delta': dict({
-          'content': 'how',
+          'content': 'are ',
         }),
       }),
       'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
@@ -216,7 +216,7 @@
     dict({
       'data': dict({
         'chat_log_delta': dict({
-          'content': ' ',
+          'content': 'you',
         }),
       }),
       'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
@@ -224,7 +224,7 @@
     dict({
       'data': dict({
         'chat_log_delta': dict({
-          'content': 'are',
+          'content': '? ',
         }),
       }),
       'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
@@ -232,7 +232,71 @@
     dict({
       'data': dict({
         'chat_log_delta': dict({
-          'content': ' ',
+          'content': "I'm ",
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'chat_log_delta': dict({
+          'content': 'doing ',
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'chat_log_delta': dict({
+          'content': 'well',
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'chat_log_delta': dict({
+          'content': ', ',
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'chat_log_delta': dict({
+          'content': 'thank ',
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'chat_log_delta': dict({
+          'content': 'you',
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'chat_log_delta': dict({
+          'content': '. ',
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'chat_log_delta': dict({
+          'content': 'What ',
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'chat_log_delta': dict({
+          'content': 'about ',
         }),
       }),
       'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
@@ -255,112 +319,8 @@
     }),
     dict({
       'data': dict({
-        'chat_log_delta': dict({
-          'content': ' ',
-        }),
-      }),
-      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
-    }),
-    dict({
-      'data': dict({
-        'chat_log_delta': dict({
-          'content': 'I',
-        }),
-      }),
-      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
-    }),
-    dict({
-      'data': dict({
-        'chat_log_delta': dict({
-          'content': "'m",
-        }),
-      }),
-      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
-    }),
-    dict({
-      'data': dict({
-        'chat_log_delta': dict({
-          'content': ' ',
-        }),
-      }),
-      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
-    }),
-    dict({
-      'data': dict({
-        'chat_log_delta': dict({
-          'content': 'doing',
-        }),
-      }),
-      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
-    }),
-    dict({
-      'data': dict({
-        'chat_log_delta': dict({
-          'content': ' ',
-        }),
-      }),
-      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
-    }),
-    dict({
-      'data': dict({
-        'chat_log_delta': dict({
-          'content': 'well',
-        }),
-      }),
-      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
-    }),
-    dict({
-      'data': dict({
-        'chat_log_delta': dict({
-          'content': ',',
-        }),
-      }),
-      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
-    }),
-    dict({
-      'data': dict({
-        'chat_log_delta': dict({
-          'content': ' ',
-        }),
-      }),
-      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
-    }),
-    dict({
-      'data': dict({
-        'chat_log_delta': dict({
-          'content': 'thank',
-        }),
-      }),
-      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
-    }),
-    dict({
-      'data': dict({
-        'chat_log_delta': dict({
-          'content': ' ',
-        }),
-      }),
-      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
-    }),
-    dict({
-      'data': dict({
-        'chat_log_delta': dict({
-          'content': 'you',
-        }),
-      }),
-      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
-    }),
-    dict({
-      'data': dict({
-        'chat_log_delta': dict({
-          'content': '.',
-        }),
-      }),
-      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
-    }),
-    dict({
-      'data': dict({
         'intent_output': dict({
-          'continue_conversation': False,
+          'continue_conversation': True,
           'conversation_id': <ANY>,
           'response': dict({
             'card': dict({
@@ -378,7 +338,7 @@
             'speech': dict({
               'plain': dict({
                 'extra_data': None,
-                'speech': "hello, how are you? I'm doing well, thank you.",
+                'speech': "hello, how are you? I'm doing well, thank you. What about you?",
               }),
             }),
           }),
@@ -391,7 +351,7 @@
       'data': dict({
         'engine': 'tts.test',
         'language': 'en_US',
-        'tts_input': "hello, how are you? I'm doing well, thank you.",
+        'tts_input': "hello, how are you? I'm doing well, thank you. What about you?",
         'voice': None,
       }),
       'type': <PipelineEventType.TTS_START: 'tts-start'>,

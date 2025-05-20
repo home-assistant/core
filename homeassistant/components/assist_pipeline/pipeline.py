@@ -90,7 +90,7 @@ KEY_PIPELINE_CONVERSATION_DATA: HassKey[dict[str, PipelineConversationData]] = H
     "pipeline_conversation_data"
 )
 # Number of response parts to handle before streaming the response
-STREAM_RESPONSE_CHARS = 45
+STREAM_RESPONSE_CHARS = 60
 
 
 def validate_language(data: dict[str, Any]) -> Any:
