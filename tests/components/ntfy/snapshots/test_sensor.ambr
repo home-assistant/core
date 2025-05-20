@@ -522,6 +522,54 @@
     'state': '12.000',
   })
 # ---
+# name: test_setup[sensor.ntfy_sh_messages_published-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ntfy_sh_messages_published',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Messages published',
+    'platform': 'ntfy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <NtfySensor.MESSAGES: 'messages'>,
+    'unique_id': '123456789_messages',
+    'unit_of_measurement': 'messages',
+  })
+# ---
+# name: test_setup[sensor.ntfy_sh_messages_published-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'ntfy.sh Messages published',
+      'unit_of_measurement': 'messages',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ntfy_sh_messages_published',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
 # name: test_setup[sensor.ntfy_sh_messages_remaining-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -760,54 +808,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
-  })
-# ---
-# name: test_setup[sensor.ntfy_sh_published_messages-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.ntfy_sh_published_messages',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Published messages',
-    'platform': 'ntfy',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <NtfySensor.MESSAGES: 'messages'>,
-    'unique_id': '123456789_messages',
-    'unit_of_measurement': 'messages',
-  })
-# ---
-# name: test_setup[sensor.ntfy_sh_published_messages-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'ntfy.sh Published messages',
-      'unit_of_measurement': 'messages',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ntfy_sh_published_messages',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '10',
   })
 # ---
 # name: test_setup[sensor.ntfy_sh_reserved_topics-entry]

@@ -64,7 +64,7 @@
         "default": "mdi:cloud-upload"
       },
       "tier": {
-        "default": "mdi:party-popper"
+        "default": "mdi:star"
       }
     }
   }
