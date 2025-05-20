@@ -11,7 +11,7 @@ from aiomealie import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mealie.const import (
     ATTR_CONFIG_ENTRY_ID,

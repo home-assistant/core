@@ -149,11 +149,6 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
             self._econet.set_set_point(None, target_temp_high, target_temp_low)
 
     @property
-    def is_aux_heat(self) -> bool:
-        """Return true if aux heater."""
-        return self._econet.mode == ThermostatOperationMode.EMERGENCY_HEAT
-
-    @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool, mode.
 

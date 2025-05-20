@@ -16,13 +16,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EcovacsConfigEntry
-from .const import SUPPORTED_LIFESPANS, SUPPORTED_STATION_ACTIONS
+from .const import SUPPORTED_LIFESPANS
 from .entity import (
     EcovacsCapabilityEntityDescription,
     EcovacsDescriptionEntity,
     EcovacsEntity,
 )
-from .util import get_supported_entitites
+from .util import get_supported_entities
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -62,7 +62,7 @@ STATION_ENTITY_DESCRIPTIONS = tuple(
         key=f"station_action_{action.name.lower()}",
         translation_key=f"station_action_{action.name.lower()}",
     )
-    for action in SUPPORTED_STATION_ACTIONS
+    for action in StationAction
 )
 
 
@@ -85,7 +85,7 @@ async def async_setup_entry(
 ) -> None:
     """Add entities for passed config_entry in HA."""
     controller = config_entry.runtime_data
-    entities: list[EcovacsEntity] = get_supported_entitites(
+    entities: list[EcovacsEntity] = get_supported_entities(
         controller, EcovacsButtonEntity, ENTITY_DESCRIPTIONS
     )
     entities.extend(

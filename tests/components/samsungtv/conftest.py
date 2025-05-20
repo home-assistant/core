@@ -67,7 +67,7 @@ def fake_host_fixture() -> Generator[None]:
     """Patch gethostbyname."""
     with patch(
         "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
-        return_value="fake_host",
+        return_value="10.20.43.21",
     ):
         yield
 

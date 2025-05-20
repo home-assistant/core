@@ -125,7 +125,30 @@
       "domain": "cover",
       "domain_data": {
         "motor": "MOTOR1",
-        "reverse_time": "RT1200"
+        "reverse_time": "RT1200",
+        "positioning_mode": "NONE"
+      }
+    },
+    {
+      "address": [0, 7, false],
+      "name": "Cover_Relays_BS4",
+      "resource": "motor2",
+      "domain": "cover",
+      "domain_data": {
+        "motor": "MOTOR2",
+        "reverse_time": "RT1200",
+        "positioning_mode": "BS4"
+      }
+    },
+    {
+      "address": [0, 7, false],
+      "name": "Cover_Relays_Module",
+      "resource": "motor3",
+      "domain": "cover",
+      "domain_data": {
+        "motor": "MOTOR3",
+        "reverse_time": "RT1200",
+        "positioning_mode": "MODULE"
       }
     },
     {

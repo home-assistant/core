@@ -236,7 +236,7 @@ class NetatmoDataHandler:
                 **self.publisher[signal_name].kwargs
             )
 
-        except (pyatmo.NoDevice, pyatmo.ApiError) as err:
+        except (pyatmo.NoDeviceError, pyatmo.ApiError) as err:
             _LOGGER.debug(err)
             has_error = True
 

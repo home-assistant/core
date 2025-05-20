@@ -1,0 +1,129 @@
+{
+  "components": {
+    "main": {
+      "tag.e2eEncryption": {
+        "encryption": {
+          "value": null
+        }
+      },
+      "audioVolume": {
+        "volume": {
+          "value": null
+        }
+      },
+      "geofence": {
+        "enableState": {
+          "value": null
+        },
+        "geofence": {
+          "value": null
+        },
+        "name": {
+          "value": null
+        }
+      },
+      "tag.updatedInfo": {
+        "connection": {
+          "value": "connected",
+          "timestamp": "2024-02-27T17:44:57.638Z"
+        }
+      },
+      "tag.factoryReset": {},
+      "battery": {
+        "quantity": {
+          "value": null
+        },
+        "battery": {
+          "value": null
+        },
+        "type": {
+          "value": null
+        }
+      },
+      "firmwareUpdate": {
+        "lastUpdateStatusReason": {
+          "value": null
+        },
+        "availableVersion": {
+          "value": null
+        },
+        "lastUpdateStatus": {
+          "value": null
+        },
+        "supportedCommands": {
+          "value": null
+        },
+        "state": {
+          "value": null
+        },
+        "updateAvailable": {
+          "value": false,
+          "timestamp": "2024-06-25T05:56:22.227Z"
+        },
+        "currentVersion": {
+          "value": null
+        },
+        "lastUpdateTime": {
+          "value": null
+        }
+      },
+      "tag.searchingStatus": {
+        "searchingStatus": {
+          "value": null
+        }
+      },
+      "tag.tagStatus": {
+        "connectedUserId": {
+          "value": null
+        },
+        "tagStatus": {
+          "value": null
+        },
+        "connectedDeviceId": {
+          "value": null
+        }
+      },
+      "alarm": {
+        "alarm": {
+          "value": null
+        }
+      },
+      "tag.tagButton": {
+        "tagButton": {
+          "value": null
+        }
+      },
+      "tag.uwbActivation": {
+        "uwbActivation": {
+          "value": null
+        }
+      },
+      "geolocation": {
+        "method": {
+          "value": null
+        },
+        "heading": {
+          "value": null
+        },
+        "latitude": {
+          "value": null
+        },
+        "accuracy": {
+          "value": null
+        },
+        "altitudeAccuracy": {
+          "value": null
+        },
+        "speed": {
+          "value": null
+        },
+        "longitude": {
+          "value": null
+        },
+        "lastUpdateTime": {
+          "value": null
+        }
+      }
+    }
+  }
+}

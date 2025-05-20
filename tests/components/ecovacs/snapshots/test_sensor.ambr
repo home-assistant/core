@@ -172,8 +172,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Area cleaned',
     'platform': 'ecovacs',
@@ -187,6 +190,7 @@
 # name: test_sensors[5xu9h3][sensor.goat_g1_area_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'area',
       'friendly_name': 'Goat G1 Area cleaned',
       'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
@@ -195,7 +199,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '10',
+    'state': '0.0010',
   })
 # ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_battery:entity-registry]
@@ -514,8 +518,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Total area cleaned',
     'platform': 'ecovacs',
@@ -529,6 +536,7 @@
 # name: test_sensors[5xu9h3][sensor.goat_g1_total_area_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'area',
       'friendly_name': 'Goat G1 Total area cleaned',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
@@ -538,7 +546,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '60',
+    'state': '0.0060',
   })
 # ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_total_cleaning_duration:entity-registry]
@@ -762,8 +770,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Area cleaned',
     'platform': 'ecovacs',
@@ -777,6 +788,7 @@
 # name: test_sensors[qhe2o2][sensor.dusty_area_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'area',
       'friendly_name': 'Dusty Area cleaned',
       'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
@@ -1257,8 +1269,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Total area cleaned',
     'platform': 'ecovacs',
@@ -1272,6 +1287,7 @@
 # name: test_sensors[qhe2o2][sensor.dusty_total_area_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'area',
       'friendly_name': 'Dusty Total area cleaned',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
@@ -1553,8 +1569,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Area cleaned',
     'platform': 'ecovacs',
@@ -1568,6 +1587,7 @@
 # name: test_sensors[yna5x1][sensor.ozmo_950_area_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'area',
       'friendly_name': 'Ozmo 950 Area cleaned',
       'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
@@ -1943,8 +1963,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Total area cleaned',
     'platform': 'ecovacs',
@@ -1958,6 +1981,7 @@
 # name: test_sensors[yna5x1][sensor.ozmo_950_total_area_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'area',
       'friendly_name': 'Ozmo 950 Total area cleaned',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,

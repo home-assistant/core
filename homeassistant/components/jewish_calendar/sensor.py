@@ -24,6 +24,7 @@ from homeassistant.util import dt as dt_util
 from .entity import JewishCalendarConfigEntry, JewishCalendarEntity
 
 _LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 INFO_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -275,9 +276,9 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
             }
             return after_shkia_date.hdate
         if self.entity_description.key == "weekly_portion":
-            self._attr_options = list(Parasha)
+            self._attr_options = [str(p) for p in Parasha]
             # Compute the weekly portion based on the upcoming shabbat.
-            return after_tzais_date.upcoming_shabbat.parasha
+            return str(after_tzais_date.upcoming_shabbat.parasha)
         if self.entity_description.key == "holiday":
             _holidays = after_shkia_date.holidays
             _id = ", ".join(holiday.name for holiday in _holidays)

@@ -406,11 +406,12 @@ class DeletedRegistryEntry:
     platform: str = attr.ib()
     config_entry_id: str | None = attr.ib()
     config_subentry_id: str | None = attr.ib()
+    created_at: datetime = attr.ib()
     domain: str = attr.ib(init=False, repr=False)
     id: str = attr.ib()
+    modified_at: datetime = attr.ib()
     orphaned_timestamp: float | None = attr.ib()
-    created_at: datetime = attr.ib(factory=utcnow)
-    modified_at: datetime = attr.ib(factory=utcnow)
+
     _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     @domain.default
@@ -975,6 +976,7 @@ class EntityRegistry(BaseRegistry):
             created_at=entity.created_at,
             entity_id=entity_id,
             id=entity.id,
+            modified_at=utcnow(),
             orphaned_timestamp=orphaned_timestamp,
             platform=entity.platform,
             unique_id=entity.unique_id,
