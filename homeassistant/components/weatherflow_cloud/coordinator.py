@@ -143,7 +143,7 @@ class WeatherFlowCloudDataCallbackCoordinator[
             for station, devices in self.stations.station_device_map.items()
         }
 
-    async def _generic_callback(self, data: C):
+    async def _generic_callback(self, data: C) -> None:
         """Handle incoming websocket data - RapidWindWS data will be parsed from the ob field, whereas ObservationTempestWS will be parsed directly."""
         device_id = data.device_id
         station_id = self.device_to_station_map[device_id]
