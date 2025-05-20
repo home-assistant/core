@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.components.lock import LockEntity, LockState
+from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -40,22 +40,10 @@ class XiaomiAqaraLock(LockEntity, XiaomiDevice):
 
     def __init__(self, device, name, xiaomi_hub, config_entry):
         """Initialize the XiaomiAqaraLock."""
-        self._changed_by = 0
+        self._attr_changed_by = "0"
         self._verified_wrong_times = 0
 
         super().__init__(device, name, xiaomi_hub, config_entry)
-
-    @property
-    def is_locked(self) -> bool | None:
-        """Return true if lock is locked."""
-        if self._state is not None:
-            return self._state == LockState.LOCKED
-        return None
-
-    @property
-    def changed_by(self) -> str:
-        """Last change triggered by."""
-        return self._changed_by
 
     @property
     def extra_state_attributes(self) -> dict[str, int]:
@@ -65,7 +53,7 @@ class XiaomiAqaraLock(LockEntity, XiaomiDevice):
     @callback
     def clear_unlock_state(self, _):
         """Clear unlock state automatically."""
-        self._state = LockState.LOCKED
+        self._attr_is_locked = True
         self.async_write_ha_state()
 
     def parse_data(self, data, raw_data):
@@ -76,9 +64,9 @@ class XiaomiAqaraLock(LockEntity, XiaomiDevice):
 
         for key in (FINGER_KEY, PASSWORD_KEY, CARD_KEY):
             if (value := data.get(key)) is not None:
-                self._changed_by = int(value)
+                self._attr_changed_by = str(int(value))
                 self._verified_wrong_times = 0
-                self._state = LockState.UNLOCKED
+                self._attr_is_locked = False
                 async_call_later(
                     self.hass, UNLOCK_MAINTAIN_TIME, self.clear_unlock_state
                 )
