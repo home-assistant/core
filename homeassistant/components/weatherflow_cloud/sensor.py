@@ -108,6 +108,7 @@ WEBSOCKET_WIND_SENSORS: tuple[
     ),
     WeatherFlowCloudSensorEntityDescriptionWebsocketWind(
         key="wind_direction",
+        device_class=SensorDeviceClass.WIND_DIRECTION,
         translation_key="wind_direction",
         value_fn=lambda data: data.wind_direction_degrees,
         icon_fn=_get_wind_direction_icon,
@@ -347,20 +348,28 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
+# Define type aliases for the observation types
+type ObservationType = EventDataRapidWind | WebsocketObservation
+type MessageType = RapidWindListenStartMessage | ListenStartMessage
+type ResponseType = RapidWindWS | WebsocketObservation
+
+# Define a type alias for the callback coordinator
+type WeatherFlowCallback = WeatherFlowCloudDataCallbackCoordinator[
+    ObservationType, MessageType, ResponseType
+]
+
+
 class WeatherFlowSensorBase(WeatherFlowCloudEntity, SensorEntity, ABC):
     """Common base class."""
 
     def __init__(
         self,
-        coordinator: WeatherFlowCloudUpdateCoordinatorREST
-        | WeatherFlowCloudDataCallbackCoordinator[
-            EventDataRapidWind | WebsocketObservation,
-            RapidWindListenStartMessage | ListenStartMessage,
-            RapidWindWS | WebsocketObservation,
-        ],
-        description: WeatherFlowCloudSensorEntityDescription
-        | WeatherFlowCloudSensorEntityDescriptionWebsocketWind
-        | WeatherFlowCloudSensorEntityDescriptionWebsocketObservation,
+        coordinator: WeatherFlowCloudUpdateCoordinatorREST | WeatherFlowCallback,
+        description: (
+            WeatherFlowCloudSensorEntityDescription
+            | WeatherFlowCloudSensorEntityDescriptionWebsocketWind
+            | WeatherFlowCloudSensorEntityDescriptionWebsocketObservation
+        ),
         station_id: int,
         device_id: int | None = None,
     ) -> None:
