@@ -1529,10 +1529,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="speed_count",
                     return_type="int",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="percentage_step",
                     return_type="float",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="current_direction",
@@ -1553,24 +1555,28 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="supported_features",
                     return_type="FanEntityFeature",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="set_percentage",
                     arg_types={1: "int"},
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="set_preset_mode",
                     arg_types={1: "str"},
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="set_direction",
                     arg_types={1: "str"},
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="turn_on",
@@ -1581,12 +1587,14 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="oscillate",
                     arg_types={1: "bool"},
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
             ],
         ),
