@@ -41,7 +41,6 @@ BINARY_SENSORS: tuple[JewishCalendarBinarySensorEntityDescription, ...] = (
     JewishCalendarBinarySensorEntityDescription(
         key="issur_melacha_in_effect",
         translation_key="issur_melacha_in_effect",
-        icon="mdi:power-plug-off",
         is_on=lambda state, now: bool(state.issur_melacha_in_effect(now)),
     ),
     JewishCalendarBinarySensorEntityDescription(

@@ -61,7 +61,6 @@ INFO_SENSORS: tuple[JewishCalendarSensorDescription, ...] = (
     JewishCalendarSensorDescription(
         key="date",
         translation_key="hebrew_date",
-        icon="mdi:star-david",
         value_fn=lambda results: str(results.after_shkia_date.hdate),
         attr_fn=lambda results: {
             "hebrew_year": str(results.after_shkia_date.hdate.year),
@@ -72,7 +71,6 @@ INFO_SENSORS: tuple[JewishCalendarSensorDescription, ...] = (
     JewishCalendarSensorDescription(
         key="weekly_portion",
         translation_key="weekly_portion",
-        icon="mdi:book-open-variant",
         device_class=SensorDeviceClass.ENUM,
         options_fn=lambda _: [str(p) for p in Parasha],
         value_fn=lambda results: str(results.after_tzais_date.upcoming_shabbat.parasha),
@@ -80,7 +78,6 @@ INFO_SENSORS: tuple[JewishCalendarSensorDescription, ...] = (
     JewishCalendarSensorDescription(
         key="holiday",
         translation_key="holiday",
-        icon="mdi:calendar-star",
         device_class=SensorDeviceClass.ENUM,
         options_fn=lambda diaspora: HolidayDatabase(diaspora).get_all_names(),
         value_fn=lambda results: ", ".join(
@@ -100,7 +97,6 @@ INFO_SENSORS: tuple[JewishCalendarSensorDescription, ...] = (
     JewishCalendarSensorDescription(
         key="omer_count",
         translation_key="omer_count",
-        icon="mdi:counter",
         entity_registry_enabled_default=False,
         value_fn=lambda results: (
             results.after_shkia_date.omer.total_days
@@ -111,7 +107,6 @@ INFO_SENSORS: tuple[JewishCalendarSensorDescription, ...] = (
     JewishCalendarSensorDescription(
         key="daf_yomi",
         translation_key="daf_yomi",
-        icon="mdi:book-open-variant",
         entity_registry_enabled_default=False,
         value_fn=lambda results: str(results.daytime_date.daf_yomi),
     ),
@@ -121,89 +116,74 @@ TIME_SENSORS: tuple[JewishCalendarTimestampSensorDescription, ...] = (
     JewishCalendarTimestampSensorDescription(
         key="alot_hashachar",
         translation_key="alot_hashachar",
-        icon="mdi:weather-sunset-up",
         entity_registry_enabled_default=False,
     ),
     JewishCalendarTimestampSensorDescription(
         key="talit_and_tefillin",
         translation_key="talit_and_tefillin",
-        icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
     JewishCalendarTimestampSensorDescription(
         key="netz_hachama",
         translation_key="netz_hachama",
-        icon="mdi:calendar-clock",
     ),
     JewishCalendarTimestampSensorDescription(
         key="sof_zman_shema_gra",
         translation_key="sof_zman_shema_gra",
-        icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
     JewishCalendarTimestampSensorDescription(
         key="sof_zman_shema_mga",
         translation_key="sof_zman_shema_mga",
-        icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
     JewishCalendarTimestampSensorDescription(
         key="sof_zman_tfilla_gra",
         translation_key="sof_zman_tfilla_gra",
-        icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
     JewishCalendarTimestampSensorDescription(
         key="sof_zman_tfilla_mga",
         translation_key="sof_zman_tfilla_mga",
-        icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
     JewishCalendarTimestampSensorDescription(
         key="chatzot_hayom",
         translation_key="chatzot_hayom",
-        icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
     JewishCalendarTimestampSensorDescription(
         key="mincha_gedola",
         translation_key="mincha_gedola",
-        icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
     JewishCalendarTimestampSensorDescription(
         key="mincha_ketana",
         translation_key="mincha_ketana",
-        icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
     JewishCalendarTimestampSensorDescription(
         key="plag_hamincha",
         translation_key="plag_hamincha",
-        icon="mdi:weather-sunset-down",
         entity_registry_enabled_default=False,
     ),
     JewishCalendarTimestampSensorDescription(
         key="shkia",
         translation_key="shkia",
-        icon="mdi:weather-sunset",
     ),
     JewishCalendarTimestampSensorDescription(
         key="tset_hakohavim_tsom",
         translation_key="tset_hakohavim_tsom",
-        icon="mdi:weather-night",
         entity_registry_enabled_default=False,
     ),
     JewishCalendarTimestampSensorDescription(
         key="tset_hakohavim_shabbat",
         translation_key="tset_hakohavim_shabbat",
-        icon="mdi:weather-night",
         entity_registry_enabled_default=False,
     ),
     JewishCalendarTimestampSensorDescription(
         key="upcoming_shabbat_candle_lighting",
         translation_key="upcoming_shabbat_candle_lighting",
-        icon="mdi:candle",
         entity_registry_enabled_default=False,
         value_fn=lambda at_date, mz: mz(
             at_date.upcoming_shabbat.previous_day.gdate
@@ -212,14 +192,12 @@ TIME_SENSORS: tuple[JewishCalendarTimestampSensorDescription, ...] = (
     JewishCalendarTimestampSensorDescription(
         key="upcoming_shabbat_havdalah",
         translation_key="upcoming_shabbat_havdalah",
-        icon="mdi:weather-night",
         entity_registry_enabled_default=False,
         value_fn=lambda at_date, mz: mz(at_date.upcoming_shabbat.gdate).havdalah,
     ),
     JewishCalendarTimestampSensorDescription(
         key="upcoming_candle_lighting",
         translation_key="upcoming_candle_lighting",
-        icon="mdi:candle",
         value_fn=lambda at_date, mz: mz(
             at_date.upcoming_shabbat_or_yom_tov.first_day.previous_day.gdate
         ).candle_lighting,
@@ -227,7 +205,6 @@ TIME_SENSORS: tuple[JewishCalendarTimestampSensorDescription, ...] = (
     JewishCalendarTimestampSensorDescription(
         key="upcoming_havdalah",
         translation_key="upcoming_havdalah",
-        icon="mdi:weather-night",
         value_fn=lambda at_date, mz: mz(
             at_date.upcoming_shabbat_or_yom_tov.last_day.gdate
         ).havdalah,

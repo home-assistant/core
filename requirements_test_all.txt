@@ -301,7 +301,7 @@ aionanoleaf==0.2.1
 aionotion==2024.03.0
 
 # homeassistant.components.ntfy
-aiontfy==0.5.2
+aiontfy==0.5.3
 
 # homeassistant.components.nut
 aionut==4.3.4
@@ -1510,7 +1510,7 @@ pyairnow==1.2.1
 pyairvisual==2023.08.1
 
 # homeassistant.components.aprilaire
-pyaprilaire==0.8.1
+pyaprilaire==0.9.0
 
 # homeassistant.components.asuswrt
 pyasuswrt==0.1.21
@@ -2344,7 +2344,7 @@ tesla-powerwall==0.5.2
 tesla-wall-connector==1.0.2
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.7.7
+teslemetry-stream==0.7.9
 
 # homeassistant.components.tessie
 tessie-api==0.1.1
