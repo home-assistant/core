@@ -32,7 +32,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
-    'unique_id': 'a1b2c3d4e5f6_3',
+    'unique_id': 'A1B2C3D4E5F6_battery',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -84,7 +84,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'analog_sensor',
-    'unique_id': 'a1b2c3d4e5f6_1',
+    'unique_id': 'A1B2C3D4E5F6_analog_0',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -136,7 +136,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'analog_sensor',
-    'unique_id': 'a1b2c3d4e5f6_2',
+    'unique_id': 'A1B2C3D4E5F6_analog_1',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---

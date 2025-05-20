@@ -42,8 +42,8 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     # This is the index in the updates from the VegeHub that will correspond to
-    # each sensor. This index is 1-based.
-    update_index = count(1)
+    # each sensor.
+    update_index = count(0)
 
     # Add each analog sensor input
     for _i in range(coordinator.vegehub.num_sensors):
@@ -55,13 +55,14 @@ async def async_setup_entry(
         sensors.append(sensor)
 
     # Add the battery sensor
-    sensors.append(
-        VegeHubSensor(
-            index=next(update_index),
-            coordinator=coordinator,
-            description=SENSOR_TYPES["battery"],
+    if not coordinator.vegehub.is_ac:
+        sensors.append(
+            VegeHubSensor(
+                index=next(update_index),
+                coordinator=coordinator,
+                description=SENSOR_TYPES["battery"],
+            )
         )
-    )
 
     async_add_entities(sensors)
 
@@ -83,14 +84,17 @@ class VegeHubSensor(VegeHubEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         # Set unique ID for pulling data from the coordinator
-        self._attr_unique_id = f"{self._mac_address}_{index}".lower()
-        if description.key == "analog_sensor":
-            self._attr_translation_placeholders = {"index": str(index)}
+        if description.key == "battery":
+            self.data_key = "battery"
+        else:
+            self.data_key = f"analog_{index}"
+            self._attr_translation_placeholders = {"index": str(index + 1)}
+        self._attr_unique_id = f"{self._mac_address}_{self.data_key}"
         self._attr_available = False
 
     @property
     def native_value(self) -> float | None:
         """Return the sensor's current value."""
-        if self.coordinator.data is None or self._attr_unique_id is None:
+        if self.coordinator.data is None:
             return None
-        return self.coordinator.data.get(self._attr_unique_id)
+        return self.coordinator.data.get(self.data_key)

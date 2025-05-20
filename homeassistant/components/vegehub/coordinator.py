@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from vegehub import VegeHub, update_data_to_latest_dict
+from vegehub import VegeHub, update_data_to_ha_dict
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -37,7 +37,12 @@ class VegeHubCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def update_from_webhook(self, data: dict) -> None:
         """Process and update data from webhook."""
-        sensor_data = update_data_to_latest_dict(data)
+        sensor_data = update_data_to_ha_dict(
+            data,
+            self.vegehub.num_sensors or 0,
+            self.vegehub.num_actuators or 0,
+            self.vegehub.is_ac or False,
+        )
         if self.data:
             existing_data: dict = self.data
             existing_data.update(sensor_data)
