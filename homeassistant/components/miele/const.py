@@ -422,30 +422,30 @@ class TumbleDryerProgramId(MieleEnum):
     """Program Id codes for tumble dryers."""
 
     no_program = 0, -1
+    automatic_plus = 1, 10
     cottons = 2, 20, 90
     minimum_iron = 3, 30
     woollens_handcare = 4, 40
     delicates = 5, 50
     warm_air = 6, 60
+    cool_air = 7, 70
     express = 8, 80
-    automatic_plus = 10
+    cottons_eco = 9, 99003
+    proofing = 12, 120
+    denim = 13, 130
+    shirts = 14, 99004
+    sportswear = 15, 150
+    outerwear = 16, 160
+    silks_handcare = 17, 170
+    standard_pillows = 19, 190
+    basket_program = 22, 220
     cottons_hygiene = 23
+    smoothing = 24, 240
     bed_linen = 31, 99002
     eco = 66
-    cool_air = 70
     gentle_smoothing = 100
-    proofing = 120
-    denim = 130
     gentle_denim = 131
-    sportswear = 150
-    outerwear = 160
-    silks_handcare = 170
-    standard_pillows = 190
-    basket_program = 220
-    smoothing = 240
     steam_smoothing = 99001
-    cottons_eco = 99003
-    shirts = 99004
     large_pillows = 99005
     missing2none = -9999
 
