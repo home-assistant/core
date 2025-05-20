@@ -2224,7 +2224,7 @@ pyownet==0.10.0.post1
 pypalazzetti==0.1.19
 
 # homeassistant.components.paperless_ngx
-pypaperless==4.0.0
+pypaperless==4.1.0
 
 # homeassistant.components.elv
 pypca==0.0.7
