@@ -364,21 +364,9 @@ async def configure_squeezebox_switch_platform(
         ),
         patch("homeassistant.components.squeezebox.Server", return_value=lms),
     ):
-        # Find the coordinator for the player to manually refresh it.
-        # This is necessary because we are not configuring the media_player platform.
-        coordinator: SqueezeBoxPlayerUpdateCoordinator | None = None
-
-        def discovery_callback(player: SqueezeBoxPlayerUpdateCoordinator):
-            """Find the coordinator for the discovered player so we can manually refresh it."""
-            nonlocal coordinator
-            coordinator = player
-
-        async_dispatcher_connect(hass, SIGNAL_PLAYER_DISCOVERED, discovery_callback)
-
-        # Set up the switch platform and refresh the player coordinator.
+        # Set up the switch platform.
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
-        await coordinator.async_refresh()
 
 
 @pytest.fixture
