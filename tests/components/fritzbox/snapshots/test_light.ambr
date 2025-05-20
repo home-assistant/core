@@ -1,0 +1,278 @@
+# serializer version: 1
+# name: test_setup[light.fake_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max_color_temp_kelvin': 6500,
+      'max_mireds': 370,
+      'min_color_temp_kelvin': 2700,
+      'min_mireds': 153,
+      'supported_color_modes': list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+        <ColorMode.HS: 'hs'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.fake_name',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'fake_name',
+    'platform': 'fritzbox',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '12345 1234567',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[light.fake_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': 100,
+      'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
+      'color_temp': 370,
+      'color_temp_kelvin': 2700,
+      'friendly_name': 'fake_name',
+      'hs_color': tuple(
+        28.395,
+        65.723,
+      ),
+      'max_color_temp_kelvin': 6500,
+      'max_mireds': 370,
+      'min_color_temp_kelvin': 2700,
+      'min_mireds': 153,
+      'rgb_color': tuple(
+        255,
+        167,
+        87,
+      ),
+      'supported_color_modes': list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+        <ColorMode.HS: 'hs'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+      'xy_color': tuple(
+        0.525,
+        0.388,
+      ),
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.fake_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_color[light.fake_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max_color_temp_kelvin': 6500,
+      'max_mireds': 370,
+      'min_color_temp_kelvin': 2700,
+      'min_mireds': 153,
+      'supported_color_modes': list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+        <ColorMode.HS: 'hs'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.fake_name',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'fake_name',
+    'platform': 'fritzbox',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '12345 1234567',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup_color[light.fake_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': 100,
+      'color_mode': <ColorMode.HS: 'hs'>,
+      'color_temp': None,
+      'color_temp_kelvin': None,
+      'friendly_name': 'fake_name',
+      'hs_color': tuple(
+        100,
+        70.0,
+      ),
+      'max_color_temp_kelvin': 6500,
+      'max_mireds': 370,
+      'min_color_temp_kelvin': 2700,
+      'min_mireds': 153,
+      'rgb_color': tuple(
+        136,
+        255,
+        77,
+      ),
+      'supported_color_modes': list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+        <ColorMode.HS: 'hs'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+      'xy_color': tuple(
+        0.271,
+        0.609,
+      ),
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.fake_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_non_color[light.fake_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.fake_name',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'fake_name',
+    'platform': 'fritzbox',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '12345 1234567',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup_non_color[light.fake_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': 100,
+      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+      'friendly_name': 'fake_name',
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.fake_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_non_color_non_level[light.fake_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.fake_name',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'fake_name',
+    'platform': 'fritzbox',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '12345 1234567',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup_non_color_non_level[light.fake_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'color_mode': <ColorMode.ONOFF: 'onoff'>,
+      'friendly_name': 'fake_name',
+      'supported_color_modes': list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.fake_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

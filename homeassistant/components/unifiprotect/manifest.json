@@ -40,7 +40,7 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["uiprotect", "unifi_discovery"],
-  "requirements": ["uiprotect==7.5.1", "unifi-discovery==1.2.0"],
+  "requirements": ["uiprotect==7.6.0", "unifi-discovery==1.2.0"],
   "ssdp": [
     {
       "manufacturer": "Ubiquiti Networks",

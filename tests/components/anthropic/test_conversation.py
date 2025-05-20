@@ -8,9 +8,11 @@ from anthropic import RateLimitError
 from anthropic.types import (
     InputJSONDelta,
     Message,
+    MessageDeltaUsage,
     RawContentBlockDeltaEvent,
     RawContentBlockStartEvent,
     RawContentBlockStopEvent,
+    RawMessageDeltaEvent,
     RawMessageStartEvent,
     RawMessageStopEvent,
     RawMessageStreamEvent,
@@ -23,6 +25,7 @@ from anthropic.types import (
     ToolUseBlock,
     Usage,
 )
+from anthropic.types.raw_message_delta_event import Delta
 from freezegun import freeze_time
 from httpx import URL, Request, Response
 import pytest
@@ -65,6 +68,11 @@ def create_messages(
             type="message_start",
         ),
         *content_blocks,
+        RawMessageDeltaEvent(
+            type="message_delta",
+            delta=Delta(stop_reason="end_turn", stop_sequence=""),
+            usage=MessageDeltaUsage(output_tokens=0),
+        ),
         RawMessageStopEvent(type="message_stop"),
     ]
 
@@ -303,11 +311,27 @@ async def test_conversation_agent(
 
 
 @patch("homeassistant.components.anthropic.conversation.llm.AssistAPI._async_get_tools")
+@pytest.mark.parametrize(
+    ("tool_call_json_parts", "expected_call_tool_args"),
+    [
+        (
+            ['{"param1": "test_value"}'],
+            {"param1": "test_value"},
+        ),
+        (
+            ['{"para', 'm1": "test_valu', 'e"}'],
+            {"param1": "test_value"},
+        ),
+        ([""], {}),
+    ],
+)
 async def test_function_call(
     mock_get_tools,
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
     mock_init_component,
+    tool_call_json_parts: list[str],
+    expected_call_tool_args: dict[str, Any],
 ) -> None:
     """Test function call from the assistant."""
     agent_id = "conversation.claude"
@@ -343,7 +367,7 @@ async def test_function_call(
                         1,
                         "toolu_0123456789AbCdEfGhIjKlM",
                         "test_tool",
-                        ['{"para', 'm1": "test_valu', 'e"}'],
+                        tool_call_json_parts,
                     ),
                 ]
             )
@@ -387,7 +411,7 @@ async def test_function_call(
         llm.ToolInput(
             id="toolu_0123456789AbCdEfGhIjKlM",
             tool_name="test_tool",
-            tool_args={"param1": "test_value"},
+            tool_args=expected_call_tool_args,
         ),
         llm.LLMContext(
             platform="anthropic",

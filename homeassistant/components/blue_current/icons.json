@@ -19,6 +19,17 @@
       "current_left": {
         "default": "mdi:gauge"
       }
+    },
+    "button": {
+      "reset": {
+        "default": "mdi:restart"
+      },
+      "reboot": {
+        "default": "mdi:restart-alert"
+      },
+      "stop_charge_session": {
+        "default": "mdi:stop"
+      }
     }
   }
 }

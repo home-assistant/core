@@ -47,8 +47,8 @@ class SmartThingsValve(SmartThingsEntity, ValveEntity):
         """Init the class."""
         super().__init__(client, device, {Capability.VALVE})
         self._attr_device_class = DEVICE_CLASS_MAP.get(
-            device.device.components[0].user_category
-            or device.device.components[0].manufacturer_category
+            device.device.components[MAIN].user_category
+            or device.device.components[MAIN].manufacturer_category
         )
 
     async def async_open_valve(self) -> None:

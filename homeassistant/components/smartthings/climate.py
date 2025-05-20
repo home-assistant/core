@@ -26,7 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
-from .const import MAIN
+from .const import MAIN, UNIT_MAP
 from .entity import SmartThingsEntity
 
 ATTR_OPERATION_STATE = "operation_state"
@@ -58,7 +58,7 @@ OPERATING_STATE_TO_ACTION = {
 }
 
 AC_MODE_TO_STATE = {
-    "auto": HVACMode.HEAT_COOL,
+    "auto": HVACMode.AUTO,
     "cool": HVACMode.COOL,
     "dry": HVACMode.DRY,
     "coolClean": HVACMode.COOL,
@@ -66,10 +66,11 @@ AC_MODE_TO_STATE = {
     "heat": HVACMode.HEAT,
     "heatClean": HVACMode.HEAT,
     "fanOnly": HVACMode.FAN_ONLY,
+    "fan": HVACMode.FAN_ONLY,
     "wind": HVACMode.FAN_ONLY,
 }
 STATE_TO_AC_MODE = {
-    HVACMode.HEAT_COOL: "auto",
+    HVACMode.AUTO: "auto",
     HVACMode.COOL: "cool",
     HVACMode.DRY: "dry",
     HVACMode.HEAT: "heat",
@@ -88,9 +89,9 @@ FAN_OSCILLATION_TO_SWING = {
 }
 
 WIND = "wind"
+FAN = "fan"
 WINDFREE = "windFree"
 
-UNIT_MAP = {"C": UnitOfTemperature.CELSIUS, "F": UnitOfTemperature.FAHRENHEIT}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -281,7 +282,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         return [
             state
             for mode in supported_thermostat_modes
-            if (state := AC_MODE_TO_STATE.get(mode)) is not None
+            if (state := MODE_TO_STATE.get(mode)) is not None
         ]
 
     @property
@@ -307,7 +308,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         return None
 
     @property
-    def target_temperature_low(self):
+    def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self.get_attribute_value(
@@ -333,7 +334,6 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     """Define a SmartThings Air Conditioner."""
 
     _attr_name = None
-    _attr_preset_mode = None
 
     def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Init the class."""
@@ -389,14 +389,15 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             tasks.append(self.async_turn_on())
 
         mode = STATE_TO_AC_MODE[hvac_mode]
-        # If new hvac_mode is HVAC_MODE_FAN_ONLY and AirConditioner support "wind" mode the AirConditioner new mode has to be "wind"
-        # The conversion make the mode change working
-        # The conversion is made only for device that wrongly has capability "wind" instead "fan_only"
+        # If new hvac_mode is HVAC_MODE_FAN_ONLY and AirConditioner support "wind" or "fan" mode the AirConditioner
+        # new mode has to be "wind" or "fan"
         if hvac_mode == HVACMode.FAN_ONLY:
-            if WIND in self.get_attribute_value(
-                Capability.AIR_CONDITIONER_MODE, Attribute.SUPPORTED_AC_MODES
-            ):
-                mode = WIND
+            for fan_mode in (WIND, FAN):
+                if fan_mode in self.get_attribute_value(
+                    Capability.AIR_CONDITIONER_MODE, Attribute.SUPPORTED_AC_MODES
+                ):
+                    mode = fan_mode
+                    break
 
         tasks.append(
             self.execute_device_command(
@@ -466,12 +467,14 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             Capability.DEMAND_RESPONSE_LOAD_CONTROL,
             Attribute.DEMAND_RESPONSE_LOAD_CONTROL_STATUS,
         )
-        return {
-            "drlc_status_duration": drlc_status["duration"],
-            "drlc_status_level": drlc_status["drlcLevel"],
-            "drlc_status_start": drlc_status["start"],
-            "drlc_status_override": drlc_status["override"],
-        }
+        res = {}
+        for key in ("duration", "start", "override", "drlcLevel"):
+            if key in drlc_status:
+                dict_key = {"drlcLevel": "drlc_status_level"}.get(
+                    key, f"drlc_status_{key}"
+                )
+                res[dict_key] = drlc_status[key]
+        return res
 
     @property
     def fan_mode(self) -> str:
@@ -542,6 +545,18 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             ),
             SWING_OFF,
         )
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the preset mode."""
+        if self.supports_capability(Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE):
+            mode = self.get_attribute_value(
+                Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
+                Attribute.AC_OPTIONAL_MODE,
+            )
+            if mode == WINDFREE:
+                return WINDFREE
+        return None
 
     def _determine_preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""

@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 from soco.data_structures import SearchResult
 from sonos_websocket.exception import SonosWebsocketError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -28,6 +28,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.sonos.const import (
     DOMAIN as SONOS_DOMAIN,
+    MEDIA_TYPE_DIRECTORY,
     SOURCE_LINEIN,
     SOURCE_TV,
 )
@@ -182,6 +183,19 @@ async def test_entity_basic(
                 "play_pos": 0,
             },
         ),
+        (
+            MEDIA_TYPE_DIRECTORY,
+            "S://192.168.1.1/music/elton%20john",
+            MediaPlayerEnqueue.REPLACE,
+            {
+                "title": None,
+                "item_id": "S://192.168.1.1/music/elton%20john",
+                "clear_queue": 1,
+                "position": None,
+                "play": 1,
+                "play_pos": 0,
+            },
+        ),
     ],
 )
 async def test_play_media_library(
@@ -246,6 +260,11 @@ async def test_play_media_library(
             "UnknownContent",
             "A:ALBUM/UnknowAlbum",
             "Sonos does not support media content type: UnknownContent",
+        ),
+        (
+            MEDIA_TYPE_DIRECTORY,
+            "S://192.168.1.1/music/error",
+            "Could not find media in library: S://192.168.1.1/music/error",
         ),
     ],
 )
