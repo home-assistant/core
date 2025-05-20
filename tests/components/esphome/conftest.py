@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import asyncio
 from asyncio import Event
-from collections.abc import AsyncGenerator, Awaitable, Callable, Coroutine
+from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Protocol
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aioesphomeapi import (
@@ -46,6 +46,46 @@ from tests.common import MockConfigEntry
 
 if TYPE_CHECKING:
     from aioesphomeapi.api_pb2 import SubscribeLogsResponse
+
+
+class MockGenericDeviceEntryType(Protocol):
+    """Mock ESPHome device entry type."""
+
+    async def __call__(
+        self,
+        mock_client: APIClient,
+        entity_info: list[EntityInfo],
+        user_service: list[UserService],
+        states: list[EntityState],
+        mock_storage: bool = ...,
+    ) -> MockConfigEntry:
+        """Mock an ESPHome device entry."""
+
+
+class MockESPHomeDeviceType(Protocol):
+    """Mock ESPHome device type."""
+
+    async def __call__(
+        self,
+        mock_client: APIClient,
+        entity_info: list[EntityInfo] | None = ...,
+        user_service: list[UserService] | None = ...,
+        states: list[EntityState] | None = ...,
+        entry: MockConfigEntry | None = ...,
+        device_info: dict[str, Any] | None = ...,
+        mock_storage: bool = ...,
+    ) -> MockESPHomeDevice:
+        """Mock an ESPHome device."""
+
+
+class MockBluetoothEntryType(Protocol):
+    """Mock ESPHome bluetooth entry type."""
+
+    async def __call__(
+        self,
+        bluetooth_proxy_feature_flags: BluetoothProxyFeature,
+    ) -> MockESPHomeDevice:
+        """Mock an ESPHome bluetooth entry."""
 
 
 _ONE_SECOND = 16000 * 2  # 16Khz 16-bit
@@ -133,7 +173,7 @@ async def init_integration(
 
 
 @pytest.fixture
-def mock_client(mock_device_info) -> APIClient:
+def mock_client(mock_device_info) -> Generator[APIClient]:
     """Mock APIClient."""
     mock_client = Mock(spec=APIClient)
 
@@ -573,7 +613,7 @@ async def mock_voice_assistant_api_entry(mock_voice_assistant_entry) -> MockConf
 async def mock_bluetooth_entry(
     hass: HomeAssistant,
     mock_client: APIClient,
-):
+) -> MockBluetoothEntryType:
     """Set up an ESPHome entry with bluetooth."""
 
     async def _mock_bluetooth_entry(
@@ -608,7 +648,9 @@ async def mock_bluetooth_entry(
 
 
 @pytest.fixture
-async def mock_bluetooth_entry_with_raw_adv(mock_bluetooth_entry) -> MockESPHomeDevice:
+async def mock_bluetooth_entry_with_raw_adv(
+    mock_bluetooth_entry: MockBluetoothEntryType,
+) -> MockESPHomeDevice:
     """Set up an ESPHome entry with bluetooth and raw advertisements."""
     return await mock_bluetooth_entry(
         bluetooth_proxy_feature_flags=BluetoothProxyFeature.PASSIVE_SCAN
@@ -622,7 +664,7 @@ async def mock_bluetooth_entry_with_raw_adv(mock_bluetooth_entry) -> MockESPHome
 
 @pytest.fixture
 async def mock_bluetooth_entry_with_legacy_adv(
-    mock_bluetooth_entry,
+    mock_bluetooth_entry: MockBluetoothEntryType,
 ) -> MockESPHomeDevice:
     """Set up an ESPHome entry with bluetooth with legacy advertisements."""
     return await mock_bluetooth_entry(
@@ -638,10 +680,7 @@ async def mock_bluetooth_entry_with_legacy_adv(
 async def mock_generic_device_entry(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
-) -> Callable[
-    [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-    Awaitable[MockConfigEntry],
-]:
+) -> MockGenericDeviceEntryType:
     """Set up an ESPHome entry and return the MockConfigEntry."""
 
     async def _mock_device_entry(
@@ -670,10 +709,7 @@ async def mock_generic_device_entry(
 async def mock_esphome_device(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
-) -> Callable[
-    [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-    Awaitable[MockESPHomeDevice],
-]:
+) -> MockESPHomeDeviceType:
     """Set up an ESPHome entry and return the MockESPHomeDevice."""
 
     async def _mock_device(

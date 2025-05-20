@@ -65,21 +65,21 @@ async def test_async_browse_media_root(
     assert response["success"]
     result = response["result"]
     for idx, item in enumerate(result["children"]):
-        assert item["title"] == LIBRARY[idx]
+        assert item["title"].lower() == LIBRARY[idx]
 
 
 @pytest.mark.parametrize(
     ("category", "child_count"),
     [
-        ("Favorites", 4),
-        ("Artists", 4),
-        ("Albums", 4),
-        ("Playlists", 4),
-        ("Genres", 4),
-        ("New Music", 4),
-        ("Album Artists", 4),
-        ("Apps", 3),
-        ("Radios", 3),
+        ("favorites", 4),
+        ("artists", 4),
+        ("albums", 4),
+        ("playlists", 4),
+        ("genres", 4),
+        ("new music", 4),
+        ("album artists", 4),
+        ("apps", 3),
+        ("radios", 3),
     ],
 )
 async def test_async_browse_media_with_subitems(

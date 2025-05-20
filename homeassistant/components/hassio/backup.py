@@ -19,12 +19,14 @@ from aiohasupervisor.exceptions import (
 )
 from aiohasupervisor.models import (
     backups as supervisor_backups,
+    jobs as supervisor_jobs,
     mounts as supervisor_mounts,
 )
 from aiohasupervisor.models.backups import LOCATION_CLOUD_BACKUP, LOCATION_LOCAL_STORAGE
 
 from homeassistant.components.backup import (
     DATA_MANAGER,
+    AddonErrorData,
     AddonInfo,
     AgentBackup,
     BackupAgent,
@@ -57,7 +59,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
-from .const import DOMAIN, EVENT_SUPERVISOR_EVENT
+from .const import DATA_CONFIG_STORE, DOMAIN, EVENT_SUPERVISOR_EVENT
 from .handler import get_supervisor_client
 
 MOUNT_JOBS = ("mount_manager_create_mount", "mount_manager_remove_mount")
@@ -401,6 +403,25 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                 f"Backup failed: {create_errors or 'no backup_id'}"
             )
 
+        # The backup was created successfully, check for non critical errors
+        full_status = await self._client.jobs.get_job(backup.job_id)
+        _addon_errors = _collect_errors(
+            full_status, "backup_store_addons", "backup_addon_save"
+        )
+        addon_errors: dict[str, AddonErrorData] = {}
+        for slug, errors in _addon_errors.items():
+            try:
+                addon_info = await self._client.addons.addon_info(slug)
+                addon_errors[slug] = AddonErrorData(name=addon_info.name, errors=errors)
+            except SupervisorError as err:
+                _LOGGER.debug("Error getting addon %s: %s", slug, err)
+                addon_errors[slug] = AddonErrorData(name=slug, errors=errors)
+
+        _folder_errors = _collect_errors(
+            full_status, "backup_store_folders", "backup_folder_save"
+        )
+        folder_errors = {Folder(key): val for key, val in _folder_errors.items()}
+
         async def open_backup() -> AsyncIterator[bytes]:
             try:
                 return await self._client.backups.download_backup(backup_id)
@@ -430,7 +451,9 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             ) from err
 
         return WrittenBackup(
+            addon_errors=addon_errors,
             backup=_backup_details_to_agent_backup(details, locations[0]),
+            folder_errors=folder_errors,
             open_stream=open_backup,
             release_stream=remove_backup,
         )
@@ -474,7 +497,9 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         details = await self._client.backups.backup_info(backup_id)
 
         return WrittenBackup(
+            addon_errors={},
             backup=_backup_details_to_agent_backup(details, locations[0]),
+            folder_errors={},
             open_stream=open_backup,
             release_stream=remove_backup,
         )
@@ -696,6 +721,27 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         on_event(job.to_dict())
 
 
+def _collect_errors(
+    job: supervisor_jobs.Job, child_job_name: str, grandchild_job_name: str
+) -> dict[str, list[tuple[str, str]]]:
+    """Collect errors from a job's grandchildren."""
+    errors: dict[str, list[tuple[str, str]]] = {}
+    for child_job in job.child_jobs:
+        if child_job.name != child_job_name:
+            continue
+        for grandchild in child_job.child_jobs:
+            if (
+                grandchild.name != grandchild_job_name
+                or not grandchild.errors
+                or not grandchild.reference
+            ):
+                continue
+            errors[grandchild.reference] = [
+                (error.type, error.message) for error in grandchild.errors
+            ]
+    return errors
+
+
 async def _default_agent(client: SupervisorClient) -> str:
     """Return the default agent for creating a backup."""
     mounts = await client.mounts.info()
@@ -729,6 +775,18 @@ async def backup_addon_before_update(
             if backup.extra_metadata.get(TAG_ADDON_UPDATE) == addon
         }
 
+    def _delete_filter(
+        backups: dict[str, ManagerBackup],
+    ) -> dict[str, ManagerBackup]:
+        """Return oldest backups more numerous than copies to delete."""
+        update_config = hass.data[DATA_CONFIG_STORE].data.update_config
+        return dict(
+            sorted(
+                backups.items(),
+                key=lambda backup_item: backup_item[1].date,
+            )[: max(len(backups) - update_config.add_on_backup_retain_copies, 0)]
+        )
+
     try:
         await backup_manager.async_create_backup(
             agent_ids=[await _default_agent(client)],
@@ -747,7 +805,7 @@ async def backup_addon_before_update(
         try:
             await backup_manager.async_delete_filtered_backups(
                 include_filter=addon_update_backup_filter,
-                delete_filter=lambda backups: backups,
+                delete_filter=_delete_filter,
             )
         except BackupManagerError as err:
             raise HomeAssistantError(f"Error deleting old backups: {err}") from err

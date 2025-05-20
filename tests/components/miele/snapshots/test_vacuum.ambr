@@ -1,0 +1,63 @@
+# serializer version: 1
+# name: test_sensor_states[platforms0-vacuum_device.json][vacuum.robot_vacuum_cleaner-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_speed_list': list([
+        'normal',
+        'turbo',
+        'silent',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'vacuum',
+    'entity_category': None,
+    'entity_id': 'vacuum.robot_vacuum_cleaner',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'supported_features': <VacuumEntityFeature: 13420>,
+    'translation_key': 'vacuum',
+    'unique_id': 'Dummy_Vacuum_1-vacuum',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states[platforms0-vacuum_device.json][vacuum.robot_vacuum_cleaner-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'battery_icon': 'mdi:battery-60',
+      'battery_level': 65,
+      'fan_speed': 'normal',
+      'fan_speed_list': list([
+        'normal',
+        'turbo',
+        'silent',
+      ]),
+      'friendly_name': 'Robot vacuum cleaner',
+      'supported_features': <VacuumEntityFeature: 13420>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'vacuum.robot_vacuum_cleaner',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cleaning',
+  })
+# ---

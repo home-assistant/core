@@ -74,7 +74,7 @@ class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
             self._attr_native_value = self.meter.reading
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         await super().async_added_to_hass()
         self.async_on_remove(self.coordinator.async_add_listener(self._state_update))

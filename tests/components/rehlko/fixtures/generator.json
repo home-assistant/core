@@ -1,0 +1,191 @@
+{
+  "device": {
+    "id": 12345,
+    "serialNumber": "123MGVHR4567",
+    "displayName": "Generator 1",
+    "deviceHost": "Oncue",
+    "hasAcceptedPrivacyPolicy": true,
+    "address": {
+      "lat": 41.3341111,
+      "long": -72.3333111,
+      "address1": "Highway 66",
+      "address2": null,
+      "city": "Somewhere",
+      "state": "CA",
+      "postalCode": "00000",
+      "country": "US"
+    },
+    "product": "Rdc2v4",
+    "productDisplayName": "RDC 2.4",
+    "controllerType": "RDC2 (Blue Board)",
+    "firmwareVersion": "3.4.5",
+    "currentFirmware": "RDC2.4 3.4.5",
+    "isConnected": true,
+    "lastConnectedTimestamp": "2025-04-14T09:30:17+00:00",
+    "deviceIpAddress": "1.1.1.1:2402",
+    "macAddress": "91:E1:20:63:10:00",
+    "status": "ReadyToRun",
+    "statusUpdateTimestamp": "2025-04-14T09:29:01+00:00",
+    "dealerOrgs": [
+      {
+        "id": 123,
+        "businessPartnerNo": "123456",
+        "name": "Generators R Us",
+        "e164PhoneNumber": "+199999999999",
+        "displayPhoneNumber": "(999) 999-9999",
+        "wizardStep": "OnboardingComplete",
+        "wizardComplete": true,
+        "address": {
+          "lat": null,
+          "long": null,
+          "address1": "Highway 66",
+          "address2": null,
+          "city": "Revisited",
+          "state": "CA",
+          "postalCode": "000000",
+          "country": null
+        },
+        "userCount": 4,
+        "technicianCount": 3,
+        "deviceCount": 71,
+        "adminEmails": ["admin@gmail.com"]
+      }
+    ],
+    "alertCount": 0,
+    "model": "Model20KW",
+    "modelDisplayName": "20 KW",
+    "lastMaintenanceTimestamp": "2025-04-10T09:12:59",
+    "nextMaintenanceTimestamp": "2026-04-10T09:12:59",
+    "maintenancePeriodDays": 365,
+    "hasServiceAgreement": null,
+    "totalRuntimeHours": 120.2
+  },
+  "powerSource": "Utility",
+  "switchState": "Auto",
+  "coolingType": "Air",
+  "connectionType": "Unknown",
+  "serverIpAddress": "2.2.2.2",
+  "serviceAgreement": {
+    "hasServiceAgreement": null,
+    "beginTimestamp": null,
+    "term": null,
+    "termMonths": null,
+    "termDays": null
+  },
+  "exercise": {
+    "frequency": "Weekly",
+    "nextStartTimestamp": "2025-04-19T10:00:00",
+    "mode": "Unloaded",
+    "runningMode": null,
+    "durationMinutes": 20,
+    "lastStartTimestamp": "2025-04-12T14:00:00+00:00",
+    "lastEndTimestamp": "2025-04-12T14:19:59+00:00"
+  },
+  "lastRanTimestamp": "2025-04-12T14:00:00+00:00",
+  "totalRuntimeHours": 120.2,
+  "totalOperationHours": 33932.3,
+  "runtimeSinceLastMaintenanceHours": 0.3,
+  "remoteResetCounterSeconds": 0,
+  "addedBy": null,
+  "associatedUsers": ["pete.rage@rage.com"],
+  "controllerClockTimestamp": "2025-04-15T07:08:50",
+  "fuelType": "LiquidPropane",
+  "batteryVoltageV": 13.9,
+  "engineCoolantTempF": null,
+  "engineFrequencyHz": 0,
+  "engineSpeedRpm": 0,
+  "lubeOilTempF": 42.8,
+  "controllerTempF": 71.6,
+  "engineCompartmentTempF": null,
+  "engineOilPressurePsi": null,
+  "engineOilPressureOk": true,
+  "generatorLoadW": 0,
+  "generatorLoadPercent": 0,
+  "generatorVoltageAvgV": 0,
+  "setOutputVoltageV": 240,
+  "utilityVoltageV": 259.7,
+  "engineState": "Standby",
+  "engineStateDisplayNameEn": "Standby",
+  "loadShed": {
+    "isConnected": true,
+    "parameters": [
+      {
+        "definitionId": 1,
+        "displayName": "HVAC A",
+        "value": false,
+        "isReadOnly": false
+      },
+      {
+        "definitionId": 2,
+        "displayName": "HVAC B",
+        "value": false,
+        "isReadOnly": false
+      },
+      {
+        "definitionId": 3,
+        "displayName": "Load A",
+        "value": false,
+        "isReadOnly": false
+      },
+      {
+        "definitionId": 4,
+        "displayName": "Load B",
+        "value": false,
+        "isReadOnly": false
+      },
+      {
+        "definitionId": 5,
+        "displayName": "Load C",
+        "value": false,
+        "isReadOnly": false
+      },
+      {
+        "definitionId": 6,
+        "displayName": "Load D",
+        "value": false,
+        "isReadOnly": false
+      }
+    ]
+  },
+  "pim": {
+    "isConnected": false,
+    "parameters": [
+      {
+        "definitionId": 7,
+        "displayName": "Digital Output B1 Value",
+        "value": false,
+        "isReadOnly": true
+      },
+      {
+        "definitionId": 8,
+        "displayName": "Digital Output B2 Value",
+        "value": false,
+        "isReadOnly": true
+      },
+      {
+        "definitionId": 9,
+        "displayName": "Digital Output B3 Value",
+        "value": false,
+        "isReadOnly": false
+      },
+      {
+        "definitionId": 10,
+        "displayName": "Digital Output B4 Value",
+        "value": false,
+        "isReadOnly": false
+      },
+      {
+        "definitionId": 11,
+        "displayName": "Digital Output B5 Value",
+        "value": false,
+        "isReadOnly": false
+      },
+      {
+        "definitionId": 12,
+        "displayName": "Digital Output B6 Value",
+        "value": false,
+        "isReadOnly": false
+      }
+    ]
+  }
+}

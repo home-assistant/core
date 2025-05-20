@@ -14,7 +14,7 @@ from aioairzone_cloud.const import (
     RAW_INSTALLATIONS_LIST,
     RAW_WEBSERVERS,
 )
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.airzone_cloud.const import DOMAIN

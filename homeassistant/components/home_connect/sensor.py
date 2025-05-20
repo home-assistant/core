@@ -159,7 +159,6 @@ SENSORS = (
     HomeConnectSensorEntityDescription(
         key=StatusKey.BSH_COMMON_BATTERY_LEVEL,
         device_class=SensorDeviceClass.BATTERY,
-        translation_key="battery_level",
     ),
     HomeConnectSensorEntityDescription(
         key=StatusKey.BSH_COMMON_VIDEO_CAMERA_STATE,

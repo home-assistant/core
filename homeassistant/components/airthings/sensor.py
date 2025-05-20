@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
+    LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
     EntityCategory,
@@ -76,6 +77,12 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="light",
         native_unit_of_measurement=PERCENTAGE,
         translation_key="light",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "lux": SensorEntityDescription(
+        key="lux",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        native_unit_of_measurement=LIGHT_LUX,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "virusRisk": SensorEntityDescription(
