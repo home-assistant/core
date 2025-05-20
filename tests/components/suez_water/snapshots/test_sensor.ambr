@@ -29,7 +29,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'water_price',
-    'unique_id': 'test-counter_water_price',
+    'unique_id': '123456_water_price',
     'unit_of_measurement': '€',
   })
 # ---
@@ -79,7 +79,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'water_usage_yesterday',
-    'unique_id': 'test-counter_water_usage_yesterday',
+    'unique_id': '123456_water_usage_yesterday',
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
