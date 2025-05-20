@@ -197,6 +197,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self._migrating = False
         self._reconfigure_config_entry: ConfigEntry | None = None
         self._usb_discovery = False
+        self._recommended_install = False
 
     async def async_step_install_addon(
         self, user_input: dict[str, Any] | None = None
@@ -372,9 +373,21 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         if is_hassio(self.hass):
-            return await self.async_step_on_supervisor()
+            return await self.async_step_installation_type()
 
         return await self.async_step_manual()
+
+    async def async_step_installation_type(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the installation type step."""
+        return self.async_show_menu(
+            step_id="installation_type",
+            menu_options=[
+                "intent_recommended",
+                "intent_custom",
+            ],
+        )
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -516,7 +529,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="addon_required")
             return await self.async_step_intent_migrate()
 
-        return await self.async_step_on_supervisor({CONF_USE_ADDON: True})
+        return await self.async_step_installation_type()
 
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
@@ -593,6 +606,21 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="hassio_confirm")
 
+    async def async_step_intent_recommended(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Select recommended installation type."""
+        self._recommended_install = True
+        return await self.async_step_on_supervisor({CONF_USE_ADDON: True})
+
+    async def async_step_intent_custom(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Select custom installation type."""
+        if self._usb_discovery:
+            return await self.async_step_on_supervisor({CONF_USE_ADDON: True})
+        return await self.async_step_on_supervisor()
+
     async def async_step_on_supervisor(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -641,31 +669,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         addon_info = await self._async_get_addon_info()
         addon_config = addon_info.options
 
-        if user_input is not None:
-            self.s0_legacy_key = user_input[CONF_S0_LEGACY_KEY]
-            self.s2_access_control_key = user_input[CONF_S2_ACCESS_CONTROL_KEY]
-            self.s2_authenticated_key = user_input[CONF_S2_AUTHENTICATED_KEY]
-            self.s2_unauthenticated_key = user_input[CONF_S2_UNAUTHENTICATED_KEY]
-            self.lr_s2_access_control_key = user_input[CONF_LR_S2_ACCESS_CONTROL_KEY]
-            self.lr_s2_authenticated_key = user_input[CONF_LR_S2_AUTHENTICATED_KEY]
-            if not self._usb_discovery:
-                self.usb_path = user_input[CONF_USB_PATH]
-
-            addon_config_updates = {
-                CONF_ADDON_DEVICE: self.usb_path,
-                CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
-                CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
-                CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
-                CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
-                CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
-                CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
-            }
-
-            await self._async_set_addon_config(addon_config_updates)
-
-            return await self.async_step_start_addon()
-
-        usb_path = self.usb_path or addon_config.get(CONF_ADDON_DEVICE) or ""
         s0_legacy_key = addon_config.get(
             CONF_ADDON_S0_LEGACY_KEY, self.s0_legacy_key or ""
         )
@@ -685,22 +688,67 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_ADDON_LR_S2_AUTHENTICATED_KEY, self.lr_s2_authenticated_key or ""
         )
 
-        schema: VolDictType = {
-            vol.Optional(CONF_S0_LEGACY_KEY, default=s0_legacy_key): str,
-            vol.Optional(
-                CONF_S2_ACCESS_CONTROL_KEY, default=s2_access_control_key
-            ): str,
-            vol.Optional(CONF_S2_AUTHENTICATED_KEY, default=s2_authenticated_key): str,
-            vol.Optional(
-                CONF_S2_UNAUTHENTICATED_KEY, default=s2_unauthenticated_key
-            ): str,
-            vol.Optional(
-                CONF_LR_S2_ACCESS_CONTROL_KEY, default=lr_s2_access_control_key
-            ): str,
-            vol.Optional(
-                CONF_LR_S2_AUTHENTICATED_KEY, default=lr_s2_authenticated_key
-            ): str,
-        }
+        if self._recommended_install and self._usb_discovery:
+            # Recommended installation with USB discovery, skip asking for keys
+            user_input = {}
+
+        if user_input is not None:
+            self.s0_legacy_key = user_input.get(CONF_S0_LEGACY_KEY, s0_legacy_key)
+            self.s2_access_control_key = user_input.get(
+                CONF_S2_ACCESS_CONTROL_KEY, s2_access_control_key
+            )
+            self.s2_authenticated_key = user_input.get(
+                CONF_S2_AUTHENTICATED_KEY, s2_authenticated_key
+            )
+            self.s2_unauthenticated_key = user_input.get(
+                CONF_S2_UNAUTHENTICATED_KEY, s2_unauthenticated_key
+            )
+            self.lr_s2_access_control_key = user_input.get(
+                CONF_LR_S2_ACCESS_CONTROL_KEY, lr_s2_access_control_key
+            )
+            self.lr_s2_authenticated_key = user_input.get(
+                CONF_LR_S2_AUTHENTICATED_KEY, lr_s2_authenticated_key
+            )
+            if not self._usb_discovery:
+                self.usb_path = user_input[CONF_USB_PATH]
+
+            addon_config_updates = {
+                CONF_ADDON_DEVICE: self.usb_path,
+                CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
+                CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
+                CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
+                CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
+                CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
+                CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
+            }
+
+            await self._async_set_addon_config(addon_config_updates)
+
+            return await self.async_step_start_addon()
+
+        usb_path = self.usb_path or addon_config.get(CONF_ADDON_DEVICE) or ""
+        schema: VolDictType = (
+            {}
+            if self._recommended_install
+            else {
+                vol.Optional(CONF_S0_LEGACY_KEY, default=s0_legacy_key): str,
+                vol.Optional(
+                    CONF_S2_ACCESS_CONTROL_KEY, default=s2_access_control_key
+                ): str,
+                vol.Optional(
+                    CONF_S2_AUTHENTICATED_KEY, default=s2_authenticated_key
+                ): str,
+                vol.Optional(
+                    CONF_S2_UNAUTHENTICATED_KEY, default=s2_unauthenticated_key
+                ): str,
+                vol.Optional(
+                    CONF_LR_S2_ACCESS_CONTROL_KEY, default=lr_s2_access_control_key
+                ): str,
+                vol.Optional(
+                    CONF_LR_S2_AUTHENTICATED_KEY, default=lr_s2_authenticated_key
+                ): str,
+            }
+        )
 
         if not self._usb_discovery:
             try:
