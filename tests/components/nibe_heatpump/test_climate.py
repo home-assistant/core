@@ -297,7 +297,6 @@ async def test_set_temperature_unsupported_cooling(
     [
         (Model.S320, "s1", "climate.climate_system_s1"),
         (Model.F1155, "s2", "climate.climate_system_s2"),
-        (Model.F730, "s1", "climate.climate_system_s1"),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

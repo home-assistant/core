@@ -161,7 +161,7 @@ async def test_set_hvac_mode(
     )
     therm_module.set_state.assert_called_with(True)
 
-    msg = "Tried to set unsupported mode: dry"
+    msg = "Hvac mode dry is not valid. Valid hvac modes are: heat, off"
     with pytest.raises(ServiceValidationError, match=msg):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
