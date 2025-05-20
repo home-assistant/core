@@ -530,6 +530,8 @@ build.json @home-assistant/supervisor
 /tests/components/garages_amsterdam/ @klaasnicolaas
 /homeassistant/components/gardena_bluetooth/ @elupus
 /tests/components/gardena_bluetooth/ @elupus
+/homeassistant/components/garni/ @fkiscd
+/tests/components/garni/ @fkiscd
 /homeassistant/components/gdacs/ @exxamalte
 /tests/components/gdacs/ @exxamalte
 /homeassistant/components/generic/ @davet2001
