@@ -655,11 +655,10 @@ class PipelineRun:
                 "url": self.tts_stream.url,
                 "mime_type": self.tts_stream.content_type,
                 "stream_response": (
-                    self.intent_agent.supports_streaming
-                    and self.tts_stream.supports_streaming_input
-                )
-                if self.intent_agent
-                else False,
+                    self.tts_stream.supports_streaming_input
+                    and self.intent_agent
+                    and self.intent_agent.supports_streaming
+                ),
             }
 
         self.process_event(PipelineEvent(PipelineEventType.RUN_START, data))
