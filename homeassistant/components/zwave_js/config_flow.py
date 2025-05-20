@@ -1167,7 +1167,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         addon_config = addon_info.options
         old_usb_path = addon_config.get(CONF_ADDON_DEVICE, "")
         # Remove the old controller from the ports list.
-        ports.pop(usb.get_serial_by_id(old_usb_path), None)
+        ports.pop(
+            await self.hass.async_add_executor_job(usb.get_serial_by_id, old_usb_path),
+            None,
+        )
 
         data_schema = vol.Schema(
             {
