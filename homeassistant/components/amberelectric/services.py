@@ -15,7 +15,7 @@ from homeassistant.exceptions import ServiceValidationError
 
 from .const import ATTR_CHANNEL_TYPE, ATTR_SITE_ID, DOMAIN, GET_FORECASTS_SERVICE
 from .coordinator import AmberConfigEntry
-from .formatters import normalize_descriptor
+from .helpers import normalize_descriptor
 
 
 def format_cents_to_dollars(cents: float) -> float:
