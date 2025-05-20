@@ -25,7 +25,7 @@ class NintendoDevice(CoordinatorEntity):
             identifiers={(DOMAIN, device.device_id)},
             manufacturer="Nintendo",
             name=device.name,
-            entry_type=dr.DeviceEntryType.SERVICE,
+            entry_type=DeviceEntryType.SERVICE,
             sw_version=device.extra["device"]["firmwareVersion"]["displayedVersion"],
         )
 
