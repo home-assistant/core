@@ -801,18 +801,21 @@ _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
         kwargs_type="Any",
         return_type=None,
         has_async_counterpart=True,
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="turn_off",
         kwargs_type="Any",
         return_type=None,
         has_async_counterpart=True,
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="toggle",
         kwargs_type="Any",
         return_type=None,
         has_async_counterpart=True,
+        mandatory=True,
     ),
 ]
 _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
