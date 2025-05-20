@@ -52,15 +52,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up binary sensor entities for the binary sensors in the tub."""
 
-    coordinator = entry.runtime_data.coordinator
+    controller = entry.runtime_data
 
     entities: list[BinarySensorEntity] = []
-    for spa in entry.runtime_data.spas:
-        entities.append(SmartTubOnline(coordinator, spa))
-        entities.append(SmartTubError(coordinator, spa))
+    for spa in controller.spas:
+        entities.append(SmartTubOnline(controller.coordinator, spa))
+        entities.append(SmartTubError(controller.coordinator, spa))
         entities.extend(
-            SmartTubReminder(coordinator, spa, reminder)
-            for reminder in coordinator.data[spa.id][ATTR_REMINDERS].values()
+            SmartTubReminder(controller.coordinator, spa, reminder)
+            for reminder in controller.coordinator.data[spa.id][ATTR_REMINDERS].values()
         )
 
     async_add_entities(entities)
@@ -129,7 +129,7 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
         return self.reminder.remaining_days == 0
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             ATTR_REMINDER_SNOOZED: self.reminder.snoozed,
@@ -179,7 +179,7 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
         return self.error is not None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if (error := self.error) is None:
             return {}
