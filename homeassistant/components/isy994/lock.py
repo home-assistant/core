@@ -7,19 +7,16 @@ from typing import Any
 from pyisy.constants import ISY_VALUE_UNKNOWN
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
 
-from .const import DOMAIN
 from .entity import ISYNodeEntity, ISYProgramEntity
-from .models import IsyData
+from .models import IsyConfigEntry
 from .services import (
     SERVICE_DELETE_USER_CODE_SCHEMA,
     SERVICE_DELETE_ZWAVE_LOCK_USER_CODE,
@@ -49,12 +46,12 @@ def async_setup_lock_services(hass: HomeAssistant) -> None:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: IsyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ISY lock platform."""
-    isy_data: IsyData = hass.data[DOMAIN][entry.entry_id]
-    devices: dict[str, DeviceInfo] = isy_data.devices
+    isy_data = entry.runtime_data
+    devices = isy_data.devices
     entities: list[ISYLockEntity | ISYLockProgramEntity] = [
         ISYLockEntity(node, devices.get(node.primary_node))
         for node in isy_data.nodes[Platform.LOCK]
