@@ -105,10 +105,9 @@ async def test_set_date_time_service_fails_bad_year_before(
 ) -> None:
     """Test that the service calls fail if the panel fails the service call."""
     await setup_integration(hass, mock_config_entry)
-    mock_panel.set_panel_date.side_effect = ValueError()
     with pytest.raises(
         vol.MultipleInvalid,
-        match=r"datetime must be before 2037 for dictionary value @ data\['datetime'\]",
+        match=r"datetime must be before 2038 for dictionary value @ data\['datetime'\]",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -132,7 +131,7 @@ async def test_set_date_time_service_fails_bad_year_after(
     mock_panel.set_panel_date.side_effect = ValueError()
     with pytest.raises(
         vol.MultipleInvalid,
-        match=r"datetime must be after 2010 for dictionary value @ data\['datetime'\]",
+        match=r"datetime must be after 2009 for dictionary value @ data\['datetime'\]",
     ):
         await hass.services.async_call(
             DOMAIN,

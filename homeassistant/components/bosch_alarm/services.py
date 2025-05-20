@@ -22,10 +22,10 @@ def validate_datetime(value: Any) -> dt.datetime:
     """Validate that a provided datetime is supported on a bosch alarm panel."""
     date_val = cv.datetime(value)
     if date_val.year < 2010:
-        raise vol.RangeInvalid("datetime must be after 2010")
+        raise vol.RangeInvalid("datetime must be after 2009")
 
     if date_val.year > 2037:
-        raise vol.RangeInvalid("datetime must be before 2037")
+        raise vol.RangeInvalid("datetime must be before 2038")
 
     return date_val
 
