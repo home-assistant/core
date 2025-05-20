@@ -266,9 +266,10 @@ async def test_browse_media_get_albums(
     assert isinstance(result.children[0], BrowseMedia)
     assert result.children[0].identifier == "mocked_syno_dsm_entry/0"
     assert result.children[0].title == "All images"
+    assert isinstance(result.children[1], BrowseMedia)
     assert result.children[1].identifier == "mocked_syno_dsm_entry/shared"
     assert result.children[1].title == "Shared space"
-    assert isinstance(result.children[1], BrowseMedia)
+    assert isinstance(result.children[2], BrowseMedia)
     assert result.children[2].identifier == "mocked_syno_dsm_entry/1_"
     assert result.children[2].title == "Album 1"
 
