@@ -975,6 +975,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         3: "datetime",
                     },
                     return_type="list[CalendarEvent]",
+                    mandatory=True,
                 ),
             ],
         ),
