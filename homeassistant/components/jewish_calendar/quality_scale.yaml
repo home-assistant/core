@@ -13,7 +13,7 @@ rules:
   docs-removal-instructions: done
   entity-event-setup:
     status: exempt
-    comment: Entities of this integration does not explicitly subscribe to events.
+    comment: Entities of this integration do not explicitly subscribe to events.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -75,11 +75,11 @@ rules:
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: todo
-  icon-translations: todo
+  icon-translations: done
   reconfiguration-flow: done
   repair-issues:
     status: exempt
-    comment: There are no issues which can be repaired.
+    comment: There are no issues that can be repaired.
   stale-devices:
     status: exempt
     comment: This integration does not have devices.
