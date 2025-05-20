@@ -24,6 +24,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.ssl import client_context
 
 from .const import DOMAIN, LOGGER
 
@@ -163,7 +164,8 @@ class WeatherFlowCloudDataCallbackCoordinator[
     async def async_setup(self) -> None:
         """Set up the websocket connection."""
         assert self.websocket_api is not None
-        await self.websocket_api.connect()
+
+        await self.websocket_api.connect(client_context())
         # Register callback
         self.websocket_api.register_callback(
             message_type=self._event_type,
