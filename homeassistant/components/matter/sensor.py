@@ -112,26 +112,6 @@ PUMP_CONTROL_MODE_MAP = {
     clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kUnknownEnumValue: "unknown",
 }
 
-PUMP_STATUS_MAP = {
-    0x1: "device_fault",
-    0x4: "speed_low",
-    0x5: "devicefault_speedlow",
-    0x8: "speed_high",
-}
-
-"""
-{
-    kDeviceFault       = 0x1,
-    kSupplyFault       = 0x2,
-    kSpeedLow          = 0x4,
-    kSpeedHigh         = 0x8,
-    kLocalOverride     = 0x10,
-    kRunning           = 0x20,
-    kRemotePressure    = 0x40,
-    kRemoteFlow        = 0x80,
-    kRemoteTemperature = 0x100,
-"""
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -305,7 +285,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="FlowSensor",
             native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
-            translation_key="flow",
+            translation_key="flow_sensor",
             measurement_to_ha=lambda x: x / 10,
             state_class=SensorStateClass.MEASUREMENT,
         ),
