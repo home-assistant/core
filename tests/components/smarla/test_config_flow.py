@@ -2,8 +2,6 @@
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
-
 from homeassistant.components.smarla.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -17,14 +15,16 @@ from tests.common import MockConfigEntry
 async def test_config_flow(hass: HomeAssistant, mock_connection) -> None:
     """Test creating a config entry."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN,
+        context={"source": SOURCE_USER},
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_USER_INPUT
+        result["flow_id"],
+        user_input=MOCK_USER_INPUT,
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -33,23 +33,11 @@ async def test_config_flow(hass: HomeAssistant, mock_connection) -> None:
     assert result["result"].unique_id == MOCK_SERIAL_NUMBER
 
 
-@pytest.mark.parametrize("error", ["malformed_token", "invalid_auth"])
-async def test_form_error(hass: HomeAssistant, error: str, mock_connection) -> None:
-    """Test we show user form on invalid auth."""
-    match error:
-        case "malformed_token":
-            error_patch = patch(
-                "homeassistant.components.smarla.config_flow.Connection",
-                side_effect=ValueError,
-            )
-        case "invalid_auth":
-            error_patch = patch.object(
-                mock_connection,
-                "refresh_token",
-                new=AsyncMock(return_value=False),
-            )
-
-    with error_patch:
+async def test_malformed_token(hass: HomeAssistant, mock_connection) -> None:
+    """Test we show user form on malformed token input."""
+    with patch(
+        "homeassistant.components.smarla.config_flow.Connection", side_effect=ValueError
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -58,10 +46,34 @@ async def test_form_error(hass: HomeAssistant, error: str, mock_connection) -> N
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": error}
+    assert result["errors"] == {"base": "malformed_token"}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_USER_INPUT
+        result["flow_id"],
+        user_input=MOCK_USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_invalid_auth(hass: HomeAssistant, mock_connection) -> None:
+    """Test we show user form on invalid auth."""
+    with patch.object(
+        mock_connection, "refresh_token", new=AsyncMock(return_value=False)
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=MOCK_USER_INPUT,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_USER_INPUT,
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY

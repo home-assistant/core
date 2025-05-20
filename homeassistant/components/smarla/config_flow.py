@@ -20,7 +20,7 @@ class SmarlaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def _handle_token(self, token: str) -> tuple[dict[str, str], str]:
+    async def _handle_token(self, token: str) -> tuple[dict[str, str], str | None]:
         """Handle the token input."""
         errors: dict[str, str] = {}
 
@@ -28,11 +28,11 @@ class SmarlaConfigFlow(ConfigFlow, domain=DOMAIN):
             conn = Connection(url=HOST, token_b64=token)
         except ValueError:
             errors["base"] = "malformed_token"
-            return (errors, "")
+            return (errors, None)
 
         if not await conn.refresh_token():
             errors["base"] = "invalid_auth"
-            return (errors, "")
+            return (errors, None)
 
         return (errors, conn.token.serialNumber)
 
@@ -46,7 +46,7 @@ class SmarlaConfigFlow(ConfigFlow, domain=DOMAIN):
             raw_token = user_input[CONF_ACCESS_TOKEN]
             errors, serial_number = await self._handle_token(token=raw_token)
 
-            if not errors:
+            if not errors and serial_number is not None:
                 await self.async_set_unique_id(serial_number)
                 self._abort_if_unique_id_configured()
 

@@ -18,3 +18,5 @@ MOCK_ACCESS_TOKEN = base64.b64encode(
 ).decode()
 
 MOCK_USER_INPUT = {CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN}
+
+MOCK_URL = "https://someurl.net"
