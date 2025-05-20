@@ -416,10 +416,8 @@ class WeatherFlowWebsocketSensorObservation(WeatherFlowSensorBase):
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the native value."""
-        if self.coordinator.data and self.device_id is not None:
-            data = self.coordinator.data[self.station_id][self.device_id]
-            return self.entity_description.value_fn(data)
-        return None
+        data = self.coordinator.data[self.station_id][self.device_id]
+        return self.entity_description.value_fn(data)
 
 
 class WeatherFlowWebsocketSensorWind(WeatherFlowSensorBase):
@@ -431,10 +429,10 @@ class WeatherFlowWebsocketSensorWind(WeatherFlowSensorBase):
     def native_value(self) -> StateType | datetime:
         """Return the native value."""
 
-        if self.coordinator.data and self.device_id is not None:
+        # This data is often invalid at starutp.
+        if self.coordinator.data is not None:
             data = self.coordinator.data[self.station_id][self.device_id]
             return self.entity_description.value_fn(data)
-
         return None
 
     @property
@@ -463,8 +461,6 @@ class WeatherFlowCloudSensorREST(WeatherFlowSensorBase):
     @property
     def native_value(self) -> StateType | datetime:
         """Return the native value."""
-        if self.coordinator.data:
-            return self.entity_description.value_fn(
-                self.coordinator.data[self.station_id].observation.obs[0]
-            )
-        return None
+        return self.entity_description.value_fn(
+            self.coordinator.data[self.station_id].observation.obs[0]
+        )
