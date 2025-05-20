@@ -17,9 +17,13 @@ class BoschAlarmEntity(Entity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, panel: Panel, unique_id: str) -> None:
+    def __init__(
+        self, panel: Panel, unique_id: str, observe_faults: bool = False
+    ) -> None:
         """Set up a entity for a bosch alarm panel."""
         self.panel = panel
+        self._observe_faults = observe_faults
+        self._attr_should_poll = False
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             name=f"Bosch {panel.model}",
@@ -34,10 +38,14 @@ class BoschAlarmEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Observe state changes."""
         self.panel.connection_status_observer.attach(self.schedule_update_ha_state)
+        if self._observe_faults:
+            self.panel.faults_observer.attach(self.schedule_update_ha_state)
 
     async def async_will_remove_from_hass(self) -> None:
         """Stop observing state changes."""
         self.panel.connection_status_observer.detach(self.schedule_update_ha_state)
+        if self._observe_faults:
+            self.panel.faults_observer.attach(self.schedule_update_ha_state)
 
 
 class BoschAlarmAreaEntity(BoschAlarmEntity):
@@ -86,6 +94,33 @@ class BoschAlarmAreaEntity(BoschAlarmEntity):
             self._area.ready_observer.detach(self.schedule_update_ha_state)
         if self._observe_status:
             self._area.status_observer.detach(self.schedule_update_ha_state)
+
+
+class BoschAlarmPointEntity(BoschAlarmEntity):
+    """A base entity for point related entities within a bosch alarm panel."""
+
+    def __init__(self, panel: Panel, point_id: int, unique_id: str) -> None:
+        """Set up a area related entity for a bosch alarm panel."""
+        super().__init__(panel, unique_id)
+        self._point_id = point_id
+        self._point_unique_id = f"{unique_id}_point_{point_id}"
+        self._point = panel.points[point_id]
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._point_unique_id)},
+            name=self._point.name,
+            manufacturer="Bosch Security Systems",
+            via_device=(DOMAIN, unique_id),
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Observe state changes."""
+        await super().async_added_to_hass()
+        self._point.status_observer.attach(self.schedule_update_ha_state)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Stop observing state changes."""
+        await super().async_added_to_hass()
+        self._point.status_observer.detach(self.schedule_update_ha_state)
 
 
 class BoschAlarmDoorEntity(BoschAlarmEntity):

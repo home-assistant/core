@@ -928,7 +928,7 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true when state is known."""
         return self._available
 
@@ -1001,7 +1001,7 @@ class XiaomiGatewayIlluminanceSensor(SensorEntity):
         self._state = None
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true when state is known."""
         return self._available
 
