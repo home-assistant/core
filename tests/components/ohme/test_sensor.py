@@ -5,7 +5,8 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from ohme import ApiException
-from syrupy import SnapshotAssertion
+import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -16,6 +17,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

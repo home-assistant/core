@@ -18,6 +18,8 @@ from .entity import (
     platform_async_setup_entry,
 )
 
+PARALLEL_UPDATES = 0
+
 
 class EsphomeLock(EsphomeEntity[LockInfo, LockEntityState], LockEntity):
     """A lock implementation for ESPHome."""
@@ -38,25 +40,25 @@ class EsphomeLock(EsphomeEntity[LockInfo, LockEntityState], LockEntity):
 
     @property
     @esphome_state_property
-    def is_locked(self) -> bool | None:
+    def is_locked(self) -> bool:
         """Return true if the lock is locked."""
         return self._state.state is LockState.LOCKED
 
     @property
     @esphome_state_property
-    def is_locking(self) -> bool | None:
+    def is_locking(self) -> bool:
         """Return true if the lock is locking."""
         return self._state.state is LockState.LOCKING
 
     @property
     @esphome_state_property
-    def is_unlocking(self) -> bool | None:
+    def is_unlocking(self) -> bool:
         """Return true if the lock is unlocking."""
         return self._state.state is LockState.UNLOCKING
 
     @property
     @esphome_state_property
-    def is_jammed(self) -> bool | None:
+    def is_jammed(self) -> bool:
         """Return true if the lock is jammed (incomplete locking)."""
         return self._state.state is LockState.JAMMED
 

@@ -156,7 +156,7 @@ class RMVDepartureSensor(SensorEntity):
         return self._name
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self._state is not None
 

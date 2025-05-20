@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
@@ -798,6 +798,8 @@ async def test_squeezebox_server_discovery(
     async def mock_async_discover(callback):
         """Mock the async_discover function of pysqueezebox."""
         return callback(lms_factory(2))
+
+    lms.async_prepared_status.return_value = {}
 
     with (
         patch(

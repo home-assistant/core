@@ -2,10 +2,11 @@
   "config": {
     "step": {
       "user": {
-        "title": "Define the Velbus connection type",
-        "data": {
-          "name": "The name for this Velbus connection",
-          "port": "Connection string"
+        "title": "Define the Velbus connection",
+        "description": "How do you want to configure the Velbus hub?",
+        "menu_options": {
+          "network": "Via network connection",
+          "usbselect": "Via USB device"
         }
       },
       "network": {
@@ -20,7 +21,7 @@
           "tls": "Enable this if you use a secure connection to your Velbus interface, like a Signum.",
           "host": "The IP address or hostname of the Velbus interface.",
           "port": "The port number of the Velbus interface.",
-          "password": "The password of the Velbus interface, this is only needed if the interface is password protected."
+          "password": "The password of the Velbus interface, this is only needed if the interface is password-protected."
         },
         "description": "TCP/IP configuration, in case you use a Signum, VelServ, velbus-tcp or any other Velbus to TCP/IP interface."
       },
@@ -57,7 +58,7 @@
   "services": {
     "sync_clock": {
       "name": "Sync clock",
-      "description": "Syncs the Velbus modules clock to the Home Assistant clock, this is the same as the 'sync clock' from VelbusLink.",
+      "description": "Syncs the clock of the Velbus modules to the Home Assistant clock, this is the same as the 'sync clock' from VelbusLink.",
       "fields": {
         "interface": {
           "name": "Interface",
@@ -103,7 +104,7 @@
     },
     "set_memo_text": {
       "name": "Set memo text",
-      "description": "Sets the memo text to the display of modules like VMBGPO, VMBGPOD Be sure the page(s) of the module is configured to display the memo text.",
+      "description": "Sets the memo text to the display of modules like VMBGPO, VMBGPOD. Be sure the pages of the modules are configured to display the memo text.",
       "fields": {
         "interface": {
           "name": "[%key:component::velbus::services::sync_clock::fields::interface::name%]",

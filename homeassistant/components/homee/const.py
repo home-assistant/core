@@ -95,3 +95,8 @@ LIGHT_PROFILES = [
     NodeProfile.WIFI_DIMMABLE_LIGHT,
     NodeProfile.WIFI_ON_OFF_DIMMABLE_METERING_SWITCH,
 ]
+
+# Preset modes
+PRESET_AUTO = "auto"
+PRESET_MANUAL = "manual"
+PRESET_SUMMER = "summer"

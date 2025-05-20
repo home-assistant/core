@@ -28,6 +28,7 @@ from .common import (
     TOTALCONNECT_REQUEST,
     TOTALCONNECT_REQUEST_TOKEN,
     USERNAME,
+    init_integration,
 )
 
 from tests.common import MockConfigEntry
@@ -219,42 +220,19 @@ async def test_no_locations(hass: HomeAssistant) -> None:
 
 async def test_options_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=CONFIG_DATA,
-        unique_id=USERNAME,
+    config_entry = await init_integration(hass)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={AUTO_BYPASS: True, CODE_REQUIRED: False}
     )
-    config_entry.add_to_hass(hass)
 
-    responses = [
-        RESPONSE_SESSION_DETAILS,
-        RESPONSE_PARTITION_DETAILS,
-        RESPONSE_GET_ZONE_DETAILS_SUCCESS,
-        RESPONSE_DISARMED,
-        RESPONSE_DISARMED,
-        RESPONSE_DISARMED,
-    ]
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {AUTO_BYPASS: True, CODE_REQUIRED: False}
+    await hass.async_block_till_done()
 
-    with (
-        patch(TOTALCONNECT_REQUEST, side_effect=responses),
-        patch(TOTALCONNECT_GET_CONFIG, side_effect=None),
-        patch(TOTALCONNECT_REQUEST_TOKEN, side_effect=None),
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "init"
-
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={AUTO_BYPASS: True, CODE_REQUIRED: False}
-        )
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert config_entry.options == {AUTO_BYPASS: True, CODE_REQUIRED: False}
-        await hass.async_block_till_done()
-
-        assert await hass.config_entries.async_unload(config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()

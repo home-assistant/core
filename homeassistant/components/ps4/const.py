@@ -1,5 +1,14 @@
 """Constants for PlayStation 4."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from . import PS4Data
+
 ATTR_MEDIA_IMAGE_URL = "media_image_url"
 CONFIG_ENTRY_VERSION = 3
 DEFAULT_NAME = "PlayStation 4"
@@ -7,7 +16,7 @@ DEFAULT_REGION = "United States"
 DEFAULT_ALIAS = "Home-Assistant"
 DOMAIN = "ps4"
 GAMES_FILE = ".ps4-games.{}.json"
-PS4_DATA = "ps4_data"
+PS4_DATA: HassKey[PS4Data] = HassKey(DOMAIN)
 
 COMMANDS = ("up", "down", "right", "left", "enter", "back", "option", "ps", "ps_hold")
 

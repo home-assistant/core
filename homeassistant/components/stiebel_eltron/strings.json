@@ -1,0 +1,43 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Stiebel Eltron device.",
+          "port": "The port of your Stiebel Eltron device."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "title": "The {integration_title} YAML configuration is being removed",
+      "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove both the `{domain}` and the relevant Modbus configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    },
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "title": "YAML import failed due to a connection error",
+      "description": "Configuring {integration_title} using YAML is being removed but there was a connect error while importing your existing configuration.\nSetup will not proceed.\n\nVerify that your {integration_title} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually."
+    },
+    "deprecated_yaml_import_issue_missing_hub": {
+      "title": "YAML import failed due to incomplete config",
+      "description": "Configuring {integration_title} using YAML is being removed but the configuration was not complete, thus we could not import your configuration.\nSetup will not proceed.\n\nVerify that your {integration_title} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually."
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "title": "YAML import failed due to an unknown error",
+      "description": "Configuring {integration_title} using YAML is being removed but there was an unknown error while importing your existing configuration.\nSetup will not proceed.\n\nVerify that your {integration_title} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually."
+    }
+  }
+}

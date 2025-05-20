@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry
 
 async def test_config_flow(
     hass: HomeAssistant,
-    mock_thinq_api: AsyncMock,
+    mock_config_thinq_api: AsyncMock,
     mock_uuid: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
@@ -37,11 +37,12 @@ async def test_config_flow(
         CONF_CONNECT_CLIENT_ID: MOCK_CONNECT_CLIENT_ID,
     }
 
-    mock_thinq_api.async_get_device_list.assert_called_once()
+    mock_config_thinq_api.async_get_device_list.assert_called_once()
 
 
 async def test_config_flow_invalid_pat(
-    hass: HomeAssistant, mock_invalid_thinq_api: AsyncMock
+    hass: HomeAssistant,
+    mock_invalid_thinq_api: AsyncMock,
 ) -> None:
     """Test that an thinq flow should be aborted with an invalid PAT."""
     result = await hass.config_entries.flow.async_init(
@@ -55,7 +56,9 @@ async def test_config_flow_invalid_pat(
 
 
 async def test_config_flow_already_configured(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_thinq_api: AsyncMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_config_thinq_api: AsyncMock,
 ) -> None:
     """Test that thinq flow should be aborted when already configured."""
     mock_config_entry.add_to_hass(hass)

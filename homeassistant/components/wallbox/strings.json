@@ -91,6 +91,21 @@
       "pause_resume": {
         "name": "Pause/resume"
       }
+    },
+    "select": {
+      "ecosmart": {
+        "name": "Solar charging",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "eco_mode": "Eco mode",
+          "full_solar": "Full solar"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "api_failed": {
+      "message": "Error communicating with Wallbox API"
     }
   }
 }

@@ -1,6 +1,6 @@
 """Define common test values."""
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.drop_connect.const import (
     CONF_COMMAND_TOPIC,

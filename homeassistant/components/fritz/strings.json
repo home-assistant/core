@@ -1,4 +1,13 @@
 {
+  "common": {
+    "data_description_host": "The hostname or IP address of your FRITZ!Box router.",
+    "data_description_port": "Leave empty to use the default port.",
+    "data_description_username": "Username for the FRITZ!Box.",
+    "data_description_password": "Password for the FRITZ!Box.",
+    "data_description_ssl": "Use SSL to connect to the FRITZ!Box.",
+    "data_description_feature_device_tracking": "Enable or disable the network device tracking feature.",
+    "data_feature_device_tracking": "Enable network device tracking"
+  },
   "config": {
     "flow_title": "{name}",
     "step": {
@@ -8,7 +17,14 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "ssl": "[%key:common::config_flow::data::ssl%]"
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "feature_device_tracking": "[%key:component::fritz::common::data_feature_device_tracking%]"
+        },
+        "data_description": {
+          "username": "[%key:component::fritz::common::data_description_username%]",
+          "password": "[%key:component::fritz::common::data_description_password%]",
+          "ssl": "[%key:component::fritz::common::data_description_ssl%]",
+          "feature_device_tracking": "[%key:component::fritz::common::data_description_feature_device_tracking%]"
         }
       },
       "reauth_confirm": {
@@ -17,6 +33,10 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::fritz::common::data_description_username%]",
+          "password": "[%key:component::fritz::common::data_description_password%]"
         }
       },
       "reconfigure": {
@@ -28,8 +48,9 @@
           "ssl": "[%key:common::config_flow::data::ssl%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your FRITZ!Box router.",
-          "port": "Leave it empty to use the default port."
+          "host": "[%key:component::fritz::common::data_description_host%]",
+          "port": "[%key:component::fritz::common::data_description_port%]",
+          "ssl": "[%key:component::fritz::common::data_description_ssl%]"
         }
       },
       "user": {
@@ -40,11 +61,16 @@
           "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "ssl": "[%key:common::config_flow::data::ssl%]"
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "feature_device_tracking": "[%key:component::fritz::common::data_feature_device_tracking%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your FRITZ!Box router.",
-          "port": "Leave it empty to use the default port."
+          "host": "[%key:component::fritz::common::data_description_host%]",
+          "port": "[%key:component::fritz::common::data_description_port%]",
+          "username": "[%key:component::fritz::common::data_description_username%]",
+          "password": "[%key:component::fritz::common::data_description_password%]",
+          "ssl": "[%key:component::fritz::common::data_description_ssl%]",
+          "feature_device_tracking": "[%key:component::fritz::common::data_description_feature_device_tracking%]"
         }
       }
     },
@@ -69,7 +95,13 @@
       "init": {
         "data": {
           "consider_home": "Seconds to consider a device at 'home'",
-          "old_discovery": "Enable old discovery method"
+          "old_discovery": "Enable old discovery method",
+          "feature_device_tracking": "[%key:component::fritz::common::data_feature_device_tracking%]"
+        },
+        "data_description": {
+          "consider_home": "Time in seconds to consider a device at home. Default is 180 seconds.",
+          "old_discovery": "Enable old discovery method. This is needed for some scenarios.",
+          "feature_device_tracking": "[%key:component::fritz::common::data_description_feature_device_tracking%]"
         }
       }
     }
@@ -169,8 +201,12 @@
     "config_entry_not_found": {
       "message": "Failed to perform action \"{service}\". Config entry for target not found"
     },
-    "service_parameter_unknown": { "message": "Action or parameter unknown" },
-    "service_not_supported": { "message": "Action not supported" },
+    "service_parameter_unknown": {
+      "message": "Action or parameter unknown"
+    },
+    "service_not_supported": {
+      "message": "Action not supported"
+    },
     "error_refresh_hosts_info": {
       "message": "Error refreshing hosts info"
     },

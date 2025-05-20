@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 from switchbot_api import Device
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switchbot_cloud.const import DOMAIN
 from homeassistant.const import Platform
@@ -26,6 +26,7 @@ async def test_meter(
 
     mock_list_devices.return_value = [
         Device(
+            version="V1.0",
             deviceId="meter-id-1",
             deviceName="meter-1",
             deviceType="Meter",
@@ -50,6 +51,7 @@ async def test_meter_no_coordinator_data(
     """Test meter sensors are unknown without coordinator data."""
     mock_list_devices.return_value = [
         Device(
+            version="V1.0",
             deviceId="meter-id-1",
             deviceName="meter-1",
             deviceType="Meter",

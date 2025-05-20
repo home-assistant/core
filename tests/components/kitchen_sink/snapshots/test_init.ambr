@@ -48,5 +48,15 @@
         'type': 'no_state',
       }),
     ]),
+    'sensor.statistics_issues_issue_5': list([
+      dict({
+        'data': dict({
+          'metadata_mean_type': 1,
+          'state_mean_type': 2,
+          'statistic_id': 'sensor.statistics_issues_issue_5',
+        }),
+        'type': 'mean_type_changed',
+      }),
+    ]),
   })
 # ---

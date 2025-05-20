@@ -6,7 +6,7 @@
     "step": {
       "create_cloud_project": {
         "title": "Nest: Create and configure Cloud Project",
-        "description": "The Nest integration allows you to integrate your Nest Thermostats, Cameras, and Doorbells using the Smart Device Management API. The SDM API **requires a US $5** one time setup fee. See documentation for [more info]({more_info_url}).\n\n1. Go to the [Google Cloud Console]({cloud_console_url}).\n1. If this is your first project, select **Create Project** then **New Project**.\n1. Give your Cloud Project a Name and then select **Create**.\n1. Save the Cloud Project ID e.g. *example-project-12345* as you will need it later\n1. Go to API Library for [Smart Device Management API]({sdm_api_url}) and select **Enable**.\n1. Go to API Library for [Cloud Pub/Sub API]({pubsub_api_url}) and select **Enable**.\n\nProceed when your cloud project is set up."
+        "description": "The Nest integration allows you to integrate your Nest Thermostats, Cameras, and Doorbells using the Smart Device Management API. The SDM API **requires a US $5** one-time setup fee. See documentation for [more info]({more_info_url}).\n\n1. Go to the [Google Cloud Console]({cloud_console_url}).\n1. If this is your first project, select **Create Project** then **New Project**.\n1. Give your Cloud Project a name and then select **Create**.\n1. Save the Cloud Project ID e.g. *example-project-12345* as you will need it later\n1. Go to API Library for [Smart Device Management API]({sdm_api_url}) and select **Enable**.\n1. Go to API Library for [Cloud Pub/Sub API]({pubsub_api_url}) and select **Enable**.\n\nProceed when your Cloud Project is set up."
       },
       "cloud_project": {
         "title": "Nest: Enter Cloud Project ID",
@@ -29,7 +29,7 @@
         "title": "Configure Cloud Pub/Sub topic",
         "description": "Nest devices publish updates on a Cloud Pub/Sub topic. You can select an existing topic if one exists, or choose to create a new topic and the next step will create it for you with the necessary permissions. See the integration documentation for [more info]({more_info_url}).",
         "data": {
-          "topic_name": "Pub/Sub topic Name"
+          "topic_name": "Pub/Sub topic name"
         }
       },
       "pubsub_topic_confirm": {
@@ -41,7 +41,7 @@
         "title": "Configure Cloud Pub/Sub subscription",
         "description": "Home Assistant receives realtime Nest device updates with a Cloud Pub/Sub subscription for topic `{topic}`.\n\nSelect an existing subscription below if one already exists, or the next step will create a new one for you. See the integration documentation for [more info]({more_info_url}).",
         "data": {
-          "subscription_name": "Pub/Sub subscription Name"
+          "subscription_name": "Pub/Sub subscription name"
         }
       },
       "reauth_confirm": {

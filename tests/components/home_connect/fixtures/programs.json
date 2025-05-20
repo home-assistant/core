@@ -181,5 +181,29 @@
         }
       ]
     }
+  },
+  "Hood": {
+    "data": {
+      "programs": [
+        {
+          "key": "Cooking.Common.Program.Hood.Automatic",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "Cooking.Common.Program.Hood.Venting",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "Cooking.Common.Program.Hood.DelayedShutOff",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        }
+      ]
+    }
   }
 }

@@ -7,30 +7,22 @@ from typing import Any, Final
 
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions, get_info
-from aioshelly.const import (
-    BLOCK_GENERATIONS,
-    DEFAULT_HTTP_PORT,
-    MODEL_WALL_DISPLAY,
-    RPC_GENERATIONS,
-)
+from aioshelly.const import BLOCK_GENERATIONS, DEFAULT_HTTP_PORT, RPC_GENERATIONS
 from aioshelly.exceptions import (
     CustomPortNotSupported,
     DeviceConnectionError,
     InvalidAuthError,
+    InvalidHostError,
     MacAddressMismatchError,
 )
 from aioshelly.rpc_device import RpcDevice
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
+    CONF_MODEL,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
@@ -48,7 +40,7 @@ from .const import (
     LOGGER,
     BLEScannerMode,
 )
-from .coordinator import async_reconnect_soon
+from .coordinator import ShellyConfigEntry, async_reconnect_soon
 from .utils import (
     get_block_device_sleep_period,
     get_coap_context,
@@ -116,7 +108,9 @@ async def validate_input(
         return {
             "title": rpc_device.name,
             CONF_SLEEP_PERIOD: sleep_period,
-            "model": rpc_device.xmod_info.get("p") or rpc_device.shelly.get("model"),
+            CONF_MODEL: (
+                rpc_device.xmod_info.get("p") or rpc_device.shelly.get(CONF_MODEL)
+            ),
             CONF_GEN: gen,
         }
 
@@ -136,7 +130,7 @@ async def validate_input(
     return {
         "title": block_device.name,
         CONF_SLEEP_PERIOD: sleep_period,
-        "model": block_device.model,
+        CONF_MODEL: block_device.model,
         CONF_GEN: gen,
     }
 
@@ -164,6 +158,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.info = await self._async_get_info(host, port)
             except DeviceConnectionError:
                 errors["base"] = "cannot_connect"
+            except InvalidHostError:
+                errors["base"] = "invalid_host"
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -191,18 +187,18 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                     LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
                 else:
-                    if device_info["model"]:
+                    if device_info[CONF_MODEL]:
                         return self.async_create_entry(
                             title=device_info["title"],
                             data={
                                 CONF_HOST: user_input[CONF_HOST],
                                 CONF_PORT: user_input[CONF_PORT],
                                 CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
-                                "model": device_info["model"],
+                                CONF_MODEL: device_info[CONF_MODEL],
                                 CONF_GEN: device_info[CONF_GEN],
                             },
                         )
-                    errors["base"] = "firmware_not_fully_provisioned"
+                    return self.async_abort(reason="firmware_not_fully_provisioned")
 
         return self.async_show_form(
             step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
@@ -230,7 +226,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if device_info["model"]:
+                if device_info[CONF_MODEL]:
                     return self.async_create_entry(
                         title=device_info["title"],
                         data={
@@ -238,11 +234,11 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                             CONF_HOST: self.host,
                             CONF_PORT: self.port,
                             CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
-                            "model": device_info["model"],
+                            CONF_MODEL: device_info[CONF_MODEL],
                             CONF_GEN: device_info[CONF_GEN],
                         },
                     )
-                errors["base"] = "firmware_not_fully_provisioned"
+                return self.async_abort(reason="firmware_not_fully_provisioned")
         else:
             user_input = {}
 
@@ -336,28 +332,26 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle discovery confirm."""
         errors: dict[str, str] = {}
 
-        if not self.device_info["model"]:
-            errors["base"] = "firmware_not_fully_provisioned"
-            model = "Shelly"
-        else:
-            model = get_model_name(self.info)
-            if user_input is not None:
-                return self.async_create_entry(
-                    title=self.device_info["title"],
-                    data={
-                        "host": self.host,
-                        CONF_SLEEP_PERIOD: self.device_info[CONF_SLEEP_PERIOD],
-                        "model": self.device_info["model"],
-                        CONF_GEN: self.device_info[CONF_GEN],
-                    },
-                )
-            self._set_confirm_only()
+        if not self.device_info[CONF_MODEL]:
+            return self.async_abort(reason="firmware_not_fully_provisioned")
+        model = get_model_name(self.info)
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self.device_info["title"],
+                data={
+                    CONF_HOST: self.host,
+                    CONF_SLEEP_PERIOD: self.device_info[CONF_SLEEP_PERIOD],
+                    CONF_MODEL: self.device_info[CONF_MODEL],
+                    CONF_GEN: self.device_info[CONF_GEN],
+                },
+            )
+        self._set_confirm_only()
 
         return self.async_show_form(
             step_id="confirm_discovery",
             description_placeholders={
-                "model": model,
-                "host": self.host,
+                CONF_MODEL: model,
+                CONF_HOST: self.host,
             },
             errors=errors,
         )
@@ -455,19 +449,17 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
+    def async_get_options_flow(config_entry: ShellyConfigEntry) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
     @classmethod
     @callback
-    def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
+    def async_supports_options_flow(cls, config_entry: ShellyConfigEntry) -> bool:
         """Return options flow support for this handler."""
-        return (
-            get_device_entry_gen(config_entry) in RPC_GENERATIONS
-            and not config_entry.data.get(CONF_SLEEP_PERIOD)
-            and config_entry.data.get("model") != MODEL_WALL_DISPLAY
-        )
+        return get_device_entry_gen(
+            config_entry
+        ) in RPC_GENERATIONS and not config_entry.data.get(CONF_SLEEP_PERIOD)
 
 
 class OptionsFlowHandler(OptionsFlow):
@@ -477,6 +469,15 @@ class OptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle options flow."""
+        if (
+            supports_scripts := self.config_entry.runtime_data.rpc_supports_scripts
+        ) is None:
+            return self.async_abort(reason="cannot_connect")
+        if not supports_scripts:
+            return self.async_abort(reason="no_scripts_support")
+        if self.config_entry.runtime_data.rpc_zigbee_enabled:
+            return self.async_abort(reason="zigbee_enabled")
+
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 

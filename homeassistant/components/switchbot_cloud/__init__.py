@@ -140,11 +140,13 @@ async def make_device_data(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.locks.append((device, coordinator))
+        devices_data.sensors.append((device, coordinator))
 
     if isinstance(device, Device) and device.device_type in ["Bot"]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
         )
+        devices_data.sensors.append((device, coordinator))
         if coordinator.data is not None:
             if coordinator.data.get("deviceMode") == "pressMode":
                 devices_data.buttons.append((device, coordinator))

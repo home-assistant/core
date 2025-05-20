@@ -13,12 +13,7 @@ from aiohue.util import normalize_bridge_id
 import slugify as unicode_slug
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_API_KEY, CONF_API_VERSION, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers import (
@@ -28,6 +23,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from .bridge import HueConfigEntry
 from .const import (
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_UNREACHABLE,
@@ -53,7 +49,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: HueConfigEntry,
     ) -> HueV1OptionsFlowHandler | HueV2OptionsFlowHandler:
         """Get the options flow for this handler."""
         if config_entry.data.get(CONF_API_VERSION, 1) == 1:

@@ -4,9 +4,23 @@
   "codeowners": ["@DavidMStraub", "@Diegorro98", "@MartinHjelmare"],
   "config_flow": true,
   "dependencies": ["application_credentials", "repairs"],
+  "dhcp": [
+    {
+      "hostname": "balay-*",
+      "macaddress": "C8D778*"
+    },
+    {
+      "hostname": "(bosch|siemens)-*",
+      "macaddress": "68A40E*"
+    },
+    {
+      "hostname": "siemens-*",
+      "macaddress": "38B4D3*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/home_connect",
   "iot_class": "cloud_push",
   "loggers": ["aiohomeconnect"],
-  "requirements": ["aiohomeconnect==0.16.2"],
-  "single_config_entry": true
+  "requirements": ["aiohomeconnect==0.17.0"],
+  "zeroconf": ["_homeconnect._tcp.local."]
 }

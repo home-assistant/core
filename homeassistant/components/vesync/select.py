@@ -15,9 +15,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .common import rgetattr
 from .const import (
     DOMAIN,
-    NIGHT_LIGHT_LEVEL_BRIGHT,
-    NIGHT_LIGHT_LEVEL_DIM,
-    NIGHT_LIGHT_LEVEL_OFF,
+    FAN_NIGHT_LIGHT_LEVEL_DIM,
+    FAN_NIGHT_LIGHT_LEVEL_OFF,
+    FAN_NIGHT_LIGHT_LEVEL_ON,
+    HUMIDIFIER_NIGHT_LIGHT_LEVEL_BRIGHT,
+    HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM,
+    HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF,
     VS_COORDINATOR,
     VS_DEVICES,
     VS_DISCOVERY,
@@ -27,14 +30,14 @@ from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-VS_TO_HA_NIGHT_LIGHT_LEVEL_MAP = {
-    100: NIGHT_LIGHT_LEVEL_BRIGHT,
-    50: NIGHT_LIGHT_LEVEL_DIM,
-    0: NIGHT_LIGHT_LEVEL_OFF,
+VS_TO_HA_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP = {
+    100: HUMIDIFIER_NIGHT_LIGHT_LEVEL_BRIGHT,
+    50: HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM,
+    0: HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF,
 }
 
-HA_TO_VS_NIGHT_LIGHT_LEVEL_MAP = {
-    v: k for k, v in VS_TO_HA_NIGHT_LIGHT_LEVEL_MAP.items()
+HA_TO_VS_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP = {
+    v: k for k, v in VS_TO_HA_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.items()
 }
 
 
@@ -48,20 +51,39 @@ class VeSyncSelectEntityDescription(SelectEntityDescription):
 
 
 SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
+    # night_light for humidifier
     VeSyncSelectEntityDescription(
         key="night_light_level",
         translation_key="night_light_level",
-        options=list(VS_TO_HA_NIGHT_LIGHT_LEVEL_MAP.values()),
+        options=list(VS_TO_HA_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.values()),
         icon="mdi:brightness-6",
-        exists_fn=lambda device: rgetattr(device, "night_light"),
+        exists_fn=lambda device: rgetattr(device, "set_night_light_brightness"),
         # The select_option service framework ensures that only options specified are
         # accepted. ServiceValidationError gets raised for invalid value.
         select_option_fn=lambda device, value: device.set_night_light_brightness(
-            HA_TO_VS_NIGHT_LIGHT_LEVEL_MAP.get(value, 0)
+            HA_TO_VS_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.get(value, 0)
         ),
         # Reporting "off" as the choice for unhandled level.
-        current_option_fn=lambda device: VS_TO_HA_NIGHT_LIGHT_LEVEL_MAP.get(
-            device.details.get("night_light_brightness"), NIGHT_LIGHT_LEVEL_OFF
+        current_option_fn=lambda device: VS_TO_HA_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.get(
+            device.details.get("night_light_brightness"),
+            HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF,
+        ),
+    ),
+    # night_light for fan devices based on pyvesync.VeSyncAirBypass
+    VeSyncSelectEntityDescription(
+        key="night_light_level",
+        translation_key="night_light_level",
+        options=[
+            FAN_NIGHT_LIGHT_LEVEL_OFF,
+            FAN_NIGHT_LIGHT_LEVEL_DIM,
+            FAN_NIGHT_LIGHT_LEVEL_ON,
+        ],
+        icon="mdi:brightness-6",
+        exists_fn=lambda device: rgetattr(device, "set_night_light"),
+        select_option_fn=lambda device, value: device.set_night_light(value),
+        current_option_fn=lambda device: VS_TO_HA_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.get(
+            device.details.get("night_light"),
+            FAN_NIGHT_LIGHT_LEVEL_OFF,
         ),
     ),
 ]

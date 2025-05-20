@@ -2,7 +2,7 @@
 
 from unittest.mock import ANY, patch
 
-from aioswitcher.api import SwitcherBaseResponse
+from aioswitcher.api.messages import SwitcherBaseResponse
 from aioswitcher.device import (
     DeviceState,
     ThermostatFanLevel,

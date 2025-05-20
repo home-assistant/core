@@ -101,14 +101,25 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionSensorEntityDescription, ...] = (
         value_fn=lambda data: data.temperature,
     ),
 )
+
+
+def _pure_aqi(pm25_pure: PureAQI | None) -> str | None:
+    """Return the Pure aqi name or None if unknown."""
+    if pm25_pure:
+        aqi_name = pm25_pure.name.lower()
+        if aqi_name != "unknown":
+            return aqi_name
+    return None
+
+
 PURE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
     SensiboDeviceSensorEntityDescription(
         key="pm25",
         translation_key="pm25_pure",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda data: data.pm25_pure.name.lower() if data.pm25_pure else None,
+        value_fn=lambda data: _pure_aqi(data.pm25_pure),
         extra_fn=None,
-        options=[aqi.name.lower() for aqi in PureAQI],
+        options=[aqi.name.lower() for aqi in PureAQI if aqi.name != "UNKNOWN"],
     ),
     SensiboDeviceSensorEntityDescription(
         key="pure_sensitivity",
@@ -118,6 +129,7 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
     ),
     FILTER_LAST_RESET_DESCRIPTION,
 )
+
 
 DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
     SensiboDeviceSensorEntityDescription(

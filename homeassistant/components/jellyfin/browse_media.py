@@ -73,7 +73,7 @@ async def build_root_response(
     children = [
         await item_payload(hass, client, user_id, folder)
         for folder in folders["Items"]
-        if folder["CollectionType"] in SUPPORTED_COLLECTION_TYPES
+        if folder.get("CollectionType") in SUPPORTED_COLLECTION_TYPES
     ]
 
     return BrowseMedia(

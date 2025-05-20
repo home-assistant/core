@@ -31,16 +31,16 @@ async def async_set_txt(hass: HomeAssistant, txt: str | None) -> None:
 
 
 @pytest.fixture
-def setup_duckdns(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+async def setup_duckdns(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Fixture that sets up DuckDNS."""
     aioclient_mock.get(
         duckdns.UPDATE_URL, params={"domains": DOMAIN, "token": TOKEN}, text="OK"
     )
 
-    hass.loop.run_until_complete(
-        async_setup_component(
-            hass, duckdns.DOMAIN, {"duckdns": {"domain": DOMAIN, "access_token": TOKEN}}
-        )
+    await async_setup_component(
+        hass, duckdns.DOMAIN, {"duckdns": {"domain": DOMAIN, "access_token": TOKEN}}
     )
 
 

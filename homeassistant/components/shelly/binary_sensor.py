@@ -42,6 +42,8 @@ from .utils import (
     is_rpc_momentary_input,
 )
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class BlockBinarySensorDescription(
@@ -130,6 +132,7 @@ SENSORS: dict[tuple[str, str], BlockBinarySensorDescription] = {
         device_class=BinarySensorDeviceClass.GAS,
         translation_key="gas",
         value=lambda value: value in ["mild", "heavy"],
+        # Deprecated, remove in 2025.10
         extra_state_attributes=lambda block: {"detected": block.gas},
     ),
     ("sensor", "smoke"): BlockBinarySensorDescription(

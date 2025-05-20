@@ -1,0 +1,85 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      Since actions are defined per device, rather than per integration,
+      they are specific to the device's YAML configuration. Additionally,
+      ESPHome allows for user-defined actions, making it impossible to
+      set them up until the device is connected as they vary by device. For more
+      information, see: https://esphome.io/components/api.html#user-defined-actions
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      Since actions are defined per device, rather than per integration,
+      they are specific to the device's YAML configuration. Additionally,
+      ESPHome allows for user-defined actions, making it difficult to provide
+      standard documentation since these actions vary by device. For more
+      information, see: https://esphome.io/components/api.html#user-defined-actions
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup:
+    status: exempt
+    comment: |
+      ESPHome relies on sleepy devices and fast reconnect logic, so we
+      can't raise `ConfigEntryNotReady`. Instead, we need to utilize the
+      reconnect logic in `aioesphomeapi` to determine the right moment
+      to trigger the connection.
+  unique-config-entry: done
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info: done
+  discovery: done
+  docs-data-update: done
+  docs-examples:
+    status: exempt
+    comment: |
+      Since ESPHome is a framework for creating custom devices, the
+      possibilities are virtually limitless. As a result, example
+      automations would likely only be relevant to the specific user
+      of the device and not generally useful to others.
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues: done
+  stale-devices: done
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

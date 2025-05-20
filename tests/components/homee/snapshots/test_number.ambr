@@ -34,7 +34,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'down_time',
-    'unique_id': '00055511EECC-1-4',
+    'unique_id': '00055511EECC-1-3',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -54,7 +54,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '57',
+    'state': '57.0',
   })
 # ---
 # name: test_number_snapshot[number.test_number_down_position-entry]
@@ -92,7 +92,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'down_position',
-    'unique_id': '00055511EECC-1-2',
+    'unique_id': '00055511EECC-1-1',
     'unit_of_measurement': '%',
   })
 # ---
@@ -111,7 +111,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '100.0',
   })
 # ---
 # name: test_number_snapshot[number.test_number_down_slat_position-entry]
@@ -149,7 +149,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'down_slat_position',
-    'unique_id': '00055511EECC-1-3',
+    'unique_id': '00055511EECC-1-2',
     'unit_of_measurement': '°',
   })
 # ---
@@ -168,7 +168,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '38',
+    'state': '38.0',
   })
 # ---
 # name: test_number_snapshot[number.test_number_end_position-entry]
@@ -206,7 +206,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'endposition_configuration',
-    'unique_id': '00055511EECC-1-5',
+    'unique_id': '00055511EECC-1-4',
     'unit_of_measurement': None,
   })
 # ---
@@ -224,7 +224,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '129',
+    'state': '129.0',
   })
 # ---
 # name: test_number_snapshot[number.test_number_maximum_slat_angle-entry]
@@ -262,7 +262,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'slat_max_angle',
-    'unique_id': '00055511EECC-1-10',
+    'unique_id': '00055511EECC-1-9',
     'unit_of_measurement': '°',
   })
 # ---
@@ -281,7 +281,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '75',
+    'state': '75.0',
   })
 # ---
 # name: test_number_snapshot[number.test_number_minimum_slat_angle-entry]
@@ -319,7 +319,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'slat_min_angle',
-    'unique_id': '00055511EECC-1-11',
+    'unique_id': '00055511EECC-1-10',
     'unit_of_measurement': '°',
   })
 # ---
@@ -338,7 +338,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-75',
+    'state': '-75.0',
   })
 # ---
 # name: test_number_snapshot[number.test_number_motion_alarm_delay-entry]
@@ -376,7 +376,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'motion_alarm_cancelation_delay',
-    'unique_id': '00055511EECC-1-6',
+    'unique_id': '00055511EECC-1-5',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -434,7 +434,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'polling_interval',
-    'unique_id': '00055511EECC-1-8',
+    'unique_id': '00055511EECC-1-7',
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
@@ -454,7 +454,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '30',
+    'state': '30.0',
   })
 # ---
 # name: test_number_snapshot[number.test_number_slat_steps-entry]
@@ -492,7 +492,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'slat_steps',
-    'unique_id': '00055511EECC-1-12',
+    'unique_id': '00055511EECC-1-11',
     'unit_of_measurement': None,
   })
 # ---
@@ -510,7 +510,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '6',
+    'state': '6.0',
   })
 # ---
 # name: test_number_snapshot[number.test_number_slat_turn_duration-entry]
@@ -548,7 +548,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'shutter_slat_time',
-    'unique_id': '00055511EECC-1-9',
+    'unique_id': '00055511EECC-1-8',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -568,7 +568,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': '1.6',
   })
 # ---
 # name: test_number_snapshot[number.test_number_temperature_offset-entry]
@@ -606,7 +606,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_offset',
-    'unique_id': '00055511EECC-1-13',
+    'unique_id': '00055511EECC-1-12',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -626,6 +626,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
+  })
+# ---
+# name: test_number_snapshot[number.test_number_threshold_for_wind_trigger-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 22.5,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 2.5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.test_number_threshold_for_wind_trigger',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.WIND_SPEED: 'wind_speed'>,
+    'original_icon': None,
+    'original_name': 'Threshold for wind trigger',
+    'platform': 'homee',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wind_monitoring_state',
+    'unique_id': '00055511EECC-1-16',
+    'unit_of_measurement': <UnitOfSpeed.METERS_PER_SECOND: 'm/s'>,
+  })
+# ---
+# name: test_number_snapshot[number.test_number_threshold_for_wind_trigger-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'wind_speed',
+      'friendly_name': 'Test Number Threshold for wind trigger',
+      'max': 22.5,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 2.5,
+      'unit_of_measurement': <UnitOfSpeed.METERS_PER_SECOND: 'm/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.test_number_threshold_for_wind_trigger',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5.0',
   })
 # ---
 # name: test_number_snapshot[number.test_number_up_movement_duration-entry]
@@ -663,7 +721,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'up_time',
-    'unique_id': '00055511EECC-1-14',
+    'unique_id': '00055511EECC-1-13',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -683,7 +741,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '57',
+    'state': '57.0',
   })
 # ---
 # name: test_number_snapshot[number.test_number_wake_up_interval-entry]
@@ -721,7 +779,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wake_up_interval',
-    'unique_id': '00055511EECC-1-15',
+    'unique_id': '00055511EECC-1-14',
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
@@ -741,7 +799,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '600',
+    'state': '600.0',
   })
 # ---
 # name: test_number_snapshot[number.test_number_window_open_sensibility-entry]
@@ -779,7 +837,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'open_window_detection_sensibility',
-    'unique_id': '00055511EECC-1-7',
+    'unique_id': '00055511EECC-1-6',
     'unit_of_measurement': None,
   })
 # ---
@@ -797,6 +855,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3',
+    'state': '3.0',
   })
 # ---

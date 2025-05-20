@@ -18,7 +18,7 @@ from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.hassio import is_hassio
 
-from .const import FIRMWARE, RADIO_DEVICE, ZHA_HW_DISCOVERY_DATA
+from .const import FIRMWARE, FIRMWARE_VERSION, RADIO_DEVICE, ZHA_HW_DISCOVERY_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,11 +55,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             data=ZHA_HW_DISCOVERY_DATA,
         )
 
+    await hass.config_entries.async_forward_entry_setups(entry, ["update"])
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    await hass.config_entries.async_unload_platforms(entry, ["update"])
     return True
 
 
@@ -85,6 +88,19 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 data=new_data,
                 version=1,
                 minor_version=2,
+            )
+
+        if config_entry.minor_version <= 3:
+            # Add a `firmware_version` key if it doesn't exist to handle entries created
+            # with minor version 1.3 where the firmware version was not set.
+            hass.config_entries.async_update_entry(
+                config_entry,
+                data={
+                    **config_entry.data,
+                    FIRMWARE_VERSION: config_entry.data.get(FIRMWARE_VERSION),
+                },
+                version=1,
+                minor_version=4,
             )
 
         _LOGGER.debug(

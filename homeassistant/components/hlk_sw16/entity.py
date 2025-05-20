@@ -2,6 +2,8 @@
 
 import logging
 
+from hlk_sw16.protocol import SW16Client
+
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -17,12 +19,12 @@ class SW16Entity(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, device_port, entry_id, client):
+    def __init__(self, device_port: str, entry_id: str, client: SW16Client) -> None:
         """Initialize the device."""
         # HLK-SW16 specific attributes for every component type
         self._entry_id = entry_id
         self._device_port = device_port
-        self._is_on = None
+        self._is_on: bool | None = None
         self._client = client
         self._attr_name = device_port
         self._attr_unique_id = f"{self._entry_id}_{self._device_port}"

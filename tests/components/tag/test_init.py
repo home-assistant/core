@@ -5,7 +5,7 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.tag import DOMAIN, _create_entry, async_scan_tag

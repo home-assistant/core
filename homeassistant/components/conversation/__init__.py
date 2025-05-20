@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-import re
 from typing import Literal
 
 from hassil.recognize import RecognizeResult
@@ -90,8 +89,6 @@ __all__ = [
 ]
 
 _LOGGER = logging.getLogger(__name__)
-
-REGEX_TYPE = type(re.compile(""))
 
 SERVICE_PROCESS_SCHEMA = vol.Schema(
     {
@@ -206,7 +203,11 @@ def async_get_agent_info(
         name = agent.name
         if not isinstance(name, str):
             name = agent.entity_id
-        return AgentInfo(id=agent.entity_id, name=name)
+        return AgentInfo(
+            id=agent.entity_id,
+            name=name,
+            supports_streaming=agent.supports_streaming,
+        )
 
     manager = get_agent_manager(hass)
 

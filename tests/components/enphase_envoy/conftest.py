@@ -20,6 +20,7 @@ from pyenphase import (
 )
 from pyenphase.const import SupportedFeatures
 from pyenphase.models.dry_contacts import EnvoyDryContactSettings, EnvoyDryContactStatus
+from pyenphase.models.home import EnvoyInterfaceInformation
 from pyenphase.models.meters import EnvoyMeterData
 from pyenphase.models.tariff import EnvoyStorageSettings, EnvoyTariff
 import pytest
@@ -144,6 +145,11 @@ def load_envoy_fixture(mock_envoy: AsyncMock, fixture_name: str) -> None:
     _load_json_2_inverter_data(mock_envoy.data, json_fixture)
     _load_json_2_encharge_enpower_data(mock_envoy.data, json_fixture)
     _load_json_2_raw_data(mock_envoy.data, json_fixture)
+
+    if item := json_fixture.get("interface_information"):
+        mock_envoy.interface_settings.return_value = EnvoyInterfaceInformation(**item)
+    else:
+        mock_envoy.interface_settings.return_value = None
 
 
 def _load_json_2_production_data(

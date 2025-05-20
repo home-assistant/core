@@ -6,6 +6,7 @@ from collections.abc import AsyncGenerator, AsyncIterable
 import logging
 
 from google.api_core.exceptions import GoogleAPIError, Unauthenticated
+from google.api_core.retry import AsyncRetry
 from google.cloud import speech_v1
 
 from homeassistant.components.stt import (
@@ -127,6 +128,7 @@ class GoogleCloudSpeechToTextEntity(SpeechToTextEntity):
             responses = await self._client.streaming_recognize(
                 requests=request_generator(),
                 timeout=10,
+                retry=AsyncRetry(initial=0.1, maximum=2.0, multiplier=2.0),
             )
 
             transcript = ""

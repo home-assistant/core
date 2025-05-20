@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, cast
 
 from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW, AtaDevice, AtwDevice
 import pymelcloud.ata_device as ata
@@ -57,8 +57,8 @@ ATA_HVAC_MODE_REVERSE_LOOKUP = {v: k for k, v in ATA_HVAC_MODE_LOOKUP.items()}
 
 
 ATW_ZONE_HVAC_MODE_LOOKUP = {
-    atw.ZONE_OPERATION_MODE_HEAT: HVACMode.HEAT,
-    atw.ZONE_OPERATION_MODE_COOL: HVACMode.COOL,
+    atw.ZONE_STATUS_HEAT: HVACMode.HEAT,
+    atw.ZONE_STATUS_COOL: HVACMode.COOL,
 }
 ATW_ZONE_HVAC_MODE_REVERSE_LOOKUP = {v: k for k, v in ATW_ZONE_HVAC_MODE_LOOKUP.items()}
 
@@ -236,7 +236,7 @@ class AtaDeviceClimate(MelCloudClimate):
         set_dict: dict[str, Any] = {}
         if ATTR_HVAC_MODE in kwargs:
             self._apply_set_hvac_mode(
-                kwargs.get(ATTR_HVAC_MODE, self.hvac_mode), set_dict
+                cast(HVACMode, kwargs.get(ATTR_HVAC_MODE, self.hvac_mode)), set_dict
             )
 
         if ATTR_TEMPERATURE in kwargs:

@@ -31,7 +31,7 @@ async def async_setup_entry(
     """Add fans for a config entry."""
     entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsFan(entry_data.client, entry_data.rooms, device)
+        SmartThingsFan(entry_data.client, device)
         for device in entry_data.devices.values()
         if Capability.SWITCH in device.status[MAIN]
         and any(
@@ -51,14 +51,11 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
     _attr_name = None
     _attr_speed_count = int_states_in_range(SPEED_RANGE)
 
-    def __init__(
-        self, client: SmartThings, rooms: dict[str, str], device: FullDevice
-    ) -> None:
+    def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Init the class."""
         super().__init__(
             client,
             device,
-            rooms,
             {
                 Capability.SWITCH,
                 Capability.FAN_SPEED,
@@ -119,7 +116,7 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
     @property
     def is_on(self) -> bool:
         """Return true if fan is on."""
-        return self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH)
+        return self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "on"
 
     @property
     def percentage(self) -> int | None:
@@ -135,6 +132,8 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
 
         Requires FanEntityFeature.PRESET_MODE.
         """
+        if not self.supports_capability(Capability.AIR_CONDITIONER_FAN_MODE):
+            return None
         return self.get_attribute_value(
             Capability.AIR_CONDITIONER_FAN_MODE, Attribute.FAN_MODE
         )
@@ -145,6 +144,8 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
 
         Requires FanEntityFeature.PRESET_MODE.
         """
+        if not self.supports_capability(Capability.AIR_CONDITIONER_FAN_MODE):
+            return None
         return self.get_attribute_value(
             Capability.AIR_CONDITIONER_FAN_MODE, Attribute.SUPPORTED_AC_FAN_MODES
         )

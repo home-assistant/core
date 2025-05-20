@@ -5,10 +5,10 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from homematicip.aio.device import AsyncSwitchMeasuring
-from homematicip.aio.group import AsyncHeatingGroup
-from homematicip.aio.home import AsyncHome
+from homematicip.async_home import AsyncHome
 from homematicip.base.helpers import handle_config
+from homematicip.device import SwitchMeasuring
+from homematicip.group import HeatingGroup
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
@@ -22,6 +22,7 @@ from homeassistant.helpers.service import (
 )
 
 from .const import DOMAIN
+from .hap import HomematicIPConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -218,7 +219,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
 async def async_unload_services(hass: HomeAssistant):
     """Unload HomematicIP Cloud services."""
-    if hass.data[DOMAIN]:
+    if hass.config_entries.async_loaded_entries(DOMAIN):
         return
 
     for hmipc_service in HMIPC_SERVICES:
@@ -233,10 +234,11 @@ async def _async_activate_eco_mode_with_duration(
 
     if hapid := service.data.get(ATTR_ACCESSPOINT_ID):
         if home := _get_home(hass, hapid):
-            await home.activate_absence_with_duration(duration)
+            await home.activate_absence_with_duration_async(duration)
     else:
-        for hap in hass.data[DOMAIN].values():
-            await hap.home.activate_absence_with_duration(duration)
+        entry: HomematicIPConfigEntry
+        for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+            await entry.runtime_data.home.activate_absence_with_duration_async(duration)
 
 
 async def _async_activate_eco_mode_with_period(
@@ -247,10 +249,11 @@ async def _async_activate_eco_mode_with_period(
 
     if hapid := service.data.get(ATTR_ACCESSPOINT_ID):
         if home := _get_home(hass, hapid):
-            await home.activate_absence_with_period(endtime)
+            await home.activate_absence_with_period_async(endtime)
     else:
-        for hap in hass.data[DOMAIN].values():
-            await hap.home.activate_absence_with_period(endtime)
+        entry: HomematicIPConfigEntry
+        for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+            await entry.runtime_data.home.activate_absence_with_period_async(endtime)
 
 
 async def _async_activate_vacation(hass: HomeAssistant, service: ServiceCall) -> None:
@@ -260,30 +263,33 @@ async def _async_activate_vacation(hass: HomeAssistant, service: ServiceCall) ->
 
     if hapid := service.data.get(ATTR_ACCESSPOINT_ID):
         if home := _get_home(hass, hapid):
-            await home.activate_vacation(endtime, temperature)
+            await home.activate_vacation_async(endtime, temperature)
     else:
-        for hap in hass.data[DOMAIN].values():
-            await hap.home.activate_vacation(endtime, temperature)
+        entry: HomematicIPConfigEntry
+        for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+            await entry.runtime_data.home.activate_vacation_async(endtime, temperature)
 
 
 async def _async_deactivate_eco_mode(hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to deactivate eco mode."""
     if hapid := service.data.get(ATTR_ACCESSPOINT_ID):
         if home := _get_home(hass, hapid):
-            await home.deactivate_absence()
+            await home.deactivate_absence_async()
     else:
-        for hap in hass.data[DOMAIN].values():
-            await hap.home.deactivate_absence()
+        entry: HomematicIPConfigEntry
+        for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+            await entry.runtime_data.home.deactivate_absence_async()
 
 
 async def _async_deactivate_vacation(hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to deactivate vacation."""
     if hapid := service.data.get(ATTR_ACCESSPOINT_ID):
         if home := _get_home(hass, hapid):
-            await home.deactivate_vacation()
+            await home.deactivate_vacation_async()
     else:
-        for hap in hass.data[DOMAIN].values():
-            await hap.home.deactivate_vacation()
+        entry: HomematicIPConfigEntry
+        for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+            await entry.runtime_data.home.deactivate_vacation_async()
 
 
 async def _set_active_climate_profile(
@@ -293,16 +299,17 @@ async def _set_active_climate_profile(
     entity_id_list = service.data[ATTR_ENTITY_ID]
     climate_profile_index = service.data[ATTR_CLIMATE_PROFILE_INDEX] - 1
 
-    for hap in hass.data[DOMAIN].values():
+    entry: HomematicIPConfigEntry
+    for entry in hass.config_entries.async_loaded_entries(DOMAIN):
         if entity_id_list != "all":
             for entity_id in entity_id_list:
-                group = hap.hmip_device_by_entity_id.get(entity_id)
-                if group and isinstance(group, AsyncHeatingGroup):
-                    await group.set_active_profile(climate_profile_index)
+                group = entry.runtime_data.hmip_device_by_entity_id.get(entity_id)
+                if group and isinstance(group, HeatingGroup):
+                    await group.set_active_profile_async(climate_profile_index)
         else:
-            for group in hap.home.groups:
-                if isinstance(group, AsyncHeatingGroup):
-                    await group.set_active_profile(climate_profile_index)
+            for group in entry.runtime_data.home.groups:
+                if isinstance(group, HeatingGroup):
+                    await group.set_active_profile_async(climate_profile_index)
 
 
 async def _async_dump_hap_config(hass: HomeAssistant, service: ServiceCall) -> None:
@@ -313,8 +320,10 @@ async def _async_dump_hap_config(hass: HomeAssistant, service: ServiceCall) -> N
     config_file_prefix = service.data[ATTR_CONFIG_OUTPUT_FILE_PREFIX]
     anonymize = service.data[ATTR_ANONYMIZE]
 
-    for hap in hass.data[DOMAIN].values():
-        hap_sgtin = hap.config_entry.unique_id
+    entry: HomematicIPConfigEntry
+    for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+        hap_sgtin = entry.unique_id
+        assert hap_sgtin is not None
 
         if anonymize:
             hap_sgtin = hap_sgtin[-4:]
@@ -323,7 +332,7 @@ async def _async_dump_hap_config(hass: HomeAssistant, service: ServiceCall) -> N
         path = Path(config_path)
         config_file = path / file_name
 
-        json_state = await hap.home.download_configuration()
+        json_state = await entry.runtime_data.home.download_configuration_async()
         json_state = handle_config(json_state, anonymize)
 
         config_file.write_text(json_state, encoding="utf8")
@@ -333,16 +342,17 @@ async def _async_reset_energy_counter(hass: HomeAssistant, service: ServiceCall)
     """Service to reset the energy counter."""
     entity_id_list = service.data[ATTR_ENTITY_ID]
 
-    for hap in hass.data[DOMAIN].values():
+    entry: HomematicIPConfigEntry
+    for entry in hass.config_entries.async_loaded_entries(DOMAIN):
         if entity_id_list != "all":
             for entity_id in entity_id_list:
-                device = hap.hmip_device_by_entity_id.get(entity_id)
-                if device and isinstance(device, AsyncSwitchMeasuring):
-                    await device.reset_energy_counter()
+                device = entry.runtime_data.hmip_device_by_entity_id.get(entity_id)
+                if device and isinstance(device, SwitchMeasuring):
+                    await device.reset_energy_counter_async()
         else:
-            for device in hap.home.devices:
-                if isinstance(device, AsyncSwitchMeasuring):
-                    await device.reset_energy_counter()
+            for device in entry.runtime_data.home.devices:
+                if isinstance(device, SwitchMeasuring):
+                    await device.reset_energy_counter_async()
 
 
 async def _async_set_home_cooling_mode(hass: HomeAssistant, service: ServiceCall):
@@ -351,16 +361,19 @@ async def _async_set_home_cooling_mode(hass: HomeAssistant, service: ServiceCall
 
     if hapid := service.data.get(ATTR_ACCESSPOINT_ID):
         if home := _get_home(hass, hapid):
-            await home.set_cooling(cooling)
+            await home.set_cooling_async(cooling)
     else:
-        for hap in hass.data[DOMAIN].values():
-            await hap.home.set_cooling(cooling)
+        entry: HomematicIPConfigEntry
+        for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+            await entry.runtime_data.home.set_cooling_async(cooling)
 
 
 def _get_home(hass: HomeAssistant, hapid: str) -> AsyncHome | None:
     """Return a HmIP home."""
-    if hap := hass.data[DOMAIN].get(hapid):
-        return hap.home
+    entry: HomematicIPConfigEntry
+    for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+        if entry.unique_id == hapid:
+            return entry.runtime_data.home
 
     raise ServiceValidationError(
         translation_domain=DOMAIN,

@@ -1,10 +1,13 @@
 """Tests for the APCUPSd component."""
 
+from __future__ import annotations
+
 from collections import OrderedDict
 from typing import Final
 from unittest.mock import patch
 
 from homeassistant.components.apcupsd.const import DOMAIN
+from homeassistant.components.apcupsd.coordinator import APCUPSdData
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -79,18 +82,23 @@ MOCK_MINIMAL_STATUS: Final = OrderedDict(
 
 
 async def async_init_integration(
-    hass: HomeAssistant, host: str = "test", status=None
+    hass: HomeAssistant,
+    *,
+    host: str = "test",
+    status: dict[str, str] | None = None,
+    entry_id: str = "mocked-config-entry-id",
 ) -> MockConfigEntry:
     """Set up the APC UPS Daemon integration in HomeAssistant."""
     if status is None:
         status = MOCK_STATUS
 
     entry = MockConfigEntry(
+        entry_id=entry_id,
         version=1,
         domain=DOMAIN,
         title="APCUPSd",
         data=CONF_DATA | {CONF_HOST: host},
-        unique_id=status.get("SERIALNO", None),
+        unique_id=APCUPSdData(status).serial_no,
         source=SOURCE_USER,
     )
 

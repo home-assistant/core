@@ -9,9 +9,9 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_zeroconf")
-async def test_delete_entry(hass: HomeAssistant, mock_client) -> None:
-    """Test we can delete an entry with error."""
+@pytest.mark.usefixtures("mock_client", "mock_zeroconf")
+async def test_delete_entry(hass: HomeAssistant) -> None:
+    """Test we can delete an entry without error."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "test.local", CONF_PORT: 6053, CONF_PASSWORD: ""},

@@ -33,21 +33,19 @@ HOME_LONGITUDE = -117.237561
 
 
 @pytest.fixture(autouse=True)
-def setup_zone(hass: HomeAssistant) -> None:
+async def setup_zone(hass: HomeAssistant) -> None:
     """Create test zone."""
-    hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            zone.DOMAIN,
-            {
-                "zone": {
-                    "name": "test",
-                    "latitude": HOME_LATITUDE,
-                    "longitude": HOME_LONGITUDE,
-                    "radius": 250,
-                }
-            },
-        )
+    await async_setup_component(
+        hass,
+        zone.DOMAIN,
+        {
+            "zone": {
+                "name": "test",
+                "latitude": HOME_LATITUDE,
+                "longitude": HOME_LONGITUDE,
+                "radius": 250,
+            }
+        },
     )
 
 

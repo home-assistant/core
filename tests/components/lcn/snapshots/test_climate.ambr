@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_setup_lcn_climate[climate.climate1-entry]
+# name: test_setup_lcn_climate[climate.testmodule_climate1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -19,8 +19,8 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.climate1',
-    'has_entity_name': False,
+    'entity_id': 'climate.testmodule_climate1',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -36,15 +36,15 @@
     'previous_unique_id': None,
     'supported_features': <ClimateEntityFeature: 385>,
     'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk.json-m000007-var1.r1varsetpoint',
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-r1varsetpoint',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_lcn_climate[climate.climate1-state]
+# name: test_setup_lcn_climate[climate.testmodule_climate1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': None,
-      'friendly_name': 'Climate1',
+      'friendly_name': 'TestModule Climate1',
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
@@ -55,7 +55,7 @@
       'temperature': None,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.climate1',
+    'entity_id': 'climate.testmodule_climate1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

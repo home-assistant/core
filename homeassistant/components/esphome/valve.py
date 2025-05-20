@@ -22,6 +22,8 @@ from .entity import (
     platform_async_setup_entry,
 )
 
+PARALLEL_UPDATES = 0
+
 
 class EsphomeValve(EsphomeEntity[ValveInfo, ValveState], ValveEntity):
     """A valve implementation for ESPHome."""
@@ -63,7 +65,7 @@ class EsphomeValve(EsphomeEntity[ValveInfo, ValveState], ValveEntity):
 
     @property
     @esphome_state_property
-    def current_valve_position(self) -> int | None:
+    def current_valve_position(self) -> int:
         """Return current position of valve. 0 is closed, 100 is open."""
         return round(self._state.position * 100.0)
 

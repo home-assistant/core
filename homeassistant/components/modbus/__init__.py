@@ -62,8 +62,10 @@ from .const import (
     CALL_TYPE_X_COILS,
     CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_BAUDRATE,
+    CONF_BRIGHTNESS_REGISTER,
     CONF_BYTESIZE,
     CONF_CLIMATES,
+    CONF_COLOR_TEMP_REGISTER,
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_FAN_MODE_AUTO,
@@ -79,6 +81,16 @@ from .const import (
     CONF_FAN_MODE_TOP,
     CONF_FAN_MODE_VALUES,
     CONF_FANS,
+    CONF_HVAC_ACTION_COOLING,
+    CONF_HVAC_ACTION_DEFROSTING,
+    CONF_HVAC_ACTION_DRYING,
+    CONF_HVAC_ACTION_FAN,
+    CONF_HVAC_ACTION_HEATING,
+    CONF_HVAC_ACTION_IDLE,
+    CONF_HVAC_ACTION_OFF,
+    CONF_HVAC_ACTION_PREHEATING,
+    CONF_HVAC_ACTION_REGISTER,
+    CONF_HVAC_ACTION_VALUES,
     CONF_HVAC_MODE_AUTO,
     CONF_HVAC_MODE_COOL,
     CONF_HVAC_MODE_DRY,
@@ -297,6 +309,45 @@ CLIMATE_SCHEMA = vol.All(
                     vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
                 }
             ),
+            vol.Optional(CONF_HVAC_ACTION_REGISTER): vol.Maybe(
+                {
+                    CONF_ADDRESS: cv.positive_int,
+                    CONF_HVAC_ACTION_VALUES: {
+                        vol.Optional(CONF_HVAC_ACTION_COOLING): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_DEFROSTING): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_DRYING): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_FAN): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_HEATING): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_IDLE): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_OFF): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_PREHEATING): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                    },
+                    vol.Optional(
+                        CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING
+                    ): vol.In(
+                        [
+                            CALL_TYPE_REGISTER_HOLDING,
+                            CALL_TYPE_REGISTER_INPUT,
+                        ]
+                    ),
+                }
+            ),
             vol.Optional(CONF_FAN_MODE_REGISTER): vol.Maybe(
                 vol.All(
                     {
@@ -366,7 +417,14 @@ SWITCH_SCHEMA = BASE_SWITCH_SCHEMA.extend(
     }
 )
 
-LIGHT_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
+LIGHT_SCHEMA = BASE_SWITCH_SCHEMA.extend(
+    {
+        vol.Optional(CONF_BRIGHTNESS_REGISTER): cv.positive_int,
+        vol.Optional(CONF_COLOR_TEMP_REGISTER): cv.positive_int,
+        vol.Optional(CONF_MIN_TEMP): cv.positive_int,
+        vol.Optional(CONF_MAX_TEMP): cv.positive_int,
+    }
+)
 
 FAN_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
 

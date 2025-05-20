@@ -9,7 +9,11 @@
     "condition_type": {
       "is_locked": "{entity_name} is locked",
       "is_unlocked": "{entity_name} is unlocked",
-      "is_open": "{entity_name} is open"
+      "is_open": "{entity_name} is open",
+      "is_jammed": "{entity_name} is jammed",
+      "is_locking": "{entity_name} is locking",
+      "is_unlocking": "{entity_name} is unlocking",
+      "is_opening": "{entity_name} is opening"
     },
     "trigger_type": {
       "locked": "{entity_name} locked",
@@ -28,7 +32,7 @@
         "locked": "[%key:common::state::locked%]",
         "locking": "Locking",
         "open": "[%key:common::state::open%]",
-        "opening": "Opening",
+        "opening": "[%key:common::state::opening%]",
         "unlocked": "[%key:common::state::unlocked%]",
         "unlocking": "Unlocking"
       },

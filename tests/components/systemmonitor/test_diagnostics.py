@@ -3,7 +3,7 @@
 from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant

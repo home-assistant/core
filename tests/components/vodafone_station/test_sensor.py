@@ -6,7 +6,7 @@ from aiovodafone import CannotAuthenticate
 from aiovodafone.exceptions import AlreadyLogged, CannotConnect
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.vodafone_station.const import LINE_TYPES, SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
@@ -55,8 +55,7 @@ async def test_active_connection_type(
 
     active_connection_entity = "sensor.vodafone_station_m123456789_active_connection"
 
-    state = hass.states.get(active_connection_entity)
-    assert state
+    assert (state := hass.states.get(active_connection_entity))
     assert state.state == STATE_UNKNOWN
 
     mock_vodafone_station_router.get_sensor_data.return_value[connection_type] = (
@@ -67,8 +66,7 @@ async def test_active_connection_type(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(active_connection_entity)
-    assert state
+    assert (state := hass.states.get(active_connection_entity))
     assert state.state == LINE_TYPES[index]
 
 
@@ -85,8 +83,7 @@ async def test_uptime(
     uptime = "2024-11-19T20:19:00+00:00"
     uptime_entity = "sensor.vodafone_station_m123456789_uptime"
 
-    state = hass.states.get(uptime_entity)
-    assert state
+    assert (state := hass.states.get(uptime_entity))
     assert state.state == uptime
 
     mock_vodafone_station_router.get_sensor_data.return_value["sys_uptime"] = "12:17:23"
@@ -95,8 +92,7 @@ async def test_uptime(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(uptime_entity)
-    assert state
+    assert (state := hass.states.get(uptime_entity))
     assert state.state == uptime
 
 
@@ -124,6 +120,5 @@ async def test_coordinator_client_connector_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get("sensor.vodafone_station_m123456789_uptime")
-    assert state
+    assert (state := hass.states.get("sensor.vodafone_station_m123456789_uptime"))
     assert state.state == STATE_UNAVAILABLE

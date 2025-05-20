@@ -10,7 +10,7 @@ from unittest.mock import patch
 from evohomeasync2 import EvohomeClient
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.water_heater import (
     ATTR_AWAY_MODE,
@@ -33,7 +33,7 @@ from .const import TEST_INSTALLS_WITH_DHW
 DHW_ENTITY_ID = "water_heater.domestic_hot_water"
 
 
-@pytest.mark.parametrize("install", [*TEST_INSTALLS_WITH_DHW, "botched"])
+@pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
 async def test_setup_platform(
     hass: HomeAssistant,
     config: dict[str, str],

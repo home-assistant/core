@@ -719,7 +719,7 @@ class LockCapabilities(AlexaEntity):
         yield Alexa(self.entity)
 
 
-@ENTITY_ADAPTERS.register(media_player.const.DOMAIN)
+@ENTITY_ADAPTERS.register(media_player.DOMAIN)
 class MediaPlayerCapabilities(AlexaEntity):
     """Class to represent MediaPlayer capabilities."""
 
@@ -757,9 +757,7 @@ class MediaPlayerCapabilities(AlexaEntity):
 
         if supported & media_player.MediaPlayerEntityFeature.SELECT_SOURCE:
             inputs = AlexaInputController.get_valid_inputs(
-                self.entity.attributes.get(
-                    media_player.const.ATTR_INPUT_SOURCE_LIST, []
-                )
+                self.entity.attributes.get(media_player.ATTR_INPUT_SOURCE_LIST, [])
             )
             if len(inputs) > 0:
                 yield AlexaInputController(self.entity)
@@ -776,8 +774,7 @@ class MediaPlayerCapabilities(AlexaEntity):
             and domain != "denonavr"
         ):
             inputs = AlexaEqualizerController.get_valid_inputs(
-                self.entity.attributes.get(media_player.const.ATTR_SOUND_MODE_LIST)
-                or []
+                self.entity.attributes.get(media_player.ATTR_SOUND_MODE_LIST) or []
             )
             if len(inputs) > 0:
                 yield AlexaEqualizerController(self.entity)

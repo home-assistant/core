@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .test_common import help_test_unload_config_entry
+from .common import help_test_unload_config_entry
 
 from tests.common import (
     MockConfigEntry,

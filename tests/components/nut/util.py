@@ -1,10 +1,17 @@
 """Tests for the nut integration."""
 
 import json
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.nut.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_ALIAS,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -35,8 +42,11 @@ def _get_mock_nutclient(
 async def async_init_integration(
     hass: HomeAssistant,
     ups_fixture: str | None = None,
+    host: str = "mock",
+    port: int = 1234,
     username: str = "mock",
     password: str = "mock",
+    alias: str | None = None,
     list_ups: dict[str, str] | None = None,
     list_vars: dict[str, str] | None = None,
     list_commands_return_value: dict[str, str] | None = None,
@@ -65,15 +75,24 @@ async def async_init_integration(
         "homeassistant.components.nut.AIONUTClient",
         return_value=mock_pynut,
     ):
+        extra_config_entry_data: dict[str, Any] = {}
+
+        if alias is not None:
+            extra_config_entry_data = {
+                CONF_ALIAS: alias,
+            }
+
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={
-                CONF_HOST: "mock",
+                CONF_HOST: host,
                 CONF_PASSWORD: password,
-                CONF_PORT: "mock",
+                CONF_PORT: port,
                 CONF_USERNAME: username,
-            },
+            }
+            | extra_config_entry_data,
         )
+
         entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(entry.entry_id)
@@ -82,18 +101,16 @@ async def async_init_integration(
     return entry
 
 
-async def _test_sensor_and_attributes(
+def _test_sensor_and_attributes(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    model: str,
     unique_id: str,
     device_id: str,
     state_value: str,
     expected_attributes: dict,
 ) -> None:
-    """Test creation of device sensors with unique ids."""
+    """Test all of the sensor entry attributes."""
 
-    await async_init_integration(hass, model)
     entry = entity_registry.async_get(device_id)
     assert entry
     assert entry.unique_id == unique_id

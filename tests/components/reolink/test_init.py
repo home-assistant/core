@@ -19,10 +19,14 @@ from homeassistant.components.reolink import (
     FIRMWARE_UPDATE_INTERVAL,
     NUM_CRED_ERRORS,
 )
-from homeassistant.components.reolink.const import DOMAIN
+from homeassistant.components.reolink.const import CONF_BC_PORT, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
     CONF_PORT,
+    CONF_PROTOCOL,
+    CONF_USERNAME,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -35,16 +39,26 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
+    CONF_SUPPORTS_PRIVACY_MODE,
+    CONF_USE_HTTPS,
+    DEFAULT_PROTOCOL,
+    TEST_BC_PORT,
     TEST_CAM_MODEL,
+    TEST_HOST,
     TEST_HOST_MODEL,
     TEST_MAC,
+    TEST_MAC_CAM,
     TEST_NVR_NAME,
     TEST_PORT,
+    TEST_PRIVACY,
     TEST_UID,
     TEST_UID_CAM,
+    TEST_USE_HTTPS,
+    TEST_USERNAME,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -411,6 +425,15 @@ async def test_removing_chime(
             True,
             True,
         ),
+        (
+            f"{TEST_UID}_unexpected",
+            f"{TEST_UID}_unexpected",
+            f"{TEST_UID}_{TEST_UID_CAM}",
+            f"{TEST_UID}_{TEST_UID_CAM}",
+            Platform.SWITCH,
+            True,
+            True,
+        ),
     ],
 )
 async def test_migrate_entity_ids(
@@ -456,7 +479,8 @@ async def test_migrate_entity_ids(
     )
 
     assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id)
-    assert entity_registry.async_get_entity_id(domain, DOMAIN, new_id) is None
+    if original_id != new_id:
+        assert entity_registry.async_get_entity_id(domain, DOMAIN, new_id) is None
 
     assert device_registry.async_get_device(identifiers={(DOMAIN, original_dev_id)})
     if new_dev_id != original_dev_id:
@@ -469,7 +493,8 @@ async def test_migrate_entity_ids(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id) is None
+    if original_id != new_id:
+        assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id) is None
     assert entity_registry.async_get_entity_id(domain, DOMAIN, new_id)
 
     if new_dev_id != original_dev_id:
@@ -588,6 +613,115 @@ async def test_migrate_with_already_existing_entity(
 
     assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id) is None
     assert entity_registry.async_get_entity_id(domain, DOMAIN, new_id)
+
+
+async def test_cleanup_mac_connection(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test cleanup of the MAC of a IPC which was set to the MAC of the host."""
+    reolink_connect.channels = [0]
+    reolink_connect.baichuan.mac_address.return_value = None
+    entity_id = f"{TEST_UID}_{TEST_UID_CAM}_record_audio"
+    dev_id = f"{TEST_UID}_{TEST_UID_CAM}"
+    domain = Platform.SWITCH
+
+    dev_entry = device_registry.async_get_or_create(
+        identifiers={(DOMAIN, dev_id), ("OTHER_INTEGRATION", "SOME_ID")},
+        connections={(CONNECTION_NETWORK_MAC, TEST_MAC)},
+        config_entry_id=config_entry.entry_id,
+        disabled_by=None,
+    )
+
+    entity_registry.async_get_or_create(
+        domain=domain,
+        platform=DOMAIN,
+        unique_id=entity_id,
+        config_entry=config_entry,
+        suggested_object_id=entity_id,
+        disabled_by=None,
+        device_id=dev_entry.id,
+    )
+
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, entity_id)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, dev_id)})
+    assert device
+    assert device.connections == {(CONNECTION_NETWORK_MAC, TEST_MAC)}
+
+    # setup CH 0 and host entities/device
+    with patch("homeassistant.components.reolink.PLATFORMS", [domain]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, entity_id)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, dev_id)})
+    assert device
+    assert device.connections == set()
+
+    reolink_connect.baichuan.mac_address.return_value = TEST_MAC_CAM
+
+
+async def test_cleanup_combined_with_NVR(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test cleanup of the device registry if IPC camera device was combined with the NVR device."""
+    reolink_connect.channels = [0]
+    reolink_connect.baichuan.mac_address.return_value = None
+    entity_id = f"{TEST_UID}_{TEST_UID_CAM}_record_audio"
+    dev_id = f"{TEST_UID}_{TEST_UID_CAM}"
+    domain = Platform.SWITCH
+    start_identifiers = {
+        (DOMAIN, dev_id),
+        (DOMAIN, TEST_UID),
+        ("OTHER_INTEGRATION", "SOME_ID"),
+    }
+
+    dev_entry = device_registry.async_get_or_create(
+        identifiers=start_identifiers,
+        connections={(CONNECTION_NETWORK_MAC, TEST_MAC)},
+        config_entry_id=config_entry.entry_id,
+        disabled_by=None,
+    )
+
+    entity_registry.async_get_or_create(
+        domain=domain,
+        platform=DOMAIN,
+        unique_id=entity_id,
+        config_entry=config_entry,
+        suggested_object_id=entity_id,
+        disabled_by=None,
+        device_id=dev_entry.id,
+    )
+
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, entity_id)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, dev_id)})
+    assert device
+    assert device.identifiers == start_identifiers
+
+    # setup CH 0 and host entities/device
+    with patch("homeassistant.components.reolink.PLATFORMS", [domain]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, entity_id)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, dev_id)})
+    assert device
+    assert device.identifiers == {(DOMAIN, dev_id)}
+    host_device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_UID)})
+    assert host_device
+    assert host_device.identifiers == {
+        (DOMAIN, TEST_UID),
+        ("OTHER_INTEGRATION", "SOME_ID"),
+    }
+
+    reolink_connect.baichuan.mac_address.return_value = TEST_MAC_CAM
 
 
 async def test_no_repair_issue(
@@ -722,6 +856,41 @@ async def test_firmware_repair_issue(
     await hass.async_block_till_done()
 
     assert (DOMAIN, "firmware_update_host") in issue_registry.issues
+    reolink_connect.camera_sw_version_update_required.return_value = False
+
+
+async def test_password_too_long_repair_issue(
+    hass: HomeAssistant,
+    reolink_connect: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test password too long issue is raised."""
+    reolink_connect.valid_password.return_value = False
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=format_mac(TEST_MAC),
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: "too_longgggggggggggggggggggggggggggggggggggggggggggggggggg",
+            CONF_PORT: TEST_PORT,
+            CONF_USE_HTTPS: TEST_USE_HTTPS,
+            CONF_SUPPORTS_PRIVACY_MODE: TEST_PRIVACY,
+        },
+        options={
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME,
+    )
+    config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        DOMAIN,
+        f"password_too_long_{config_entry.entry_id}",
+    ) in issue_registry.issues
+    reolink_connect.valid_password.return_value = True
 
 
 async def test_new_device_discovered(
@@ -760,6 +929,21 @@ async def test_port_changed(
     await hass.async_block_till_done()
 
     assert config_entry.data[CONF_PORT] == 4567
+
+
+async def test_baichuan_port_changed(
+    hass: HomeAssistant,
+    reolink_connect: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test config_entry baichuan port update when it has changed during initial login."""
+    assert config_entry.data[CONF_BC_PORT] == TEST_BC_PORT
+    reolink_connect.baichuan.port = 8901
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.data[CONF_BC_PORT] == 8901
 
 
 async def test_privacy_mode_on(

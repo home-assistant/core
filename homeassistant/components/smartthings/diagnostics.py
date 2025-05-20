@@ -17,6 +17,15 @@ from .const import DOMAIN
 EVENT_WAIT_TIME = 5
 
 
+async def async_get_config_entry_diagnostics(
+    hass: HomeAssistant,
+    entry: SmartThingsConfigEntry,
+) -> dict[str, Any]:
+    """Return diagnostics for a config entry."""
+    client = entry.runtime_data.client
+    return {"devices": await client.get_raw_devices()}
+
+
 async def async_get_device_diagnostics(
     hass: HomeAssistant, entry: SmartThingsConfigEntry, device: DeviceEntry
 ) -> dict[str, Any]:
@@ -26,7 +35,8 @@ async def async_get_device_diagnostics(
         identifier for identifier in device.identifiers if identifier[0] == DOMAIN
     )[1]
 
-    device_status = await client.get_device_status(device_id)
+    device_status = await client.get_raw_device_status(device_id)
+    device_info = await client.get_raw_device(device_id)
 
     events: list[DeviceEvent] = []
 
@@ -39,11 +49,8 @@ async def async_get_device_diagnostics(
 
     listener()
 
-    status: dict[str, Any] = {}
-    for component, capabilities in device_status.items():
-        status[component] = {}
-        for capability, attributes in capabilities.items():
-            status[component][capability] = {}
-            for attribute, value in attributes.items():
-                status[component][capability][attribute] = asdict(value)
-    return {"events": [asdict(event) for event in events], "status": status}
+    return {
+        "events": [asdict(event) for event in events],
+        "status": device_status,
+        "info": device_info,
+    }

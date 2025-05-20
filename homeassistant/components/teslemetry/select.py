@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import Any
 
-from tesla_fleet_api import VehicleSpecific
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode, Scope, Seat
+from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -20,7 +20,7 @@ from . import TeslemetryConfigEntry
 from .entity import (
     TeslemetryEnergyInfoEntity,
     TeslemetryRootEntity,
-    TeslemetryVehicleEntity,
+    TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
 from .helpers import handle_command, handle_vehicle_command
@@ -40,7 +40,7 @@ LEVEL = {OFF: 0, LOW: 1, MEDIUM: 2, HIGH: 3}
 class TeslemetrySelectEntityDescription(SelectEntityDescription):
     """Seat Heater entity description."""
 
-    select_fn: Callable[[VehicleSpecific, int], Awaitable[Any]]
+    select_fn: Callable[[Vehicle, int], Awaitable[Any]]
     supported_fn: Callable[[dict], bool] = lambda _: True
     streaming_listener: (
         Callable[
@@ -177,7 +177,7 @@ async def async_setup_entry(
     async_add_entities(
         chain(
             (
-                TeslemetryPollingSelectEntity(
+                TeslemetryVehiclePollingSelectEntity(
                     vehicle, description, entry.runtime_data.scopes
                 )
                 if vehicle.api.pre2021
@@ -208,6 +208,7 @@ async def async_setup_entry(
 class TeslemetrySelectEntity(TeslemetryRootEntity, SelectEntity):
     """Parent vehicle select entity class."""
 
+    api: Vehicle
     entity_description: TeslemetrySelectEntityDescription
     _climate: bool = False
 
@@ -223,7 +224,9 @@ class TeslemetrySelectEntity(TeslemetryRootEntity, SelectEntity):
         self.async_write_ha_state()
 
 
-class TeslemetryPollingSelectEntity(TeslemetryVehicleEntity, TeslemetrySelectEntity):
+class TeslemetryVehiclePollingSelectEntity(
+    TeslemetryVehiclePollingEntity, TeslemetrySelectEntity
+):
     """Base polling vehicle select entity class."""
 
     def __init__(
