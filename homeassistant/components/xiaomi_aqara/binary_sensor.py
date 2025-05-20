@@ -140,19 +140,8 @@ class XiaomiBinarySensor(XiaomiDevice, BinarySensorEntity):
     def __init__(self, device, name, xiaomi_hub, data_key, device_class, config_entry):
         """Initialize the XiaomiSmokeSensor."""
         self._data_key = data_key
-        self._device_class = device_class
-        self._density = 0
+        self._attr_device_class = device_class
         super().__init__(device, name, xiaomi_hub, config_entry)
-
-    @property
-    def is_on(self):
-        """Return true if sensor is on."""
-        return self._state
-
-    @property
-    def device_class(self):
-        """Return the class of binary sensor."""
-        return self._device_class
 
     def update(self) -> None:
         """Update the sensor state."""
@@ -180,7 +169,7 @@ class XiaomiNatgasSensor(XiaomiBinarySensor):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        self._state = False
+        self._attr_is_on = False
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
@@ -192,13 +181,13 @@ class XiaomiNatgasSensor(XiaomiBinarySensor):
             return False
 
         if value in ("1", "2"):
-            if self._state:
+            if self._attr_is_on:
                 return False
-            self._state = True
+            self._attr_is_on = True
             return True
         if value == "0":
-            if self._state:
-                self._state = False
+            if self._attr_is_on:
+                self._attr_is_on = False
                 return True
             return False
 
@@ -232,13 +221,13 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
     def _async_set_no_motion(self, now):
         """Set state to False."""
         self._unsub_set_no_motion = None
-        self._state = False
+        self._attr_is_on = False
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        self._state = False
+        self._attr_is_on = False
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway.
@@ -274,7 +263,7 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
 
         if NO_MOTION in data:
             self._no_motion_since = data[NO_MOTION]
-            self._state = False
+            self._attr_is_on = False
             return True
 
         value = data.get(self._data_key)
@@ -295,9 +284,9 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
                 )
 
             self._no_motion_since = 0
-            if self._state:
+            if self._attr_is_on:
                 return False
-            self._state = True
+            self._attr_is_on = True
             return True
 
         return False
@@ -335,7 +324,7 @@ class XiaomiDoorSensor(XiaomiBinarySensor, RestoreEntity):
         if (state := await self.async_get_last_state()) is None:
             return
 
-        self._state = state.state == "on"
+        self._attr_is_on = state.state == "on"
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
@@ -350,14 +339,14 @@ class XiaomiDoorSensor(XiaomiBinarySensor, RestoreEntity):
 
         if value == "open":
             self._attr_should_poll = True
-            if self._state:
+            if self._attr_is_on:
                 return False
-            self._state = True
+            self._attr_is_on = True
             return True
         if value == "close":
             self._open_since = 0
-            if self._state:
-                self._state = False
+            if self._attr_is_on:
+                self._attr_is_on = False
                 return True
             return False
 
@@ -385,7 +374,7 @@ class XiaomiWaterLeakSensor(XiaomiBinarySensor):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        self._state = False
+        self._attr_is_on = False
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
@@ -397,13 +386,13 @@ class XiaomiWaterLeakSensor(XiaomiBinarySensor):
 
         if value == "leak":
             self._attr_should_poll = True
-            if self._state:
+            if self._attr_is_on:
                 return False
-            self._state = True
+            self._attr_is_on = True
             return True
         if value == "no_leak":
-            if self._state:
-                self._state = False
+            if self._attr_is_on:
+                self._attr_is_on = False
                 return True
             return False
 
@@ -430,7 +419,7 @@ class XiaomiSmokeSensor(XiaomiBinarySensor):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        self._state = False
+        self._attr_is_on = False
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
@@ -441,13 +430,13 @@ class XiaomiSmokeSensor(XiaomiBinarySensor):
             return False
 
         if value in ("1", "2"):
-            if self._state:
+            if self._attr_is_on:
                 return False
-            self._state = True
+            self._attr_is_on = True
             return True
         if value == "0":
-            if self._state:
-                self._state = False
+            if self._attr_is_on:
+                self._attr_is_on = False
                 return True
             return False
 
@@ -472,7 +461,7 @@ class XiaomiVibration(XiaomiBinarySensor):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        self._state = False
+        self._attr_is_on = False
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
@@ -512,7 +501,7 @@ class XiaomiButton(XiaomiBinarySensor):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        self._state = False
+        self._attr_is_on = False
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
@@ -521,10 +510,10 @@ class XiaomiButton(XiaomiBinarySensor):
             return False
 
         if value == "long_click_press":
-            self._state = True
+            self._attr_is_on = True
             click_type = "long_click_press"
         elif value == "long_click_release":
-            self._state = False
+            self._attr_is_on = False
             click_type = "hold"
         elif value == "click":
             click_type = "single"
@@ -576,7 +565,7 @@ class XiaomiCube(XiaomiBinarySensor):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        self._state = False
+        self._attr_is_on = False
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
