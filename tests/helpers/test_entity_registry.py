@@ -583,23 +583,43 @@ async def test_load_bad_data(
             ],
             "deleted_entities": [
                 {
+                    "aliases": [],
+                    "area_id": None,
+                    "categories": {},
                     "config_entry_id": None,
                     "config_subentry_id": None,
                     "created_at": "2024-02-14T12:00:00.900075+00:00",
+                    "device_class": None,
+                    "disabled_by": None,
                     "entity_id": "test.test3",
+                    "hidden_by": None,
+                    "icon": None,
                     "id": "00003",
+                    "labels": [],
                     "modified_at": "2024-02-14T12:00:00.900075+00:00",
+                    "name": None,
+                    "options": None,
                     "orphaned_timestamp": None,
                     "platform": "super_platform",
                     "unique_id": 234,  # Should not load
                 },
                 {
+                    "aliases": [],
+                    "area_id": None,
+                    "categories": {},
                     "config_entry_id": None,
                     "config_subentry_id": None,
                     "created_at": "2024-02-14T12:00:00.900075+00:00",
+                    "device_class": None,
+                    "disabled_by": None,
                     "entity_id": "test.test4",
+                    "hidden_by": None,
+                    "icon": None,
                     "id": "00004",
+                    "labels": [],
                     "modified_at": "2024-02-14T12:00:00.900075+00:00",
+                    "name": None,
+                    "options": None,
                     "orphaned_timestamp": None,
                     "platform": "super_platform",
                     "unique_id": ["also", "not", "valid"],  # Should not load
@@ -1119,12 +1139,22 @@ async def test_migration_1_11(
             ],
             "deleted_entities": [
                 {
+                    "aliases": [],
+                    "area_id": None,
+                    "categories": {},
                     "config_entry_id": None,
                     "config_subentry_id": None,
                     "created_at": "1970-01-01T00:00:00+00:00",
+                    "device_class": None,
+                    "disabled_by": None,
                     "entity_id": "test.deleted_entity",
+                    "hidden_by": None,
+                    "icon": None,
                     "id": "23456",
+                    "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": None,
+                    "options": {},
                     "orphaned_timestamp": None,
                     "platform": "super_duper_platform",
                     "unique_id": "very_very_unique",
@@ -2453,7 +2483,7 @@ async def test_restore_entity(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Make sure entity registry id is stable."""
+    """Make sure entity registry id is stable and user configurations are restored."""
     update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
     config_entry = MockConfigEntry(
         domain="light",
@@ -2562,27 +2592,31 @@ async def test_restore_entity(
     assert len(entity_registry.entities) == 2
     assert len(entity_registry.deleted_entities) == 0
     assert entry1 != entry1_restored
-    # entity_id and user customizations are not restored. new integration options are
+    # entity_id and user customizations are restored. new integration options are
     # respected.
     assert entry1_restored == er.RegistryEntry(
-        entity_id="light.suggested_2",
+        entity_id="light.custom_1",
         unique_id="1234",
         platform="hue",
+        aliases={"alias1", "alias2"},
+        area_id="12345A",
+        categories={"scope1": "id", "scope2": "id"},
         capabilities={"key2": "value2"},
         config_entry_id=config_entry.entry_id,
         config_subentry_id="mock-subentry-id-1-2",
         created_at=utcnow(),
-        device_class=None,
+        device_class="device_class_user",
         device_id=device_entry_2.id,
-        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+        disabled_by=er.RegistryEntryDisabler.USER,
         entity_category=EntityCategory.CONFIG,
         has_entity_name=False,
-        hidden_by=None,
-        icon=None,
+        hidden_by=er.RegistryEntryHider.USER,
+        icon="icon_user",
         id=entry1.id,
+        labels={"label1", "label2"},
         modified_at=utcnow(),
-        name=None,
-        options={"test_domain": {"key2": "value2"}},
+        name="Test Friendly Name",
+        options={"options_domain": {"key": "value"}, "test_domain": {"key1": "value1"}},
         original_device_class="device_class_2",
         original_icon="original_icon_2",
         original_name="original_name_2",
@@ -2647,20 +2681,14 @@ async def test_restore_entity(
     assert update_events[4].data == {"action": "remove", "entity_id": "light.custom_1"}
     assert update_events[5].data == {"action": "remove", "entity_id": "light.hue_5678"}
     # Restore entities the 1st time
-    assert update_events[6].data == {
-        "action": "create",
-        "entity_id": "light.suggested_2",
-    }
+    assert update_events[6].data == {"action": "create", "entity_id": "light.custom_1"}
     assert update_events[7].data == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[8].data == {
-        "action": "remove",
-        "entity_id": "light.suggested_2",
-    }
+    assert update_events[8].data == {"action": "remove", "entity_id": "light.custom_1"}
     assert update_events[9].data == {"action": "remove", "entity_id": "light.hue_5678"}
     # Restore entities the 2nd time
-    assert update_events[10].data == {"action": "create", "entity_id": "light.hue_1234"}
+    assert update_events[10].data == {"action": "create", "entity_id": "light.custom_1"}
     assert update_events[11].data == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[12].data == {"action": "remove", "entity_id": "light.hue_1234"}
+    assert update_events[12].data == {"action": "remove", "entity_id": "light.custom_1"}
     # Restore entities the 3rd time
     assert update_events[13].data == {"action": "create", "entity_id": "light.hue_1234"}
 
