@@ -2858,7 +2858,7 @@ async def test_removing_labels_deleted_entity(
     assert entry1_cleared_label1.labels == {"label2"}
     assert not entry1_cleared_label2.labels
     assert entry2 != entry2_restored
-    assert entry2.labels == {"label3"}
+    assert entry2_restored.labels == {"label3"}
 
 
 async def test_entries_for_label(entity_registry: er.EntityRegistry) -> None:
