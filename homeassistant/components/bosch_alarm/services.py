@@ -18,8 +18,8 @@ from .const import ATTR_CONFIG_ENTRY_ID, ATTR_DATETIME, DOMAIN, SERVICE_SET_DATE
 from .types import BoschAlarmConfigEntry
 
 
-def valiadate_year(value: Any) -> dt.datetime:
-    """Validate datetime."""
+def validate_datetime(value: Any) -> dt.datetime:
+    """Validate that a provided datetime is supported on a bosch alarm panel."""
     date_val = cv.datetime(value)
     if date_val.year < 2010:
         raise vol.RangeInvalid("datetime must be after 2010")
@@ -33,7 +33,7 @@ def valiadate_year(value: Any) -> dt.datetime:
 SET_DATE_TIME_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
-        vol.Optional(ATTR_DATETIME): valiadate_year,
+        vol.Optional(ATTR_DATETIME): validate_datetime,
     }
 )
 
