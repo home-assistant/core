@@ -111,6 +111,7 @@ class NetatmoPersonHomeSwitch(NetatmoDeviceEntity, SwitchEntity):
     """Representation of a Netatmo person home/away switch."""
 
     person: Person
+    entity_registry_enabled_default = False
     _attr_configuration_url = CONF_URL_SECURITY
 
     def __init__(self, netatmo_person: NetatmoPerson) -> None:

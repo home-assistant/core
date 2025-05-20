@@ -57,7 +57,7 @@
     'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
-    'disabled_by': None,
+    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
     'domain': 'switch',
     'entity_category': None,
     'entity_id': 'switch.myhome_persons_john_doe',
@@ -82,18 +82,7 @@
   })
 # ---
 # name: test_entity[switch.myhome_persons_john_doe-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'MYHOME Persons John Doe',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.myhome_persons_john_doe',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
+  None
 # ---
 # name: test_entity[switch.myhome_persons_jane_doe-entry]
   EntityRegistryEntrySnapshot({
@@ -105,7 +94,7 @@
     'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
-    'disabled_by': None,
+    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
     'domain': 'switch',
     'entity_category': None,
     'entity_id': 'switch.myhome_persons_jane_doe',
@@ -130,18 +119,7 @@
   })
 # ---
 # name: test_entity[switch.myhome_persons_jane_doe-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'MYHOME Persons Jane Doe',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.myhome_persons_jane_doe',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
+  None
 # ---
 # name: test_entity[switch.myhome_persons_richard_doe-entry]
   EntityRegistryEntrySnapshot({
@@ -153,7 +131,7 @@
     'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
-    'disabled_by': None,
+    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
     'domain': 'switch',
     'entity_category': None,
     'entity_id': 'switch.myhome_persons_richard_doe',
@@ -178,16 +156,5 @@
   })
 # ---
 # name: test_entity[switch.myhome_persons_richard_doe-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'MYHOME Persons Richard Doe',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.myhome_persons_richard_doe',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
+  None
 # ---
