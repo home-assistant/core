@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import PaperlessConfigEntry, PaperlessCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.UPDATE]
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) -> bool:

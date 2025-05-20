@@ -3,14 +3,14 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pypaperless.models import RemoteVersion, Statistic
+from pypaperless.models import Statistic
 import pytest
 
 from homeassistant.components.paperless_ngx.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-from .const import MOCK_REMOTE_VERSION_DATA_NO_UPDATE, MOCK_STATISTICS_DATA, USER_INPUT
+from .const import MOCK_STATISTICS_DATA, USER_INPUT
 
 from tests.common import MockConfigEntry
 
@@ -33,11 +33,6 @@ def mock_paperless() -> Generator[AsyncMock]:
         paperless.base_url = "http://paperless.example.com/"
         paperless.host_version = "2.3.0"
         paperless.initialize = AsyncMock(return_value=None)
-        paperless.remote_version = AsyncMock(
-            return_value=RemoteVersion.create_with_data(
-                paperless, data=MOCK_REMOTE_VERSION_DATA_NO_UPDATE, fetched=True
-            )
-        )
         paperless.statistics = AsyncMock(
             return_value=Statistic.create_with_data(
                 paperless, data=MOCK_STATISTICS_DATA, fetched=True
