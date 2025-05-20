@@ -33,7 +33,7 @@ from tests.common import MockConfigEntry
 MOCK_API_TOKEN = "psk_0000000000000000"
 
 
-async def create_amber_config_entry(site_id):
+async def create_amber_config_entry(site_id: str) -> MockConfigEntry:
     """Create an Amber config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
