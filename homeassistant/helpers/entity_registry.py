@@ -961,7 +961,7 @@ class EntityRegistry(BaseRegistry):
             disabled_by = (
                 deleted_entity.disabled_by
                 if deleted_entity.disabled_by == RegistryEntryDisabler.USER
-                else None
+                else disabled_by
             )
             # Restore entity_id if it's available
             if self._entity_id_available(deleted_entity.entity_id):
@@ -970,7 +970,7 @@ class EntityRegistry(BaseRegistry):
             hidden_by = (
                 deleted_entity.hidden_by
                 if deleted_entity.hidden_by == RegistryEntryHider.USER
-                else None
+                else hidden_by
             )
             icon = deleted_entity.icon
             labels = deleted_entity.labels
