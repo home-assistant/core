@@ -1171,10 +1171,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="precision",
                     return_type="float",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="temperature_unit",
                     return_type="str",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="current_humidity",
@@ -1191,6 +1193,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="hvac_modes",
                     return_type="list[HVACMode]",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="hvac_action",
@@ -1249,6 +1252,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     kwargs_type="Any",
                     return_type="None",
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="set_humidity",
@@ -1257,6 +1261,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     },
                     return_type="None",
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="set_fan_mode",
@@ -1265,6 +1270,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     },
                     return_type="None",
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="set_hvac_mode",
@@ -1273,6 +1279,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     },
                     return_type="None",
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="set_swing_mode",
@@ -1281,6 +1288,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     },
                     return_type="None",
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="set_preset_mode",
@@ -1289,46 +1297,56 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     },
                     return_type="None",
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="turn_aux_heat_on",
                     return_type="None",
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="turn_aux_heat_off",
                     return_type="None",
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="turn_on",
                     return_type="None",
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="turn_off",
                     return_type="None",
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_features",
                     return_type="ClimateEntityFeature",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="min_temp",
                     return_type="float",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="max_temp",
                     return_type="float",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="min_humidity",
                     return_type="float",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="max_humidity",
                     return_type="float",
+                    mandatory=True,
                 ),
             ],
         ),
