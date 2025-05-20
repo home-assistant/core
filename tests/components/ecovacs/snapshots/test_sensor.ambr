@@ -172,6 +172,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
       }),
@@ -199,7 +202,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0010',
+    'state': '0.001',
   })
 # ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_battery:entity-registry]
@@ -321,6 +324,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
@@ -518,6 +524,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
       }),
@@ -546,7 +555,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0060',
+    'state': '0.006',
   })
 # ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_total_cleaning_duration:entity-registry]
@@ -573,6 +582,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -601,7 +613,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '40.000',
+    'state': '40.0',
   })
 # ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_total_cleanings:entity-registry]
@@ -770,6 +782,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
       }),
@@ -871,6 +886,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
@@ -1269,6 +1287,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
       }),
@@ -1324,6 +1345,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -1352,7 +1376,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '40.000',
+    'state': '40.0',
   })
 # ---
 # name: test_sensors[qhe2o2][sensor.dusty_total_cleanings:entity-registry]
@@ -1569,6 +1593,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
       }),
@@ -1670,6 +1697,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
@@ -1963,6 +1993,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
       }),
@@ -2018,6 +2051,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -2046,7 +2082,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '40.000',
+    'state': '40.0',
   })
 # ---
 # name: test_sensors[yna5x1][sensor.ozmo_950_total_cleanings:entity-registry]
