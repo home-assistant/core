@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
+    REVOLUTIONS_PER_MINUTE,
     EntityCategory,
     Platform,
     UnitOfElectricCurrent,
@@ -1090,7 +1091,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="PumpSpeed",
             translation_key="pump_speed",
-            native_unit_of_measurement=None,
+            native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,

@@ -2894,7 +2894,7 @@
     'supported_features': 0,
     'translation_key': 'pump_speed',
     'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-PumpSpeed-512-20',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'rpm',
   })
 # ---
 # name: test_sensors[pump][sensor.mock_pump_rotation_speed-state]
@@ -2902,6 +2902,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Pump Rotation speed',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'rpm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_pump_rotation_speed',
