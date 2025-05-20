@@ -27,7 +27,6 @@ from .const import DOMAIN, LOGGER
 type PaperlessConfigEntry = ConfigEntry[PaperlessCoordinator]
 
 UPDATE_INTERVAL = 120
-REMOTE_VERSION_UPDATE_INTERVAL_HOURS = 24
 
 
 @dataclass(kw_only=True)
