@@ -1,7 +1,7 @@
 {
   "domain": "analytics",
   "name": "Analytics",
-  "after_dependencies": ["energy", "recorder"],
+  "after_dependencies": ["energy", "hassio", "recorder"],
   "codeowners": ["@home-assistant/core", "@ludeeus"],
   "dependencies": ["api", "websocket_api"],
   "documentation": "https://www.home-assistant.io/integrations/analytics",

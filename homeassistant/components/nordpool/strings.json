@@ -1,0 +1,139 @@
+{
+  "config": {
+    "abort": {
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_data": "API connected but the response was empty"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "currency": "Currency",
+          "areas": "Areas"
+        },
+        "data_description": {
+          "currency": "Select currency to display prices in, EUR is the base currency.",
+          "areas": "Areas to display prices for according to Nord Pool market areas."
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "currency": "[%key:component::nordpool::config::step::user::data::currency%]",
+          "areas": "[%key:component::nordpool::config::step::user::data::areas%]"
+        },
+        "data_description": {
+          "currency": "[%key:component::nordpool::config::step::user::data_description::currency%]",
+          "areas": "[%key:component::nordpool::config::step::user::data_description::areas%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "updated_at": {
+        "name": "Last updated"
+      },
+      "currency": {
+        "name": "Currency"
+      },
+      "exchange_rate": {
+        "name": "Exchange rate"
+      },
+      "current_price": {
+        "name": "Current price"
+      },
+      "last_price": {
+        "name": "Previous price"
+      },
+      "next_price": {
+        "name": "Next price"
+      },
+      "lowest_price": {
+        "name": "Lowest price",
+        "state_attributes": {
+          "start": {
+            "name": "Start time"
+          },
+          "end": {
+            "name": "End time"
+          }
+        }
+      },
+      "highest_price": {
+        "name": "Highest price",
+        "state_attributes": {
+          "start": {
+            "name": "[%key:component::nordpool::entity::sensor::lowest_price::state_attributes::start::name%]"
+          },
+          "end": {
+            "name": "[%key:component::nordpool::entity::sensor::lowest_price::state_attributes::end::name%]"
+          }
+        }
+      },
+      "block_average": {
+        "name": "{block} average"
+      },
+      "block_min": {
+        "name": "{block} lowest price"
+      },
+      "block_max": {
+        "name": "{block} highest price"
+      },
+      "block_start_time": {
+        "name": "{block} time from"
+      },
+      "block_end_time": {
+        "name": "{block} time until"
+      },
+      "daily_average": {
+        "name": "Daily average"
+      }
+    }
+  },
+  "services": {
+    "get_prices_for_date": {
+      "name": "Get prices for date",
+      "description": "Retrieves the prices for a specific date.",
+      "fields": {
+        "config_entry": {
+          "name": "Config entry",
+          "description": "The Nord Pool configuration entry for this action."
+        },
+        "date": {
+          "name": "Date",
+          "description": "Only dates two months in the past and one day in the future is allowed."
+        },
+        "areas": {
+          "name": "Areas",
+          "description": "One or multiple areas to get prices for. If left empty it will use the areas already configured."
+        },
+        "currency": {
+          "name": "Currency",
+          "description": "Currency to get prices in. If left empty it will use the currency already configured."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "initial_update_failed": {
+      "message": "Initial update failed on startup with error {error}"
+    },
+    "entry_not_found": {
+      "message": "The Nord Pool integration is not configured in Home Assistant."
+    },
+    "entry_not_loaded": {
+      "message": "The Nord Pool integration is currently not loaded or disabled in Home Assistant."
+    },
+    "authentication_error": {
+      "message": "There was an authentication error as you tried to retrieve data too far in the past."
+    },
+    "empty_response": {
+      "message": "Nord Pool has not posted market prices for the provided date."
+    },
+    "connection_error": {
+      "message": "There was a connection error connecting to the API. Try again later."
+    }
+  }
+}

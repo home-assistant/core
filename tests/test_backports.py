@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from functools import cached_property
+from functools import cached_property  # pylint: disable=hass-deprecated-import
 from types import ModuleType
 from typing import Any
 

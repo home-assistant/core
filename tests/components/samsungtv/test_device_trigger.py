@@ -7,7 +7,8 @@ from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.components.samsungtv import DOMAIN, device_trigger
+from homeassistant.components.samsungtv import device_trigger
+from homeassistant.components.samsungtv.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError

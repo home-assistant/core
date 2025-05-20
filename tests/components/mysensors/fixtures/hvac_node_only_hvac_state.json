@@ -1,0 +1,22 @@
+{
+  "1": {
+    "sensor_id": 1,
+    "children": {
+      "1": {
+        "id": 1,
+        "type": 29,
+        "description": "",
+        "values": {
+          "0": "20.0",
+          "21": "Off"
+        }
+      }
+    },
+    "type": 17,
+    "sketch_name": "HVAC Node",
+    "sketch_version": "1.0",
+    "battery_level": 0,
+    "protocol_version": "2.3.2",
+    "heartbeat": 0
+  }
+}

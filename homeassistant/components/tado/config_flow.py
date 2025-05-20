@@ -10,7 +10,6 @@ from PyTado.interface import Tado
 import requests.exceptions
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -20,6 +19,10 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 
 from .const import (
     CONF_FALLBACK,
@@ -49,7 +52,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         tado = await hass.async_add_executor_job(
             Tado, data[CONF_USERNAME], data[CONF_PASSWORD]
         )
-        tado_me = await hass.async_add_executor_job(tado.getMe)
+        tado_me = await hass.async_add_executor_job(tado.get_me)
     except KeyError as ex:
         raise InvalidAuth from ex
     except RuntimeError as ex:
@@ -73,7 +76,6 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tado."""
 
     VERSION = 1
-    config_entry: ConfigEntry | None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -105,14 +107,14 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_homekit(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle HomeKit discovery."""
         self._async_abort_entries_match()
         properties = {
             key.lower(): value for (key, value) in discovery_info.properties.items()
         }
-        await self.async_set_unique_id(properties[zeroconf.ATTR_PROPERTIES_ID])
+        await self.async_set_unique_id(properties[ATTR_PROPERTIES_ID])
         self._abort_if_unique_id_configured()
         return await self.async_step_user()
 
@@ -120,20 +122,11 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        self.config_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a reconfiguration flow initialized by the user."""
         errors: dict[str, str] = {}
-        assert self.config_entry
+        reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input is not None:
-            user_input[CONF_USERNAME] = self.config_entry.data[CONF_USERNAME]
+            user_input[CONF_USERNAME] = reconfigure_entry.data[CONF_USERNAME]
             try:
                 await validate_input(self.hass, user_input)
             except CannotConnect:
@@ -148,13 +141,11 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 return self.async_update_reload_and_abort(
-                    self.config_entry,
-                    data={**self.config_entry.data, **user_input},
-                    reason="reconfigure_successful",
+                    reconfigure_entry, data_updates=user_input
                 )
 
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_PASSWORD): str,
@@ -162,7 +153,7 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             description_placeholders={
-                CONF_USERNAME: self.config_entry.data[CONF_USERNAME]
+                CONF_USERNAME: reconfigure_entry.data[CONF_USERNAME]
             },
         )
 
@@ -172,15 +163,11 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
 class OptionsFlowHandler(OptionsFlow):
     """Handle an option flow for Tado."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

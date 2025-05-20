@@ -1,0 +1,25 @@
+# serializer version: 1
+# name: test_get_minute_forecast[mock_service_response]
+  dict({
+    'weather.openweathermap': dict({
+      'forecast': list([
+        dict({
+          'datetime': 1728672360,
+          'precipitation': 0,
+        }),
+        dict({
+          'datetime': 1728672420,
+          'precipitation': 1.23,
+        }),
+        dict({
+          'datetime': 1728672480,
+          'precipitation': 4.5,
+        }),
+        dict({
+          'datetime': 1728672540,
+          'precipitation': 0,
+        }),
+      ]),
+    }),
+  })
+# ---

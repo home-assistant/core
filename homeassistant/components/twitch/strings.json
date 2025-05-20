@@ -16,5 +16,47 @@
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "channel": {
+        "state": {
+          "streaming": "Streaming",
+          "offline": "Offline"
+        },
+        "state_attributes": {
+          "followers": {
+            "name": "Followers"
+          },
+          "game": {
+            "name": "Game"
+          },
+          "title": {
+            "name": "Title"
+          },
+          "started_at": {
+            "name": "Started at"
+          },
+          "viewers": {
+            "name": "Viewers"
+          },
+          "subscribed": {
+            "name": "Subscribed"
+          },
+          "subscription_is_gifted": {
+            "name": "Subscription is gifted"
+          },
+          "subscription_tier": {
+            "name": "Subscription tier"
+          },
+          "following": {
+            "name": "Following"
+          },
+          "following_since": {
+            "name": "Following since"
+          }
+        }
+      }
+    }
   }
 }

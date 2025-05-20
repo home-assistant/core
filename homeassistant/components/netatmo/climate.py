@@ -30,7 +30,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -58,9 +58,9 @@ from .entity import NetatmoRoomEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-PRESET_FROST_GUARD = "Frost Guard"
-PRESET_SCHEDULE = "Schedule"
-PRESET_MANUAL = "Manual"
+PRESET_FROST_GUARD = "frost_guard"
+PRESET_SCHEDULE = "schedule"
+PRESET_MANUAL = "manual"
 
 SUPPORT_FLAGS = (
     ClimateEntityFeature.TARGET_TEMPERATURE
@@ -118,7 +118,9 @@ NA_VALVE = DeviceType.NRV
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Netatmo energy platform."""
 
@@ -188,10 +190,10 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
     _attr_supported_features = SUPPORT_FLAGS
     _attr_target_temperature_step = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = "thermostat"
     _attr_name = None
     _away: bool | None = None
     _connected: bool | None = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     _away_temperature: float | None = None
     _hg_temperature: float | None = None

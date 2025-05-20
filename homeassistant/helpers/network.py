@@ -6,6 +6,7 @@ from collections.abc import Callable
 from contextlib import suppress
 from ipaddress import ip_address
 
+from aiohttp import hdrs
 from hass_nabucasa import remote
 import yarl
 
@@ -14,6 +15,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.util.network import is_ip_address, is_loopback, normalize_url
+
+from .hassio import is_hassio
 
 TYPE_URL_INTERNAL = "internal_url"
 TYPE_URL_EXTERNAL = "external_url"
@@ -41,10 +44,6 @@ def get_supervisor_network_url(
     hass: HomeAssistant, *, allow_ssl: bool = False
 ) -> str | None:
     """Get URL for home assistant within supervisor network."""
-    # Local import to avoid circular dependencies
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.hassio import is_hassio
-
     if hass.config.api is None or not is_hassio(hass):
         return None
 
@@ -179,20 +178,21 @@ def get_url(
         and request_host is not None
         and hass.config.api is not None
     ):
-        # Local import to avoid circular dependencies
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.hassio import get_host_info, is_hassio
-
         scheme = "https" if hass.config.api.use_ssl else "http"
         current_url = yarl.URL.build(
             scheme=scheme, host=request_host, port=hass.config.api.port
         )
 
         known_hostnames = ["localhost"]
-        if is_hassio(hass) and (host_info := get_host_info(hass)):
-            known_hostnames.extend(
-                [host_info["hostname"], f"{host_info['hostname']}.local"]
-            )
+        if is_hassio(hass):
+            # Local import to avoid circular dependencies
+            # pylint: disable-next=import-outside-toplevel
+            from homeassistant.components.hassio import get_host_info
+
+            if host_info := get_host_info(hass):
+                known_hostnames.extend(
+                    [host_info["hostname"], f"{host_info['hostname']}.local"]
+                )
 
         if (
             (
@@ -216,7 +216,18 @@ def _get_request_host() -> str | None:
     """Get the host address of the current request."""
     if (request := http.current_request.get()) is None:
         raise NoURLAvailableError
-    return yarl.URL(request.url).host
+    # partition the host to remove the port
+    # because the raw host header can contain the port
+    host = request.headers.get(hdrs.HOST)
+    if host is None:
+        return None
+    # IPv6 addresses are enclosed in brackets
+    # use same logic as yarl and urllib to extract the host
+    if "[" in host:
+        return (host.partition("[")[2]).partition("]")[0]
+    if ":" in host:
+        host = host.partition(":")[0]
+    return host
 
 
 @bind_hass

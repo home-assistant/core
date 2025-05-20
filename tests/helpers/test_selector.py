@@ -1,12 +1,13 @@
 """Test selectors."""
 
 from enum import Enum
+from typing import Any
 
 import pytest
 import voluptuous as vol
 
 from homeassistant.helpers import selector
-from homeassistant.util import yaml
+from homeassistant.util import yaml as yaml_util
 
 FAKE_UUID = "a266a680b608c32770e6c45bfe6b8411"
 
@@ -76,7 +77,7 @@ def _test_selector(
         "selector": {selector_type: selector_instance.config}
     }
     # Test serialized selector can be dumped to YAML
-    yaml.dump(selector_instance.serialize())
+    yaml_util.dump(selector_instance.serialize())
 
 
 @pytest.mark.parametrize(
@@ -87,6 +88,7 @@ def _test_selector(
         ({"integration": "zha"}, ("abc123",), (None,)),
         ({"manufacturer": "mock-manuf"}, ("abc123",), (None,)),
         ({"model": "mock-model"}, ("abc123",), (None,)),
+        ({"model_id": "mock-model_id"}, ("abc123",), (None,)),
         ({"manufacturer": "mock-manuf", "model": "mock-model"}, ("abc123",), (None,)),
         (
             {"integration": "zha", "manufacturer": "mock-manuf", "model": "mock-model"},
@@ -978,6 +980,7 @@ def test_datetime_selector_schema(schema, valid_selections, invalid_selections) 
     ("schema", "valid_selections", "invalid_selections"),
     [({}, ("abc123", "{{ now() }}"), (None, "{{ incomplete }", "{% if True %}Hi!"))],
 )
+@pytest.mark.usefixtures("hass")
 def test_template_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test template selector."""
     _test_selector("template", schema, valid_selections, invalid_selections)
@@ -1114,6 +1117,13 @@ def test_condition_selector_schema(
                         "below": 20,
                     }
                 ],
+                [
+                    {
+                        "platform": "numeric_state",
+                        "entity_id": ["sensor.temperature"],
+                        "below": 20,
+                    }
+                ],
                 [],
             ),
             ("abc"),
@@ -1122,7 +1132,24 @@ def test_condition_selector_schema(
 )
 def test_trigger_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test trigger sequence selector."""
-    _test_selector("trigger", schema, valid_selections, invalid_selections)
+
+    def _custom_trigger_serializer(
+        triggers: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        res = []
+        for trigger in triggers:
+            if "trigger" in trigger:
+                trigger["platform"] = trigger.pop("trigger")
+            res.append(trigger)
+        return res
+
+    _test_selector(
+        "trigger",
+        schema,
+        valid_selections,
+        invalid_selections,
+        _custom_trigger_serializer,
+    )
 
 
 @pytest.mark.parametrize(

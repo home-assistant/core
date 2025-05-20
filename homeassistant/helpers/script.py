@@ -9,13 +9,13 @@ from contextvars import ContextVar
 from copy import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from functools import cached_property, partial
+from functools import partial
 import itertools
 import logging
-from types import MappingProxyType
 from typing import Any, Literal, TypedDict, cast, overload
 
 import async_interrupt
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -89,7 +89,7 @@ from . import condition, config_validation as cv, service, template
 from .condition import ConditionCheckerType, trace_condition_function
 from .dispatcher import async_dispatcher_connect, async_dispatcher_send_internal
 from .event import async_call_later, async_track_template
-from .script_variables import ScriptVariables
+from .script_variables import ScriptRunVariables, ScriptVariables
 from .template import Template
 from .trace import (
     TraceElement,
@@ -176,7 +176,7 @@ def _set_result_unless_done(future: asyncio.Future[None]) -> None:
         future.set_result(None)
 
 
-def action_trace_append(variables: dict[str, Any], path: str) -> TraceElement:
+def action_trace_append(variables: TemplateVarsType, path: str) -> TraceElement:
     """Append a TraceElement to trace[path]."""
     trace_element = TraceElement(variables, path)
     trace_append_element(trace_element, ACTION_TRACE_NODE_MAX_LEN)
@@ -188,7 +188,7 @@ async def trace_action(
     hass: HomeAssistant,
     script_run: _ScriptRun,
     stop: asyncio.Future[None],
-    variables: dict[str, Any],
+    variables: TemplateVarsType,
 ) -> AsyncGenerator[TraceElement]:
     """Trace action execution."""
     path = trace_path_get()
@@ -410,7 +410,7 @@ class _ScriptRun:
         self,
         hass: HomeAssistant,
         script: Script,
-        variables: dict[str, Any],
+        variables: ScriptRunVariables,
         context: Context | None,
         log_exceptions: bool,
     ) -> None:
@@ -428,9 +428,6 @@ class _ScriptRun:
     def _changed(self) -> None:
         if not self._stop.done():
             self._script._changed()  # noqa: SLF001
-
-    async def _async_get_condition(self, config: ConfigType) -> ConditionCheckerType:
-        return await self._script._async_get_condition(config)  # noqa: SLF001
 
     def _log(
         self, msg: str, *args: Any, level: int = logging.INFO, **kwargs: Any
@@ -472,13 +469,13 @@ class _ScriptRun:
             script_execution_set("aborted")
         except _StopScript as err:
             script_execution_set("finished", err.response)
-            response = err.response
 
             # Let the _StopScript bubble up if this is a sub-script
             if not self._script.top_level:
-                # We already consumed the response, do not pass it on
-                err.response = None
                 raise
+
+            response = err.response
+
         except Exception:
             script_execution_set("error")
             raise
@@ -487,14 +484,16 @@ class _ScriptRun:
             script_stack.pop()
             self._finish()
 
-        return ScriptRunResult(self._conversation_response, response, self._variables)
+        return ScriptRunResult(
+            self._conversation_response, response, self._variables.local_scope
+        )
 
     async def _async_step(self, log_exceptions: bool) -> None:
         continue_on_error = self._action.get(CONF_CONTINUE_ON_ERROR, False)
 
         with trace_path(str(self._step)):
             async with trace_action(
-                self._hass, self, self._stop, self._variables
+                self._hass, self, self._stop, self._variables.non_parallel_scope
             ) as trace_element:
                 if self._stop.done():
                     return
@@ -520,7 +519,7 @@ class _ScriptRun:
                         trace_set_result(enabled=False)
                         return
 
-                handler = f"_async_{action}_step"
+                handler = f"_async_step_{action}"
                 try:
                     await getattr(self, handler)()
                 except Exception as ex:  # noqa: BLE001
@@ -528,7 +527,7 @@ class _ScriptRun:
                         ex, continue_on_error, self._log_exceptions or log_exceptions
                     )
                 finally:
-                    trace_element.update_variables(self._variables)
+                    trace_element.update_variables(self._variables.non_parallel_scope)
 
     def _finish(self) -> None:
         self._script._runs.remove(self)  # noqa: SLF001
@@ -613,107 +612,6 @@ class _ScriptRun:
             level=level,
         )
 
-    def _get_pos_time_period_template(self, key: str) -> timedelta:
-        try:
-            return cv.positive_time_period(  # type: ignore[no-any-return]
-                template.render_complex(self._action[key], self._variables)
-            )
-        except (exceptions.TemplateError, vol.Invalid) as ex:
-            self._log(
-                "Error rendering %s %s template: %s",
-                self._script.name,
-                key,
-                ex,
-                level=logging.ERROR,
-            )
-            raise _AbortScript from ex
-
-    async def _async_delay_step(self) -> None:
-        """Handle delay."""
-        delay_delta = self._get_pos_time_period_template(CONF_DELAY)
-
-        self._step_log(f"delay {delay_delta}")
-
-        delay = delay_delta.total_seconds()
-        self._changed()
-        if not delay:
-            # Handle an empty delay
-            trace_set_result(delay=delay, done=True)
-            return
-
-        trace_set_result(delay=delay, done=False)
-        futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
-            delay
-        )
-
-        try:
-            await asyncio.wait(futures, return_when=asyncio.FIRST_COMPLETED)
-        finally:
-            if timeout_future.done():
-                trace_set_result(delay=delay, done=True)
-            else:
-                timeout_handle.cancel()
-
-    def _get_timeout_seconds_from_action(self) -> float | None:
-        """Get the timeout from the action."""
-        if CONF_TIMEOUT in self._action:
-            return self._get_pos_time_period_template(CONF_TIMEOUT).total_seconds()
-        return None
-
-    async def _async_wait_template_step(self) -> None:
-        """Handle a wait template."""
-        timeout = self._get_timeout_seconds_from_action()
-        self._step_log("wait template", timeout)
-
-        self._variables["wait"] = {"remaining": timeout, "completed": False}
-        trace_set_result(wait=self._variables["wait"])
-
-        wait_template = self._action[CONF_WAIT_TEMPLATE]
-
-        # check if condition already okay
-        if condition.async_template(self._hass, wait_template, self._variables, False):
-            self._variables["wait"]["completed"] = True
-            self._changed()
-            return
-
-        if timeout == 0:
-            self._changed()
-            self._async_handle_timeout()
-            return
-
-        futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
-            timeout
-        )
-        done = self._hass.loop.create_future()
-        futures.append(done)
-
-        @callback
-        def async_script_wait(
-            entity_id: str, from_s: State | None, to_s: State | None
-        ) -> None:
-            """Handle script after template condition is true."""
-            self._async_set_remaining_time_var(timeout_handle)
-            self._variables["wait"]["completed"] = True
-            _set_result_unless_done(done)
-
-        unsub = async_track_template(
-            self._hass, wait_template, async_script_wait, self._variables
-        )
-        self._changed()
-        await self._async_wait_with_optional_timeout(
-            futures, timeout_handle, timeout_future, unsub
-        )
-
-    def _async_set_remaining_time_var(
-        self, timeout_handle: asyncio.TimerHandle | None
-    ) -> None:
-        """Set the remaining time variable for a wait step."""
-        wait_var = self._variables["wait"]
-        if timeout_handle:
-            wait_var["remaining"] = timeout_handle.when() - self._hass.loop.time()
-        else:
-            wait_var["remaining"] = None
-
     async def _async_run_long_action[_T](
         self, long_task: asyncio.Task[_T]
     ) -> _T | None:
@@ -727,113 +625,54 @@ class _ScriptRun:
         except ScriptStoppedError as ex:
             raise asyncio.CancelledError from ex
 
-    async def _async_call_service_step(self) -> None:
-        """Call the service specified in the action."""
-        self._step_log("call service")
-
-        params = service.async_prepare_call_from_config(
-            self._hass, self._action, self._variables
-        )
-
-        # Validate response data parameters. This check ignores services that do
-        # not exist which will raise an appropriate error in the service call below.
-        response_variable = self._action.get(CONF_RESPONSE_VARIABLE)
-        return_response = response_variable is not None
-        if self._hass.services.has_service(params[CONF_DOMAIN], params[CONF_SERVICE]):
-            supports_response = self._hass.services.supports_response(
-                params[CONF_DOMAIN], params[CONF_SERVICE]
-            )
-            if supports_response == SupportsResponse.ONLY and not return_response:
-                raise vol.Invalid(
-                    f"Script requires '{CONF_RESPONSE_VARIABLE}' for response data "
-                    f"for service call {params[CONF_DOMAIN]}.{params[CONF_SERVICE]}"
-                )
-            if supports_response == SupportsResponse.NONE and return_response:
-                raise vol.Invalid(
-                    f"Script does not support '{CONF_RESPONSE_VARIABLE}' for service "
-                    f"'{CONF_RESPONSE_VARIABLE}' which does not support response data."
-                )
-
-        running_script = (
-            params[CONF_DOMAIN] == "automation"
-            and params[CONF_SERVICE] == "trigger"
-            or params[CONF_DOMAIN] in ("python_script", "script")
-        )
-        trace_set_result(params=params, running_script=running_script)
-        response_data = await self._async_run_long_action(
+    async def _async_run_script(
+        self, script: Script, *, parallel: bool = False
+    ) -> None:
+        """Execute a script."""
+        result = await self._async_run_long_action(
             self._hass.async_create_task_internal(
-                self._hass.services.async_call(
-                    **params,
-                    blocking=True,
-                    context=self._context,
-                    return_response=return_response,
+                script.async_run(
+                    self._variables.enter_scope(parallel=parallel), self._context
                 ),
                 eager_start=True,
             )
         )
-        if response_variable:
-            self._variables[response_variable] = response_data
+        if result and result.conversation_response is not UNDEFINED:
+            self._conversation_response = result.conversation_response
 
-    async def _async_device_step(self) -> None:
-        """Perform the device automation specified in the action."""
-        self._step_log("device automation")
-        await device_action.async_call_action_from_config(
-            self._hass, self._action, self._variables, self._context
+    ## Flow control actions ##
+
+    ### Sequence actions ###
+
+    @async_trace_path("parallel")
+    async def _async_step_parallel(self) -> None:
+        """Run a sequence in parallel."""
+        scripts = await self._script._async_get_parallel_scripts(self._step)  # noqa: SLF001
+
+        async def async_run_with_trace(idx: int, script: Script) -> None:
+            """Run a script with a trace path."""
+            trace_path_stack_cv.set(copy(trace_path_stack_cv.get()))
+            with trace_path([str(idx), "sequence"]):
+                await self._async_run_script(script, parallel=True)
+
+        results = await asyncio.gather(
+            *(async_run_with_trace(idx, script) for idx, script in enumerate(scripts)),
+            return_exceptions=True,
         )
+        for result in results:
+            if isinstance(result, Exception):
+                raise result
 
-    async def _async_scene_step(self) -> None:
-        """Activate the scene specified in the action."""
-        self._step_log("activate scene")
-        trace_set_result(scene=self._action[CONF_SCENE])
-        await self._hass.services.async_call(
-            scene.DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: self._action[CONF_SCENE]},
-            blocking=True,
-            context=self._context,
-        )
+    @async_trace_path("sequence")
+    async def _async_step_sequence(self) -> None:
+        """Run a sequence."""
+        sequence = await self._script._async_get_sequence_script(self._step)  # noqa: SLF001
+        await self._async_run_script(sequence)
 
-    async def _async_event_step(self) -> None:
-        """Fire an event."""
-        self._step_log(self._action.get(CONF_ALIAS, self._action[CONF_EVENT]))
-        event_data = {}
-        for conf in (CONF_EVENT_DATA, CONF_EVENT_DATA_TEMPLATE):
-            if conf not in self._action:
-                continue
+    ### Condition actions ###
 
-            try:
-                event_data.update(
-                    template.render_complex(self._action[conf], self._variables)
-                )
-            except exceptions.TemplateError as ex:
-                self._log(
-                    "Error rendering event data template: %s", ex, level=logging.ERROR
-                )
-
-        trace_set_result(event=self._action[CONF_EVENT], event_data=event_data)
-        self._hass.bus.async_fire_internal(
-            self._action[CONF_EVENT], event_data, context=self._context
-        )
-
-    async def _async_condition_step(self) -> None:
-        """Test if condition is matching."""
-        self._script.last_action = self._action.get(
-            CONF_ALIAS, self._action[CONF_CONDITION]
-        )
-        cond = await self._async_get_condition(self._action)
-        try:
-            trace_element = trace_stack_top(trace_stack_cv)
-            if trace_element:
-                trace_element.reuse_by_child = True
-            check = cond(self._hass, self._variables)
-        except exceptions.ConditionError as ex:
-            _LOGGER.warning("Error in 'condition' evaluation:\n%s", ex)
-            check = False
-
-        self._log("Test condition %s: %s", self._script.last_action, check)
-        trace_update_result(result=check)
-        if not check:
-            raise _ConditionFail
+    async def _async_get_condition(self, config: ConfigType) -> ConditionCheckerType:
+        return await self._script._async_get_condition(config)  # noqa: SLF001
 
     def _test_conditions(
         self,
@@ -862,13 +701,75 @@ class _ScriptRun:
 
         return traced_test_conditions(self._hass, self._variables)
 
-    @async_trace_path("repeat")
-    async def _async_repeat_step(self) -> None:  # noqa: C901
-        """Repeat a sequence."""
+    async def _async_step_choose(self) -> None:
+        """Choose a sequence."""
+        choose_data = await self._script._async_get_choose_data(self._step)  # noqa: SLF001
+
+        with trace_path("choose"):
+            for idx, (conditions, script) in enumerate(choose_data["choices"]):
+                with trace_path(str(idx)):
+                    try:
+                        if self._test_conditions(conditions, "choose", "conditions"):
+                            trace_set_result(choice=idx)
+                            with trace_path("sequence"):
+                                await self._async_run_script(script)
+                                return
+                    except exceptions.ConditionError as ex:
+                        _LOGGER.warning("Error in 'choose' evaluation:\n%s", ex)
+
+        if choose_data["default"] is not None:
+            trace_set_result(choice="default")
+            with trace_path(["default"]):
+                await self._async_run_script(choose_data["default"])
+
+    async def _async_step_condition(self) -> None:
+        """Test if condition is matching."""
+        self._script.last_action = self._action.get(
+            CONF_ALIAS, self._action[CONF_CONDITION]
+        )
+        cond = await self._async_get_condition(self._action)
+        try:
+            trace_element = trace_stack_top(trace_stack_cv)
+            if trace_element:
+                trace_element.reuse_by_child = True
+            check = cond(self._hass, self._variables)
+        except exceptions.ConditionError as ex:
+            _LOGGER.warning("Error in 'condition' evaluation:\n%s", ex)
+            check = False
+
+        self._log("Test condition %s: %s", self._script.last_action, check)
+        trace_update_result(result=check)
+        if not check:
+            raise _ConditionFail
+
+    async def _async_step_if(self) -> None:
+        """If sequence."""
+        if_data = await self._script._async_get_if_data(self._step)  # noqa: SLF001
+
+        test_conditions: bool | None = False
+        try:
+            with trace_path("if"):
+                test_conditions = self._test_conditions(
+                    if_data["if_conditions"], "if", "condition"
+                )
+        except exceptions.ConditionError as ex:
+            _LOGGER.warning("Error in 'if' evaluation:\n%s", ex)
+
+        if test_conditions:
+            trace_set_result(choice="then")
+            with trace_path("then"):
+                await self._async_run_script(if_data["if_then"])
+                return
+
+        if if_data["if_else"] is not None:
+            trace_set_result(choice="else")
+            with trace_path("else"):
+                await self._async_run_script(if_data["if_else"])
+
+    async def _async_do_step_repeat(self) -> None:  # noqa: C901
+        """Repeat a sequence helper."""
         description = self._action.get(CONF_ALIAS, "sequence")
         repeat = self._action[CONF_REPEAT]
-
-        saved_repeat_vars = self._variables.get("repeat")
 
         def set_repeat_var(
             iteration: int, count: int | None = None, item: Any = None
@@ -878,7 +779,7 @@ class _ScriptRun:
                 repeat_vars["last"] = iteration == count
             if item is not None:
                 repeat_vars["item"] = item
-            self._variables["repeat"] = repeat_vars
+            self._variables.define_local("repeat", repeat_vars)
 
         script = self._script._get_repeat_script(self._step)  # noqa: SLF001
         warned_too_many_loops = False
@@ -1029,55 +930,138 @@ class _ScriptRun:
                 # while all the cpu time is consumed.
                 await asyncio.sleep(0)
 
-        if saved_repeat_vars:
-            self._variables["repeat"] = saved_repeat_vars
-        else:
-            self._variables.pop("repeat", None)  # Not set if count = 0
-
-    async def _async_choose_step(self) -> None:
-        """Choose a sequence."""
-        choose_data = await self._script._async_get_choose_data(self._step)  # noqa: SLF001
-
-        with trace_path("choose"):
-            for idx, (conditions, script) in enumerate(choose_data["choices"]):
-                with trace_path(str(idx)):
-                    try:
-                        if self._test_conditions(conditions, "choose", "conditions"):
-                            trace_set_result(choice=idx)
-                            with trace_path("sequence"):
-                                await self._async_run_script(script)
-                                return
-                    except exceptions.ConditionError as ex:
-                        _LOGGER.warning("Error in 'choose' evaluation:\n%s", ex)
-
-        if choose_data["default"] is not None:
-            trace_set_result(choice="default")
-            with trace_path(["default"]):
-                await self._async_run_script(choose_data["default"])
-
-    async def _async_if_step(self) -> None:
-        """If sequence."""
-        if_data = await self._script._async_get_if_data(self._step)  # noqa: SLF001
-
-        test_conditions: bool | None = False
+    @async_trace_path("repeat")
+    async def _async_step_repeat(self) -> None:
+        """Repeat a sequence."""
+        self._variables = self._variables.enter_scope()
         try:
-            with trace_path("if"):
-                test_conditions = self._test_conditions(
-                    if_data["if_conditions"], "if", "condition"
+            await self._async_do_step_repeat()
+        finally:
+            self._variables = self._variables.exit_scope()
+
+    ### Stop actions ###
+
+    async def _async_step_stop(self) -> None:
+        """Stop script execution."""
+        stop = self._action[CONF_STOP]
+        error = self._action.get(CONF_ERROR, False)
+        trace_set_result(stop=stop, error=error)
+        if error:
+            self._log("Error script sequence: %s", stop)
+            raise _AbortScript(stop)
+
+        self._log("Stop script sequence: %s", stop)
+        if CONF_RESPONSE_VARIABLE in self._action:
+            try:
+                response = self._variables[self._action[CONF_RESPONSE_VARIABLE]]
+            except KeyError as ex:
+                raise _AbortScript(
+                    f"Response variable '{self._action[CONF_RESPONSE_VARIABLE]}' "
+                    "is not defined"
+                ) from ex
+        else:
+            response = None
+        raise _StopScript(stop, response)
+
+    ## Variable actions ##
+
+    async def _async_step_variables(self) -> None:
+        """Define a local variable."""
+        self._step_log("defining local variables")
+        for key, value in (
+            self._action[CONF_VARIABLES].async_simple_render(self._variables).items()
+        ):
+            self._variables.define_local(key, value)
+
+    ## External actions ##
+
+    async def _async_step_call_service(self) -> None:
+        """Call the service specified in the action."""
+        self._step_log("call service")
+
+        params = service.async_prepare_call_from_config(
+            self._hass, self._action, self._variables
+        )
+
+        # Validate response data parameters. This check ignores services that do
+        # not exist which will raise an appropriate error in the service call below.
+        response_variable = self._action.get(CONF_RESPONSE_VARIABLE)
+        return_response = response_variable is not None
+        if self._hass.services.has_service(params[CONF_DOMAIN], params[CONF_SERVICE]):
+            supports_response = self._hass.services.supports_response(
+                params[CONF_DOMAIN], params[CONF_SERVICE]
+            )
+            if supports_response == SupportsResponse.ONLY and not return_response:
+                raise vol.Invalid(
+                    f"Script requires '{CONF_RESPONSE_VARIABLE}' for response data "
+                    f"for service call {params[CONF_DOMAIN]}.{params[CONF_SERVICE]}"
                 )
-        except exceptions.ConditionError as ex:
-            _LOGGER.warning("Error in 'if' evaluation:\n%s", ex)
+            if supports_response == SupportsResponse.NONE and return_response:
+                raise vol.Invalid(
+                    f"Script does not support '{CONF_RESPONSE_VARIABLE}' for service "
+                    f"'{CONF_RESPONSE_VARIABLE}' which does not support response data."
+                )
 
-        if test_conditions:
-            trace_set_result(choice="then")
-            with trace_path("then"):
-                await self._async_run_script(if_data["if_then"])
-                return
+        running_script = (
+            params[CONF_DOMAIN] == "automation" and params[CONF_SERVICE] == "trigger"
+        ) or params[CONF_DOMAIN] in ("python_script", "script")
+        trace_set_result(params=params, running_script=running_script)
+        response_data = await self._async_run_long_action(
+            self._hass.async_create_task_internal(
+                self._hass.services.async_call(
+                    **params,
+                    blocking=True,
+                    context=self._context,
+                    return_response=return_response,
+                ),
+                eager_start=True,
+            )
+        )
+        if response_variable:
+            self._variables[response_variable] = response_data
 
-        if if_data["if_else"] is not None:
-            trace_set_result(choice="else")
-            with trace_path("else"):
-                await self._async_run_script(if_data["if_else"])
+    async def _async_step_device(self) -> None:
+        """Perform the device automation specified in the action."""
+        self._step_log("device automation")
+        await device_action.async_call_action_from_config(
+            self._hass, self._action, dict(self._variables), self._context
+        )
+
+    async def _async_step_event(self) -> None:
+        """Fire an event."""
+        self._step_log(self._action.get(CONF_ALIAS, self._action[CONF_EVENT]))
+        event_data = {}
+        for conf in (CONF_EVENT_DATA, CONF_EVENT_DATA_TEMPLATE):
+            if conf not in self._action:
+                continue
+
+            try:
+                event_data.update(
+                    template.render_complex(self._action[conf], self._variables)
+                )
+            except exceptions.TemplateError as ex:
+                self._log(
+                    "Error rendering event data template: %s", ex, level=logging.ERROR
+                )
+
+        trace_set_result(event=self._action[CONF_EVENT], event_data=event_data)
+        self._hass.bus.async_fire_internal(
+            self._action[CONF_EVENT], event_data, context=self._context
+        )
+
+    async def _async_step_scene(self) -> None:
+        """Activate the scene specified in the action."""
+        self._step_log("activate scene")
+        trace_set_result(scene=self._action[CONF_SCENE])
+        await self._hass.services.async_call(
+            scene.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: self._action[CONF_SCENE]},
+            blocking=True,
+            context=self._context,
+        )
+
+    ## Time-based actions ##
 
     @overload
     def _async_futures_with_timeout(
@@ -1125,52 +1109,52 @@ class _ScriptRun:
             futures.append(timeout_future)
         return futures, timeout_handle, timeout_future
 
-    async def _async_wait_for_trigger_step(self) -> None:
-        """Wait for a trigger event."""
-        timeout = self._get_timeout_seconds_from_action()
+    def _get_pos_time_period_template(self, key: str) -> timedelta:
+        try:
+            return cv.positive_time_period(  # type: ignore[no-any-return]
+                template.render_complex(self._action[key], self._variables)
+            )
+        except (exceptions.TemplateError, vol.Invalid) as ex:
+            self._log(
+                "Error rendering %s %s template: %s",
+                self._script.name,
+                key,
+                ex,
+                level=logging.ERROR,
+            )
+            raise _AbortScript from ex
 
-        self._step_log("wait for trigger", timeout)
+    async def _async_step_delay(self) -> None:
+        """Handle delay."""
+        delay_delta = self._get_pos_time_period_template(CONF_DELAY)
 
-        variables = {**self._variables}
-        self._variables["wait"] = {"remaining": timeout, "trigger": None}
-        trace_set_result(wait=self._variables["wait"])
+        self._step_log(f"delay {delay_delta}")
 
-        if timeout == 0:
-            self._changed()
-            self._async_handle_timeout()
-            return
-
-        futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
-            timeout
-        )
-        done = self._hass.loop.create_future()
-        futures.append(done)
-
-        async def async_done(
-            variables: dict[str, Any], context: Context | None = None
-        ) -> None:
-            self._async_set_remaining_time_var(timeout_handle)
-            self._variables["wait"]["trigger"] = variables["trigger"]
-            _set_result_unless_done(done)
-
-        def log_cb(level: int, msg: str, **kwargs: Any) -> None:
-            self._log(msg, level=level, **kwargs)
-
-        remove_triggers = await async_initialize_triggers(
-            self._hass,
-            self._action[CONF_WAIT_FOR_TRIGGER],
-            async_done,
-            self._script.domain,
-            self._script.name,
-            log_cb,
-            variables=variables,
-        )
-        if not remove_triggers:
-            return
+        delay = delay_delta.total_seconds()
         self._changed()
-        await self._async_wait_with_optional_timeout(
-            futures, timeout_handle, timeout_future, remove_triggers
+        if not delay:
+            # Handle an empty delay
+            trace_set_result(delay=delay, done=True)
+            return
+
+        trace_set_result(delay=delay, done=False)
+        futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
+            delay
         )
+
+        try:
+            await asyncio.wait(futures, return_when=asyncio.FIRST_COMPLETED)
+        finally:
+            if timeout_future.done():
+                trace_set_result(delay=delay, done=True)
+            else:
+                timeout_handle.cancel()
+
+    def _get_timeout_seconds_from_action(self) -> float | None:
+        """Get the timeout from the action."""
+        if CONF_TIMEOUT in self._action:
+            return self._get_pos_time_period_template(CONF_TIMEOUT).total_seconds()
+        return None
 
     def _async_handle_timeout(self) -> None:
         """Handle timeout."""
@@ -1197,14 +1181,120 @@ class _ScriptRun:
 
             unsub()
 
-    async def _async_variables_step(self) -> None:
-        """Set a variable value."""
-        self._step_log("setting variables")
-        self._variables = self._action[CONF_VARIABLES].async_render(
-            self._hass, self._variables, render_as_defaults=False
+    def _async_set_remaining_time_var(
+        self, timeout_handle: asyncio.TimerHandle | None
+    ) -> None:
+        """Set the remaining time variable for a wait step."""
+        wait_var = self._variables["wait"]
+        if timeout_handle:
+            wait_var["remaining"] = timeout_handle.when() - self._hass.loop.time()
+        else:
+            wait_var["remaining"] = None
+
+    async def _async_step_wait_for_trigger(self) -> None:
+        """Wait for a trigger event."""
+        timeout = self._get_timeout_seconds_from_action()
+
+        self._step_log("wait for trigger", timeout)
+
+        variables = dict(self._variables)
+        self._variables.assign_parallel_protected(
+            "wait",
+            {
+                "remaining": timeout,
+                "completed": False,
+                "trigger": None,
+            },
+        )
+        trace_set_result(wait=self._variables["wait"])
+
+        if timeout == 0:
+            self._changed()
+            self._async_handle_timeout()
+            return
+
+        futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
+            timeout
+        )
+        done = self._hass.loop.create_future()
+        futures.append(done)
+
+        async def async_done(
+            variables: dict[str, Any], context: Context | None = None
+        ) -> None:
+            self._async_set_remaining_time_var(timeout_handle)
+            self._variables["wait"]["completed"] = True
+            self._variables["wait"]["trigger"] = variables["trigger"]
+            _set_result_unless_done(done)
+
+        def log_cb(level: int, msg: str, **kwargs: Any) -> None:
+            self._log(msg, level=level, **kwargs)
+
+        remove_triggers = await async_initialize_triggers(
+            self._hass,
+            self._action[CONF_WAIT_FOR_TRIGGER],
+            async_done,
+            self._script.domain,
+            self._script.name,
+            log_cb,
+            variables=variables,
+        )
+        if not remove_triggers:
+            return
+        self._changed()
+        await self._async_wait_with_optional_timeout(
+            futures, timeout_handle, timeout_future, remove_triggers
         )
 
-    async def _async_set_conversation_response_step(self) -> None:
+    async def _async_step_wait_template(self) -> None:
+        """Handle a wait template."""
+        timeout = self._get_timeout_seconds_from_action()
+        self._step_log("wait template", timeout)
+
+        self._variables.assign_parallel_protected(
+            "wait", {"remaining": timeout, "completed": False}
+        )
+        trace_set_result(wait=self._variables["wait"])
+
+        wait_template = self._action[CONF_WAIT_TEMPLATE]
+
+        # check if condition already okay
+        if condition.async_template(self._hass, wait_template, self._variables, False):
+            self._variables["wait"]["completed"] = True
+            self._changed()
+            return
+
+        if timeout == 0:
+            self._changed()
+            self._async_handle_timeout()
+            return
+
+        futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
+            timeout
+        )
+        done = self._hass.loop.create_future()
+        futures.append(done)
+
+        @callback
+        def async_script_wait(
+            entity_id: str, from_s: State | None, to_s: State | None
+        ) -> None:
+            """Handle script after template condition is true."""
+            self._async_set_remaining_time_var(timeout_handle)
+            self._variables["wait"]["completed"] = True
+            _set_result_unless_done(done)
+
+        unsub = async_track_template(
+            self._hass, wait_template, async_script_wait, self._variables
+        )
+        self._changed()
+        await self._async_wait_with_optional_timeout(
+            futures, timeout_handle, timeout_future, unsub
+        )
+
+    ## Conversation actions ##
+
+    async def _async_step_set_conversation_response(self) -> None:
         """Set conversation response."""
         self._step_log("setting conversation response")
         resp: template.Template | None = self._action[CONF_SET_CONVERSATION_RESPONSE]
@@ -1215,63 +1305,6 @@ class _ScriptRun:
                 variables=self._variables, parse_result=False
             )
         trace_set_result(conversation_response=self._conversation_response)
-
-    async def _async_stop_step(self) -> None:
-        """Stop script execution."""
-        stop = self._action[CONF_STOP]
-        error = self._action.get(CONF_ERROR, False)
-        trace_set_result(stop=stop, error=error)
-        if error:
-            self._log("Error script sequence: %s", stop)
-            raise _AbortScript(stop)
-
-        self._log("Stop script sequence: %s", stop)
-        if CONF_RESPONSE_VARIABLE in self._action:
-            try:
-                response = self._variables[self._action[CONF_RESPONSE_VARIABLE]]
-            except KeyError as ex:
-                raise _AbortScript(
-                    f"Response variable '{self._action[CONF_RESPONSE_VARIABLE]}' "
-                    "is not defined"
-                ) from ex
-        else:
-            response = None
-        raise _StopScript(stop, response)
-
-    @async_trace_path("sequence")
-    async def _async_sequence_step(self) -> None:
-        """Run a sequence."""
-        sequence = await self._script._async_get_sequence_script(self._step)  # noqa: SLF001
-        await self._async_run_script(sequence)
-
-    @async_trace_path("parallel")
-    async def _async_parallel_step(self) -> None:
-        """Run a sequence in parallel."""
-        scripts = await self._script._async_get_parallel_scripts(self._step)  # noqa: SLF001
-
-        async def async_run_with_trace(idx: int, script: Script) -> None:
-            """Run a script with a trace path."""
-            trace_path_stack_cv.set(copy(trace_path_stack_cv.get()))
-            with trace_path([str(idx), "sequence"]):
-                await self._async_run_script(script)
-
-        results = await asyncio.gather(
-            *(async_run_with_trace(idx, script) for idx, script in enumerate(scripts)),
-            return_exceptions=True,
-        )
-        for result in results:
-            if isinstance(result, Exception):
-                raise result
-
-    async def _async_run_script(self, script: Script) -> None:
-        """Execute a script."""
-        result = await self._async_run_long_action(
-            self._hass.async_create_task_internal(
-                script.async_run(self._variables, self._context), eager_start=True
-            )
-        )
-        if result and result.conversation_response is not UNDEFINED:
-            self._conversation_response = result.conversation_response
 
 
 class _QueuedScriptRun(_ScriptRun):
@@ -1349,7 +1382,7 @@ async def _async_stop_scripts_at_shutdown(hass: HomeAssistant, event: Event) -> 
         )
 
 
-type _VarsType = dict[str, Any] | MappingProxyType[str, Any]
+type _VarsType = dict[str, Any] | Mapping[str, Any] | ScriptRunVariables
 
 
 def _referenced_extract_ids(data: Any, key: str, found: set[str]) -> None:
@@ -1387,7 +1420,7 @@ class ScriptRunResult:
 
     conversation_response: str | None | UndefinedType
     service_response: ServiceResponse
-    variables: dict[str, Any]
+    variables: Mapping[str, Any]
 
 
 class Script:
@@ -1402,7 +1435,6 @@ class Script:
         *,
         # Used in "Running <running_description>" log message
         change_listener: Callable[[], Any] | None = None,
-        copy_variables: bool = False,
         log_exceptions: bool = True,
         logger: logging.Logger | None = None,
         max_exceeded: str = DEFAULT_MAX_EXCEEDED,
@@ -1456,8 +1488,6 @@ class Script:
         self._parallel_scripts: dict[int, list[Script]] = {}
         self._sequence_scripts: dict[int, Script] = {}
         self.variables = variables
-        self._variables_dynamic = template.is_complex(variables)
-        self._copy_variables_on_run = copy_variables
 
     @property
     def change_listener(self) -> Callable[..., Any] | None:
@@ -1583,6 +1613,9 @@ class Script:
                         target, referenced, script[CONF_SEQUENCE]
                     )
 
+            elif action == cv.SCRIPT_ACTION_SEQUENCE:
+                Script._find_referenced_target(target, referenced, step[CONF_SEQUENCE])
+
     @cached_property
     def referenced_devices(self) -> set[str]:
         """Return a set of referenced devices."""
@@ -1629,6 +1662,9 @@ class Script:
             elif action == cv.SCRIPT_ACTION_PARALLEL:
                 for script in step[CONF_PARALLEL]:
                     Script._find_referenced_devices(referenced, script[CONF_SEQUENCE])
+
+            elif action == cv.SCRIPT_ACTION_SEQUENCE:
+                Script._find_referenced_devices(referenced, step[CONF_SEQUENCE])
 
     @cached_property
     def referenced_entities(self) -> set[str]:
@@ -1678,6 +1714,9 @@ class Script:
                 for script in step[CONF_PARALLEL]:
                     Script._find_referenced_entities(referenced, script[CONF_SEQUENCE])
 
+            elif action == cv.SCRIPT_ACTION_SEQUENCE:
+                Script._find_referenced_entities(referenced, step[CONF_SEQUENCE])
+
     def run(
         self, variables: _VarsType | None = None, context: Context | None = None
     ) -> None:
@@ -1726,25 +1765,19 @@ class Script:
         if self.top_level:
             if self.variables:
                 try:
-                    variables = self.variables.async_render(
+                    run_variables = self.variables.async_render(
                         self._hass,
                         run_variables,
                     )
                 except exceptions.TemplateError as err:
                     self._log("Error rendering variables: %s", err, level=logging.ERROR)
                     raise
-            elif run_variables:
-                variables = dict(run_variables)
-            else:
-                variables = {}
 
+            variables = ScriptRunVariables.create_top_level(run_variables)
             variables["context"] = context
-        elif self._copy_variables_on_run:
-            # This is not the top level script, variables have been turned to a dict
-            variables = cast(dict[str, Any], copy(run_variables))
         else:
-            # This is not the top level script, variables have been turned to a dict
-            variables = cast(dict[str, Any], run_variables)
+            # This is not the top level script, run_variables is an instance of ScriptRunVariables
+            variables = cast(ScriptRunVariables, run_variables)
 
         # Prevent non-allowed recursive calls which will cause deadlocks when we try to
         # stop (restart) or wait for (queued) our own script run.
@@ -1764,7 +1797,7 @@ class Script:
                 f"{self.domain}.{self.name} which is already running "
                 "in the current execution path; "
                 "Traceback (most recent call last):\n"
-                f"{"\n".join(formatted_stack)}",
+                f"{'\n'.join(formatted_stack)}",
                 level=logging.WARNING,
             )
             return None
@@ -1828,7 +1861,7 @@ class Script:
 
     def _prep_repeat_script(self, step: int) -> Script:
         action = self.sequence[step]
-        step_name = action.get(CONF_ALIAS, f"Repeat at step {step+1}")
+        step_name = action.get(CONF_ALIAS, f"Repeat at step {step + 1}")
         sub_script = Script(
             self._hass,
             action[CONF_REPEAT][CONF_SEQUENCE],
@@ -1851,7 +1884,7 @@ class Script:
 
     async def _async_prep_choose_data(self, step: int) -> _ChooseData:
         action = self.sequence[step]
-        step_name = action.get(CONF_ALIAS, f"Choose at step {step+1}")
+        step_name = action.get(CONF_ALIAS, f"Choose at step {step + 1}")
         choices = []
         for idx, choice in enumerate(action[CONF_CHOOSE], start=1):
             conditions = [
@@ -1905,7 +1938,7 @@ class Script:
     async def _async_prep_if_data(self, step: int) -> _IfData:
         """Prepare data for an if statement."""
         action = self.sequence[step]
-        step_name = action.get(CONF_ALIAS, f"If at step {step+1}")
+        step_name = action.get(CONF_ALIAS, f"If at step {step + 1}")
 
         conditions = [
             await self._async_get_condition(config) for config in action[CONF_IF]
@@ -1956,7 +1989,7 @@ class Script:
 
     async def _async_prep_parallel_scripts(self, step: int) -> list[Script]:
         action = self.sequence[step]
-        step_name = action.get(CONF_ALIAS, f"Parallel action at step {step+1}")
+        step_name = action.get(CONF_ALIAS, f"Parallel action at step {step + 1}")
         parallel_scripts: list[Script] = []
         for idx, parallel_script in enumerate(action[CONF_PARALLEL], start=1):
             parallel_name = parallel_script.get(CONF_ALIAS, f"parallel {idx}")
@@ -1970,7 +2003,6 @@ class Script:
                 max_runs=self.max_runs,
                 logger=self._logger,
                 top_level=False,
-                copy_variables=True,
             )
             parallel_script.change_listener = partial(
                 self._chain_change_listener, parallel_script
@@ -1988,7 +2020,7 @@ class Script:
     async def _async_prep_sequence_script(self, step: int) -> Script:
         """Prepare a sequence script."""
         action = self.sequence[step]
-        step_name = action.get(CONF_ALIAS, f"Sequence action at step {step+1}")
+        step_name = action.get(CONF_ALIAS, f"Sequence action at step {step + 1}")
 
         sequence_script = Script(
             self._hass,

@@ -6,15 +6,14 @@ import asyncio
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
+from aiohasupervisor import SupervisorError
 from matter_server.client.exceptions import (
     CannotConnect,
+    NotConnected,
     ServerVersionTooNew,
     ServerVersionTooOld,
 )
-from matter_server.client.models.node import MatterNode
 from matter_server.common.errors import MatterError
-from matter_server.common.helpers.util import dataclass_from_dict
-from matter_server.common.models import MatterNodeData
 import pytest
 
 from homeassistant.components.hassio import HassioAPIError
@@ -29,7 +28,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from .common import load_and_parse_node_fixture, setup_integration_with_node_fixture
+from .common import create_node_from_fixture, setup_integration_with_node_fixture
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
@@ -56,13 +55,7 @@ async def test_entry_setup_unload(
     matter_client: MagicMock,
 ) -> None:
     """Test the integration set up and unload."""
-    node_data = load_and_parse_node_fixture("onoff-light")
-    node = MatterNode(
-        dataclass_from_dict(
-            MatterNodeData,
-            node_data,
-        )
-    )
+    node = create_node_from_fixture("onoff_light")
     matter_client.get_nodes.return_value = [node]
     matter_client.get_node.return_value = node
     entry = MockConfigEntry(domain="matter", data={"url": "ws://localhost:5580/ws"})
@@ -72,8 +65,9 @@ async def test_entry_setup_unload(
     await hass.async_block_till_done()
 
     assert matter_client.connect.call_count == 1
+    assert matter_client.set_default_fabric_label.call_count == 1
     assert entry.state is ConfigEntryState.LOADED
-    entity_state = hass.states.get("light.mock_onoff_light_light")
+    entity_state = hass.states.get("light.mock_onoff_light")
     assert entity_state
     assert entity_state.state != STATE_UNAVAILABLE
 
@@ -81,13 +75,11 @@ async def test_entry_setup_unload(
 
     assert matter_client.disconnect.call_count == 1
     assert entry.state is ConfigEntryState.NOT_LOADED
-    entity_state = hass.states.get("light.mock_onoff_light_light")
+    entity_state = hass.states.get("light.mock_onoff_light")
     assert entity_state
     assert entity_state.state == STATE_UNAVAILABLE
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_home_assistant_stop(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -112,6 +104,26 @@ async def test_connect_failed(
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_set_default_fabric_label_failed(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """Test failure during client connection."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    matter_client.set_default_fabric_label.side_effect = NotConnected()
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert matter_client.connect.call_count == 1
+    assert matter_client.set_default_fabric_label.call_count == 1
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -234,10 +246,10 @@ async def test_raise_addon_task_in_progress(
 
     install_addon_original_side_effect = install_addon.side_effect
 
-    async def install_addon_side_effect(hass: HomeAssistant, slug: str) -> None:
+    async def install_addon_side_effect(slug: str) -> None:
         """Mock install add-on."""
         await install_event.wait()
-        await install_addon_original_side_effect(hass, slug)
+        await install_addon_original_side_effect(slug)
 
     install_addon.side_effect = install_addon_side_effect
 
@@ -298,7 +310,7 @@ async def test_start_addon(
     assert addon_info.call_count == 1
     assert install_addon.call_count == 0
     assert start_addon.call_count == 1
-    assert start_addon.call_args == call(hass, "core_matter_server")
+    assert start_addon.call_args == call("core_matter_server")
 
 
 async def test_install_addon(
@@ -325,9 +337,9 @@ async def test_install_addon(
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert addon_store_info.call_count == 3
     assert install_addon.call_count == 1
-    assert install_addon.call_args == call(hass, "core_matter_server")
+    assert install_addon.call_args == call("core_matter_server")
     assert start_addon.call_count == 1
-    assert start_addon.call_args == call(hass, "core_matter_server")
+    assert start_addon.call_args == call("core_matter_server")
 
 
 async def test_addon_info_failure(
@@ -338,7 +350,7 @@ async def test_addon_info_failure(
     start_addon: AsyncMock,
 ) -> None:
     """Test failure to get add-on info for Matter add-on during entry setup."""
-    addon_info.side_effect = HassioAPIError("Boom")
+    addon_info.side_effect = SupervisorError("Boom")
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Matter",
@@ -377,7 +389,7 @@ async def test_addon_info_failure(
             True,
             1,
             1,
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             None,
             ServerVersionTooOld("Invalid version"),
         ),
@@ -411,8 +423,8 @@ async def test_update_addon(
     connect_side_effect: Exception,
 ) -> None:
     """Test update the Matter add-on during entry setup."""
-    addon_info.return_value["version"] = addon_version
-    addon_info.return_value["update_available"] = update_available
+    addon_info.return_value.version = addon_version
+    addon_info.return_value.update_available = update_available
     create_backup.side_effect = create_backup_side_effect
     update_addon.side_effect = update_addon_side_effect
     matter_client.connect.side_effect = connect_side_effect
@@ -434,8 +446,6 @@ async def test_update_addon(
     assert update_addon.call_count == update_calls
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     (
         "connect_side_effect",
@@ -492,7 +502,7 @@ async def test_issue_registry_invalid_version(
     ("stop_addon_side_effect", "entry_state"),
     [
         (None, ConfigEntryState.NOT_LOADED),
-        (HassioAPIError("Boom"), ConfigEntryState.LOADED),
+        (SupervisorError("Boom"), ConfigEntryState.FAILED_UNLOAD),
     ],
 )
 async def test_stop_addon(
@@ -531,7 +541,7 @@ async def test_stop_addon(
 
     assert entry.state == entry_state
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_matter_server")
+    assert stop_addon.call_args == call("core_matter_server")
 
 
 async def test_remove_entry(
@@ -570,7 +580,7 @@ async def test_remove_entry(
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_matter_server")
+    assert stop_addon.call_args == call("core_matter_server")
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
         hass,
@@ -578,7 +588,7 @@ async def test_remove_entry(
         partial=True,
     )
     assert uninstall_addon.call_count == 1
-    assert uninstall_addon.call_args == call(hass, "core_matter_server")
+    assert uninstall_addon.call_args == call("core_matter_server")
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     stop_addon.reset_mock()
@@ -588,12 +598,12 @@ async def test_remove_entry(
     # test add-on stop failure
     entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    stop_addon.side_effect = HassioAPIError()
+    stop_addon.side_effect = SupervisorError()
 
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_matter_server")
+    assert stop_addon.call_args == call("core_matter_server")
     assert create_backup.call_count == 0
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
@@ -612,7 +622,7 @@ async def test_remove_entry(
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_matter_server")
+    assert stop_addon.call_args == call("core_matter_server")
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
         hass,
@@ -631,12 +641,12 @@ async def test_remove_entry(
     # test add-on uninstall failure
     entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    uninstall_addon.side_effect = HassioAPIError()
+    uninstall_addon.side_effect = SupervisorError()
 
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_matter_server")
+    assert stop_addon.call_args == call("core_matter_server")
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
         hass,
@@ -644,14 +654,12 @@ async def test_remove_entry(
         partial=True,
     )
     assert uninstall_addon.call_count == 1
-    assert uninstall_addon.call_args == call(hass, "core_matter_server")
+    assert uninstall_addon.call_args == call("core_matter_server")
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to uninstall the Matter Server add-on" in caplog.text
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_remove_config_entry_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -668,7 +676,7 @@ async def test_remove_config_entry_device(
     device_entry = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     )[0]
-    entity_id = "light.m5stamp_lighting_app_light"
+    entity_id = "light.m5stamp_lighting_app"
 
     assert device_entry
     assert entity_registry.async_get(entity_id)
@@ -684,8 +692,6 @@ async def test_remove_config_entry_device(
     assert not hass.states.get(entity_id)
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_remove_config_entry_device_no_node(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

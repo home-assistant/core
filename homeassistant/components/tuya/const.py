@@ -96,6 +96,7 @@ class DPCode(StrEnum):
     """
 
     AIR_QUALITY = "air_quality"
+    AIR_QUALITY_INDEX = "air_quality_index"
     ALARM_SWITCH = "alarm_switch"  # Alarm switch
     ALARM_TIME = "alarm_time"  # Alarm time
     ALARM_VOLUME = "alarm_volume"  # Alarm volume
@@ -325,12 +326,19 @@ class DPCode(StrEnum):
     SWITCH_USB6 = "switch_usb6"  # USB 6
     SWITCH_VERTICAL = "switch_vertical"  # Vertical swing flap switch
     SWITCH_VOICE = "switch_voice"  # Voice switch
+    TARGET_DIS_CLOSEST = "target_dis_closest"  # Closest target distance
     TEMP = "temp"  # Temperature setting
     TEMP_BOILING_C = "temp_boiling_c"
     TEMP_BOILING_F = "temp_boiling_f"
     TEMP_CONTROLLER = "temp_controller"
     TEMP_CURRENT = "temp_current"  # Current temperature in °C
     TEMP_CURRENT_F = "temp_current_f"  # Current temperature in °F
+    TEMP_CURRENT_EXTERNAL = (
+        "temp_current_external"  # Current external temperature in Celsius
+    )
+    TEMP_CURRENT_EXTERNAL_F = (
+        "temp_current_external_f"  # Current external temperature in Fahrenheit
+    )
     TEMP_INDOOR = "temp_indoor"  # Indoor temperature in °C
     TEMP_SET = "temp_set"  # Set the temperature in °C
     TEMP_SET_F = "temp_set_f"  # Set the temperature in °F

@@ -42,7 +42,7 @@ async def test_assume_button(
     assert hass.states.get(SWING_OFF_EID) is None
 
     with patch(
-        "homeassistant.components.switcher_kis.climate.SwitcherType2Api.control_breeze_device",
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.control_breeze_device",
     ) as mock_control_device:
         await hass.services.async_call(
             BUTTON_DOMAIN,
@@ -79,7 +79,7 @@ async def test_swing_button(
     assert hass.states.get(SWING_OFF_EID) is not None
 
     with patch(
-        "homeassistant.components.switcher_kis.climate.SwitcherType2Api.control_breeze_device",
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.control_breeze_device",
     ) as mock_control_device:
         await hass.services.async_call(
             BUTTON_DOMAIN,
@@ -103,7 +103,7 @@ async def test_control_device_fail(
 
     # Test exception during set hvac mode
     with patch(
-        "homeassistant.components.switcher_kis.climate.SwitcherType2Api.control_breeze_device",
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.control_breeze_device",
         side_effect=RuntimeError("fake error"),
     ) as mock_control_device:
         with pytest.raises(HomeAssistantError):
@@ -130,7 +130,7 @@ async def test_control_device_fail(
 
     # Test error response during turn on
     with patch(
-        "homeassistant.components.switcher_kis.climate.SwitcherType2Api.control_breeze_device",
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.control_breeze_device",
         return_value=SwitcherBaseResponse(None),
     ) as mock_control_device:
         with pytest.raises(HomeAssistantError):

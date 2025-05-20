@@ -6,11 +6,13 @@ from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
-from collections.abc import Callable, Generator, Iterable
+from collections.abc import Callable, Generator, Iterable, MutableSequence
 from contextlib import AbstractContextManager
 from contextvars import ContextVar
+from copy import deepcopy
 from datetime import date, datetime, time, timedelta
-from functools import cache, cached_property, lru_cache, partial, wraps
+from functools import cache, lru_cache, partial, wraps
+import hashlib
 import json
 import logging
 import math
@@ -22,7 +24,16 @@ import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
 from types import CodeType, TracebackType
-from typing import Any, Concatenate, Literal, NoReturn, Self, cast, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Concatenate,
+    Literal,
+    NoReturn,
+    Self,
+    cast,
+    overload,
+)
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -34,6 +45,7 @@ from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 from lru import LRU
 import orjson
+from propcache.api import under_cached_property
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -51,6 +63,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     Context,
     HomeAssistant,
+    ServiceResponse,
     State,
     callback,
     split_entity_id,
@@ -62,7 +75,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import (
     convert,
     dt as dt_util,
-    location as loc_util,
+    location as location_util,
     slugify as slugify_util,
 )
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -80,9 +93,13 @@ from . import (
     label_registry,
     location as loc_helper,
 )
+from .deprecation import deprecated_function
 from .singleton import singleton
 from .translation import async_translate_state
 from .typing import TemplateVarsType
+
+if TYPE_CHECKING:
+    from _typeshed import OptExcInfo
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -149,6 +166,7 @@ CACHED_TEMPLATE_STATES = 512
 EVAL_CACHE_SIZE = 512
 
 MAX_CUSTOM_TEMPLATE_SIZE = 5 * 1024 * 1024
+MAX_TEMPLATE_OUTPUT = 256 * 1024  # 256KiB
 
 CACHED_TEMPLATE_LRU: LRU[State, TemplateState] = LRU(CACHED_TEMPLATE_STATES)
 CACHED_TEMPLATE_NO_COLLECT_LRU: LRU[State, TemplateState] = LRU(CACHED_TEMPLATE_STATES)
@@ -205,15 +223,24 @@ def async_setup(hass: HomeAssistant) -> bool:
 
 
 @bind_hass
+@deprecated_function(
+    "automatic setting of Template.hass introduced by HA Core PR #89242",
+    breaks_in_ha_version="2025.10",
+)
 def attach(hass: HomeAssistant, obj: Any) -> None:
+    """Recursively attach hass to all template instances in list and dict."""
+    return _attach(hass, obj)
+
+
+def _attach(hass: HomeAssistant, obj: Any) -> None:
     """Recursively attach hass to all template instances in list and dict."""
     if isinstance(obj, list):
         for child in obj:
-            attach(hass, child)
+            _attach(hass, child)
     elif isinstance(obj, collections.abc.Mapping):
         for child_key, child_value in obj.items():
-            attach(hass, child_key)
-            attach(hass, child_value)
+            _attach(hass, child_key)
+            _attach(hass, child_value)
     elif isinstance(obj, Template):
         obj.hass = hass
 
@@ -360,19 +387,19 @@ class RenderInfo:
     """Holds information about a template render."""
 
     __slots__ = (
-        "template",
-        "filter_lifecycle",
-        "filter",
         "_result",
-        "is_static",
-        "exception",
         "all_states",
         "all_states_lifecycle",
         "domains",
         "domains_lifecycle",
         "entities",
-        "rate_limit",
+        "exception",
+        "filter",
+        "filter_lifecycle",
         "has_time",
+        "is_static",
+        "rate_limit",
+        "template",
     )
 
     def __init__(self, template: Template) -> None:
@@ -481,30 +508,44 @@ class Template:
 
     __slots__ = (
         "__weakref__",
-        "template",
+        "_compiled",
+        "_compiled_code",
+        "_exc_info",
+        "_hash_cache",
+        "_limited",
+        "_log_fn",
+        "_renders",
+        "_strict",
         "hass",
         "is_static",
-        "_compiled_code",
-        "_compiled",
-        "_exc_info",
-        "_limited",
-        "_strict",
-        "_log_fn",
-        "_hash_cache",
-        "_renders",
+        "template",
     )
 
     def __init__(self, template: str, hass: HomeAssistant | None = None) -> None:
-        """Instantiate a template."""
+        """Instantiate a template.
+
+        Note: A valid hass instance should always be passed in. The hass parameter
+        will be non optional in Home Assistant Core 2025.10.
+        """
+        # pylint: disable-next=import-outside-toplevel
+        from .frame import ReportBehavior, report_usage
+
         if not isinstance(template, str):
             raise TypeError("Expected template to be a string")
+
+        if not hass:
+            report_usage(
+                "creates a template object without passing hass",
+                core_behavior=ReportBehavior.LOG,
+                breaks_in_ha_version="2025.10",
+            )
 
         self.template: str = template.strip()
         self._compiled_code: CodeType | None = None
         self._compiled: jinja2.Template | None = None
         self.hass = hass
         self.is_static = not is_template_string(template)
-        self._exc_info: sys._OptExcInfo | None = None
+        self._exc_info: OptExcInfo | None = None
         self._limited: bool | None = None
         self._strict: bool | None = None
         self._log_fn: Callable[[int, str], None] | None = None
@@ -561,7 +602,7 @@ class Template:
         or filter depending on hass or the state machine.
         """
         if self.is_static:
-            if not parse_result or self.hass and self.hass.config.legacy_templates:
+            if not parse_result or (self.hass and self.hass.config.legacy_templates):
                 return self.template
             return self._parse_result(self.template)
         assert self.hass is not None, "hass variable not set on template"
@@ -590,7 +631,7 @@ class Template:
         self._renders += 1
 
         if self.is_static:
-            if not parse_result or self.hass and self.hass.config.legacy_templates:
+            if not parse_result or (self.hass and self.hass.config.legacy_templates):
                 return self.template
             return self._parse_result(self.template)
 
@@ -604,9 +645,14 @@ class Template:
         except Exception as err:
             raise TemplateError(err) from err
 
+        if len(render_result) > MAX_TEMPLATE_OUTPUT:
+            raise TemplateError(
+                f"Template output exceeded maximum size of {MAX_TEMPLATE_OUTPUT} characters"
+            )
+
         render_result = render_result.strip()
 
-        if not parse_result or self.hass and self.hass.config.legacy_templates:
+        if not parse_result or (self.hass and self.hass.config.legacy_templates):
             return render_result
 
         return self._parse_result(render_result)
@@ -781,7 +827,7 @@ class Template:
                 )
             return value if error_value is _SENTINEL else error_value
 
-        if not parse_result or self.hass and self.hass.config.legacy_templates:
+        if not parse_result or (self.hass and self.hass.config.legacy_templates):
             return render_result
 
         return self._parse_result(render_result)
@@ -796,16 +842,16 @@ class Template:
         self.ensure_valid()
 
         assert self.hass is not None, "hass variable not set on template"
-        assert (
-            self._limited is None or self._limited == limited
-        ), "can't change between limited and non limited template"
-        assert (
-            self._strict is None or self._strict == strict
-        ), "can't change between strict and non strict template"
+        assert self._limited is None or self._limited == limited, (
+            "can't change between limited and non limited template"
+        )
+        assert self._strict is None or self._strict == strict, (
+            "can't change between strict and non strict template"
+        )
         assert not (strict and limited), "can't combine strict and limited template"
-        assert (
-            self._log_fn is None or self._log_fn == log_fn
-        ), "can't change custom log function"
+        assert self._log_fn is None or self._log_fn == log_fn, (
+            "can't change custom log function"
+        )
         assert self._compiled_code is not None, "template code was not compiled"
 
         self._limited = limited
@@ -946,7 +992,7 @@ class StateTranslated:
 class DomainStates:
     """Class to expose a specific HA domain as attributes."""
 
-    __slots__ = ("_hass", "_domain")
+    __slots__ = ("_domain", "_hass")
 
     __setitem__ = _readonly
     __delitem__ = _readonly
@@ -990,6 +1036,8 @@ class DomainStates:
 class TemplateStateBase(State):
     """Class to represent a state object in a template."""
 
+    __slots__ = ("_collect", "_entity_id", "_hass", "_state")
+
     _state: State
 
     __setitem__ = _readonly
@@ -1002,6 +1050,7 @@ class TemplateStateBase(State):
         self._hass = hass
         self._collect = collect
         self._entity_id = entity_id
+        self._cache: dict[str, Any] = {}
 
     def _collect_state(self) -> None:
         if self._collect and (render_info := _render_info.get()):
@@ -1022,7 +1071,7 @@ class TemplateStateBase(State):
             return self.state_with_unit
         raise KeyError
 
-    @cached_property
+    @under_cached_property
     def entity_id(self) -> str:  # type: ignore[override]
         """Wrap State.entity_id.
 
@@ -1079,7 +1128,7 @@ class TemplateStateBase(State):
         return self._state.object_id
 
     @property
-    def name(self) -> str:
+    def name(self) -> str:  # type: ignore[override]
         """Wrap State.name."""
         self._collect_state()
         return self._state.name
@@ -1116,7 +1165,7 @@ class TemplateStateBase(State):
 class TemplateState(TemplateStateBase):
     """Class to represent a state object in a template."""
 
-    __slots__ = ("_state",)
+    __slots__ = ()
 
     # Inheritance is done so functions that check against State keep working
     def __init__(self, hass: HomeAssistant, state: State, collect: bool = True) -> None:
@@ -1131,6 +1180,8 @@ class TemplateState(TemplateStateBase):
 
 class TemplateStateFromEntityId(TemplateStateBase):
     """Class to represent a state object in a template."""
+
+    __slots__ = ()
 
     def __init__(
         self, hass: HomeAssistant, entity_id: str, collect: bool = True
@@ -1241,7 +1292,7 @@ def result_as_boolean(template_result: Any | None) -> bool:
 
     True/not 0/'1'/'true'/'yes'/'on'/'enable' are considered truthy
     False/0/None/'0'/'false'/'no'/'off'/'disable' are considered falsy
-
+    All other values are falsy
     """
     if template_result is None:
         return False
@@ -1475,6 +1526,15 @@ def floor_areas(hass: HomeAssistant, floor_id_or_name: str) -> Iterable[str]:
     return [entry.id for entry in entries if entry.id]
 
 
+def floor_entities(hass: HomeAssistant, floor_id_or_name: str) -> Iterable[str]:
+    """Return entity_ids for a given floor ID or name."""
+    return [
+        entity_id
+        for area_id in floor_areas(hass, floor_id_or_name)
+        for entity_id in area_entities(hass, area_id)
+    ]
+
+
 def areas(hass: HomeAssistant) -> Iterable[str | None]:
     """Return all areas."""
     return list(area_registry.async_get(hass).areas)
@@ -1685,7 +1745,7 @@ def label_entities(hass: HomeAssistant, label_id_or_name: str) -> Iterable[str]:
     return [entry.entity_id for entry in entries]
 
 
-def closest(hass, *args):
+def closest(hass: HomeAssistant, *args: Any) -> State | None:
     """Find closest entity.
 
     Closest to home:
@@ -1725,20 +1785,23 @@ def closest(hass, *args):
             )
             return None
 
-        latitude = point_state.attributes.get(ATTR_LATITUDE)
-        longitude = point_state.attributes.get(ATTR_LONGITUDE)
+        latitude = point_state.attributes[ATTR_LATITUDE]
+        longitude = point_state.attributes[ATTR_LONGITUDE]
 
         entities = args[1]
 
     else:
-        latitude = convert(args[0], float)
-        longitude = convert(args[1], float)
+        latitude_arg = convert(args[0], float)
+        longitude_arg = convert(args[1], float)
 
-        if latitude is None or longitude is None:
+        if latitude_arg is None or longitude_arg is None:
             _LOGGER.warning(
                 "Closest:Received invalid coordinates: %s, %s", args[0], args[1]
             )
             return None
+
+        latitude = latitude_arg
+        longitude = longitude_arg
 
         entities = args[2]
 
@@ -1748,20 +1811,20 @@ def closest(hass, *args):
     return loc_helper.closest(latitude, longitude, states)
 
 
-def closest_filter(hass, *args):
+def closest_filter(hass: HomeAssistant, *args: Any) -> State | None:
     """Call closest as a filter. Need to reorder arguments."""
     new_args = list(args[1:])
     new_args.append(args[0])
     return closest(hass, *new_args)
 
 
-def distance(hass, *args):
+def distance(hass: HomeAssistant, *args: Any) -> float | None:
     """Calculate distance.
 
     Will calculate distance from home to a point or between points.
     Points can be passed in using state objects or lat/lng coordinates.
     """
-    locations = []
+    locations: list[tuple[float, float]] = []
 
     to_process = list(args)
 
@@ -1781,16 +1844,19 @@ def distance(hass, *args):
                 return None
 
             value_2 = to_process.pop(0)
-            latitude = convert(value, float)
-            longitude = convert(value_2, float)
+            latitude_to_process = convert(value, float)
+            longitude_to_process = convert(value_2, float)
 
-            if latitude is None or longitude is None:
+            if latitude_to_process is None or longitude_to_process is None:
                 _LOGGER.warning(
                     "Distance:Unable to process latitude and longitude: %s, %s",
                     value,
                     value_2,
                 )
                 return None
+
+            latitude = latitude_to_process
+            longitude = longitude_to_process
 
         else:
             if not loc_helper.has_location(point_state):
@@ -1799,8 +1865,8 @@ def distance(hass, *args):
                 )
                 return None
 
-            latitude = point_state.attributes.get(ATTR_LATITUDE)
-            longitude = point_state.attributes.get(ATTR_LONGITUDE)
+            latitude = point_state.attributes[ATTR_LATITUDE]
+            longitude = point_state.attributes[ATTR_LONGITUDE]
 
         locations.append((latitude, longitude))
 
@@ -1808,7 +1874,7 @@ def distance(hass, *args):
         return hass.config.distance(*locations[0])
 
     return hass.config.units.length(
-        loc_util.distance(*locations[0] + locations[1]), UnitOfLength.METERS
+        location_util.distance(*locations[0] + locations[1]), UnitOfLength.METERS
     )
 
 
@@ -1823,14 +1889,19 @@ def is_state(hass: HomeAssistant, entity_id: str, state: str | list[str]) -> boo
     """Test if a state is a specific value."""
     state_obj = _get_state(hass, entity_id)
     return state_obj is not None and (
-        state_obj.state == state or isinstance(state, list) and state_obj.state in state
+        state_obj.state == state
+        or (isinstance(state, list) and state_obj.state in state)
     )
 
 
 def is_state_attr(hass: HomeAssistant, entity_id: str, name: str, value: Any) -> bool:
     """Test if a state's attribute is a specific value."""
-    attr = state_attr(hass, entity_id, name)
-    return attr is not None and attr == value
+    if (state_obj := _get_state(hass, entity_id)) is not None:
+        attr = state_obj.attributes.get(name, _SENTINEL)
+        if attr is _SENTINEL:
+            return False
+        return bool(attr == value)
+    return False
 
 
 def state_attr(hass: HomeAssistant, entity_id: str, name: str) -> Any:
@@ -2110,6 +2181,63 @@ def as_datetime(value: Any, default: Any = _SENTINEL) -> Any:
 def as_timedelta(value: str) -> timedelta | None:
     """Parse a ISO8601 duration like 'PT10M' to a timedelta."""
     return dt_util.parse_duration(value)
+
+
+def merge_response(value: ServiceResponse) -> list[Any]:
+    """Merge action responses into single list.
+
+    Checks that the input is a correct service response:
+    {
+        "entity_id": {str: dict[str, Any]},
+    }
+    If response is a single list, it will extend the list with the items
+        and add the entity_id and value_key to each dictionary for reference.
+    If response is a dictionary or multiple lists,
+        it will append the dictionary/lists to the list
+        and add the entity_id to each dictionary for reference.
+    """
+    if not isinstance(value, dict):
+        raise TypeError("Response is not a dictionary")
+    if not value:
+        # Bail out early if response is an empty dictionary
+        return []
+
+    is_single_list = False
+    response_items: list = []
+    input_service_response = deepcopy(value)
+    for entity_id, entity_response in input_service_response.items():  # pylint: disable=too-many-nested-blocks
+        if not isinstance(entity_response, dict):
+            raise TypeError("Response is not a dictionary")
+        for value_key, type_response in entity_response.items():
+            if len(entity_response) == 1 and isinstance(type_response, list):
+                # Provides special handling for responses such as calendar events
+                # and weather forecasts where the response contains a single list with multiple
+                # dictionaries inside.
+                is_single_list = True
+                for dict_in_list in type_response:
+                    if isinstance(dict_in_list, dict):
+                        if ATTR_ENTITY_ID in dict_in_list:
+                            raise ValueError(
+                                f"Response dictionary already contains key '{ATTR_ENTITY_ID}'"
+                            )
+                        dict_in_list[ATTR_ENTITY_ID] = entity_id
+                        dict_in_list["value_key"] = value_key
+                response_items.extend(type_response)
+            else:
+                # Break the loop if not a single list as the logic is then managed in the outer loop
+                # which handles both dictionaries and in the case of multiple lists.
+                break
+
+        if not is_single_list:
+            _response = entity_response.copy()
+            if ATTR_ENTITY_ID in _response:
+                raise ValueError(
+                    f"Response dictionary already contains key '{ATTR_ENTITY_ID}'"
+                )
+            _response[ATTR_ENTITY_ID] = entity_id
+            response_items.append(_response)
+
+    return response_items
 
 
 def strptime(string, fmt, default=_SENTINEL):
@@ -2609,6 +2737,100 @@ def iif(
     return if_false
 
 
+def shuffle(*args: Any, seed: Any = None) -> MutableSequence[Any]:
+    """Shuffle a list, either with a seed or without."""
+    if not args:
+        raise TypeError("shuffle expected at least 1 argument, got 0")
+
+    # If first argument is iterable and more than 1 argument provided
+    # but not a named seed, then use 2nd argument as seed.
+    if isinstance(args[0], Iterable):
+        items = list(args[0])
+        if len(args) > 1 and seed is None:
+            seed = args[1]
+    elif len(args) == 1:
+        raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
+    else:
+        items = list(args)
+
+    if seed:
+        r = random.Random(seed)
+        r.shuffle(items)
+    else:
+        random.shuffle(items)
+    return items
+
+
+def typeof(value: Any) -> Any:
+    """Return the type of value passed to debug types."""
+    return value.__class__.__name__
+
+
+def flatten(value: Iterable[Any], levels: int | None = None) -> list[Any]:
+    """Flattens list of lists."""
+    if not isinstance(value, Iterable) or isinstance(value, str):
+        raise TypeError(f"flatten expected a list, got {type(value).__name__}")
+
+    flattened: list[Any] = []
+    for item in value:
+        if isinstance(item, Iterable) and not isinstance(item, str):
+            if levels is None:
+                flattened.extend(flatten(item))
+            elif levels >= 1:
+                flattened.extend(flatten(item, levels=(levels - 1)))
+            else:
+                flattened.append(item)
+        else:
+            flattened.append(item)
+    return flattened
+
+
+def combine(*args: Any, recursive: bool = False) -> dict[Any, Any]:
+    """Combine multiple dictionaries into one."""
+    if not args:
+        raise TypeError("combine expected at least 1 argument, got 0")
+
+    result: dict[Any, Any] = {}
+    for arg in args:
+        if not isinstance(arg, dict):
+            raise TypeError(f"combine expected a dict, got {type(arg).__name__}")
+
+        if recursive:
+            for key, value in arg.items():
+                if (
+                    key in result
+                    and isinstance(result[key], dict)
+                    and isinstance(value, dict)
+                ):
+                    result[key] = combine(result[key], value, recursive=True)
+                else:
+                    result[key] = value
+        else:
+            result |= arg
+
+    return result
+
+
+def md5(value: str) -> str:
+    """Generate md5 hash from a string."""
+    return hashlib.md5(value.encode()).hexdigest()
+
+
+def sha1(value: str) -> str:
+    """Generate sha1 hash from a string."""
+    return hashlib.sha1(value.encode()).hexdigest()
+
+
+def sha256(value: str) -> str:
+    """Generate sha256 hash from a string."""
+    return hashlib.sha256(value.encode()).hexdigest()
+
+
+def sha512(value: str) -> str:
+    """Generate sha512 hash from a string."""
+    return hashlib.sha512(value.encode()).hexdigest()
+
+
 class TemplateContextManager(AbstractContextManager):
     """Context manager to store template being parsed or rendered in a ContextVar."""
 
@@ -2761,99 +2983,119 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             str | jinja2.nodes.Template, CodeType | None
         ] = weakref.WeakValueDictionary()
         self.add_extension("jinja2.ext.loopcontrols")
-        self.filters["round"] = forgiving_round
-        self.filters["multiply"] = multiply
-        self.filters["add"] = add
-        self.filters["log"] = logarithm
-        self.filters["sin"] = sine
-        self.filters["cos"] = cosine
-        self.filters["tan"] = tangent
-        self.filters["asin"] = arc_sine
-        self.filters["acos"] = arc_cosine
-        self.filters["atan"] = arc_tangent
-        self.filters["atan2"] = arc_tangent2
-        self.filters["sqrt"] = square_root
-        self.filters["as_datetime"] = as_datetime
-        self.filters["as_timedelta"] = as_timedelta
-        self.filters["as_timestamp"] = forgiving_as_timestamp
-        self.filters["as_local"] = dt_util.as_local
-        self.filters["timestamp_custom"] = timestamp_custom
-        self.filters["timestamp_local"] = timestamp_local
-        self.filters["timestamp_utc"] = timestamp_utc
-        self.filters["to_json"] = to_json
-        self.filters["from_json"] = from_json
-        self.filters["is_defined"] = fail_when_undefined
-        self.filters["average"] = average
-        self.filters["median"] = median
-        self.filters["statistical_mode"] = statistical_mode
-        self.filters["random"] = random_every_time
-        self.filters["base64_encode"] = base64_encode
-        self.filters["base64_decode"] = base64_decode
-        self.filters["ordinal"] = ordinal
-        self.filters["regex_match"] = regex_match
-        self.filters["regex_replace"] = regex_replace
-        self.filters["regex_search"] = regex_search
-        self.filters["regex_findall"] = regex_findall
-        self.filters["regex_findall_index"] = regex_findall_index
-        self.filters["bitwise_and"] = bitwise_and
-        self.filters["bitwise_or"] = bitwise_or
-        self.filters["bitwise_xor"] = bitwise_xor
-        self.filters["pack"] = struct_pack
-        self.filters["unpack"] = struct_unpack
-        self.filters["ord"] = ord
-        self.filters["is_number"] = is_number
-        self.filters["float"] = forgiving_float_filter
-        self.filters["int"] = forgiving_int_filter
-        self.filters["slugify"] = slugify
-        self.filters["iif"] = iif
-        self.filters["bool"] = forgiving_boolean
-        self.filters["version"] = version
-        self.filters["contains"] = contains
-        self.globals["log"] = logarithm
-        self.globals["sin"] = sine
-        self.globals["cos"] = cosine
-        self.globals["tan"] = tangent
-        self.globals["sqrt"] = square_root
-        self.globals["pi"] = math.pi
-        self.globals["tau"] = math.pi * 2
-        self.globals["e"] = math.e
-        self.globals["asin"] = arc_sine
+
         self.globals["acos"] = arc_cosine
-        self.globals["atan"] = arc_tangent
-        self.globals["atan2"] = arc_tangent2
-        self.globals["float"] = forgiving_float
         self.globals["as_datetime"] = as_datetime
         self.globals["as_local"] = dt_util.as_local
         self.globals["as_timedelta"] = as_timedelta
         self.globals["as_timestamp"] = forgiving_as_timestamp
-        self.globals["timedelta"] = timedelta
-        self.globals["strptime"] = strptime
-        self.globals["urlencode"] = urlencode
+        self.globals["asin"] = arc_sine
+        self.globals["atan"] = arc_tangent
+        self.globals["atan2"] = arc_tangent2
         self.globals["average"] = average
-        self.globals["median"] = median
-        self.globals["statistical_mode"] = statistical_mode
-        self.globals["max"] = min_max_from_filter(self.filters["max"], "max")
-        self.globals["min"] = min_max_from_filter(self.filters["min"], "min")
-        self.globals["is_number"] = is_number
-        self.globals["set"] = _to_set
-        self.globals["tuple"] = _to_tuple
-        self.globals["int"] = forgiving_int
-        self.globals["pack"] = struct_pack
-        self.globals["unpack"] = struct_unpack
-        self.globals["slugify"] = slugify
-        self.globals["iif"] = iif
         self.globals["bool"] = forgiving_boolean
+        self.globals["combine"] = combine
+        self.globals["cos"] = cosine
+        self.globals["e"] = math.e
+        self.globals["flatten"] = flatten
+        self.globals["float"] = forgiving_float
+        self.globals["iif"] = iif
+        self.globals["int"] = forgiving_int
+        self.globals["is_number"] = is_number
+        self.globals["log"] = logarithm
+        self.globals["max"] = min_max_from_filter(self.filters["max"], "max")
+        self.globals["md5"] = md5
+        self.globals["median"] = median
+        self.globals["merge_response"] = merge_response
+        self.globals["min"] = min_max_from_filter(self.filters["min"], "min")
+        self.globals["pack"] = struct_pack
+        self.globals["pi"] = math.pi
+        self.globals["set"] = _to_set
+        self.globals["sha1"] = sha1
+        self.globals["sha256"] = sha256
+        self.globals["sha512"] = sha512
+        self.globals["shuffle"] = shuffle
+        self.globals["sin"] = sine
+        self.globals["slugify"] = slugify
+        self.globals["sqrt"] = square_root
+        self.globals["statistical_mode"] = statistical_mode
+        self.globals["strptime"] = strptime
+        self.globals["tan"] = tangent
+        self.globals["tau"] = math.pi * 2
+        self.globals["timedelta"] = timedelta
+        self.globals["tuple"] = _to_tuple
+        self.globals["typeof"] = typeof
+        self.globals["unpack"] = struct_unpack
+        self.globals["urlencode"] = urlencode
         self.globals["version"] = version
         self.globals["zip"] = zip
+
+        self.filters["acos"] = arc_cosine
+        self.filters["add"] = add
+        self.filters["as_datetime"] = as_datetime
+        self.filters["as_local"] = dt_util.as_local
+        self.filters["as_timedelta"] = as_timedelta
+        self.filters["as_timestamp"] = forgiving_as_timestamp
+        self.filters["asin"] = arc_sine
+        self.filters["atan"] = arc_tangent
+        self.filters["atan2"] = arc_tangent2
+        self.filters["average"] = average
+        self.filters["base64_decode"] = base64_decode
+        self.filters["base64_encode"] = base64_encode
+        self.filters["bitwise_and"] = bitwise_and
+        self.filters["bitwise_or"] = bitwise_or
+        self.filters["bitwise_xor"] = bitwise_xor
+        self.filters["bool"] = forgiving_boolean
+        self.filters["combine"] = combine
+        self.filters["contains"] = contains
+        self.filters["cos"] = cosine
+        self.filters["flatten"] = flatten
+        self.filters["float"] = forgiving_float_filter
+        self.filters["from_json"] = from_json
+        self.filters["iif"] = iif
+        self.filters["int"] = forgiving_int_filter
+        self.filters["is_defined"] = fail_when_undefined
+        self.filters["is_number"] = is_number
+        self.filters["log"] = logarithm
+        self.filters["md5"] = md5
+        self.filters["median"] = median
+        self.filters["multiply"] = multiply
+        self.filters["ord"] = ord
+        self.filters["ordinal"] = ordinal
+        self.filters["pack"] = struct_pack
+        self.filters["random"] = random_every_time
+        self.filters["regex_findall_index"] = regex_findall_index
+        self.filters["regex_findall"] = regex_findall
+        self.filters["regex_match"] = regex_match
+        self.filters["regex_replace"] = regex_replace
+        self.filters["regex_search"] = regex_search
+        self.filters["round"] = forgiving_round
+        self.filters["sha1"] = sha1
+        self.filters["sha256"] = sha256
+        self.filters["sha512"] = sha512
+        self.filters["shuffle"] = shuffle
+        self.filters["sin"] = sine
+        self.filters["slugify"] = slugify
+        self.filters["sqrt"] = square_root
+        self.filters["statistical_mode"] = statistical_mode
+        self.filters["tan"] = tangent
+        self.filters["timestamp_custom"] = timestamp_custom
+        self.filters["timestamp_local"] = timestamp_local
+        self.filters["timestamp_utc"] = timestamp_utc
+        self.filters["to_json"] = to_json
+        self.filters["typeof"] = typeof
+        self.filters["unpack"] = struct_unpack
+        self.filters["version"] = version
+
+        self.tests["contains"] = contains
+        self.tests["datetime"] = _is_datetime
         self.tests["is_number"] = is_number
         self.tests["list"] = _is_list
-        self.tests["set"] = _is_set
-        self.tests["tuple"] = _is_tuple
-        self.tests["datetime"] = _is_datetime
-        self.tests["string_like"] = _is_string_like
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
-        self.tests["contains"] = contains
+        self.tests["set"] = _is_set
+        self.tests["string_like"] = _is_string_like
+        self.tests["tuple"] = _is_tuple
 
         if hass is None:
             return
@@ -2880,28 +3122,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
             return jinja_context(wrapper)
 
-        self.globals["device_entities"] = hassfunction(device_entities)
-        self.filters["device_entities"] = self.globals["device_entities"]
-
-        self.globals["device_attr"] = hassfunction(device_attr)
-        self.filters["device_attr"] = self.globals["device_attr"]
-
-        self.globals["config_entry_attr"] = hassfunction(config_entry_attr)
-        self.filters["config_entry_attr"] = self.globals["config_entry_attr"]
-
-        self.globals["is_device_attr"] = hassfunction(is_device_attr)
-        self.tests["is_device_attr"] = hassfunction(is_device_attr, pass_eval_context)
-
-        self.globals["config_entry_id"] = hassfunction(config_entry_id)
-        self.filters["config_entry_id"] = self.globals["config_entry_id"]
-
-        self.globals["device_id"] = hassfunction(device_id)
-        self.filters["device_id"] = self.globals["device_id"]
-
-        self.globals["issues"] = hassfunction(issues)
-
-        self.globals["issue"] = hassfunction(issue)
-        self.filters["issue"] = self.globals["issue"]
+        # Area extensions
 
         self.globals["areas"] = hassfunction(areas)
 
@@ -2917,6 +3138,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["area_devices"] = hassfunction(area_devices)
         self.filters["area_devices"] = self.globals["area_devices"]
 
+        # Floor extensions
+
         self.globals["floors"] = hassfunction(floors)
         self.filters["floors"] = self.globals["floors"]
 
@@ -2929,8 +3152,37 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["floor_areas"] = hassfunction(floor_areas)
         self.filters["floor_areas"] = self.globals["floor_areas"]
 
+        self.globals["floor_entities"] = hassfunction(floor_entities)
+        self.filters["floor_entities"] = self.globals["floor_entities"]
+
+        # Integration extensions
+
         self.globals["integration_entities"] = hassfunction(integration_entities)
         self.filters["integration_entities"] = self.globals["integration_entities"]
+
+        # Config entry extensions
+
+        self.globals["config_entry_attr"] = hassfunction(config_entry_attr)
+        self.filters["config_entry_attr"] = self.globals["config_entry_attr"]
+
+        self.globals["config_entry_id"] = hassfunction(config_entry_id)
+        self.filters["config_entry_id"] = self.globals["config_entry_id"]
+
+        # Device extensions
+
+        self.globals["device_attr"] = hassfunction(device_attr)
+        self.filters["device_attr"] = self.globals["device_attr"]
+
+        self.globals["device_entities"] = hassfunction(device_entities)
+        self.filters["device_entities"] = self.globals["device_entities"]
+
+        self.globals["is_device_attr"] = hassfunction(is_device_attr)
+        self.tests["is_device_attr"] = hassfunction(is_device_attr, pass_eval_context)
+
+        self.globals["device_id"] = hassfunction(device_id)
+        self.filters["device_id"] = self.globals["device_id"]
+
+        # Label extensions
 
         self.globals["labels"] = hassfunction(labels)
         self.filters["labels"] = self.globals["labels"]
@@ -2950,6 +3202,12 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["label_entities"] = hassfunction(label_entities)
         self.filters["label_entities"] = self.globals["label_entities"]
 
+        # Issue extensions
+
+        self.globals["issues"] = hassfunction(issues)
+        self.globals["issue"] = hassfunction(issue)
+        self.filters["issue"] = self.globals["issue"]
+
         if limited:
             # Only device_entities is available to limited templates, mark other
             # functions and filters as unsupported.
@@ -2962,38 +3220,38 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 return warn_unsupported
 
             hass_globals = [
-                "closest",
-                "distance",
-                "expand",
-                "is_hidden_entity",
-                "is_state",
-                "is_state_attr",
-                "state_attr",
-                "states",
-                "state_translated",
-                "has_value",
-                "utcnow",
-                "now",
-                "device_attr",
-                "is_device_attr",
-                "device_id",
                 "area_id",
                 "area_name",
+                "closest",
+                "device_attr",
+                "device_id",
+                "distance",
+                "expand",
                 "floor_id",
                 "floor_name",
+                "has_value",
+                "is_device_attr",
+                "is_hidden_entity",
+                "is_state_attr",
+                "is_state",
+                "label_id",
+                "label_name",
+                "now",
                 "relative_time",
+                "state_attr",
+                "state_translated",
+                "states",
                 "time_since",
                 "time_until",
                 "today_at",
-                "label_id",
-                "label_name",
+                "utcnow",
             ]
             hass_filters = [
-                "closest",
-                "expand",
-                "device_id",
                 "area_id",
                 "area_name",
+                "closest",
+                "device_id",
+                "expand",
                 "floor_id",
                 "floor_name",
                 "has_value",
@@ -3003,8 +3261,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             hass_tests = [
                 "has_value",
                 "is_hidden_entity",
-                "is_state",
                 "is_state_attr",
+                "is_state",
             ]
             for glob in hass_globals:
                 self.globals[glob] = unsupported(glob)
@@ -3014,38 +3272,46 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 self.filters[test] = unsupported(test)
             return
 
-        self.globals["expand"] = hassfunction(expand)
-        self.filters["expand"] = self.globals["expand"]
         self.globals["closest"] = hassfunction(closest)
-        self.filters["closest"] = hassfunction(closest_filter)
         self.globals["distance"] = hassfunction(distance)
+        self.globals["expand"] = hassfunction(expand)
+        self.globals["has_value"] = hassfunction(has_value)
+        self.globals["now"] = hassfunction(now)
+        self.globals["relative_time"] = hassfunction(relative_time)
+        self.globals["time_since"] = hassfunction(time_since)
+        self.globals["time_until"] = hassfunction(time_until)
+        self.globals["today_at"] = hassfunction(today_at)
+        self.globals["utcnow"] = hassfunction(utcnow)
+
+        self.filters["closest"] = hassfunction(closest_filter)
+        self.filters["expand"] = self.globals["expand"]
+        self.filters["has_value"] = self.globals["has_value"]
+        self.filters["relative_time"] = self.globals["relative_time"]
+        self.filters["time_since"] = self.globals["time_since"]
+        self.filters["time_until"] = self.globals["time_until"]
+        self.filters["today_at"] = self.globals["today_at"]
+
+        self.tests["has_value"] = hassfunction(has_value, pass_eval_context)
+
+        # Entity extensions
+
         self.globals["is_hidden_entity"] = hassfunction(is_hidden_entity)
         self.tests["is_hidden_entity"] = hassfunction(
             is_hidden_entity, pass_eval_context
         )
-        self.globals["is_state"] = hassfunction(is_state)
-        self.tests["is_state"] = hassfunction(is_state, pass_eval_context)
+
+        # State extensions
+
         self.globals["is_state_attr"] = hassfunction(is_state_attr)
-        self.tests["is_state_attr"] = hassfunction(is_state_attr, pass_eval_context)
+        self.globals["is_state"] = hassfunction(is_state)
         self.globals["state_attr"] = hassfunction(state_attr)
-        self.filters["state_attr"] = self.globals["state_attr"]
-        self.globals["states"] = AllStates(hass)
-        self.filters["states"] = self.globals["states"]
         self.globals["state_translated"] = StateTranslated(hass)
+        self.globals["states"] = AllStates(hass)
+        self.filters["state_attr"] = self.globals["state_attr"]
         self.filters["state_translated"] = self.globals["state_translated"]
-        self.globals["has_value"] = hassfunction(has_value)
-        self.filters["has_value"] = self.globals["has_value"]
-        self.tests["has_value"] = hassfunction(has_value, pass_eval_context)
-        self.globals["utcnow"] = hassfunction(utcnow)
-        self.globals["now"] = hassfunction(now)
-        self.globals["relative_time"] = hassfunction(relative_time)
-        self.filters["relative_time"] = self.globals["relative_time"]
-        self.globals["time_since"] = hassfunction(time_since)
-        self.filters["time_since"] = self.globals["time_since"]
-        self.globals["time_until"] = hassfunction(time_until)
-        self.filters["time_until"] = self.globals["time_until"]
-        self.globals["today_at"] = hassfunction(today_at)
-        self.filters["today_at"] = self.globals["today_at"]
+        self.filters["states"] = self.globals["states"]
+        self.tests["is_state_attr"] = hassfunction(is_state_attr, pass_eval_context)
+        self.tests["is_state"] = hassfunction(is_state, pass_eval_context)
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""

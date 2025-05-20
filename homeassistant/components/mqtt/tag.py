@@ -12,7 +12,7 @@ from homeassistant.components import tag
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_VALUE_TEMPLATE
 from homeassistant.core import HassJobType, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -20,7 +20,7 @@ from . import subscription
 from .config import MQTT_BASE_SCHEMA
 from .const import ATTR_DISCOVERY_HASH, CONF_QOS, CONF_TOPIC
 from .discovery import MQTTDiscoveryPayload
-from .mixins import (
+from .entity import (
     MqttDiscoveryDeviceUpdateMixin,
     async_handle_schema_error,
     async_setup_non_entity_entry_helper,

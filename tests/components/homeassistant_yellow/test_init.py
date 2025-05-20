@@ -8,7 +8,7 @@ from homeassistant.components import zha
 from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
-    FirmwareGuess,
+    FirmwareInfo,
 )
 from homeassistant.components.homeassistant_yellow.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -49,11 +49,13 @@ async def test_setup_entry(
             return_value=onboarded,
         ),
         patch(
-            "homeassistant.components.homeassistant_yellow.guess_firmware_type",
-            return_value=FirmwareGuess(  # Nothing is setup
-                is_running=False,
+            "homeassistant.components.homeassistant_yellow.guess_firmware_info",
+            return_value=FirmwareInfo(  # Nothing is setup
+                device="/dev/ttyAMA1",
+                firmware_version=None,
                 firmware_type=ApplicationType.EZSP,
                 source="unknown",
+                owners=[],
             ),
         ),
     ):

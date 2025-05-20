@@ -4,31 +4,32 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from homeassistant.components.device_tracker import SourceType, TrackerEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.device_tracker import (
+    TrackerEntity,
+    TrackerEntityDescription,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_ALTITUDE, DOMAIN
-from .coordinator import StarlinkData
+from .const import ATTR_ALTITUDE
+from .coordinator import StarlinkConfigEntry, StarlinkData
 from .entity import StarlinkEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    config_entry: StarlinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all binary sensors for this entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-
     async_add_entities(
-        StarlinkDeviceTrackerEntity(coordinator, description)
+        StarlinkDeviceTrackerEntity(config_entry.runtime_data, description)
         for description in DEVICE_TRACKERS
     )
 
 
 @dataclass(frozen=True, kw_only=True)
-class StarlinkDeviceTrackerEntityDescription(EntityDescription):
+class StarlinkDeviceTrackerEntityDescription(TrackerEntityDescription):
     """Describes a Starlink button entity."""
 
     latitude_fn: Callable[[StarlinkData], float]
@@ -52,11 +53,6 @@ class StarlinkDeviceTrackerEntity(StarlinkEntity, TrackerEntity):
     """A TrackerEntity for Starlink devices. Handles creating unique IDs."""
 
     entity_description: StarlinkDeviceTrackerEntityDescription
-
-    @property
-    def source_type(self) -> SourceType | str:
-        """Return the source type, eg gps or router, of the device."""
-        return SourceType.GPS
 
     @property
     def latitude(self) -> float | None:

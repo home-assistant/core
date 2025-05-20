@@ -2,18 +2,18 @@
 
 from typing import Any
 
-from homeassistant.components.switch import DOMAIN, SwitchEntity
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import LutronCasetaDeviceUpdatableEntity
+from .entity import LutronCasetaUpdatableEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Lutron Caseta switch platform.
 
@@ -22,13 +22,13 @@ async def async_setup_entry(
     """
     data = config_entry.runtime_data
     bridge = data.bridge
-    switch_devices = bridge.get_devices_by_domain(DOMAIN)
+    switch_devices = bridge.get_devices_by_domain(SWITCH_DOMAIN)
     async_add_entities(
         LutronCasetaLight(switch_device, data) for switch_device in switch_devices
     )
 
 
-class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, SwitchEntity):
+class LutronCasetaLight(LutronCasetaUpdatableEntity, SwitchEntity):
     """Representation of a Lutron Caseta switch."""
 
     def __init__(self, device, data):
@@ -44,7 +44,7 @@ class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, SwitchEntity):
         parent_keypad = keypads[device["parent_device"]]
         parent_device_info = parent_keypad["device_info"]
         # Append the child device name to the end of the parent keypad name to create the entity name
-        self._attr_name = f'{parent_device_info["name"]} {device["device_name"]}'
+        self._attr_name = f"{parent_device_info['name']} {device['device_name']}"
         # Set the device_info to the same as the Parent Keypad
         # The entities will be nested inside the keypad device
         self._attr_device_info = parent_device_info

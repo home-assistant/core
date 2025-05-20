@@ -26,7 +26,7 @@ from homeassistant.components.unifi.const import (
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
     ConfigEntryFactoryType,
@@ -589,14 +589,14 @@ async def test_restoring_client(
     entity_registry.async_get_or_create(  # Make sure unique ID converts to site_id-mac
         TRACKER_DOMAIN,
         UNIFI_DOMAIN,
-        f'{clients_all_payload[0]["mac"]}-site_id',
+        f"{clients_all_payload[0]['mac']}-site_id",
         suggested_object_id=clients_all_payload[0]["hostname"],
         config_entry=config_entry,
     )
     entity_registry.async_get_or_create(  # Unique ID already follow format site_id-mac
         TRACKER_DOMAIN,
         UNIFI_DOMAIN,
-        f'site_id-{client_payload[0]["mac"]}',
+        f"site_id-{client_payload[0]['mac']}",
         suggested_object_id=client_payload[0]["hostname"],
         config_entry=config_entry,
     )

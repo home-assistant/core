@@ -9,17 +9,17 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import MANUFACTURER, MODEL
-from .coordinator import IronOSCoordinator
+from .coordinator import IronOSLiveDataCoordinator
 
 
-class IronOSBaseEntity(CoordinatorEntity[IronOSCoordinator]):
+class IronOSBaseEntity(CoordinatorEntity[IronOSLiveDataCoordinator]):
     """Base IronOS entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: IronOSCoordinator,
+        coordinator: IronOSLiveDataCoordinator,
         entity_description: EntityDescription,
     ) -> None:
         """Initialize the sensor."""
@@ -31,7 +31,8 @@ class IronOSBaseEntity(CoordinatorEntity[IronOSCoordinator]):
         )
         if TYPE_CHECKING:
             assert coordinator.config_entry.unique_id
-        self.device_info = DeviceInfo(
+
+        self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, coordinator.config_entry.unique_id)},
             manufacturer=MANUFACTURER,
             model=MODEL,

@@ -78,21 +78,12 @@ async def update_node_fixture(matter_client: MagicMock) -> AsyncMock:
     return matter_client.update_node
 
 
-@pytest.fixture(name="updateable_node")
-async def updateable_node_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
-) -> MatterNode:
-    """Fixture for a flow sensor node."""
-    return await setup_integration_with_node_fixture(
-        hass, "dimmable-light", matter_client
-    )
-
-
+@pytest.mark.parametrize("node_fixture", ["dimmable_light"])
 async def test_update_entity(
     hass: HomeAssistant,
     matter_client: MagicMock,
     check_node_update: AsyncMock,
-    updateable_node: MatterNode,
+    matter_node: MatterNode,
 ) -> None:
     """Test update entity exists and update check got made."""
     state = hass.states.get("update.mock_dimmable_light")
@@ -102,11 +93,12 @@ async def test_update_entity(
     assert matter_client.check_node_update.call_count == 1
 
 
+@pytest.mark.parametrize("node_fixture", ["dimmable_light"])
 async def test_update_check_service(
     hass: HomeAssistant,
     matter_client: MagicMock,
     check_node_update: AsyncMock,
-    updateable_node: MatterNode,
+    matter_node: MatterNode,
 ) -> None:
     """Test check device update through service call."""
     state = hass.states.get("update.mock_dimmable_light")
@@ -149,11 +141,12 @@ async def test_update_check_service(
     )
 
 
+@pytest.mark.parametrize("node_fixture", ["dimmable_light"])
 async def test_update_install(
     hass: HomeAssistant,
     matter_client: MagicMock,
     check_node_update: AsyncMock,
-    updateable_node: MatterNode,
+    matter_node: MatterNode,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test device update with Matter attribute changes influence progress."""
@@ -199,7 +192,7 @@ async def test_update_install(
     )
 
     set_node_attribute_typed(
-        updateable_node,
+        matter_node,
         0,
         clusters.OtaSoftwareUpdateRequestor.Attributes.UpdateState,
         clusters.OtaSoftwareUpdateRequestor.Enums.UpdateStateEnum.kDownloading,
@@ -209,10 +202,11 @@ async def test_update_install(
     state = hass.states.get("update.mock_dimmable_light")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes.get("in_progress")
+    assert state.attributes["in_progress"] is True
+    assert state.attributes["update_percentage"] is None
 
     set_node_attribute_typed(
-        updateable_node,
+        matter_node,
         0,
         clusters.OtaSoftwareUpdateRequestor.Attributes.UpdateStateProgress,
         50,
@@ -222,22 +216,23 @@ async def test_update_install(
     state = hass.states.get("update.mock_dimmable_light")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes.get("in_progress") == 50
+    assert state.attributes["in_progress"] is True
+    assert state.attributes["update_percentage"] == 50
 
     set_node_attribute_typed(
-        updateable_node,
+        matter_node,
         0,
         clusters.OtaSoftwareUpdateRequestor.Attributes.UpdateState,
         clusters.OtaSoftwareUpdateRequestor.Enums.UpdateStateEnum.kIdle,
     )
     set_node_attribute_typed(
-        updateable_node,
+        matter_node,
         0,
         clusters.BasicInformation.Attributes.SoftwareVersion,
         2,
     )
     set_node_attribute_typed(
-        updateable_node,
+        matter_node,
         0,
         clusters.BasicInformation.Attributes.SoftwareVersionString,
         "v2.0",
@@ -249,12 +244,13 @@ async def test_update_install(
     assert state.attributes.get("installed_version") == "v2.0"
 
 
+@pytest.mark.parametrize("node_fixture", ["dimmable_light"])
 async def test_update_install_failure(
     hass: HomeAssistant,
     matter_client: MagicMock,
     check_node_update: AsyncMock,
     update_node: AsyncMock,
-    updateable_node: MatterNode,
+    matter_node: MatterNode,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test update entity service call errors."""
@@ -317,12 +313,13 @@ async def test_update_install_failure(
         )
 
 
+@pytest.mark.parametrize("node_fixture", ["dimmable_light"])
 async def test_update_state_save_and_restore(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     matter_client: MagicMock,
     check_node_update: AsyncMock,
-    updateable_node: MatterNode,
+    matter_node: MatterNode,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test latest update information is retained across reload/restart."""
@@ -392,7 +389,7 @@ async def test_update_state_restore(
             ),
         ),
     )
-    await setup_integration_with_node_fixture(hass, "dimmable-light", matter_client)
+    await setup_integration_with_node_fixture(hass, "dimmable_light", matter_client)
 
     assert check_node_update.call_count == 0
 

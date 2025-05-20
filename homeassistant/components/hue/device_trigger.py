@@ -4,9 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.device_automation.exceptions import (
-    InvalidDeviceAutomationConfig,
-)
+from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import CALLBACK_TYPE
 from homeassistant.helpers import device_registry as dr

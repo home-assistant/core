@@ -8,12 +8,11 @@ import pypck
 
 from homeassistant.components.cover import DOMAIN as DOMAIN_COVER, CoverEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_DOMAIN, CONF_ENTITIES
+from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from . import LcnEntity
 from .const import (
     ADD_ENTITIES_CALLBACKS,
     CONF_DOMAIN_DATA,
@@ -21,32 +20,24 @@ from .const import (
     CONF_REVERSE_TIME,
     DOMAIN,
 )
-from .helpers import DeviceConnectionType, InputType, get_device_connection
+from .entity import LcnEntity
+from .helpers import InputType
 
 PARALLEL_UPDATES = 0
 
 
 def add_lcn_entities(
-    hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     entity_configs: Iterable[ConfigType],
 ) -> None:
     """Add entities for this domain."""
     entities: list[LcnOutputsCover | LcnRelayCover] = []
     for entity_config in entity_configs:
-        device_connection = get_device_connection(
-            hass, entity_config[CONF_ADDRESS], config_entry
-        )
-
         if entity_config[CONF_DOMAIN_DATA][CONF_MOTOR] in "OUTPUTS":
-            entities.append(
-                LcnOutputsCover(entity_config, config_entry.entry_id, device_connection)
-            )
+            entities.append(LcnOutputsCover(entity_config, config_entry))
         else:  # in RELAYS
-            entities.append(
-                LcnRelayCover(entity_config, config_entry.entry_id, device_connection)
-            )
+            entities.append(LcnRelayCover(entity_config, config_entry))
 
     async_add_entities(entities)
 
@@ -54,12 +45,11 @@ def add_lcn_entities(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LCN cover entities from a config entry."""
     add_entities = partial(
         add_lcn_entities,
-        hass,
         config_entry,
         async_add_entities,
     )
@@ -85,11 +75,9 @@ class LcnOutputsCover(LcnEntity, CoverEntity):
     _attr_is_opening = False
     _attr_assumed_state = True
 
-    def __init__(
-        self, config: ConfigType, entry_id: str, device_connection: DeviceConnectionType
-    ) -> None:
+    def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
         """Initialize the LCN cover."""
-        super().__init__(config, entry_id, device_connection)
+        super().__init__(config, config_entry)
 
         self.output_ids = [
             pypck.lcn_defs.OutputPort["OUTPUTUP"].value,
@@ -189,11 +177,9 @@ class LcnRelayCover(LcnEntity, CoverEntity):
     _attr_is_opening = False
     _attr_assumed_state = True
 
-    def __init__(
-        self, config: ConfigType, entry_id: str, device_connection: DeviceConnectionType
-    ) -> None:
+    def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
         """Initialize the LCN cover."""
-        super().__init__(config, entry_id, device_connection)
+        super().__init__(config, config_entry)
 
         self.motor = pypck.lcn_defs.MotorPort[config[CONF_DOMAIN_DATA][CONF_MOTOR]]
         self.motor_port_onoff = self.motor.value * 2

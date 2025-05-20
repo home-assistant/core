@@ -3,7 +3,7 @@
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from .const import ATTR_POWER, ATTR_POWER_P3, DOMAIN
 from .coordinator import ElecPricesDataUpdateCoordinator

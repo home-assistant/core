@@ -1,9 +1,11 @@
 """Tessie Data Coordinator."""
 
+from __future__ import annotations
+
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientResponseError
 from tesla_fleet_api import EnergySpecific
@@ -14,6 +16,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+if TYPE_CHECKING:
+    from . import TessieConfigEntry
 
 from .const import TessieStatus
 
@@ -40,9 +45,12 @@ def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
 class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the Tessie API."""
 
+    config_entry: TessieConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: TessieConfigEntry,
         api_key: str,
         vin: str,
         data: dict[str, Any],
@@ -51,6 +59,7 @@ class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="Tessie",
             update_interval=timedelta(seconds=TESSIE_SYNC_INTERVAL),
         )
@@ -90,11 +99,16 @@ class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 class TessieEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching energy site live status from the Tessie API."""
 
-    def __init__(self, hass: HomeAssistant, api: EnergySpecific) -> None:
+    config_entry: TessieConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: TessieConfigEntry, api: EnergySpecific
+    ) -> None:
         """Initialize Tessie Energy Site Live coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="Tessie Energy Site Live",
             update_interval=TESSIE_FLEET_API_SYNC_INTERVAL,
         )
@@ -121,11 +135,16 @@ class TessieEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 class TessieEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching energy site info from the Tessie API."""
 
-    def __init__(self, hass: HomeAssistant, api: EnergySpecific) -> None:
+    config_entry: TessieConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: TessieConfigEntry, api: EnergySpecific
+    ) -> None:
         """Initialize Tessie Energy Info coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="Tessie Energy Site Info",
             update_interval=TESSIE_FLEET_API_SYNC_INTERVAL,
         )

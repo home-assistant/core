@@ -68,6 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     outage_coordinator = DataUpdateCoordinator(
         hass,
         LOGGER,
+        config_entry=entry,
         name="PECO Outage Count",
         update_method=async_update_outage_data,
         update_interval=timedelta(minutes=OUTAGE_SCAN_INTERVAL),
@@ -97,6 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         meter_coordinator = DataUpdateCoordinator(
             hass,
             LOGGER,
+            config_entry=entry,
             name="PECO Smart Meter",
             update_method=async_update_meter_data,
             update_interval=timedelta(minutes=SMART_METER_SCAN_INTERVAL),

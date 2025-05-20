@@ -17,13 +17,12 @@ from .const import (
     DOMAIN,
     MYSENSORS_DISCOVERED_NODES,
     MYSENSORS_GATEWAYS,
-    MYSENSORS_ON_UNLOAD,
     PLATFORMS,
     DevId,
     DiscoveryInfo,
     SensorType,
 )
-from .device import MySensorsChildEntity, get_mysensors_devices
+from .entity import MySensorsChildEntity, get_mysensors_devices
 from .gateway import finish_setup, gw_stop, setup_gateway
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,13 +60,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if not unload_ok:
         return False
-
-    key = MYSENSORS_ON_UNLOAD.format(entry.entry_id)
-    if key in hass.data[DOMAIN]:
-        for fnct in hass.data[DOMAIN][key]:
-            fnct()
-
-        hass.data[DOMAIN].pop(key)
 
     del hass.data[DOMAIN][MYSENSORS_GATEWAYS][entry.entry_id]
     hass.data[DOMAIN].pop(MYSENSORS_DISCOVERED_NODES.format(entry.entry_id), None)
@@ -148,7 +140,7 @@ def setup_mysensors_platform(
         devices[dev_id] = device_class_copy(*args_copy)
         new_devices.append(devices[dev_id])
     if new_devices:
-        _LOGGER.info("Adding new devices: %s", new_devices)
+        _LOGGER.debug("Adding new devices: %s", new_devices)
         if async_add_entities is not None:
             async_add_entities(new_devices)
     return new_devices

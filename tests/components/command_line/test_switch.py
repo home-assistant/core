@@ -30,7 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import mock_asyncio_subprocess_run
 
@@ -552,7 +552,7 @@ async def test_templating(hass: HomeAssistant) -> None:
                             "command_off": f"echo 0 > {path}",
                             "value_template": '{{ value=="1" }}',
                             "icon": (
-                                '{% if this.state=="on" %} mdi:on {% else %} mdi:off {% endif %}'
+                                '{% if this.attributes.icon=="mdi:icon2" %} mdi:icon1 {% else %} mdi:icon2 {% endif %}'
                             ),
                             "name": "Test",
                         }
@@ -564,7 +564,7 @@ async def test_templating(hass: HomeAssistant) -> None:
                             "command_off": f"echo 0 > {path}",
                             "value_template": '{{ value=="1" }}',
                             "icon": (
-                                '{% if states("switch.test2")=="on" %} mdi:on {% else %} mdi:off {% endif %}'
+                                '{% if states("switch.test")=="off" %} mdi:off {% else %} mdi:on {% endif %}'
                             ),
                             "name": "Test2",
                         },
@@ -595,7 +595,7 @@ async def test_templating(hass: HomeAssistant) -> None:
         entity_state = hass.states.get("switch.test")
         entity_state2 = hass.states.get("switch.test2")
         assert entity_state.state == STATE_ON
-        assert entity_state.attributes.get("icon") == "mdi:on"
+        assert entity_state.attributes.get("icon") == "mdi:icon2"
         assert entity_state2.state == STATE_ON
         assert entity_state2.attributes.get("icon") == "mdi:on"
 

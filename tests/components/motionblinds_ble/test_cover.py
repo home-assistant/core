@@ -18,10 +18,7 @@ from homeassistant.components.cover import (
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
     SERVICE_STOP_COVER_TILT,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
+    CoverState,
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -74,8 +71,8 @@ async def test_cover_service(
     [
         (None, "unknown"),
         (MotionRunningType.STILL, "unknown"),
-        (MotionRunningType.OPENING, STATE_OPENING),
-        (MotionRunningType.CLOSING, STATE_CLOSING),
+        (MotionRunningType.OPENING, CoverState.OPENING),
+        (MotionRunningType.CLOSING, CoverState.CLOSING),
     ],
 )
 async def test_cover_update_running(
@@ -101,9 +98,9 @@ async def test_cover_update_running(
     ("position", "tilt", "state"),
     [
         (None, None, "unknown"),
-        (0, 0, STATE_OPEN),
-        (50, 90, STATE_OPEN),
-        (100, 180, STATE_CLOSED),
+        (0, 0, CoverState.OPEN),
+        (50, 90, CoverState.OPEN),
+        (100, 180, CoverState.CLOSED),
     ],
 )
 async def test_cover_update_position(

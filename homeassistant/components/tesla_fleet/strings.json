@@ -8,7 +8,9 @@
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reauth_account_mismatch": "The reauthentication account does not match the original account"
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
@@ -64,6 +66,9 @@
       "state": {
         "name": "Status"
       },
+      "storm_mode_active": {
+        "name": "Storm watch active"
+      },
       "vehicle_state_dashcam_state": {
         "name": "Dashcam"
       },
@@ -107,12 +112,183 @@
         "name": "Tire pressure warning rear right"
       }
     },
+    "button": {
+      "boombox": {
+        "name": "Play fart"
+      },
+      "enable_keyless_driving": {
+        "name": "Keyless driving"
+      },
+      "flash_lights": {
+        "name": "Flash lights"
+      },
+      "homelink": {
+        "name": "Homelink"
+      },
+      "honk": {
+        "name": "Honk horn"
+      },
+      "wake": {
+        "name": "Wake"
+      }
+    },
+    "climate": {
+      "climate_state_cabin_overheat_protection": {
+        "name": "Cabin overheat protection"
+      },
+      "driver_temp": {
+        "name": "[%key:component::climate::title%]",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "off": "Normal",
+              "keep": "Keep mode",
+              "dog": "Dog mode",
+              "camp": "Camp mode"
+            }
+          }
+        }
+      }
+    },
+    "cover": {
+      "charge_state_charge_port_door_open": {
+        "name": "Charge port door"
+      },
+      "vehicle_state_ft": {
+        "name": "Frunk"
+      },
+      "vehicle_state_rt": {
+        "name": "Trunk"
+      },
+      "vehicle_state_sun_roof_state": {
+        "name": "Sunroof"
+      },
+      "windows": {
+        "name": "Windows"
+      }
+    },
     "device_tracker": {
       "location": {
         "name": "Location"
       },
       "route": {
         "name": "Route"
+      }
+    },
+    "lock": {
+      "charge_state_charge_port_latch": {
+        "name": "Charge cable lock"
+      },
+      "vehicle_state_locked": {
+        "name": "[%key:component::lock::title%]"
+      }
+    },
+    "media_player": {
+      "media": {
+        "name": "[%key:component::media_player::title%]"
+      }
+    },
+    "number": {
+      "backup_reserve_percent": {
+        "name": "Backup reserve"
+      },
+      "charge_state_charge_current_request": {
+        "name": "Charge current"
+      },
+      "charge_state_charge_limit_soc": {
+        "name": "Charge limit"
+      },
+      "off_grid_vehicle_charging_reserve_percent": {
+        "name": "Off grid reserve"
+      }
+    },
+    "select": {
+      "climate_state_seat_heater_left": {
+        "name": "Seat heater front left",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "medium": "Medium",
+          "off": "Off"
+        }
+      },
+      "climate_state_seat_heater_rear_center": {
+        "name": "Seat heater rear center",
+        "state": {
+          "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "climate_state_seat_heater_rear_left": {
+        "name": "Seat heater rear left",
+        "state": {
+          "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "climate_state_seat_heater_rear_right": {
+        "name": "Seat heater rear right",
+        "state": {
+          "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "climate_state_seat_heater_right": {
+        "name": "Seat heater front right",
+        "state": {
+          "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "climate_state_seat_heater_third_row_left": {
+        "name": "Seat heater third row left",
+        "state": {
+          "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "climate_state_seat_heater_third_row_right": {
+        "name": "Seat heater third row right",
+        "state": {
+          "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "climate_state_steering_wheel_heat_level": {
+        "name": "Steering wheel heater",
+        "state": {
+          "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
+          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "components_customer_preferred_export_rule": {
+        "name": "Allow export",
+        "state": {
+          "battery_ok": "Battery",
+          "never": "Never",
+          "pv_only": "Solar only"
+        }
+      },
+      "default_real_mode": {
+        "name": "Operation mode",
+        "state": {
+          "autonomous": "Autonomous",
+          "backup": "Backup",
+          "self_consumption": "Self consumption"
+        }
       }
     },
     "sensor": {
@@ -153,7 +329,7 @@
         "name": "Charging",
         "state": {
           "starting": "Starting",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "disconnected": "Disconnected",
           "stopped": "Stopped",
           "complete": "Complete",
@@ -238,6 +414,19 @@
       "vehicle_state_odometer": {
         "name": "Odometer"
       },
+      "island_status": {
+        "name": "Grid Status",
+        "state": {
+          "island_status_unknown": "Unknown",
+          "on_grid": "Connected",
+          "off_grid": "Disconnected",
+          "off_grid_unintentional": "Disconnected unintentionally",
+          "off_grid_intentional": "Disconnected intentionally"
+        }
+      },
+      "storm_mode_active": {
+        "name": "Storm Watch active"
+      },
       "vehicle_state_tpms_pressure_fl": {
         "name": "Tire pressure front left"
       },
@@ -267,12 +456,137 @@
       },
       "wall_connector_state": {
         "name": "State code"
+      },
+      "solar_energy_exported": {
+        "name": "Solar exported"
+      },
+      "generator_energy_exported": {
+        "name": "Generator exported"
+      },
+      "grid_energy_imported": {
+        "name": "Grid imported"
+      },
+      "grid_services_energy_imported": {
+        "name": "Grid services imported"
+      },
+      "grid_services_energy_exported": {
+        "name": "Grid services exported"
+      },
+      "grid_energy_exported_from_solar": {
+        "name": "Grid exported from solar"
+      },
+      "grid_energy_exported_from_generator": {
+        "name": "Grid exported from generator"
+      },
+      "grid_energy_exported_from_battery": {
+        "name": "Grid exported from battery"
+      },
+      "battery_energy_exported": {
+        "name": "Battery exported"
+      },
+      "battery_energy_imported_from_grid": {
+        "name": "Battery imported from grid"
+      },
+      "battery_energy_imported_from_solar": {
+        "name": "Battery imported from solar"
+      },
+      "battery_energy_imported_from_generator": {
+        "name": "Battery imported from generator"
+      },
+      "consumer_energy_imported_from_grid": {
+        "name": "Consumer imported from grid"
+      },
+      "consumer_energy_imported_from_solar": {
+        "name": "Consumer imported from solar"
+      },
+      "consumer_energy_imported_from_battery": {
+        "name": "Consumer imported from battery"
+      },
+      "consumer_energy_imported_from_generator": {
+        "name": "Consumer imported from generator"
+      },
+      "total_home_usage": {
+        "name": "Home usage"
+      },
+      "total_battery_charge": {
+        "name": "Battery charged"
+      },
+      "total_battery_discharge": {
+        "name": "Battery discharged"
+      },
+      "total_solar_generation": {
+        "name": "Solar generated"
+      },
+      "total_grid_energy_exported": {
+        "name": "Grid exported"
+      }
+    },
+    "switch": {
+      "charge_state_charging_state": {
+        "name": "Charge"
+      },
+      "climate_state_auto_seat_climate_left": {
+        "name": "Auto seat climate left"
+      },
+      "climate_state_auto_seat_climate_right": {
+        "name": "Auto seat climate right"
+      },
+      "climate_state_auto_steering_wheel_heat": {
+        "name": "Auto steering wheel heater"
+      },
+      "climate_state_defrost_mode": {
+        "name": "Defrost"
+      },
+      "components_disallow_charge_from_grid_with_solar_installed": {
+        "name": "Allow charging from grid"
+      },
+      "user_settings_storm_mode_enabled": {
+        "name": "Storm watch"
+      },
+      "vehicle_state_sentry_mode": {
+        "name": "Sentry mode"
+      },
+      "vehicle_state_valet_mode": {
+        "name": "Valet mode"
       }
     }
   },
   "exceptions": {
+    "no_cable": {
+      "message": "Charge cable will lock automatically when connected"
+    },
     "update_failed": {
-      "message": "{endpoint} data request failed. {message}"
+      "message": "{endpoint} data request failed: {message}"
+    },
+    "command_failed": {
+      "message": "Command failed: {message}"
+    },
+    "command_error": {
+      "message": "Command returned an error: {error}"
+    },
+    "command_reason": {
+      "message": "Command was unsuccessful: {reason}"
+    },
+    "command_no_reason": {
+      "message": "Command was unsuccessful but did not return a reason why."
+    },
+    "invalid_cop_temp": {
+      "message": "Cabin overheat protection does not support that temperature."
+    },
+    "invalid_hvac_mode": {
+      "message": "Climate mode {hvac_mode} is not supported."
+    },
+    "missing_temperature": {
+      "message": "Temperature is required for this action."
+    },
+    "missing_scope_vehicle_cmds": {
+      "message": "Missing vehicle commands scope."
+    },
+    "missing_scope_vehicle_charging_cmds": {
+      "message": "Missing vehicle charging commands scope."
+    },
+    "missing_scope_energy_cmds": {
+      "message": "Missing energy commands scope."
     }
   }
 }

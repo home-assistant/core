@@ -10,20 +10,20 @@ from reolink_aio.enums import VodRequestType
 
 from homeassistant.components.camera import DOMAIN as CAM_DOMAIN, DynamicStreamSettings
 from homeassistant.components.media_player import MediaClass, MediaType
-from homeassistant.components.media_source.error import Unresolvable
-from homeassistant.components.media_source.models import (
+from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
     PlayMedia,
+    Unresolvable,
 )
 from homeassistant.components.stream import create_stream
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import ReolinkData
 from .const import DOMAIN
+from .util import get_host
+from .views import async_generate_playback_proxy_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,18 +58,21 @@ class ReolinkVODMediaSource(MediaSource):
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
-        identifier = item.identifier.split("|", 5)
+        identifier = ["UNKNOWN"]
+        if item.identifier is not None:
+            identifier = item.identifier.split("|", 5)
         if identifier[0] != "FILE":
             raise Unresolvable(f"Unknown media item '{item.identifier}'.")
 
         _, config_entry_id, channel_str, stream_res, filename = identifier
         channel = int(channel_str)
 
-        data: dict[str, ReolinkData] = self.hass.data[DOMAIN]
-        host = data[config_entry_id].host
+        host = get_host(self.hass, config_entry_id)
 
         def get_vod_type() -> VodRequestType:
-            if filename.endswith(".mp4"):
+            if filename.endswith((".mp4", ".vref")):
+                if host.api.is_nvr:
+                    return VodRequestType.DOWNLOAD
                 return VodRequestType.PLAYBACK
             if host.api.is_nvr:
                 return VodRequestType.FLV
@@ -77,21 +80,21 @@ class ReolinkVODMediaSource(MediaSource):
 
         vod_type = get_vod_type()
 
+        if vod_type in [VodRequestType.DOWNLOAD, VodRequestType.PLAYBACK]:
+            proxy_url = async_generate_playback_proxy_url(
+                config_entry_id, channel, filename, stream_res, vod_type.value
+            )
+            return PlayMedia(proxy_url, "video/mp4")
+
         mime_type, url = await host.api.get_vod_source(
             channel, filename, stream_res, vod_type
         )
         if _LOGGER.isEnabledFor(logging.DEBUG):
-            url_log = url
-            if "&user=" in url_log:
-                url_log = f"{url_log.split('&user=')[0]}&user=xxxxx&password=xxxxx"
-            elif "&token=" in url_log:
-                url_log = f"{url_log.split('&token=')[0]}&token=xxxxx"
             _LOGGER.debug(
-                "Opening VOD stream from %s: %s", host.api.camera_name(channel), url_log
+                "Opening VOD stream from %s: %s",
+                host.api.camera_name(channel),
+                host.api.hide_password(url),
             )
-
-        if mime_type == "video/mp4":
-            return PlayMedia(url, mime_type)
 
         stream = create_stream(self.hass, url, {}, DynamicStreamSettings())
         stream.add_provider("hls", timeout=3600)
@@ -104,7 +107,7 @@ class ReolinkVODMediaSource(MediaSource):
         item: MediaSourceItem,
     ) -> BrowseMediaSource:
         """Return media."""
-        if item.identifier is None:
+        if not item.identifier:
             return await self._async_generate_root()
 
         identifier = item.identifier.split("|", 7)
@@ -147,12 +150,9 @@ class ReolinkVODMediaSource(MediaSource):
 
         entity_reg = er.async_get(self.hass)
         device_reg = dr.async_get(self.hass)
-        for config_entry in self.hass.config_entries.async_entries(DOMAIN):
-            if config_entry.state != ConfigEntryState.LOADED:
-                continue
+        for config_entry in self.hass.config_entries.async_loaded_entries(DOMAIN):
             channels: list[str] = []
-            data: dict[str, ReolinkData] = self.hass.data[DOMAIN]
-            host = data[config_entry.entry_id].host
+            host = config_entry.runtime_data.host
             entities = er.async_entries_for_config_entry(
                 entity_reg, config_entry.entry_id
             )
@@ -213,14 +213,13 @@ class ReolinkVODMediaSource(MediaSource):
         self, config_entry_id: str, channel: int
     ) -> BrowseMediaSource:
         """Allow the user to select the high or low playback resolution, (low loads faster)."""
-        data: dict[str, ReolinkData] = self.hass.data[DOMAIN]
-        host = data[config_entry_id].host
+        host = get_host(self.hass, config_entry_id)
 
         main_enc = await host.api.get_encoding(channel, "main")
         if main_enc == "h265":
             _LOGGER.debug(
                 "Reolink camera %s uses h265 encoding for main stream,"
-                "playback only possible using sub stream",
+                "playback at high resolution may not work in all browsers/apps",
                 host.api.camera_name(channel),
             )
 
@@ -234,34 +233,29 @@ class ReolinkVODMediaSource(MediaSource):
                 can_play=False,
                 can_expand=True,
             ),
+            BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=f"RES|{config_entry_id}|{channel}|main",
+                media_class=MediaClass.CHANNEL,
+                media_content_type=MediaType.PLAYLIST,
+                title="High resolution",
+                can_play=False,
+                can_expand=True,
+            ),
         ]
-        if main_enc != "h265":
-            children.append(
-                BrowseMediaSource(
-                    domain=DOMAIN,
-                    identifier=f"RES|{config_entry_id}|{channel}|main",
-                    media_class=MediaClass.CHANNEL,
-                    media_content_type=MediaType.PLAYLIST,
-                    title="High resolution",
-                    can_play=False,
-                    can_expand=True,
-                ),
-            )
 
         if host.api.supported(channel, "autotrack_stream"):
-            children.append(
-                BrowseMediaSource(
-                    domain=DOMAIN,
-                    identifier=f"RES|{config_entry_id}|{channel}|autotrack_sub",
-                    media_class=MediaClass.CHANNEL,
-                    media_content_type=MediaType.PLAYLIST,
-                    title="Autotrack low resolution",
-                    can_play=False,
-                    can_expand=True,
-                ),
-            )
-            if main_enc != "h265":
-                children.append(
+            children.extend(
+                [
+                    BrowseMediaSource(
+                        domain=DOMAIN,
+                        identifier=f"RES|{config_entry_id}|{channel}|autotrack_sub",
+                        media_class=MediaClass.CHANNEL,
+                        media_content_type=MediaType.PLAYLIST,
+                        title="Autotrack low resolution",
+                        can_play=False,
+                        can_expand=True,
+                    ),
                     BrowseMediaSource(
                         domain=DOMAIN,
                         identifier=f"RES|{config_entry_id}|{channel}|autotrack_main",
@@ -271,11 +265,7 @@ class ReolinkVODMediaSource(MediaSource):
                         can_play=False,
                         can_expand=True,
                     ),
-                )
-
-        if len(children) == 1:
-            return await self._async_generate_camera_days(
-                config_entry_id, channel, "sub"
+                ]
             )
 
         title = host.api.camera_name(channel)
@@ -297,8 +287,7 @@ class ReolinkVODMediaSource(MediaSource):
         self, config_entry_id: str, channel: int, stream: str
     ) -> BrowseMediaSource:
         """Return all days on which recordings are available for a reolink camera."""
-        data: dict[str, ReolinkData] = self.hass.data[DOMAIN]
-        host = data[config_entry_id].host
+        host = get_host(self.hass, config_entry_id)
 
         # We want today of the camera, not necessarily today of the server
         now = host.api.time() or await host.api.async_get_time()
@@ -354,8 +343,7 @@ class ReolinkVODMediaSource(MediaSource):
         day: int,
     ) -> BrowseMediaSource:
         """Return all recording files on a specific day of a Reolink camera."""
-        data: dict[str, ReolinkData] = self.hass.data[DOMAIN]
-        host = data[config_entry_id].host
+        host = get_host(self.hass, config_entry_id)
 
         start = dt.datetime(year, month, day, hour=0, minute=0, second=0)
         end = dt.datetime(year, month, day, hour=23, minute=59, second=59)

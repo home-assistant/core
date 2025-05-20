@@ -22,16 +22,77 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "state_e_activated": {
+        "name": "EV error"
+      },
+      "overtemp": {
+        "name": "Thermal throttling"
+      },
+      "critical_temp": {
+        "name": "Overheating"
+      },
+      "overcurrent": {
+        "name": "Overcurrent"
+      },
+      "meter_fault": {
+        "name": "Metering error"
+      },
+      "undervoltage": {
+        "name": "Undervoltage"
+      },
+      "overvoltage": {
+        "name": "Overvoltage"
+      },
+      "rcd_error": {
+        "name": "RCD error"
+      },
+      "cp_diode_failure": {
+        "name": "EV diode short"
+      },
+      "contactor_failure": {
+        "name": "Relay contacts welded"
+      }
+    },
+    "button": {
+      "charge_start": {
+        "name": "Charge start"
+      },
+      "charge_stop": {
+        "name": "Charge stop"
+      }
+    },
+    "number": {
+      "led_max_brightness": {
+        "name": "LED brightness"
+      },
+      "dynamic_limit": {
+        "name": "Dynamic limit"
+      }
+    },
+    "select": {
+      "load_balancing_mode": {
+        "name": "Load balancing mode",
+        "state": {
+          "disabled": "[%key:common::state::disabled%]",
+          "power": "Power",
+          "hybrid": "Hybrid",
+          "green": "Green"
+        }
+      }
+    },
     "sensor": {
       "state": {
         "name": "State",
         "state": {
           "available": "Available",
+          "charging": "[%key:common::state::charging%]",
           "connected": "Connected",
+          "error": "Error",
+          "locked": "Locked",
           "need_auth": "Waiting for authentication",
           "paused": "Paused",
-          "charging": "Charging",
-          "error": "Error",
+          "paused_by_scheduler": "Paused by scheduler",
           "updating_firmware": "Updating firmware"
         }
       },
@@ -54,7 +115,10 @@
           "schedule": "Schedule",
           "em_offline": "EM offline",
           "em": "EM",
-          "ocpp": "OCPP"
+          "ocpp": "OCPP",
+          "overtemperature": "Overtemperature",
+          "switching_phases": "Switching phases",
+          "1p_charging_disabled": "1p charging disabled"
         }
       },
       "breaker_current": {
@@ -95,6 +159,17 @@
       },
       "pf_l3": {
         "name": "Power factor L3"
+      }
+    },
+    "switch": {
+      "authentication": {
+        "name": "Authentication"
+      },
+      "force_single_phase": {
+        "name": "Force single phase"
+      },
+      "lock": {
+        "name": "Lock"
       }
     }
   }

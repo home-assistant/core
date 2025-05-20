@@ -16,12 +16,18 @@ from pyhap.const import (
 
 from homeassistant.components import button, input_button
 from homeassistant.components.input_select import ATTR_OPTIONS, SERVICE_SELECT_OPTION
-from homeassistant.components.switch import DOMAIN
+from homeassistant.components.lawn_mower import (
+    DOMAIN as LAWN_MOWER_DOMAIN,
+    SERVICE_DOCK,
+    SERVICE_START_MOWING,
+    LawnMowerActivity,
+)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_RETURN_TO_BASE,
     SERVICE_START,
-    STATE_CLEANING,
+    VacuumActivity,
     VacuumEntityFeature,
 )
 from homeassistant.const import (
@@ -109,7 +115,7 @@ class Outlet(HomeAccessory):
         _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
-        self.async_call_service(DOMAIN, service, params)
+        self.async_call_service(SWITCH_DOMAIN, service, params)
 
     @callback
     def async_update_state(self, new_state: State) -> None:
@@ -213,7 +219,30 @@ class Vacuum(Switch):
     @callback
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
-        current_state = new_state.state in (STATE_CLEANING, STATE_ON)
+        current_state = new_state.state in (VacuumActivity.CLEANING, STATE_ON)
+        _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
+        self.char_on.set_value(current_state)
+
+
+@TYPES.register("LawnMower")
+class LawnMower(Switch):
+    """Generate a Switch accessory."""
+
+    def set_state(self, value: bool) -> None:
+        """Move switch state to value if call came from HomeKit."""
+        _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
+        state = self.hass.states.get(self.entity_id)
+        assert state
+
+        service = SERVICE_START_MOWING if value else SERVICE_DOCK
+        self.async_call_service(
+            LAWN_MOWER_DOMAIN, service, {ATTR_ENTITY_ID: self.entity_id}
+        )
+
+    @callback
+    def async_update_state(self, new_state: State) -> None:
+        """Update switch state after state changed."""
+        current_state = new_state.state in (LawnMowerActivity.MOWING, STATE_ON)
         _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
         self.char_on.set_value(current_state)
 

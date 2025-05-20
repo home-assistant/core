@@ -11,8 +11,8 @@ from homeassistant.components import locative
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.locative import DOMAIN, TRACKER_UPDATE
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
@@ -134,9 +134,7 @@ async def test_enter_and_exit(
     req = await locative_client.post(url, data=data)
     await hass.async_block_till_done()
     assert req.status == HTTPStatus.OK
-    state_name = hass.states.get(
-        "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["device"])
-    ).state
+    state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}").state
     assert state_name == "home"
 
     data["id"] = "HOME"
@@ -146,9 +144,7 @@ async def test_enter_and_exit(
     req = await locative_client.post(url, data=data)
     await hass.async_block_till_done()
     assert req.status == HTTPStatus.OK
-    state_name = hass.states.get(
-        "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["device"])
-    ).state
+    state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}").state
     assert state_name == "not_home"
 
     data["id"] = "hOmE"
@@ -158,9 +154,7 @@ async def test_enter_and_exit(
     req = await locative_client.post(url, data=data)
     await hass.async_block_till_done()
     assert req.status == HTTPStatus.OK
-    state_name = hass.states.get(
-        "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["device"])
-    ).state
+    state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}").state
     assert state_name == "home"
 
     data["trigger"] = "exit"
@@ -169,9 +163,7 @@ async def test_enter_and_exit(
     req = await locative_client.post(url, data=data)
     await hass.async_block_till_done()
     assert req.status == HTTPStatus.OK
-    state_name = hass.states.get(
-        "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["device"])
-    ).state
+    state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}").state
     assert state_name == "not_home"
 
     data["id"] = "work"
@@ -181,9 +173,7 @@ async def test_enter_and_exit(
     req = await locative_client.post(url, data=data)
     await hass.async_block_till_done()
     assert req.status == HTTPStatus.OK
-    state_name = hass.states.get(
-        "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["device"])
-    ).state
+    state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}").state
     assert state_name == "work"
 
 
@@ -206,7 +196,7 @@ async def test_exit_after_enter(
     await hass.async_block_till_done()
     assert req.status == HTTPStatus.OK
 
-    state = hass.states.get("{}.{}".format(DEVICE_TRACKER_DOMAIN, data["device"]))
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}")
     assert state.state == "home"
 
     data["id"] = "Work"
@@ -216,7 +206,7 @@ async def test_exit_after_enter(
     await hass.async_block_till_done()
     assert req.status == HTTPStatus.OK
 
-    state = hass.states.get("{}.{}".format(DEVICE_TRACKER_DOMAIN, data["device"]))
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}")
     assert state.state == "work"
 
     data["id"] = "Home"
@@ -227,7 +217,7 @@ async def test_exit_after_enter(
     await hass.async_block_till_done()
     assert req.status == HTTPStatus.OK
 
-    state = hass.states.get("{}.{}".format(DEVICE_TRACKER_DOMAIN, data["device"]))
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}")
     assert state.state == "work"
 
 
@@ -250,7 +240,7 @@ async def test_exit_first(
     await hass.async_block_till_done()
     assert req.status == HTTPStatus.OK
 
-    state = hass.states.get("{}.{}".format(DEVICE_TRACKER_DOMAIN, data["device"]))
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}")
     assert state.state == "not_home"
 
 
@@ -273,9 +263,7 @@ async def test_two_devices(
     await hass.async_block_till_done()
     assert req.status == HTTPStatus.OK
 
-    state = hass.states.get(
-        "{}.{}".format(DEVICE_TRACKER_DOMAIN, data_device_1["device"])
-    )
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data_device_1['device']}")
     assert state.state == "not_home"
 
     # Enter Home
@@ -286,13 +274,9 @@ async def test_two_devices(
     await hass.async_block_till_done()
     assert req.status == HTTPStatus.OK
 
-    state = hass.states.get(
-        "{}.{}".format(DEVICE_TRACKER_DOMAIN, data_device_2["device"])
-    )
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data_device_2['device']}")
     assert state.state == "home"
-    state = hass.states.get(
-        "{}.{}".format(DEVICE_TRACKER_DOMAIN, data_device_1["device"])
-    )
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data_device_1['device']}")
     assert state.state == "not_home"
 
 
@@ -318,7 +302,7 @@ async def test_load_unload_entry(
     await hass.async_block_till_done()
     assert req.status == HTTPStatus.OK
 
-    state = hass.states.get("{}.{}".format(DEVICE_TRACKER_DOMAIN, data["device"]))
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}")
     assert state.state == "not_home"
     assert len(hass.data[DATA_DISPATCHER][TRACKER_UPDATE]) == 1
 

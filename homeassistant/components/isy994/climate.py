@@ -37,7 +37,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
 from .const import (
@@ -61,7 +61,9 @@ from .models import IsyData
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ISY thermostat platform."""
 
@@ -88,7 +90,6 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
     )
     _attr_target_temperature_step = 1.0
     _attr_fan_modes = [FAN_AUTO, FAN_ON]
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, node: Node, device_info: DeviceInfo | None = None) -> None:
         """Initialize the ISY Thermostat entity."""

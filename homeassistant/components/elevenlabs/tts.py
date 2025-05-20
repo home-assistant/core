@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import logging
+from types import MappingProxyType
 from typing import Any
 
-from elevenlabs.client import AsyncElevenLabs
+from elevenlabs import AsyncElevenLabs
 from elevenlabs.core import ApiError
-from elevenlabs.types import Model, Voice as ElevenLabsVoice
+from elevenlabs.types import Model, Voice as ElevenLabsVoice, VoiceSettings
 
 from homeassistant.components.tts import (
     ATTR_VOICE,
@@ -15,26 +16,55 @@ from homeassistant.components.tts import (
     TtsAudioType,
     Voice,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import EleventLabsConfigEntry
-from .const import CONF_VOICE, DOMAIN
+from . import ElevenLabsConfigEntry
+from .const import (
+    ATTR_MODEL,
+    CONF_OPTIMIZE_LATENCY,
+    CONF_SIMILARITY,
+    CONF_STABILITY,
+    CONF_STYLE,
+    CONF_USE_SPEAKER_BOOST,
+    CONF_VOICE,
+    DEFAULT_OPTIMIZE_LATENCY,
+    DEFAULT_SIMILARITY,
+    DEFAULT_STABILITY,
+    DEFAULT_STYLE,
+    DEFAULT_USE_SPEAKER_BOOST,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
+
+
+def to_voice_settings(options: MappingProxyType[str, Any]) -> VoiceSettings:
+    """Return voice settings."""
+    return VoiceSettings(
+        stability=options.get(CONF_STABILITY, DEFAULT_STABILITY),
+        similarity_boost=options.get(CONF_SIMILARITY, DEFAULT_SIMILARITY),
+        style=options.get(CONF_STYLE, DEFAULT_STYLE),
+        use_speaker_boost=options.get(
+            CONF_USE_SPEAKER_BOOST, DEFAULT_USE_SPEAKER_BOOST
+        ),
+    )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: EleventLabsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ElevenLabsConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ElevenLabs tts platform via config entry."""
     client = config_entry.runtime_data.client
     voices = (await client.voices.get_all()).voices
     default_voice_id = config_entry.options[CONF_VOICE]
+    voice_settings = to_voice_settings(config_entry.options)
     async_add_entities(
         [
             ElevenLabsTTSEntity(
@@ -44,6 +74,10 @@ async def async_setup_entry(
                 default_voice_id,
                 config_entry.entry_id,
                 config_entry.title,
+                voice_settings,
+                config_entry.options.get(
+                    CONF_OPTIMIZE_LATENCY, DEFAULT_OPTIMIZE_LATENCY
+                ),
             )
         ]
     )
@@ -52,7 +86,8 @@ async def async_setup_entry(
 class ElevenLabsTTSEntity(TextToSpeechEntity):
     """The ElevenLabs API entity."""
 
-    _attr_supported_options = [ATTR_VOICE]
+    _attr_supported_options = [ATTR_VOICE, ATTR_MODEL]
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self,
@@ -62,6 +97,8 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
         default_voice_id: str,
         entry_id: str,
         title: str,
+        voice_settings: VoiceSettings,
+        latency: int = 0,
     ) -> None:
         """Init ElevenLabs TTS service."""
         self._client = client
@@ -77,6 +114,10 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
         ]
         if voice_indices:
             self._voices.insert(0, self._voices.pop(voice_indices[0]))
+        self._voice_settings = voice_settings
+        self._latency = latency
+
+        # Entity attributes
         self._attr_unique_id = entry_id
         self._attr_name = title
         self._attr_device_info = DeviceInfo(
@@ -100,12 +141,15 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
         """Load tts audio file from the engine."""
         _LOGGER.debug("Getting TTS audio for %s", message)
         _LOGGER.debug("Options: %s", options)
-        voice_id = options[ATTR_VOICE]
+        voice_id = options.get(ATTR_VOICE, self._default_voice_id)
+        model = options.get(ATTR_MODEL, self._model.model_id)
         try:
             audio = await self._client.generate(
                 text=message,
                 voice=voice_id,
-                model=self._model.model_id,
+                optimize_streaming_latency=self._latency,
+                voice_settings=self._voice_settings,
+                model=model,
             )
             bytes_combined = b"".join([byte_seg async for byte_seg in audio])
         except ApiError as exc:

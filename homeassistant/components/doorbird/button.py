@@ -7,7 +7,7 @@ from typing import Any
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .device import ConfiguredDoorBird, async_reset_device_favorites
 from .entity import DoorBirdEntity
@@ -45,7 +45,7 @@ BUTTON_DESCRIPTIONS: tuple[DoorbirdButtonEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: DoorBirdConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the DoorBird button platform."""
     door_bird_data = config_entry.runtime_data

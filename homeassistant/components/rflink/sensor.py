@@ -35,12 +35,12 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
+from .const import (
     CONF_ALIASES,
     CONF_AUTOMATIC_ADD,
     DATA_DEVICE_REGISTER,
@@ -51,8 +51,8 @@ from . import (
     SIGNAL_AVAILABILITY,
     SIGNAL_HANDLE_EVENT,
     TMP_ENTITY,
-    RflinkDevice,
 )
+from .entity import RflinkDevice
 
 SENSOR_TYPES = (
     # check new descriptors against PACKET_FIELDS & UNITS from rflink.parser
@@ -71,6 +71,8 @@ SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfPressure.HPA,
     ),
     SensorEntityDescription(
+        # Rflink devices reports ok/low so device class can’t be used
+        # It should be migrated to a binary sensor
         key="battery",
         name="Battery",
         icon="mdi:battery",

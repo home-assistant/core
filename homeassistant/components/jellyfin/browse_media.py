@@ -7,8 +7,12 @@ from typing import Any
 
 from jellyfin_apiclient_python import JellyfinClient
 
-from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
-from homeassistant.components.media_player.browse_media import BrowseMedia
+from homeassistant.components.media_player import (
+    BrowseError,
+    BrowseMedia,
+    MediaClass,
+    MediaType,
+)
 from homeassistant.core import HomeAssistant
 
 from .client_wrapper import get_artwork_url

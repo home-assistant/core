@@ -148,6 +148,8 @@ class ScriptIntentHandler(intent.IntentHandler):
         vol.Any("name", "area", "floor"): cv.string,
         vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional("preferred_area_id"): cv.string,
+        vol.Optional("preferred_floor_id"): cv.string,
     }
 
     def __init__(self, intent_type: str, config: ConfigType) -> None:
@@ -205,7 +207,14 @@ class ScriptIntentHandler(intent.IntentHandler):
         )
 
         if match_constraints.has_constraints:
-            match_result = intent.async_match_targets(hass, match_constraints)
+            match_preferences = intent.MatchTargetsPreferences(
+                area_id=slots.get("preferred_area_id"),
+                floor_id=slots.get("preferred_floor_id"),
+            )
+
+            match_result = intent.async_match_targets(
+                hass, match_constraints, match_preferences
+            )
             if match_result.is_match:
                 targets = {}
 

@@ -69,6 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
             vin=vehicle["vin"],
             data_coordinator=TessieStateUpdateCoordinator(
                 hass,
+                entry,
                 api_key=api_key,
                 vin=vehicle["vin"],
                 data=vehicle["last_state"],
@@ -127,8 +128,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
                     TessieEnergyData(
                         api=api,
                         id=site_id,
-                        live_coordinator=TessieEnergySiteLiveCoordinator(hass, api),
-                        info_coordinator=TessieEnergySiteInfoCoordinator(hass, api),
+                        live_coordinator=TessieEnergySiteLiveCoordinator(
+                            hass, entry, api
+                        ),
+                        info_coordinator=TessieEnergySiteInfoCoordinator(
+                            hass, entry, api
+                        ),
                         device=DeviceInfo(
                             identifiers={(DOMAIN, str(site_id))},
                             manufacturer="Tesla",

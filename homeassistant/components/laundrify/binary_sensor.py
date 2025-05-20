@@ -13,7 +13,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, MODELS
@@ -23,7 +23,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    config: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors from a config entry created in the integrations UI."""
 
@@ -44,7 +46,6 @@ class LaundrifyPowerPlug(
     _attr_device_class = BinarySensorDeviceClass.RUNNING
     _attr_unique_id: str
     _attr_has_entity_name = True
-    _attr_name = None
     _attr_translation_key = "wash_cycle"
 
     def __init__(

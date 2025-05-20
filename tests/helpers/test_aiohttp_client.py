@@ -21,8 +21,9 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.aiohttp_client as client
+from homeassistant.helpers import aiohttp_client as client
 from homeassistant.util.color import RGBColor
+from homeassistant.util.ssl import SSLCipherList
 
 from tests.common import (
     MockConfigEntry,
@@ -62,11 +63,14 @@ async def test_get_clientsession_with_ssl(hass: HomeAssistant) -> None:
     """Test init clientsession with ssl."""
     client.async_get_clientsession(hass)
     verify_ssl = True
+    ssl_cipher = SSLCipherList.PYTHON_DEFAULT
     family = 0
 
-    client_session = hass.data[client.DATA_CLIENTSESSION][(verify_ssl, family)]
+    client_session = hass.data[client.DATA_CLIENTSESSION][
+        (verify_ssl, family, ssl_cipher)
+    ]
     assert isinstance(client_session, aiohttp.ClientSession)
-    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, family)]
+    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, family, ssl_cipher)]
     assert isinstance(connector, aiohttp.TCPConnector)
 
 
@@ -74,33 +78,63 @@ async def test_get_clientsession_without_ssl(hass: HomeAssistant) -> None:
     """Test init clientsession without ssl."""
     client.async_get_clientsession(hass, verify_ssl=False)
     verify_ssl = False
+    ssl_cipher = SSLCipherList.PYTHON_DEFAULT
     family = 0
 
-    client_session = hass.data[client.DATA_CLIENTSESSION][(verify_ssl, family)]
+    client_session = hass.data[client.DATA_CLIENTSESSION][
+        (verify_ssl, family, ssl_cipher)
+    ]
     assert isinstance(client_session, aiohttp.ClientSession)
-    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, family)]
+    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, family, ssl_cipher)]
     assert isinstance(connector, aiohttp.TCPConnector)
 
 
 @pytest.mark.parametrize(
-    ("verify_ssl", "expected_family"),
+    ("verify_ssl", "expected_family", "ssl_cipher"),
     [
-        (True, socket.AF_UNSPEC),
-        (False, socket.AF_UNSPEC),
-        (True, socket.AF_INET),
-        (False, socket.AF_INET),
-        (True, socket.AF_INET6),
-        (False, socket.AF_INET6),
+        (True, socket.AF_UNSPEC, SSLCipherList.PYTHON_DEFAULT),
+        (True, socket.AF_INET, SSLCipherList.PYTHON_DEFAULT),
+        (True, socket.AF_INET6, SSLCipherList.PYTHON_DEFAULT),
+        (True, socket.AF_UNSPEC, SSLCipherList.INTERMEDIATE),
+        (True, socket.AF_INET, SSLCipherList.INTERMEDIATE),
+        (True, socket.AF_INET6, SSLCipherList.INTERMEDIATE),
+        (True, socket.AF_UNSPEC, SSLCipherList.MODERN),
+        (True, socket.AF_INET, SSLCipherList.MODERN),
+        (True, socket.AF_INET6, SSLCipherList.MODERN),
+        (True, socket.AF_UNSPEC, SSLCipherList.INSECURE),
+        (True, socket.AF_INET, SSLCipherList.INSECURE),
+        (True, socket.AF_INET6, SSLCipherList.INSECURE),
+        (False, socket.AF_UNSPEC, SSLCipherList.PYTHON_DEFAULT),
+        (False, socket.AF_INET, SSLCipherList.PYTHON_DEFAULT),
+        (False, socket.AF_INET6, SSLCipherList.PYTHON_DEFAULT),
+        (False, socket.AF_UNSPEC, SSLCipherList.INTERMEDIATE),
+        (False, socket.AF_INET, SSLCipherList.INTERMEDIATE),
+        (False, socket.AF_INET6, SSLCipherList.INTERMEDIATE),
+        (False, socket.AF_UNSPEC, SSLCipherList.MODERN),
+        (False, socket.AF_INET, SSLCipherList.MODERN),
+        (False, socket.AF_INET6, SSLCipherList.MODERN),
+        (False, socket.AF_UNSPEC, SSLCipherList.INSECURE),
+        (False, socket.AF_INET, SSLCipherList.INSECURE),
+        (False, socket.AF_INET6, SSLCipherList.INSECURE),
     ],
 )
 async def test_get_clientsession(
-    hass: HomeAssistant, verify_ssl: bool, expected_family: int
+    hass: HomeAssistant,
+    verify_ssl: bool,
+    expected_family: int,
+    ssl_cipher: SSLCipherList,
 ) -> None:
     """Test init clientsession combinations."""
-    client.async_get_clientsession(hass, verify_ssl=verify_ssl, family=expected_family)
-    client_session = hass.data[client.DATA_CLIENTSESSION][(verify_ssl, expected_family)]
+    client.async_get_clientsession(
+        hass, verify_ssl=verify_ssl, family=expected_family, ssl_cipher=ssl_cipher
+    )
+    client_session = hass.data[client.DATA_CLIENTSESSION][
+        (verify_ssl, expected_family, ssl_cipher)
+    ]
     assert isinstance(client_session, aiohttp.ClientSession)
-    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, expected_family)]
+    connector = hass.data[client.DATA_CONNECTOR][
+        (verify_ssl, expected_family, ssl_cipher)
+    ]
     assert isinstance(connector, aiohttp.TCPConnector)
 
 
@@ -110,10 +144,11 @@ async def test_create_clientsession_with_ssl_and_cookies(hass: HomeAssistant) ->
     assert isinstance(session, aiohttp.ClientSession)
 
     verify_ssl = True
+    ssl_cipher = SSLCipherList.PYTHON_DEFAULT
     family = 0
 
     assert client.DATA_CLIENTSESSION not in hass.data
-    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, family)]
+    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, family, ssl_cipher)]
     assert isinstance(connector, aiohttp.TCPConnector)
 
 
@@ -125,26 +160,61 @@ async def test_create_clientsession_without_ssl_and_cookies(
     assert isinstance(session, aiohttp.ClientSession)
 
     verify_ssl = False
+    ssl_cipher = SSLCipherList.PYTHON_DEFAULT
     family = 0
 
     assert client.DATA_CLIENTSESSION not in hass.data
-    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, family)]
+    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, family, ssl_cipher)]
     assert isinstance(connector, aiohttp.TCPConnector)
 
 
 @pytest.mark.parametrize(
-    ("verify_ssl", "expected_family"),
-    [(True, 0), (False, 0), (True, 4), (False, 4), (True, 6), (False, 6)],
+    ("verify_ssl", "expected_family", "ssl_cipher"),
+    [
+        (True, 0, SSLCipherList.PYTHON_DEFAULT),
+        (True, 4, SSLCipherList.PYTHON_DEFAULT),
+        (True, 6, SSLCipherList.PYTHON_DEFAULT),
+        (True, 0, SSLCipherList.INTERMEDIATE),
+        (True, 4, SSLCipherList.INTERMEDIATE),
+        (True, 6, SSLCipherList.INTERMEDIATE),
+        (True, 0, SSLCipherList.MODERN),
+        (True, 4, SSLCipherList.MODERN),
+        (True, 6, SSLCipherList.MODERN),
+        (True, 0, SSLCipherList.INSECURE),
+        (True, 4, SSLCipherList.INSECURE),
+        (True, 6, SSLCipherList.INSECURE),
+        (False, 0, SSLCipherList.PYTHON_DEFAULT),
+        (False, 4, SSLCipherList.PYTHON_DEFAULT),
+        (False, 6, SSLCipherList.PYTHON_DEFAULT),
+        (False, 0, SSLCipherList.INTERMEDIATE),
+        (False, 4, SSLCipherList.INTERMEDIATE),
+        (False, 6, SSLCipherList.INTERMEDIATE),
+        (False, 0, SSLCipherList.MODERN),
+        (False, 4, SSLCipherList.MODERN),
+        (False, 6, SSLCipherList.MODERN),
+        (False, 0, SSLCipherList.INSECURE),
+        (False, 4, SSLCipherList.INSECURE),
+        (False, 6, SSLCipherList.INSECURE),
+    ],
 )
 async def test_get_clientsession_cleanup(
-    hass: HomeAssistant, verify_ssl: bool, expected_family: int
+    hass: HomeAssistant,
+    verify_ssl: bool,
+    expected_family: int,
+    ssl_cipher: SSLCipherList,
 ) -> None:
     """Test init clientsession cleanup."""
-    client.async_get_clientsession(hass, verify_ssl=verify_ssl, family=expected_family)
+    client.async_get_clientsession(
+        hass, verify_ssl=verify_ssl, family=expected_family, ssl_cipher=ssl_cipher
+    )
 
-    client_session = hass.data[client.DATA_CLIENTSESSION][(verify_ssl, expected_family)]
+    client_session = hass.data[client.DATA_CLIENTSESSION][
+        (verify_ssl, expected_family, ssl_cipher)
+    ]
     assert isinstance(client_session, aiohttp.ClientSession)
-    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, expected_family)]
+    connector = hass.data[client.DATA_CONNECTOR][
+        (verify_ssl, expected_family, ssl_cipher)
+    ]
     assert isinstance(connector, aiohttp.TCPConnector)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
@@ -158,17 +228,19 @@ async def test_get_clientsession_patched_close(hass: HomeAssistant) -> None:
     """Test closing clientsession does not work."""
 
     verify_ssl = True
+    ssl_cipher = SSLCipherList.PYTHON_DEFAULT
     family = 0
 
     with patch("aiohttp.ClientSession.close") as mock_close:
         session = client.async_get_clientsession(hass)
 
         assert isinstance(
-            hass.data[client.DATA_CLIENTSESSION][(verify_ssl, family)],
+            hass.data[client.DATA_CLIENTSESSION][(verify_ssl, family, ssl_cipher)],
             aiohttp.ClientSession,
         )
         assert isinstance(
-            hass.data[client.DATA_CONNECTOR][(verify_ssl, family)], aiohttp.TCPConnector
+            hass.data[client.DATA_CONNECTOR][(verify_ssl, family, ssl_cipher)],
+            aiohttp.TCPConnector,
         )
 
         with pytest.raises(RuntimeError):
@@ -177,7 +249,6 @@ async def test_get_clientsession_patched_close(hass: HomeAssistant) -> None:
         assert mock_close.call_count == 0
 
 
-@patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
 async def test_warning_close_session_integration(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -214,13 +285,12 @@ async def test_warning_close_session_integration(
         await session.close()
     assert (
         "Detected that integration 'hue' closes the Home Assistant aiohttp session at "
-        "homeassistant/components/hue/light.py, line 23: await session.close(), "
-        "please create a bug report at https://github.com/home-assistant/core/issues?"
+        "homeassistant/components/hue/light.py, line 23: await session.close(). "
+        "Please create a bug report at https://github.com/home-assistant/core/issues?"
         "q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+hue%22"
     ) in caplog.text
 
 
-@patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
 async def test_warning_close_session_custom(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -258,8 +328,8 @@ async def test_warning_close_session_custom(
         await session.close()
     assert (
         "Detected that custom integration 'hue' closes the Home Assistant aiohttp "
-        "session at custom_components/hue/light.py, line 23: await session.close(), "
-        "please report it to the author of the 'hue' custom integration"
+        "session at custom_components/hue/light.py, line 23: await session.close(). "
+        "Please report it to the author of the 'hue' custom integration"
     ) in caplog.text
 
 
@@ -318,3 +388,16 @@ async def test_client_session_immutable_headers(hass: HomeAssistant) -> None:
 
     with pytest.raises(AttributeError):
         session.headers.update({"user-agent": "bla"})
+
+
+@pytest.mark.usefixtures("disable_mock_zeroconf_resolver")
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_async_mdnsresolver(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test async_mdnsresolver."""
+    resp = aioclient_mock.post("http://localhost/xyz", json={"x": 1})
+    session = client.async_create_clientsession(hass)
+    resp = await session.post("http://localhost/xyz", json={"x": 1})
+    assert resp.status == 200
+    assert await resp.json() == {"x": 1}

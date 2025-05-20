@@ -18,18 +18,21 @@ from uiprotect.data import (
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     BaseProtectEntity,
+    PermRequired,
     ProtectDeviceEntity,
+    ProtectEntityDescription,
     ProtectIsOnEntity,
     ProtectNVREntity,
+    ProtectSetableKeysMixin,
+    T,
     async_all_device_entities,
 )
-from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
 
 ATTR_PREV_MIC = "prev_mic_level"
 ATTR_PREV_RECORD = "prev_record_mode"
@@ -565,7 +568,7 @@ class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors for UniFi Protect integration."""
     data = entry.runtime_data

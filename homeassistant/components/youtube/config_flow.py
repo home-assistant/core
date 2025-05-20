@@ -12,9 +12,10 @@ from youtubeaio.types import AuthScope, ForbiddenError
 from youtubeaio.youtube import YouTube
 
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     ConfigEntry,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import callback
@@ -45,7 +46,6 @@ class OAuth2FlowHandler(
 
     DOMAIN = DOMAIN
 
-    reauth_entry: ConfigEntry | None = None
     _youtube: YouTube | None = None
 
     @staticmethod
@@ -54,7 +54,7 @@ class OAuth2FlowHandler(
         config_entry: ConfigEntry,
     ) -> YouTubeOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return YouTubeOptionsFlowHandler(config_entry)
+        return YouTubeOptionsFlowHandler()
 
     @property
     def logger(self) -> logging.Logger:
@@ -75,9 +75,6 @@ class OAuth2FlowHandler(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -117,21 +114,18 @@ class OAuth2FlowHandler(
         self._title = own_channel.snippet.title
         self._data = data
 
-        if not self.reauth_entry:
-            await self.async_set_unique_id(own_channel.channel_id)
+        await self.async_set_unique_id(own_channel.channel_id)
+        if self.source != SOURCE_REAUTH:
             self._abort_if_unique_id_configured()
 
             return await self.async_step_channels()
 
-        if self.reauth_entry.unique_id == own_channel.channel_id:
-            self.hass.config_entries.async_update_entry(self.reauth_entry, data=data)
-            await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
-
-        return self.async_abort(
+        self._abort_if_unique_id_mismatch(
             reason="wrong_account",
             description_placeholders={"title": self._title},
         )
+
+        return self.async_update_reload_and_abort(self._get_reauth_entry(), data=data)
 
     async def async_step_channels(
         self, user_input: dict[str, Any] | None = None
@@ -165,7 +159,7 @@ class OAuth2FlowHandler(
         )
 
 
-class YouTubeOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class YouTubeOptionsFlowHandler(OptionsFlow):
     """YouTube Options flow handler."""
 
     async def async_step_init(
@@ -200,6 +194,6 @@ class YouTubeOptionsFlowHandler(OptionsFlowWithConfigEntry):
                         ),
                     }
                 ),
-                self.options,
+                self.config_entry.options,
             ),
         )

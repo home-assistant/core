@@ -4,7 +4,7 @@ from collections import OrderedDict
 from typing import Final
 from unittest.mock import patch
 
-from homeassistant.components.apcupsd import DOMAIN
+from homeassistant.components.apcupsd.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant

@@ -26,6 +26,7 @@ from homeassistant.components.homekit.const import (
     CONF_VIDEO_CODEC,
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
+    CONF_VIDEO_PROFILE_NAMES,
     DEFAULT_AUDIO_CODEC,
     DEFAULT_AUDIO_MAP,
     DEFAULT_AUDIO_PACKET_SIZE,
@@ -39,6 +40,7 @@ from homeassistant.components.homekit.const import (
     DEFAULT_VIDEO_CODEC,
     DEFAULT_VIDEO_MAP,
     DEFAULT_VIDEO_PACKET_SIZE,
+    DEFAULT_VIDEO_PROFILE_NAMES,
     DOMAIN,
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
@@ -159,8 +161,20 @@ def test_validate_entity_config() -> None:
     assert vec({"lock.demo": {}}) == {
         "lock.demo": {ATTR_CODE: None, CONF_LOW_BATTERY_THRESHOLD: 20}
     }
-    assert vec({"lock.demo": {ATTR_CODE: "1234"}}) == {
-        "lock.demo": {ATTR_CODE: "1234", CONF_LOW_BATTERY_THRESHOLD: 20}
+
+    assert vec(
+        {
+            "lock.demo": {
+                ATTR_CODE: "1234",
+                CONF_LINKED_DOORBELL_SENSOR: "event.doorbell",
+            }
+        }
+    ) == {
+        "lock.demo": {
+            ATTR_CODE: "1234",
+            CONF_LOW_BATTERY_THRESHOLD: 20,
+            CONF_LINKED_DOORBELL_SENSOR: "event.doorbell",
+        }
     }
 
     assert vec({"media_player.demo": {}}) == {
@@ -223,6 +237,7 @@ def test_validate_entity_config() -> None:
             CONF_VIDEO_MAP: DEFAULT_VIDEO_MAP,
             CONF_STREAM_COUNT: DEFAULT_STREAM_COUNT,
             CONF_VIDEO_CODEC: DEFAULT_VIDEO_CODEC,
+            CONF_VIDEO_PROFILE_NAMES: DEFAULT_VIDEO_PROFILE_NAMES,
             CONF_AUDIO_PACKET_SIZE: DEFAULT_AUDIO_PACKET_SIZE,
             CONF_VIDEO_PACKET_SIZE: DEFAULT_VIDEO_PACKET_SIZE,
             CONF_LOW_BATTERY_THRESHOLD: DEFAULT_LOW_BATTERY_THRESHOLD,
@@ -256,6 +271,7 @@ def test_cleanup_name_for_homekit() -> None:
     """Ensure name sanitize works as expected."""
 
     assert cleanup_name_for_homekit("abc") == "abc"
+    assert cleanup_name_for_homekit("abc ") == "abc"
     assert cleanup_name_for_homekit("a b c") == "a b c"
     assert cleanup_name_for_homekit("ab_c") == "ab c"
     assert (
@@ -267,14 +283,16 @@ def test_cleanup_name_for_homekit() -> None:
 
 def test_temperature_to_homekit() -> None:
     """Test temperature conversion from HA to HomeKit."""
-    assert temperature_to_homekit(20.46, UnitOfTemperature.CELSIUS) == 20.5
-    assert temperature_to_homekit(92.1, UnitOfTemperature.FAHRENHEIT) == 33.4
+    assert temperature_to_homekit(20.46, UnitOfTemperature.CELSIUS) == 20.46
+    assert temperature_to_homekit(92.1, UnitOfTemperature.FAHRENHEIT) == pytest.approx(
+        33.388888888888886
+    )
 
 
 def test_temperature_to_states() -> None:
     """Test temperature conversion from HomeKit to HA."""
     assert temperature_to_states(20, UnitOfTemperature.CELSIUS) == 20.0
-    assert temperature_to_states(20.2, UnitOfTemperature.FAHRENHEIT) == 68.5
+    assert temperature_to_states(20.2, UnitOfTemperature.FAHRENHEIT) == 68.36
 
 
 def test_density_to_air_quality() -> None:

@@ -15,7 +15,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_DEVICES, CONF_EMAIL, CONF_PASSWORD, PERCENTAGE
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -125,7 +125,7 @@ class TankUtilitySensor(SensorEntity):
                 requests.codes.unauthorized,
                 requests.codes.bad_request,
             ):
-                _LOGGER.info("Getting new token")
+                _LOGGER.debug("Getting new token")
                 self._token = auth.get_token(self._email, self._password, force=True)
                 data = tank_monitor.get_device_data(self._token, self.device)
             else:

@@ -5,7 +5,6 @@ from homeassistant.components.device_tracker import (
     ATTR_GPS,
     ATTR_GPS_ACCURACY,
     ATTR_LOCATION_NAME,
-    SourceType,
     TrackerEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -17,7 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -34,7 +33,9 @@ ATTR_KEYS = (ATTR_ALTITUDE, ATTR_COURSE, ATTR_SPEED, ATTR_VERTICAL_ACCURACY)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Mobile app based off an entry."""
     entity = MobileAppEntity(entry)
@@ -102,11 +103,6 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
     def name(self):
         """Return the name of the device."""
         return self._entry.data[ATTR_DEVICE_NAME]
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type, eg gps or router, of the device."""
-        return SourceType.GPS
 
     @property
     def device_info(self):

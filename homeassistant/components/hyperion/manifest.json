@@ -6,7 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/hyperion",
   "iot_class": "local_push",
   "loggers": ["hyperion"],
-  "quality_scale": "platinum",
   "requirements": ["hyperion-py==0.7.5"],
   "ssdp": [
     {

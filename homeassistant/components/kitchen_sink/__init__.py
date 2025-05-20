@@ -24,10 +24,9 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
-DOMAIN = "kitchen_sink"
-
+from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
     Platform.BUTTON,
@@ -71,11 +70,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set the config entry up."""
     # Set up demo platforms with config entry
     await hass.config_entries.async_forward_entry_setups(
-        config_entry, COMPONENTS_WITH_DEMO_PLATFORM
+        entry, COMPONENTS_WITH_DEMO_PLATFORM
     )
 
     # Create issues
@@ -86,9 +85,34 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await _insert_statistics(hass)
 
     # Start a reauth flow
-    config_entry.async_start_reauth(hass)
+    entry.async_start_reauth(hass)
+
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
+    # Notify backup listeners
+    hass.async_create_task(_notify_backup_listeners(hass), eager_start=False)
 
     return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle update."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload config entry."""
+    # Notify backup listeners
+    hass.async_create_task(_notify_backup_listeners(hass), eager_start=False)
+
+    return await hass.config_entries.async_unload_platforms(
+        entry, COMPONENTS_WITH_DEMO_PLATFORM
+    )
+
+
+async def _notify_backup_listeners(hass: HomeAssistant) -> None:
+    for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
+        listener()
 
 
 def _create_issues(hass: HomeAssistant) -> None:
@@ -272,7 +296,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata = {
         "source": RECORDER_DOMAIN,
         "name": None,
-        "statistic_id": "sensor.statistics_issue_1",
+        "statistic_id": "sensor.statistics_issues_issue_1",
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "has_mean": True,
         "has_sum": False,
@@ -284,7 +308,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata = {
         "source": RECORDER_DOMAIN,
         "name": None,
-        "statistic_id": "sensor.statistics_issue_2",
+        "statistic_id": "sensor.statistics_issues_issue_2",
         "unit_of_measurement": "cats",
         "has_mean": True,
         "has_sum": False,
@@ -296,7 +320,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata = {
         "source": RECORDER_DOMAIN,
         "name": None,
-        "statistic_id": "sensor.statistics_issue_3",
+        "statistic_id": "sensor.statistics_issues_issue_3",
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "has_mean": True,
         "has_sum": False,
@@ -308,7 +332,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata = {
         "source": RECORDER_DOMAIN,
         "name": None,
-        "statistic_id": "sensor.statistics_issue_4",
+        "statistic_id": "sensor.statistics_issues_issue_4",
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "has_mean": True,
         "has_sum": False,

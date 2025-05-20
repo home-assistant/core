@@ -16,7 +16,7 @@ from homeassistant.components.switch import (
 from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 

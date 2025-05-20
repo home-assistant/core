@@ -460,10 +460,10 @@ async def test_call_service_child_not_found(
         "domain_test.test_service which was not found."
     )
     assert msg["error"]["translation_placeholders"] == {
-        "domain": "non",
-        "service": "existing",
-        "child_domain": "domain_test",
-        "child_service": "test_service",
+        "domain": "domain_test",
+        "service": "test_service",
+        "child_domain": "non",
+        "child_service": "existing",
     }
     assert msg["error"]["translation_key"] == "child_service_not_found"
     assert msg["error"]["translation_domain"] == "websocket_api"
@@ -540,6 +540,7 @@ async def test_call_service_schema_validation_error(
     assert len(calls) == 0
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_call_service_error(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:
@@ -2390,6 +2391,7 @@ async def test_execute_script(
         ),
     ],
 )
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_execute_script_err_localization(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
@@ -2566,18 +2568,18 @@ async def test_integration_setup_info(
 @pytest.mark.parametrize(
     ("key", "config"),
     [
-        ("trigger", {"platform": "event", "event_type": "hello"}),
-        ("trigger", [{"platform": "event", "event_type": "hello"}]),
+        ("triggers", {"platform": "event", "event_type": "hello"}),
+        ("triggers", [{"platform": "event", "event_type": "hello"}]),
         (
-            "condition",
+            "conditions",
             {"condition": "state", "entity_id": "hello.world", "state": "paulus"},
         ),
         (
-            "condition",
+            "conditions",
             [{"condition": "state", "entity_id": "hello.world", "state": "paulus"}],
         ),
-        ("action", {"service": "domain_test.test_service"}),
-        ("action", [{"service": "domain_test.test_service"}]),
+        ("actions", {"service": "domain_test.test_service"}),
+        ("actions", [{"service": "domain_test.test_service"}]),
     ],
 )
 async def test_validate_config_works(
@@ -2599,13 +2601,13 @@ async def test_validate_config_works(
     [
         # Raises vol.Invalid
         (
-            "trigger",
+            "triggers",
             {"platform": "non_existing", "event_type": "hello"},
-            "Invalid platform 'non_existing' specified",
+            "Invalid trigger 'non_existing' specified",
         ),
         # Raises vol.Invalid
         (
-            "condition",
+            "conditions",
             {
                 "condition": "non_existing",
                 "entity_id": "hello.world",
@@ -2619,7 +2621,7 @@ async def test_validate_config_works(
         ),
         # Raises HomeAssistantError
         (
-            "condition",
+            "conditions",
             {
                 "above": 50,
                 "condition": "device",
@@ -2632,7 +2634,7 @@ async def test_validate_config_works(
         ),
         # Raises vol.Invalid
         (
-            "action",
+            "actions",
             {"non_existing": "domain_test.test_service"},
             "Unable to determine action @ data[0]",
         ),

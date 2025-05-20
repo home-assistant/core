@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import wraps
 import logging
-from typing import Any, Concatenate, cast
+from typing import TYPE_CHECKING, Any, Concatenate, cast
 
 from renault_api.exceptions import RenaultException
 from renault_api.kamereon import models
@@ -17,6 +17,9 @@ from renault_api.renault_vehicle import RenaultVehicle
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
+
+if TYPE_CHECKING:
+    from . import RenaultConfigEntry
 
 from .const import DOMAIN
 from .coordinator import RenaultDataUpdateCoordinator
@@ -64,20 +67,22 @@ class RenaultVehicleProxy:
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: RenaultConfigEntry,
         vehicle: RenaultVehicle,
         details: models.KamereonVehicleDetails,
         scan_interval: timedelta,
     ) -> None:
         """Initialise vehicle proxy."""
         self.hass = hass
+        self.config_entry = config_entry
         self._vehicle = vehicle
         self._details = details
         self._device_info = DeviceInfo(
             identifiers={(DOMAIN, cast(str, details.vin))},
             manufacturer=(details.get_brand_label() or "").capitalize(),
             model=(details.get_model_label() or "").capitalize(),
+            model_id=(details.get_model_code() or ""),
             name=details.registrationNumber or "",
-            sw_version=details.get_model_code() or "",
         )
         self.coordinators: dict[str, RenaultDataUpdateCoordinator] = {}
         self.hvac_target_temperature = 21
@@ -98,11 +103,10 @@ class RenaultVehicleProxy:
         self.coordinators = {
             coord.key: RenaultDataUpdateCoordinator(
                 self.hass,
+                self.config_entry,
                 LOGGER,
-                # Name of the data. For logging purposes.
                 name=f"{self.details.vin} {coord.key}",
                 update_method=coord.update_method(self._vehicle),
-                # Polling interval. Will only be polled if there are subscribers.
                 update_interval=self._scan_interval,
             )
             for coord in COORDINATORS
@@ -166,6 +170,18 @@ class RenaultVehicleProxy:
     ) -> models.KamereonVehicleHvacStartActionData:
         """Start vehicle ac."""
         return await self._vehicle.set_ac_start(temperature, when)
+
+    @with_error_wrapping
+    async def get_hvac_settings(self) -> models.KamereonVehicleHvacSettingsData:
+        """Get vehicle hvac settings."""
+        return await self._vehicle.get_hvac_settings()
+
+    @with_error_wrapping
+    async def set_hvac_schedules(
+        self, schedules: list[models.HvacSchedule]
+    ) -> models.KamereonVehicleHvacScheduleActionData:
+        """Set vehicle hvac schedules."""
+        return await self._vehicle.set_hvac_schedules(schedules)
 
     @with_error_wrapping
     async def get_charging_settings(self) -> models.KamereonVehicleChargingSettingsData:

@@ -9,13 +9,16 @@ from pyfritzhome import LoginError
 import pytest
 from requests.exceptions import HTTPError
 
-from homeassistant.components import ssdp
 from homeassistant.components.fritzbox.const import DOMAIN
-from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_UDN
-from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
 from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
@@ -23,7 +26,7 @@ from tests.common import MockConfigEntry
 
 MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
 MOCK_SSDP_DATA = {
-    "ip4_valid": ssdp.SsdpServiceInfo(
+    "ip4_valid": SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="mock_st",
         ssdp_location="https://10.0.0.1:12345/test",
@@ -32,7 +35,7 @@ MOCK_SSDP_DATA = {
             ATTR_UPNP_UDN: "uuid:only-a-test",
         },
     ),
-    "ip6_valid": ssdp.SsdpServiceInfo(
+    "ip6_valid": SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="mock_st",
         ssdp_location="https://[1234::1]:12345/test",
@@ -41,7 +44,7 @@ MOCK_SSDP_DATA = {
             ATTR_UPNP_UDN: "uuid:only-a-test",
         },
     ),
-    "ip6_invalid": ssdp.SsdpServiceInfo(
+    "ip6_invalid": SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="mock_st",
         ssdp_location="https://[fe80::1%1]:12345/test",
@@ -196,13 +199,9 @@ async def test_reconfigure_success(hass: HomeAssistant, fritz: Mock) -> None:
     assert mock_config.data[CONF_USERNAME] == "fake_user"
     assert mock_config.data[CONF_PASSWORD] == "fake_pass"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config.entry_id},
-        data=mock_config.data,
-    )
+    result = await mock_config.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -229,13 +228,9 @@ async def test_reconfigure_failed(hass: HomeAssistant, fritz: Mock) -> None:
     assert mock_config.data[CONF_USERNAME] == "fake_user"
     assert mock_config.data[CONF_PASSWORD] == "fake_pass"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config.entry_id},
-        data=mock_config.data,
-    )
+    result = await mock_config.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -244,7 +239,7 @@ async def test_reconfigure_failed(hass: HomeAssistant, fritz: Mock) -> None:
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"]["base"] == "no_devices_found"
 
     result = await hass.config_entries.flow.async_configure(
@@ -272,7 +267,7 @@ async def test_reconfigure_failed(hass: HomeAssistant, fritz: Mock) -> None:
 async def test_ssdp(
     hass: HomeAssistant,
     fritz: Mock,
-    test_data: ssdp.SsdpServiceInfo,
+    test_data: SsdpServiceInfo,
     expected_result: str,
 ) -> None:
     """Test starting a flow from discovery."""

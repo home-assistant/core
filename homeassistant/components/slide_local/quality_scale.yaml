@@ -1,0 +1,75 @@
+rules:
+  # Bronze
+  config-flow: done
+  test-before-configure: done
+  unique-config-entry: done
+  config-flow-test-coverage: done
+  runtime-data: done
+  test-before-setup: done
+  appropriate-polling: done
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup:
+    status: exempt
+    comment: No explicit event subscriptions.
+  dependency-transparency: done
+  action-setup: done
+  common-modules: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-actions: done
+  brands: done
+
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable: done
+  entity-unavailable: done
+  action-exceptions: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      The password used is the device code and can't change. No reauth required.
+  parallel-updates: done
+  test-coverage: done
+  integration-owner: done
+  docs-installation-parameters: done
+  docs-configuration-parameters: done
+
+  # Gold
+  entity-translations: done
+  entity-device-class: done
+  devices: done
+  entity-category: done
+  entity-disabled-by-default: done
+  discovery: done
+  stale-devices:
+    status: done
+    comment: |
+      Slide_local represents a single physical device, no removal stale devices required (besides removal of instance itself).
+  diagnostics: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  dynamic-devices:
+    status: exempt
+    comment: |
+      Slide_local represents a single physical device, no dynamic changes of devices possible (besides removal of instance itself).
+  discovery-update-info: done
+  repair-issues:
+    status: exempt
+    comment: No issues/repairs.
+  docs-use-cases: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-data-update: done
+  docs-known-limitations: done
+  docs-troubleshooting:
+    status: exempt
+    comment: |
+      This integration doesn't have known issues that could be resolved by the user.
+  docs-examples: done
+  # Platinum
+  async-dependency: done
+  inject-websession: todo
+  strict-typing: todo

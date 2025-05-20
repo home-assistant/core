@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import contextlib
 from contextlib import suppress
-from dataclasses import dataclass
 from fnmatch import translate
-from functools import lru_cache
+from functools import lru_cache, partial
 from ipaddress import IPv4Address, IPv6Address
 import logging
 import re
@@ -30,10 +29,20 @@ from homeassistant.const import (
     __version__,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.data_entry_flow import BaseServiceInfo
-from homeassistant.helpers import discovery_flow, instance_id
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, discovery_flow, instance_id
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstant,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
+from homeassistant.helpers.discovery_flow import DiscoveryKey
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID as _ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo as _ZeroconfServiceInfo,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import (
     HomeKitDiscoveredIntegration,
@@ -81,7 +90,11 @@ ATTR_NAME: Final = "name"
 ATTR_PROPERTIES: Final = "properties"
 
 # Attributes for ZeroconfServiceInfo[ATTR_PROPERTIES]
-ATTR_PROPERTIES_ID: Final = "id"
+_DEPRECATED_ATTR_PROPERTIES_ID = DeprecatedConstant(
+    _ATTR_PROPERTIES_ID,
+    "homeassistant.helpers.service_info.zeroconf.ATTR_PROPERTIES_ID",
+    "2026.2",
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -99,66 +112,42 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-
-@dataclass(slots=True)
-class ZeroconfServiceInfo(BaseServiceInfo):
-    """Prepared info from mDNS entries.
-
-    The ip_address is the most recently updated address
-    that is not a link local or unspecified address.
-
-    The ip_addresses are all addresses in order of most
-    recently updated to least recently updated.
-
-    The host is the string representation of the ip_address.
-
-    The addresses are the string representations of the
-    ip_addresses.
-
-    It is recommended to use the ip_address to determine
-    the address to connect to as it will be the most
-    recently updated address that is not a link local
-    or unspecified address.
-    """
-
-    ip_address: IPv4Address | IPv6Address
-    ip_addresses: list[IPv4Address | IPv6Address]
-    port: int | None
-    hostname: str
-    type: str
-    name: str
-    properties: dict[str, Any]
-
-    @property
-    def host(self) -> str:
-        """Return the host."""
-        return str(self.ip_address)
-
-    @property
-    def addresses(self) -> list[str]:
-        """Return the addresses."""
-        return [str(ip_address) for ip_address in self.ip_addresses]
+_DEPRECATED_ZeroconfServiceInfo = DeprecatedConstant(
+    _ZeroconfServiceInfo,
+    "homeassistant.helpers.service_info.zeroconf.ZeroconfServiceInfo",
+    "2026.2",
+)
 
 
 @bind_hass
 async def async_get_instance(hass: HomeAssistant) -> HaZeroconf:
-    """Zeroconf instance to be shared with other integrations that use it."""
-    return cast(HaZeroconf, (await _async_get_instance(hass)).zeroconf)
+    """Get or create the shared HaZeroconf instance."""
+    return cast(HaZeroconf, (_async_get_instance(hass)).zeroconf)
 
 
 @bind_hass
 async def async_get_async_instance(hass: HomeAssistant) -> HaAsyncZeroconf:
-    """Zeroconf instance to be shared with other integrations that use it."""
-    return await _async_get_instance(hass)
+    """Get or create the shared HaAsyncZeroconf instance."""
+    return _async_get_instance(hass)
 
 
-async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> HaAsyncZeroconf:
+@callback
+def async_get_async_zeroconf(hass: HomeAssistant) -> HaAsyncZeroconf:
+    """Get or create the shared HaAsyncZeroconf instance.
+
+    This method must be run in the event loop, and is an alternative
+    to the async_get_async_instance method when a coroutine cannot be used.
+    """
+    return _async_get_instance(hass)
+
+
+def _async_get_instance(hass: HomeAssistant) -> HaAsyncZeroconf:
     if DOMAIN in hass.data:
         return cast(HaAsyncZeroconf, hass.data[DOMAIN])
 
     logging.getLogger("zeroconf").setLevel(logging.NOTSET)
 
-    zeroconf = HaZeroconf(**zcargs)
+    zeroconf = HaZeroconf(**_async_get_zc_args(hass))
     aio_zc = HaAsyncZeroconf(zc=zeroconf)
 
     install_multiple_zeroconf_catcher(zeroconf)
@@ -186,12 +175,10 @@ def _async_zc_has_functional_dual_stack() -> bool:
     )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Zeroconf and make Home Assistant discoverable."""
-    zc_args: dict = {"ip_version": IPVersion.V4Only}
-
-    adapters = await network.async_get_adapters(hass)
-
+def _async_get_zc_args(hass: HomeAssistant) -> dict[str, Any]:
+    """Get zeroconf arguments from config."""
+    zc_args: dict[str, Any] = {"ip_version": IPVersion.V4Only}
+    adapters = network.async_get_loaded_adapters(hass)
     ipv6 = False
     if _async_zc_has_functional_dual_stack():
         if any(adapter["enabled"] and adapter["ipv6"] for adapter in adapters):
@@ -206,7 +193,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     else:
         zc_args["interfaces"] = [
             str(source_ip)
-            for source_ip in await network.async_get_enabled_source_ips(hass)
+            for source_ip in network.async_get_enabled_source_ips_from_adapters(
+                adapters
+            )
             if not source_ip.is_loopback
             and not (isinstance(source_ip, IPv6Address) and source_ip.is_global)
             and not (
@@ -218,8 +207,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 and zc_args["ip_version"] == IPVersion.V6Only
             )
         ]
+    return zc_args
 
-    aio_zc = await _async_get_instance(hass, **zc_args)
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Zeroconf and make Home Assistant discoverable."""
+    aio_zc = _async_get_instance(hass)
     zeroconf = cast(HaZeroconf, aio_zc.zeroconf)
     zeroconf_types = await async_get_zeroconf(hass)
     homekit_models = await async_get_homekit(hass)
@@ -379,15 +372,35 @@ class ZeroconfDiscovery:
             self.zeroconf, types, handlers=[self.async_service_update]
         )
 
+        async_dispatcher_connect(
+            self.hass,
+            config_entries.signal_discovered_config_entry_removed(DOMAIN),
+            self._handle_config_entry_removed,
+        )
+
     async def async_stop(self) -> None:
         """Cancel the service browser and stop processing the queue."""
         if self.async_service_browser:
             await self.async_service_browser.async_cancel()
 
+    @callback
+    def _handle_config_entry_removed(
+        self,
+        entry: config_entries.ConfigEntry,
+    ) -> None:
+        """Handle config entry changes."""
+        for discovery_key in entry.discovery_keys[DOMAIN]:
+            if discovery_key.version != 1:
+                continue
+            _type = discovery_key.key[0]
+            name = discovery_key.key[1]
+            _LOGGER.debug("Rediscover service %s.%s", _type, name)
+            self._async_service_update(self.zeroconf, _type, name)
+
     def _async_dismiss_discoveries(self, name: str) -> None:
         """Dismiss all discoveries for the given name."""
         for flow in self.hass.config_entries.flow.async_progress_by_init_data_type(
-            ZeroconfServiceInfo,
+            _ZeroconfServiceInfo,
             lambda service_info: bool(service_info.name == name),
         ):
             self.hass.config_entries.flow.async_abort(flow["flow_id"])
@@ -408,10 +421,20 @@ class ZeroconfDiscovery:
             state_change,
         )
 
-        if state_change == ServiceStateChange.Removed:
+        if state_change is ServiceStateChange.Removed:
             self._async_dismiss_discoveries(name)
             return
 
+        self._async_service_update(zeroconf, service_type, name)
+
+    @callback
+    def _async_service_update(
+        self,
+        zeroconf: HaZeroconf,
+        service_type: str,
+        name: str,
+    ) -> None:
+        """Service state added or changed."""
         try:
             async_service_info = AsyncServiceInfo(service_type, name)
         except BadTypeInNameException as ex:
@@ -453,6 +476,11 @@ class ZeroconfDiscovery:
             return
         _LOGGER.debug("Discovered new device %s %s", name, info)
         props: dict[str, str | None] = info.properties
+        discovery_key = DiscoveryKey(
+            domain=DOMAIN,
+            key=(info.type, info.name),
+            version=1,
+        )
         domain = None
 
         # If we can handle it as a HomeKit discovery, we do that here.
@@ -467,6 +495,7 @@ class ZeroconfDiscovery:
                 homekit_discovery.domain,
                 {"source": config_entries.SOURCE_HOMEKIT},
                 info,
+                discovery_key=discovery_key,
             )
             # Continue on here as homekit_controller
             # still needs to get updates on devices
@@ -502,7 +531,9 @@ class ZeroconfDiscovery:
                     continue
 
             matcher_domain = matcher[ATTR_DOMAIN]
-            context = {
+            # Create a type annotated regular dict since this is a hot path and creating
+            # a regular dict is slightly cheaper than calling ConfigFlowContext
+            context: config_entries.ConfigFlowContext = {
                 "source": config_entries.SOURCE_ZEROCONF,
             }
             if domain:
@@ -515,6 +546,7 @@ class ZeroconfDiscovery:
                 matcher_domain,
                 context,
                 info,
+                discovery_key=discovery_key,
             )
 
 
@@ -544,7 +576,7 @@ def async_get_homekit_discovery(
     return None
 
 
-def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
+def info_from_service(service: AsyncServiceInfo) -> _ZeroconfServiceInfo | None:
     """Return prepared info from mDNS entries."""
     # See https://ietf.org/rfc/rfc6763.html#section-6.4 and
     # https://ietf.org/rfc/rfc6763.html#section-6.5 for expected encodings
@@ -564,10 +596,10 @@ def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
         return None
 
     if TYPE_CHECKING:
-        assert (
-            service.server is not None
-        ), "server cannot be none if there are addresses"
-    return ZeroconfServiceInfo(
+        assert service.server is not None, (
+            "server cannot be none if there are addresses"
+        )
+    return _ZeroconfServiceInfo(
         ip_address=ip_address,
         ip_addresses=ip_addresses,
         port=service.port,
@@ -633,3 +665,11 @@ def _memorized_fnmatch(name: str, pattern: str) -> bool:
     since the devices will not change frequently
     """
     return bool(_compile_fnmatch(pattern).match(name))
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

@@ -474,25 +474,30 @@ class ClimateCapabilities(AlexaEntity):
         # If we support two modes, one being off, we allow turning on too.
         supported_features = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if (
-            self.entity.domain == climate.DOMAIN
-            and climate.HVACMode.OFF
-            in (self.entity.attributes.get(climate.ATTR_HVAC_MODES) or [])
-            or self.entity.domain == climate.DOMAIN
-            and (
-                supported_features
-                & (
-                    climate.ClimateEntityFeature.TURN_ON
-                    | climate.ClimateEntityFeature.TURN_OFF
+            (
+                self.entity.domain == climate.DOMAIN
+                and climate.HVACMode.OFF
+                in (self.entity.attributes.get(climate.ATTR_HVAC_MODES) or [])
+            )
+            or (
+                self.entity.domain == climate.DOMAIN
+                and (
+                    supported_features
+                    & (
+                        climate.ClimateEntityFeature.TURN_ON
+                        | climate.ClimateEntityFeature.TURN_OFF
+                    )
                 )
             )
-            or self.entity.domain == water_heater.DOMAIN
-            and (supported_features & water_heater.WaterHeaterEntityFeature.ON_OFF)
+            or (
+                self.entity.domain == water_heater.DOMAIN
+                and (supported_features & water_heater.WaterHeaterEntityFeature.ON_OFF)
+            )
         ):
             yield AlexaPowerController(self.entity)
 
-        if (
-            self.entity.domain == climate.DOMAIN
-            or self.entity.domain == water_heater.DOMAIN
+        if self.entity.domain == climate.DOMAIN or (
+            self.entity.domain == water_heater.DOMAIN
             and (
                 supported_features
                 & water_heater.WaterHeaterEntityFeature.OPERATION_MODE
@@ -559,6 +564,10 @@ class CoverCapabilities(AlexaEntity):
             )
         if supported & cover.CoverEntityFeature.SET_TILT_POSITION:
             yield AlexaRangeController(self.entity, instance=f"{cover.DOMAIN}.tilt")
+        if supported & (
+            cover.CoverEntityFeature.STOP | cover.CoverEntityFeature.STOP_TILT
+        ):
+            yield AlexaPlaybackController(self.entity, instance=f"{cover.DOMAIN}.stop")
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.entity)
 

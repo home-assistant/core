@@ -1,0 +1,98 @@
+rules:
+  # Bronze
+  config-flow: done
+  test-before-configure: done
+  unique-config-entry: done
+  config-flow-test-coverage: done
+  runtime-data: done
+  test-before-setup: done
+  appropriate-polling: done
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup:
+    status: exempt
+    comment: no subscription to api
+  dependency-transparency: done
+  action-setup:
+    status: exempt
+    comment: no service action
+  common-modules: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-actions:
+    status: exempt
+    comment: no service action
+  brands: done
+
+  # Silver
+  config-entry-unloading:
+    status: todo
+    comment: cleanly close session
+  log-when-unavailable: done
+  entity-unavailable: done
+  action-exceptions:
+    status: exempt
+    comment: no service action
+  reauthentication-flow: todo
+  parallel-updates:
+    status: exempt
+    comment: no service action and coordinator updates
+  test-coverage: done
+  integration-owner: done
+  docs-installation-parameters:
+    status: todo
+    comment: missing user/password
+  docs-configuration-parameters:
+    status: exempt
+    comment: no configuration option
+
+  # Gold
+  entity-translations: done
+  entity-device-class: done
+  devices:
+    status: todo
+    comment: see https://github.com/home-assistant/core/pull/134027#discussion_r1898732463
+  entity-category:
+    status: done
+    comment: default class is fine
+  entity-disabled-by-default:
+    status: todo
+    comment: price can always be disabled and yesterday usage after https://github.com/home-assistant/core/pull/131166
+  discovery:
+    status: exempt
+    comment: api only, nothing on local network to discover services
+  stale-devices:
+    status: todo
+    comment: see devices
+  diagnostics: todo
+  exception-translations: todo
+  icon-translations:
+    status: exempt
+    comment: no custom icons
+  reconfiguration-flow:
+    status: todo
+    comment: reconfigure every configurations input
+  dynamic-devices:
+    status: todo
+    comment: see devices
+  discovery-update-info:
+    status: exempt
+    comment: devices are not network dependent and will not be updated during their lives
+  repair-issues:
+    status: exempt
+    comment: No repair issues to be raised
+  docs-use-cases: done
+  docs-supported-devices: todo
+  docs-supported-functions: done
+  docs-data-update:
+    status: todo
+    comment: make it clearer
+  docs-known-limitations: todo
+  docs-troubleshooting: todo
+  docs-examples: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession: todo
+  strict-typing: done

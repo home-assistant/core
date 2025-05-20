@@ -20,15 +20,13 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
-from .types import ViCareDevice
-from .utils import get_circuits
+from .types import ViCareConfigEntry, ViCareDevice
+from .utils import get_circuits, get_device_serial
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,6 +67,7 @@ def _build_entities(
 
     return [
         ViCareWater(
+            get_device_serial(device.api),
             device.config,
             device.api,
             circuit,
@@ -80,16 +79,14 @@ def _build_entities(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ViCareConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ViCare water heater platform."""
-    device_list = hass.data[DOMAIN][config_entry.entry_id][DEVICE_LIST]
-
     async_add_entities(
         await hass.async_add_executor_job(
             _build_entities,
-            device_list,
+            config_entry.runtime_data.devices,
         )
     )
 
@@ -108,12 +105,13 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
 
     def __init__(
         self,
+        device_serial: str | None,
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice,
         circuit: PyViCareHeatingCircuit,
     ) -> None:
         """Initialize the DHW water_heater device."""
-        super().__init__(device_config, device, circuit.id)
+        super().__init__(circuit.id, device_serial, device_config, device)
         self._circuit = circuit
         self._attributes: dict[str, Any] = {}
 

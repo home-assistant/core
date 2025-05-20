@@ -58,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> boo
             f"Error connecting to Nexia service: {os_error}"
         ) from os_error
 
-    coordinator = NexiaDataUpdateCoordinator(hass, nexia_home)
+    coordinator = NexiaDataUpdateCoordinator(hass, entry, nexia_home)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -85,4 +85,22 @@ async def async_remove_config_entry_device(
         for zone_id in thermostat.get_zone_ids():
             if zone_id in dev_ids:
                 return False
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> bool:
+    """Migrate entry."""
+
+    _LOGGER.debug("Migrating from version %s", entry.version)
+
+    if entry.version == 1:
+        # 1 -> 2: Unique ID from integer to string
+        if entry.minor_version == 1:
+            minor_version = 2
+            hass.config_entries.async_update_entry(
+                entry, unique_id=str(entry.unique_id), minor_version=minor_version
+            )
+
+    _LOGGER.debug("Migration successful")
+
     return True

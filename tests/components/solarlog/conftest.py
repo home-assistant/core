@@ -1,17 +1,33 @@
 """Test helpers."""
 
 from collections.abc import Generator
-from datetime import UTC, datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from solarlog_cli.solarlog_models import InverterData, SolarlogData
 
-from homeassistant.components.solarlog.const import DOMAIN as SOLARLOG_DOMAIN
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.components.solarlog.const import (
+    CONF_HAS_PWD,
+    DOMAIN as SOLARLOG_DOMAIN,
+)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 
-from .const import HOST, NAME
+from .const import HOST
 
 from tests.common import MockConfigEntry, load_json_object_fixture
+
+DEVICE_LIST = {
+    0: InverterData(name="Inverter 1", enabled=True),
+    1: InverterData(name="Inverter 2", enabled=True),
+}
+INVERTER_DATA = {
+    0: InverterData(
+        name="Inverter 1", enabled=True, consumption_year=354687, current_power=5
+    ),
+    1: InverterData(
+        name="Inverter 2", enabled=True, consumption_year=354, current_power=6
+    ),
+}
 
 
 @pytest.fixture
@@ -22,10 +38,10 @@ def mock_config_entry() -> MockConfigEntry:
         title="solarlog",
         data={
             CONF_HOST: HOST,
-            CONF_NAME: NAME,
-            "extended_data": True,
+            CONF_HAS_PWD: True,
+            CONF_PASSWORD: "pwd",
         },
-        minor_version=2,
+        minor_version=3,
         entry_id="ce5f5431554d101905d31797e1232da8",
     )
 
@@ -34,28 +50,22 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_solarlog_connector():
     """Build a fixture for the SolarLog API that connects successfully and returns one device."""
 
+    data = SolarlogData.from_dict(
+        load_json_object_fixture("solarlog_data.json", SOLARLOG_DOMAIN)
+    )
+    data.inverter_data = INVERTER_DATA
+
     mock_solarlog_api = AsyncMock()
-    mock_solarlog_api.test_connection = AsyncMock(return_value=True)
-
-    data = {
-        "devices": {
-            0: {"consumption_total": 354687, "current_power": 5},
-        }
-    }
-    data |= load_json_object_fixture("solarlog_data.json", SOLARLOG_DOMAIN)
-    data["last_updated"] = datetime.fromisoformat(data["last_updated"]).astimezone(UTC)
-
+    mock_solarlog_api.set_enabled_devices = MagicMock()
+    mock_solarlog_api.test_connection.return_value = True
+    mock_solarlog_api.test_extended_data_available.return_value = True
+    mock_solarlog_api.extended_data.return_value = True
     mock_solarlog_api.update_data.return_value = data
-    mock_solarlog_api.device_list.return_value = {
-        0: {"name": "Inverter 1"},
-        1: {"name": "Inverter 2"},
-    }
+    mock_solarlog_api.update_device_list.return_value = DEVICE_LIST
+    mock_solarlog_api.update_inverter_data.return_value = INVERTER_DATA
     mock_solarlog_api.device_name = {0: "Inverter 1", 1: "Inverter 2"}.get
-    mock_solarlog_api.client.get_device_list.return_value = {
-        0: {"name": "Inverter 1"},
-        1: {"name": "Inverter 2"},
-    }
-    mock_solarlog_api.client.close = AsyncMock(return_value=None)
+    mock_solarlog_api.device_enabled = {0: True, 1: True}.get
+    mock_solarlog_api.password.return_value = "pwd"
 
     with (
         patch(

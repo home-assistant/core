@@ -11,9 +11,13 @@ USERNAME: Final = "test_user@gmail.com"
 
 # The h-numbers refer to issues in HA's core repo
 TEST_INSTALLS: Final = (
-    "minimal",  # evohome (single zone, no DHW)
-    "default",  # evohome (multi-zone, with DHW & ghost zones)
-    "h032585",  # VisionProWifi (no preset_mode for TCS)
+    "minimal",  # evohome: single zone, no DHW
+    "default",  # evohome: multi-zone, with DHW
+    "h032585",  # VisionProWifi: no preset modes for TCS, zoneId=systemId
     "h099625",  # RoundThermostat
-    "system_004",  # RoundModulation
+    "h139906",  # zone with null schedule
+    "sys_004",  # RoundModulation
 )
+#   "botched",  # as default: but with activeFaults, ghost zones & unknown types
+
+TEST_INSTALLS_WITH_DHW: Final = ("default", "botched")

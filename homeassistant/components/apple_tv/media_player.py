@@ -39,11 +39,12 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
-from . import AppleTvConfigEntry, AppleTVEntity, AppleTVManager
+from . import AppleTvConfigEntry, AppleTVManager
 from .browse_media import build_app_list
+from .entity import AppleTVEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,7 +100,7 @@ SUPPORT_FEATURE_MAPPING = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AppleTvConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Load Apple TV media player based on a config entry."""
     name: str = config_entry.data[CONF_NAME]

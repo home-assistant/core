@@ -1,0 +1,19 @@
+{
+  "__typename": "iometer.status.v1",
+  "meter": {
+    "number": "1ISK0000000000"
+  },
+  "device": {
+    "bridge": { "rssi": -30, "version": "build-65" },
+    "id": "658c2b34-2017-45f2-a12b-731235f8bb97",
+    "core": {
+      "connectionStatus": "connected",
+      "rssi": -30,
+      "version": "build-58",
+      "powerStatus": "battery",
+      "batteryLevel": 100,
+      "attachmentStatus": "attached",
+      "pinStatus": "entered"
+    }
+  }
+}

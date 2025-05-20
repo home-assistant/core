@@ -42,6 +42,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import (
     HomeAssistantError,
+    ServiceNotSupported,
     TemplateError,
     Unauthorized,
     UnknownUser,
@@ -87,6 +88,7 @@ def _base_components() -> dict[str, ModuleType]:
     # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import (
         alarm_control_panel,
+        assist_satellite,
         calendar,
         camera,
         climate,
@@ -107,6 +109,7 @@ def _base_components() -> dict[str, ModuleType]:
 
     return {
         "alarm_control_panel": alarm_control_panel,
+        "assist_satellite": assist_satellite,
         "calendar": calendar,
         "camera": camera,
         "climate": climate,
@@ -132,8 +135,7 @@ def _validate_option_or_feature(option_or_feature: str, label: str) -> Any:
         domain, enum, option = option_or_feature.split(".", 2)
     except ValueError as exc:
         raise vol.Invalid(
-            f"Invalid {label} '{option_or_feature}', expected "
-            "<domain>.<enum>.<member>"
+            f"Invalid {label} '{option_or_feature}', expected <domain>.<enum>.<member>"
         ) from exc
 
     base_components = _base_components()
@@ -225,7 +227,7 @@ class ServiceParams(TypedDict):
 class ServiceTargetSelector:
     """Class to hold a target selector for a service."""
 
-    __slots__ = ("entity_ids", "device_ids", "area_ids", "floor_ids", "label_ids")
+    __slots__ = ("area_ids", "device_ids", "entity_ids", "floor_ids", "label_ids")
 
     def __init__(self, service_call: ServiceCall) -> None:
         """Extract ids from service call data."""
@@ -502,7 +504,7 @@ def _has_match(ids: str | list[str] | None) -> TypeGuard[str | list[str]]:
 
 
 @bind_hass
-def async_extract_referenced_entity_ids(  # noqa: C901
+def async_extract_referenced_entity_ids(
     hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
 ) -> SelectedEntities:
     """Extract referenced entity IDs from a service call."""
@@ -571,19 +573,31 @@ def async_extract_referenced_entity_ids(  # noqa: C901
             for area_entry in area_reg.areas.get_areas_for_floor(floor_id)
         )
 
-    # Find devices for targeted areas
-    selected.referenced_devices.update(selector.device_ids)
-
     selected.referenced_areas.update(selector.area_ids)
-    if selected.referenced_areas:
-        for area_id in selected.referenced_areas:
-            selected.referenced_devices.update(
-                device_entry.id
-                for device_entry in dev_reg.devices.get_devices_for_area_id(area_id)
-            )
+    selected.referenced_devices.update(selector.device_ids)
 
     if not selected.referenced_areas and not selected.referenced_devices:
         return selected
+
+    # Add indirectly referenced by device
+    selected.indirectly_referenced.update(
+        entry.entity_id
+        for device_id in selected.referenced_devices
+        for entry in entities.get_entries_for_device_id(device_id)
+        # Do not add entities which are hidden or which are config
+        # or diagnostic entities.
+        if (entry.entity_category is None and entry.hidden_by is None)
+    )
+
+    # Find devices for targeted areas
+    referenced_devices_by_area: set[str] = set()
+    if selected.referenced_areas:
+        for area_id in selected.referenced_areas:
+            referenced_devices_by_area.update(
+                device_entry.id
+                for device_entry in dev_reg.devices.get_devices_for_area_id(area_id)
+            )
+    selected.referenced_devices.update(referenced_devices_by_area)
 
     # Add indirectly referenced by area
     selected.indirectly_referenced.update(
@@ -595,10 +609,10 @@ def async_extract_referenced_entity_ids(  # noqa: C901
         # or diagnostic entities.
         if entry.entity_category is None and entry.hidden_by is None
     )
-    # Add indirectly referenced by device
+    # Add indirectly referenced by area through device
     selected.indirectly_referenced.update(
         entry.entity_id
-        for device_id in selected.referenced_devices
+        for device_id in referenced_devices_by_area
         for entry in entities.get_entries_for_device_id(device_id)
         # Do not add entities which are hidden or which are config
         # or diagnostic entities.
@@ -610,11 +624,10 @@ def async_extract_referenced_entity_ids(  # noqa: C901
                 # by an area and the entity
                 # has no explicitly set area
                 not entry.area_id
-                # The entity's device matches a targeted device
-                or device_id in selector.device_ids
             )
         )
     )
+
     return selected
 
 
@@ -975,9 +988,7 @@ async def entity_service_call(
         ):
             # If entity explicitly referenced, raise an error
             if referenced is not None and entity.entity_id in referenced.referenced:
-                raise HomeAssistantError(
-                    f"Entity {entity.entity_id} does not support this service."
-                )
+                raise ServiceNotSupported(call.domain, call.service, entity.entity_id)
 
             continue
 
@@ -1264,11 +1275,15 @@ def async_register_entity_service(
     """
     if schema is None or isinstance(schema, dict):
         schema = cv.make_entity_service_schema(schema)
-    # Do a sanity check to check this is a valid entity service schema,
-    # the check could be extended to require All/Any to have sub schema(s)
-    # with all entity service fields
     elif not cv.is_entity_service_schema(schema):
-        raise HomeAssistantError("The schema is not an entity service schema")
+        # pylint: disable-next=import-outside-toplevel
+        from .frame import ReportBehavior, report_usage
+
+        report_usage(
+            "registers an entity service with a non entity service schema",
+            core_behavior=ReportBehavior.LOG,
+            breaks_in_ha_version="2025.9",
+        )
 
     service_func: str | HassJob[..., Any]
     service_func = func if isinstance(func, str) else HassJob(func)

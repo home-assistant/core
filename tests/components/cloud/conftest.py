@@ -3,13 +3,15 @@
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
 from pathlib import Path
 from typing import Any
-from unittest.mock import DEFAULT, MagicMock, PropertyMock, patch
+from unittest.mock import DEFAULT, AsyncMock, MagicMock, PropertyMock, patch
 
 from hass_nabucasa import Cloud
 from hass_nabucasa.auth import CognitoAuth
 from hass_nabucasa.cloudhooks import Cloudhooks
 from hass_nabucasa.const import DEFAULT_SERVERS, DEFAULT_VALUES, STATE_CONNECTED
+from hass_nabucasa.files import Files
 from hass_nabucasa.google_report_state import GoogleReportState
+from hass_nabucasa.ice_servers import IceServers
 from hass_nabucasa.iot import CloudIoT
 from hass_nabucasa.remote import RemoteUI
 from hass_nabucasa.voice import Voice
@@ -67,7 +69,14 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
             spec=CloudIoT, last_disconnect_reason=None, state=STATE_CONNECTED
         )
         mock_cloud.voice = MagicMock(spec=Voice)
+        mock_cloud.files = MagicMock(spec=Files)
         mock_cloud.started = None
+        mock_cloud.ice_servers = MagicMock(
+            spec=IceServers,
+            async_register_ice_servers_listener=AsyncMock(
+                return_value=lambda: "mock-unregister"
+            ),
+        )
 
         def set_up_mock_cloud(
             cloud_client: CloudClient, mode: str, **kwargs: Any
@@ -136,7 +145,12 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
 
         # Methods that we mock with a custom side effect.
 
-        async def mock_login(email: str, password: str) -> None:
+        async def mock_login(
+            email: str,
+            password: str,
+            *,
+            check_connection: bool = False,
+        ) -> None:
             """Mock login.
 
             When called, it should call the on_start callback.

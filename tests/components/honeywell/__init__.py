@@ -1,4 +1,4 @@
-"""Tests for honeywell component."""
+"""Tests for Honeywell component."""
 
 from unittest.mock import MagicMock
 

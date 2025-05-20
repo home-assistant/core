@@ -10,6 +10,7 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
+    ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
@@ -72,6 +73,7 @@ async def test_device_registry(
     )
     assert reg_device is not None
     assert reg_device.model == "Model Name"
+    assert reg_device.model_id == "S12"
     assert reg_device.sw_version == "13.1"
     assert reg_device.connections == {
         (CONNECTION_NETWORK_MAC, "00:11:22:33:44:55"),
@@ -229,6 +231,45 @@ async def test_play_media_library(
         assert (
             sock_mock.play_from_queue.call_args_list[0].args[0]
             == test_result["play_pos"]
+        )
+
+
+@pytest.mark.parametrize(
+    ("media_content_type", "media_content_id", "message"),
+    [
+        (
+            "artist",
+            "A:ALBUM/UnknowAlbum",
+            "Could not find media in library: A:ALBUM/UnknowAlbum",
+        ),
+        (
+            "UnknownContent",
+            "A:ALBUM/UnknowAlbum",
+            "Sonos does not support media content type: UnknownContent",
+        ),
+    ],
+)
+async def test_play_media_library_content_error(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    media_content_type,
+    media_content_id,
+    message,
+) -> None:
+    """Test playing local library errors on content and content type."""
+    with pytest.raises(
+        ServiceValidationError,
+        match=message,
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: media_content_type,
+                ATTR_MEDIA_CONTENT_ID: media_content_id,
+            },
+            blocking=True,
         )
 
 
@@ -651,6 +692,7 @@ async def test_select_source_line_in_tv(
                 "play_uri": 1,
                 "play_uri_uri": "x-sonosapi-radio:ST%3aetc",
                 "play_uri_title": "James Taylor Radio",
+                "play_uri_meta": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="100c2068ST%3a1683194971234567890" parentID="10fe2064myStations" restricted="true"><dc:title>James Taylor Radio</dc:title><upnp:class>object.item.audioItem.audioBroadcast.#station</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON60423_X_#Svc60423-99999999-Token</desc></item></DIDL-Lite>',
             },
         ),
         (
@@ -659,6 +701,16 @@ async def test_select_source_line_in_tv(
                 "play_uri": 1,
                 "play_uri_uri": "x-sonosapi-hls:Api%3atune%3aliveAudio%3ajazzcafe%3aetc",
                 "play_uri_title": "66 - Watercolors",
+                "play_uri_meta": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="10090120Api%3atune%3aliveAudio%3ajazzcafe%3ae4b5402c-9999-9999-9999-4bc8e2cdccce" parentID="10086064live%3f93b0b9cb-9999-9999-9999-bcf75971fcfe" restricted="false"><dc:title>66 - Watercolors</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON9479_X_#Svc9479-99999999-Token</desc></item></DIDL-Lite>',
+            },
+        ),
+        (
+            "American Tall Tales",
+            {
+                "play_uri": 1,
+                "play_uri_uri": "x-rincon-cpcontainer:101340c8reftitle%C9F27_com?sid=239&flags=16584&sn=5",
+                "play_uri_title": "American Tall Tales",
+                "play_uri_meta": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="101340c8reftitleC9F27_com" parentID="101340c8reftitleC9F27_com" restricted="true"><dc:title>American Tall Tales</dc:title><upnp:class>object.item.audioItem.audioBook</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON61191_X_#Svc6-0-Token</desc></item></DIDL-Lite>',
             },
         ),
     ],
@@ -685,6 +737,7 @@ async def test_select_source_play_uri(
     soco_mock.play_uri.assert_called_with(
         result.get("play_uri_uri"),
         title=result.get("play_uri_title"),
+        meta=result.get("play_uri_meta"),
         timeout=LONG_SERVICE_TIMEOUT,
     )
 
@@ -1123,6 +1176,27 @@ async def test_play_media_announce(
         )
     assert sonos_websocket.play_clip.call_count == 1
 
+    # Test speakers that do not support announce. This
+    # will result in playing the clip directly via play_uri
+    sonos_websocket.play_clip.reset_mock()
+    sonos_websocket.play_clip.side_effect = None
+    retval = {"success": 0, "type": "globalError"}
+    sonos_websocket.play_clip.return_value = [retval, {}]
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "music",
+            ATTR_MEDIA_CONTENT_ID: content_id,
+            ATTR_MEDIA_ANNOUNCE: True,
+        },
+        blocking=True,
+    )
+    assert sonos_websocket.play_clip.call_count == 1
+    soco.play_uri.assert_called_with(content_id, force_radio=False)
+
 
 async def test_media_get_queue(
     hass: HomeAssistant,
@@ -1144,3 +1218,27 @@ async def test_media_get_queue(
     )
     soco_mock.get_queue.assert_called_with(max_items=0)
     assert result == snapshot
+
+
+@pytest.mark.parametrize(
+    ("speaker_model", "source_list"),
+    [
+        ("Sonos Arc Ultra", [SOURCE_TV]),
+        ("Sonos Arc", [SOURCE_TV]),
+        ("Sonos Playbar", [SOURCE_TV]),
+        ("Sonos Connect", [SOURCE_LINEIN]),
+        ("Sonos Play:5", [SOURCE_LINEIN]),
+        ("Sonos Amp", [SOURCE_LINEIN, SOURCE_TV]),
+        ("Sonos Era", None),
+    ],
+    indirect=["speaker_model"],
+)
+async def test_media_source_list(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    speaker_model: str,
+    source_list: list[str] | None,
+) -> None:
+    """Test the mapping between the speaker model name and source_list."""
+    state = hass.states.get("media_player.zone_a")
+    assert state.attributes.get(ATTR_INPUT_SOURCE_LIST) == source_list

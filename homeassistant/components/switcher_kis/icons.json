@@ -20,6 +20,9 @@
       },
       "auto_shutdown": {
         "default": "mdi:progress-clock"
+      },
+      "temperature": {
+        "default": "mdi:thermometer"
       }
     }
   },

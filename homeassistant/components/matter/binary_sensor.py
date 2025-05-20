@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING, cast
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import uint
@@ -17,7 +18,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
@@ -27,7 +28,7 @@ from .models import MatterDiscoverySchema
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter binary sensor from Config Entry."""
     matter = get_matter(hass)
@@ -55,6 +56,8 @@ class MatterBinarySensor(MatterEntity, BinarySensorEntity):
             value = None
         elif value_convert := self.entity_description.measurement_to_ha:
             value = value_convert(value)
+        if TYPE_CHECKING:
+            value = cast(bool | None, value)
         self._attr_is_on = value
 
 
@@ -150,15 +153,116 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterBinarySensorEntityDescription(
             key="LockDoorStateSensor",
             device_class=BinarySensorDeviceClass.DOOR,
-            # pylint: disable=unnecessary-lambda
-            measurement_to_ha=lambda x: {
+            measurement_to_ha={
                 clusters.DoorLock.Enums.DoorStateEnum.kDoorOpen: True,
                 clusters.DoorLock.Enums.DoorStateEnum.kDoorJammed: True,
                 clusters.DoorLock.Enums.DoorStateEnum.kDoorForcedOpen: True,
                 clusters.DoorLock.Enums.DoorStateEnum.kDoorClosed: False,
-            }.get(x),
+            }.get,
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.DoorLock.Attributes.DoorState,),
+        featuremap_contains=clusters.DoorLock.Bitmaps.Feature.kDoorPositionSensor,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="SmokeCoAlarmDeviceMutedSensor",
+            measurement_to_ha=lambda x: (
+                x == clusters.SmokeCoAlarm.Enums.MuteStateEnum.kMuted
+            ),
+            translation_key="muted",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.SmokeCoAlarm.Attributes.DeviceMuted,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="SmokeCoAlarmEndfOfServiceSensor",
+            measurement_to_ha=lambda x: (
+                x == clusters.SmokeCoAlarm.Enums.EndOfServiceEnum.kExpired
+            ),
+            translation_key="end_of_service",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.SmokeCoAlarm.Attributes.EndOfServiceAlert,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="SmokeCoAlarmBatteryAlertSensor",
+            measurement_to_ha=lambda x: (
+                x != clusters.SmokeCoAlarm.Enums.AlarmStateEnum.kNormal
+            ),
+            translation_key="battery_alert",
+            device_class=BinarySensorDeviceClass.BATTERY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.SmokeCoAlarm.Attributes.BatteryAlert,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="SmokeCoAlarmTestInProgressSensor",
+            translation_key="test_in_progress",
+            device_class=BinarySensorDeviceClass.RUNNING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.SmokeCoAlarm.Attributes.TestInProgress,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="SmokeCoAlarmHardwareFaultAlertSensor",
+            translation_key="hardware_fault",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.SmokeCoAlarm.Attributes.HardwareFaultAlert,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="SmokeCoAlarmSmokeStateSensor",
+            device_class=BinarySensorDeviceClass.SMOKE,
+            measurement_to_ha=lambda x: (
+                x != clusters.SmokeCoAlarm.Enums.AlarmStateEnum.kNormal
+            ),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.SmokeCoAlarm.Attributes.SmokeState,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="SmokeCoAlarmInterconnectSmokeAlarmSensor",
+            device_class=BinarySensorDeviceClass.SMOKE,
+            measurement_to_ha=lambda x: (
+                x != clusters.SmokeCoAlarm.Enums.AlarmStateEnum.kNormal
+            ),
+            translation_key="interconnected_smoke_alarm",
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.SmokeCoAlarm.Attributes.InterconnectSmokeAlarm,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="SmokeCoAlarmInterconnectCOAlarmSensor",
+            device_class=BinarySensorDeviceClass.CO,
+            measurement_to_ha=lambda x: (
+                x != clusters.SmokeCoAlarm.Enums.AlarmStateEnum.kNormal
+            ),
+            translation_key="interconnected_co_alarm",
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.SmokeCoAlarm.Attributes.InterconnectCOAlarm,),
     ),
 ]

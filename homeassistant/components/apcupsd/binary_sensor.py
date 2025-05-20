@@ -2,24 +2,20 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Final
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import APCUPSdCoordinator
+from .coordinator import APCUPSdConfigEntry, APCUPSdCoordinator
 
 PARALLEL_UPDATES = 0
 
-_LOGGER = logging.getLogger(__name__)
 _DESCRIPTION = BinarySensorEntityDescription(
     key="statflag",
     translation_key="online_status",
@@ -30,11 +26,11 @@ _VALUE_ONLINE_MASK: Final = 0b1000
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: APCUPSdConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up an APCUPSd Online Status binary sensor."""
-    coordinator: APCUPSdCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     # Do not create the binary sensor if APCUPSd does not provide STATFLAG field for us
     # to determine the online status.

@@ -18,7 +18,7 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
@@ -83,7 +83,7 @@ SET_ABSOLUTE_POSITION_SCHEMA: VolDictType = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Motion Blind from a config entry."""
     entities: list[MotionBaseDevice] = []
@@ -461,7 +461,7 @@ class MotionTDBUDevice(MotionBaseDevice):
     async def async_set_absolute_position(self, **kwargs):
         """Move the cover to a specific absolute position."""
         position = kwargs[ATTR_ABSOLUTE_POSITION]
-        target_width = kwargs.get(ATTR_WIDTH, None)
+        target_width = kwargs.get(ATTR_WIDTH)
 
         async with self._api_lock:
             await self.hass.async_add_executor_job(

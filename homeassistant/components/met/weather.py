@@ -13,6 +13,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
+    ATTR_WEATHER_UV_INDEX,
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
@@ -33,10 +34,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, sun
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from . import MetWeatherConfigEntry
 from .const import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_SUNNY,
@@ -46,7 +46,7 @@ from .const import (
     DOMAIN,
     FORECAST_MAP,
 )
-from .coordinator import MetDataUpdateCoordinator
+from .coordinator import MetDataUpdateCoordinator, MetWeatherConfigEntry
 
 DEFAULT_NAME = "Met.no"
 
@@ -54,7 +54,7 @@ DEFAULT_NAME = "Met.no"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: MetWeatherConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
     coordinator = config_entry.runtime_data
@@ -206,6 +206,13 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
         """Return the dew point."""
         return self.coordinator.data.current_weather_data.get(
             ATTR_MAP[ATTR_WEATHER_DEW_POINT]
+        )
+
+    @property
+    def uv_index(self) -> float | None:
+        """Return the uv index."""
+        return self.coordinator.data.current_weather_data.get(
+            ATTR_MAP[ATTR_WEATHER_UV_INDEX]
         )
 
     def _forecast(self, hourly: bool) -> list[Forecast] | None:

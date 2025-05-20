@@ -211,6 +211,12 @@ SSDP = {
         {
             "st": "nanoleaf:nl52",
         },
+        {
+            "st": "nanoleaf:nl69",
+        },
+        {
+            "st": "inanoleaf:nl81",
+        },
     ],
     "netgear": [
         {
@@ -222,6 +228,44 @@ SSDP = {
         {
             "deviceType": "urn:schemas-upnp-org:device:Basic:1",
             "manufacturer": "The OctoPrint Project",
+        },
+    ],
+    "onkyo": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "ONKYO",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
+            "manufacturer": "ONKYO",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:3",
+            "manufacturer": "ONKYO",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "Onkyo & Pioneer Corporation",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
+            "manufacturer": "Onkyo & Pioneer Corporation",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:3",
+            "manufacturer": "Onkyo & Pioneer Corporation",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "Pioneer",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
+            "manufacturer": "Pioneer",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:3",
+            "manufacturer": "Pioneer",
         },
     ],
     "openhome": [

@@ -56,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     else:
         cls = HERERoutingDataUpdateCoordinator
 
-    data_coordinator = cls(hass, api_key, here_travel_time_config)
+    data_coordinator = cls(hass, config_entry, api_key, here_travel_time_config)
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = data_coordinator
 
     async def _async_update_at_start(_: HomeAssistant) -> None:

@@ -38,28 +38,28 @@
         "name": "Input 1 voltage"
       },
       "inverter_amperage_input_1": {
-        "name": "Input 1 Amperage"
+        "name": "Input 1 amperage"
       },
       "inverter_wattage_input_1": {
-        "name": "Input 1 Wattage"
+        "name": "Input 1 wattage"
       },
       "inverter_voltage_input_2": {
         "name": "Input 2 voltage"
       },
       "inverter_amperage_input_2": {
-        "name": "Input 2 Amperage"
+        "name": "Input 2 amperage"
       },
       "inverter_wattage_input_2": {
-        "name": "Input 2 Wattage"
+        "name": "Input 2 wattage"
       },
       "inverter_voltage_input_3": {
         "name": "Input 3 voltage"
       },
       "inverter_amperage_input_3": {
-        "name": "Input 3 Amperage"
+        "name": "Input 3 amperage"
       },
       "inverter_wattage_input_3": {
-        "name": "Input 3 Wattage"
+        "name": "Input 3 wattage"
       },
       "inverter_internal_wattage": {
         "name": "Internal wattage"
@@ -137,13 +137,13 @@
         "name": "Load consumption"
       },
       "mix_wattage_pv_1": {
-        "name": "PV1 Wattage"
+        "name": "PV1 wattage"
       },
       "mix_wattage_pv_2": {
-        "name": "PV2 Wattage"
+        "name": "PV2 wattage"
       },
       "mix_wattage_pv_all": {
-        "name": "All PV Wattage"
+        "name": "All PV wattage"
       },
       "mix_export_to_grid": {
         "name": "Export to grid"
@@ -182,7 +182,7 @@
         "name": "Storage production today"
       },
       "storage_storage_production_lifetime": {
-        "name": "Lifetime Storage production"
+        "name": "Lifetime storage production"
       },
       "storage_grid_discharge_today": {
         "name": "Grid discharged today"
@@ -224,7 +224,7 @@
         "name": "Storage charging/ discharging(-ve)"
       },
       "storage_load_consumption_solar_storage": {
-        "name": "Load consumption (Solar + Storage)"
+        "name": "Load consumption (solar + storage)"
       },
       "storage_charge_today": {
         "name": "Charge today"
@@ -257,7 +257,7 @@
         "name": "Output voltage"
       },
       "storage_ac_output_frequency": {
-        "name": "Ac output frequency"
+        "name": "AC output frequency"
       },
       "storage_current_pv": {
         "name": "Solar charge current"
@@ -290,7 +290,7 @@
         "name": "Lifetime total energy input 1"
       },
       "tlx_energy_today_input_1": {
-        "name": "Energy Today Input 1"
+        "name": "Energy today input 1"
       },
       "tlx_voltage_input_1": {
         "name": "[%key:component::growatt_server::entity::sensor::inverter_voltage_input_1::name%]"
@@ -305,7 +305,7 @@
         "name": "Lifetime total energy input 2"
       },
       "tlx_energy_today_input_2": {
-        "name": "Energy Today Input 2"
+        "name": "Energy today input 2"
       },
       "tlx_voltage_input_2": {
         "name": "[%key:component::growatt_server::entity::sensor::inverter_voltage_input_2::name%]"
@@ -320,7 +320,7 @@
         "name": "Lifetime total energy input 3"
       },
       "tlx_energy_today_input_3": {
-        "name": "Energy Today Input 3"
+        "name": "Energy today input 3"
       },
       "tlx_voltage_input_3": {
         "name": "[%key:component::growatt_server::entity::sensor::inverter_voltage_input_3::name%]"
@@ -335,16 +335,16 @@
         "name": "Lifetime total energy input 4"
       },
       "tlx_energy_today_input_4": {
-        "name": "Energy Today Input 4"
+        "name": "Energy today input 4"
       },
       "tlx_voltage_input_4": {
         "name": "Input 4 voltage"
       },
       "tlx_amperage_input_4": {
-        "name": "Input 4 Amperage"
+        "name": "Input 4 amperage"
       },
       "tlx_wattage_input_4": {
-        "name": "Input 4 Wattage"
+        "name": "Input 4 wattage"
       },
       "tlx_solar_generation_total": {
         "name": "Lifetime total solar energy"
@@ -434,10 +434,10 @@
         "name": "Money lifetime"
       },
       "total_energy_today": {
-        "name": "Energy Today"
+        "name": "Energy today"
       },
       "total_output_power": {
-        "name": "Output Power"
+        "name": "Output power"
       },
       "total_energy_output": {
         "name": "[%key:component::growatt_server::entity::sensor::inverter_energy_total::name%]"

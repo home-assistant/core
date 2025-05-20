@@ -9,11 +9,19 @@ from typing import Any
 
 from pynina import ApiError, Nina
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, DOMAIN, SCAN_INTERVAL
+from .const import (
+    _LOGGER,
+    CONF_AREA_FILTER,
+    CONF_HEADLINE_FILTER,
+    CONF_REGIONS,
+    DOMAIN,
+    SCAN_INTERVAL,
+)
 
 
 @dataclass
@@ -27,6 +35,7 @@ class NinaWarningData:
     severity: str
     recommended_actions: str
     affected_areas: str
+    web: str
     sent: str
     start: str
     expires: str
@@ -38,23 +47,29 @@ class NINADataUpdateCoordinator(
 ):
     """Class to manage fetching NINA data API."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        regions: dict[str, str],
-        headline_filter: str,
-        area_filter: str,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize."""
-        self._regions: dict[str, str] = regions
         self._nina: Nina = Nina(async_get_clientsession(hass))
-        self.headline_filter: str = headline_filter
-        self.area_filter: str = area_filter
+        self.headline_filter: str = config_entry.data[CONF_HEADLINE_FILTER]
+        self.area_filter: str = config_entry.data[CONF_AREA_FILTER]
 
+        regions: dict[str, str] = config_entry.data[CONF_REGIONS]
         for region in regions:
             self._nina.addRegion(region)
 
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
+        )
 
     async def _async_update_data(self) -> dict[str, list[NinaWarningData]]:
         """Update data."""
@@ -127,6 +142,7 @@ class NINADataUpdateCoordinator(
                     raw_warn.severity,
                     " ".join([str(action) for action in raw_warn.recommended_actions]),
                     affected_areas_string,
+                    raw_warn.web or "",
                     raw_warn.sent or "",
                     raw_warn.start or "",
                     raw_warn.expires or "",

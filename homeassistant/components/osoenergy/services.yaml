@@ -1,0 +1,261 @@
+get_profile:
+  target:
+    entity:
+      domain: water_heater
+set_profile:
+  target:
+    entity:
+      domain: water_heater
+  fields:
+    hour_00:
+      required: false
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_01:
+      required: false
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_02:
+      required: false
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_03:
+      required: false
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_04:
+      required: false
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_05:
+      required: false
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_06:
+      required: false
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_07:
+      required: false
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_08:
+      required: false
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_09:
+      required: false
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_10:
+      required: false
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_11:
+      required: false
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_12:
+      required: false
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_13:
+      required: false
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_14:
+      required: false
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_15:
+      required: false
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_16:
+      required: false
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_17:
+      required: false
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_18:
+      required: false
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_19:
+      required: false
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_20:
+      required: false
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_21:
+      required: false
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_22:
+      required: false
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_23:
+      required: false
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+set_v40_min:
+  target:
+    entity:
+      domain: water_heater
+  fields:
+    v40_min:
+      required: true
+      example: 240
+      selector:
+        number:
+          min: 200
+          max: 550
+          step: 1
+          unit_of_measurement: L
+turn_off:
+  target:
+    entity:
+      domain: water_heater
+  fields:
+    until_temp_limit:
+      required: true
+      default: false
+      example: false
+      selector:
+        boolean:
+turn_on:
+  target:
+    entity:
+      domain: water_heater
+  fields:
+    until_temp_limit:
+      required: true
+      default: false
+      example: false
+      selector:
+        boolean:

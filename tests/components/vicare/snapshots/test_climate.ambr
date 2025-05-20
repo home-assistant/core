@@ -18,6 +18,7 @@
       'target_temp_step': 1,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -40,7 +41,7 @@
     'previous_unique_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': 'heating',
-    'unique_id': 'gateway0-0',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-heating-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -101,6 +102,7 @@
       'target_temp_step': 1,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -123,7 +125,7 @@
     'previous_unique_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': 'heating',
-    'unique_id': 'gateway0-1',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-heating-1',
     'unit_of_measurement': None,
   })
 # ---

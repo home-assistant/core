@@ -10,7 +10,7 @@ from pyhomematic import HMConnection
 from pyhomematic.devicetypes.generic import HMGeneric
 
 from homeassistant.const import ATTR_NAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.event import track_time_interval
 
@@ -62,7 +62,7 @@ class HMDevice(Entity):
         if self._state:
             self._state = self._state.upper()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Load data init callbacks."""
         self._subscribe_homematic_events()
 
@@ -77,7 +77,7 @@ class HMDevice(Entity):
         return self._name
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true if device is available."""
         return self._available
 

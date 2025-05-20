@@ -7,11 +7,11 @@ from unittest.mock import patch
 import rtsp_to_webrtc
 
 from homeassistant import config_entries
-from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.rtsp_to_webrtc import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .conftest import ComponentSetup
 

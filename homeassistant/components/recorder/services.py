@@ -9,13 +9,13 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entityfilter import generate_filter
 from homeassistant.helpers.service import (
     async_extract_entity_ids,
     async_register_admin_service,
 )
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import ATTR_APPLY_FILTER, ATTR_KEEP_DAYS, ATTR_REPACK, DOMAIN
 from .core import Recorder

@@ -1,0 +1,58 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "grid_status": {
+        "default": "mdi:transmission-tower",
+        "state": {
+          "off": "mdi:transmission-tower-off"
+        }
+      }
+    },
+    "sensor": {
+      "current_power_production": {
+        "default": "mdi:solar-power"
+      },
+      "daily_production": {
+        "default": "mdi:solar-power"
+      },
+      "seven_days_production": {
+        "default": "mdi:solar-power"
+      },
+      "lifetime_production": {
+        "default": "mdi:solar-power"
+      },
+      "current_power_production_phase": {
+        "default": "mdi:solar-power"
+      },
+      "daily_production_phase": {
+        "default": "mdi:solar-power"
+      },
+      "seven_days_production_phase": {
+        "default": "mdi:solar-power"
+      },
+      "lifetime_production_phase": {
+        "default": "mdi:solar-power"
+      },
+      "max_capacity": {
+        "default": "mdi:battery-charging-100"
+      },
+      "available_energy": {
+        "default": "mdi:battery-50"
+      }
+    },
+    "switch": {
+      "grid_enabled": {
+        "default": "mdi:transmission-tower",
+        "state": {
+          "off": "mdi:transmission-tower-off"
+        }
+      },
+      "relay_status": {
+        "default": "mdi:electric-switch-closed",
+        "state": {
+          "off": "mdi:electric-switch"
+        }
+      }
+    }
+  }
+}

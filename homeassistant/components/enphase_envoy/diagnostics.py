@@ -104,8 +104,12 @@ async def async_get_config_entry_diagnostics(
             if state := hass.states.get(entity.entity_id):
                 state_dict = dict(state.as_dict())
                 state_dict.pop("context", None)
-            entities.append({"entity": asdict(entity), "state": state_dict})
-        device_entities.append({"device": asdict(device), "entities": entities})
+            entity_dict = asdict(entity)
+            entity_dict.pop("_cache", None)
+            entities.append({"entity": entity_dict, "state": state_dict})
+        device_dict = asdict(device)
+        device_dict.pop("_cache", None)
+        device_entities.append({"device": device_dict, "entities": entities})
 
     # remove envoy serial
     old_serial = coordinator.envoy_serial_number

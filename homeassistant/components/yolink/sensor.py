@@ -47,7 +47,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import percentage
 
 from .const import (
@@ -57,6 +57,8 @@ from .const import (
     DEV_MODEL_PLUG_YS6803_UC,
     DEV_MODEL_TH_SENSOR_YS8004_EC,
     DEV_MODEL_TH_SENSOR_YS8004_UC,
+    DEV_MODEL_TH_SENSOR_YS8008_EC,
+    DEV_MODEL_TH_SENSOR_YS8008_UC,
     DEV_MODEL_TH_SENSOR_YS8014_EC,
     DEV_MODEL_TH_SENSOR_YS8014_UC,
     DEV_MODEL_TH_SENSOR_YS8017_EC,
@@ -125,6 +127,8 @@ MCU_DEV_TEMPERATURE_SENSOR = [
 NONE_HUMIDITY_SENSOR_MODELS = [
     DEV_MODEL_TH_SENSOR_YS8004_EC,
     DEV_MODEL_TH_SENSOR_YS8004_UC,
+    DEV_MODEL_TH_SENSOR_YS8008_EC,
+    DEV_MODEL_TH_SENSOR_YS8008_UC,
     DEV_MODEL_TH_SENSOR_YS8014_EC,
     DEV_MODEL_TH_SENSOR_YS8014_UC,
     DEV_MODEL_TH_SENSOR_YS8017_UC,
@@ -171,8 +175,10 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        exists_fn=lambda device: device.device_type in [ATTR_DEVICE_TH_SENSOR]
-        and device.device_model_name not in NONE_HUMIDITY_SENSOR_MODELS,
+        exists_fn=lambda device: (
+            device.device_type in [ATTR_DEVICE_TH_SENSOR]
+            and device.device_model_name not in NONE_HUMIDITY_SENSOR_MODELS
+        ),
     ),
     YoLinkSensorEntityDescription(
         key="temperature",
@@ -244,8 +250,9 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         should_update_entity=lambda value: value is not None,
-        exists_fn=lambda device: device.device_type
-        in ATTR_DEVICE_WATER_METER_CONTROLLER,
+        exists_fn=lambda device: (
+            device.device_type in ATTR_DEVICE_WATER_METER_CONTROLLER
+        ),
     ),
     YoLinkSensorEntityDescription(
         key="power",
@@ -273,7 +280,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up YoLink Sensor from a config entry."""
     device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators

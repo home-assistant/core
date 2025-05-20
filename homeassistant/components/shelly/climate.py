@@ -7,7 +7,12 @@ from dataclasses import asdict, dataclass
 from typing import Any, cast
 
 from aioshelly.block_device import Block
-from aioshelly.const import RPC_GENERATIONS
+from aioshelly.const import (
+    BLU_TRV_IDENTIFIER,
+    BLU_TRV_MODEL_NAME,
+    BLU_TRV_TIMEOUT,
+    RPC_GENERATIONS,
+)
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 
 from homeassistant.components.climate import (
@@ -22,8 +27,12 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import (
+    CONNECTION_BLUETOOTH,
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -31,6 +40,7 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
+    BLU_TRV_TEMPERATURE_SETTINGS,
     DOMAIN,
     LOGGER,
     NOT_CALIBRATED_ISSUE_ID,
@@ -50,7 +60,7 @@ from .utils import (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up climate device."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
@@ -69,7 +79,7 @@ async def async_setup_entry(
 
 @callback
 def async_setup_climate_entities(
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: ShellyBlockCoordinator,
 ) -> None:
     """Set up online climate devices."""
@@ -96,7 +106,7 @@ def async_setup_climate_entities(
 def async_restore_climate_entities(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: ShellyBlockCoordinator,
 ) -> None:
     """Restore sleeping climate devices."""
@@ -118,12 +128,13 @@ def async_restore_climate_entities(
 def async_setup_rpc_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entities for RPC device."""
     coordinator = config_entry.runtime_data.rpc
     assert coordinator
     climate_key_ids = get_rpc_key_ids(coordinator.device.status, "thermostat")
+    blutrv_key_ids = get_rpc_key_ids(coordinator.device.status, BLU_TRV_IDENTIFIER)
 
     climate_ids = []
     for id_ in climate_key_ids:
@@ -139,10 +150,11 @@ def async_setup_rpc_entry(
             unique_id = f"{coordinator.mac}-switch:{id_}"
             async_remove_shelly_entity(hass, "switch", unique_id)
 
-    if not climate_ids:
-        return
+    if climate_ids:
+        async_add_entities(RpcClimate(coordinator, id_) for id_ in climate_ids)
 
-    async_add_entities(RpcClimate(coordinator, id_) for id_ in climate_ids)
+    if blutrv_key_ids:
+        async_add_entities(RpcBluTrvClimate(coordinator, id_) for id_ in blutrv_key_ids)
 
 
 @dataclass
@@ -172,7 +184,6 @@ class BlockSleepingClimate(
     )
     _attr_target_temperature_step = SHTRV_01_TEMPERATURE_SETTINGS["step"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -456,7 +467,6 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
     )
     _attr_target_temperature_step = RPC_THERMOSTAT_SETTINGS["step"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
         """Initialize."""
@@ -527,4 +537,77 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
         mode = hvac_mode in (HVACMode.COOL, HVACMode.HEAT)
         await self.call_rpc(
             "Thermostat.SetConfig", {"config": {"id": self._id, "enable": mode}}
+        )
+
+
+class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
+    """Entity that controls a thermostat on RPC based Shelly devices."""
+
+    _attr_max_temp = BLU_TRV_TEMPERATURE_SETTINGS["max"]
+    _attr_min_temp = BLU_TRV_TEMPERATURE_SETTINGS["min"]
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_ON
+    )
+    _attr_hvac_modes = [HVACMode.HEAT]
+    _attr_hvac_mode = HVACMode.HEAT
+    _attr_target_temperature_step = BLU_TRV_TEMPERATURE_SETTINGS["step"]
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
+        """Initialize."""
+
+        super().__init__(coordinator, f"{BLU_TRV_IDENTIFIER}:{id_}")
+        self._id = id_
+        self._config = coordinator.device.config[f"{BLU_TRV_IDENTIFIER}:{id_}"]
+        ble_addr: str = self._config["addr"]
+        self._attr_unique_id = f"{ble_addr}-{self.key}"
+        name = self._config["name"] or f"shellyblutrv-{ble_addr.replace(':', '')}"
+        model_id = self._config.get("local_name")
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_BLUETOOTH, ble_addr)},
+            identifiers={(DOMAIN, ble_addr)},
+            via_device=(DOMAIN, self.coordinator.mac),
+            manufacturer="Shelly",
+            model=BLU_TRV_MODEL_NAME.get(model_id),
+            model_id=model_id,
+            name=name,
+        )
+        # Added intentionally to the constructor to avoid double name from base class
+        self._attr_name = None
+
+    @property
+    def target_temperature(self) -> float | None:
+        """Set target temperature."""
+        if not self._config["enable"]:
+            return None
+
+        return cast(float, self.status["target_C"])
+
+    @property
+    def current_temperature(self) -> float | None:
+        """Return current temperature."""
+        return cast(float, self.status["current_C"])
+
+    @property
+    def hvac_action(self) -> HVACAction:
+        """HVAC current action."""
+        if not self.status["pos"]:
+            return HVACAction.IDLE
+
+        return HVACAction.HEATING
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        if (target_temp := kwargs.get(ATTR_TEMPERATURE)) is None:
+            return
+
+        await self.call_rpc(
+            "BluTRV.Call",
+            {
+                "id": self._id,
+                "method": "Trv.SetTarget",
+                "params": {"id": 0, "target_C": target_temp},
+            },
+            timeout=BLU_TRV_TIMEOUT,
         )

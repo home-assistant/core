@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from copy import copy
 from datetime import datetime, timedelta
 import json
@@ -9,29 +10,20 @@ from unittest.mock import patch, sentinel
 
 from freezegun import freeze_time
 import pytest
-from sqlalchemy import text
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import Recorder, get_instance, history
+from homeassistant.components.recorder import Recorder, history
 from homeassistant.components.recorder.db_schema import (
-    Events,
-    RecorderRuns,
     StateAttributes,
     States,
     StatesMeta,
 )
 from homeassistant.components.recorder.filters import Filters
-from homeassistant.components.recorder.history import legacy
 from homeassistant.components.recorder.models import process_timestamp
-from homeassistant.components.recorder.models.legacy import (
-    LegacyLazyState,
-    LegacyLazyStatePreSchema31,
-)
 from homeassistant.components.recorder.util import session_scope
-import homeassistant.core as ha
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.json import JSONEncoder
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import (
     assert_dict_of_states_equal_without_context_and_last_changed,
@@ -42,12 +34,30 @@ from .common import (
     async_wait_recording_done,
 )
 
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager
+
+
+@pytest.fixture
+def multiple_start_time_chunk_sizes(
+    ids_for_start_time_chunk_sizes: int,
+) -> Generator[None]:
+    """Fixture to test different chunk sizes for start time query.
+
+    Force the recorder to use different chunk sizes for start time query.
+
+    In effect this forces get_significant_states_with_session
+    to call _generate_significant_states_with_session_stmt multiple times.
+    """
+    with patch(
+        "homeassistant.components.recorder.history.modern.MAX_IDS_FOR_INDEXED_GROUP_BY",
+        ids_for_start_time_chunk_sizes,
+    ):
+        yield
 
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 
@@ -55,77 +65,6 @@ async def mock_recorder_before_hass(
 @pytest.fixture(autouse=True)
 def setup_recorder(recorder_mock: Recorder) -> recorder.Recorder:
     """Set up recorder."""
-
-
-async def _async_get_states(
-    hass: HomeAssistant,
-    utc_point_in_time: datetime,
-    entity_ids: list[str] | None = None,
-    run: RecorderRuns | None = None,
-    no_attributes: bool = False,
-):
-    """Get states from the database."""
-
-    def _get_states_with_session():
-        with session_scope(hass=hass, read_only=True) as session:
-            attr_cache = {}
-            pre_31_schema = get_instance(hass).schema_version < 31
-            return [
-                LegacyLazyStatePreSchema31(row, attr_cache, None)
-                if pre_31_schema
-                else LegacyLazyState(
-                    row,
-                    attr_cache,
-                    None,
-                    row.entity_id,
-                )
-                for row in legacy._get_rows_with_session(
-                    hass,
-                    session,
-                    utc_point_in_time,
-                    entity_ids,
-                    run,
-                    no_attributes,
-                )
-            ]
-
-    return await recorder.get_instance(hass).async_add_executor_job(
-        _get_states_with_session
-    )
-
-
-def _add_db_entries(
-    hass: ha.HomeAssistant, point: datetime, entity_ids: list[str]
-) -> None:
-    with session_scope(hass=hass) as session:
-        for idx, entity_id in enumerate(entity_ids):
-            session.add(
-                Events(
-                    event_id=1001 + idx,
-                    event_type="state_changed",
-                    event_data="{}",
-                    origin="LOCAL",
-                    time_fired=point,
-                )
-            )
-            session.add(
-                States(
-                    entity_id=entity_id,
-                    state="on",
-                    attributes='{"name":"the light"}',
-                    last_changed=None,
-                    last_updated=point,
-                    event_id=1001 + idx,
-                    attributes_id=1002 + idx,
-                )
-            )
-            session.add(
-                StateAttributes(
-                    shared_attrs='{"name":"the shared light"}',
-                    hash=1234 + idx,
-                    attributes_id=1002 + idx,
-                )
-            )
 
 
 async def test_get_full_significant_states_with_session_entity_no_matches(
@@ -509,6 +448,7 @@ async def test_ensure_state_can_be_copied(
     assert_states_equal_without_context(copy(hist[entity_id][1]), hist[entity_id][1])
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 async def test_get_significant_states(hass: HomeAssistant) -> None:
     """Test that only significant states are returned.
 
@@ -523,6 +463,7 @@ async def test_get_significant_states(hass: HomeAssistant) -> None:
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 async def test_get_significant_states_minimal_response(
     hass: HomeAssistant,
 ) -> None:
@@ -592,6 +533,7 @@ async def test_get_significant_states_minimal_response(
     )
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 @pytest.mark.parametrize("time_zone", ["Europe/Berlin", "US/Hawaii", "UTC"])
 async def test_get_significant_states_with_initial(
     time_zone, hass: HomeAssistant
@@ -624,6 +566,7 @@ async def test_get_significant_states_with_initial(
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 async def test_get_significant_states_without_initial(
     hass: HomeAssistant,
 ) -> None:
@@ -658,6 +601,7 @@ async def test_get_significant_states_without_initial(
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 async def test_get_significant_states_entity_id(
     hass: HomeAssistant,
 ) -> None:
@@ -676,6 +620,7 @@ async def test_get_significant_states_entity_id(
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 async def test_get_significant_states_multiple_entity_ids(
     hass: HomeAssistant,
 ) -> None:
@@ -889,184 +834,6 @@ def record_states(
         )
 
     return zero, four, states
-
-
-@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
-@pytest.mark.usefixtures("skip_by_db_engine")
-async def test_state_changes_during_period_query_during_migration_to_schema_25(
-    hass: HomeAssistant,
-    recorder_db_url: str,
-) -> None:
-    """Test we can query data prior to schema 25 and during migration to schema 25.
-
-    This test doesn't run on MySQL / MariaDB / Postgresql; we can't drop the
-    state_attributes table.
-    """
-
-    instance = recorder.get_instance(hass)
-
-    with patch.object(instance.states_meta_manager, "active", False):
-        start = dt_util.utcnow()
-        point = start + timedelta(seconds=1)
-        end = point + timedelta(seconds=1)
-        entity_id = "light.test"
-        await recorder.get_instance(hass).async_add_executor_job(
-            _add_db_entries, hass, point, [entity_id]
-        )
-
-        no_attributes = True
-        hist = history.state_changes_during_period(
-            hass, start, end, entity_id, no_attributes, include_start_time_state=False
-        )
-        state = hist[entity_id][0]
-        assert state.attributes == {}
-
-        no_attributes = False
-        hist = history.state_changes_during_period(
-            hass, start, end, entity_id, no_attributes, include_start_time_state=False
-        )
-        state = hist[entity_id][0]
-        assert state.attributes == {"name": "the shared light"}
-
-        with instance.engine.connect() as conn:
-            conn.execute(text("update states set attributes_id=NULL;"))
-            conn.execute(text("drop table state_attributes;"))
-            conn.commit()
-
-        with patch.object(instance, "schema_version", 24):
-            instance.states_meta_manager.active = False
-            no_attributes = True
-            hist = history.state_changes_during_period(
-                hass,
-                start,
-                end,
-                entity_id,
-                no_attributes,
-                include_start_time_state=False,
-            )
-            state = hist[entity_id][0]
-            assert state.attributes == {}
-
-            no_attributes = False
-            hist = history.state_changes_during_period(
-                hass,
-                start,
-                end,
-                entity_id,
-                no_attributes,
-                include_start_time_state=False,
-            )
-            state = hist[entity_id][0]
-            assert state.attributes == {"name": "the light"}
-
-
-@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
-@pytest.mark.usefixtures("skip_by_db_engine")
-async def test_get_states_query_during_migration_to_schema_25(
-    hass: HomeAssistant,
-    recorder_db_url: str,
-) -> None:
-    """Test we can query data prior to schema 25 and during migration to schema 25.
-
-    This test doesn't run on MySQL / MariaDB / Postgresql; we can't drop the
-    state_attributes table.
-    """
-
-    instance = recorder.get_instance(hass)
-
-    start = dt_util.utcnow()
-    point = start + timedelta(seconds=1)
-    end = point + timedelta(seconds=1)
-    entity_id = "light.test"
-    await instance.async_add_executor_job(_add_db_entries, hass, point, [entity_id])
-    assert instance.states_meta_manager.active
-
-    no_attributes = True
-    hist = await _async_get_states(hass, end, [entity_id], no_attributes=no_attributes)
-    state = hist[0]
-    assert state.attributes == {}
-
-    no_attributes = False
-    hist = await _async_get_states(hass, end, [entity_id], no_attributes=no_attributes)
-    state = hist[0]
-    assert state.attributes == {"name": "the shared light"}
-
-    with instance.engine.connect() as conn:
-        conn.execute(text("update states set attributes_id=NULL;"))
-        conn.execute(text("drop table state_attributes;"))
-        conn.commit()
-
-    with patch.object(instance, "schema_version", 24):
-        instance.states_meta_manager.active = False
-        no_attributes = True
-        hist = await _async_get_states(
-            hass, end, [entity_id], no_attributes=no_attributes
-        )
-        state = hist[0]
-        assert state.attributes == {}
-
-        no_attributes = False
-        hist = await _async_get_states(
-            hass, end, [entity_id], no_attributes=no_attributes
-        )
-        state = hist[0]
-        assert state.attributes == {"name": "the light"}
-
-
-@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
-@pytest.mark.usefixtures("skip_by_db_engine")
-async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
-    hass: HomeAssistant,
-    recorder_db_url: str,
-) -> None:
-    """Test we can query data prior to schema 25 and during migration to schema 25.
-
-    This test doesn't run on MySQL / MariaDB / Postgresql; we can't drop the
-    state_attributes table.
-    """
-
-    instance = recorder.get_instance(hass)
-
-    start = dt_util.utcnow()
-    point = start + timedelta(seconds=1)
-    end = point + timedelta(seconds=1)
-    entity_id_1 = "light.test"
-    entity_id_2 = "switch.test"
-    entity_ids = [entity_id_1, entity_id_2]
-
-    await instance.async_add_executor_job(_add_db_entries, hass, point, entity_ids)
-    assert instance.states_meta_manager.active
-
-    no_attributes = True
-    hist = await _async_get_states(hass, end, entity_ids, no_attributes=no_attributes)
-    assert hist[0].attributes == {}
-    assert hist[1].attributes == {}
-
-    no_attributes = False
-    hist = await _async_get_states(hass, end, entity_ids, no_attributes=no_attributes)
-    assert hist[0].attributes == {"name": "the shared light"}
-    assert hist[1].attributes == {"name": "the shared light"}
-
-    with instance.engine.connect() as conn:
-        conn.execute(text("update states set attributes_id=NULL;"))
-        conn.execute(text("drop table state_attributes;"))
-        conn.commit()
-
-    with patch.object(instance, "schema_version", 24):
-        instance.states_meta_manager.active = False
-        no_attributes = True
-        hist = await _async_get_states(
-            hass, end, entity_ids, no_attributes=no_attributes
-        )
-        assert hist[0].attributes == {}
-        assert hist[1].attributes == {}
-
-        no_attributes = False
-        hist = await _async_get_states(
-            hass, end, entity_ids, no_attributes=no_attributes
-        )
-        assert hist[0].attributes == {"name": "the light"}
-        assert hist[1].attributes == {"name": "the light"}
 
 
 async def test_get_full_significant_states_handles_empty_last_changed(

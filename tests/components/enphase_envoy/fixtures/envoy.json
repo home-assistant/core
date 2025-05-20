@@ -17,6 +17,7 @@
     "encharge_aggregate": null,
     "enpower": null,
     "system_consumption": null,
+    "system_net_consumption": null,
     "system_production": {
       "watt_hours_lifetime": 1234,
       "watt_hours_last_7_days": 1234,
@@ -24,6 +25,7 @@
       "watts_now": 1234
     },
     "system_consumption_phases": null,
+    "system_net_consumption_phases": null,
     "system_production_phases": null,
     "ctmeter_production": null,
     "ctmeter_consumption": null,

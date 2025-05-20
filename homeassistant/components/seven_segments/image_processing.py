@@ -17,7 +17,7 @@ from homeassistant.components.image_processing import (
 )
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_SOURCE
 from homeassistant.core import HomeAssistant, split_entity_id
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -82,7 +82,7 @@ class ImageProcessingSsocr(ImageProcessingEntity):
 
         self.filepath = os.path.join(
             self.hass.config.config_dir,
-            "ssocr-{}.png".format(self._name.replace(" ", "_")),
+            f"ssocr-{self._name.replace(' ', '_')}.png",
         )
         crop = [
             "crop",

@@ -3,9 +3,10 @@
 import pytest
 
 from homeassistant.components.aranet.const import DOMAIN
-from homeassistant.components.sensor import ATTR_STATE_CLASS
+from homeassistant.components.sensor import ATTR_OPTIONS, ATTR_STATE_CLASS
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import (
     DISABLED_INTEGRATIONS_SERVICE_INFO,
@@ -20,7 +21,11 @@ from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensors_aranet_radiation(hass: HomeAssistant) -> None:
+async def test_sensors_aranet_radiation(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test setting up creates the sensors for Aranet Radiation device."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -73,12 +78,24 @@ async def test_sensors_aranet_radiation(hass: HomeAssistant) -> None:
     assert interval_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "s"
     assert interval_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
+    # Check device context for the battery sensor
+    entity = entity_registry.async_get("sensor.aranet_12345_battery")
+    device = device_registry.async_get(entity.device_id)
+    assert device.name == "Aranet☢ 12345"
+    assert device.model == "Aranet Radiation"
+    assert device.sw_version == "v1.4.38"
+    assert device.manufacturer == "SAF Tehnika"
+
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensors_aranet2(hass: HomeAssistant) -> None:
+async def test_sensors_aranet2(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test setting up creates the sensors for Aranet2 device."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -122,12 +139,24 @@ async def test_sensors_aranet2(hass: HomeAssistant) -> None:
     assert interval_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "s"
     assert interval_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
+    # Check device context for the battery sensor
+    entity = entity_registry.async_get("sensor.aranet2_12345_battery")
+    device = device_registry.async_get(entity.device_id)
+    assert device.name == "Aranet2 12345"
+    assert device.model == "Aranet2"
+    assert device.sw_version == "v1.4.4"
+    assert device.manufacturer == "SAF Tehnika"
+
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensors_aranet4(hass: HomeAssistant) -> None:
+async def test_sensors_aranet4(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test setting up creates the sensors for Aranet4 device."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -141,7 +170,7 @@ async def test_sensors_aranet4(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all("sensor")) == 0
     inject_bluetooth_service_info(hass, VALID_DATA_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 6
+    assert len(hass.states.async_all("sensor")) == 7
 
     batt_sensor = hass.states.get("sensor.aranet4_12345_battery")
     batt_sensor_attrs = batt_sensor.attributes
@@ -185,12 +214,30 @@ async def test_sensors_aranet4(hass: HomeAssistant) -> None:
     assert interval_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "s"
     assert interval_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
+    status_sensor = hass.states.get("sensor.aranet4_12345_threshold")
+    status_sensor_attrs = status_sensor.attributes
+    assert status_sensor.state == "green"
+    assert status_sensor_attrs[ATTR_FRIENDLY_NAME] == "Aranet4 12345 Threshold"
+    assert status_sensor_attrs[ATTR_OPTIONS] == ["error", "green", "yellow", "red"]
+
+    # Check device context for the battery sensor
+    entity = entity_registry.async_get("sensor.aranet4_12345_battery")
+    device = device_registry.async_get(entity.device_id)
+    assert device.name == "Aranet4 12345"
+    assert device.model == "Aranet4"
+    assert device.sw_version == "v1.2.0"
+    assert device.manufacturer == "SAF Tehnika"
+
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensors_aranetrn(hass: HomeAssistant) -> None:
+async def test_sensors_aranetrn(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test setting up creates the sensors for Aranet Radon device."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -204,7 +251,7 @@ async def test_sensors_aranetrn(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all("sensor")) == 0
     inject_bluetooth_service_info(hass, VALID_ARANET_RADON_DATA_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 6
+    assert len(hass.states.async_all("sensor")) == 7
 
     batt_sensor = hass.states.get("sensor.aranetrn_12345_battery")
     batt_sensor_attrs = batt_sensor.attributes
@@ -249,6 +296,20 @@ async def test_sensors_aranetrn(hass: HomeAssistant) -> None:
     )
     assert interval_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "s"
     assert interval_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    status_sensor = hass.states.get("sensor.aranetrn_12345_threshold")
+    status_sensor_attrs = status_sensor.attributes
+    assert status_sensor.state == "green"
+    assert status_sensor_attrs[ATTR_FRIENDLY_NAME] == "AranetRn+ 12345 Threshold"
+    assert status_sensor_attrs[ATTR_OPTIONS] == ["error", "green", "yellow", "red"]
+
+    # Check device context for the battery sensor
+    entity = entity_registry.async_get("sensor.aranetrn_12345_battery")
+    device = device_registry.async_get(entity.device_id)
+    assert device.name == "AranetRn+ 12345"
+    assert device.model == "Aranet Radon Plus"
+    assert device.sw_version == "v1.6.4"
+    assert device.manufacturer == "SAF Tehnika"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

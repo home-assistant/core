@@ -3,16 +3,18 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
-from devolo_plc_api.exceptions.device import DeviceUnavailable
+from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnavailable
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.devolo_home_network.const import (
+    DOMAIN,
     LONG_UPDATE_INTERVAL,
     SHORT_UPDATE_INTERVAL,
 )
-from homeassistant.components.sensor import DOMAIN
+from homeassistant.components.sensor import DOMAIN as PLATFORM
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -33,59 +35,74 @@ async def test_sensor_setup(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert (
-        hass.states.get(f"{DOMAIN}.{device_name}_connected_wi_fi_clients") is not None
+        hass.states.get(f"{PLATFORM}.{device_name}_connected_wi_fi_clients") is not None
     )
-    assert hass.states.get(f"{DOMAIN}.{device_name}_connected_plc_devices") is None
-    assert hass.states.get(f"{DOMAIN}.{device_name}_neighboring_wi_fi_networks") is None
+    assert hass.states.get(f"{PLATFORM}.{device_name}_connected_plc_devices") is None
+    assert (
+        hass.states.get(f"{PLATFORM}.{device_name}_neighboring_wi_fi_networks") is None
+    )
     assert (
         hass.states.get(
-            f"{DOMAIN}.{device_name}_plc_downlink_phy_rate_{PLCNET.devices[1].user_device_name}"
+            f"{PLATFORM}.{device_name}_plc_downlink_phy_rate_{PLCNET.devices[1].user_device_name}"
         )
         is not None
     )
     assert (
         hass.states.get(
-            f"{DOMAIN}.{device_name}_plc_uplink_phy_rate_{PLCNET.devices[1].user_device_name}"
+            f"{PLATFORM}.{device_name}_plc_uplink_phy_rate_{PLCNET.devices[1].user_device_name}"
         )
         is not None
     )
     assert (
         hass.states.get(
-            f"{DOMAIN}.{device_name}_plc_downlink_phyrate_{PLCNET.devices[2].user_device_name}"
+            f"{PLATFORM}.{device_name}_plc_downlink_phyrate_{PLCNET.devices[2].user_device_name}"
         )
         is None
     )
     assert (
         hass.states.get(
-            f"{DOMAIN}.{device_name}_plc_uplink_phyrate_{PLCNET.devices[2].user_device_name}"
+            f"{PLATFORM}.{device_name}_plc_uplink_phyrate_{PLCNET.devices[2].user_device_name}"
         )
         is None
+    )
+    assert (
+        hass.states.get(f"{PLATFORM}.{device_name}_last_restart_of_the_device") is None
     )
 
     await hass.config_entries.async_unload(entry.entry_id)
 
 
 @pytest.mark.parametrize(
-    ("name", "get_method", "interval"),
+    ("name", "get_method", "interval", "expected_state"),
     [
         (
             "connected_wi_fi_clients",
             "async_get_wifi_connected_station",
             SHORT_UPDATE_INTERVAL,
+            "1",
         ),
         (
             "neighboring_wi_fi_networks",
             "async_get_wifi_neighbor_access_points",
             LONG_UPDATE_INTERVAL,
+            "1",
         ),
         (
             "connected_plc_devices",
             "async_get_network_overview",
             LONG_UPDATE_INTERVAL,
+            "1",
+        ),
+        (
+            "last_restart_of_the_device",
+            "async_uptime",
+            SHORT_UPDATE_INTERVAL,
+            "2023-01-13T11:58:50+00:00",
         ),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.freeze_time("2023-01-13 12:00:00+00:00")
 async def test_sensor(
     hass: HomeAssistant,
     mock_device: MockDevice,
@@ -95,11 +112,12 @@ async def test_sensor(
     name: str,
     get_method: str,
     interval: timedelta,
+    expected_state: str,
 ) -> None:
     """Test state change of a sensor device."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    state_key = f"{DOMAIN}.{device_name}_{name}"
+    state_key = f"{PLATFORM}.{device_name}_{name}"
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -125,7 +143,7 @@ async def test_sensor(
 
     state = hass.states.get(state_key)
     assert state is not None
-    assert state.state == "1"
+    assert state.state == expected_state
 
     await hass.config_entries.async_unload(entry.entry_id)
 
@@ -140,8 +158,8 @@ async def test_update_plc_phyrates(
     """Test state change of plc_downlink_phyrate and plc_uplink_phyrate sensor devices."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    state_key_downlink = f"{DOMAIN}.{device_name}_plc_downlink_phy_rate_{PLCNET.devices[1].user_device_name}"
-    state_key_uplink = f"{DOMAIN}.{device_name}_plc_uplink_phy_rate_{PLCNET.devices[1].user_device_name}"
+    state_key_downlink = f"{PLATFORM}.{device_name}_plc_downlink_phy_rate_{PLCNET.devices[1].user_device_name}"
+    state_key_uplink = f"{PLATFORM}.{device_name}_plc_uplink_phy_rate_{PLCNET.devices[1].user_device_name}"
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -179,5 +197,30 @@ async def test_update_plc_phyrates(
     state = hass.states.get(state_key_uplink)
     assert state is not None
     assert state.state == str(PLCNET.data_rates[0].tx_rate)
+
+    await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_update_last_update_auth_failed(
+    hass: HomeAssistant, mock_device: MockDevice
+) -> None:
+    """Test getting the last update state with wrong password triggers the reauth flow."""
+    entry = configure_integration(hass)
+    mock_device.device.async_uptime.side_effect = DevicePasswordProtected
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow["step_id"] == "reauth_confirm"
+    assert flow["handler"] == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"]["source"] == SOURCE_REAUTH
+    assert flow["context"]["entry_id"] == entry.entry_id
 
     await hass.config_entries.async_unload(entry.entry_id)

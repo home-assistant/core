@@ -1,4 +1,19 @@
 {
+  "entity": {
+    "button": {
+      "pause": {
+        "default": "mdi:pause"
+      },
+      "resume": {
+        "default": "mdi:play"
+      }
+    },
+    "number": {
+      "speedlimit": {
+        "default": "mdi:speedometer"
+      }
+    }
+  },
   "services": {
     "pause": {
       "service": "mdi:pause"
