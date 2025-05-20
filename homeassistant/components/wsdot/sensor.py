@@ -54,10 +54,9 @@ async def async_setup_platform(
     wsdot_travel = WsdotTravelTimes(api_key=api_key, session=session)
     for travel_time in config[CONF_TRAVEL_TIMES]:
         name = travel_time.get(CONF_NAME) or travel_time.get(CONF_ID)
+        travel_time_id = int(travel_time[CONF_ID])
         sensors.append(
-            WashingtonStateTravelTimeSensor(
-                name, wsdot_travel, travel_time.get(CONF_ID)
-            )
+            WashingtonStateTravelTimeSensor(name, wsdot_travel, travel_time_id)
         )
 
     add_entities(sensors, True)
@@ -96,7 +95,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
     def __init__(
-        self, name: str, wsdot_travel: WsdotTravelTimes, travel_time_id: str
+        self, name: str, wsdot_travel: WsdotTravelTimes, travel_time_id: int
     ) -> None:
         """Construct a travel time sensor."""
         super().__init__(name)
