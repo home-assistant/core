@@ -2,7 +2,7 @@
 
 from amberelectric.models.price_descriptor import PriceDescriptor
 
-from homeassistant.components.amberelectric.formatters import normalize_descriptor
+from homeassistant.components.amberelectric.helpers import normalize_descriptor
 
 
 def test_normalize_descriptor() -> None:
