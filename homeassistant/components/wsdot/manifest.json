@@ -6,5 +6,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["wsdot"],
   "quality_scale": "legacy",
-  "requirements": ["wsdot==0.0.0"]
+  "requirements": ["wsdot==0.0.1"]
 }
