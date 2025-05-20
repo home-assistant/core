@@ -309,7 +309,7 @@ async def test_dhcp_updates_host(
     assert mock_config_entry.data[CONF_HOST] == "4.5.6.7"
 
 
-@pytest.mark.parametrize("serial_number", [None])
+@pytest.mark.parametrize("serial_number", ["12345678"])
 async def test_dhcp_discovery_if_panel_setup_config_flow(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
@@ -321,7 +321,8 @@ async def test_dhcp_discovery_if_panel_setup_config_flow(
 ) -> None:
     """Test DHCP discovery doesn't fail if a different panel was set up via config flow."""
     await setup_integration(hass, mock_config_entry)
-
+    assert mock_config_entry.unique_id == serial_number
+    mock_panel.serial_number = "789101112"
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_DHCP},
@@ -352,6 +353,7 @@ async def test_dhcp_discovery_if_panel_setup_config_flow(
         CONF_MODEL: model_name,
         **config_flow_data,
     }
+    assert result["result"].unique_id == "789101112"
 
 
 @pytest.mark.parametrize("model", ["solution_3000", "amax_3000"])
