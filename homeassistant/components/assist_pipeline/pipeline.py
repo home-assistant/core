@@ -554,7 +554,7 @@ class PipelineRun:
     event_callback: PipelineEventCallback
     language: str = None  # type: ignore[assignment]
     runner_data: Any | None = None
-    intent_agent: str | None = None
+    intent_agent: conversation.AgentInfo | None = None
     tts_audio_output: str | dict[str, Any] | None = None
     wake_word_settings: WakeWordSettings | None = None
     audio_settings: AudioSettings = field(default_factory=AudioSettings)
@@ -654,6 +654,12 @@ class PipelineRun:
                 "token": self.tts_stream.token,
                 "url": self.tts_stream.url,
                 "mime_type": self.tts_stream.content_type,
+                "stream_response": (
+                    self.intent_agent.supports_streaming
+                    and self.tts_stream.supports_streaming_input
+                )
+                if self.intent_agent
+                else False,
             }
 
         self.process_event(PipelineEvent(PipelineEventType.RUN_START, data))
@@ -901,12 +907,12 @@ class PipelineRun:
     ) -> str:
         """Run speech-to-text portion of pipeline. Returns the spoken text."""
         # Create a background task to prepare the conversation agent
-        if self.end_stage >= PipelineStage.INTENT:
+        if self.end_stage >= PipelineStage.INTENT and self.intent_agent:
             self.hass.async_create_background_task(
                 conversation.async_prepare_agent(
-                    self.hass, self.intent_agent, self.language
+                    self.hass, self.intent_agent.id, self.language
                 ),
-                f"prepare conversation agent {self.intent_agent}",
+                f"prepare conversation agent {self.intent_agent.id}",
             )
 
         if isinstance(self.stt_provider, stt.Provider):
@@ -1047,7 +1053,7 @@ class PipelineRun:
                     message=f"Intent recognition engine {engine} is not found",
                 )
 
-        self.intent_agent = agent_info.id
+        self.intent_agent = agent_info
 
     async def recognize_intent(
         self,
@@ -1080,7 +1086,7 @@ class PipelineRun:
             PipelineEvent(
                 PipelineEventType.INTENT_START,
                 {
-                    "engine": self.intent_agent,
+                    "engine": self.intent_agent.id,
                     "language": input_language,
                     "intent_input": intent_input,
                     "conversation_id": conversation_id,
@@ -1097,11 +1103,11 @@ class PipelineRun:
                 conversation_id=conversation_id,
                 device_id=device_id,
                 language=input_language,
-                agent_id=self.intent_agent,
+                agent_id=self.intent_agent.id,
                 extra_system_prompt=conversation_extra_system_prompt,
             )
 
-            agent_id = self.intent_agent
+            agent_id = self.intent_agent.id
             processed_locally = agent_id == conversation.HOME_ASSISTANT_AGENT
             intent_response: intent.IntentResponse | None = None
             if not processed_locally and not self._intent_agent_only:
@@ -1123,7 +1129,7 @@ class PipelineRun:
                 # If the LLM has API access, we filter out some sentences that are
                 # interfering with LLM operation.
                 if (
-                    intent_agent_state := self.hass.states.get(self.intent_agent)
+                    intent_agent_state := self.hass.states.get(self.intent_agent.id)
                 ) and intent_agent_state.attributes.get(
                     ATTR_SUPPORTED_FEATURES, 0
                 ) & conversation.ConversationEntityFeature.CONTROL:

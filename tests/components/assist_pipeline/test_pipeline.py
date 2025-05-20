@@ -1694,7 +1694,7 @@ async def test_chat_log_tts_streaming(
         return_value=conversation.AgentInfo(
             id="test-agent",
             name="Test Agent",
-            supports_streaming=False,
+            supports_streaming=True,
         ),
     ):
         await pipeline_input.validate()
