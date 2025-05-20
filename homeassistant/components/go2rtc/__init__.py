@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from contextlib import suppress
 from dataclasses import dataclass, field
 import logging
 import shutil
@@ -18,7 +19,7 @@ from homeassistant.components.default_config import DOMAIN as DEFAULT_CONFIG_DOM
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
     discovery_flow,
@@ -209,12 +210,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bo
         # pylint: disable-next=import-outside-toplevel
         from homeassistant.components.camera.helper import get_camera_entities
 
-        await asyncio.gather(
-            *(
-                camera.async_create_go2rtc_client_if_needed()
-                for camera in get_camera_entities(hass)
+        # HomeAssistantError is raised if the camera platform is not loaded
+        # and it's not a problem
+        with suppress(HomeAssistantError):
+            await asyncio.gather(
+                *(
+                    camera.async_create_go2rtc_client_if_needed()
+                    for camera in get_camera_entities(hass)
+                )
             )
-        )
 
     hass.async_create_background_task(
         inform_cameras(), "go2rtc_inform_cameras", eager_start=False
