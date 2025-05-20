@@ -1,0 +1,48 @@
+{
+  "issues": {
+      "dependancy_needs_updating": {
+          "title": "Mobile application has been updated",
+          "description": "A change has occured to the OAuth authentication method used by the Nintendo Switch Parental Controls mobile app.\n\nThis issue is not resolvable, please use the learn more link to report this issue."
+      },
+      "configuration_error": {
+          "title": "Error setting up {name}",
+          "description": "There was a problem with the response from Nintendo for this device, check the logs for further information.\n\nThis can occur due to a config issue with the parental control settings.\n\nBefore reporting this issue, make sure that debug mode has been turned on and reload the integration."
+      }
+  },
+  "config": {
+      "step": {
+          "configure": {
+              "description": "By default sensors will update every 60 seconds.",
+              "data": {
+                  "update_interval": "Update interval (seconds)"
+              }
+          },
+          "nintendo_website_auth": {
+              "description": "Click this link [Nintendo Login]({link}) to login to Nintendo. For the account you wish to link, right click on the red button \"Select this person\" and click \"Copy Link\" to use in the next step.",
+              "data": {
+                  "api_token": "Access token"
+              }
+          }
+      },
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      }
+  },
+  "exceptions": {
+      "bedtime_alarm_out_of_range": {
+          "message": "Invalid time provided, expected between 16:00 and 23:59. Got {time}"
+      },
+      "play_time_limit_out_of_range": {
+          "message": "Play time limit cannot be more than 6 hours. To lock the switch, set to 0, to disable screen time limits, set to -1."
+      }
+  },
+  "entity": {
+    "sensor": {
+      "playing_time": {
+        "name": "{DEV_NAME} used screen time"
+      }
+    }
+  }
+}
