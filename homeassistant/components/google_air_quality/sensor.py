@@ -58,7 +58,7 @@ class AirQualitySensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[Any], StateType | datetime]
 
 
-MOWER_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
+AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
     AirQualitySensorEntityDescription(
         key="uaqi",
         translation_key="uaqi",
@@ -103,13 +103,13 @@ async def async_setup_entry(
     entities: list[SensorEntity] = []
 
     entities.extend(
-        AutomowerSensorEntity(coordinator, description)
-        for description in MOWER_SENSOR_TYPES
+        AirQualitySensorEntity(coordinator, description)
+        for description in AIR_QUALITY_SENSOR_TYPES
     )
     async_add_entities(entities)
 
 
-class AutomowerSensorEntity(
+class AirQualitySensorEntity(
     CoordinatorEntity[GoogleAirQualityUpdateCoordinator], SensorEntity
 ):
     """Defining the Air Quality Sensors with AirQualitySensorEntityDescription."""

@@ -18,7 +18,6 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL: Final = datetime.timedelta(hours=1)
-ALBUM_PAGE_SIZE = 50
 
 type GoogleAirQualityConfigEntry = ConfigEntry[GoogleAirQualityUpdateCoordinator]
 
@@ -41,7 +40,6 @@ class GoogleAirQualityUpdateCoordinator(DataUpdateCoordinator[AirQualityData]):
             config_entry=config_entry,
             name=DOMAIN,
             update_interval=UPDATE_INTERVAL,
-            update_method=self._async_update_data,
         )
         self.client = client
         self.config_entry = config_entry
@@ -54,5 +52,8 @@ class GoogleAirQualityUpdateCoordinator(DataUpdateCoordinator[AirQualityData]):
                 self.config_entry.data[CONF_LONGITUDE],
             )
         except GoogleAirQualityApiError as err:
-            _LOGGER.debug("Error listing air qulaity: %s", err)
-            raise UpdateFailed(f"Error listing albums: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="unable_to_fetch",
+                translation_placeholders={"err": str(err)},
+            ) from err

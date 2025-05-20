@@ -22,10 +22,9 @@ from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 from homeassistant.helpers.selector import LocationSelector
 
 from . import api
-from .const import DOMAIN, OAUTH2_SCOPES
+from .const import DOMAIN, OAUTH2_SCOPE
 
 CONF_MAP = "map"
-SCOPE_CLOUD = "https://www.googleapis.com/auth/cloud-platform"
 
 
 class OAuth2FlowHandler(
@@ -48,7 +47,7 @@ class OAuth2FlowHandler(
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {
-            "scope": " ".join(OAUTH2_SCOPES),
+            "scope": OAUTH2_SCOPE,
             # Add params to ensure we get back a refresh token
             "access_type": "offline",
             "prompt": "consent",
@@ -61,11 +60,11 @@ class OAuth2FlowHandler(
         scopes = token_info.get("scope", "")
         scope_list = scopes.split()
 
-        if SCOPE_CLOUD not in scope_list:
+        if OAUTH2_SCOPE not in scope_list:
             return self.async_abort(
                 reason="access_not_configured",
                 description_placeholders={
-                    "message": f"Missing required scope: {SCOPE_CLOUD}"
+                    "message": f"Missing required scope: {OAUTH2_SCOPE}"
                 },
             )
 

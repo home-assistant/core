@@ -46,11 +46,8 @@
     }
   },
   "exceptions": {
-    "integration_not_found": {
-      "message": "Integration \"{target}\" not found in registry."
-    },
-    "not_loaded": {
-      "message": "{target} is not loaded."
+    "unable_to_fetch": {
+      "message": "Unable to fetch calendar data: {err}"
     }
   },
   "entity": {

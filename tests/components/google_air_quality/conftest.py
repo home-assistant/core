@@ -13,7 +13,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.google_air_quality.const import DOMAIN, OAUTH2_SCOPES
+from homeassistant.components.google_air_quality.const import DOMAIN, OAUTH2_SCOPE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -26,7 +26,6 @@ CLIENT_SECRET = "5678"
 FAKE_ACCESS_TOKEN = "some-access-token"
 FAKE_REFRESH_TOKEN = "some-refresh-token"
 EXPIRES_IN = 3600
-USERINFO_URL = "https://www.googleapis.com/oauth2/v1/userinfo"
 
 
 @pytest.fixture(name="expires_at")
@@ -35,19 +34,19 @@ def mock_expires_at() -> int:
     return time.time() + EXPIRES_IN
 
 
-@pytest.fixture(name="scopes")
-def mock_scopes() -> list[str]:
+@pytest.fixture(name="scope")
+def mock_scope() -> str:
     """Fixture to set scopes used during the config entry."""
-    return OAUTH2_SCOPES
+    return OAUTH2_SCOPE
 
 
 @pytest.fixture(name="token_entry")
-def mock_token_entry(expires_at: int, scopes: list[str]) -> dict[str, Any]:
+def mock_token_entry(expires_at: int, scope: str) -> dict[str, Any]:
     """Fixture for OAuth 'token' data for a ConfigEntry."""
     return {
         "access_token": FAKE_ACCESS_TOKEN,
         "refresh_token": FAKE_REFRESH_TOKEN,
-        "scope": " ".join(scopes),
+        "scope": scope,
         "type": "Bearer",
         "expires_at": expires_at,
         "expires_in": EXPIRES_IN,
