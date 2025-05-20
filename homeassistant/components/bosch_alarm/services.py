@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import datetime as dt
+from typing import Any
 
 import voluptuous as vol
 
@@ -16,10 +17,23 @@ from homeassistant.util import dt as dt_util
 from .const import ATTR_CONFIG_ENTRY_ID, ATTR_DATETIME, DOMAIN, SERVICE_SET_DATE_TIME
 from .types import BoschAlarmConfigEntry
 
+
+def valiadate_year(value: Any) -> dt.datetime:
+    """Validate datetime."""
+    date_val = cv.datetime(value)
+    if date_val.year < 2010:
+        raise vol.RangeInvalid("datetime must be after 2010")
+
+    if date_val.year > 2037:
+        raise vol.RangeInvalid("datetime must be before 2037")
+
+    return date_val
+
+
 SET_DATE_TIME_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
-        vol.Optional(ATTR_DATETIME): cv.datetime,
+        vol.Optional(ATTR_DATETIME): valiadate_year,
     }
 )
 
@@ -47,10 +61,6 @@ def setup_services(hass: HomeAssistant) -> None:
         panel = config_entry.runtime_data
         try:
             await panel.set_panel_date(value)
-        except ValueError as err:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN, translation_key="incorrect_year"
-            ) from err
         except asyncio.InvalidStateError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncGenerator
+import datetime as dt
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -96,7 +97,7 @@ async def test_set_date_time_service_fails_bad_params(
         )
 
 
-async def test_set_date_time_service_fails_bad_year(
+async def test_set_date_time_service_fails_bad_year_before(
     hass: HomeAssistant,
     mock_panel: AsyncMock,
     area: AsyncMock,
@@ -106,15 +107,39 @@ async def test_set_date_time_service_fails_bad_year(
     await setup_integration(hass, mock_config_entry)
     mock_panel.set_panel_date.side_effect = ValueError()
     with pytest.raises(
-        ServiceValidationError,
-        match="Bosch alarm panels only support years between 2010 and 2037",
+        vol.MultipleInvalid,
+        match=r"datetime must be before 2037 for dictionary value @ data\['datetime'\]",
     ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_DATE_TIME,
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_DATETIME: dt_util.now(),
+                ATTR_DATETIME: dt.datetime(2038, 1, 1),
+            },
+            blocking=True,
+        )
+
+
+async def test_set_date_time_service_fails_bad_year_after(
+    hass: HomeAssistant,
+    mock_panel: AsyncMock,
+    area: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the service calls fail if the panel fails the service call."""
+    await setup_integration(hass, mock_config_entry)
+    mock_panel.set_panel_date.side_effect = ValueError()
+    with pytest.raises(
+        vol.MultipleInvalid,
+        match=r"datetime must be after 2010 for dictionary value @ data\['datetime'\]",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_DATE_TIME,
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                ATTR_DATETIME: dt.datetime(2009, 1, 1),
             },
             blocking=True,
         )

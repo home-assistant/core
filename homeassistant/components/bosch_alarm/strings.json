@@ -57,9 +57,6 @@
     "not_loaded": {
       "message": "{target} is not loaded."
     },
-    "incorrect_year": {
-      "message": "Bosch alarm panels only support years between 2010 and 2037."
-    },
     "connection_error": {
       "message": "Could not connect to \"{target}\"."
     },
