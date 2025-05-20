@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 import itertools as it
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -31,8 +31,16 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
-from homeassistant.helpers import config_validation as cv, recorder, restore_state
+from homeassistant.helpers import (
+    config_validation as cv,
+    issue_registry as ir,
+    recorder,
+    restore_state,
+)
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.hassio import is_hassio
+from homeassistant.helpers.importlib import async_import_module
+from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
     async_extract_referenced_entity_ids,
@@ -41,6 +49,7 @@ from homeassistant.helpers.service import (
 from homeassistant.helpers.signal import KEY_HA_STOP
 from homeassistant.helpers.template import async_load_custom_templates
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.package import is_virtual_env
 
 # The scene integration will do a late import of scene
 # so we want to make sure its loaded with the component
@@ -385,6 +394,34 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     await exposed_entities.async_initialize()
     hass.data[DATA_EXPOSED_ENTITIES] = exposed_entities
     async_set_stop_handler(hass, _async_stop)
+
+    # Local import to avoid circular dependencies
+    # We use the import helper because hassio
+    # may not be loaded yet and we don't want to
+    # do blocking I/O in the event loop to import it.
+    if TYPE_CHECKING:
+        # pylint: disable-next=import-outside-toplevel
+        from homeassistant.components import hassio
+    else:
+        hassio = await async_import_module(hass, "homeassistant.components.hassio")
+
+    is_hassio_ = is_hassio(hass)
+
+    unsupported_method = None
+    if is_virtual_env():
+        unsupported_method = "core"
+    elif is_hassio_ and (info := hassio.get_info(hass)) and info.get("hassos") is None:
+        unsupported_method = "supervised"
+    if unsupported_method:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"unsupported_{unsupported_method}",
+            breaks_in_ha_version="2026.1.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key=f"unsupported_{unsupported_method}",
+        )
 
     return True
 

@@ -86,6 +86,14 @@
           }
         }
       }
+    },
+    "unsupported_core": {
+      "title": "Unsupported Home Assistant method",
+      "description": "You are running Home Assistant in a way that is not supported."
+    },
+    "unsupported_supervised": {
+      "title": "Unsupported Home Assistant method",
+      "description": "You are running Home Assistant in a way that is not supported."
     }
   },
   "system_health": {
