@@ -840,10 +840,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="code_arm_required",
                     return_type="bool",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_features",
                     return_type="AlarmControlPanelEntityFeature",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="alarm_disarm",
@@ -852,6 +854,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     },
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="alarm_arm_home",
@@ -860,6 +863,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     },
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="alarm_arm_away",
@@ -868,6 +872,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     },
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="alarm_arm_night",
@@ -876,6 +881,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     },
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="alarm_arm_vacation",
@@ -884,6 +890,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     },
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="alarm_trigger",
@@ -892,6 +899,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     },
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="alarm_arm_custom_bypass",
@@ -900,6 +908,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     },
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
             ],
         ),
