@@ -4673,7 +4673,7 @@ async def test_get_usb_ports_sorting(hass: HomeAssistant) -> None:
     ]
     mock_ports[0].description = "n/a"
     mock_ports[1].description = "Device A"
-    mock_ports[2].description = "n/a"
+    mock_ports[2].description = "N/A"
     mock_ports[3].description = "Device B"
 
     with patch("serial.tools.list_ports.comports", return_value=mock_ports):
@@ -4682,10 +4682,10 @@ async def test_get_usb_ports_sorting(hass: HomeAssistant) -> None:
         descriptions = list(result.values())
 
         # Verify that descriptions containing "n/a" are at the end
-        assert all("n/a" in desc for desc in descriptions[-2:])
 
-        assert not descriptions[0].startswith("n/a")
-        assert not descriptions[1].startswith("n/a")
-
-        assert "Device A" in descriptions[0]
-        assert "Device B" in descriptions[1]
+        assert descriptions == [
+            "Device A - /dev/ttyUSB1, s/n: n/a",
+            "Device B - /dev/ttyUSB3, s/n: n/a",
+            "n/a - /dev/ttyUSB0, s/n: n/a",
+            "N/A - /dev/ttyUSB2, s/n: n/a",
+        ]

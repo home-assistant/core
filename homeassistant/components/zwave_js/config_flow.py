@@ -154,7 +154,7 @@ def get_usb_ports() -> dict[str, str]:
     return dict(
         sorted(
             port_descriptions.items(),
-            key=lambda x: (x[1].startswith("n/a"), x[1].lower()),
+            key=lambda x: x[1].lower().startswith("n/a"),
         )
     )
 
