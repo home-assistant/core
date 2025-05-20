@@ -1430,10 +1430,9 @@ class BackupManager:
                 "automatic_backup_failed_agents_addons_folders",
                 {
                     "failed_agents": ", ".join(failed_agents) or "-",
-                    "failed_addons": ", ".join(
-                        val.name for val in addon_errors.values()
-                    )
-                    or "-",
+                    "failed_addons": (
+                        ", ".join(val.name for val in addon_errors.values()) or "-"
+                    ),
                     "failed_folders": ", ".join(f for f in folder_errors) or "-",
                 },
             )
