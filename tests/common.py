@@ -565,6 +565,12 @@ def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.P
 
 
 @lru_cache
+def load_fixture_bytes(filename: str, integration: str | None = None) -> bytes:
+    """Load a fixture."""
+    return get_fixture_path(filename, integration).read_bytes()
+
+
+@lru_cache
 def load_fixture(filename: str, integration: str | None = None) -> str:
     """Load a fixture."""
     return get_fixture_path(filename, integration).read_text(encoding="utf8")
