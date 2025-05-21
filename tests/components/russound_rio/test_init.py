@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, Mock
 
 from aiorussound.models import CallbackType
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.russound_rio.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
