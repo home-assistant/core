@@ -1,42 +1,8 @@
 """Constants for the Paperless NGX integration tests."""
 
-from homeassistant.const import CONF_API_KEY, CONF_HOST
+from homeassistant.const import CONF_API_KEY, CONF_URL
 
 USER_INPUT = {
-    CONF_HOST: "192.168.69.16",
+    CONF_URL: "https://192.168.69.16:8000",
     CONF_API_KEY: "test_token",
-}
-
-MOCK_STATISTICS_DATA = {
-    "documents_total": 999,
-    "documents_inbox": 9,
-    "inbox_tag": 9,
-    "inbox_tags": [9],
-    "document_file_type_counts": [
-        {"mime_type": "application/pdf", "mime_type_count": 998},
-        {"mime_type": "image/png", "mime_type_count": 1},
-    ],
-    "character_count": 99999,
-    "tag_count": 99,
-    "correspondent_count": 99,
-    "document_type_count": 99,
-    "storage_path_count": 9,
-    "current_asn": 99,
-}
-
-MOCK_STATISTICS_DATA_UPDATE = {
-    "documents_total": 420,
-    "documents_inbox": 3,
-    "inbox_tag": 5,
-    "inbox_tags": [5],
-    "document_file_type_counts": [
-        {"mime_type": "application/pdf", "mime_type_count": 419},
-        {"mime_type": "image/png", "mime_type_count": 1},
-    ],
-    "character_count": 34453,
-    "tag_count": 45,
-    "correspondent_count": 23,
-    "document_type_count": 45,
-    "storage_path_count": 2,
-    "current_asn": 456,
 }

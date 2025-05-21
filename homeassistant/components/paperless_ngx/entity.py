@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import EntityDescription
-from homeassistant.const import CONF_HOST
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import PaperlessConfigEntry, PaperlessCoordinator
+from .coordinator import PaperlessCoordinator
 
 
 class PaperlessEntity(CoordinatorEntity[PaperlessCoordinator]):
@@ -18,7 +17,6 @@ class PaperlessEntity(CoordinatorEntity[PaperlessCoordinator]):
 
     def __init__(
         self,
-        entry: PaperlessConfigEntry,
         coordinator: PaperlessCoordinator,
         description: EntityDescription,
     ) -> None:
@@ -27,16 +25,12 @@ class PaperlessEntity(CoordinatorEntity[PaperlessCoordinator]):
             self,
             coordinator=coordinator,
         )
-
-        self.entry = entry
         self.entity_description = description
-        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
-
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"  # type: ignore[union-attr]
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, entry.entry_id)},
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},  # type: ignore[union-attr]
             manufacturer="Paperless-ngx",
-            name=entry.data[CONF_HOST],
-            sw_version=entry.runtime_data.api.host_version,
-            configuration_url=entry.runtime_data.api.base_url,
+            sw_version=coordinator.api.host_version,
+            configuration_url=coordinator.api.base_url,
         )

@@ -3,11 +3,11 @@
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
+          "url": "[%key:common::config_flow::data::url%]",
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "host": "Host to connect to Paperless-ngx API",
+          "url": "URL to connect to Paperless-ngx API",
           "api_key": "API key to connect to Paperless-ngx API"
         },
         "title": "Add Paperless-ngx instance"
@@ -17,32 +17,38 @@
       "cannot_connect": "[%key:common::config_flow::error::invalid_host%]",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "user_inactive_or_deleted": "Authentication failed. The user is inactive or has been deleted.",
-      "forbidden": "Access forbidden. Your token does not have permission to access the API.",
+      "forbidden": "The token does not have permission to access the API.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   },
   "entity": {
     "sensor": {
       "documents_total": {
-        "name": "Total documents"
+        "name": "Total documents",
+        "unit_of_measurement": "documents"
       },
       "documents_inbox": {
-        "name": "Documents in inbox"
+        "name": "Documents in inbox",
+        "unit_of_measurement": "documents"
       },
       "characters_count": {
-        "name": "Total characters"
+        "name": "Total characters",
+        "unit_of_measurement": "characters"
       },
       "tag_count": {
-        "name": "Tags"
+        "name": "Tags",
+        "unit_of_measurement": "tags"
       },
       "correspondent_count": {
-        "name": "Correspondents"
+        "name": "Correspondents",
+        "unit_of_measurement": "correspondents"
       },
       "document_type_count": {
-        "name": "Document types"
+        "name": "Document types",
+        "unit_of_measurement": "document types"
       }
     }
   },

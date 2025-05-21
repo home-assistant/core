@@ -1,4 +1,4 @@
-"""Update platform for Paperless-ngx."""
+"""Sensor platform for Paperless-ngx."""
 
 from __future__ import annotations
 
@@ -11,12 +11,11 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
-    StateType,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import PaperlessConfigEntry, PaperlessCoordinator
+from .coordinator import PaperlessConfigEntry
 from .entity import PaperlessEntity
 
 PARALLEL_UPDATES = 0
@@ -77,11 +76,10 @@ async def async_setup_entry(
     """Set up Paperless-ngx sensors."""
     async_add_entities(
         PaperlessSensor(
-            entry=entry,
             coordinator=entry.runtime_data,
-            description=description,
+            description=sensor_description,
         )
-        for description in SENSOR_DESCRIPTIONS
+        for sensor_description in SENSOR_DESCRIPTIONS
     )
 
 
@@ -90,20 +88,7 @@ class PaperlessSensor(PaperlessEntity, SensorEntity):
 
     entity_description: PaperlessEntityDescription
 
-    def __init__(
-        self,
-        entry: PaperlessConfigEntry,
-        coordinator: PaperlessCoordinator,
-        description: PaperlessEntityDescription,
-    ) -> None:
-        """Initialize Paperless-ngx sensor."""
-        super().__init__(
-            entry=entry,
-            coordinator=coordinator,
-            description=description,
-        )
-
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> int | None:
         """Return the current value of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

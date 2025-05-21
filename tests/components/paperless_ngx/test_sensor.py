@@ -17,7 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-from .const import MOCK_STATISTICS_DATA_UPDATE
 
 from tests.common import (
     AsyncMock,
@@ -47,16 +46,17 @@ async def test_statistic_sensor_state(
     hass: HomeAssistant,
     mock_paperless: AsyncMock,
     freezer: FrozenDateTimeFactory,
+    mock_statistic_data_update,
 ) -> None:
     """Ensure sensor entities are added automatically."""
     # initialize with 999 documents
-    state = hass.states.get("sensor.192_168_69_16_total_documents")
+    state = hass.states.get("sensor.paperless_ngx_total_documents")
     assert state.state == "999"
 
     # update to 420 documents
     mock_paperless.statistics = AsyncMock(
         return_value=Statistic.create_with_data(
-            mock_paperless, data=MOCK_STATISTICS_DATA_UPDATE, fetched=True
+            mock_paperless, data=mock_statistic_data_update, fetched=True
         )
     )
 
@@ -64,31 +64,42 @@ async def test_statistic_sensor_state(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.192_168_69_16_total_documents")
+    state = hass.states.get("sensor.paperless_ngx_total_documents")
     assert state.state == "420"
 
 
 @pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    "error_cls",
+    [
+        PaperlessForbiddenError,
+        PaperlessConnectionError,
+        PaperlessInactiveOrDeletedError,
+        PaperlessInvalidTokenError,
+    ],
+)
 async def test__statistic_sensor_state_on_error(
     hass: HomeAssistant,
     mock_paperless: AsyncMock,
     freezer: FrozenDateTimeFactory,
+    mock_statistic_data_update,
+    error_cls,
 ) -> None:
     """Ensure sensor entities are added automatically."""
-    # PaperlessForbiddenError
-    mock_paperless.statistics.side_effect = PaperlessForbiddenError
+    # simulate error
+    mock_paperless.statistics.side_effect = error_cls
 
     freezer.tick(timedelta(seconds=120))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.192_168_69_16_total_documents")
+    state = hass.states.get("sensor.paperless_ngx_total_documents")
     assert state.state == STATE_UNAVAILABLE
 
-    # recover from PaperlessForbiddenError
+    # recover from error
     mock_paperless.statistics = AsyncMock(
         return_value=Statistic.create_with_data(
-            mock_paperless, data=MOCK_STATISTICS_DATA_UPDATE, fetched=True
+            mock_paperless, data=mock_statistic_data_update, fetched=True
         )
     )
 
@@ -96,77 +107,5 @@ async def test__statistic_sensor_state_on_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.192_168_69_16_total_documents")
-    assert state.state == "420"
-
-    # PaperlessConnectionError
-    mock_paperless.statistics.side_effect = PaperlessConnectionError
-
-    freezer.tick(timedelta(seconds=120))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.192_168_69_16_total_documents")
-    assert state.state == STATE_UNAVAILABLE
-
-    # recover from PaperlessConnectionError
-    mock_paperless.statistics = AsyncMock(
-        return_value=Statistic.create_with_data(
-            mock_paperless, data=MOCK_STATISTICS_DATA_UPDATE, fetched=True
-        )
-    )
-
-    freezer.tick(timedelta(seconds=120))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.192_168_69_16_total_documents")
-    assert state.state == "420"
-
-    # PaperlessInactiveOrDeletedError
-    mock_paperless.statistics.side_effect = PaperlessInactiveOrDeletedError
-
-    freezer.tick(timedelta(seconds=120))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.192_168_69_16_total_documents")
-    assert state.state == STATE_UNAVAILABLE
-
-    # recover from PaperlessInactiveOrDeletedError
-    mock_paperless.statistics = AsyncMock(
-        return_value=Statistic.create_with_data(
-            mock_paperless, data=MOCK_STATISTICS_DATA_UPDATE, fetched=True
-        )
-    )
-
-    freezer.tick(timedelta(seconds=120))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.192_168_69_16_total_documents")
-    assert state.state == "420"
-
-    # PaperlessInvalidTokenError
-    mock_paperless.statistics.side_effect = PaperlessInvalidTokenError
-
-    freezer.tick(timedelta(seconds=120))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.192_168_69_16_total_documents")
-    assert state.state == STATE_UNAVAILABLE
-
-    # recover from PaperlessInvalidTokenError
-    mock_paperless.statistics = AsyncMock(
-        return_value=Statistic.create_with_data(
-            mock_paperless, data=MOCK_STATISTICS_DATA_UPDATE, fetched=True
-        )
-    )
-
-    freezer.tick(timedelta(seconds=120))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.192_168_69_16_total_documents")
+    state = hass.states.get("sensor.paperless_ngx_total_documents")
     assert state.state == "420"

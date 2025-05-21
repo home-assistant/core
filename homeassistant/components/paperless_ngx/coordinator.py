@@ -15,7 +15,7 @@ from pypaperless.exceptions import (
 from pypaperless.models import Statistic
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_HOST
+from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -46,7 +46,7 @@ class PaperlessCoordinator(DataUpdateCoordinator[Statistic]):
         )
 
         self.api = Paperless(
-            entry.data[CONF_HOST],
+            entry.data[CONF_URL],
             entry.data[CONF_API_KEY],
             session=async_get_clientsession(self.hass),
         )

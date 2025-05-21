@@ -15,14 +15,14 @@ from pypaperless.exceptions import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_HOST
+from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_URL): str,
         vol.Required(CONF_API_KEY): str,
     }
 )
@@ -39,7 +39,7 @@ class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._async_abort_entries_match(
                 {
-                    CONF_HOST: user_input[CONF_HOST],
+                    CONF_URL: user_input[CONF_URL],
                     CONF_API_KEY: user_input[CONF_API_KEY],
                 }
             )
@@ -47,7 +47,7 @@ class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             client = Paperless(
-                user_input[CONF_HOST],
+                user_input[CONF_URL],
                 user_input[CONF_API_KEY],
                 session=async_get_clientsession(self.hass),
             )
@@ -56,7 +56,7 @@ class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
                 await client.initialize()
                 await client.statistics()
             except PaperlessConnectionError:
-                errors[CONF_HOST] = "cannot_connect"
+                errors[CONF_URL] = "cannot_connect"
             except PaperlessInvalidTokenError:
                 errors[CONF_API_KEY] = "invalid_api_key"
             except PaperlessInactiveOrDeletedError:
@@ -64,13 +64,13 @@ class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
             except PaperlessForbiddenError:
                 errors[CONF_API_KEY] = "forbidden"
             except InitializationError:
-                errors[CONF_HOST] = "cannot_connect"
+                errors[CONF_URL] = "cannot_connect"
             except Exception as err:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception: %s", err)
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=user_input[CONF_HOST], data=user_input
+                    title=user_input[CONF_URL], data=user_input
                 )
 
         return self.async_show_form(

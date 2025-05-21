@@ -15,7 +15,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.paperless_ngx.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_HOST
+from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -40,7 +40,6 @@ async def test_full_config_flow(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result
     assert result["flow_id"]
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -51,7 +50,7 @@ async def test_full_config_flow(hass: HomeAssistant) -> None:
     )
 
     config_entry = result["result"]
-    assert config_entry.title == USER_INPUT[CONF_HOST]
+    assert config_entry.title == USER_INPUT[CONF_URL]
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.data == USER_INPUT
 
@@ -59,11 +58,11 @@ async def test_full_config_flow(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
-        (PaperlessConnectionError(), {CONF_HOST: "cannot_connect"}),
+        (PaperlessConnectionError(), {CONF_URL: "cannot_connect"}),
         (PaperlessInvalidTokenError(), {CONF_API_KEY: "invalid_api_key"}),
         (PaperlessInactiveOrDeletedError(), {CONF_API_KEY: "user_inactive_or_deleted"}),
         (PaperlessForbiddenError(), {CONF_API_KEY: "forbidden"}),
-        (InitializationError(), {CONF_HOST: "cannot_connect"}),
+        (InitializationError(), {CONF_URL: "cannot_connect"}),
         (Exception("BOOM!"), {"base": "unknown"}),
     ],
 )
@@ -94,22 +93,20 @@ async def test_config_flow_error_handling(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == USER_INPUT[CONF_HOST]
+    assert result["title"] == USER_INPUT[CONF_URL]
     assert result["data"] == USER_INPUT
 
 
-async def test_config_already_exists(hass: HomeAssistant) -> None:
+async def test_config_already_exists(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test we only allow a single config flow."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        data=USER_INPUT,
-    ).add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         data=USER_INPUT,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
