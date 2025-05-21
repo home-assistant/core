@@ -6,6 +6,7 @@ import asyncio
 import contextlib
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from pynintendoparental import Authenticator, NintendoParental
 from pynintendoparental.exceptions import (
@@ -51,6 +52,8 @@ class NintendoUpdateCoordinator(DataUpdateCoordinator[None]):
         """Update data from Nintendo's API."""
         try:
             with contextlib.suppress(InvalidSessionTokenException):
+                if TYPE_CHECKING:
+                    assert isinstance(self.update_interval, timedelta)
                 async with asyncio.timeout(self.update_interval.total_seconds() - 5):
                     return await self.api.update()
         except InvalidOAuthConfigurationException as err:
