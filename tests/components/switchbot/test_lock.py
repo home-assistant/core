@@ -102,7 +102,6 @@ async def test_lock_services_with_night_latch_enabled(
 
     entry = mock_entry_encrypted_factory(sensor_type=sensor_type)
     entry.add_to_hass(hass)
-
     mocked_instance = AsyncMock(return_value=True)
 
     with patch.multiple(
