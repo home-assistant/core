@@ -21,6 +21,7 @@ from homeassistant.components.sensor import (
     SensorExtraStoredData,
     SensorStateClass,
 )
+from homeassistant.components.sensor.recorder import EQUIVALENT_UNITS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -138,6 +139,10 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
     ) is None:
         return config
 
+    if unit_of_measurement in EQUIVALENT_UNITS:
+        unit_of_measurement = config[CONF_UNIT_OF_MEASUREMENT] = EQUIVALENT_UNITS[
+            unit_of_measurement
+        ]
     if (
         device_class in DEVICE_CLASS_UNITS
         and unit_of_measurement not in DEVICE_CLASS_UNITS[device_class]
