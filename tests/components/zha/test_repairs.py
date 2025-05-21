@@ -3,7 +3,6 @@
 from http import HTTPStatus
 from unittest.mock import Mock, call, patch
 
-import pytest
 from zigpy.application import ControllerApplication
 import zigpy.backups
 from zigpy.exceptions import NetworkSettingsInconsistent
@@ -18,7 +17,6 @@ from homeassistant.components.zha.repairs.network_settings_inconsistent import (
     ISSUE_INCONSISTENT_NETWORK_SETTINGS,
 )
 from homeassistant.components.zha.repairs.wrong_silabs_firmware import (
-    DISABLE_MULTIPAN_URL,
     ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED,
     HardwareType,
     _detect_radio_hardware,
@@ -109,14 +107,6 @@ def test_detect_radio_hardware_failure(hass: HomeAssistant) -> None:
         assert _detect_radio_hardware(hass, SKYCONNECT_DEVICE) == HardwareType.OTHER
 
 
-@pytest.mark.parametrize(
-    ("detected_hardware", "expected_learn_more_url"),
-    [
-        (HardwareType.SKYCONNECT, DISABLE_MULTIPAN_URL[HardwareType.SKYCONNECT]),
-        (HardwareType.YELLOW, DISABLE_MULTIPAN_URL[HardwareType.YELLOW]),
-        (HardwareType.OTHER, None),
-    ],
-)
 async def test_multipan_firmware_repair(
     hass: HomeAssistant,
     detected_hardware: HardwareType,
