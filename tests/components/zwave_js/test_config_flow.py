@@ -4483,28 +4483,12 @@ async def test_get_usb_ports_sorting() -> None:
         ]
 
 
-@pytest.mark.parametrize(
-    "discovery_info",
-    [
-        [
-            Discovery(
-                addon="core_zwave_js",
-                service="zwave_js",
-                uuid=uuid4(),
-                config=ADDON_DISCOVERY_INFO,
-            )
-        ]
-    ],
-)
+@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
 async def test_intent_recommended_user(
     hass: HomeAssistant,
-    supervisor,
-    addon_not_installed,
-    install_addon,
-    start_addon,
-    addon_options,
-    set_addon_options,
-    get_addon_discovery_info,
+    install_addon: AsyncMock,
+    start_addon: AsyncMock,
+    set_addon_options: AsyncMock,
 ) -> None:
     """Test the intent_recommended step."""
     result = await hass.config_entries.flow.async_init(
@@ -4596,6 +4580,7 @@ async def test_intent_recommended_user(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
 @pytest.mark.parametrize(
     ("usb_discovery_info", "device", "discovery_name"),
     [
@@ -4618,29 +4603,12 @@ async def test_intent_recommended_user(
         ),
     ],
 )
-@pytest.mark.parametrize(
-    "discovery_info",
-    [
-        [
-            Discovery(
-                addon="core_zwave_js",
-                service="zwave_js",
-                uuid=uuid4(),
-                config=ADDON_DISCOVERY_INFO,
-            )
-        ]
-    ],
-)
 async def test_recommended_usb_discovery(
     hass: HomeAssistant,
-    supervisor,
-    addon_not_installed,
-    install_addon,
-    addon_options,
-    get_addon_discovery_info,
+    install_addon: AsyncMock,
     mock_usb_serial_by_id: MagicMock,
-    set_addon_options,
-    start_addon,
+    set_addon_options: AsyncMock,
+    start_addon: AsyncMock,
     usb_discovery_info: UsbServiceInfo,
     device: str,
     discovery_name: str,
