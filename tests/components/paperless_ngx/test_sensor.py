@@ -29,7 +29,6 @@ from tests.common import (
 )
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_platfom(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -43,7 +42,6 @@ async def test_sensor_platfom(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.usefixtures("init_integration")
 async def test_statistic_sensor_state(
     hass: HomeAssistant,
@@ -70,7 +68,6 @@ async def test_statistic_sensor_state(
     assert state.state == "420"
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.usefixtures("init_integration")
 async def test__statistic_sensor_state_on_error(
     hass: HomeAssistant,

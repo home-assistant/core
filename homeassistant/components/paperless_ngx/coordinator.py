@@ -40,11 +40,10 @@ class PaperlessCoordinator(DataUpdateCoordinator[Statistic]):
         super().__init__(
             hass,
             LOGGER,
+            config_entry=entry,
             name="Paperless-ngx Coordinator",
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
-            always_update=True,
         )
-        self.statistic_forbidden_logged: bool = False
 
         self.api = Paperless(
             entry.data[CONF_HOST],
