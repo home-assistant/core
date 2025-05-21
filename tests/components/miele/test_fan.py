@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 from aiohttp import ClientResponseError
 from pymiele import MieleDevices
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,

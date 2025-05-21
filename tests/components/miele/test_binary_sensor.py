@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 from pymiele import MieleDevices
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.miele.const import DOMAIN

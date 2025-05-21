@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 from aiohttp import ClientResponseError
 from pymiele import MieleDevices
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.miele.const import DOMAIN

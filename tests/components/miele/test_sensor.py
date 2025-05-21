@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 from pymiele import MieleDevices
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.miele.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -50,5 +50,20 @@ async def test_sensor_states_api_push(
     action_callback = get_actions_callback(mock_miele_client)
     await action_callback(act_file)
     await hass.async_block_till_done()
+
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
+
+
+@pytest.mark.parametrize("load_device_file", ["hob.json"])
+@pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_hob_sensor_states(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    setup_platform: None,
+) -> None:
+    """Test sensor state."""
 
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)

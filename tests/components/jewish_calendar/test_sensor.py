@@ -59,7 +59,6 @@ TEST_PARAMS = [
             "attr": {
                 "device_class": "enum",
                 "friendly_name": "Jewish Calendar Holiday",
-                "icon": "mdi:calendar-star",
                 "id": "rosh_hashana_i",
                 "type": "YOM_TOV",
                 "options": lambda: HolidayDatabase(False).get_all_names(),
@@ -77,7 +76,6 @@ TEST_PARAMS = [
             "attr": {
                 "device_class": "enum",
                 "friendly_name": "Jewish Calendar Holiday",
-                "icon": "mdi:calendar-star",
                 "id": "chanukah, rosh_chodesh",
                 "type": "MELACHA_PERMITTED_HOLIDAY, ROSH_CHODESH",
                 "options": lambda: HolidayDatabase(False).get_all_names(),
@@ -95,8 +93,7 @@ TEST_PARAMS = [
             "attr": {
                 "device_class": "enum",
                 "friendly_name": "Jewish Calendar Weekly Torah portion",
-                "icon": "mdi:book-open-variant",
-                "options": list(Parasha),
+                "options": [str(p) for p in Parasha],
             },
         },
         "he",
@@ -144,7 +141,6 @@ TEST_PARAMS = [
                 "hebrew_year": "5779",
                 "hebrew_month_name": "מרחשוון",
                 "hebrew_day": "6",
-                "icon": "mdi:star-david",
                 "friendly_name": "Jewish Calendar Date",
             },
         },

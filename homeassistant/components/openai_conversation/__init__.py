@@ -140,7 +140,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     content.append(
                         ResponseInputImageParam(
                             type="input_image",
-                            file_id=filename,
                             image_url=f"data:{mime_type};base64,{base64_file}",
                             detail="auto",
                         )
