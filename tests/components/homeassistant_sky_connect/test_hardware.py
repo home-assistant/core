@@ -97,7 +97,7 @@ async def test_hardware_info(
                     "description": "SkyConnect v1.0",
                 },
                 "name": "Home Assistant SkyConnect",
-                "url": "https://skyconnect.home-assistant.io/documentation/",
+                "url": "https://support.nabucasa.com/hc/en-us/categories/24734620813469-Home-Assistant-Connect-ZBT-1",
             },
             {
                 "board": None,
@@ -110,7 +110,7 @@ async def test_hardware_info(
                     "description": "Home Assistant Connect ZBT-1",
                 },
                 "name": "Home Assistant Connect ZBT-1",
-                "url": "https://skyconnect.home-assistant.io/documentation/",
+                "url": "https://support.nabucasa.com/hc/en-us/categories/24734620813469-Home-Assistant-Connect-ZBT-1",
             },
             # Bad entry is skipped
         ]

@@ -11,7 +11,7 @@ from homeassistant.components.samsungtv.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import setup_samsungtv_entry
-from .const import ENTRYDATA_ENCRYPTED_WEBSOCKET, MOCK_ENTRY_WS_WITH_MAC
+from .const import ENTRYDATA_ENCRYPTED_WEBSOCKET, ENTRYDATA_WEBSOCKET
 
 from tests.common import load_json_object_fixture
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -25,7 +25,7 @@ async def test_entry_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
-    config_entry = await setup_samsungtv_entry(hass, MOCK_ENTRY_WS_WITH_MAC)
+    config_entry = await setup_samsungtv_entry(hass, ENTRYDATA_WEBSOCKET)
 
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry

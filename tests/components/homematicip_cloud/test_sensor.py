@@ -2,7 +2,6 @@
 
 from homematicip.base.enums import ValveState
 
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.components.homematicip_cloud.entity import (
     ATTR_CONFIG_PENDING,
     ATTR_DEVICE_OVERHEATED,
@@ -23,11 +22,7 @@ from homeassistant.components.homematicip_cloud.sensor import (
     ATTR_WIND_DIRECTION,
     ATTR_WIND_DIRECTION_VARIATION,
 )
-from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
-    DOMAIN as SENSOR_DOMAIN,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     LIGHT_LUX,
@@ -39,17 +34,8 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entity_basics
-
-
-async def test_manually_configured_platform(hass: HomeAssistant) -> None:
-    """Test that we do not set up an access point."""
-    assert await async_setup_component(
-        hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: {"platform": HMIPC_DOMAIN}}
-    )
-    assert not hass.data.get(HMIPC_DOMAIN)
 
 
 async def test_hmip_accesspoint_status(

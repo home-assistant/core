@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 import aiohttp
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.wmspro.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState

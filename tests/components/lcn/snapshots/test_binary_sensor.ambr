@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_setup_lcn_binary_sensor[binary_sensor.binary_sensor1-entry]
+# name: test_setup_lcn_binary_sensor[binary_sensor.testmodule_binary_sensor1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,8 +12,8 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.binary_sensor1',
-    'has_entity_name': False,
+    'entity_id': 'binary_sensor.testmodule_binary_sensor1',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -33,20 +33,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_lcn_binary_sensor[binary_sensor.binary_sensor1-state]
+# name: test_setup_lcn_binary_sensor[binary_sensor.testmodule_binary_sensor1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Binary_Sensor1',
+      'friendly_name': 'TestModule Binary_Sensor1',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.binary_sensor1',
+    'entity_id': 'binary_sensor.testmodule_binary_sensor1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_lcn_binary_sensor[binary_sensor.sensor_keylock-entry]
+# name: test_setup_lcn_binary_sensor[binary_sensor.testmodule_sensor_keylock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -59,8 +59,8 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.sensor_keylock',
-    'has_entity_name': False,
+    'entity_id': 'binary_sensor.testmodule_sensor_keylock',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -80,20 +80,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_lcn_binary_sensor[binary_sensor.sensor_keylock-state]
+# name: test_setup_lcn_binary_sensor[binary_sensor.testmodule_sensor_keylock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sensor_KeyLock',
+      'friendly_name': 'TestModule Sensor_KeyLock',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.sensor_keylock',
+    'entity_id': 'binary_sensor.testmodule_sensor_keylock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_lcn_binary_sensor[binary_sensor.sensor_lockregulator1-entry]
+# name: test_setup_lcn_binary_sensor[binary_sensor.testmodule_sensor_lockregulator1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -106,8 +106,8 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.sensor_lockregulator1',
-    'has_entity_name': False,
+    'entity_id': 'binary_sensor.testmodule_sensor_lockregulator1',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -127,13 +127,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_lcn_binary_sensor[binary_sensor.sensor_lockregulator1-state]
+# name: test_setup_lcn_binary_sensor[binary_sensor.testmodule_sensor_lockregulator1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sensor_LockRegulator1',
+      'friendly_name': 'TestModule Sensor_LockRegulator1',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.sensor_lockregulator1',
+    'entity_id': 'binary_sensor.testmodule_sensor_lockregulator1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

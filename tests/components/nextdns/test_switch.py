@@ -7,7 +7,7 @@ from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
 from nextdns import ApiError, InvalidApiKeyError
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from tenacity import RetryError
 
 from homeassistant.components.nextdns.const import DOMAIN

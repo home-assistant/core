@@ -1090,7 +1090,7 @@ type ValueSchemas = dict[Hashable, VolSchemaType | Callable[[Any], dict[str, Any
 def key_value_schemas(
     key: str,
     value_schemas: ValueSchemas,
-    default_schema: VolSchemaType | None = None,
+    default_schema: VolSchemaType | Callable[[Any], dict[str, Any]] | None = None,
     default_description: str | None = None,
 ) -> Callable[[Any], dict[Hashable, Any]]:
     """Create a validator that validates based on a value for specific key.
@@ -1745,18 +1745,35 @@ BUILT_IN_CONDITIONS: ValueSchemas = {
     "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
     "or": OR_CONDITION_SCHEMA,
     "state": STATE_CONDITION_SCHEMA,
-    "sun": SUN_CONDITION_SCHEMA,
     "template": TEMPLATE_CONDITION_SCHEMA,
     "time": TIME_CONDITION_SCHEMA,
     "trigger": TRIGGER_CONDITION_SCHEMA,
     "zone": ZONE_CONDITION_SCHEMA,
 }
 
+
+# This is first round of validation, we don't want to mutate the config here already,
+# just ensure basics as condition type and alias are there.
+def _base_condition_validator(value: Any) -> Any:
+    vol.Schema(
+        {
+            **CONDITION_BASE_SCHEMA,
+            CONF_CONDITION: vol.NotIn(BUILT_IN_CONDITIONS),
+        },
+        extra=vol.ALLOW_EXTRA,
+    )(value)
+    return value
+
+
 CONDITION_SCHEMA: vol.Schema = vol.Schema(
     vol.Any(
         vol.All(
             expand_condition_shorthand,
-            key_value_schemas(CONF_CONDITION, BUILT_IN_CONDITIONS),
+            key_value_schemas(
+                CONF_CONDITION,
+                BUILT_IN_CONDITIONS,
+                _base_condition_validator,
+            ),
         ),
         dynamic_template_condition,
     )
@@ -1783,7 +1800,10 @@ CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
         key_value_schemas(
             CONF_CONDITION,
             BUILT_IN_CONDITIONS,
-            dynamic_template_condition_action,
+            vol.Any(
+                dynamic_template_condition_action,
+                _base_condition_validator,
+            ),
             "a list of conditions or a valid template",
         ),
     )
@@ -1842,7 +1862,7 @@ def _base_trigger_list_flatten(triggers: list[Any]) -> list[Any]:
     return flatlist
 
 
-# This is first round of validation, we don't want to process the config here already,
+# This is first round of validation, we don't want to mutate the config here already,
 # just ensure basics as platform and ID are there.
 def _base_trigger_validator(value: Any) -> Any:
     _base_trigger_validator_schema(value)

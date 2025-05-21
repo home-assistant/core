@@ -55,16 +55,16 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def get_omer_count(call: ServiceCall) -> ServiceResponse:
         """Return the Omer blessing for a given date."""
-        date = call.data.get("date", dt_util.now().date())
+        date = call.data.get(ATTR_DATE, dt_util.now().date())
         after_sunset = (
             call.data[ATTR_AFTER_SUNSET]
-            if "date" in call.data
+            if ATTR_DATE in call.data
             else is_after_sunset(hass)
         )
         hebrew_date = HebrewDate.from_gdate(
             date + datetime.timedelta(days=int(after_sunset))
         )
-        nusach = Nusach[call.data["nusach"].upper()]
+        nusach = Nusach[call.data[ATTR_NUSACH].upper()]
         set_language(call.data[CONF_LANGUAGE])
         omer = Omer(date=hebrew_date, nusach=nusach)
         return {

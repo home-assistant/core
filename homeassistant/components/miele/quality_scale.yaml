@@ -32,18 +32,23 @@ rules:
       Handled by a setting in manifest.json as there is no account information in API
 
   # Silver
-  action-exceptions: todo
+  action-exceptions:
+    status: done
+    comment: No custom actions are defined
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
     comment: No configuration parameters
-  docs-installation-parameters: todo
+  docs-installation-parameters:
+    status: exempt
+    comment: |
+      Integration uses account linking via Nabu casa so no installation parameters are needed.
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
-  parallel-updates:
-    status: exempt
-    comment: Handled by coordinator
+  log-when-unavailable:
+    status: done
+    comment: Handled by DataUpdateCoordinator
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: todo
 

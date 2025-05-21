@@ -1033,7 +1033,7 @@ async def test_form_with_automatic_connection_handling(
 
 
 async def _get_menu_step_secure_tunnel(hass: HomeAssistant) -> FlowResult:
-    """Return flow in secure_tunnelling menu step."""
+    """Return flow in secure_tunnel menu step."""
     gateway = _gateway_descriptor(
         "192.168.0.1",
         3675,
@@ -1082,7 +1082,7 @@ async def test_get_secure_menu_step_manual_tunnelling(
     request_description_mock: MagicMock,
     hass: HomeAssistant,
 ) -> None:
-    """Test flow reaches secure_tunnellinn menu step from manual tunnelling configuration."""
+    """Test flow reaches secure_tunnellinn menu step from manual tunneling configuration."""
     gateway = _gateway_descriptor(
         "192.168.0.1",
         3675,
@@ -1129,7 +1129,7 @@ async def test_get_secure_menu_step_manual_tunnelling(
 
 
 async def test_configure_secure_tunnel_manual(hass: HomeAssistant, knx_setup) -> None:
-    """Test configure tunnelling secure keys manually."""
+    """Test configure tunneling secure keys manually."""
     menu_step = await _get_menu_step_secure_tunnel(hass)
 
     result = await hass.config_entries.flow.async_configure(

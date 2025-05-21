@@ -24,6 +24,8 @@ from .const import DOMAIN, PROCESS_ACTION, PROGRAM_ID, MieleActions, MieleApplia
 from .coordinator import MieleConfigEntry
 from .entity import MieleEntity
 
+PARALLEL_UPDATES = 1
+
 _LOGGER = logging.getLogger(__name__)
 
 # The following const classes define program speeds and programs for the vacuum cleaner.
@@ -80,7 +82,7 @@ class MieleVacuumStateCode(MieleEnum):
     blocked_front_wheel = 5900
     docked = 5903, 5904
     remote_controlled = 5910
-    unknown = -9999
+    missing2none = -9999
 
 
 SUPPORTED_FEATURES = (
@@ -139,21 +141,21 @@ async def async_setup_entry(
 
 
 VACUUM_PHASE_TO_ACTIVITY = {
-    MieleVacuumStateCode.idle: VacuumActivity.IDLE,
-    MieleVacuumStateCode.docked: VacuumActivity.DOCKED,
-    MieleVacuumStateCode.cleaning: VacuumActivity.CLEANING,
-    MieleVacuumStateCode.going_to_target_area: VacuumActivity.CLEANING,
-    MieleVacuumStateCode.returning: VacuumActivity.RETURNING,
-    MieleVacuumStateCode.wheel_lifted: VacuumActivity.ERROR,
-    MieleVacuumStateCode.dirty_sensors: VacuumActivity.ERROR,
-    MieleVacuumStateCode.dust_box_missing: VacuumActivity.ERROR,
-    MieleVacuumStateCode.blocked_drive_wheels: VacuumActivity.ERROR,
-    MieleVacuumStateCode.blocked_brushes: VacuumActivity.ERROR,
-    MieleVacuumStateCode.check_dust_box_and_filter: VacuumActivity.ERROR,
-    MieleVacuumStateCode.internal_fault_reboot: VacuumActivity.ERROR,
-    MieleVacuumStateCode.blocked_front_wheel: VacuumActivity.ERROR,
-    MieleVacuumStateCode.paused: VacuumActivity.PAUSED,
-    MieleVacuumStateCode.remote_controlled: VacuumActivity.PAUSED,
+    MieleVacuumStateCode.idle.value: VacuumActivity.IDLE,
+    MieleVacuumStateCode.docked.value: VacuumActivity.DOCKED,
+    MieleVacuumStateCode.cleaning.value: VacuumActivity.CLEANING,
+    MieleVacuumStateCode.going_to_target_area.value: VacuumActivity.CLEANING,
+    MieleVacuumStateCode.returning.value: VacuumActivity.RETURNING,
+    MieleVacuumStateCode.wheel_lifted.value: VacuumActivity.ERROR,
+    MieleVacuumStateCode.dirty_sensors.value: VacuumActivity.ERROR,
+    MieleVacuumStateCode.dust_box_missing.value: VacuumActivity.ERROR,
+    MieleVacuumStateCode.blocked_drive_wheels.value: VacuumActivity.ERROR,
+    MieleVacuumStateCode.blocked_brushes.value: VacuumActivity.ERROR,
+    MieleVacuumStateCode.check_dust_box_and_filter.value: VacuumActivity.ERROR,
+    MieleVacuumStateCode.internal_fault_reboot.value: VacuumActivity.ERROR,
+    MieleVacuumStateCode.blocked_front_wheel.value: VacuumActivity.ERROR,
+    MieleVacuumStateCode.paused.value: VacuumActivity.PAUSED,
+    MieleVacuumStateCode.remote_controlled.value: VacuumActivity.PAUSED,
 }
 
 
@@ -169,7 +171,7 @@ class MieleVacuum(MieleEntity, StateVacuumEntity):
     def activity(self) -> VacuumActivity | None:
         """Return activity."""
         return VACUUM_PHASE_TO_ACTIVITY.get(
-            MieleVacuumStateCode(self.device.state_program_phase)
+            MieleVacuumStateCode(self.device.state_program_phase).value
         )
 
     @property

@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from aiotractive.exceptions import TractiveError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (

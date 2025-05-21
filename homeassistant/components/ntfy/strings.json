@@ -18,7 +18,7 @@
         "sections": {
           "auth": {
             "name": "Authentication",
-            "description": "Depending on whether the server is configured to support access control, some topics may be read/write protected so that only users with the correct credentials can subscribe or publish to them. To publish/subscribe to protected topics, you can provide a username and password.",
+            "description": "Depending on whether the server is configured to support access control, some topics may be read/write protected so that only users with the correct credentials can subscribe or publish to them. To publish/subscribe to protected topics, you can provide a username and password. Home Assistant will automatically generate an access token to authenticate with ntfy.",
             "data": {
               "username": "[%key:common::config_flow::data::username%]",
               "password": "[%key:common::config_flow::data::password%]"

@@ -13,7 +13,7 @@ from onedrive_personal_sdk.exceptions import (
 )
 from onedrive_personal_sdk.models.items import AppRoot, Drive, File, Folder, ItemUpdate
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.onedrive.const import (
     CONF_FOLDER_ID,
