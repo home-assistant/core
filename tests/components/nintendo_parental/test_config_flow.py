@@ -1,5 +1,7 @@
 """Test the Nintendo Switch Parental Controls config flow."""
 
+from unittest.mock import MagicMock
+
 from homeassistant import config_entries
 from homeassistant.components.nintendo_parental.const import CONF_SESSION_TOKEN, DOMAIN
 from homeassistant.const import CONF_API_TOKEN
@@ -15,7 +17,7 @@ mock_config_entry = MockConfigEntry(
 )
 
 
-async def test_full_flow(hass: HomeAssistant, mock_authenticator_client) -> None:
+async def test_full_flow(hass: HomeAssistant, mock_authenticator_client: MagicMock) -> None:
     """Test a full and successful config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -36,7 +38,7 @@ async def test_full_flow(hass: HomeAssistant, mock_authenticator_client) -> None
 
 
 async def test_already_configured(
-    hass: HomeAssistant, mock_authenticator_client
+    hass: HomeAssistant, mock_authenticator_client: MagicMock
 ) -> None:
     """Ensure only one instance of an account can be configured."""
     mock_config_entry.add_to_hass(hass)
@@ -57,7 +59,7 @@ async def test_already_configured(
 
 
 async def test_invalid_api_token(
-    hass: HomeAssistant, mock_request_handler, mock_authenticator_client
+    hass: HomeAssistant, mock_request_handler, mock_authenticator_client: MagicMock
 ) -> None:
     """Test to ensure an error is shown if the API token is invalid."""
     result = await hass.config_entries.flow.async_init(
@@ -107,7 +109,7 @@ async def test_invalid_api_token(
 
 
 async def test_general_error(
-    hass: HomeAssistant, mock_request_handler, mock_authenticator_client
+    hass: HomeAssistant, mock_request_handler, mock_authenticator_client: MagicMock
 ) -> None:
     """Test catching of general Exceptions."""
     result = await hass.config_entries.flow.async_init(
