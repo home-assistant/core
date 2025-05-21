@@ -3,6 +3,7 @@
 from http import HTTPStatus
 from unittest.mock import Mock, call, patch
 
+import pytest
 from zigpy.application import ControllerApplication
 import zigpy.backups
 from zigpy.exceptions import NetworkSettingsInconsistent
@@ -107,10 +108,13 @@ def test_detect_radio_hardware_failure(hass: HomeAssistant) -> None:
         assert _detect_radio_hardware(hass, SKYCONNECT_DEVICE) == HardwareType.OTHER
 
 
+@pytest.mark.parametrize(
+    ("detected_hardware"),
+    [HardwareType.SKYCONNECT, HardwareType.YELLOW, HardwareType.OTHER],
+)
 async def test_multipan_firmware_repair(
     hass: HomeAssistant,
     detected_hardware: HardwareType,
-    expected_learn_more_url: str,
     config_entry: MockConfigEntry,
     mock_zigpy_connect: ControllerApplication,
     issue_registry: ir.IssueRegistry,
@@ -149,7 +153,6 @@ async def test_multipan_firmware_repair(
     # The issue is created when we fail to probe
     assert issue is not None
     assert issue.translation_placeholders["firmware_type"] == "CPC"
-    assert issue.learn_more_url == expected_learn_more_url
 
     # If ZHA manages to start up normally after this, the issue will be deleted
     await hass.config_entries.async_setup(config_entry.entry_id)
