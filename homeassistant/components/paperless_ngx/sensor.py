@@ -33,37 +33,37 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
     PaperlessEntityDescription(
         key="documents_total",
         translation_key="documents_total",
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.documents_total,
     ),
     PaperlessEntityDescription(
         key="documents_inbox",
         translation_key="documents_inbox",
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.documents_inbox,
     ),
     PaperlessEntityDescription(
         key="characters_count",
         translation_key="characters_count",
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.character_count,
     ),
     PaperlessEntityDescription(
         key="tag_count",
         translation_key="tag_count",
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.tag_count,
     ),
     PaperlessEntityDescription(
         key="correspondent_count",
         translation_key="correspondent_count",
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.correspondent_count,
     ),
     PaperlessEntityDescription(
         key="document_type_count",
         translation_key="document_type_count",
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.document_type_count,
     ),
 )
