@@ -33,7 +33,6 @@ from .const import (
     CONF_MIN_TEMP,
     CONF_SETPOINT,
     CONF_TARGET_VALUE_LOCKED,
-    DOMAIN,
 )
 from .entity import LcnEntity
 from .helpers import InputType
@@ -66,7 +65,7 @@ async def async_setup_entry(
         async_add_entities,
     )
 
-    hass.data[DOMAIN][config_entry.entry_id][ADD_ENTITIES_CALLBACKS].update(
+    config_entry.runtime_data[ADD_ENTITIES_CALLBACKS].update(
         {DOMAIN_CLIMATE: add_entities}
     )
 

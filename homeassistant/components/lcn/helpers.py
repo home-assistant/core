@@ -65,7 +65,7 @@ def get_device_connection(
     hass: HomeAssistant, address: AddressType, config_entry: ConfigEntry
 ) -> DeviceConnectionType:
     """Return a lcn device_connection."""
-    host_connection = hass.data[DOMAIN][config_entry.entry_id][CONNECTION]
+    host_connection = config_entry.runtime_data[CONNECTION]
     addr = pypck.lcn_addr.LcnAddr(*address)
     return host_connection.get_address_conn(addr)
 
@@ -217,9 +217,9 @@ def register_lcn_address_devices(
             model=device_model,
         )
 
-        hass.data[DOMAIN][config_entry.entry_id][DEVICE_CONNECTIONS][
-            device_entry.id
-        ] = get_device_connection(hass, address, config_entry)
+        config_entry.runtime_data[DEVICE_CONNECTIONS][device_entry.id] = (
+            get_device_connection(hass, address, config_entry)
+        )
 
 
 async def async_update_device_config(
