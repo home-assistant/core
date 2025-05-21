@@ -55,7 +55,6 @@ class AirQualitySensorEntityDescription(SensorEntityDescription):
         lambda _: None
     )
     translation_key_fn: Callable[[Any], str]
-    option_fn: Callable[[Any], list[str] | None] = lambda _: None
     value_fn: Callable[[Any], StateType | datetime]
 
 
@@ -72,6 +71,13 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
         key="uaqi_category",
         translation_key_fn=lambda x: "uaqi_category",
         device_class=SensorDeviceClass.ENUM,
+        options=[
+            "excellent_air_quality",
+            "good_air_quality",
+            "low_air_quality",
+            "moderate_air_quality",
+            "poor_air_quality",
+        ],
         value_fn=lambda x: x.indexes[0].category,
     ),
     AirQualitySensorEntityDescription(
