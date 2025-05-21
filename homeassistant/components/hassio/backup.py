@@ -412,10 +412,19 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         for slug, errors in _addon_errors.items():
             try:
                 addon_info = await self._client.addons.addon_info(slug)
-                addon_errors[slug] = AddonErrorData(name=addon_info.name, errors=errors)
+                addon_errors[slug] = AddonErrorData(
+                    addon=AddonInfo(
+                        name=addon_info.name,
+                        slug=addon_info.slug,
+                        version=addon_info.version,
+                    ),
+                    errors=errors,
+                )
             except SupervisorError as err:
                 _LOGGER.debug("Error getting addon %s: %s", slug, err)
-                addon_errors[slug] = AddonErrorData(name=slug, errors=errors)
+                addon_errors[slug] = AddonErrorData(
+                    addon=AddonInfo(name=None, slug=slug, version=None), errors=errors
+                )
 
         _folder_errors = _collect_errors(
             full_status, "backup_store_folders", "backup_folder_save"

@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 STORE_DELAY_SAVE = 30
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-STORAGE_VERSION_MINOR = 6
+STORAGE_VERSION_MINOR = 7
 
 
 class StoredBackupData(TypedDict):
@@ -76,6 +76,11 @@ class _BackupStore(Store[StoredBackupData]):
                 # Version 1.6 adds agent retention settings
                 for agent in data["config"]["agents"]:
                     data["config"]["agents"][agent]["retention"] = None
+            if old_minor_version < 7:
+                # Version 1.7 adds failing addons and folders
+                for backup in data["backups"]:
+                    backup["failed_addons"] = []
+                    backup["failed_folders"] = []
 
         # Note: We allow reading data with major version 2.
         # Reject if major version is higher than 2.
