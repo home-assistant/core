@@ -87,13 +87,17 @@
         }
       }
     },
-    "unsupported_core": {
-      "title": "Home Assistant Core installation method deprecated",
-      "description": "The Home Assistant Core installation method is deprecated and won't be supported in the future. Please consider switching to a supported installation method."
+    "unsupported_method": {
+      "title": "Home Assistant installation method is deprecated",
+      "description": "The {method} installation method is deprecated and won't be supported in the future. Please consider switching to a supported installation method."
     },
-    "unsupported_supervised": {
-      "title": "Home Assistant Supervised installation method deprecated",
-      "description": "The Home Assistant Supervised installation method is deprecated and won't be supported in the future. Please consider switching to a supported installation method."
+    "unsupported_architecture": {
+      "title": "32-bit architecture is deprecated",
+      "description": "The 32-bit architecture is deprecated and won't be supported in the future. Please consider switching to a supported architecture."
+    },
+    "unsupported_method_architecture": {
+      "title": "Home Assistant installation method and architecture are deprecated",
+      "description": "The {method} installation method and 32-bit architecture are deprecated and won't be supported in the future. Please consider switching to a supported installation method and architecture."
     }
   },
   "system_health": {

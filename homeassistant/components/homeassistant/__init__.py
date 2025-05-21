@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 import itertools as it
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import voluptuous as vol
 
@@ -38,8 +38,6 @@ from homeassistant.helpers import (
     restore_state,
 )
 from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.helpers.hassio import is_hassio
-from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
@@ -47,9 +45,9 @@ from homeassistant.helpers.service import (
     async_register_admin_service,
 )
 from homeassistant.helpers.signal import KEY_HA_STOP
+from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.template import async_load_custom_templates
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.package import is_virtual_env
 
 # The scene integration will do a late import of scene
 # so we want to make sure its loaded with the component
@@ -395,32 +393,34 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     hass.data[DATA_EXPOSED_ENTITIES] = exposed_entities
     async_set_stop_handler(hass, _async_stop)
 
-    # Local import to avoid circular dependencies
-    # We use the import helper because hassio
-    # may not be loaded yet and we don't want to
-    # do blocking I/O in the event loop to import it.
-    if TYPE_CHECKING:
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components import hassio
-    else:
-        hassio = await async_import_module(hass, "homeassistant.components.hassio")
+    info = await async_get_system_info(hass)
 
-    is_hassio_ = is_hassio(hass)
-
-    unsupported_method = None
-    if is_virtual_env():
-        unsupported_method = "core"
-    elif is_hassio_ and (info := hassio.get_info(hass)) and info.get("hassos") is None:
-        unsupported_method = "supervised"
-    if unsupported_method:
+    unsupported_method = info["installation_type"] in {
+        "Home Assistant Core",
+        "Home Assistant Supervised",
+    }
+    arch = info["arch"]
+    unsupported_architecture = False
+    if arch in {"i386", "armhf", "armv7"}:
+        unsupported_architecture = True
+    if unsupported_method or unsupported_architecture:
+        issue_id = "unsupported"
+        if unsupported_method:
+            issue_id += "_method"
+        if unsupported_architecture:
+            issue_id += "_architecture"
         ir.async_create_issue(
             hass,
             DOMAIN,
-            f"unsupported_{unsupported_method}",
-            breaks_in_ha_version="2026.1.0",
+            issue_id,
+            breaks_in_ha_version="2025.12.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
-            translation_key=f"unsupported_{unsupported_method}",
+            translation_key=issue_id,
+            translation_placeholders={
+                "method": info["installation_type"],
+                "arch": arch,
+            },
         )
 
     return True
