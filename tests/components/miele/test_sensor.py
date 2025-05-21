@@ -44,6 +44,21 @@ async def test_hob_sensor_states(
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
 
+@pytest.mark.parametrize("load_device_file", ["fridge_freezer.json"])
+@pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_fridge_freezer_sensor_states(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    setup_platform: None,
+) -> None:
+    """Test sensor state."""
+
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
+
+
 @pytest.mark.parametrize("load_device_file", ["oven_scenario/001_off.json"])
 @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
 @pytest.mark.parametrize(
