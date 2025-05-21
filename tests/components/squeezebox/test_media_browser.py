@@ -264,7 +264,7 @@ async def test_async_search_media_invalid_type(
         )
         response = await client.receive_json()
         assert not response["success"]
-        err_message = "Media Content Type must be specified and must be one of"
+        err_message = "Media content type must be specified and must be one of"
         assert err_message in response["error"]["message"]
 
 
