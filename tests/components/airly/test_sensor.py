@@ -5,7 +5,7 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 from airly.exceptions import AirlyError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant

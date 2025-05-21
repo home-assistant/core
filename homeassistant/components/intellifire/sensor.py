@@ -12,14 +12,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN
-from .coordinator import IntellifireDataUpdateCoordinator
+from .coordinator import IntellifireConfigEntry, IntellifireDataUpdateCoordinator
 from .entity import IntellifireEntity
 
 
@@ -142,12 +140,12 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: IntellifireConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Define setup entry call."""
 
-    coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         IntelliFireSensor(coordinator=coordinator, description=description)
         for description in INTELLIFIRE_SENSORS

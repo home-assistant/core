@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -13,17 +12,17 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 
-from .account import IcloudAccount, IcloudDevice
+from .account import IcloudAccount, IcloudConfigEntry, IcloudDevice
 from .const import DOMAIN
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: IcloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for iCloud component."""
-    account: IcloudAccount = hass.data[DOMAIN][entry.unique_id]
+    account = entry.runtime_data
     tracked = set[str]()
 
     @callback

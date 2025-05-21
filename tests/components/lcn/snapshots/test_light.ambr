@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_setup_lcn_light[light.light_output1-entry]
+# name: test_setup_lcn_light[light.testmodule_light_output1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -16,8 +16,8 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.light_output1',
-    'has_entity_name': False,
+    'entity_id': 'light.testmodule_light_output1',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -37,26 +37,26 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_lcn_light[light.light_output1-state]
+# name: test_setup_lcn_light[light.testmodule_light_output1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'friendly_name': 'Light_Output1',
+      'friendly_name': 'TestModule Light_Output1',
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
       'supported_features': <LightEntityFeature: 32>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.light_output1',
+    'entity_id': 'light.testmodule_light_output1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_lcn_light[light.light_output2-entry]
+# name: test_setup_lcn_light[light.testmodule_light_output2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -73,8 +73,8 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.light_output2',
-    'has_entity_name': False,
+    'entity_id': 'light.testmodule_light_output2',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -94,25 +94,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_lcn_light[light.light_output2-state]
+# name: test_setup_lcn_light[light.testmodule_light_output2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'color_mode': None,
-      'friendly_name': 'Light_Output2',
+      'friendly_name': 'TestModule Light_Output2',
       'supported_color_modes': list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
       'supported_features': <LightEntityFeature: 32>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.light_output2',
+    'entity_id': 'light.testmodule_light_output2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_lcn_light[light.light_relay1-entry]
+# name: test_setup_lcn_light[light.testmodule_light_relay1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -129,8 +129,8 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.light_relay1',
-    'has_entity_name': False,
+    'entity_id': 'light.testmodule_light_relay1',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -150,18 +150,18 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_lcn_light[light.light_relay1-state]
+# name: test_setup_lcn_light[light.testmodule_light_relay1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'color_mode': None,
-      'friendly_name': 'Light_Relay1',
+      'friendly_name': 'TestModule Light_Relay1',
       'supported_color_modes': list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.light_relay1',
+    'entity_id': 'light.testmodule_light_relay1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

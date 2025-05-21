@@ -22,7 +22,7 @@ from .const import (
     CONF_ACTIVATION,
     CONF_MOMENTARY,
     CONF_PAUSE,
-    DOMAIN as KONNECTED_DOMAIN,
+    DOMAIN,
     STATE_HIGH,
     STATE_LOW,
 )
@@ -36,7 +36,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches attached to a Konnected device from a config entry."""
-    data = hass.data[KONNECTED_DOMAIN]
+    data = hass.data[DOMAIN]
     device_id = config_entry.data["id"]
     switches = [
         KonnectedSwitch(device_id, zone_data.get(CONF_ZONE), zone_data)
@@ -63,12 +63,12 @@ class KonnectedSwitch(SwitchEntity):
             f"{device_id}-{self._zone_num}-{self._momentary}-"
             f"{self._pause}-{self._repeat}"
         )
-        self._attr_device_info = DeviceInfo(identifiers={(KONNECTED_DOMAIN, device_id)})
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_id)})
 
     @property
     def panel(self):
         """Return the Konnected HTTP client."""
-        device_data = self.hass.data[KONNECTED_DOMAIN][CONF_DEVICES][self._device_id]
+        device_data = self.hass.data[DOMAIN][CONF_DEVICES][self._device_id]
         return device_data.get("panel")
 
     @property

@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from technove import Station, Status, TechnoVEError
 
 from homeassistant.components.technove.const import DOMAIN

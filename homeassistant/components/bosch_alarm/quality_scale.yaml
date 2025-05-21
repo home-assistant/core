@@ -13,10 +13,7 @@ rules:
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions:
-    status: exempt
-    comment: |
-      No custom actions are defined.
+  docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -29,25 +26,22 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: |
-      No custom actions are defined.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
   entity-unavailable: todo
   integration-owner: done
   log-when-unavailable: todo
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
 
   # Gold
   devices: done
   diagnostics: todo
-  discovery-update-info: todo
-  discovery: todo
+  discovery-update-info: done
+  discovery: done
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo

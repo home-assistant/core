@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import HomeAssistantUpdateOptions, StoreAddonUpdate
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import BackupManagerError, ManagerBackup
 

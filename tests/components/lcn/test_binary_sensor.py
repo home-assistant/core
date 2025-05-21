@@ -22,9 +22,9 @@ from .conftest import MockConfigEntry, init_integration
 
 from tests.common import snapshot_platform
 
-BINARY_SENSOR_LOCKREGULATOR1 = "binary_sensor.sensor_lockregulator1"
-BINARY_SENSOR_SENSOR1 = "binary_sensor.binary_sensor1"
-BINARY_SENSOR_KEYLOCK = "binary_sensor.sensor_keylock"
+BINARY_SENSOR_LOCKREGULATOR1 = "binary_sensor.testmodule_sensor_lockregulator1"
+BINARY_SENSOR_SENSOR1 = "binary_sensor.testmodule_binary_sensor1"
+BINARY_SENSOR_KEYLOCK = "binary_sensor.testmodule_sensor_keylock"
 
 
 async def test_setup_lcn_binary_sensor(
@@ -140,7 +140,11 @@ async def test_unload_config_entry(hass: HomeAssistant, entry: MockConfigEntry) 
 
 
 @pytest.mark.parametrize(
-    "entity_id", ["binary_sensor.sensor_lockregulator1", "binary_sensor.sensor_keylock"]
+    "entity_id",
+    [
+        "binary_sensor.testmodule_sensor_lockregulator1",
+        "binary_sensor.testmodule_sensor_keylock",
+    ],
 )
 async def test_create_issue(
     hass: HomeAssistant,
