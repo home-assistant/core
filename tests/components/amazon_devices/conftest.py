@@ -41,8 +41,8 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         }
         client.get_devices_data.return_value = {
             "test": AmazonDevice(
-                account_name="test",
-                capabilities=["cook"],
+                account_name="Echo Test",
+                capabilities=["AUDIO_PLAYER", "MICROPHONE"],
                 device_family="mine",
                 device_type="echo",
                 device_owner_customer_id="test",

@@ -50,6 +50,20 @@
       "bluetooth": {
         "name": "Bluetooth state"
       }
+    },
+    "notify": {
+      "speak": {
+        "name": "Speak"
+      },
+      "announce": {
+        "name": "Announce"
+      },
+      "sound": {
+        "name": "Sound"
+      },
+      "custom": {
+        "name": "Custom"
+      }
     }
   }
 }

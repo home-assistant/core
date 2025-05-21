@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[binary_sensor.test_bluetooth_state-entry]
+# name: test_all_entities[binary_sensor.echo_test_bluetooth_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.test_bluetooth_state',
+    'entity_id': 'binary_sensor.echo_test_bluetooth_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -33,21 +33,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.test_bluetooth_state-state]
+# name: test_all_entities[binary_sensor.echo_test_bluetooth_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
-      'friendly_name': 'test Bluetooth state',
+      'friendly_name': 'Echo Test Bluetooth state',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_bluetooth_state',
+    'entity_id': 'binary_sensor.echo_test_bluetooth_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_all_entities[binary_sensor.test_connectivity-entry]
+# name: test_all_entities[binary_sensor.echo_test_connectivity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -60,7 +60,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.test_connectivity',
+    'entity_id': 'binary_sensor.echo_test_connectivity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -81,14 +81,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.test_connectivity-state]
+# name: test_all_entities[binary_sensor.echo_test_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
-      'friendly_name': 'test Connectivity',
+      'friendly_name': 'Echo Test Connectivity',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_connectivity',
+    'entity_id': 'binary_sensor.echo_test_connectivity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
