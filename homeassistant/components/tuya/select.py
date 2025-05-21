@@ -316,6 +316,28 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Electric Blanket
+    # https://developer.tuya.com/en/docs/iot/categorydr?id=Kaiuz22dyc66p
+    "dr": (
+        # Sets the heating level for both sides of the electric blanket.
+        SelectEntityDescription(
+            key=DPCode.LEVEL,  # Unified Level Selector (overrides Side A & B)
+            icon="mdi:thermometer-lines",
+            translation_key="electric_blanket_level",
+        ),
+        # Side-specific level selectors (synced with the global LEVEL selector).
+        # Tuya allows for setting the level for each side separately.
+        SelectEntityDescription(
+            key=DPCode.LEVEL_1,  # Level Selector for Side A
+            icon="mdi:thermometer-lines",
+            translation_key="electric_blanket_level_side_a",
+        ),
+        SelectEntityDescription(
+            key=DPCode.LEVEL_2,  # Level Selector for Side B
+            icon="mdi:thermometer-lines",
+            translation_key="electric_blanket_level_side_b",
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)

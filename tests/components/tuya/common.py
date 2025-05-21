@@ -1,6 +1,70 @@
-"""Test code shared between test files."""
+"""Shared helpers for Tuya tests.
 
+Pure Python code, no pyTest magic stuff here.
+"""
+
+from datetime import UTC, datetime
+import json
+from pathlib import Path
+from types import SimpleNamespace
+from typing import Any
+
+from tuya_sharing.device import CustomerDevice
 from tuyaha.devices import climate, light, switch
+
+from homeassistant.components.tuya.const import DPType
+
+# Tuya API constants
+DEVICE_SPECS_DIR = Path(__file__).parent / "device_specs"
+
+
+def load_device_spec(name: str) -> dict[str, Any]:
+    """Load a JSON device fixture from the device_specs directory.
+
+    Automatically appends '.json' to the filename if not present.
+    Converts ISO 8601 timestamps to Unix epoch seconds, as required
+    by the Tuya API and the CustomerDevice constructor.
+    """
+    fn = name if name.endswith(".json") else f"{name}.json"
+    fixture_path = DEVICE_SPECS_DIR.joinpath(fn)
+    raw = json.loads(fixture_path.read_text(encoding="utf-8"))
+
+    # Convert timestamp fields from ISO 8601 to Unix epoch format
+    for key in ("active_time", "create_time", "update_time"):
+        if key in raw:
+            dt = datetime.fromisoformat(raw[key]).astimezone(UTC)
+            raw[key] = int(dt.timestamp())
+
+    return raw
+
+
+def make_customer_device(device_spec_name: str) -> CustomerDevice:
+    """Construct a CustomerDevice instance from a device spec fixture.
+
+    These device specs may come from Home Assistant diagnostic exports
+    or the Tuya IoT API.
+    """
+    raw = load_device_spec(device_spec_name)
+
+    init_kwargs = {k: v for k, v in raw.items() if k in CustomerDevice.__annotations__}
+    device = CustomerDevice(**init_kwargs)
+
+    for attr in ("function", "status_range"):  # need to parse these.
+        raw_map = raw[attr]
+        wrapped: dict[str, SimpleNamespace] = {}
+        for code, entry in raw_map.items():
+            dp_type = DPType(entry["type"])
+            json_str = json.dumps(entry["value"])
+            wrapped[code] = SimpleNamespace(
+                type=dp_type,
+                range=entry["value"].get("range"),
+                values=json_str,
+            )
+        setattr(device, attr, wrapped)
+
+    device.status = raw["status"]
+    return device
+
 
 CLIMATE_ID = "1"
 CLIMATE_DATA = {
