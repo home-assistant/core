@@ -637,7 +637,7 @@ bluemaestro-ble==0.4.1
 bluetooth-adapters==0.21.4
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==1.5.1
+bluetooth-auto-recovery==1.5.2
 
 # homeassistant.components.bluetooth
 # homeassistant.components.ld2410_ble
