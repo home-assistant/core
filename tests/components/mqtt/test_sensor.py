@@ -15,9 +15,11 @@ import pytest
 from homeassistant.components import mqtt, sensor
 from homeassistant.components.mqtt.sensor import MQTT_SENSOR_ATTRIBUTES_BLOCKED
 from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
     EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfElectricPotential,
     UnitOfTemperature,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
@@ -963,6 +965,10 @@ async def test_device_class_with_equivalent_unit_of_measurement_received(
     state = hass.states.get("sensor.test")
     assert state is not None
     assert state.state == "100"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        is UnitOfElectricPotential.MICROVOLT
+    )
 
     caplog.clear()
 
@@ -982,6 +988,10 @@ async def test_device_class_with_equivalent_unit_of_measurement_received(
     state = hass.states.get("sensor.bla")
     assert state is not None
     assert state.state == "21"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        is UnitOfElectricPotential.MICROVOLT
+    )
 
 
 @pytest.mark.parametrize(
@@ -1010,6 +1020,10 @@ async def test_equivalent_unit_of_measurement_received_without_device_class(
     state = hass.states.get("sensor.test")
     assert state is not None
     assert state.state == "100"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        is UnitOfElectricPotential.MICROVOLT
+    )
 
     caplog.clear()
 
@@ -1028,6 +1042,10 @@ async def test_equivalent_unit_of_measurement_received_without_device_class(
     state = hass.states.get("sensor.bla")
     assert state is not None
     assert state.state == "21"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        is UnitOfElectricPotential.MICROVOLT
+    )
 
 
 @pytest.mark.parametrize(
