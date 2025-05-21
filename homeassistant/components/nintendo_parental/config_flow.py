@@ -22,7 +22,7 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize a new config flow instance."""
-        self.auth: Authenticator = Authenticator.generate_login()
+        self.auth = Authenticator.generate_login()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
