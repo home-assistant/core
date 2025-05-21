@@ -31,6 +31,17 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "generator_connected": {
+        "name": "Generator connected"
+      },
+      "generator_auto": {
+        "name": "Generator auto"
+      },
+      "oil_pressure_ok": {
+        "name": "Oil pressure"
+      }
+    },
     "sensor": {
       "engine_speed": {
         "name": "Engine speed"
