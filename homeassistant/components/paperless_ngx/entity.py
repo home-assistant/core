@@ -26,10 +26,10 @@ class PaperlessEntity(CoordinatorEntity[PaperlessCoordinator]):
             coordinator=coordinator,
         )
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"  # type: ignore[union-attr]
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},  # type: ignore[union-attr]
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer="Paperless-ngx",
             sw_version=coordinator.api.host_version,
             configuration_url=coordinator.api.base_url,

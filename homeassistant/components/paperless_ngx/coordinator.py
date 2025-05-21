@@ -31,6 +31,8 @@ UPDATE_INTERVAL = 120
 class PaperlessCoordinator(DataUpdateCoordinator[Statistic]):
     """Coordinator to manage Paperless-ngx statistic updates."""
 
+    config_entry: PaperlessConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
