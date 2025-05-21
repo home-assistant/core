@@ -12,7 +12,11 @@ from mawaqit.consts import BadCredentialsException
 _LOGGER = logging.getLogger(__name__)
 
 
-async def test_credentials(username=None, password=None, client_instance=None):
+async def test_credentials(
+    username: str | None = None,
+    password: str | None = None,
+    client_instance: AsyncMawaqitClient | None = None,
+) -> bool:
     """Return True if the MAWAQIT credentials is valid."""
     try:
         client = client_instance
@@ -31,7 +35,11 @@ async def test_credentials(username=None, password=None, client_instance=None):
     return True
 
 
-async def get_mawaqit_api_token(username=None, password=None, client_instance=None):
+async def get_mawaqit_api_token(
+    username: str | None = None,
+    password: str | None = None,
+    client_instance: AsyncMawaqitClient | None = None,
+) -> str | None:
     """Return the MAWAQIT API token."""
     token = None
     try:
@@ -52,12 +60,12 @@ async def get_mawaqit_api_token(username=None, password=None, client_instance=No
 async def all_mosques_neighborhood(
     latitude,
     longitude,
-    mosque=None,
-    username=None,
-    password=None,
-    token=None,
-    client_instance=None,
-):
+    mosque: str | None = None,
+    username: str | None = None,
+    password: str | None = None,
+    token: str | None = None,
+    client_instance: AsyncMawaqitClient | None = None,
+) -> list[dict] | None:
     """Return mosques in the neighborhood if any. Returns a list of dicts."""
     nearest_mosques = None
     try:
@@ -83,8 +91,12 @@ async def all_mosques_neighborhood(
 
 
 async def all_mosques_by_keyword(
-    search_keyword, username=None, password=None, token=None, client_instance=None
-):
+    search_keyword,
+    username: str | None = None,
+    password: str | None = None,
+    token: str | None = None,
+    client_instance: AsyncMawaqitClient | None = None,
+) -> list[dict] | None:
     """Return mosques in the neighborhood if any. Returns a list of dicts."""
     search_mosques = []
     try:
@@ -113,14 +125,14 @@ async def all_mosques_by_keyword(
 
 
 async def fetch_prayer_times(
-    latitude=None,
-    longitude=None,
-    mosque=None,
-    username=None,
-    password=None,
-    token=None,
-    client_instance=None,
-):
+    latitude: str | None = None,
+    longitude: str | None = None,
+    mosque: str | None = None,
+    username: str | None = None,
+    password: str | None = None,
+    token: str | None = None,
+    client_instance: AsyncMawaqitClient | None = None,
+) -> dict | None:
     """Get prayer times from the MAWAQIT API. Returns a dict."""
     dict_calendar = None
     try:
@@ -147,10 +159,10 @@ async def fetch_prayer_times(
 
 
 async def fetch_mosque_by_id(
-    mosque,
-    token=None,
-    client_instance=None,
-):
+    mosque: str,
+    token: str | None = None,
+    client_instance: AsyncMawaqitClient | None = None,
+) -> dict | None:
     """Get Mosque data by ID from the MAWAQIT API. Returns a dict."""
     dict_calendar = None
     try:
