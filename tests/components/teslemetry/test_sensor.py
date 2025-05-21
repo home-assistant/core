@@ -73,6 +73,12 @@ async def test_sensors_streaming(
                 Signal.TIME_TO_FULL_CHARGE: 0.166666667,
                 Signal.MINUTES_TO_ARRIVAL: None,
             },
+            "credits": {
+                "type": "wake_up",
+                "cost": 20,
+                "name": "wake_up",
+                "balance": 1980,
+            },
             "createdAt": "2024-10-04T10:45:17.537Z",
         }
     )
@@ -91,6 +97,7 @@ async def test_sensors_streaming(
         "sensor.test_charge_cable",
         "sensor.test_time_to_full_charge",
         "sensor.test_time_to_arrival",
+        "sensor.teslemetry_credits",
     ):
         state = hass.states.get(entity_id)
         assert state.state == snapshot(name=f"{entity_id}-state")
