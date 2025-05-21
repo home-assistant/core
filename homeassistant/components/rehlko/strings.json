@@ -32,9 +32,6 @@
   },
   "entity": {
     "binary_sensor": {
-      "connected": {
-        "name": "Connected"
-      },
       "auto_run": {
         "name": "Auto run"
       },

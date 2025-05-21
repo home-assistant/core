@@ -46,7 +46,7 @@
     'state': 'on',
   })
 # ---
-# name: test_sensors[binary_sensor.generator_1_connected-entry]
+# name: test_sensors[binary_sensor.generator_1_connectivity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -59,7 +59,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.generator_1_connected',
+    'entity_id': 'binary_sensor.generator_1_connectivity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -71,23 +71,23 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
-    'original_name': 'Connected',
+    'original_name': 'Connectivity',
     'platform': 'rehlko',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'connected',
+    'translation_key': None,
     'unique_id': 'myemail@email.com_12345_isConnected',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[binary_sensor.generator_1_connected-state]
+# name: test_sensors[binary_sensor.generator_1_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
-      'friendly_name': 'Generator 1 Connected',
+      'friendly_name': 'Generator 1 Connectivity',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.generator_1_connected',
+    'entity_id': 'binary_sensor.generator_1_connectivity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

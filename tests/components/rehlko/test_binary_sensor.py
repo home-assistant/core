@@ -81,7 +81,7 @@ async def test_binary_sensor_connectivity_availability(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the connectivity entity availability when device is disconnected."""
-    state = hass.states.get("binary_sensor.generator_1_connected")
+    state = hass.states.get("binary_sensor.generator_1_connectivity")
     assert state.state == STATE_ON
 
     # Entity should be available when device is disconnected
@@ -89,5 +89,5 @@ async def test_binary_sensor_connectivity_availability(
     freezer.tick(SCAN_INTERVAL_MINUTES)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.generator_1_connected")
+    state = hass.states.get("binary_sensor.generator_1_connectivity")
     assert state.state == STATE_OFF

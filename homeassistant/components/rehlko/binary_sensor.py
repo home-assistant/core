@@ -42,7 +42,6 @@ class RehlkoBinarySensorEntityDescription(BinarySensorEntityDescription):
 BINARY_SENSORS: tuple[RehlkoBinarySensorEntityDescription, ...] = (
     RehlkoBinarySensorEntityDescription(
         key=DEVICE_DATA_IS_CONNECTED,
-        translation_key="connected",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         document_key=GENERATOR_DATA_DEVICE,
