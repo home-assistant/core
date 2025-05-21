@@ -61,7 +61,9 @@ async def test_already_configured(
 
 
 async def test_invalid_api_token(
-    hass: HomeAssistant, mock_request_handler, mock_authenticator_client: MagicMock
+    hass: HomeAssistant,
+    mock_request_handler: MagicMock,
+    mock_authenticator_client: MagicMock,
 ) -> None:
     """Test to ensure an error is shown if the API token is invalid."""
     result = await hass.config_entries.flow.async_init(
@@ -111,7 +113,9 @@ async def test_invalid_api_token(
 
 
 async def test_general_error(
-    hass: HomeAssistant, mock_request_handler, mock_authenticator_client: MagicMock
+    hass: HomeAssistant,
+    mock_request_handler: MagicMock,
+    mock_authenticator_client: MagicMock,
 ) -> None:
     """Test catching of general Exceptions."""
     result = await hass.config_entries.flow.async_init(
