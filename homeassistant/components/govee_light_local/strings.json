@@ -22,8 +22,8 @@
       "init": {
         "description": "Please make a choice",
         "menu_options": {
-          "configure_auto_discovery": "Enable or disable automatic discovery",
-          "add_device": "Enter a device's IP address",
+          "configure_auto_discovery": "[%key:component::govee_light_local::options::step::configure_auto_discovery::description%]",
+          "add_device": "[%key:component::govee_light_local::options::step::add_device::description%]",
           "remove_device": "Remove a manually added device"
         }
       },
