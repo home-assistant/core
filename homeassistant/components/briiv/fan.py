@@ -55,7 +55,6 @@ class BriivFan(FanEntity):
         self._attr_preset_mode = None
         self._fan_speed = 0
 
-        LOGGER.debug("Initializing Briiv fan with serial: %s", serial_number)
 
     async def async_added_to_hass(self) -> None:
         """Register callback when entity is added to Home Assistant."""
