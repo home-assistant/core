@@ -1036,7 +1036,7 @@ idasen-ha==2.6.3
 ifaddr==0.2.0
 
 # homeassistant.components.igloohome
-igloohome-api==0.1.0
+igloohome-api==0.1.1
 
 # homeassistant.components.imeon_inverter
 imeon_inverter_api==0.3.12
