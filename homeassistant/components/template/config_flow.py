@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.button import ButtonDeviceClass
+from homeassistant.components.event import EventDeviceClass
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASS_STATE_CLASSES,
@@ -53,6 +54,7 @@ from .alarm_control_panel import (
 )
 from .binary_sensor import async_create_preview_binary_sensor
 from .const import CONF_PRESS, CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
+from .event import CONF_EVENT_TYPE, CONF_EVENT_TYPES
 from .number import (
     CONF_MAX,
     CONF_MIN,
@@ -134,6 +136,23 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                 )
             }
 
+    if domain == Platform.EVENT:
+        schema |= {
+            vol.Required(CONF_EVENT_TYPE): selector.TemplateSelector(),
+            vol.Required(CONF_EVENT_TYPES): selector.TemplateSelector(),
+        }
+
+        if flow_type == "config":
+            schema |= {
+                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[cls.value for cls in EventDeviceClass],
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                        translation_key="event_device_class",
+                        sort=True,
+                    ),
+                )
+            }
     if domain == Platform.IMAGE:
         schema |= {
             vol.Required(CONF_URL): selector.TemplateSelector(),
@@ -309,6 +328,7 @@ TEMPLATE_TYPES = [
     "binary_sensor",
     "button",
     "image",
+    "event",
     "number",
     "select",
     "sensor",
@@ -329,6 +349,10 @@ CONFIG_FLOW = {
     Platform.BUTTON: SchemaFlowFormStep(
         config_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
+    ),
+    Platform.EVENT: SchemaFlowFormStep(
+        config_schema(Platform.EVENT),
+        validate_user_input=validate_user_input(Platform.EVENT),
     ),
     Platform.IMAGE: SchemaFlowFormStep(
         config_schema(Platform.IMAGE),
@@ -370,6 +394,10 @@ OPTIONS_FLOW = {
     Platform.BUTTON: SchemaFlowFormStep(
         options_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
+    ),
+    Platform.EVENT: SchemaFlowFormStep(
+        options_schema(Platform.EVENT),
+        validate_user_input=validate_user_input(Platform.EVENT),
     ),
     Platform.IMAGE: SchemaFlowFormStep(
         options_schema(Platform.IMAGE),
