@@ -1406,19 +1406,19 @@ class BackupManager:
             # No issues to report, clear previous error
             ir.async_delete_issue(self.hass, DOMAIN, "automatic_backup_failed")
             return
-        if (agent_errors or unavailable_agents) and not (addon_errors or folder_errors):
+        if failed_agents and not (addon_errors or folder_errors):
             # No issues with add-ons or folders, but issues with agents
             self._create_automatic_backup_failed_issue(
                 "automatic_backup_failed_upload_agents",
                 {"failed_agents": ", ".join(failed_agents)},
             )
-        elif addon_errors and not (agent_errors or unavailable_agents or folder_errors):
+        elif addon_errors and not (failed_agents or folder_errors):
             # No issues with agents or folders, but issues with add-ons
             self._create_automatic_backup_failed_issue(
                 "automatic_backup_failed_addons",
                 {"failed_addons": ", ".join(val.name for val in addon_errors.values())},
             )
-        elif folder_errors and not (agent_errors or unavailable_agents or addon_errors):
+        elif folder_errors and not (failed_agents or addon_errors):
             # No issues with agents or add-ons, but issues with folders
             self._create_automatic_backup_failed_issue(
                 "automatic_backup_failed_folders",

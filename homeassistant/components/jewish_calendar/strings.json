@@ -185,5 +185,8 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "sunset_event": { "message": "Can't get sunset event date" }
   }
 }
