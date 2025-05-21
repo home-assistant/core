@@ -47,6 +47,14 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
+def patch_async_ble_device_from_address(return_value: BluetoothServiceInfoBleak | None):
+    """Patch async ble device from address to return a given value."""
+    return patch(
+        "homeassistant.components.bluetooth.async_ble_device_from_address",
+        return_value=return_value,
+    )
+
+
 WOHAND_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="WoHand",
     manufacturer_data={89: b"\xfd`0U\x92W"},
@@ -676,6 +684,77 @@ S10_VACUUM_SERVICE_INFO = BluetoothServiceInfoBleak(
         service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     ),
     device=generate_ble_device("AA:BB:CC:DD:EE:FF", "S10 Vacuum"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+HUB3_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Hub3",
+    manufacturer_data={
+        2409: b"\xb0\xe9\xfen^)\x00\xffh&\xd6d\x83\x03\x994\x80",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00d\x00\x10\xb9@"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Hub3",
+        manufacturer_data={
+            2409: b"\xb0\xe9\xfen^)\x00\xffh&\xd6d\x83\x03\x994\x80",
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00d\x00\x10\xb9@"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Hub3"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+LOCK_LITE_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Lock Lite",
+    manufacturer_data={2409: b"\xe9\xd5\x11\xb2kS\x17\x93\x08 "},
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"-\x80d"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Lock Lite",
+        manufacturer_data={2409: b"\xe9\xd5\x11\xb2kS\x17\x93\x08 "},
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"-\x80d"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Lock Lite"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+LOCK_ULTRA_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Lock Ultra",
+    manufacturer_data={2409: b"\xb0\xe9\xfe\xb6j=%\x8204\x00\x04"},
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x804\x00\x10\xa5\xb8"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Lock Ultra",
+        manufacturer_data={2409: b"\xb0\xe9\xfe\xb6j=%\x8204\x00\x04"},
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x804\x00\x10\xa5\xb8"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Lock Ultra"),
     time=0,
     connectable=True,
     tx_power=-127,

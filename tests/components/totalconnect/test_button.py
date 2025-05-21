@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from total_connect_client.exceptions import FailedToBypassZone
 
 from homeassistant.components.button import DOMAIN as BUTTON, SERVICE_PRESS

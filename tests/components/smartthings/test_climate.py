@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, call
 from pysmartthings import Attribute, Capability, Command, Status
 from pysmartthings.models import HealthStatus
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
@@ -121,7 +121,7 @@ async def test_ac_set_hvac_mode_off(
 @pytest.mark.parametrize(
     ("hvac_mode", "argument"),
     [
-        (HVACMode.HEAT_COOL, "auto"),
+        (HVACMode.AUTO, "auto"),
         (HVACMode.COOL, "cool"),
         (HVACMode.DRY, "dry"),
         (HVACMode.HEAT, "heat"),
@@ -176,7 +176,7 @@ async def test_ac_set_hvac_mode_turns_on(
         SERVICE_SET_HVAC_MODE,
         {
             ATTR_ENTITY_ID: "climate.ac_office_granit",
-            ATTR_HVAC_MODE: HVACMode.HEAT_COOL,
+            ATTR_HVAC_MODE: HVACMode.AUTO,
         },
         blocking=True,
     )
@@ -198,17 +198,19 @@ async def test_ac_set_hvac_mode_turns_on(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
-async def test_ac_set_hvac_mode_wind(
+@pytest.mark.parametrize("mode", ["fan", "wind"])
+async def test_ac_set_hvac_mode_fan(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    mode: str,
 ) -> None:
     """Test setting AC HVAC mode to wind if the device supports it."""
     set_attribute_value(
         devices,
         Capability.AIR_CONDITIONER_MODE,
         Attribute.SUPPORTED_AC_MODES,
-        ["auto", "cool", "dry", "heat", "wind"],
+        ["auto", "cool", "dry", "heat", mode],
     )
     set_attribute_value(devices, Capability.SWITCH, Attribute.SWITCH, "on")
 
@@ -225,7 +227,7 @@ async def test_ac_set_hvac_mode_wind(
         Capability.AIR_CONDITIONER_MODE,
         Command.SET_AIR_CONDITIONER_MODE,
         MAIN,
-        argument="wind",
+        argument=mode,
     )
 
 
@@ -268,7 +270,7 @@ async def test_ac_set_temperature_and_hvac_mode_while_off(
         {
             ATTR_ENTITY_ID: "climate.ac_office_granit",
             ATTR_TEMPERATURE: 23,
-            ATTR_HVAC_MODE: HVACMode.HEAT_COOL,
+            ATTR_HVAC_MODE: HVACMode.AUTO,
         },
         blocking=True,
     )
@@ -318,7 +320,7 @@ async def test_ac_set_temperature_and_hvac_mode(
         {
             ATTR_ENTITY_ID: "climate.ac_office_granit",
             ATTR_TEMPERATURE: 23,
-            ATTR_HVAC_MODE: HVACMode.HEAT_COOL,
+            ATTR_HVAC_MODE: HVACMode.AUTO,
         },
         blocking=True,
     )

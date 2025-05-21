@@ -2,7 +2,7 @@
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fronius.const import DOMAIN
 from homeassistant.components.fronius.coordinator import (

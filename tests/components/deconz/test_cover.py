@@ -4,7 +4,7 @@ from collections.abc import Callable
 from unittest.mock import patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
