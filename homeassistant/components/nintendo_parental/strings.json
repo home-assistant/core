@@ -31,6 +31,8 @@
     }
   },
   "exceptions": {
-    "invalid_auth": "Authentication expired. Please remove and re-add the integration to reconnect."
+    "invalid_auth": {
+      "message": "Authentication expired. Please remove and re-add the integration to reconnect."
+    }
   }
 }
