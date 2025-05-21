@@ -5,12 +5,11 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_ZIP_CODE, DOMAIN
+from .const import CONF_ZIP_CODE
+from .coordinator import IqviaConfigEntry
 
 CONF_CITY = "City"
 CONF_DISPLAY_LOCATION = "DisplayLocation"
@@ -33,19 +32,15 @@ TO_REDACT = {
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: IqviaConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinators: dict[str, DataUpdateCoordinator[dict[str, Any]]] = hass.data[DOMAIN][
-        entry.entry_id
-    ]
-
     return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "data": async_redact_data(
             {
                 data_type: coordinator.data
-                for data_type, coordinator in coordinators.items()
+                for data_type, coordinator in entry.runtime_data.items()
             },
             TO_REDACT,
         ),

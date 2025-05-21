@@ -20,7 +20,7 @@ from homeassistant.helpers.event import async_track_time_change
 
 from .const import (
     DATA_SONOS,
-    DOMAIN as SONOS_DOMAIN,
+    DOMAIN,
     SONOS_ALARMS_UPDATED,
     SONOS_CREATE_ALARM,
     SONOS_CREATE_SWITCHES,
@@ -276,7 +276,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
 
         new_device = device_registry.async_get_or_create(
             config_entry_id=cast(str, entity.config_entry_id),
-            identifiers={(SONOS_DOMAIN, self.soco.uid)},
+            identifiers={(DOMAIN, self.soco.uid)},
             connections={(dr.CONNECTION_NETWORK_MAC, self.speaker.mac_address)},
         )
         if (

@@ -5191,7 +5191,7 @@ async def test_hard_reset_controller(
     client.async_send_command.side_effect = async_send_command_no_driver_ready
 
     with patch(
-        "homeassistant.components.zwave_js.api.HARD_RESET_CONTROLLER_DRIVER_READY_TIMEOUT",
+        "homeassistant.components.zwave_js.api.DRIVER_READY_TIMEOUT",
         new=0,
     ):
         await ws_client.send_json_auto_id(
@@ -5567,8 +5567,12 @@ async def test_restore_nvm(
     integration,
     client,
     hass_ws_client: WebSocketGenerator,
+    get_server_version: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the restore NVM websocket command."""
+    entry = integration
+    assert entry.unique_id == "3245146787"
     ws_client = await hass_ws_client(hass)
 
     # Set up mocks for the controller events
@@ -5648,6 +5652,45 @@ async def test_restore_nvm(
         },
         require_schema=14,
     )
+    assert entry.unique_id == "1234"
+
+    client.async_send_command.reset_mock()
+
+    # Test client connect error when getting the server version.
+
+    get_server_version.side_effect = ClientError("Boom!")
+
+    # Send the subscription request
+    await ws_client.send_json_auto_id(
+        {
+            "type": "zwave_js/restore_nvm",
+            "entry_id": entry.entry_id,
+            "data": "dGVzdA==",  # base64 encoded "test"
+        }
+    )
+
+    # Verify the finished event first
+    msg = await ws_client.receive_json()
+    assert msg["type"] == "event"
+    assert msg["event"]["event"] == "finished"
+
+    # Verify subscription success
+    msg = await ws_client.receive_json()
+    assert msg["type"] == "result"
+    assert msg["success"] is True
+
+    assert client.async_send_command.call_count == 3
+    assert client.async_send_command.call_args_list[0] == call(
+        {
+            "command": "controller.restore_nvm",
+            "nvmData": "dGVzdA==",
+        },
+        require_schema=14,
+    )
+    assert (
+        "Failed to get server version, cannot update config entry"
+        "unique id with new home id, after controller NVM restore"
+    ) in caplog.text
 
     client.async_send_command.reset_mock()
 
@@ -5663,7 +5706,7 @@ async def test_restore_nvm(
     client.async_send_command.side_effect = async_send_command_no_driver_ready
 
     with patch(
-        "homeassistant.components.zwave_js.api.RESTORE_NVM_DRIVER_READY_TIMEOUT",
+        "homeassistant.components.zwave_js.api.DRIVER_READY_TIMEOUT",
         new=0,
     ):
         # Send the subscription request

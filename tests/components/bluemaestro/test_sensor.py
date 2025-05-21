@@ -1,7 +1,7 @@
 """Test the BlueMaestro sensors."""
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bluemaestro.const import DOMAIN
 from homeassistant.core import HomeAssistant

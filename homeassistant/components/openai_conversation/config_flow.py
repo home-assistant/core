@@ -177,7 +177,9 @@ class OpenAIOptionsFlow(OptionsFlow):
 
                 options = {
                     CONF_RECOMMENDED: user_input[CONF_RECOMMENDED],
-                    CONF_PROMPT: user_input[CONF_PROMPT],
+                    CONF_PROMPT: user_input.get(
+                        CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
+                    ),
                     CONF_LLM_HASS_API: user_input.get(CONF_LLM_HASS_API),
                 }
 

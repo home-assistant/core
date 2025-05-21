@@ -91,6 +91,21 @@
       },
       "generator_status": {
         "name": "Generator status"
+      },
+      "last_run": {
+        "name": "Last run"
+      },
+      "last_maintainance": {
+        "name": "Last maintainance"
+      },
+      "next_maintainance": {
+        "name": "Next maintainance"
+      },
+      "next_exercise": {
+        "name": "Next exercise"
+      },
+      "last_exercise": {
+        "name": "Last exercise"
       }
     }
   },

@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from weatherflow4py.models.rest.observation import ObservationStationREST
 
 from homeassistant.components.weatherflow_cloud import DOMAIN

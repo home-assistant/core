@@ -10,6 +10,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_REFRESH_TOKEN,
@@ -28,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: RehlkoConfigEntry) -> bool:
     """Set up Rehlko from a config entry."""
     websession = async_get_clientsession(hass)
-    rehlko = AioKem(session=websession)
+    rehlko = AioKem(session=websession, home_timezone=dt_util.get_default_time_zone())
     # If requests take more than 20 seconds; timeout and let the setup retry.
     rehlko.set_timeout(20)
 

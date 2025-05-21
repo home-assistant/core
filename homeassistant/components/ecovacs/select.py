@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EcovacsConfigEntry
 from .entity import EcovacsCapabilityEntityDescription, EcovacsDescriptionEntity, EventT
-from .util import get_name_key, get_supported_entitites
+from .util import get_name_key, get_supported_entities
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -59,7 +59,7 @@ async def async_setup_entry(
 ) -> None:
     """Add entities for passed config_entry in HA."""
     controller = config_entry.runtime_data
-    entities = get_supported_entitites(
+    entities = get_supported_entities(
         controller, EcovacsSelectEntity, ENTITY_DESCRIPTIONS
     )
     if entities:

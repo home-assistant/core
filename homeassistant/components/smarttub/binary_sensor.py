@@ -2,20 +2,23 @@
 
 from __future__ import annotations
 
-from smarttub import SpaError, SpaReminder
+from typing import Any
+
+from smarttub import Spa, SpaError, SpaReminder
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import ATTR_ERRORS, ATTR_REMINDERS, DOMAIN, SMARTTUB_CONTROLLER
+from .const import ATTR_ERRORS, ATTR_REMINDERS
+from .controller import SmartTubConfigEntry
 from .entity import SmartTubEntity, SmartTubSensorBase
 
 # whether the reminder has been snoozed (bool)
@@ -44,12 +47,12 @@ SNOOZE_REMINDER_SCHEMA: VolDictType = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SmartTubConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up binary sensor entities for the binary sensors in the tub."""
 
-    controller = hass.data[DOMAIN][entry.entry_id][SMARTTUB_CONTROLLER]
+    controller = entry.runtime_data
 
     entities: list[BinarySensorEntity] = []
     for spa in controller.spas:
@@ -83,7 +86,9 @@ class SmartTubOnline(SmartTubSensorBase, BinarySensorEntity):
     # This seems to be very noisy and not generally useful, so disable by default.
     _attr_entity_registry_enabled_default = False
 
-    def __init__(self, coordinator, spa):
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[dict[str, Any]], spa: Spa
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, spa, "Online", "online")
 
@@ -98,7 +103,12 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
 
-    def __init__(self, coordinator, spa, reminder):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[dict[str, Any]],
+        spa: Spa,
+        reminder: SpaReminder,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(
             coordinator,
@@ -119,7 +129,7 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
         return self.reminder.remaining_days == 0
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             ATTR_REMINDER_SNOOZED: self.reminder.snoozed,
@@ -145,7 +155,9 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
 
-    def __init__(self, coordinator, spa):
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[dict[str, Any]], spa: Spa
+    ) -> None:
         """Initialize the entity."""
         super().__init__(
             coordinator,
@@ -167,7 +179,7 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
         return self.error is not None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if (error := self.error) is None:
             return {}

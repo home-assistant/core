@@ -94,18 +94,22 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         self._attr_media_duration = 0
         self._pianobar: pexpect.spawn[str] | None = None
 
-    def turn_on(self) -> None:
-        """Turn the media player on."""
-        if self.state != MediaPlayerState.OFF:
-            return
-        self._pianobar = pexpect.spawn("pianobar", encoding="utf-8")
+    async def _start_pianobar(self) -> bool:
+        pianobar = pexpect.spawn("pianobar", encoding="utf-8")
+        pianobar.delaybeforesend = None
+        # mypy thinks delayafterread must be a float but that is not what pexpect says
+        # https://github.com/pexpect/pexpect/blob/4.9/pexpect/expect.py#L170
+        pianobar.delayafterread = None  # type: ignore[assignment]
+        pianobar.delayafterclose = 0
+        pianobar.delayafterterminate = 0
         _LOGGER.debug("Started pianobar subprocess")
-        mode = self._pianobar.expect(
-            ["Receiving new playlist", "Select station:", "Email:"]
+        mode = await pianobar.expect(
+            ["Receiving new playlist", "Select station:", "Email:"],
+            async_=True,
         )
         if mode == 1:
             # station list was presented. dismiss it.
-            self._pianobar.sendcontrol("m")
+            pianobar.sendcontrol("m")
         elif mode == 2:
             _LOGGER.warning(
                 "The pianobar client is not configured to log in. "
@@ -113,16 +117,20 @@ class PandoraMediaPlayer(MediaPlayerEntity):
                 "https://www.home-assistant.io/integrations/pandora/"
             )
             # pass through the email/password prompts to quit cleanly
-            self._pianobar.sendcontrol("m")
-            self._pianobar.sendcontrol("m")
-            self._pianobar.terminate()
-            self._pianobar = None
-            return
-        self._update_stations()
-        self.update_playing_status()
+            pianobar.sendcontrol("m")
+            pianobar.sendcontrol("m")
+            pianobar.terminate()
+            return False
+        self._pianobar = pianobar
+        return True
 
-        self._attr_state = MediaPlayerState.IDLE
-        self.schedule_update_ha_state()
+    async def async_turn_on(self) -> None:
+        """Turn the media player on."""
+        if self.state == MediaPlayerState.OFF and await self._start_pianobar():
+            await self._update_stations()
+            await self.update_playing_status()
+            self._attr_state = MediaPlayerState.IDLE
+            self.schedule_update_ha_state()
 
     def turn_off(self) -> None:
         """Turn the media player off."""
@@ -142,30 +150,24 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         self._attr_state = MediaPlayerState.OFF
         self.schedule_update_ha_state()
 
-    def media_play(self) -> None:
+    async def async_media_play(self) -> None:
         """Send play command."""
-        self._send_pianobar_command(SERVICE_MEDIA_PLAY_PAUSE)
+        await self._send_pianobar_command(SERVICE_MEDIA_PLAY_PAUSE)
         self._attr_state = MediaPlayerState.PLAYING
         self.schedule_update_ha_state()
 
-    def media_pause(self) -> None:
+    async def async_media_pause(self) -> None:
         """Send pause command."""
-        self._send_pianobar_command(SERVICE_MEDIA_PLAY_PAUSE)
+        await self._send_pianobar_command(SERVICE_MEDIA_PLAY_PAUSE)
         self._attr_state = MediaPlayerState.PAUSED
         self.schedule_update_ha_state()
 
-    def media_next_track(self) -> None:
+    async def async_media_next_track(self) -> None:
         """Go to next track."""
-        self._send_pianobar_command(SERVICE_MEDIA_NEXT_TRACK)
+        await self._send_pianobar_command(SERVICE_MEDIA_NEXT_TRACK)
         self.schedule_update_ha_state()
 
-    @property
-    def media_title(self) -> str | None:
-        """Title of current playing media."""
-        self.update_playing_status()
-        return self._attr_media_title
-
-    def select_source(self, source: str) -> None:
+    async def async_select_source(self, source: str) -> None:
         """Choose a different Pandora station and play it."""
         if self.source_list is None:
             return
@@ -176,45 +178,46 @@ class PandoraMediaPlayer(MediaPlayerEntity):
             return
         _LOGGER.debug("Setting station %s, %d", source, station_index)
         assert self._pianobar is not None
-        self._send_station_list_command()
+        await self._send_station_list_command()
         self._pianobar.sendline(f"{station_index}")
-        self._pianobar.expect("\r\n")
+        await self._pianobar.expect("\r\n", async_=True)
         self._attr_state = MediaPlayerState.PLAYING
 
-    def _send_station_list_command(self) -> None:
+    async def _send_station_list_command(self) -> None:
         """Send a station list command."""
         assert self._pianobar is not None
         self._pianobar.send("s")
         try:
-            self._pianobar.expect("Select station:", timeout=1)
+            await self._pianobar.expect("Select station:", async_=True, timeout=1)
         except pexpect.exceptions.TIMEOUT:
             # try again. Buffer was contaminated.
-            self._clear_buffer()
+            await self._clear_buffer()
             self._pianobar.send("s")
-            self._pianobar.expect("Select station:")
+            await self._pianobar.expect("Select station:", async_=True)
 
-    def update_playing_status(self) -> None:
+    async def update_playing_status(self) -> None:
         """Query pianobar for info about current media_title, station."""
-        response = self._query_for_playing_status()
+        response = await self._query_for_playing_status()
         if not response:
             return
         self._update_current_station(response)
         self._update_current_song(response)
         self._update_song_position()
 
-    def _query_for_playing_status(self) -> str | None:
+    async def _query_for_playing_status(self) -> str | None:
         """Query system for info about current track."""
         assert self._pianobar is not None
-        self._clear_buffer()
+        await self._clear_buffer()
         self._pianobar.send("i")
         try:
-            match_idx = self._pianobar.expect(
+            match_idx = await self._pianobar.expect(
                 [
                     r"(\d\d):(\d\d)/(\d\d):(\d\d)",
                     "No song playing",
                     "Select station",
                     "Receiving new playlist",
-                ]
+                ],
+                async_=True,
             )
         except pexpect.exceptions.EOF:
             _LOGGER.warning("Pianobar process already exited")
@@ -229,11 +232,11 @@ class PandoraMediaPlayer(MediaPlayerEntity):
             _LOGGER.warning("On unexpected station list page")
             self._pianobar.sendcontrol("m")  # press enter
             self._pianobar.sendcontrol("m")  # do it again b/c an 'i' got in
-            self.update_playing_status()
+            await self.update_playing_status()
             return None
         if match_idx == 3:
             _LOGGER.debug("Received new playlist list")
-            self.update_playing_status()
+            await self.update_playing_status()
             return None
 
         return self._pianobar.before
@@ -292,7 +295,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
             repr(self._pianobar.after),
         )
 
-    def _send_pianobar_command(self, service_cmd: str) -> None:
+    async def _send_pianobar_command(self, service_cmd: str) -> None:
         """Send a command to Pianobar."""
         assert self._pianobar is not None
         command = CMD_MAP.get(service_cmd)
@@ -300,13 +303,13 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         if command is None:
             _LOGGER.warning("Command %s not supported yet", service_cmd)
             return
-        self._clear_buffer()
+        await self._clear_buffer()
         self._pianobar.sendline(command)
 
-    def _update_stations(self) -> None:
+    async def _update_stations(self) -> None:
         """List defined Pandora stations."""
         assert self._pianobar is not None
-        self._send_station_list_command()
+        await self._send_station_list_command()
         station_lines = self._pianobar.before or ""
         _LOGGER.debug("Getting stations: %s", station_lines)
         self._attr_source_list = []
@@ -320,7 +323,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         self._pianobar.sendcontrol("m")  # press enter with blank line
         self._pianobar.sendcontrol("m")  # do it twice in case an 'i' got in
 
-    def _clear_buffer(self) -> None:
+    async def _clear_buffer(self) -> None:
         """Clear buffer from pexpect.
 
         This is necessary because there are a bunch of 00:00 in the buffer
@@ -328,7 +331,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         """
         assert self._pianobar is not None
         try:
-            while not self._pianobar.expect(".+", timeout=0.1):
+            while not await self._pianobar.expect(".+", async_=True, timeout=0.1):
                 pass
         except pexpect.exceptions.TIMEOUT:
             pass

@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from p1monitor import P1MonitorConnectionError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.p1_monitor.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
