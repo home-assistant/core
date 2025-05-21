@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor_platfom[sensor.192_168_69_16_characters_total-entry]
+# name: test_sensor_platfom[sensor.192_168_69_16_correspondents-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -14,7 +14,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.192_168_69_16_characters_total',
+    'entity_id': 'sensor.192_168_69_16_correspondents',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -26,57 +26,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Characters total',
-    'platform': 'paperless_ngx',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'characters_count',
-    'unique_id': 'paperless_ngx_test_characters_count',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_platfom[sensor.192_168_69_16_characters_total-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.69.16 Characters total',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_69_16_characters_total',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '99999',
-  })
-# ---
-# name: test_sensor_platfom[sensor.192_168_69_16_correspondents_total-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_69_16_correspondents_total',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Correspondents total',
+    'original_name': 'Correspondents',
     'platform': 'paperless_ngx',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -85,21 +35,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_platfom[sensor.192_168_69_16_correspondents_total-state]
+# name: test_sensor_platfom[sensor.192_168_69_16_correspondents-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.69.16 Correspondents total',
+      'friendly_name': '192.168.69.16 Correspondents',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.192_168_69_16_correspondents_total',
+    'entity_id': 'sensor.192_168_69_16_correspondents',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '99',
   })
 # ---
-# name: test_sensor_platfom[sensor.192_168_69_16_document_types_total-entry]
+# name: test_sensor_platfom[sensor.192_168_69_16_document_types-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -114,7 +64,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.192_168_69_16_document_types_total',
+    'entity_id': 'sensor.192_168_69_16_document_types',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -126,7 +76,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Document types total',
+    'original_name': 'Document types',
     'platform': 'paperless_ngx',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -135,21 +85,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_platfom[sensor.192_168_69_16_document_types_total-state]
+# name: test_sensor_platfom[sensor.192_168_69_16_document_types-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.69.16 Document types total',
+      'friendly_name': '192.168.69.16 Document types',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.192_168_69_16_document_types_total',
+    'entity_id': 'sensor.192_168_69_16_document_types',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '99',
   })
 # ---
-# name: test_sensor_platfom[sensor.192_168_69_16_documents_inbox-entry]
+# name: test_sensor_platfom[sensor.192_168_69_16_documents_in_inbox-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -164,7 +114,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.192_168_69_16_documents_inbox',
+    'entity_id': 'sensor.192_168_69_16_documents_in_inbox',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -176,7 +126,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Documents inbox',
+    'original_name': 'Documents in inbox',
     'platform': 'paperless_ngx',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -185,21 +135,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_platfom[sensor.192_168_69_16_documents_inbox-state]
+# name: test_sensor_platfom[sensor.192_168_69_16_documents_in_inbox-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.69.16 Documents inbox',
+      'friendly_name': '192.168.69.16 Documents in inbox',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.192_168_69_16_documents_inbox',
+    'entity_id': 'sensor.192_168_69_16_documents_in_inbox',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '9',
   })
 # ---
-# name: test_sensor_platfom[sensor.192_168_69_16_documents_total-entry]
+# name: test_sensor_platfom[sensor.192_168_69_16_tags-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -214,7 +164,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.192_168_69_16_documents_total',
+    'entity_id': 'sensor.192_168_69_16_tags',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -226,57 +176,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Documents total',
-    'platform': 'paperless_ngx',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'documents_total',
-    'unique_id': 'paperless_ngx_test_documents_total',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_platfom[sensor.192_168_69_16_documents_total-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.69.16 Documents total',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_69_16_documents_total',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '999',
-  })
-# ---
-# name: test_sensor_platfom[sensor.192_168_69_16_tags_total-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_69_16_tags_total',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Tags total',
+    'original_name': 'Tags',
     'platform': 'paperless_ngx',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -285,17 +185,117 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_platfom[sensor.192_168_69_16_tags_total-state]
+# name: test_sensor_platfom[sensor.192_168_69_16_tags-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.69.16 Tags total',
+      'friendly_name': '192.168.69.16 Tags',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.192_168_69_16_tags_total',
+    'entity_id': 'sensor.192_168_69_16_tags',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '99',
+  })
+# ---
+# name: test_sensor_platfom[sensor.192_168_69_16_total_characters-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.192_168_69_16_total_characters',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total characters',
+    'platform': 'paperless_ngx',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'characters_count',
+    'unique_id': 'paperless_ngx_test_characters_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_platfom[sensor.192_168_69_16_total_characters-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '192.168.69.16 Total characters',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.192_168_69_16_total_characters',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '99999',
+  })
+# ---
+# name: test_sensor_platfom[sensor.192_168_69_16_total_documents-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.192_168_69_16_total_documents',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total documents',
+    'platform': 'paperless_ngx',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'documents_total',
+    'unique_id': 'paperless_ngx_test_documents_total',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_platfom[sensor.192_168_69_16_total_documents-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '192.168.69.16 Total documents',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.192_168_69_16_total_documents',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '999',
   })
 # ---

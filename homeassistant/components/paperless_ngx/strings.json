@@ -25,29 +25,24 @@
     }
   },
   "entity": {
-    "todo": {
-      "shopping_cart": {
-        "name": "Shopping cart"
-      }
-    },
     "sensor": {
       "documents_total": {
-        "name": "Documents total"
+        "name": "Total documents"
       },
       "documents_inbox": {
-        "name": "Documents inbox"
+        "name": "Documents in inbox"
       },
       "characters_count": {
-        "name": "Characters total"
+        "name": "Total characters"
       },
       "tag_count": {
-        "name": "Tags total"
+        "name": "Tags"
       },
       "correspondent_count": {
-        "name": "Correspondents total"
+        "name": "Correspondents"
       },
       "document_type_count": {
-        "name": "Document types total"
+        "name": "Document types"
       }
     }
   },
