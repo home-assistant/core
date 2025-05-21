@@ -31,6 +31,26 @@ WASHER_SOIL_LEVEL_TO_HA = {
     "down": "down",
 }
 
+WASHER_SPIN_LEVEL_TO_HA = {
+    "none": "none",
+    "rinseHold": "rinse_hold",
+    "noSpin": "no_spin",
+    "low": "low",
+    "extraLow": "extra_low",
+    "delicate": "delicate",
+    "medium": "medium",
+    "high": "high",
+    "extraHigh": "extra_high",
+    "200": "200",
+    "400": "400",
+    "600": "600",
+    "800": "800",
+    "1000": "1000",
+    "1200": "1200",
+    "1400": "1400",
+    "1600": "1600",
+}
+
 
 @dataclass(frozen=True, kw_only=True)
 class SmartThingsSelectDescription(SelectEntityDescription):
@@ -43,6 +63,8 @@ class SmartThingsSelectDescription(SelectEntityDescription):
     command: Command
     options_map: dict[str, str] | None = None
     default_options: list[str] | None = None
+    extra_components: list[str] | None = None
+    capability_ignore_list: list[Capability] | None = None
 
 
 CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
@@ -99,6 +121,17 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         command=Command.SET_BRIGHTNESS_LEVEL,
         options_map=LAMP_TO_HA,
         entity_category=EntityCategory.CONFIG,
+        extra_components=["hood"],
+        capability_ignore_list=[Capability.SAMSUNG_CE_CONNECTION_STATE],
+    ),
+    Capability.CUSTOM_WASHER_SPIN_LEVEL: SmartThingsSelectDescription(
+        key=Capability.CUSTOM_WASHER_SPIN_LEVEL,
+        translation_key="spin_level",
+        options_attribute=Attribute.SUPPORTED_WASHER_SPIN_LEVEL,
+        status_attribute=Attribute.WASHER_SPIN_LEVEL,
+        command=Command.SET_WASHER_SPIN_LEVEL,
+        options_map=WASHER_SPIN_LEVEL_TO_HA,
+        entity_category=EntityCategory.CONFIG,
     ),
     Capability.CUSTOM_WASHER_SOIL_LEVEL: SmartThingsSelectDescription(
         key=Capability.CUSTOM_WASHER_SOIL_LEVEL,
@@ -120,12 +153,25 @@ async def async_setup_entry(
     """Add select entities for a config entry."""
     entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsSelectEntity(
-            entry_data.client, device, CAPABILITIES_TO_SELECT[capability]
-        )
+        SmartThingsSelectEntity(entry_data.client, device, description, component)
+        for capability, description in CAPABILITIES_TO_SELECT.items()
         for device in entry_data.devices.values()
-        for capability in device.status[MAIN]
-        if capability in CAPABILITIES_TO_SELECT
+        for component in device.status
+        if capability in device.status[component]
+        and (
+            component == MAIN
+            or (
+                description.extra_components is not None
+                and component in description.extra_components
+            )
+        )
+        and (
+            description.capability_ignore_list is None
+            or any(
+                capability not in device.status[component]
+                for capability in description.capability_ignore_list
+            )
+        )
     )
 
 
@@ -139,14 +185,15 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
         client: SmartThings,
         device: FullDevice,
         entity_description: SmartThingsSelectDescription,
+        component: str,
     ) -> None:
         """Initialize the instance."""
         capabilities = {entity_description.key}
         if entity_description.requires_remote_control_status:
             capabilities.add(Capability.REMOTE_CONTROL_STATUS)
-        super().__init__(client, device, capabilities)
+        super().__init__(client, device, capabilities, component=component)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{device.device.device_id}_{MAIN}_{entity_description.key}_{entity_description.status_attribute}_{entity_description.status_attribute}"
+        self._attr_unique_id = f"{device.device.device_id}_{component}_{entity_description.key}_{entity_description.status_attribute}_{entity_description.status_attribute}"
 
     @property
     def options(self) -> list[str]:

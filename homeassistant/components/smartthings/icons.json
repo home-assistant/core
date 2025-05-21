@@ -18,6 +18,9 @@
         "state": {
           "on": "mdi:lock"
         }
+      },
+      "keep_fresh_mode": {
+        "default": "mdi:creation"
       }
     },
     "button": {
@@ -31,6 +34,9 @@
     "number": {
       "washer_rinse_cycles": {
         "default": "mdi:waves-arrow-up"
+      },
+      "freezer_temperature": {
+        "default": "mdi:snowflake-thermometer"
       }
     },
     "select": {
@@ -53,6 +59,9 @@
       },
       "flexible_detergent_amount": {
         "default": "mdi:car-coolant-level"
+      },
+      "spin_level": {
+        "default": "mdi:rotate-right"
       }
     },
     "sensor": {
@@ -97,8 +106,26 @@
           "off": "mdi:tumble-dryer-off"
         }
       },
+      "keep_fresh_mode": {
+        "default": "mdi:creation"
+      },
       "ice_maker": {
         "default": "mdi:delete-variant"
+      },
+      "power_cool": {
+        "default": "mdi:snowflake-alert"
+      },
+      "power_freeze": {
+        "default": "mdi:snowflake"
+      },
+      "sanitize": {
+        "default": "mdi:lotion"
+      },
+      "auto_cycle_link": {
+        "default": "mdi:link-off",
+        "state": {
+          "on": "mdi:link"
+        }
       }
     }
   }
