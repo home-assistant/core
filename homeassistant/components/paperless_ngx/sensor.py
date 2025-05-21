@@ -4,17 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
-
-from voluptuous import Decimal
 
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
     StateType,
-    date,
-    datetime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -29,7 +24,7 @@ PARALLEL_UPDATES = 0
 class PaperlessEntityDescription(SensorEntityDescription):
     """Describes Paperless-ngx sensor entity."""
 
-    value_fn: Callable[[PaperlessData], Any] | None = None
+    value_fn: Callable[[PaperlessData], int | None]
 
 
 SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
@@ -122,11 +117,6 @@ class PaperlessSensor(PaperlessEntity, SensorEntity):
         return super().available and self.native_value is not None
 
     @property
-    def native_value(self) -> StateType | date | datetime | Decimal:
+    def native_value(self) -> StateType:
         """Return the current value of the sensor."""
-        value_fn = self.entity_description.value_fn
-        if not value_fn:
-            raise NotImplementedError(
-                f"value_fn not implemented for {self.entity_description.key}"
-            )
-        return value_fn(self.coordinator.data)
+        return self.entity_description.value_fn(self.coordinator.data)
