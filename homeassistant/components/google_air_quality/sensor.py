@@ -54,14 +54,13 @@ class AirQualitySensorEntityDescription(SensorEntityDescription):
     extra_state_attributes_fn: Callable[[Any], Mapping[str, Any] | None] = (
         lambda _: None
     )
-    translation_key_fn: Callable[[Any], str]
     value_fn: Callable[[Any], StateType | datetime]
 
 
 AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
     AirQualitySensorEntityDescription(
         key="uaqi",
-        translation_key_fn=lambda x: "uaqi",
+        translation_key="uaqi",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.AQI,
         value_fn=lambda x: x.indexes[0].aqi,
@@ -69,7 +68,7 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
     ),
     AirQualitySensorEntityDescription(
         key="uaqi_category",
-        translation_key_fn=lambda x: "uaqi_category",
+        translation_key="uaqi_category",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "excellent_air_quality",
@@ -82,13 +81,12 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
     ),
     AirQualitySensorEntityDescription(
         key="local_category",
-        translation_key_fn=lambda x: "local_category",
+        translation_key="local_category",
         device_class=SensorDeviceClass.ENUM,
         value_fn=lambda x: x.indexes[1].category,
     ),
     AirQualitySensorEntityDescription(
         key="pm10",
-        translation_key_fn=lambda x: "pm10",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PM10,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -96,7 +94,6 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
     ),
     AirQualitySensorEntityDescription(
         key="pm25",
-        translation_key_fn=lambda x: "pm25",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -159,8 +156,3 @@ class AirQualitySensorEntity(
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return self.entity_description.extra_state_attributes_fn(self.coordinator.data)
-
-    @property
-    def translation_key(self) -> str:
-        """Return the state attributes."""
-        return self.entity_description.translation_key_fn(self.coordinator.data)

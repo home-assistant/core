@@ -78,7 +78,7 @@
     'platform': 'google_air_quality',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'pm10',
+    'translation_key': None,
     'unique_id': 'pm10_48_9',
     'unit_of_measurement': 'µg/m³',
   })
@@ -130,7 +130,7 @@
     'platform': 'google_air_quality',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'pm25',
+    'translation_key': None,
     'unique_id': 'pm25_48_9',
     'unit_of_measurement': 'µg/m³',
   })
@@ -156,7 +156,15 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'excellent_air_quality',
+        'good_air_quality',
+        'low_air_quality',
+        'moderate_air_quality',
+        'poor_air_quality',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -190,6 +198,13 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': '48_9 UAQI Category',
+      'options': list([
+        'excellent_air_quality',
+        'good_air_quality',
+        'low_air_quality',
+        'moderate_air_quality',
+        'poor_air_quality',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.48_9_uaqi_category',
