@@ -66,9 +66,5 @@ async def test_notify_send_message(
         blocking=True,
     )
 
-    # Checking call
-    # assert mock_amazon_devices_client.
-    # assert mock_amazon_devices_client.call_count == 1
-
     assert (state := hass.states.get(entity_id))
     assert state.state == now.isoformat()

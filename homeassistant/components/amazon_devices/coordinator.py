@@ -2,8 +2,12 @@
 
 from datetime import timedelta
 
-from aioamazondevices import AmazonDevice, AmazonEchoApi, CannotConnect
-from aioamazondevices.exceptions import CannotAuthenticate, CannotRetrieveData
+from aioamazondevices.api import AmazonDevice, AmazonEchoApi
+from aioamazondevices.exceptions import (
+    CannotAuthenticate,
+    CannotConnect,
+    CannotRetrieveData,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME

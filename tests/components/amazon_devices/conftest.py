@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from aioamazondevices import AmazonDevice
+from aioamazondevices.api import AmazonDevice
 import pytest
 
 from homeassistant.components.amazon_devices.const import CONF_LOGIN_DATA, DOMAIN

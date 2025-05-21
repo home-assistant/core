@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from aioamazondevices import CannotAuthenticate, CannotConnect
+from aioamazondevices.exceptions import CannotAuthenticate, CannotConnect
 import pytest
 
 from homeassistant.components.amazon_devices.const import CONF_LOGIN_DATA, DOMAIN

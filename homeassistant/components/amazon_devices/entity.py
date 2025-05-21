@@ -1,6 +1,6 @@
 """Defines a base Amazon Devices entity."""
 
-from aioamazondevices import AmazonDevice
+from aioamazondevices.api import AmazonDevice
 from aioamazondevices.const import DEVICE_TYPE_TO_MODEL
 
 from homeassistant.helpers.device_registry import DeviceInfo

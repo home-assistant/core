@@ -5,7 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aioamazondevices import AmazonEchoApi, CannotAuthenticate, CannotConnect
+from aioamazondevices.api import AmazonEchoApi
+from aioamazondevices.exceptions import CannotAuthenticate, CannotConnect
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
