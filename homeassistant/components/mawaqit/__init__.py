@@ -7,7 +7,6 @@ from dateutil import parser as date_parser
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import MOSQUES_COORDINATOR, PRAYER_TIMES_COORDINATOR
 from .coordinator import MosqueCoordinator, PrayerTimeCoordinator
@@ -47,10 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         PRAYER_TIMES_COORDINATOR: prayer_time_coordinator,
     }
 
-    try:
-        await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-    except Exception as err:
-        raise ConfigEntryNotReady from err
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 

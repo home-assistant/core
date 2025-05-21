@@ -38,8 +38,15 @@ class MosqueCoordinator(DataUpdateCoordinator):
                 self.mosque_uuid, token=self.token
             )
 
-        except Exception as err:
-            raise UpdateFailed(f"Failed to update mosque data: {err}") from err
+        except mawaqit_wrapper.BadCredentialsException as err:
+            _LOGGER.error("Bad credentials: %s", err)
+            # Handle re-authentication if needed
+        except mawaqit_wrapper.NoMosqueAround as err:
+            _LOGGER.error("No mosque found in the area: %s", err)
+        except mawaqit_wrapper.NoMosqueFound as err:
+            _LOGGER.error("No mosque found: %s", err)
+        except (ConnectionError, TimeoutError) as err:
+            _LOGGER.error("Network-related error: %s", err)
 
         if not mosque_data:
             raise UpdateFailed("No mosque data found")
