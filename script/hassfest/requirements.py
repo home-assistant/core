@@ -286,12 +286,12 @@ def _is_dependency_version_range_valid(version_part: str, convention: str) -> bo
         # Lower version binding and version exclusion are fine
         return True
 
-    if operator == "==":
-        # Explicit version with wildcard is allowed only on major version
-        # e.g. ==1.* is allowed, but ==1.2.* is not
-        return version.endswith(".*") and version.count(".") == 1
-
     if convention == "SemVer":
+        if operator == "==":
+            # Explicit version with wildcard is allowed only on major version
+            # e.g. ==1.* is allowed, but ==1.2.* is not
+            return version.endswith(".*") and version.count(".") == 1
+
         awesome = AwesomeVersion(version)
         if operator in ("<", "<="):
             # Upper version binding only allowed on major version
