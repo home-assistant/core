@@ -16,7 +16,7 @@ class HassEnforceGreekMicroCharChecker(BaseChecker):
         "W7452": (
             "Constants with a micro unit prefix must be encode mu as U+03BC (\u03bc), not as U+00B5 (\u00b5)",
             "hass-enforce-greek-micro-char",
-            "According to [The Unicode Consortium](https://en.wikipedia.org/wiki/Unicode_Consortium), the Greek letter character is preferred [10].",
+            "According to [The Unicode Consortium](https://en.wikipedia.org/wiki/Micro-#Symbol_encoding_in_character_sets), the Greek letter character is preferred.",
         ),
     }
     options = ()
