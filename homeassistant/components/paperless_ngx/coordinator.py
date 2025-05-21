@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 
 from pypaperless import Paperless
@@ -29,15 +28,8 @@ type PaperlessConfigEntry = ConfigEntry[PaperlessCoordinator]
 UPDATE_INTERVAL = 120
 
 
-@dataclass(kw_only=True)
-class PaperlessData:
-    """Describes Paperless-ngx sensor entity."""
-
-    statistic: Statistic | None = None
-
-
-class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
-    """Coordinator to manage Paperless-ngx status updates."""
+class PaperlessCoordinator(DataUpdateCoordinator[Statistic]):
+    """Coordinator to manage Paperless-ngx statistic updates."""
 
     def __init__(
         self,
@@ -64,6 +56,11 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
         try:
             await self.api.initialize()
             await self.api.statistics()  # test permissions on api
+        except PaperlessForbiddenError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="forbidden",
+            ) from err
         except PaperlessConnectionError as err:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
@@ -90,12 +87,10 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
                 translation_key="cannot_connect",
             ) from err
 
-    async def _async_update_data(self) -> PaperlessData:
+    async def _async_update_data(self) -> Statistic:
         """Fetch data from API endpoint."""
-        data = PaperlessData()
-
         try:
-            data.statistic = await self._get_paperless_statistics()
+            return await self.api.statistics()
         except PaperlessConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -111,22 +106,3 @@ class PaperlessCoordinator(DataUpdateCoordinator[PaperlessData]):
                 translation_domain=DOMAIN,
                 translation_key="user_inactive_or_deleted",
             ) from err
-
-        return data
-
-    async def _get_paperless_statistics(self) -> Statistic | None:
-        """Get the status of Paperless-ngx."""
-        try:
-            statistics = await self.api.statistics()
-        except PaperlessForbiddenError as err:
-            if not self.statistic_forbidden_logged:
-                LOGGER.warning(
-                    "Could not fetch statistics from Paperless-ngx due missing permissions: %s",
-                    err,
-                    exc_info=True,
-                )
-                self.statistic_forbidden_logged = True
-            return None
-        else:
-            self.statistic_forbidden_logged = False
-            return statistics

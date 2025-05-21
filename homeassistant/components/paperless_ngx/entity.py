@@ -35,7 +35,7 @@ class PaperlessEntity(CoordinatorEntity[PaperlessCoordinator]):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self.entry.entry_id)},
             manufacturer="Paperless-ngx",
-            name="Paperless-ngx",
+            name=coordinator.api.base_url,
             sw_version=self.entry.runtime_data.api.host_version,
             configuration_url=self.entry.runtime_data.api.base_url,
         )

@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from pypaperless.models import Statistic
+
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
@@ -14,7 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import PaperlessConfigEntry, PaperlessCoordinator, PaperlessData
+from .coordinator import PaperlessConfigEntry, PaperlessCoordinator
 from .entity import PaperlessEntity
 
 PARALLEL_UPDATES = 0
@@ -24,7 +26,7 @@ PARALLEL_UPDATES = 0
 class PaperlessEntityDescription(SensorEntityDescription):
     """Describes Paperless-ngx sensor entity."""
 
-    value_fn: Callable[[PaperlessData], int | None]
+    value_fn: Callable[[Statistic], int | None]
 
 
 SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
@@ -32,47 +34,37 @@ SENSOR_DESCRIPTIONS: tuple[PaperlessEntityDescription, ...] = (
         key="documents_total",
         translation_key="documents_total",
         state_class=SensorStateClass.TOTAL,
-        value_fn=(
-            lambda data: data.statistic.documents_total if data.statistic else None
-        ),
+        value_fn=lambda data: data.documents_total,
     ),
     PaperlessEntityDescription(
         key="documents_inbox",
         translation_key="documents_inbox",
         state_class=SensorStateClass.TOTAL,
-        value_fn=(
-            lambda data: data.statistic.documents_inbox if data.statistic else None
-        ),
+        value_fn=lambda data: data.documents_inbox,
     ),
     PaperlessEntityDescription(
         key="characters_count",
         translation_key="characters_count",
         state_class=SensorStateClass.TOTAL,
-        value_fn=(
-            lambda data: data.statistic.character_count if data.statistic else None
-        ),
+        value_fn=lambda data: data.character_count,
     ),
     PaperlessEntityDescription(
         key="tag_count",
         translation_key="tag_count",
         state_class=SensorStateClass.TOTAL,
-        value_fn=lambda data: data.statistic.tag_count if data.statistic else None,
+        value_fn=lambda data: data.tag_count,
     ),
     PaperlessEntityDescription(
         key="correspondent_count",
         translation_key="correspondent_count",
         state_class=SensorStateClass.TOTAL,
-        value_fn=(
-            lambda data: data.statistic.correspondent_count if data.statistic else None
-        ),
+        value_fn=lambda data: data.correspondent_count,
     ),
     PaperlessEntityDescription(
         key="document_type_count",
         translation_key="document_type_count",
         state_class=SensorStateClass.TOTAL,
-        value_fn=(
-            lambda data: data.statistic.document_type_count if data.statistic else None
-        ),
+        value_fn=lambda data: data.document_type_count,
     ),
 )
 
@@ -110,11 +102,6 @@ class PaperlessSensor(PaperlessEntity, SensorEntity):
             coordinator=coordinator,
             description=description,
         )
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and self.native_value is not None
 
     @property
     def native_value(self) -> StateType:
