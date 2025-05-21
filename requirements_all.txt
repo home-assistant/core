@@ -2722,7 +2722,7 @@ sense-energy==0.13.8
 sensirion-ble==0.1.1
 
 # homeassistant.components.sensorpro
-sensorpro-ble==0.7.0
+sensorpro-ble==0.7.1
 
 # homeassistant.components.sensorpush_cloud
 sensorpush-api==2.1.2
