@@ -24,7 +24,8 @@ from .model import Config, Integration
 
 PACKAGE_CHECK_VERSION_RANGE = {
     "aiohttp": "SemVer",
-    "attrs": "CalVer",
+    # https://github.com/iMicknl/python-overkiz-api/issues/1644
+    # "attrs": "CalVer"
     "grpcio": "SemVer",
     "mashumaro": "SemVer",
     "pydantic": "SemVer",
