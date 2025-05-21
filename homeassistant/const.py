@@ -843,7 +843,7 @@ class UnitOfConductivity(
     # Deprecated aliases
     SIEMENS = "S/cm"
     """Deprecated: Please use UnitOfConductivity.SIEMENS_PER_CM"""
-    MICROSIEMENS = "μS/cm"  # 'b'\xce\xbcS/cm'
+    MICROSIEMENS = "μS/cm"  # "μ" == "\u03bc"
     """Deprecated: Please use UnitOfConductivity.MICROSIEMENS_PER_CM"""
     MILLISIEMENS = "mS/cm"
     """Deprecated: Please use UnitOfConductivity.MILLISIEMENS_PER_CM"""
