@@ -7,7 +7,7 @@ from mawaqit.consts import NoMosqueAround, NoMosqueFound
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.mawaqit import DOMAIN, config_flow
+from homeassistant.components.mawaqit import config_flow
 from homeassistant.components.mawaqit.const import (
     CANNOT_CONNECT_TO_SERVER,
     CONF_CALC_METHOD,
@@ -15,6 +15,7 @@ from homeassistant.components.mawaqit.const import (
     CONF_TYPE_SEARCH,
     CONF_TYPE_SEARCH_COORDINATES,
     CONF_TYPE_SEARCH_KEYWORD,
+    DOMAIN,
     NO_MOSQUE_FOUND_KEYWORD,
     WRONG_CREDENTIAL,
 )
@@ -136,7 +137,6 @@ async def test_show_form_user_no_input_reopens_form(hass: HomeAssistant) -> None
     flow = config_flow.MawaqitPrayerFlowHandler()
     flow.async_set_unique_id = AsyncMock()
     flow.hass = hass
-    flow.store = None  # Explicitly setting store to None
 
     # Invoke the initial step of the flow without user input
     result = await flow.async_step_user(user_input=None)

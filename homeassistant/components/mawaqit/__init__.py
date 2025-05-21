@@ -8,17 +8,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.storage import Store
 
-from . import utils
-from .const import (
-    DOMAIN,
-    MAWAQIT_PRAY_TIME,
-    MAWAQIT_STORAGE_KEY,
-    MAWAQIT_STORAGE_VERSION,
-    MOSQUES_COORDINATOR,
-    PRAYER_TIMES_COORDINATOR,
-)
+from .const import MOSQUES_COORDINATOR, PRAYER_TIMES_COORDINATOR
 from .coordinator import MosqueCoordinator, PrayerTimeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,19 +58,4 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Mawaqit Prayer entry from config_entry."""
 
-    if DOMAIN in hass.data:
-        if hass.data[DOMAIN].event_unsub:
-            hass.data[DOMAIN].event_unsub()
-        hass.data.pop(DOMAIN)
-
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
-
-
-async def async_remove_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-    """Remove Mawaqit Prayer entry from config_entry."""
-    _LOGGER.debug("Started clearing data")
-
-    store: Store = Store(hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY)
-    await utils.clear_storage_entry(store, MAWAQIT_PRAY_TIME)
-
-    _LOGGER.debug("Finished clearing data")

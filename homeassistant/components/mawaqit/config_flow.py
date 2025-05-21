@@ -103,7 +103,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         longi = self.hass.config.longitude
 
         if user_input is not None:
-            title, data_entry = await utils.async_save_mosque(
+            title, data_entry = utils.async_save_mosque(
                 user_input[CONF_UUID],
                 self.mosques,
                 self.token,
@@ -203,7 +203,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 if keyword == self.previous_keyword_search:
                     # if the form is submitted with the same keyword as the previous one, we check if the user has selected a mosque
                     if CONF_UUID in user_input and (user_input[CONF_UUID] is not None):
-                        title, data_entry = await utils.async_save_mosque(
+                        title, data_entry = utils.async_save_mosque(
                             user_input[CONF_UUID],
                             self.mosques,
                             mawaqit_token=self.token,
@@ -281,7 +281,7 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
         mawaqit_token = self.config_entry.data.get(CONF_API_KEY)
 
         if user_input is not None:
-            title_entry, data_entry = await utils.async_save_mosque(
+            title_entry, data_entry = utils.async_save_mosque(
                 user_input[CONF_CALC_METHOD],
                 self.mosques,
                 mawaqit_token,

@@ -8,11 +8,9 @@ import logging
 import os
 
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.storage import Store
 import homeassistant.util.dt as dt_util
 
-from .const import CONF_UUID, MAWAQIT_PRAY_TIME, PRAYER_NAMES, PRAYER_NAMES_IQAMA
+from .const import CONF_UUID, PRAYER_NAMES, PRAYER_NAMES_IQAMA
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -50,171 +48,27 @@ def parse_mosque_data(dict_mosques):
     return name_servers, uuid_servers, CALC_METHODS
 
 
-async def read_pray_time(store: Store | None):
-    """Read the prayer time data from the store.
-
-    Args:
-        store (Store | None): The storage object to read from.
-
-    Returns:
-        The prayer time data read from the store.
-
-    """
-    return await read_one_element(store, MAWAQIT_PRAY_TIME)
-
-
-async def write_pray_time(pray_time, store: Store | None) -> None:
-    """Write the prayer time data to the store.
-
-    Args:
-        pray_time (dict): The prayer time data to write.
-        store (Store | None): The storage object to write to.
-
-    """
-    await write_one_element(store, MAWAQIT_PRAY_TIME, pray_time)
-
-
-async def read_one_element(store, key):
-    """Read a single element from the store by key.
-
-    Args:
-        store (Store): The storage object to read from.
-        key (str): The key of the element to read.
-
-    Returns:
-        The value associated with the key, or None if the key does not exist.
-
-    """
-    if store is None:
-        _LOGGER.error("Store is None !")
-        raise ValueError("Store is None !")
-
-    data = await store.async_load()
-    if data is None or key not in data:
-        return None
-    data = data.get(key)
-    if data == {} or data is None:
-        return None
-    _LOGGER.debug("Read %s from store with key = %s ", data, key)
-    return data
-
-
-async def write_one_element(store, key, value):
-    """Write a single element to the store by key.
-
-    Args:
-        store (Store): The storage object to write to.
-        key (str): The key of the element to write.
-        value: The value to associate with the key.
-
-    """
-    if store is None:
-        _LOGGER.error("Store is None !")
-        raise ValueError("Store is None !")
-
-    data = await store.async_load()
-    if data is None:
-        data = {}
-    data[key] = value
-    _LOGGER.debug("Writing %s to store with key = %s", data, key)
-    await store.async_save(data)
-
-
-async def read_all_elements(store):
-    """Read all elements from the store.
-
-    Args:
-        store (Store): The storage object to read from.
-
-    Returns:
-        dict: The data read from the store, or an empty dictionary if no data is found.
-
-    """
-    if store is None:
-        _LOGGER.error("Store is None !")
-        raise ValueError("Store is None !")
-
-    data = await store.async_load()
-    if data is None:
-        return {}
-    _LOGGER.debug("Read %s from store", data)
-    return data
-
-
-async def write_all_elements(store, data):
-    """Write all elements to the store.
-
-    Args:
-        store (Store): The storage object to write to.
-        data (dict): The data to write to the store.
-
-    """
-    if store is None:
-        _LOGGER.error("Store is None !")
-        raise ValueError("Store is None !")
-
-    _LOGGER.debug("Writing %s to store", data)
-    await store.async_save(data)
-
-
-async def clear_storage_entry(store, key):
-    """Clear the storage entry.
-
-    Args:
-        store (Store): The storage object to clear.
-        key (str): The key of the element to clear.
-
-    """
-    if store is None:
-        _LOGGER.error("Store is None !")
-        raise ValueError("Store is None !")
-    await write_one_element(
-        store,
-        key,
-        None,
-    )
-    _LOGGER.info("Cleared storage entry with key = %s", key)
-    # maybe use the async_remove() in the store object
-
-
-async def async_clear_data(hass: HomeAssistant, store: Store | None, domain: str):
-    """Clear all data from the store and folders."""
-    if store is None:
-        _LOGGER.error("Store is None !")
-        raise ValueError("Store is None !")
-    # Remove all config entries
-    entries = hass.config_entries.async_entries(domain)
-    for entry in entries:
-        if entry.domain == domain:
-            await hass.config_entries.async_remove(entry.entry_id)
-
-    await store.async_remove()  # Remove the existing data in the store
-
-
-async def async_save_mosque(
+def async_save_mosque(
     UUID,
     mosques,
     mawaqit_token=None,
     lat=None,
     longi=None,
 ) -> tuple[str, dict]:
-    """Save mosque data  in store and prepare entry data.
-
-    This function saves mosque data by reading from the store, updating necessary files,
-    and clearing storage entries. It also handles optional latitude and longitude data,
-    and prepares the entry data.
+    """Create a data entry to simplify the process of saving mosque data.
 
     Args:
-        UUID (str): The unique identifier for the mosque.
-        mosques (list) : The list of mosque data dictionaries.
-        mawaqit_token (str, optional): The token for Mawaqit API. Defaults to None.
-        lat (float, optional): The latitude of the mosque. Defaults to None.
-        longi (float, optional): The longitude of the mosque. Defaults to None.
+        UUID (str): The unique identifier of the mosque.
+        mosques (list): List of mosque data dictionaries.
+        mawaqit_token (str, optional): Token for Mawaqit API authentication.
+        lat (float, optional): Latitude of the mosque.
+        longi (float, optional): Longitude of the mosque.
 
     Returns:
-        tuple: A tuple containing the title and data entry dictionary.
+        tuple[str, dict]: A tuple containing the title and data entry dictionary.
 
     """
+
     if mawaqit_token is None:
         _LOGGER.error("Token should not be None !")
         raise ValueError("Token should not be None !")

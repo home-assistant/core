@@ -65,13 +65,6 @@ CONF_KEEP: str = "keep"
 CONF_RESET: str = "reset"
 
 
-# Store
-
-MAWAQIT_STORAGE_VERSION = 1
-MAWAQIT_STORAGE_KEY = "mawaqit_storage"
-
-MAWAQIT_PRAY_TIME = "pray_time"
-
 # Error messages
 
 NO_MOSQUE_FOUND_KEYWORD = "no_mosque_found_keyword"
