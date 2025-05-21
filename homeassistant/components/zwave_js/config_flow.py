@@ -65,7 +65,7 @@ from .const import (
     CONF_USE_ADDON,
     DATA_CLIENT,
     DOMAIN,
-    RESTORE_NVM_DRIVER_READY_TIMEOUT,
+    DRIVER_READY_TIMEOUT,
 )
 from .helpers import CannotConnect, async_get_version_info
 
@@ -149,7 +149,14 @@ def get_usb_ports() -> dict[str, str]:
             pid,
         )
         port_descriptions[dev_path] = human_name
-    return port_descriptions
+
+    # Sort the dictionary by description, putting "n/a" last
+    return dict(
+        sorted(
+            port_descriptions.items(),
+            key=lambda x: x[1].lower().startswith("n/a"),
+        )
+    )
 
 
 async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
@@ -190,6 +197,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self._migrating = False
         self._reconfigure_config_entry: ConfigEntry | None = None
         self._usb_discovery = False
+        self._recommended_install = False
 
     async def async_step_install_addon(
         self, user_input: dict[str, Any] | None = None
@@ -365,9 +373,21 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         if is_hassio(self.hass):
-            return await self.async_step_on_supervisor()
+            return await self.async_step_installation_type()
 
         return await self.async_step_manual()
+
+    async def async_step_installation_type(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the installation type step."""
+        return self.async_show_menu(
+            step_id="installation_type",
+            menu_options=[
+                "intent_recommended",
+                "intent_custom",
+            ],
+        )
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -509,7 +529,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="addon_required")
             return await self.async_step_intent_migrate()
 
-        return await self.async_step_on_supervisor({CONF_USE_ADDON: True})
+        return await self.async_step_installation_type()
 
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
@@ -586,6 +606,21 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="hassio_confirm")
 
+    async def async_step_intent_recommended(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Select recommended installation type."""
+        self._recommended_install = True
+        return await self.async_step_on_supervisor({CONF_USE_ADDON: True})
+
+    async def async_step_intent_custom(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Select custom installation type."""
+        if self._usb_discovery:
+            return await self.async_step_on_supervisor({CONF_USE_ADDON: True})
+        return await self.async_step_on_supervisor()
+
     async def async_step_on_supervisor(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -634,31 +669,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         addon_info = await self._async_get_addon_info()
         addon_config = addon_info.options
 
-        if user_input is not None:
-            self.s0_legacy_key = user_input[CONF_S0_LEGACY_KEY]
-            self.s2_access_control_key = user_input[CONF_S2_ACCESS_CONTROL_KEY]
-            self.s2_authenticated_key = user_input[CONF_S2_AUTHENTICATED_KEY]
-            self.s2_unauthenticated_key = user_input[CONF_S2_UNAUTHENTICATED_KEY]
-            self.lr_s2_access_control_key = user_input[CONF_LR_S2_ACCESS_CONTROL_KEY]
-            self.lr_s2_authenticated_key = user_input[CONF_LR_S2_AUTHENTICATED_KEY]
-            if not self._usb_discovery:
-                self.usb_path = user_input[CONF_USB_PATH]
-
-            addon_config_updates = {
-                CONF_ADDON_DEVICE: self.usb_path,
-                CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
-                CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
-                CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
-                CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
-                CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
-                CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
-            }
-
-            await self._async_set_addon_config(addon_config_updates)
-
-            return await self.async_step_start_addon()
-
-        usb_path = self.usb_path or addon_config.get(CONF_ADDON_DEVICE) or ""
         s0_legacy_key = addon_config.get(
             CONF_ADDON_S0_LEGACY_KEY, self.s0_legacy_key or ""
         )
@@ -678,22 +688,67 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_ADDON_LR_S2_AUTHENTICATED_KEY, self.lr_s2_authenticated_key or ""
         )
 
-        schema: VolDictType = {
-            vol.Optional(CONF_S0_LEGACY_KEY, default=s0_legacy_key): str,
-            vol.Optional(
-                CONF_S2_ACCESS_CONTROL_KEY, default=s2_access_control_key
-            ): str,
-            vol.Optional(CONF_S2_AUTHENTICATED_KEY, default=s2_authenticated_key): str,
-            vol.Optional(
-                CONF_S2_UNAUTHENTICATED_KEY, default=s2_unauthenticated_key
-            ): str,
-            vol.Optional(
-                CONF_LR_S2_ACCESS_CONTROL_KEY, default=lr_s2_access_control_key
-            ): str,
-            vol.Optional(
-                CONF_LR_S2_AUTHENTICATED_KEY, default=lr_s2_authenticated_key
-            ): str,
-        }
+        if self._recommended_install and self._usb_discovery:
+            # Recommended installation with USB discovery, skip asking for keys
+            user_input = {}
+
+        if user_input is not None:
+            self.s0_legacy_key = user_input.get(CONF_S0_LEGACY_KEY, s0_legacy_key)
+            self.s2_access_control_key = user_input.get(
+                CONF_S2_ACCESS_CONTROL_KEY, s2_access_control_key
+            )
+            self.s2_authenticated_key = user_input.get(
+                CONF_S2_AUTHENTICATED_KEY, s2_authenticated_key
+            )
+            self.s2_unauthenticated_key = user_input.get(
+                CONF_S2_UNAUTHENTICATED_KEY, s2_unauthenticated_key
+            )
+            self.lr_s2_access_control_key = user_input.get(
+                CONF_LR_S2_ACCESS_CONTROL_KEY, lr_s2_access_control_key
+            )
+            self.lr_s2_authenticated_key = user_input.get(
+                CONF_LR_S2_AUTHENTICATED_KEY, lr_s2_authenticated_key
+            )
+            if not self._usb_discovery:
+                self.usb_path = user_input[CONF_USB_PATH]
+
+            addon_config_updates = {
+                CONF_ADDON_DEVICE: self.usb_path,
+                CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
+                CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
+                CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
+                CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
+                CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
+                CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
+            }
+
+            await self._async_set_addon_config(addon_config_updates)
+
+            return await self.async_step_start_addon()
+
+        usb_path = self.usb_path or addon_config.get(CONF_ADDON_DEVICE) or ""
+        schema: VolDictType = (
+            {}
+            if self._recommended_install
+            else {
+                vol.Optional(CONF_S0_LEGACY_KEY, default=s0_legacy_key): str,
+                vol.Optional(
+                    CONF_S2_ACCESS_CONTROL_KEY, default=s2_access_control_key
+                ): str,
+                vol.Optional(
+                    CONF_S2_AUTHENTICATED_KEY, default=s2_authenticated_key
+                ): str,
+                vol.Optional(
+                    CONF_S2_UNAUTHENTICATED_KEY, default=s2_unauthenticated_key
+                ): str,
+                vol.Optional(
+                    CONF_LR_S2_ACCESS_CONTROL_KEY, default=lr_s2_access_control_key
+                ): str,
+                vol.Optional(
+                    CONF_LR_S2_AUTHENTICATED_KEY, default=lr_s2_authenticated_key
+                ): str,
+            }
+        )
 
         if not self._usb_discovery:
             try:
@@ -776,17 +831,14 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _async_update_entry(
-        self, updates: dict[str, Any], *, schedule_reload: bool = True
-    ) -> None:
+    def _async_update_entry(self, updates: dict[str, Any]) -> None:
         """Update the config entry with new data."""
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
         self.hass.config_entries.async_update_entry(
             config_entry, data=config_entry.data | updates
         )
-        if schedule_reload:
-            self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
+        self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
 
     async def async_step_intent_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -896,15 +948,63 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             # Now that the old controller is gone, we can scan for serial ports again
             return await self.async_step_choose_serial_port()
 
+        try:
+            driver = self._get_driver()
+        except AbortFlow:
+            return self.async_abort(reason="config_entry_not_loaded")
+
+        @callback
+        def set_driver_ready(event: dict) -> None:
+            "Set the driver ready event."
+            wait_driver_ready.set()
+
+        wait_driver_ready = asyncio.Event()
+
+        unsubscribe = driver.once("driver ready", set_driver_ready)
+
         # reset the old controller
         try:
-            await self._get_driver().async_hard_reset()
-        except (AbortFlow, FailedCommand) as err:
+            await driver.async_hard_reset()
+        except FailedCommand as err:
+            unsubscribe()
             _LOGGER.error("Failed to reset controller: %s", err)
             return self.async_abort(reason="reset_failed")
 
+        # Update the unique id of the config entry
+        # to the new home id, which requires waiting for the driver
+        # to be ready before getting the new home id.
+        # If the backup restore, done later in the flow, fails,
+        # the config entry unique id should be the new home id
+        # after the controller reset.
+        try:
+            async with asyncio.timeout(DRIVER_READY_TIMEOUT):
+                await wait_driver_ready.wait()
+        except TimeoutError:
+            pass
+        finally:
+            unsubscribe()
+
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
+
+        try:
+            version_info = await async_get_version_info(
+                self.hass, config_entry.data[CONF_URL]
+            )
+        except CannotConnect:
+            # Just log this error, as there's nothing to do about it here.
+            # The stale unique id needs to be handled by a repair flow,
+            # after the config entry has been reloaded, if the backup restore
+            # also fails.
+            _LOGGER.debug(
+                "Failed to get server version, cannot update config entry "
+                "unique id with new home id, after controller reset"
+            )
+        else:
+            self.hass.config_entries.async_update_entry(
+                config_entry, unique_id=str(version_info.home_id)
+            )
+
         # Unload the config entry before asking the user to unplug the controller.
         await self.hass.config_entries.async_unload(config_entry.entry_id)
 
@@ -1111,6 +1211,15 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Failed to get USB ports: %s", err)
             return self.async_abort(reason="usb_ports_failed")
 
+        addon_info = await self._async_get_addon_info()
+        addon_config = addon_info.options
+        old_usb_path = addon_config.get(CONF_ADDON_DEVICE, "")
+        # Remove the old controller from the ports list.
+        ports.pop(
+            await self.hass.async_add_executor_job(usb.get_serial_by_id, old_usb_path),
+            None,
+        )
+
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_USB_PATH): vol.In(ports),
@@ -1154,14 +1263,17 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         assert ws_address is not None
         version_info = self.version_info
         assert version_info is not None
+        config_entry = self._reconfigure_config_entry
+        assert config_entry is not None
 
         # We need to wait for the config entry to be reloaded,
         # before restoring the backup.
         # We will do this in the restore nvm progress task,
         # to get a nicer user experience.
-        self._async_update_entry(
-            {
-                "unique_id": str(version_info.home_id),
+        self.hass.config_entries.async_update_entry(
+            config_entry,
+            data={
+                **config_entry.data,
                 CONF_URL: ws_address,
                 CONF_USB_PATH: self.usb_path,
                 CONF_S0_LEGACY_KEY: self.s0_legacy_key,
@@ -1173,8 +1285,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_USE_ADDON: True,
                 CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
             },
-            schedule_reload=False,
+            unique_id=str(version_info.home_id),
         )
+
         return await self.async_step_restore_nvm()
 
     async def async_step_finish_addon_setup_reconfigure(
@@ -1321,8 +1434,24 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             raise AbortFlow(f"Failed to restore network: {err}") from err
         else:
             with suppress(TimeoutError):
-                async with asyncio.timeout(RESTORE_NVM_DRIVER_READY_TIMEOUT):
+                async with asyncio.timeout(DRIVER_READY_TIMEOUT):
                     await wait_driver_ready.wait()
+            try:
+                version_info = await async_get_version_info(
+                    self.hass, config_entry.data[CONF_URL]
+                )
+            except CannotConnect:
+                # Just log this error, as there's nothing to do about it here.
+                # The stale unique id needs to be handled by a repair flow,
+                # after the config entry has been reloaded.
+                _LOGGER.error(
+                    "Failed to get server version, cannot update config entry "
+                    "unique id with new home id, after controller reset"
+                )
+            else:
+                self.hass.config_entries.async_update_entry(
+                    config_entry, unique_id=str(version_info.home_id)
+                )
             await self.hass.config_entries.async_reload(config_entry.entry_id)
         finally:
             for unsub in unsubs:
