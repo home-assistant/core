@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -54,6 +54,7 @@ class AirQualitySensorEntityDescription(SensorEntityDescription):
     extra_state_attributes_fn: Callable[[Any], Mapping[str, Any] | None] = (
         lambda _: None
     )
+    translation_key_fn: Callable[[Any], str]
     option_fn: Callable[[Any], list[str] | None] = lambda _: None
     value_fn: Callable[[Any], StateType | datetime]
 
@@ -61,23 +62,27 @@ class AirQualitySensorEntityDescription(SensorEntityDescription):
 AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
     AirQualitySensorEntityDescription(
         key="uaqi",
-        translation_key="uaqi",
+        translation_key_fn=lambda x: "uaqi",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.AQI,
         value_fn=lambda x: x.indexes[0].aqi,
         extra_state_attributes_fn=_get_local_aqi_extra_state_attributes,
     ),
     AirQualitySensorEntityDescription(
-        key="category",
-        translation_key="category",
+        key="uaqi_category",
+        translation_key_fn=lambda x: "uaqi_category",
         device_class=SensorDeviceClass.ENUM,
         value_fn=lambda x: x.indexes[0].category,
-        extra_state_attributes_fn=lambda x: {
-            x.indexes[1].display_name: x.indexes[1].category,
-        },
+    ),
+    AirQualitySensorEntityDescription(
+        key="local_category",
+        translation_key_fn=lambda x: "local_category",
+        device_class=SensorDeviceClass.ENUM,
+        value_fn=lambda x: x.indexes[1].category,
     ),
     AirQualitySensorEntityDescription(
         key="pm10",
+        translation_key_fn=lambda x: "pm10",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PM10,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -85,6 +90,7 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
     ),
     AirQualitySensorEntityDescription(
         key="pm25",
+        translation_key_fn=lambda x: "pm25",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -132,19 +138,23 @@ class AirQualitySensorEntity(
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, name)},
             name=name,
+            entry_type=DeviceEntryType.SERVICE,
         )
+        self._attr_translation_placeholders = {
+            "local_aqi": coordinator.data.indexes[1].display_name
+        }
 
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
 
-    # @property
-    # def options(self) -> list[str] | None:
-    #     """Return the option of the sensor."""
-    #     return self.entity_description.option_fn(self.mower_attributes)
-
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return self.entity_description.extra_state_attributes_fn(self.coordinator.data)
+
+    @property
+    def translation_key(self) -> str:
+        """Return the state attributes."""
+        return self.entity_description.translation_key_fn(self.coordinator.data)
