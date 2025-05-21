@@ -262,13 +262,13 @@ aiohue==4.7.4
 aioimaplib==2.0.1
 
 # homeassistant.components.immich
-aioimmich==0.5.0
+aioimmich==0.6.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
 
 # homeassistant.components.rehlko
-aiokem==0.5.10
+aiokem==0.5.11
 
 # homeassistant.components.lifx
 aiolifx-effects==0.3.2
@@ -301,7 +301,7 @@ aionanoleaf==0.2.1
 aionotion==2024.03.0
 
 # homeassistant.components.ntfy
-aiontfy==0.5.2
+aiontfy==0.5.3
 
 # homeassistant.components.nut
 aionut==4.3.4
@@ -1513,7 +1513,7 @@ pyairnow==1.2.1
 pyairvisual==2023.08.1
 
 # homeassistant.components.aprilaire
-pyaprilaire==0.8.1
+pyaprilaire==0.9.0
 
 # homeassistant.components.asuswrt
 pyasuswrt==0.1.21
@@ -2347,7 +2347,7 @@ tesla-powerwall==0.5.2
 tesla-wall-connector==1.0.2
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.7.7
+teslemetry-stream==0.7.9
 
 # homeassistant.components.tessie
 tessie-api==0.1.1
@@ -2515,7 +2515,7 @@ wyoming==1.5.4
 xbox-webapi==2.1.0
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.38.0
+xiaomi-ble==0.39.0
 
 # homeassistant.components.knx
 xknx==3.8.0

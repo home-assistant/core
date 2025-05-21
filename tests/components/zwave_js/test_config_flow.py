@@ -13,11 +13,12 @@ from aiohasupervisor.models import AddonsOptions, Discovery
 import aiohttp
 import pytest
 from serial.tools.list_ports_common import ListPortInfo
+from voluptuous import InInvalid
 from zwave_js_server.exceptions import FailedCommand
 from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.zwave_js.config_flow import TITLE
+from homeassistant.components.zwave_js.config_flow import TITLE, get_usb_ports
 from homeassistant.components.zwave_js.const import ADDON_SLUG, CONF_USB_PATH, DOMAIN
 from homeassistant.components.zwave_js.helpers import SERVER_VERSION_TIMEOUT
 from homeassistant.core import HomeAssistant
@@ -3694,6 +3695,7 @@ async def test_reconfigure_migrate_with_addon(
     integration,
     addon_running,
     restart_addon,
+    addon_options,
     set_addon_options,
     get_addon_discovery_info,
     get_server_version: AsyncMock,
@@ -3717,6 +3719,7 @@ async def test_reconfigure_migrate_with_addon(
             "usb_path": "/dev/ttyUSB0",
         },
     )
+    addon_options["device"] = "/dev/ttyUSB0"
 
     async def mock_backup_nvm_raw():
         await asyncio.sleep(0)
@@ -3793,6 +3796,9 @@ async def test_reconfigure_migrate_with_addon(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "choose_serial_port"
     assert result["data_schema"].schema[CONF_USB_PATH]
+    # Ensure the old usb path is not in the list of options
+    with pytest.raises(InInvalid):
+        result["data_schema"].schema[CONF_USB_PATH](addon_options["device"])
 
     # Reset side effect before starting the add-on.
     get_server_version.side_effect = None
@@ -4661,3 +4667,31 @@ async def test_configure_addon_usb_ports_failure(
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "usb_ports_failed"
+
+
+async def test_get_usb_ports_sorting(hass: HomeAssistant) -> None:
+    """Test that get_usb_ports sorts ports with 'n/a' descriptions last."""
+    mock_ports = [
+        ListPortInfo("/dev/ttyUSB0"),
+        ListPortInfo("/dev/ttyUSB1"),
+        ListPortInfo("/dev/ttyUSB2"),
+        ListPortInfo("/dev/ttyUSB3"),
+    ]
+    mock_ports[0].description = "n/a"
+    mock_ports[1].description = "Device A"
+    mock_ports[2].description = "N/A"
+    mock_ports[3].description = "Device B"
+
+    with patch("serial.tools.list_ports.comports", return_value=mock_ports):
+        result = get_usb_ports()
+
+        descriptions = list(result.values())
+
+        # Verify that descriptions containing "n/a" are at the end
+
+        assert descriptions == [
+            "Device A - /dev/ttyUSB1, s/n: n/a",
+            "Device B - /dev/ttyUSB3, s/n: n/a",
+            "n/a - /dev/ttyUSB0, s/n: n/a",
+            "N/A - /dev/ttyUSB2, s/n: n/a",
+        ]

@@ -149,7 +149,14 @@ def get_usb_ports() -> dict[str, str]:
             pid,
         )
         port_descriptions[dev_path] = human_name
-    return port_descriptions
+
+    # Sort the dictionary by description, putting "n/a" last
+    return dict(
+        sorted(
+            port_descriptions.items(),
+            key=lambda x: x[1].lower().startswith("n/a"),
+        )
+    )
 
 
 async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
@@ -1155,6 +1162,15 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         except OSError as err:
             _LOGGER.error("Failed to get USB ports: %s", err)
             return self.async_abort(reason="usb_ports_failed")
+
+        addon_info = await self._async_get_addon_info()
+        addon_config = addon_info.options
+        old_usb_path = addon_config.get(CONF_ADDON_DEVICE, "")
+        # Remove the old controller from the ports list.
+        ports.pop(
+            await self.hass.async_add_executor_job(usb.get_serial_by_id, old_usb_path),
+            None,
+        )
 
         data_schema = vol.Schema(
             {
