@@ -3884,6 +3884,17 @@ async def test_compile_hourly_statistics_equivalent_units_1(
         (None, "ft3", "ft³", None, 13.333333, -10, 30),
         (None, "ft³/m", "ft³/min", None, 13.333333, -10, 30),
         (None, "m3", "m³", None, 13.333333, -10, 30),
+        (None, "\u00b5V", "\u03bcV", None, 13.333333, -10, 30),
+        (SensorDeviceClass.VOLTAGE, "\u00b5V", "\u03bcV", None, 13.333333, -10, 30),
+        (None, "\u00b5Sv/h", "\u03bcSv/h", None, 13.333333, -10, 30),
+        (None, "\u00b5S/cm", "\u03bcS/cm", None, 13.333333, -10, 30),
+        (None, "\u00b5g/ft³", "\u03bcg/ft³", None, 13.333333, -10, 30),
+        (None, "\u00b5g/m³", "\u03bcg/m³", None, 13.333333, -10, 30),
+        (None, "\u00b5mol/s⋅m²", "\u03bcmol/s⋅m²", None, 13.333333, -10, 30),
+        (None, "\u00b5g", "\u03bcg", None, 13.333333, -10, 30),
+        (SensorDeviceClass.WEIGHT, "\u00b5g", "\u03bcg", None, 13.333333, -10, 30),
+        (None, "\u00b5s", "\u03bcs", None, 13.333333, -10, 30),
+        (SensorDeviceClass.DURATION, "\u00b5s", "\u03bcs", None, 13.333333, -10, 30),
     ],
 )
 async def test_compile_hourly_statistics_equivalent_units_2(
