@@ -67,6 +67,12 @@ async def test_setup(
                     "set_night_temperature_offset",
                     (0.4,),
                 ),
+                (
+                    "number.mock_heater_system_led_brightness",
+                    20,
+                    "set_sys_led",
+                    (20,),
+                ),
             ],
         ),
         (
@@ -89,6 +95,12 @@ async def test_setup(
                     72.1,
                     "set_night_speed",
                     (int(72.1),),
+                ),
+                (
+                    "number.mock_classicvario_system_led_brightness",
+                    20,
+                    "set_sys_led",
+                    (20,),
                 ),
             ],
         ),
@@ -140,6 +152,11 @@ async def test_set_value(
                     "night_temperature_offset",
                     2.3,
                 ),
+                (
+                    "number.mock_heater_system_led_brightness",
+                    "sys_led",
+                    87,
+                ),
             ],
         ),
         (
@@ -159,6 +176,11 @@ async def test_set_value(
                     "number.mock_classicvario_night_speed",
                     "night_speed",
                     12,
+                ),
+                (
+                    "number.mock_classicvario_system_led_brightness",
+                    "sys_led",
+                    35,
                 ),
             ],
         ),

@@ -32,7 +32,7 @@ def get_client_device_id(hass: HomeAssistant, self_hosted: bool) -> str:
     )
 
 
-def get_supported_entitites(
+def get_supported_entities(
     controller: EcovacsController,
     entity_class: type[EcovacsDescriptionEntity],
     descriptions: tuple[EcovacsCapabilityEntityDescription, ...],

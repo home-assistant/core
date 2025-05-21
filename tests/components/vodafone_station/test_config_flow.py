@@ -302,3 +302,22 @@ async def test_reconfigure_fails(
     assert reconfigure_result["type"] is FlowResultType.FORM
     assert reconfigure_result["step_id"] == "reconfigure"
     assert reconfigure_result["errors"] == {"base": error}
+
+    mock_vodafone_station_router.login.side_effect = None
+
+    reconfigure_result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.168.100.61",
+            CONF_PASSWORD: "fake_password",
+            CONF_USERNAME: "fake_username",
+        },
+    )
+
+    assert reconfigure_result["type"] is FlowResultType.ABORT
+    assert reconfigure_result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_HOST: "192.168.100.61",
+        CONF_PASSWORD: "fake_password",
+        CONF_USERNAME: "fake_username",
+    }

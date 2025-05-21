@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.downloader import (
+from homeassistant.components.downloader.const import (
     CONF_DOWNLOAD_DIR,
     DOMAIN,
     SERVICE_DOWNLOAD_FILE,

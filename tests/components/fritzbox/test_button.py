@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import Mock, patch
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN

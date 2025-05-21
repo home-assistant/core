@@ -9,7 +9,7 @@ from aiohttp import ClientConnectionError
 from freezegun.api import FrozenDateTimeFactory
 from pymiele import OAUTH2_TOKEN
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.miele.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState

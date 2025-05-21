@@ -8,7 +8,7 @@ from airtouch5py.packets.zone_status import (
     ZonePowerState,
     ZoneStatusZone,
 )
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,

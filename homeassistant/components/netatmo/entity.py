@@ -178,7 +178,8 @@ class NetatmoWeatherModuleEntity(NetatmoModuleEntity):
     def __init__(self, device: NetatmoDevice) -> None:
         """Set up a Netatmo weather module entity."""
         super().__init__(device)
-        category = getattr(self.device.device_category, "name")
+        assert self.device.device_category
+        category = self.device.device_category.name
         self._publishers.extend(
             [
                 {
@@ -189,7 +190,7 @@ class NetatmoWeatherModuleEntity(NetatmoModuleEntity):
         )
 
         if hasattr(self.device, "place"):
-            place = cast(Place, getattr(self.device, "place"))
+            place = cast(Place, self.device.place)
             if hasattr(place, "location") and place.location is not None:
                 self._attr_extra_state_attributes.update(
                     {

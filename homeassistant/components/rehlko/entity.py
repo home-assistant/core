@@ -43,7 +43,7 @@ class RehlkoEntity(CoordinatorEntity[RehlkoUpdateCoordinator]):
         device_id: int,
         device_data: dict,
         description: EntityDescription,
-        use_device_key: bool = False,
+        document_key: str | None = None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -61,7 +61,7 @@ class RehlkoEntity(CoordinatorEntity[RehlkoUpdateCoordinator]):
             manufacturer=KOHLER,
             connections=_get_device_connections(device_data[DEVICE_DATA_MAC_ADDRESS]),
         )
-        self._use_device_key = use_device_key
+        self._document_key = document_key
 
     @property
     def _device_data(self) -> dict[str, Any]:
@@ -71,8 +71,10 @@ class RehlkoEntity(CoordinatorEntity[RehlkoUpdateCoordinator]):
     @property
     def _rehlko_value(self) -> str:
         """Return the sensor value."""
-        if self._use_device_key:
-            return self._device_data[self.entity_description.key]
+        if self._document_key:
+            return self.coordinator.data[self._document_key][
+                self.entity_description.key
+            ]
         return self.coordinator.data[self.entity_description.key]
 
     @property

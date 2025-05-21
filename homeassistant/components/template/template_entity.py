@@ -76,23 +76,35 @@ TEMPLATE_ENTITY_ICON_SCHEMA = vol.Schema(
     }
 )
 
-TEMPLATE_ENTITY_COMMON_SCHEMA = vol.Schema(
+TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ATTRIBUTES): vol.Schema({cv.string: cv.template}),
-        vol.Optional(CONF_AVAILABILITY): cv.template,
-        vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
     }
-).extend(TEMPLATE_ENTITY_BASE_SCHEMA.schema)
+)
+
+TEMPLATE_ENTITY_COMMON_SCHEMA = (
+    vol.Schema(
+        {
+            vol.Optional(CONF_AVAILABILITY): cv.template,
+            vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
+        }
+    )
+    .extend(TEMPLATE_ENTITY_BASE_SCHEMA.schema)
+    .extend(TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA.schema)
+)
 
 
 def make_template_entity_common_schema(default_name: str) -> vol.Schema:
     """Return a schema with default name."""
-    return vol.Schema(
-        {
-            vol.Optional(CONF_ATTRIBUTES): vol.Schema({cv.string: cv.template}),
-            vol.Optional(CONF_AVAILABILITY): cv.template,
-        }
-    ).extend(make_template_entity_base_schema(default_name).schema)
+    return (
+        vol.Schema(
+            {
+                vol.Optional(CONF_AVAILABILITY): cv.template,
+            }
+        )
+        .extend(make_template_entity_base_schema(default_name).schema)
+        .extend(TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA.schema)
+    )
 
 
 TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY = vol.Schema(

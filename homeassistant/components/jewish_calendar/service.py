@@ -16,6 +16,7 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import LanguageSelector, LanguageSelectorConfig
 from homeassistant.helpers.sun import get_astral_event_date
@@ -48,23 +49,25 @@ def async_setup_services(hass: HomeAssistant) -> None:
         event_date = get_astral_event_date(hass, SUN_EVENT_SUNSET, today)
         if event_date is None:
             _LOGGER.error("Can't get sunset event date for %s", today)
-            raise ValueError("Can't get sunset event date")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="sunset_event"
+            )
         sunset = dt_util.as_local(event_date)
         _LOGGER.debug("Now: %s Sunset: %s", now, sunset)
         return now > sunset
 
     async def get_omer_count(call: ServiceCall) -> ServiceResponse:
         """Return the Omer blessing for a given date."""
-        date = call.data.get("date", dt_util.now().date())
+        date = call.data.get(ATTR_DATE, dt_util.now().date())
         after_sunset = (
             call.data[ATTR_AFTER_SUNSET]
-            if "date" in call.data
+            if ATTR_DATE in call.data
             else is_after_sunset(hass)
         )
         hebrew_date = HebrewDate.from_gdate(
             date + datetime.timedelta(days=int(after_sunset))
         )
-        nusach = Nusach[call.data["nusach"].upper()]
+        nusach = Nusach[call.data[ATTR_NUSACH].upper()]
         set_language(call.data[CONF_LANGUAGE])
         omer = Omer(date=hebrew_date, nusach=nusach)
         return {

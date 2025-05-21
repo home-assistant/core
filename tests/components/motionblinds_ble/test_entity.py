@@ -52,4 +52,4 @@ async def test_entity_update(
         {ATTR_ENTITY_ID: f"{platform.name.lower()}.{name}_{entity}"},
         blocking=True,
     )
-    getattr(mock_motion_device, "status_query").assert_called_once_with()
+    mock_motion_device.status_query.assert_called_once_with()
