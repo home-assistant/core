@@ -19,5 +19,18 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "playing_time": {
+        "name": "Used screen time"
+      },
+      "time_remaining": {
+        "name": "Screen time remaining"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": "Authentication expired. Please remove and re-add the integration to reconnect."
   }
 }
