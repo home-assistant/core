@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Click this link [Nintendo Login]({link}) to login to Nintendo. For the account you wish to link, right click on the red button \"Select this person\" and click \"Copy Link\".",
+        "description": "To obtain your access token, click [Nintendo Login]({link}) to sign in to your Nintendo account. Then, for the account you want to link, right-click on the red **Select this person** button and choose **Copy Link Address**.",
         "data": {
           "api_token": "Access token"
         },
