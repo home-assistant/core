@@ -182,6 +182,19 @@
           "1400": "1400",
           "1600": "1600"
         }
+      },
+      "soil_level": {
+        "name": "Soil level",
+        "state": {
+          "none": "None",
+          "heavy": "Heavy",
+          "normal": "Normal",
+          "light": "Light",
+          "extra_light": "Extra light",
+          "extra_heavy": "Extra heavy",
+          "up": "Up",
+          "down": "Down"
+        }
       }
     },
     "sensor": {
