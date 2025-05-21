@@ -16,7 +16,7 @@ class NintendoDevice(CoordinatorEntity[NintendoUpdateCoordinator]):
 
     def __init__(self, coordinator: NintendoUpdateCoordinator, device: Device) -> None:
         """Initialize."""
-        super().__init__(coordinator=coordinator)
+        super().__init__(coordinator)
         self._device = device
         self._attr_unique_id = f"{device.device_id}_{self.entity_description.key}"
         self._attr_has_entity_name = True
