@@ -43,6 +43,7 @@ class SupportedModels(StrEnum):
     K10_VACUUM = "k10_vacuum"
     K10_PRO_VACUUM = "k10_pro_vacuum"
     K10_PRO_COMBO_VACUUM = "k10_pro_combo_vacumm"
+    HUB3 = "hub3"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -78,6 +79,7 @@ NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.LEAK: SupportedModels.LEAK,
     SwitchbotModel.REMOTE: SupportedModels.REMOTE,
     SwitchbotModel.HUBMINI_MATTER: SupportedModels.HUBMINI_MATTER,
+    SwitchbotModel.HUB3: SupportedModels.HUB3,
 }
 
 SUPPORTED_MODEL_TYPES = (

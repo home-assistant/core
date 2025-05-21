@@ -79,6 +79,7 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.K10_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.K10_PRO_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.K10_PRO_COMBO_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
+    SupportedModels.HUB3.value: [Platform.SENSOR, Platform.BINARY_SENSOR],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
