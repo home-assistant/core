@@ -11,6 +11,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
+@pytest.fixture
+def ignore_missing_translations() -> list[str]:
+    """Ignore specific missing translations."""
+    return [
+        "component.dreo.config.step.user.data_description.username",
+        "component.dreo.config.step.user.data_description.password",
+    ]
+
+
 @pytest.fixture(autouse=True)
 def mock_config_entries_setup():
     """Disable setting up entries for config flow tests."""
@@ -45,7 +54,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["title"] == "test-username"
     data = result2["data"]
     assert data[CONF_USERNAME] == "test-username"
-    # Don't check exact password value since it's hashed
+
     assert CONF_PASSWORD in data
 
 
