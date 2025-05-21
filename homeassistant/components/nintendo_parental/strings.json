@@ -7,7 +7,7 @@
           "api_token": "Access token"
         },
         "data_description": {
-          "api_token": "The link copied from the Nintendo website"
+          "api_token": "Paste the link copied from the Nintendo website"
         }
       }
     },
