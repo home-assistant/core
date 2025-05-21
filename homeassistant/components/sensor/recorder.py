@@ -91,7 +91,7 @@ EQUIVALENT_UNITS = {
     "\u00b5g/ft³": CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
     "\u00b5g/m³": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     "\u00b5mol/s⋅m²": "μmol/s⋅m²",  # fyta: light
-    "\u0065g": UnitOfMass.MICROGRAMS,
+    "\u00b5g": UnitOfMass.MICROGRAMS,
     "\u00b5s": UnitOfTime.MICROSECONDS,
 }
 
