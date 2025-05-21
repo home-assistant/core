@@ -1953,3 +1953,28 @@ def get_schema_suggested_value(schema: vol.Schema, key: str) -> Any | None:
                 return None
             return schema_key.description["suggested_value"]
     return None
+
+
+def get_sensor_display_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, entity_id: str
+) -> str:
+    """Return the state rounded for presentation."""
+    state = hass.states.get(entity_id)
+    assert state
+    value = state.state
+
+    entity_entry = entity_registry.async_get(entity_id)
+    if entity_entry is None:
+        return value
+
+    if (
+        precision := entity_entry.options.get("sensor", {}).get(
+            "suggested_display_precision"
+        )
+    ) is None:
+        return value
+
+    with suppress(TypeError, ValueError):
+        numerical_value = float(value)
+        value = f"{numerical_value:z.{precision}f}"
+    return value

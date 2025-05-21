@@ -74,4 +74,4 @@ async def test_state_update(
             "sensor.mock_classicvario_remaining_hours_until_service"
         )
     )
-    assert state.state == str(round(100 / 24, 1))
+    assert float(state.state) == pytest.approx(100 / 24)
