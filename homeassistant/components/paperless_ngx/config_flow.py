@@ -69,7 +69,9 @@ class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected exception: %s", err)
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=client.base_url, data=user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_HOST], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

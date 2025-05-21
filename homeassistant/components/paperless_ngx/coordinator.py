@@ -56,11 +56,6 @@ class PaperlessCoordinator(DataUpdateCoordinator[Statistic]):
         try:
             await self.api.initialize()
             await self.api.statistics()  # test permissions on api
-        except PaperlessForbiddenError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="forbidden",
-            ) from err
         except PaperlessConnectionError as err:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
@@ -95,6 +90,11 @@ class PaperlessCoordinator(DataUpdateCoordinator[Statistic]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
+            ) from err
+        except PaperlessForbiddenError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="forbidden",
             ) from err
         except PaperlessInvalidTokenError as err:
             raise ConfigEntryError(

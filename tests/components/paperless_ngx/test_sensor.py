@@ -52,7 +52,7 @@ async def test_statistic_sensor_state(
 ) -> None:
     """Ensure sensor entities are added automatically."""
     # initialize with 999 documents
-    state = hass.states.get("sensor.paperless_ngx_documents_total")
+    state = hass.states.get("sensor.192_168_69_16_documents_total")
     assert state.state == "999"
 
     # update to 420 documents
@@ -66,7 +66,7 @@ async def test_statistic_sensor_state(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.paperless_ngx_documents_total")
+    state = hass.states.get("sensor.192_168_69_16_documents_total")
     assert state.state == "420"
 
 
@@ -85,7 +85,7 @@ async def test__statistic_sensor_state_on_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.paperless_ngx_documents_total")
+    state = hass.states.get("sensor.192_168_69_16_documents_total")
     assert state.state == STATE_UNAVAILABLE
 
     # recover from PaperlessForbiddenError
@@ -99,7 +99,7 @@ async def test__statistic_sensor_state_on_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.paperless_ngx_documents_total")
+    state = hass.states.get("sensor.192_168_69_16_documents_total")
     assert state.state == "420"
 
     # PaperlessConnectionError
@@ -109,7 +109,7 @@ async def test__statistic_sensor_state_on_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.paperless_ngx_documents_total")
+    state = hass.states.get("sensor.192_168_69_16_documents_total")
     assert state.state == STATE_UNAVAILABLE
 
     # recover from PaperlessConnectionError
@@ -123,7 +123,7 @@ async def test__statistic_sensor_state_on_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.paperless_ngx_documents_total")
+    state = hass.states.get("sensor.192_168_69_16_documents_total")
     assert state.state == "420"
 
     # PaperlessInactiveOrDeletedError
@@ -133,7 +133,7 @@ async def test__statistic_sensor_state_on_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.paperless_ngx_documents_total")
+    state = hass.states.get("sensor.192_168_69_16_documents_total")
     assert state.state == STATE_UNAVAILABLE
 
     # recover from PaperlessInactiveOrDeletedError
@@ -147,7 +147,7 @@ async def test__statistic_sensor_state_on_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.paperless_ngx_documents_total")
+    state = hass.states.get("sensor.192_168_69_16_documents_total")
     assert state.state == "420"
 
     # PaperlessInvalidTokenError
@@ -157,7 +157,7 @@ async def test__statistic_sensor_state_on_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.paperless_ngx_documents_total")
+    state = hass.states.get("sensor.192_168_69_16_documents_total")
     assert state.state == STATE_UNAVAILABLE
 
     # recover from PaperlessInvalidTokenError
@@ -171,5 +171,5 @@ async def test__statistic_sensor_state_on_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.paperless_ngx_documents_total")
+    state = hass.states.get("sensor.192_168_69_16_documents_total")
     assert state.state == "420"

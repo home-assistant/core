@@ -51,7 +51,7 @@ async def test_full_config_flow(hass: HomeAssistant) -> None:
     )
 
     config_entry = result["result"]
-    assert config_entry.title == "Paperless-ngx"
+    assert config_entry.title == USER_INPUT[CONF_HOST]
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.data == USER_INPUT
     assert config_entry.data[CONF_HOST] == USER_INPUT[CONF_HOST]
@@ -96,7 +96,7 @@ async def test_config_flow_error_handling(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Paperless-ngx"
+    assert result["title"] == USER_INPUT[CONF_HOST]
     assert result["data"] == USER_INPUT
     assert result["data"][CONF_HOST] == USER_INPUT[CONF_HOST]
     assert result["data"][CONF_API_KEY] == USER_INPUT[CONF_API_KEY]
