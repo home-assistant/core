@@ -797,6 +797,90 @@
     'state': 'heat',
   })
 # ---
+# name: test_all_entities[sensi_thermostat][climate.thermostat-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'auto',
+        'on',
+        'circulate',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 7.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.thermostat',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 395>,
+    'translation_key': None,
+    'unique_id': '2409a73c-918a-4d1f-b4f5-c27468c71d70_main',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensi_thermostat][climate.thermostat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_humidity': 49,
+      'current_temperature': 23.6,
+      'fan_mode': 'auto',
+      'fan_modes': list([
+        'auto',
+        'on',
+        'circulate',
+      ]),
+      'friendly_name': 'Thermostat',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 7.0,
+      'supported_features': <ClimateEntityFeature: 395>,
+      'target_temp_high': 23.9,
+      'target_temp_low': 21.7,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
 # name: test_all_entities[virtual_thermostat][climate.asd-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
