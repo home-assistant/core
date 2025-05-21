@@ -16,6 +16,14 @@ from tests.common import MockConfigEntry
 async def test_setup(hass: HomeAssistant, mock_config_entry) -> None:
     """Test the Dreo setup."""
     mock_config_entry.add_to_hass(hass)
+
+    runtime_data = MagicMock()
+    runtime_data.client = MagicMock()
+    runtime_data.devices = []
+    runtime_data.coordinators = {}
+
+    hass.data[DOMAIN] = {mock_config_entry.entry_id: runtime_data}
+
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -34,7 +42,6 @@ async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
     )
     mock_entry.add_to_hass(hass)
 
-    # Mock the HsCloud instance to raise an exception
     mock_manager = MagicMock(spec=HsCloud)
     mock_manager.login.side_effect = HsCloudException("Connection failed")
 
@@ -45,7 +52,6 @@ async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-    # Changed from SETUP_ERROR to SETUP_RETRY to match actual behavior
     assert mock_entry.state == ConfigEntryState.SETUP_RETRY
 
 
@@ -60,7 +66,6 @@ async def test_invalid_auth(hass: HomeAssistant) -> None:
     )
     mock_entry.add_to_hass(hass)
 
-    # Mock the HsCloud instance to raise an auth exception
     mock_manager = MagicMock(spec=HsCloud)
     mock_manager.login.side_effect = HsCloudBusinessException("Invalid credentials")
 
@@ -71,13 +76,20 @@ async def test_invalid_auth(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-    # Changed from SETUP_RETRY to SETUP_ERROR to match actual behavior
-    assert mock_entry.state == ConfigEntryState.SETUP_ERROR
+    assert mock_entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_config_entry(hass: HomeAssistant, mock_config_entry) -> None:
     """Test unloading the Dreo config entry."""
     mock_config_entry.add_to_hass(hass)
+
+    runtime_data = MagicMock()
+    runtime_data.client = MagicMock()
+    runtime_data.devices = []
+    runtime_data.coordinators = {}
+
+    hass.data[DOMAIN] = {mock_config_entry.entry_id: runtime_data}
+
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 

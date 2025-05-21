@@ -21,12 +21,10 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-# Mock device constants - using test-device-id as this is what's expected in tests
 MOCK_DEVICE_ID1 = "test-device-id"
 MOCK_DEVICE_ID2 = "test-device-id-2"
 
 
-# Create a mock fan entity that will be directly added to Home Assistant
 class MockDreoFan(FanEntity):
     """Mock Dreo Fan entity."""
 
@@ -52,7 +50,6 @@ class MockDreoFan(FanEntity):
         self._attr_preset_modes = ["sleep", "auto", "normal", "natural"]
         self._attr_speed_count = 4
         self._low_high_range = (1, 6)
-        # Will be set in setup_integration
         self.coordinator = None
 
     @property
@@ -65,7 +62,6 @@ class MockDreoFan(FanEntity):
     @property
     def is_on(self) -> bool:
         """Return if device is on."""
-        # Use coordinator data if available
         if self.coordinator and hasattr(self.coordinator.data, "is_on"):
             return self.coordinator.data.is_on
         return self._attr_state == "on"
@@ -73,7 +69,6 @@ class MockDreoFan(FanEntity):
     @property
     def percentage(self) -> int:
         """Return the fan speed."""
-        # Use coordinator data if available
         if self.coordinator and hasattr(self.coordinator.data, "speed_percentage"):
             speed = self.coordinator.data.speed_percentage
             if speed is not None:
@@ -86,7 +81,6 @@ class MockDreoFan(FanEntity):
     @property
     def preset_mode(self) -> str:
         """Return the preset mode."""
-        # Use coordinator data if available
         if self.coordinator and hasattr(self.coordinator.data, "mode"):
             mode = self.coordinator.data.mode
             if mode is not None:
@@ -96,7 +90,6 @@ class MockDreoFan(FanEntity):
     @property
     def oscillating(self) -> bool:
         """Return if oscillating."""
-        # Use coordinator data if available
         if self.coordinator and hasattr(self.coordinator.data, "oscillate"):
             oscillate = self.coordinator.data.oscillate
             if oscillate is not None:
@@ -113,7 +106,7 @@ class MockDreoFan(FanEntity):
         command_params: dict[str, Any] = {"power_switch": True}
 
         if percentage is not None and percentage > 0:
-            speed = int(percentage / 25)  # Convert percentage to speed level
+            speed = int(percentage / 25)
             command_params["speed"] = speed
         if preset_mode is not None:
             command_params["mode"] = preset_mode
@@ -135,7 +128,7 @@ class MockDreoFan(FanEntity):
         if percentage <= 0:
             await self.async_turn_off()
         else:
-            speed = int(percentage / 25)  # Convert percentage to speed level
+            speed = int(percentage / 25)
             command_params: dict[str, Any] = {"speed": speed}
             self._client.update_status(self._device_id, **command_params)
 
@@ -145,7 +138,6 @@ class MockDreoFan(FanEntity):
         self._client.update_status(self._device_id, **command_params)
 
 
-# Mock coordinator for testing
 class MockDreoCoordinator(DreoDataUpdateCoordinator):
     """Mock coordinator with test data."""
 
@@ -157,12 +149,9 @@ class MockDreoCoordinator(DreoDataUpdateCoordinator):
         model: str,
     ) -> None:
         """Initialize mock coordinator."""
-        # Call parent class init
         super().__init__(hass, client, device_id, model)
 
-        # Override the data with test values
         self.device_type = "fan"
-        # Create a DreoFanDeviceData instance with proper initialization
         self.data = DreoFanDeviceData(
             available=True,
             is_on=True,
@@ -173,7 +162,6 @@ class MockDreoCoordinator(DreoDataUpdateCoordinator):
 
     async def async_refresh(self) -> None:
         """Mock refresh method."""
-        # Return None to match the parent class signature
         return
 
 
@@ -184,7 +172,6 @@ def fixture_mock_auth_api():
         mock.patch("homeassistant.components.dreo.HsCloud") as mock_auth,
         mock.patch("homeassistant.components.dreo.config_flow.HsCloud", new=mock_auth),
     ):
-        # login is sync method
         mock_auth.return_value.login = MagicMock()
         yield mock_auth
 
@@ -285,18 +272,14 @@ async def setup_integration(
     """Set up the Dreo integration for testing."""
     mock_config_entry.add_to_hass(hass)
 
-    # Create runtime data
     runtime_data = MagicMock()
     runtime_data.client = mock_dreo_client
     runtime_data.devices = mock_dreo_devices
 
-    # Set runtime_data
     mock_config_entry.runtime_data = runtime_data
 
-    # Add coordinator to mock entity
     mock_fan_entity.coordinator = mock_coordinator
 
-    # Patch the async_setup_entry function to add our mock entity directly
     async def mock_async_setup_entry(
         hass: HomeAssistant | None, config_entry, async_add_entities
     ):
@@ -317,7 +300,6 @@ async def setup_integration(
 @pytest.fixture
 def mock_fan_device_data():
     """Mock fan device constants."""
-    # Create direct module-level patches for the constants
     with (
         mock.patch(
             "homeassistant.components.dreo.fan.DEVICE_TYPE", new={"DR-HTF001S": "fan"}
