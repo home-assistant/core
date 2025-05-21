@@ -21,7 +21,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 
 @pytest.fixture(name="platform_binary_sensor", autouse=True)
 async def platform_binary_sensor_fixture():
-    """Patch Rehlko to only load Sensor platform."""
+    """Patch Rehlko to only load binary_sensor platform."""
     with patch("homeassistant.components.rehlko.PLATFORMS", [Platform.BINARY_SENSOR]):
         yield
 
@@ -51,7 +51,6 @@ async def test_binary_sensor_states(
     """Test the Rehlko binary sensor state logic."""
     assert generator["engineOilPressureOk"] is True
     state = hass.states.get("binary_sensor.generator_1_oil_pressure")
-    assert state
     assert state.state == STATE_OFF
 
     generator["engineOilPressureOk"] = False
@@ -59,18 +58,15 @@ async def test_binary_sensor_states(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.generator_1_oil_pressure")
-    assert state
     assert state.state == STATE_ON
 
     generator["engineOilPressureOk"] = "Unknown State"
     with caplog.at_level(logging.WARNING):
         caplog.clear()
-        # Move time to next update
         freezer.tick(SCAN_INTERVAL_MINUTES)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.generator_1_oil_pressure")
-    assert state
     assert state.state == STATE_UNKNOWN
     assert "Unknown State" in caplog.text
     assert "engineOilPressureOk" in caplog.text
@@ -84,9 +80,8 @@ async def test_binary_sensor_connectivity_availability(
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the Rehlko sensor availability when device is disconnected."""
+    """Test the connectivity entity availability when device is disconnected."""
     state = hass.states.get("binary_sensor.generator_1_connected")
-    assert state
     assert state.state == STATE_ON
 
     # Entity should be available when device is disconnected
@@ -95,5 +90,4 @@ async def test_binary_sensor_connectivity_availability(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.generator_1_connected")
-    assert state
     assert state.state == STATE_OFF
