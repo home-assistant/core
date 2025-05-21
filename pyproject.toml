@@ -52,7 +52,7 @@ dependencies = [
   "ha-ffmpeg==3.2.2",
   # hass-nabucasa is imported by helpers which don't depend on the cloud
   # integration
-  "hass-nabucasa==0.100.0",
+  "hass-nabucasa==0.101.0",
   # hassil is indirectly imported from onboarding via the import chain
   # onboarding->cloud->assist_pipeline->conversation->hassil. Onboarding needs
   # to be setup in stage 0, but we don't want to also promote cloud with all its
@@ -82,10 +82,10 @@ dependencies = [
   "numpy==2.2.2",
   "PyJWT==2.10.1",
   # PyJWT has loose dependency. We want the latest one.
-  "cryptography==44.0.1",
+  "cryptography==45.0.1",
   "Pillow==11.2.1",
   "propcache==0.3.1",
-  "pyOpenSSL==25.0.0",
+  "pyOpenSSL==25.1.0",
   "orjson==3.10.18",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
