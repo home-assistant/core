@@ -51,7 +51,7 @@ BINARY_SENSORS: tuple[RehlkoBinarySensorEntityDescription, ...] = (
     ),
     RehlkoBinarySensorEntityDescription(
         key="switchState",
-        translation_key="auto",
+        translation_key="auto_run",
         on_value="Auto",
         off_value="Off",
     ),

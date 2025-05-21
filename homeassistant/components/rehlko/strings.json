@@ -35,8 +35,8 @@
       "connected": {
         "name": "Connected"
       },
-      "auto": {
-        "name": "Auto"
+      "auto_run": {
+        "name": "Auto run"
       },
       "oil_pressure": {
         "name": "Oil pressure"

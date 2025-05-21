@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[binary_sensor.generator_1_auto-entry]
+# name: test_sensors[binary_sensor.generator_1_auto_run-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.generator_1_auto',
+    'entity_id': 'binary_sensor.generator_1_auto_run',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,22 +24,22 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Auto',
+    'original_name': 'Auto run',
     'platform': 'rehlko',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'auto',
+    'translation_key': 'auto_run',
     'unique_id': 'myemail@email.com_12345_switchState',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[binary_sensor.generator_1_auto-state]
+# name: test_sensors[binary_sensor.generator_1_auto_run-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Generator 1 Auto',
+      'friendly_name': 'Generator 1 Auto run',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.generator_1_auto',
+    'entity_id': 'binary_sensor.generator_1_auto_run',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
