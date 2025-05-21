@@ -28,6 +28,25 @@ PACKAGE_REGEX = re.compile(
 PIP_REGEX = re.compile(r"^(--.+\s)?([-_\.\w\d]+.*(?:==|>=|<=|~=|!=|<|>|===)?.*$)")
 PIP_VERSION_RANGE_SEPARATOR = re.compile(r"^(==|>=|<=|~=|!=|<|>|===)?(.*)$")
 
+FORBIDDEN_PACKAGES = {"setuptools", "wheel"}
+FORBIDDEN_PACKAGE_EXCEPTIONS = {
+    # Direct dependencies
+    "fitbit",  # setuptools (fitbit)
+    "habitipy",  # setuptools (habitica)
+    "influxdb-client",  # setuptools (influxdb)
+    "microbeespy",  # setuptools (microbees)
+    "pyefergy",  # types-pytz (efergy)
+    "python-mystrom",  # setuptools (mystrom)
+    # Transitive dependencies
+    "arrow",  # types-python-dateutil (opower)
+    "asyncio-dgram",  # setuptools (guardian / keba / minecraft_server)
+    "colorzero",  # setuptools (remote_rpi_gpio / zha)
+    "incremental",  # setuptools (azure_devops / lyric / ovo_energy / system_bridge)
+    "pbr",  # setuptools (cmus / concord232 / mochad / nx584 / opnsense)
+    "pycountry-convert",  # wheel (ecovacs)
+    "unasync",  # setuptools (hive / osoenergy)
+}
+
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Handle requirements for integrations."""
@@ -204,7 +223,21 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
                 )
             continue
 
-        to_check.extend(item["dependencies"])
+        dependencies: set[str] = item["dependencies"]
+        for pkg in dependencies:
+            if pkg.startswith("types-") or pkg in FORBIDDEN_PACKAGES:
+                if package in FORBIDDEN_PACKAGE_EXCEPTIONS:
+                    integration.add_warning(
+                        "requirements",
+                        f"Package {pkg} should not be a runtime dependency in {package}",
+                    )
+                else:
+                    integration.add_error(
+                        "requirements",
+                        f"Package {pkg} should not be a runtime dependency in {package}",
+                    )
+
+        to_check.extend(dependencies)
 
     return all_requirements
 

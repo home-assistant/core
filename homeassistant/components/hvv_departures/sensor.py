@@ -8,7 +8,6 @@ from aiohttp import ClientConnectorError
 from pygti.exceptions import InvalidAuth
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ID, CONF_OFFSET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
@@ -18,6 +17,7 @@ from homeassistant.util import Throttle
 from homeassistant.util.dt import get_time_zone, utcnow
 
 from .const import ATTRIBUTION, CONF_REAL_TIME, CONF_STATION, DOMAIN, MANUFACTURER
+from .hub import HVVConfigEntry
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 MAX_LIST = 20
@@ -41,11 +41,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HVVConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    hub = hass.data[DOMAIN][config_entry.entry_id]
+    hub = config_entry.runtime_data
 
     session = aiohttp_client.async_get_clientsession(hass)
 

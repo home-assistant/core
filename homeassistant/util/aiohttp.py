@@ -37,6 +37,9 @@ class MockPayloadWriter:
     async def write_headers(self, *args: Any, **kwargs: Any) -> None:
         """Write headers."""
 
+    async def write(self, *args: Any, **kwargs: Any) -> None:
+        """Write payload."""
+
 
 _MOCK_PAYLOAD_WRITER = MockPayloadWriter()
 

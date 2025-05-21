@@ -7,7 +7,7 @@ from aioautomower.exceptions import ApiError
 from aioautomower.model import MowerAttributes
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.const import EXECUTION_TIME_DELAY
 from homeassistant.const import Platform
@@ -96,7 +96,7 @@ async def test_number_workarea_commands(
             service_data={"value": "75"},
             blocking=True,
         )
-    assert len(mocked_method.mock_calls) == 2
+    assert mock_automower_client.commands.workarea_settings.call_count == 2
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
