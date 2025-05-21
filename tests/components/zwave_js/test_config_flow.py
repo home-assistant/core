@@ -13,6 +13,7 @@ from aiohasupervisor.models import AddonsOptions, Discovery
 import aiohttp
 import pytest
 from serial.tools.list_ports_common import ListPortInfo
+from voluptuous import InInvalid
 from zwave_js_server.exceptions import FailedCommand
 from zwave_js_server.version import VersionInfo
 
@@ -3694,6 +3695,7 @@ async def test_reconfigure_migrate_with_addon(
     integration,
     addon_running,
     restart_addon,
+    addon_options,
     set_addon_options,
     get_addon_discovery_info,
     get_server_version: AsyncMock,
@@ -3717,6 +3719,7 @@ async def test_reconfigure_migrate_with_addon(
             "usb_path": "/dev/ttyUSB0",
         },
     )
+    addon_options["device"] = "/dev/ttyUSB0"
 
     async def mock_backup_nvm_raw():
         await asyncio.sleep(0)
@@ -3793,6 +3796,9 @@ async def test_reconfigure_migrate_with_addon(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "choose_serial_port"
     assert result["data_schema"].schema[CONF_USB_PATH]
+    # Ensure the old usb path is not in the list of options
+    with pytest.raises(InInvalid):
+        result["data_schema"].schema[CONF_USB_PATH](addon_options["device"])
 
     # Reset side effect before starting the add-on.
     get_server_version.side_effect = None
