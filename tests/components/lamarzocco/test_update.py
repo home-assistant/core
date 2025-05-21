@@ -12,7 +12,7 @@ from pylamarzocco.const import (
 from pylamarzocco.exceptions import RequestNotSuccessful
 from pylamarzocco.models import UpdateDetails
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
 from homeassistant.const import ATTR_ENTITY_ID, Platform

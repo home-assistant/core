@@ -32,10 +32,10 @@ cronsim==2.6
 cryptography==45.0.1
 dbus-fast==2.43.0
 fnv-hash-fast==1.5.0
-go2rtc-client==0.1.2
+go2rtc-client==0.1.3b0
 ha-ffmpeg==3.2.2
 habluetooth==3.48.2
-hass-nabucasa==0.100.0
+hass-nabucasa==0.101.0
 hassil==2.2.3
 home-assistant-bluetooth==1.13.1
 home-assistant-frontend==20250516.0

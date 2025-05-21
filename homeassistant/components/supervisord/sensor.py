@@ -71,7 +71,7 @@ class SupervisorProcessSensor(SensorEntity):
         return self._info.get("statename")
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Could the device be accessed during the last update call."""
         return self._available
 
