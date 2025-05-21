@@ -64,6 +64,11 @@
       "custom": {
         "name": "Custom"
       }
+    },
+    "switch": {
+      "do_not_disturb": {
+        "name": "Do not disturb"
+      }
     }
   }
 }
