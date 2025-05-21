@@ -45,6 +45,25 @@ from . import assert_no_messages
         """,
             id="good_str_enum",
         ),
+        pytest.param(
+            """
+            SENSOR_DESCRIPTION = {
+                "radiation_rate": AranetSensorEntityDescription(
+                    key="radiation_rate",
+                    translation_key="radiation_rate",
+                    name="Radiation Dose Rate",
+                    native_unit_of_measurement="μSv/h",  # "μ" == "\u03bc"
+                    state_class=SensorStateClass.MEASUREMENT,
+                    suggested_display_precision=2,
+                    scale=0.001,
+                ),
+            }
+            OTHER_DICT = {
+                "value_with_bad_mu_should_pass": "µ"
+            }
+        """,
+            id="good_sensor_description",
+        ),
     ],
 )
 def test_enforce_greek_micro_char(
@@ -94,6 +113,22 @@ def test_enforce_greek_micro_char(
                 MEGAVOLT = "MV"
         """,
             id="bad_str_enum",
+        ),
+        pytest.param(
+            """
+            SENSOR_DESCRIPTION = {
+                "radiation_rate": AranetSensorEntityDescription(
+                    key="radiation_rate",
+                    translation_key="radiation_rate",
+                    name="Radiation Dose Rate",
+                    native_unit_of_measurement="µSv/h",  # "μ" != "\u03bc"
+                    state_class=SensorStateClass.MEASUREMENT,
+                    suggested_display_precision=2,
+                    scale=0.001,
+                ),
+            }
+        """,
+            id="bad_sensor_description",
         ),
     ],
 )
