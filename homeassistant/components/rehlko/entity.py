@@ -82,7 +82,6 @@ class RehlkoEntity(CoordinatorEntity[RehlkoUpdateCoordinator]):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        # The device connectivity sensor is always available, even if the device is offline
         return super().available and (
             not self._connectivity_key or self._device_data[self._connectivity_key]
         )
