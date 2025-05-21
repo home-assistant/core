@@ -22,11 +22,11 @@ class HassEnforceGreekMicroCharChecker(BaseChecker):
     options = ()
 
     def visit_annassign(self, node: nodes.AnnAssign) -> None:
-        """Check for sorted PLATFORMS const with type annotations."""
+        """Check for micro char const or StrEnum with type annotations."""
         self._do_micro_check(node.target, node)
 
     def visit_assign(self, node: nodes.Assign) -> None:
-        """Check for sorted PLATFORMS const without type annotations."""
+        """Check for micro char const without type annotations."""
         for target in node.targets:
             self._do_micro_check(target, node)
 
