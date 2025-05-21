@@ -1,6 +1,6 @@
 """Test the Blue Current config flow."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -163,18 +163,27 @@ async def test_reauth(
         await hass.async_block_till_done()
 
 
-async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+@pytest.mark.parametrize(
+    ("mock_card", "user_input"),
+    [
+        (
+            {"uid": "MOCK_UID", CONF_ID: "MOCK_ID", "name": "MOCK_NAME"},
+            {CARD: "MOCK_NAME (MOCK_ID)"},
+        ),
+        ({"uid": "MOCK_UID", CONF_ID: "MOCK_ID", "name": ""}, {CARD: "MOCK_ID"}),
+    ],
+)
+async def test_options_flow(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_card, user_input
+) -> None:
     """Test the Blue Current options flow."""
     config_entry.add_to_hass(hass)
 
-    # Create a mock connector that is bind to the runtime_data value of config_entry.
-    mock_card = {"uid": "MOCK_UID", CONF_ID: "MOCK_ID"}
     mock_card_list = {"MOCK_UID": mock_card}
-    user_input = {CARD: "MOCK_ID"}
-
     mock_connector = Mock(spec=Connector)
     mock_connector.selected_charge_card = mock_card
     mock_connector.charge_cards = mock_card_list
+    mock_connector.client = AsyncMock()
 
     config_entry.runtime_data = mock_connector
 

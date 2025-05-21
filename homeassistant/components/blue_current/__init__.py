@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import CARD, DEFAULT_CARD, DOMAIN, EVSE_ID, LOGGER, MODEL_TYPE
+from .const import CARD, DEFAULT_CARD, DOMAIN, EVSE_ID, LOGGER, MODEL_TYPE, UID
 
 type BlueCurrentConfigEntry = ConfigEntry[Connector]
 
@@ -144,11 +144,11 @@ class Connector:
         """Add charge cards to charge_cards. Only adding valid charge cards."""
 
         # Add the standard default card.
-        valid_cards = {default_card["uid"]: default_card}
+        valid_cards = {default_card[UID]: default_card}
 
         for card in cards:
             if card["valid"]:
-                valid_cards[card["uid"]] = card
+                valid_cards[card[UID]] = card
 
         self.charge_cards = valid_cards
 

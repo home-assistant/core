@@ -16,11 +16,11 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_TOKEN, CONF_ID
+from homeassistant.const import CONF_API_TOKEN, CONF_ID, CONF_NAME
 from homeassistant.core import callback
 
 from . import BlueCurrentConfigEntry, Connector
-from .const import CARD, DOMAIN, LOGGER
+from .const import BCU_APP, CARD, DOMAIN, LOGGER
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_TOKEN): str})
 
@@ -97,19 +97,37 @@ class ChargeCardsFlowHandler(config_entries.OptionsFlow):
         """Handle the card step."""
 
         connector: Connector = self.config_entry.runtime_data
+        await connector.client.get_charge_cards()
 
-        card_ids = [card[CONF_ID] for card in connector.charge_cards.values()]
+        def card_display_name(card: dict[str, Any]) -> str:
+            """Get the display name of a card. When the card has a name, show the name with the card id. Otherwise, only show the card id."""
+            if card[CONF_ID] == BCU_APP:
+                return "None"
+            if card[CONF_NAME] == "":
+                return str(card[CONF_ID])
+            return f"{card[CONF_NAME]} ({card[CONF_ID]})"
 
-        current_charge_card_id = connector.selected_charge_card[CONF_ID]
+        def get_card_id(card_name: str) -> str:
+            """Get the card id based on the display name."""
+            split = card_name.rsplit("(")
+            if len(split) == 1:
+                if split[0] == "None":
+                    return BCU_APP
+                return split[0]
+            return split[-1].strip(")")
+
+        cards = [card_display_name(card) for card in connector.charge_cards.values()]
+
+        current_charge_card_id = card_display_name(connector.selected_charge_card)
 
         card_schema = vol.Schema(
-            {vol.Required(CARD, default=current_charge_card_id): vol.In(card_ids)}
+            {vol.Required(CARD, default=current_charge_card_id): vol.In(cards)}
         )
 
         if user_input is not None:
             selected_card = list(
                 filter(
-                    lambda card: card[CONF_ID] == user_input[CARD],
+                    lambda card: card[CONF_ID] == get_card_id(user_input[CARD]),
                     connector.charge_cards.values(),
                 )
             )[0]
