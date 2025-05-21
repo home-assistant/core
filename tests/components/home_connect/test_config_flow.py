@@ -1,9 +1,11 @@
 """Test the Home Connect config flow."""
 
+from collections.abc import Awaitable, Callable
 from http import HTTPStatus
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from aiohomeconnect.const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from aiohomeconnect.model import HomeAppliance
 import pytest
 
 from homeassistant import config_entries, setup
@@ -11,7 +13,7 @@ from homeassistant.components.home_connect.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import FAKE_ACCESS_TOKEN, FAKE_REFRESH_TOKEN
@@ -337,17 +339,17 @@ async def test_zeroconf_flow_already_setup(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
-@pytest.mark.parametrize("dchp_discovery", DHCP_DISCOVERY)
+@pytest.mark.parametrize("dhcp_discovery", DHCP_DISCOVERY)
 async def test_dhcp_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    dchp_discovery: DhcpServiceInfo,
+    dhcp_discovery: DhcpServiceInfo,
 ) -> None:
     """Test DHCP discovery."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dchp_discovery
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_discovery
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -391,8 +393,6 @@ async def test_dhcp_flow(
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_dhcp_flow_already_setup(
     hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test DHCP discovery with already setup device."""
@@ -403,3 +403,56 @@ async def test_dhcp_flow_already_setup(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    ("dhcp_discovery", "appliance"),
+    [
+        (
+            DhcpServiceInfo(
+                ip="1.1.1.1",
+                hostname="bosch-cookprocessor-123456789012345678",
+                macaddress="c8:d7:78:00:00:00",
+            ),
+            "CookProcessor",
+        ),
+        (
+            DhcpServiceInfo(
+                ip="1.1.1.1",
+                hostname="BOSCH-HCS000000-68A40E000000",
+                macaddress="68:a4:0e:00:00:00",
+            ),
+            "Hob",
+        ),
+    ],
+    indirect=["appliance"],
+)
+async def test_dhcp_flow_complete_device_information(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    dhcp_discovery: DhcpServiceInfo,
+    appliance: HomeAppliance,
+) -> None:
+    """Test DHCP discovery with complete device information."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    assert device
+    assert device.connections == set()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_discovery
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    assert device
+    assert device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, dhcp_discovery.macaddress)
+    }

@@ -386,4 +386,8 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
             await self._async_send_keys([SOURCES[source]])
             return
 
-        LOGGER.error("Unsupported source")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="source_unsupported",
+            translation_placeholders={"entity": self.entity_id, "source": source},
+        )

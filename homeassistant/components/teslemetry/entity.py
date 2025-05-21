@@ -9,6 +9,7 @@ from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -26,7 +27,6 @@ class TeslemetryRootEntity(Entity):
 
     _attr_has_entity_name = True
     scoped: bool
-    api: Vehicle | EnergySite
 
     def raise_for_scope(self, scope: Scope):
         """Raise an error if a scope is not available."""
@@ -38,7 +38,7 @@ class TeslemetryRootEntity(Entity):
             )
 
 
-class TeslemetryEntity(
+class TeslemetryPollingEntity(
     TeslemetryRootEntity,
     CoordinatorEntity[
         TeslemetryVehicleDataCoordinator
@@ -98,7 +98,7 @@ class TeslemetryEntity(
         """Update the attributes of the entity."""
 
 
-class TeslemetryVehicleEntity(TeslemetryEntity):
+class TeslemetryVehiclePollingEntity(TeslemetryPollingEntity):
     """Parent class for Teslemetry Vehicle entities."""
 
     _last_update: int = 0
@@ -130,7 +130,7 @@ class TeslemetryVehicleEntity(TeslemetryEntity):
         return self.coordinator.data.get(self.key)
 
 
-class TeslemetryEnergyLiveEntity(TeslemetryEntity):
+class TeslemetryEnergyLiveEntity(TeslemetryPollingEntity):
     """Parent class for Teslemetry Energy Site Live entities."""
 
     api: EnergySite
@@ -151,7 +151,7 @@ class TeslemetryEnergyLiveEntity(TeslemetryEntity):
         super().__init__(data.live_coordinator, key)
 
 
-class TeslemetryEnergyInfoEntity(TeslemetryEntity):
+class TeslemetryEnergyInfoEntity(TeslemetryPollingEntity):
     """Parent class for Teslemetry Energy Site Info Entities."""
 
     api: EnergySite
@@ -170,7 +170,7 @@ class TeslemetryEnergyInfoEntity(TeslemetryEntity):
         super().__init__(data.info_coordinator, key)
 
 
-class TeslemetryEnergyHistoryEntity(TeslemetryEntity):
+class TeslemetryEnergyHistoryEntity(TeslemetryPollingEntity):
     """Parent class for Teslemetry Energy History Entities."""
 
     def __init__(
@@ -189,7 +189,7 @@ class TeslemetryEnergyHistoryEntity(TeslemetryEntity):
         super().__init__(data.history_coordinator, key)
 
 
-class TeslemetryWallConnectorEntity(TeslemetryEntity):
+class TeslemetryWallConnectorEntity(TeslemetryPollingEntity):
     """Parent class for Teslemetry Wall Connector Entities."""
 
     _attr_has_entity_name = True
@@ -229,7 +229,7 @@ class TeslemetryWallConnectorEntity(TeslemetryEntity):
         super().__init__(data.live_coordinator, key)
 
     @property
-    def _value(self) -> int:
+    def _value(self) -> StateType:
         """Return a specific wall connector value from coordinator data."""
         return (
             self.coordinator.data.get("wall_connectors", {})
@@ -247,6 +247,8 @@ class TeslemetryWallConnectorEntity(TeslemetryEntity):
 
 class TeslemetryVehicleStreamEntity(TeslemetryRootEntity):
     """Parent class for Teslemetry Vehicle Stream entities."""
+
+    api: Vehicle
 
     def __init__(self, data: TeslemetryVehicleData, key: str) -> None:
         """Initialize common aspects of a Teslemetry entity."""

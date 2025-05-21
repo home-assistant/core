@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 from soco.data_structures import SearchResult
 from sonos_websocket.exception import SonosWebsocketError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,

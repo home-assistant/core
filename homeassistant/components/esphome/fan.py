@@ -63,7 +63,7 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
             if self._supports_speed_levels:
                 data["speed_level"] = math.ceil(
                     percentage_to_ranged_value(
-                        (1, self._static_info.supported_speed_levels), percentage
+                        (1, self._static_info.supported_speed_count), percentage
                     )
                 )
             else:
@@ -121,7 +121,7 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
             )
 
         return ranged_value_to_percentage(
-            (1, self._static_info.supported_speed_levels), self._state.speed_level
+            (1, self._static_info.supported_speed_count), self._state.speed_level
         )
 
     @property
@@ -164,7 +164,7 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
         if not supports_speed_levels:
             self._attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
         else:
-            self._attr_speed_count = static_info.supported_speed_levels
+            self._attr_speed_count = static_info.supported_speed_count
 
 
 async_setup_entry = partial(

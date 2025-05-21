@@ -26,6 +26,16 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
+  "issues": {
+    "deprecated_service_set_sleep_timer": {
+      "title": "Detected use of deprecated action bluesound.set_sleep_timer",
+      "description": "Use `button.{name}_set_sleep_timer` instead.\n\nPlease replace this action and adjust your automations and scripts."
+    },
+    "deprecated_service_clear_sleep_timer": {
+      "title": "Detected use of deprecated action bluesound.clear_sleep_timer",
+      "description": "Use `button.{name}_clear_sleep_timer` instead.\n\nPlease replace this action and adjust your automations and scripts."
+    }
+  },
   "services": {
     "join": {
       "name": "Join",
@@ -69,6 +79,16 @@
           "name": "Entity",
           "description": "Name(s) of entities that will have the timer cleared."
         }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "set_sleep_timer": {
+        "name": "Set sleep timer"
+      },
+      "clear_sleep_timer": {
+        "name": "Clear sleep timer"
       }
     }
   }
