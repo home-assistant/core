@@ -143,6 +143,7 @@ FLOWS = {
         "downloader",
         "dremel_3d_printer",
         "drop_connect",
+        "droplet",
         "dsmr",
         "dsmr_reader",
         "duke_energy",

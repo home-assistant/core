@@ -1924,6 +1924,9 @@ pydrawise==2025.3.0
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==3.0.0
 
+# homeassistant.components.droplet
+pydroplet==0.0.1
+
 # homeassistant.components.ebox
 pyebox==1.1.4
 
