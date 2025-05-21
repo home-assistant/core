@@ -34,14 +34,20 @@ async def test_entry_setup_unload(
 
 
 @pytest.mark.parametrize(
-    ("exception"),
+    ("exception", "state"),
     [
-        NtfyUnauthorizedAuthenticationError(
-            40101, 401, "unauthorized", "https://ntfy.sh/docs/publish/#authentication"
+        (
+            NtfyUnauthorizedAuthenticationError(
+                40101,
+                401,
+                "unauthorized",
+                "https://ntfy.sh/docs/publish/#authentication",
+            ),
+            ConfigEntryState.SETUP_ERROR,
         ),
-        NtfyHTTPError(418001, 418, "I'm a teapot", ""),
-        NtfyConnectionError,
-        NtfyTimeoutError,
+        (NtfyHTTPError(418001, 418, "I'm a teapot", ""), ConfigEntryState.SETUP_RETRY),
+        (NtfyConnectionError, ConfigEntryState.SETUP_RETRY),
+        (NtfyTimeoutError, ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_config_entry_not_ready(
@@ -49,6 +55,7 @@ async def test_config_entry_not_ready(
     config_entry: MockConfigEntry,
     mock_aiontfy: AsyncMock,
     exception: Exception,
+    state: ConfigEntryState,
 ) -> None:
     """Test config entry not ready."""
 
@@ -57,4 +64,4 @@ async def test_config_entry_not_ready(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is state

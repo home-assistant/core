@@ -70,6 +70,7 @@ SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
         key="water_flow",
         translation_key="water_flow",
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         entity_registry_enabled_default=False,
         measurement_fn=lambda data: data.water_flow,
     ),

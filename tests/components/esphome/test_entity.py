@@ -1,7 +1,7 @@
 """Test ESPHome binary sensors."""
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from dataclasses import asdict
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -9,13 +9,14 @@ from aioesphomeapi import (
     APIClient,
     BinarySensorInfo,
     BinarySensorState,
-    EntityInfo,
-    EntityState,
+    DeviceInfo,
     SensorInfo,
     SensorState,
-    UserService,
+    build_unique_id,
 )
+import pytest
 
+from homeassistant.components.esphome import DOMAIN
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_RESTORED,
@@ -23,12 +24,13 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .conftest import MockESPHomeDevice
+from .conftest import MockESPHomeDevice, MockESPHomeDeviceType
 
 
 async def test_entities_removed(
@@ -36,10 +38,7 @@ async def test_entities_removed(
     entity_registry: er.EntityRegistry,
     mock_client: APIClient,
     hass_storage: dict[str, Any],
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test entities are removed when static info changes."""
     entity_info = [
@@ -131,10 +130,7 @@ async def test_entities_removed_after_reload(
     entity_registry: er.EntityRegistry,
     mock_client: APIClient,
     hass_storage: dict[str, Any],
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test entities and their registry entry are removed when static info changes after a reload."""
     entity_info = [
@@ -221,9 +217,6 @@ async def test_entities_removed_after_reload(
             unique_id="my_binary_sensor",
         ),
     ]
-    states = [
-        BinarySensorState(key=1, state=True, missing_state=False),
-    ]
     mock_device.client.list_entities_services = AsyncMock(
         return_value=(entity_info, user_service)
     )
@@ -266,10 +259,7 @@ async def test_entities_for_entire_platform_removed(
     entity_registry: er.EntityRegistry,
     mock_client: APIClient,
     hass_storage: dict[str, Any],
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test removing all entities for a specific platform when static info changes."""
     entity_info = [
@@ -334,10 +324,7 @@ async def test_entities_for_entire_platform_removed(
 async def test_entity_info_object_ids(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test how object ids affect entity id."""
     entity_info = [
@@ -364,10 +351,7 @@ async def test_deep_sleep_device(
     hass: HomeAssistant,
     mock_client: APIClient,
     hass_storage: dict[str, Any],
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a deep sleep device."""
     entity_info = [
@@ -475,10 +459,7 @@ async def test_esphome_device_without_friendly_name(
     hass: HomeAssistant,
     mock_client: APIClient,
     hass_storage: dict[str, Any],
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a device without friendly_name set."""
     entity_info = [
@@ -510,10 +491,7 @@ async def test_entity_without_name_device_with_friendly_name(
     hass: HomeAssistant,
     mock_client: APIClient,
     hass_storage: dict[str, Any],
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test name and entity_id for a device a friendly name and an entity without a name."""
     entity_info = [
@@ -541,3 +519,211 @@ async def test_entity_without_name_device_with_friendly_name(
     # Make sure we have set the name to `None` as otherwise
     # the friendly_name will be "The Best Mixer "
     assert state.attributes[ATTR_FRIENDLY_NAME] == "The Best Mixer"
+
+
+@pytest.mark.usefixtures("hass_storage")
+async def test_entity_id_preserved_on_upgrade(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity_id is preserved on upgrade."""
+    entity_info = [
+        BinarySensorInfo(
+            object_id="my",
+            key=1,
+            name="my",
+            unique_id="binary_sensor_my",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+    ]
+    user_service = []
+    assert (
+        build_unique_id("11:22:33:44:55:AA", entity_info[0])
+        == "11:22:33:44:55:AA-binary_sensor-my"
+    )
+
+    entry = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        "11:22:33:44:55:AA-binary_sensor-my",
+        suggested_object_id="should_not_change",
+    )
+    assert entry.entity_id == "binary_sensor.should_not_change"
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+        device_info={"friendly_name": "The Best Mixer", "name": "mixer"},
+    )
+    state = hass.states.get("binary_sensor.should_not_change")
+    assert state is not None
+
+
+@pytest.mark.usefixtures("hass_storage")
+async def test_entity_id_preserved_on_upgrade_old_format_entity_id(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity_id is preserved on upgrade from old format."""
+    entity_info = [
+        BinarySensorInfo(
+            object_id="my",
+            key=1,
+            name="my",
+            unique_id="binary_sensor_my",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+    ]
+    user_service = []
+    assert (
+        build_unique_id("11:22:33:44:55:AA", entity_info[0])
+        == "11:22:33:44:55:AA-binary_sensor-my"
+    )
+
+    entry = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        "11:22:33:44:55:AA-binary_sensor-my",
+        suggested_object_id="my",
+    )
+    assert entry.entity_id == "binary_sensor.my"
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+        device_info={"name": "mixer"},
+    )
+    state = hass.states.get("binary_sensor.my")
+    assert state is not None
+
+
+async def test_entity_id_preserved_on_upgrade_when_in_storage(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+    mock_esphome_device: MockESPHomeDeviceType,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity_id is preserved on upgrade with user defined entity_id."""
+    entity_info = [
+        BinarySensorInfo(
+            object_id="my",
+            key=1,
+            name="my",
+            unique_id="binary_sensor_my",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+    ]
+    user_service = []
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+        device_info={"friendly_name": "The Best Mixer", "name": "mixer"},
+    )
+    state = hass.states.get("binary_sensor.mixer_my")
+    assert state is not None
+    # now rename the entity
+    ent_reg_entry = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        "11:22:33:44:55:AA-binary_sensor-my",
+    )
+    entity_registry.async_update_entity(
+        ent_reg_entry.entity_id,
+        new_entity_id="binary_sensor.user_named",
+    )
+    await hass.config_entries.async_unload(device.entry.entry_id)
+    await hass.async_block_till_done()
+    entry = device.entry
+    entry_id = entry.entry_id
+    storage_key = f"esphome.{entry_id}"
+    assert len(hass_storage[storage_key]["data"]["binary_sensor"]) == 1
+    binary_sensor_data: dict[str, Any] = hass_storage[storage_key]["data"][
+        "binary_sensor"
+    ][0]
+    assert binary_sensor_data["name"] == "my"
+    assert binary_sensor_data["object_id"] == "my"
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+        entry=entry,
+        device_info={"friendly_name": "The Best Mixer", "name": "mixer"},
+    )
+    state = hass.states.get("binary_sensor.user_named")
+    assert state is not None
+
+
+async def test_deep_sleep_added_after_setup(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test deep sleep added after setup."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[
+            BinarySensorInfo(
+                object_id="test",
+                key=1,
+                name="test",
+                unique_id="test",
+            ),
+        ],
+        user_service=[],
+        states=[
+            BinarySensorState(key=1, state=True, missing_state=False),
+        ],
+        device_info={"has_deep_sleep": False},
+    )
+
+    entity_id = "binary_sensor.test_test"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+
+    await mock_device.mock_disconnect(expected_disconnect=True)
+
+    # No deep sleep, should be unavailable
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    await mock_device.mock_connect()
+
+    # reconnect, should be available
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+
+    await mock_device.mock_disconnect(expected_disconnect=True)
+    new_device_info = DeviceInfo(
+        **{**asdict(mock_device.device_info), "has_deep_sleep": True}
+    )
+    mock_device.client.device_info = AsyncMock(return_value=new_device_info)
+    mock_device.device_info = new_device_info
+
+    await mock_device.mock_connect()
+
+    # Now disconnect that deep sleep is set in device info
+    await mock_device.mock_disconnect(expected_disconnect=True)
+
+    # Deep sleep, should be available
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON

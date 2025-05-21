@@ -525,6 +525,11 @@ ZEROCONF = {
             "domain": "homekit_controller",
         },
     ],
+    "_homeconnect._tcp.local.": [
+        {
+            "domain": "home_connect",
+        },
+    ],
     "_homekit._tcp.local.": [
         {
             "domain": "homekit",
@@ -708,6 +713,11 @@ ZEROCONF = {
     "_meshcop._udp.local.": [
         {
             "domain": "thread",
+        },
+    ],
+    "_mieleathome._tcp.local.": [
+        {
+            "domain": "miele",
         },
     ],
     "_miio._udp.local.": [

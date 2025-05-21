@@ -96,9 +96,16 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
             await self.api.login()
             return await self._async_update_system_data()
         except (CannotConnect, CannotRetrieveData) as err:
-            raise UpdateFailed(repr(err)) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": repr(err)},
+            ) from err
         except CannotAuthenticate as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_authenticate",
+            ) from err
 
     @abstractmethod
     async def _async_update_system_data(self) -> T:
