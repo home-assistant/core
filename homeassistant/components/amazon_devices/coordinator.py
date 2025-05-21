@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, CONF_LOGIN_DATA, DOMAIN
+from .const import _LOGGER, CONF_LOGIN_DATA, DOMAIN, SCAN_INTERVAL
 
 type AmazonConfigEntry = ConfigEntry[AmazonDevicesCoordinator]
 
@@ -34,7 +34,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             _LOGGER,
             name=f"{DOMAIN} {username}",
             config_entry=entry,
-            update_interval=timedelta(seconds=30),
+            update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
         self.api = AmazonEchoApi(
             entry.data[CONF_COUNTRY],
