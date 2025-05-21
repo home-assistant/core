@@ -9,6 +9,7 @@ from pynobo import nobo
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    ATTR_TEMPERATURE,
     PRESET_AWAY,
     PRESET_COMFORT,
     PRESET_ECO,
@@ -29,18 +30,15 @@ from .const import (
     ATTR_TEMP_COMFORT_C,
     ATTR_TEMP_ECO_C,
     CONF_OVERRIDE_TYPE,
+    CONF_DISABLE_COMFORT_CONTROL,
     DOMAIN,
     OVERRIDE_TYPE_NOW,
-)
-
-SUPPORT_FLAGS = (
-    ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
 )
 
 PRESET_MODES = [PRESET_NONE, PRESET_COMFORT, PRESET_ECO, PRESET_AWAY]
 
 MIN_TEMPERATURE = 7
-MAX_TEMPERATURE = 40
+MAX_TEMPERATURE = 30
 
 
 async def async_setup_entry(
@@ -59,8 +57,15 @@ async def async_setup_entry(
         else nobo.API.OVERRIDE_TYPE_CONSTANT
     )
 
+    disable_comfort_control = config_entry.options.get(
+        CONF_DISABLE_COMFORT_CONTROL, False
+    )
+
     # Add zones as entities
-    async_add_entities(NoboZone(zone_id, hub, override_type) for zone_id in hub.zones)
+    async_add_entities(
+        NoboZone(zone_id, hub, override_type, disable_comfort_control)
+        for zone_id in hub.zones
+    )
 
 
 class NoboZone(ClimateEntity):
@@ -78,23 +83,32 @@ class NoboZone(ClimateEntity):
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.AUTO]
     _attr_hvac_mode = HVACMode.AUTO
     _attr_preset_modes = PRESET_MODES
-    _attr_supported_features = SUPPORT_FLAGS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 1
     # Need to poll to get preset change when in HVACMode.AUTO, so can't set _attr_should_poll = False
 
-    def __init__(self, zone_id, hub: nobo, override_type) -> None:
+    def __init__(
+        self, zone_id, hub: nobo, override_type, disable_comfort_control
+    ) -> None:
         """Initialize the climate device."""
         self._id = zone_id
         self._nobo = hub
         self._attr_unique_id = f"{hub.hub_serial}:{zone_id}"
         self._override_type = override_type
+        self._disable_comfort_control = disable_comfort_control
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{hub.hub_serial}:{zone_id}")},
             name=hub.zones[zone_id][ATTR_NAME],
             via_device=(DOMAIN, hub.hub_info[ATTR_SERIAL]),
             suggested_area=hub.zones[zone_id][ATTR_NAME],
         )
+        self._attr_supported_features = ClimateEntityFeature.PRESET_MODE
+        if disable_comfort_control:
+            self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
+        else:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            )
         self._read_state()
 
     async def async_added_to_hass(self) -> None:
@@ -136,11 +150,12 @@ class NoboZone(ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if ATTR_TARGET_TEMP_LOW in kwargs:
+        if self._disable_comfort_control and ATTR_TEMPERATURE in kwargs:
+            temp = round(kwargs[ATTR_TEMPERATURE])
+            await self._nobo.async_update_zone(self._id, temp_eco_c=temp)
+        elif ATTR_TARGET_TEMP_LOW in kwargs:
             low = round(kwargs[ATTR_TARGET_TEMP_LOW])
             high = round(kwargs[ATTR_TARGET_TEMP_HIGH])
-            low = min(low, high)
-            high = max(low, high)
             await self._nobo.async_update_zone(
                 self._id, temp_comfort_c=high, temp_eco_c=low
             )
@@ -172,12 +187,20 @@ class NoboZone(ClimateEntity):
         self._attr_current_temperature = (
             None if current_temperature is None else float(current_temperature)
         )
-        self._attr_target_temperature_high = int(
-            self._nobo.zones[self._id][ATTR_TEMP_COMFORT_C]
-        )
-        self._attr_target_temperature_low = int(
-            self._nobo.zones[self._id][ATTR_TEMP_ECO_C]
-        )
+        if self._disable_comfort_control:
+            self._attr_target_temperature_high = None
+            self._attr_target_temperature_low = None
+            self._attr_target_temperature = int(
+                self._nobo.zones[self._id][ATTR_TEMP_ECO_C]
+            )
+        else:
+            self._attr_target_temperature_high = int(
+                self._nobo.zones[self._id][ATTR_TEMP_COMFORT_C]
+            )
+            self._attr_target_temperature_low = int(
+                self._nobo.zones[self._id][ATTR_TEMP_ECO_C]
+            )
+            self._attr_target_temperature = None
 
     @callback
     def _after_update(self, hub):
