@@ -715,3 +715,47 @@ HUB3_SERVICE_INFO = BluetoothServiceInfoBleak(
     connectable=True,
     tx_power=-127,
 )
+
+
+LOCK_LITE_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Lock Lite",
+    manufacturer_data={2409: b"\xe9\xd5\x11\xb2kS\x17\x93\x08 "},
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"-\x80d"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Lock Lite",
+        manufacturer_data={2409: b"\xe9\xd5\x11\xb2kS\x17\x93\x08 "},
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"-\x80d"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Lock Lite"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+LOCK_ULTRA_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Lock Ultra",
+    manufacturer_data={2409: b"\xb0\xe9\xfe\xb6j=%\x8204\x00\x04"},
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x804\x00\x10\xa5\xb8"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Lock Ultra",
+        manufacturer_data={2409: b"\xb0\xe9\xfe\xb6j=%\x8204\x00\x04"},
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x804\x00\x10\xa5\xb8"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Lock Ultra"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)

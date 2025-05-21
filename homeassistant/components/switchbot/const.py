@@ -44,6 +44,8 @@ class SupportedModels(StrEnum):
     K10_PRO_VACUUM = "k10_pro_vacuum"
     K10_PRO_COMBO_VACUUM = "k10_pro_combo_vacumm"
     HUB3 = "hub3"
+    LOCK_LITE = "lock_lite"
+    LOCK_ULTRA = "lock_ultra"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -67,6 +69,8 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.K10_VACUUM: SupportedModels.K10_VACUUM,
     SwitchbotModel.K10_PRO_VACUUM: SupportedModels.K10_PRO_VACUUM,
     SwitchbotModel.K10_PRO_COMBO_VACUUM: SupportedModels.K10_PRO_COMBO_VACUUM,
+    SwitchbotModel.LOCK_LITE: SupportedModels.LOCK_LITE,
+    SwitchbotModel.LOCK_ULTRA: SupportedModels.LOCK_ULTRA,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -91,6 +95,8 @@ ENCRYPTED_MODELS = {
     SwitchbotModel.RELAY_SWITCH_1PM,
     SwitchbotModel.LOCK,
     SwitchbotModel.LOCK_PRO,
+    SwitchbotModel.LOCK_LITE,
+    SwitchbotModel.LOCK_ULTRA,
 }
 
 ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
@@ -100,6 +106,8 @@ ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
     SwitchbotModel.LOCK_PRO: switchbot.SwitchbotLock,
     SwitchbotModel.RELAY_SWITCH_1PM: switchbot.SwitchbotRelaySwitch,
     SwitchbotModel.RELAY_SWITCH_1: switchbot.SwitchbotRelaySwitch,
+    SwitchbotModel.LOCK_LITE: switchbot.SwitchbotLock,
+    SwitchbotModel.LOCK_ULTRA: switchbot.SwitchbotLock,
 }
 
 HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {
