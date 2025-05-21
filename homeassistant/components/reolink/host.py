@@ -34,7 +34,7 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.storage import Store
 from homeassistant.util.ssl import SSLCipherList
 
-from .const import CONF_BC_PORT, CONF_SUPPORTS_PRIVACY_MODE, CONF_USE_HTTPS, DOMAIN, BATTERY_WAKE_UPDATE_INTERVAL, BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL
+from .const import CONF_BC_PORT, CONF_SUPPORTS_PRIVACY_MODE, CONF_USE_HTTPS, DOMAIN, BATTERY_WAKE_UPDATE_INTERVAL, BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL, BATTERY_ALL_WAKE_UPDATE_INTERVAL
 from .exceptions import (
     PasswordIncompatible,
     ReolinkSetupException,
@@ -92,6 +92,7 @@ class ReolinkHost:
         )
 
         self.last_wake: defaultdict[int, float] = defaultdict(float)
+        self.last_all_wake: float = 0
         self.update_cmd: defaultdict[str, defaultdict[int | None, int]] = defaultdict(
             lambda: defaultdict(int)
         )
@@ -455,18 +456,25 @@ class ReolinkHost:
 
     async def update_states(self) -> None:
         """Call the API of the camera device to update the internal states."""
-        wake = defaultdict(bool)
+        wake: dict[int, bool] = {}
         now = time()
         for channel in self._api.channels:
             # wake the battery cameras for a complete update
-            if (not self._api.sleeping(channel) and now - self.last_wake[channel] > BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL) or (now - self.last_wake[channel] > BATTERY_WAKE_UPDATE_INTERVAL):
+            if not self._api.supported(channel, "battery"):
+                wake[channel] = True
+            elif (not self._api.sleeping(channel) and now - self.last_wake[channel] > BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL) or (now - self.last_wake[channel] > BATTERY_WAKE_UPDATE_INTERVAL) or (now - self.last_all_wake > BATTERY_ALL_WAKE_UPDATE_INTERVAL):
                 # let a waking update coincide with the camera waking up by itself unless it did not wake for BATTERY_WAKE_UPDATE_INTERVAL
                 wake[channel] = True
                 self.last_wake[channel] = now
+            else:
+                wake[channel] = False
 
             # check privacy mode if enabled
             if self._api.baichuan.privacy_mode(channel):
                 await self._api.baichuan.get_privacy_mode(channel)
+
+        if all(wake.values()):
+            self.last_all_wake = now
 
         if self._api.baichuan.privacy_mode():
             return  # API is shutdown, no need to check states
