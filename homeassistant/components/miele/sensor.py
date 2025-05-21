@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import logging
 from typing import Final, cast
 
-from pymiele import MieleDevice
+from pymiele import MieleDevice, MieleTemperature
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -101,6 +101,18 @@ def _get_plate_count(tech_type: str) -> int:
 def _convert_duration(value_list: list[int]) -> int | None:
     """Convert duration to minutes."""
     return value_list[0] * 60 + value_list[1] if value_list else None
+
+
+def _convert_temperature(
+    value_list: list[MieleTemperature], index: int
+) -> float | None:
+    """Convert temperature object to readable value."""
+    if index >= len(value_list):
+        return None
+    raw_value = cast(int, value_list[index].temperature) / 100.0
+    if raw_value in DISABLED_TEMP_ENTITIES:
+        return None
+    return raw_value
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -447,8 +459,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,
-            value_fn=lambda value: cast(int, value.state_temperatures[0].temperature)
-            / 100.0,
+            value_fn=lambda value: _convert_temperature(value.state_temperatures, 0),
         ),
     ),
     MieleSensorDefinition(
@@ -466,8 +477,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             translation_key="temperature_zone_2",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,
-            value_fn=lambda value: cast(int, value.state_temperatures[1].temperature)
-            / 100.0,
+            value_fn=lambda value: _convert_temperature(value.state_temperatures, 1),
         ),
     ),
     MieleSensorDefinition(
@@ -484,8 +494,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             translation_key="temperature_zone_3",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,
-            value_fn=lambda value: cast(int, value.state_temperatures[2].temperature)
-            / 100.0,
+            value_fn=lambda value: _convert_temperature(value.state_temperatures, 2),
         ),
     ),
     MieleSensorDefinition(
@@ -501,10 +510,9 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,
-            value_fn=lambda value: cast(
-                int, value.state_core_target_temperature[0].temperature
-            )
-            / 100.0,
+            value_fn=lambda value: _convert_temperature(
+                value.state_core_target_temperature, 0
+            ),
         ),
     ),
     MieleSensorDefinition(
@@ -524,9 +532,8 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,
-            value_fn=(
-                lambda value: cast(int, value.state_target_temperature[0].temperature)
-                / 100.0
+            value_fn=lambda value: _convert_temperature(
+                value.state_target_temperature, 0
             ),
         ),
     ),
@@ -542,10 +549,9 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,
-            value_fn=lambda value: cast(
-                int, value.state_core_temperature[0].temperature
-            )
-            / 100.0,
+            value_fn=lambda value: _convert_temperature(
+                value.state_core_temperature, 0
+            ),
         ),
     ),
     *(
@@ -610,8 +616,6 @@ async def async_setup_entry(
                 return MielePhaseSensor
             case "state_plate_step":
                 return MielePlateSensor
-        if definition.description.device_class == SensorDeviceClass.TEMPERATURE:
-            return MieleTemperatureSensor
         return MieleSensor
 
     def _is_entity_registered(unique_id: str) -> bool:
@@ -630,7 +634,7 @@ async def async_setup_entry(
         """Check if the sensor is enabled."""
         if (
             definition.description.device_class == SensorDeviceClass.TEMPERATURE
-            and definition.description.value_fn(device) in DISABLED_TEMP_ENTITIES
+            and definition.description.value_fn(device) is None
             and definition.description.zone != 1
         ):
             # all appliances supporting temperature have at least zone 1, for other zones
@@ -820,15 +824,3 @@ class MieleProgramIdSensor(MieleSensor):
     def options(self) -> list[str]:
         """Return the options list for the actual device type."""
         return sorted(set(STATE_PROGRAM_ID.get(self.device.device_type, {}).values()))
-
-
-class MieleTemperatureSensor(MieleSensor):
-    """Representation of a temperature sensor."""
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        ret_val = self.entity_description.value_fn(self.device)
-        if ret_val in DISABLED_TEMP_ENTITIES:
-            return None
-        return ret_val
