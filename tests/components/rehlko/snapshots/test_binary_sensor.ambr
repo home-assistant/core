@@ -1,0 +1,144 @@
+# serializer version: 1
+# name: test_sensors[binary_sensor.generator_1_generator_auto-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.generator_1_generator_auto',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Generator auto',
+    'platform': 'rehlko',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'generator_auto',
+    'unique_id': 'myemail@email.com_12345_switchState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[binary_sensor.generator_1_generator_auto-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Generator 1 Generator auto',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.generator_1_generator_auto',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_sensors[binary_sensor.generator_1_generator_connected-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.generator_1_generator_connected',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Generator connected',
+    'platform': 'rehlko',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'generator_connected',
+    'unique_id': 'myemail@email.com_12345_isConnected',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[binary_sensor.generator_1_generator_connected-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Generator 1 Generator connected',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.generator_1_generator_connected',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_sensors[binary_sensor.generator_1_oil_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.generator_1_oil_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Oil pressure',
+    'platform': 'rehlko',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'oil_pressure_ok',
+    'unique_id': 'myemail@email.com_12345_engineOilPressureOk',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[binary_sensor.generator_1_oil_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Generator 1 Oil pressure',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.generator_1_oil_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
