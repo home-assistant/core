@@ -613,7 +613,7 @@ async def test_thermostat_set_fan_mode(
     )
 
 
-@pytest.mark.parametrize("device_fixture", ["virtual_thermostat"])
+@pytest.mark.parametrize("device_fixture", ["sensi_thermostat"])
 async def test_thermostat_set_hvac_mode(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -625,11 +625,11 @@ async def test_thermostat_set_hvac_mode(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.asd", ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
-        "2894dc93-0f11-49cc-8a81-3a684cebebf6",
+        "2409a73c-918a-4d1f-b4f5-c27468c71d70",
         Capability.THERMOSTAT_MODE,
         Command.SET_THERMOSTAT_MODE,
         MAIN,
