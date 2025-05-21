@@ -44,6 +44,7 @@ BINARY_SENSORS: tuple[RehlkoBinarySensorEntityDescription, ...] = (
         key=DEVICE_DATA_IS_CONNECTED,
         translation_key="connected",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
         document_key=GENERATOR_DATA_DEVICE,
         # Entity is available when the device is disconnected
         connectivity_key=None,
