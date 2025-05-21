@@ -35,18 +35,21 @@ class RehlkoBinarySensorEntityDescription(BinarySensorEntityDescription):
     on_value: str | bool | None = True
     off_value: str | bool | None = False
     document_key: str | None = None
+    connectivity_key: str | None = DEVICE_DATA_IS_CONNECTED
 
 
 BINARY_SENSORS: tuple[RehlkoBinarySensorEntityDescription, ...] = (
     RehlkoBinarySensorEntityDescription(
         key=DEVICE_DATA_IS_CONNECTED,
-        translation_key="generator_connected",
+        translation_key="connected",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         document_key=GENERATOR_DATA_DEVICE,
+        # Entity is available when the device is disconnected
+        connectivity_key=None,
     ),
     RehlkoBinarySensorEntityDescription(
         key="switchState",
-        translation_key="generator_auto",
+        translation_key="auto",
         on_value="Auto",
         off_value="Off",
     ),
@@ -75,6 +78,7 @@ async def async_setup_entry(
             device_data,
             sensor_description,
             document_key=sensor_description.document_key,
+            connectivity_key=sensor_description.connectivity_key,
         )
         for home_data in homes
         for device_data in home_data[DEVICE_DATA_DEVICES]

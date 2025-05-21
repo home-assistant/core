@@ -10,6 +10,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.rehlko.const import GENERATOR_DATA_DEVICE
 from homeassistant.components.rehlko.coordinator import SCAN_INTERVAL_MINUTES
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -47,7 +48,7 @@ async def test_binary_sensor_states(
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the Rehlko sensor availability when device is disconnected."""
+    """Test the Rehlko binary sensor state logic."""
     assert generator["engineOilPressureOk"] is True
     state = hass.states.get("binary_sensor.generator_1_oil_pressure")
     assert state
@@ -73,3 +74,26 @@ async def test_binary_sensor_states(
     assert state.state == STATE_UNKNOWN
     assert "Unknown State" in caplog.text
     assert "engineOilPressureOk" in caplog.text
+
+
+async def test_binary_sensor_connectivity_availability(
+    hass: HomeAssistant,
+    generator: dict[str, Any],
+    mock_rehlko: AsyncMock,
+    load_rehlko_config_entry: None,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the Rehlko sensor availability when device is disconnected."""
+    state = hass.states.get("binary_sensor.generator_1_connected")
+    assert state
+    assert state.state == STATE_ON
+
+    # Entity should be available when device is disconnected
+    generator[GENERATOR_DATA_DEVICE]["isConnected"] = False
+    freezer.tick(SCAN_INTERVAL_MINUTES)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.generator_1_connected")
+    assert state
+    assert state.state == STATE_OFF

@@ -32,11 +32,11 @@
   },
   "entity": {
     "binary_sensor": {
-      "generator_connected": {
-        "name": "Generator connected"
+      "connected": {
+        "name": "Connected"
       },
-      "generator_auto": {
-        "name": "Generator auto"
+      "auto": {
+        "name": "Auto"
       },
       "oil_pressure_ok": {
         "name": "Oil pressure"
