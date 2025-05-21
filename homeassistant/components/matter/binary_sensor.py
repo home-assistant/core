@@ -341,10 +341,18 @@ DISCOVERY_SCHEMAS = [
             translation_key="pump_fault",
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
-            measurement_to_ha=lambda x: (
-                x
-                == clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kDeviceFault
-            ),
+            # DeviceFault or SupplyFault bit enabled
+            measurement_to_ha={
+                clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kDeviceFault: True,
+                clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kSupplyFault: True,
+                clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kSpeedLow: False,
+                clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kSpeedHigh: False,
+                clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kLocalOverride: False,
+                clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kRunning: False,
+                clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kRemotePressure: False,
+                clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kRemoteFlow: False,
+                clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kRemoteTemperature: False,
+            }.get,
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(

@@ -238,12 +238,20 @@ async def test_pump(
     assert state
     assert state.state == "off"
 
-    # PumpStatus
+    # PumpStatus --> DeviceFault bit
     state = hass.states.get("binary_sensor.mock_pump_problem")
     assert state
-    assert state.state == "off"
+    assert state.state == "unknown"
 
     set_node_attribute(matter_node, 1, 512, 16, 1)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.mock_pump_problem")
+    assert state
+    assert state.state == "on"
+
+    # PumpStatus --> SupplyFault bit
+    set_node_attribute(matter_node, 1, 512, 16, 2)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("binary_sensor.mock_pump_problem")
