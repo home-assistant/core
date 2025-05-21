@@ -17,7 +17,9 @@ mock_config_entry = MockConfigEntry(
 )
 
 
-async def test_full_flow(hass: HomeAssistant, mock_authenticator_client: MagicMock) -> None:
+async def test_full_flow(
+    hass: HomeAssistant, mock_authenticator_client: MagicMock
+) -> None:
     """Test a full and successful config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

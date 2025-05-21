@@ -33,7 +33,7 @@ async def async_setup_entry(
     except InvalidOAuthConfigurationException as err:
         raise ConfigEntryError(err) from err
     entry.runtime_data = coordinator = NintendoUpdateCoordinator(
-        hass=hass, authenticator=nintendo_auth, config_entry=entry
+        hass, nintendo_auth, entry
     )
     await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)

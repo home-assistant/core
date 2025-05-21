@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -22,6 +23,13 @@ from .entity import Device, NintendoDevice
 PARALLEL_UPDATES = 0
 
 
+class NintendoParentalSensor(StrEnum):
+    """Store keys for Nintendo Parental sensors."""
+
+    PLAYING_TIME = "playing_time"
+    TIME_REMAINING = "time_remaining"
+
+
 @dataclass(kw_only=True, frozen=True)
 class NintendoParentalSensorEntityDescription(SensorEntityDescription):
     """Description for Nintendo Parental sensor entities."""
@@ -32,8 +40,8 @@ class NintendoParentalSensorEntityDescription(SensorEntityDescription):
 
 SENSOR_DESCRIPTIONS: tuple[NintendoParentalSensorEntityDescription, ...] = (
     NintendoParentalSensorEntityDescription(
-        key="playing_time",
-        name="used screen time",
+        key=NintendoParentalSensor.PLAYING_TIME,
+        translation_key=NintendoParentalSensor.PLAYING_TIME,
         native_unit_of_measurement="min",
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
@@ -41,8 +49,8 @@ SENSOR_DESCRIPTIONS: tuple[NintendoParentalSensorEntityDescription, ...] = (
         state_attributes_fn=lambda device: {"daily": device.daily_summaries[0:5]},
     ),
     NintendoParentalSensorEntityDescription(
-        key="time_remaining",
-        name="time remaining",
+        key=NintendoParentalSensor.TIME_REMAINING,
+        translation_key=NintendoParentalSensor.TIME_REMAINING,
         native_unit_of_measurement="min",
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
@@ -60,13 +68,13 @@ async def async_setup_entry(
     """Set up the sensor platform."""
     if entry.runtime_data.api.devices is not None:
         async_add_devices(
-            NintendoParentalSensor(entry.runtime_data, device, sensor)
+            NintendoParentalSensorEntity(entry.runtime_data, device, sensor)
             for device in entry.runtime_data.api.devices.values()
             for sensor in SENSOR_DESCRIPTIONS
         )
 
 
-class NintendoParentalSensor(NintendoDevice, SensorEntity):
+class NintendoParentalSensorEntity(NintendoDevice, SensorEntity):
     """Represent a single sensor."""
 
     entity_description: NintendoParentalSensorEntityDescription
@@ -78,10 +86,10 @@ class NintendoParentalSensor(NintendoDevice, SensorEntity):
         description: NintendoParentalSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(
-            coordinator=coordinator, device=device, entity_id=description.key
+        self.entity_description = (
+            description  # this first so the NintendoDevice class has the entity key
         )
-        self.entity_description = description
+        super().__init__(coordinator=coordinator, device=device)
 
     @property
     def native_value(self) -> int | float | None:

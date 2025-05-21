@@ -15,8 +15,8 @@ from pynintendoparental.exceptions import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL = timedelta(seconds=60)
 
 
-class NintendoUpdateCoordinator(DataUpdateCoordinator):
+class NintendoUpdateCoordinator(DataUpdateCoordinator[None]):
     """Nintendo data update coordinator."""
 
     def __init__(
@@ -47,14 +47,13 @@ class NintendoUpdateCoordinator(DataUpdateCoordinator):
             authenticator, hass.config.time_zone, hass.config.language
         )
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> None:
         """Update data from Nintendo's API."""
         try:
             with contextlib.suppress(InvalidSessionTokenException):
                 async with asyncio.timeout(self.update_interval.total_seconds() - 5):
                     return await self.api.update()
         except InvalidOAuthConfigurationException as err:
-            raise ConfigEntryAuthFailed(err) from err
-        except TimeoutError as err:
-            raise UpdateFailed(err) from err
-        return False
+            raise ConfigEntryError(
+                err, translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from err
