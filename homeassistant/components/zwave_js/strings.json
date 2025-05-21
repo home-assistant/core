@@ -133,7 +133,7 @@
         "title": "Select your Z-Wave device"
       },
       "installation_type": {
-        "title": "Set-up Z-Wave",
+        "title": "Set up Z-Wave",
         "description": "Choose the installation type for your Z-Wave integration.",
         "menu_options": {
           "intent_recommended": "Recommended installation",
