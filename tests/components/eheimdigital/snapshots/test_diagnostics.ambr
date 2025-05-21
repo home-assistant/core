@@ -1,0 +1,26 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'data': None,
+    'entry': dict({
+      'data': dict({
+        'host': 'eheimdigital',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'eheimdigital',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': '00:00:00:00:00:01',
+      'version': 1,
+    }),
+  })
+# ---
