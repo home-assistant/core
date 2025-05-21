@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.squeezebox.const import SENSOR_UPDATE_INTERVAL
+from homeassistant.components.squeezebox.const import PLAYER_UPDATE_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -35,7 +35,7 @@ async def test_switch_state(
     assert hass.states.get(f"switch.test_player_alarm_{TEST_ALARM_ID}").state == "on"
 
     mock_alarms_player.alarms[0]["enabled"] = False
-    freezer.tick(timedelta(seconds=SENSOR_UPDATE_INTERVAL))
+    freezer.tick(timedelta(seconds=PLAYER_UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(f"switch.test_player_alarm_{TEST_ALARM_ID}").state == "off"
@@ -50,7 +50,7 @@ async def test_switch_deleted(
     assert hass.states.get(f"switch.test_player_alarm_{TEST_ALARM_ID}").state == "on"
 
     mock_alarms_player.alarms = []
-    freezer.tick(timedelta(seconds=SENSOR_UPDATE_INTERVAL))
+    freezer.tick(timedelta(seconds=PLAYER_UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(f"switch.test_player_alarm_{TEST_ALARM_ID}") is None
@@ -98,7 +98,7 @@ async def test_alarms_enabled_state(
     assert hass.states.get("switch.test_player_alarms_enabled").state == "on"
 
     mock_alarms_player.alarms_enabled = False
-    freezer.tick(timedelta(seconds=SENSOR_UPDATE_INTERVAL))
+    freezer.tick(timedelta(seconds=PLAYER_UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

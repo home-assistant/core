@@ -11,14 +11,9 @@ from typing import TYPE_CHECKING, Any
 from pysqueezebox import Player, Server
 from pysqueezebox.player import Alarm
 
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 if TYPE_CHECKING:
@@ -28,7 +23,6 @@ from .const import (
     DOMAIN,
     PLAYER_UPDATE_INTERVAL,
     SENSOR_UPDATE_INTERVAL,
-    SIGNAL_ALARM_DISCOVERED,
     SIGNAL_PLAYER_REDISCOVERED,
     STATUS_API_TIMEOUT,
 )
@@ -110,48 +104,6 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._remove_dispatcher: Callable | None = None
         self.player_uuid = format_mac(player.player_id)
         self.server_uuid = server_uuid
-        self.async_add_listener(self._async_listener)
-
-    def _async_listener(self) -> None:
-        """Handle alarm creation and deletion after coordinator data update."""
-
-        new_alarms: set[str] = set()
-        received_alarms: set[str] = set()
-
-        if self.data["alarms"] and self.available:
-            received_alarms = set(self.data["alarms"])
-            new_alarms = received_alarms - self.known_alarms
-        removed_alarms = self.known_alarms - received_alarms
-
-        if new_alarms:
-            for new_alarm in new_alarms:
-                _LOGGER.debug("New alarm %s to be created", new_alarm)
-                self.known_alarms.add(new_alarm)
-                async_dispatcher_send(
-                    self.hass,
-                    SIGNAL_ALARM_DISCOVERED,
-                    self.data["alarms"][new_alarm],
-                    self,
-                )
-
-        if removed_alarms and self.available:
-            for removed_alarm in removed_alarms:
-                _uid = f"{self.player_uuid}-alarm-{removed_alarm}"
-                _LOGGER.debug(
-                    "Alarm %s with unique_id %s needs to be deleted",
-                    removed_alarm,
-                    _uid,
-                )
-
-                entity_registry = er.async_get(self.hass)
-                _entity_id = entity_registry.async_get_entity_id(
-                    Platform.SWITCH,
-                    DOMAIN,
-                    _uid,
-                )
-                if _entity_id:
-                    entity_registry.async_remove(_entity_id)
-                    self.known_alarms.remove(removed_alarm)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update the Player() object if available, or listen for rediscovery if not."""
@@ -168,10 +120,10 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     self.hass, SIGNAL_PLAYER_REDISCOVERED, self.rediscovered
                 )
 
-        alarm_dict: dict[str, Alarm] | None = (
+        alarm_dict: dict[str, Alarm] = (
             {alarm["id"]: alarm for alarm in self.player.alarms}
             if self.player.alarms
-            else None
+            else {}
         )
 
         return {"alarms": alarm_dict}

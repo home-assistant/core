@@ -33,7 +33,6 @@ SQUEEZEBOX_SOURCE_STRINGS = (
     "spotify:",
     "loop:",
 )
-SIGNAL_ALARM_DISCOVERED = "squeezebox_alarm_discovered"
 SIGNAL_PLAYER_DISCOVERED = "squeezebox_player_discovered"
 SIGNAL_PLAYER_REDISCOVERED = "squeezebox_player_rediscovered"
 DISCOVERY_INTERVAL = 60

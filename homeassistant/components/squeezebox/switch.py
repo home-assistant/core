@@ -8,14 +8,15 @@ from pysqueezebox.player import Alarm
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_change
 
-from .const import ATTR_ALARM_ID, SIGNAL_ALARM_DISCOVERED, SIGNAL_PLAYER_DISCOVERED
+from .const import ATTR_ALARM_ID, DOMAIN, SIGNAL_PLAYER_DISCOVERED
 from .coordinator import SqueezeBoxPlayerUpdateCoordinator
 from .entity import SqueezeboxEntity
 
@@ -29,29 +30,62 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Squeezebox alarm switch."""
 
-    # create a new alarm entity if it doesn't already exist
-    async def _alarm_discovered(
-        alarm: Alarm,
-        coordinator: SqueezeBoxPlayerUpdateCoordinator,
-    ) -> None:
-        _LOGGER.debug(
-            "Setting up alarm entity for alarm %s on player %s",
-            alarm["id"],
-            coordinator.player,
-        )
-        async_add_entities([SqueezeBoxAlarmEntity(coordinator, alarm["id"])])
-
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, SIGNAL_ALARM_DISCOVERED, _alarm_discovered)
-    )
-
-    # create a new alarm enabled entity upon player discovery
     async def _player_discovered(
         coordinator: SqueezeBoxPlayerUpdateCoordinator,
     ) -> None:
+        def _async_listener() -> None:
+            """Handle alarm creation and deletion after coordinator data update."""
+            new_alarms: set[str] = set()
+            received_alarms: set[str] = set()
+
+            if coordinator.data["alarms"] and coordinator.available:
+                received_alarms = set(coordinator.data["alarms"])
+                new_alarms = received_alarms - coordinator.known_alarms
+            removed_alarms = coordinator.known_alarms - received_alarms
+
+            if new_alarms:
+                for new_alarm in new_alarms:
+                    coordinator.known_alarms.add(new_alarm)
+                    _LOGGER.debug(
+                        "Setting up alarm entity for alarm %s on player %s",
+                        new_alarm,
+                        coordinator.player,
+                    )
+                    async_add_entities([SqueezeBoxAlarmEntity(coordinator, new_alarm)])
+
+            if removed_alarms and coordinator.available:
+                for removed_alarm in removed_alarms:
+                    _uid = f"{coordinator.player_uuid}-alarm-{removed_alarm}"
+                    _LOGGER.debug(
+                        "Alarm %s with unique_id %s needs to be deleted",
+                        removed_alarm,
+                        _uid,
+                    )
+
+                    entity_registry = er.async_get(hass)
+                    _entity_id = entity_registry.async_get_entity_id(
+                        Platform.SWITCH,
+                        DOMAIN,
+                        _uid,
+                    )
+                    if _entity_id:
+                        entity_registry.async_remove(_entity_id)
+                        coordinator.known_alarms.remove(removed_alarm)
+
         _LOGGER.debug(
             "Setting up alarm enabled entity for player %s", coordinator.player
         )
+        # Add listener first for future coordinator refresh
+        coordinator.async_add_listener(_async_listener)
+
+        # If coordinator already has alarm data from the initial refresh,
+        # call the listener immediately to process existing alarms and create alarm entities.
+        if coordinator.data["alarms"]:
+            _LOGGER.debug(
+                "Coordinator has alarm data, calling _async_listener immediately for player %s",
+                coordinator.player,
+            )
+            _async_listener()
         async_add_entities([SqueezeBoxAlarmsEnabledEntity(coordinator)])
 
     entry.async_on_unload(
@@ -100,12 +134,12 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
     @property
     def alarm(self) -> Alarm:
         """Return the alarm object."""
-        return self.coordinator.data["alarms"].get(self._alarm_id)
+        return self.coordinator.data["alarms"][self._alarm_id]
 
     @property
     def available(self) -> bool:
         """Return whether the alarm is available."""
-        return self.coordinator.data["alarms"].get(self._alarm_id) and super().available
+        return super().available and self._alarm_id in self.coordinator.data["alarms"]
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
