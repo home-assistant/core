@@ -1,6 +1,6 @@
 """Common items for testing the zimi component."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.zimi.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -50,6 +50,12 @@ def mock_entity(
     mock_manfacture_info.firmwareVersion = DEVICE_INFO["fwVersion"]
 
     mock_entity.manufacture_info = mock_manfacture_info
+
+    mock_entity.subscribe = AsyncMock()
+
+    mock_entity.set_brightness = AsyncMock()
+    mock_entity.turn_on = AsyncMock()
+    mock_entity.turn_off = AsyncMock()
 
     return mock_entity
 
