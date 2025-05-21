@@ -33,8 +33,8 @@ _LOGGER = logging.getLogger(__name__)
 class RehlkoBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Class describing Rehlko binary sensor entities."""
 
-    on_value: str | bool | None = True
-    off_value: str | bool | None = False
+    on_value: str | bool = True
+    off_value: str | bool = False
     document_key: str | None = None
     connectivity_key: str | None = DEVICE_DATA_IS_CONNECTED
 
