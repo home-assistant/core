@@ -34,7 +34,7 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.storage import Store
 from homeassistant.util.ssl import SSLCipherList
 
-from .const import CONF_BC_PORT, CONF_SUPPORTS_PRIVACY_MODE, CONF_USE_HTTPS, DOMAIN
+from .const import CONF_BC_PORT, CONF_SUPPORTS_PRIVACY_MODE, CONF_USE_HTTPS, DOMAIN, BATTERY_WAKE_UPDATE_INTERVAL, BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL
 from .exceptions import (
     PasswordIncompatible,
     ReolinkSetupException,
@@ -51,10 +51,6 @@ SUBSCRIPTION_RENEW_THRESHOLD = 300
 POLL_INTERVAL_NO_PUSH = 5
 LONG_POLL_COOLDOWN = 0.75
 LONG_POLL_ERROR_COOLDOWN = 30
-
-# Conserve battery by not waking the battery cameras each minute during normal update
-# Most props are cached in the Home Hub and updated, but some are skipped
-BATTERY_WAKE_UPDATE_INTERVAL = 3600  # seconds
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,7 +91,7 @@ class ReolinkHost:
             bc_port=config.get(CONF_BC_PORT, DEFAULT_BC_PORT),
         )
 
-        self.last_wake: float = 0
+        self.last_wake: defaultdict[int, float] = defaultdict(float)
         self.update_cmd: defaultdict[str, defaultdict[int | None, int]] = defaultdict(
             lambda: defaultdict(int)
         )
@@ -459,15 +455,19 @@ class ReolinkHost:
 
     async def update_states(self) -> None:
         """Call the API of the camera device to update the internal states."""
-        wake = False
-        if time() - self.last_wake > BATTERY_WAKE_UPDATE_INTERVAL:
-            # wake the battery cameras for a complete update
-            wake = True
-            self.last_wake = time()
-
+        wake = defaultdict(bool)
+        now = time()
         for channel in self._api.channels:
+            # wake the battery cameras for a complete update
+            if (not self._api.sleeping(channel) and now - self.last_wake[channel] > BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL) or (now - self.last_wake[channel] > BATTERY_WAKE_UPDATE_INTERVAL):
+                # let a waking update coincide with the camera waking up by itself unless it did not wake for BATTERY_WAKE_UPDATE_INTERVAL
+                wake[channel] = True
+                self.last_wake[channel] = now
+
+            # check privacy mode if enabled
             if self._api.baichuan.privacy_mode(channel):
                 await self._api.baichuan.get_privacy_mode(channel)
+
         if self._api.baichuan.privacy_mode():
             return  # API is shutdown, no need to check states
 
