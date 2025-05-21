@@ -206,7 +206,7 @@ async def test_pump(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test MatterMapSelectEntity entities are discovered and working from a laundrywasher fixture."""
+    """Test MatterAttributeSelectEntity entities are discovered and working from a pump fixture."""
     # OperationMode
     state = hass.states.get("select.mock_pump_mode")
     assert state
