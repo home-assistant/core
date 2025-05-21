@@ -48,6 +48,7 @@ class BriivFan(FanEntity):
             name=f"Briiv {serial_number}",
             manufacturer="Briiv",
             model="Air Filter",
+            serial_number=serial_number,
         )
 
         self._attr_is_on = False
