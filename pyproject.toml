@@ -707,6 +707,7 @@ select = [
   "B002",   # Python does not support the unary prefix increment
   "B005",   # Using .strip() with multi-character strings is misleading
   "B007",   # Loop control variable {name} not used within loop body
+  "B009",   # Do not call getattr with a constant attribute value. It is not any safer than normal property access.
   "B014",   # Exception handler with duplicate exception
   "B015",   # Pointless comparison. Did you mean to assign a value? Otherwise, prepend assert or remove it.
   "B017",   # pytest.raises(BaseException) should be considered evil
