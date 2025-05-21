@@ -1054,7 +1054,7 @@ influxdb-client==1.48.0
 influxdb==5.3.1
 
 # homeassistant.components.inkbird
-inkbird-ble==0.16.1
+inkbird-ble==0.16.2
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.5.0
