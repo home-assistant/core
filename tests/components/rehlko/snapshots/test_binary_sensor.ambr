@@ -106,7 +106,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'binary_sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'binary_sensor.generator_1_oil_pressure',
     'has_entity_name': True,
     'hidden_by': None,
@@ -123,7 +123,7 @@
     'platform': 'rehlko',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'oil_pressure_ok',
+    'translation_key': 'oil_pressure',
     'unique_id': 'myemail@email.com_12345_engineOilPressureOk',
     'unit_of_measurement': None,
   })

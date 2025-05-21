@@ -38,7 +38,7 @@
       "auto": {
         "name": "Auto"
       },
-      "oil_pressure_ok": {
+      "oil_pressure": {
         "name": "Oil pressure"
       }
     },

@@ -10,6 +10,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -55,8 +56,9 @@ BINARY_SENSORS: tuple[RehlkoBinarySensorEntityDescription, ...] = (
     ),
     RehlkoBinarySensorEntityDescription(
         key="engineOilPressureOk",
-        translation_key="oil_pressure_ok",
+        translation_key="oil_pressure",
         device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
         on_value=False,
         off_value=True,
     ),
