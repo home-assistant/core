@@ -29,6 +29,7 @@ from .const import (
     CHARGER_MAX_ICP_CURRENT_KEY,
     CHARGER_PLAN_KEY,
     CHARGER_POWER_BOOST_KEY,
+    CHARGER_SOFTWARE_KEY,
     CHARGER_STATUS_DESCRIPTION_KEY,
     CHARGER_STATUS_ID_KEY,
     CODE_KEY,
@@ -165,6 +166,8 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             data[CHARGER_STATUS_ID_KEY], ChargerStatus.UNKNOWN
         )
 
+        data[CHARGER_SOFTWARE_KEY] = data[CHARGER_DATA_KEY][CHARGER_SOFTWARE_KEY]
+    
         # Set current solar charging mode
         eco_smart_enabled = data[CHARGER_DATA_KEY][CHARGER_ECO_SMART_KEY][
             CHARGER_ECO_SMART_STATUS_KEY
@@ -178,7 +181,6 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             data[CHARGER_ECO_SMART_KEY] = EcoSmartMode.ECO_MODE
         elif eco_smart_mode == 1:
             data[CHARGER_ECO_SMART_KEY] = EcoSmartMode.FULL_SOLAR
-
         return data
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -261,6 +263,14 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await self.async_request_refresh()
 
     @_require_authentication
+    def _firmware_update(self) -> None:
+        """Update Wallbox firmware."""
+        self._wallbox.updateFirmware(self._station)
+
+    async def async_trigger_firmware_update(self) -> None:
+        """Update Wallbox firmware."""
+        await self.hass.async_add_executor_job(self._firmware_update)
+        
     def _set_eco_smart(self, option: str) -> None:
         """Set wallbox solar charging mode."""
 
