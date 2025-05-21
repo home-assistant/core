@@ -2,18 +2,14 @@
 
 from unittest.mock import MagicMock
 
-from pymiele import MieleDevices
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.miele.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import get_actions_callback, get_data_callback
-
-from tests.common import MockConfigEntry, load_json_object_fixture, snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize("platforms", [(BINARY_SENSOR_DOMAIN,)])
@@ -38,17 +34,8 @@ async def test_binary_sensor_states_api_push(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     setup_platform: MockConfigEntry,
-    device_fixture: MieleDevices,
+    push_data_and_actions: None,
 ) -> None:
     """Test binary sensor state when the API pushes data via SSE."""
-
-    data_callback = get_data_callback(mock_miele_client)
-    await data_callback(device_fixture)
-    await hass.async_block_till_done()
-
-    act_file = load_json_object_fixture("4_actions.json", DOMAIN)
-    action_callback = get_actions_callback(mock_miele_client)
-    await action_callback(act_file)
-    await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)

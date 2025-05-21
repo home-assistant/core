@@ -4,7 +4,6 @@ from typing import Any
 from unittest.mock import MagicMock
 
 from aiohttp import ClientResponseError
-from pymiele import MieleDevices
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -13,15 +12,12 @@ from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_PERCENTAGE,
 )
-from homeassistant.components.miele.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import get_actions_callback, get_data_callback
-
-from tests.common import MockConfigEntry, load_json_object_fixture, snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 
 TEST_PLATFORM = FAN_DOMAIN
 pytestmark = pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)])
@@ -49,18 +45,9 @@ async def test_fan_states_api_push(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     setup_platform: MockConfigEntry,
-    device_fixture: MieleDevices,
+    push_data_and_actions: None,
 ) -> None:
     """Test fan state when the API pushes data via SSE."""
-
-    data_callback = get_data_callback(mock_miele_client)
-    await data_callback(device_fixture)
-    await hass.async_block_till_done()
-
-    act_file = load_json_object_fixture("4_actions.json", DOMAIN)
-    action_callback = get_actions_callback(mock_miele_client)
-    await action_callback(act_file)
-    await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
@@ -171,7 +158,9 @@ async def test_set_percentage(
     """Test handling of exception at set_percentage."""
     mock_miele_client.send_action.side_effect = ClientResponseError("test", "Test")
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError, match=f"Failed to set state for {ENTITY_ID}"
+    ):
         await hass.services.async_call(
             TEST_PLATFORM,
             SERVICE_SET_PERCENTAGE,

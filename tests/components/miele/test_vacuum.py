@@ -138,7 +138,9 @@ async def test_api_failure(
     """Test handling of exception from API."""
     mock_miele_client.send_action.side_effect = ClientResponseError("test", "Test")
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError, match=f"Failed to set state for {ENTITY_ID}"
+    ):
         await hass.services.async_call(
             TEST_PLATFORM, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
         )
