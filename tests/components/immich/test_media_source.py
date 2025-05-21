@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.aiohttp import MockRequest
 
-from . import setup_integration
+from . import MockStreamReaderChunked, setup_integration
 from .const import MOCK_ALBUM_WITHOUT_ASSETS
 
 from tests.common import MockConfigEntry
@@ -255,7 +255,7 @@ async def test_browse_media_get_items(
     result = await source.async_browse_media(item)
 
     assert result
-    assert len(result.children) == 1
+    assert len(result.children) == 2
     media_file = result.children[0]
     assert isinstance(media_file, BrowseMedia)
     assert media_file.identifier == (
@@ -271,6 +271,23 @@ async def test_browse_media_get_items(
     assert media_file.thumbnail == (
         "/immich/e7ef5713-9dab-4bd4-b899-715b0ca4379e/"
         "2e94c203-50aa-4ad2-8e29-56dd74e0eff4/filename.jpg/thumbnail"
+    )
+
+    media_file = result.children[1]
+    assert isinstance(media_file, BrowseMedia)
+    assert media_file.identifier == (
+        "e7ef5713-9dab-4bd4-b899-715b0ca4379e/"
+        "721e1a4b-aa12-441e-8d3b-5ac7ab283bb6/"
+        "2e65a5f2-db83-44c4-81ab-f5ff20c9bd7b/filename.mp4"
+    )
+    assert media_file.title == "filename.mp4"
+    assert media_file.media_class == MediaClass.VIDEO
+    assert media_file.media_content_type == "video/mp4"
+    assert media_file.can_play is True
+    assert not media_file.can_expand
+    assert media_file.thumbnail == (
+        "/immich/e7ef5713-9dab-4bd4-b899-715b0ca4379e/"
+        "2e65a5f2-db83-44c4-81ab-f5ff20c9bd7b/thumbnail.jpg/thumbnail"
     )
 
 
@@ -317,6 +334,22 @@ async def test_media_view(
             "2e94c203-50aa-4ad2-8e29-56dd74e0eff4/filename.jpg/thumbnail",
         )
 
+    # exception in async_play_video_stream()
+    mock_immich.assets.async_play_video_stream.side_effect = ImmichError(
+        {
+            "message": "Not found or no asset.read access",
+            "error": "Bad Request",
+            "statusCode": 400,
+            "correlationId": "e0hlizyl",
+        }
+    )
+    with pytest.raises(web.HTTPNotFound):
+        await view.get(
+            request,
+            "e7ef5713-9dab-4bd4-b899-715b0ca4379e",
+            "2e65a5f2-db83-44c4-81ab-f5ff20c9bd7b/filename.mp4/fullsize",
+        )
+
     # success
     mock_immich.assets.async_view_asset.side_effect = None
     mock_immich.assets.async_view_asset.return_value = b"xxxx"
@@ -334,3 +367,15 @@ async def test_media_view(
             "2e94c203-50aa-4ad2-8e29-56dd74e0eff4/filename.jpg/fullsize",
         )
         assert isinstance(result, web.Response)
+
+    mock_immich.assets.async_play_video_stream.side_effect = None
+    mock_immich.assets.async_play_video_stream.return_value = MockStreamReaderChunked(
+        b"xxxx"
+    )
+    with patch.object(tempfile, "tempdir", tmp_path):
+        result = await view.get(
+            request,
+            "e7ef5713-9dab-4bd4-b899-715b0ca4379e",
+            "2e65a5f2-db83-44c4-81ab-f5ff20c9bd7b/filename.mp4/fullsize",
+        )
+        assert isinstance(result, web.StreamResponse)
