@@ -110,7 +110,6 @@ async def test_lock_services_with_night_latch_enabled(
         "homeassistant.components.switchbot.lock.switchbot.SwitchbotLock",
         update=AsyncMock(return_value=None),
         is_night_latch_enabled=MagicMock(return_value=True),
-        update=AsyncMock(return_value=None),
         **{mock_method: mocked_instance},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -164,7 +163,6 @@ async def test_exception_handling_lock_service(
         "homeassistant.components.switchbot.lock.switchbot.SwitchbotLock",
         update=AsyncMock(return_value=None),
         is_night_latch_enabled=MagicMock(return_value=True),
-        update=AsyncMock(return_value=None),
         **{mock_method: AsyncMock(side_effect=exception)},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
