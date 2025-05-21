@@ -5815,14 +5815,15 @@ async def test_validate_statistics_unit_change_equivalent_units(
     ("attributes", "unit1", "unit2", "supported_unit"),
     [
         (NONE_SENSOR_ATTRIBUTES, "m³", "m3", "CCF, L, fl. oz., ft³, gal, mL, m³"),
-        (NONE_SENSOR_ATTRIBUTES, "\u03bcV", "\u00b5V", "\u03bcV"),
-        (NONE_SENSOR_ATTRIBUTES, "\u03bcSv/h", "\u00b5Sv/h", "\u03bcSv/h"),
-        (NONE_SENSOR_ATTRIBUTES, "\u03bcS/cm", "\u00b5S/cm", "\u03bcS/cm"),
-        (NONE_SENSOR_ATTRIBUTES, "\u03bcg/ft³", "\u00b5g/ft³", "\u03bcg/ft³"),
-        (NONE_SENSOR_ATTRIBUTES, "\u03bcg/m³", "\u00b5g/m³", "\u03bcg/m³"),
-        (NONE_SENSOR_ATTRIBUTES, "\u03bcmol/s⋅m²", "\u00b5mol/s⋅m²", "\u03bcmol/s⋅m²"),
-        (NONE_SENSOR_ATTRIBUTES, "\u03bcg", "\u00b5g", "\u03bcg"),
-        (NONE_SENSOR_ATTRIBUTES, "\u03bcs", "\u00b5s", "\u03bcs"),
+        (NONE_SENSOR_ATTRIBUTES, "\u03bcV", "\u00b5V", "MV, V, kV, mV, \u03bcV"),
+        (NONE_SENSOR_ATTRIBUTES, "\u03bcS/cm", "\u00b5S/cm", "S/cm, mS/cm, \u03bcS/cm"),
+        (
+            NONE_SENSOR_ATTRIBUTES,
+            "\u03bcg",
+            "\u00b5g",
+            "g, kg, lb, mg, oz, st, \u03bcg",
+        ),
+        (NONE_SENSOR_ATTRIBUTES, "\u03bcs", "\u00b5s", "d, h, min, ms, s, w, \u03bcs"),
     ],
 )
 async def test_validate_statistics_unit_change_equivalent_units_2(
