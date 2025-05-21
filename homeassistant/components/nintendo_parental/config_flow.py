@@ -37,7 +37,7 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
             except (ValueError, InvalidSessionTokenException, HttpException):
                 errors["base"] = "invalid_auth"
             except Exception as exc:
-                _LOGGER.exception("Unknown error during setup", exc_info=exc)
+                _LOGGER.exception("Unknown error during setup")
                 errors["base"] = "unknown"
             else:
                 if TYPE_CHECKING:
