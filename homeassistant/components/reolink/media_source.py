@@ -70,7 +70,7 @@ class ReolinkVODMediaSource(MediaSource):
         host = get_host(self.hass, config_entry_id)
 
         def get_vod_type() -> VodRequestType:
-            if filename.endswith((".mp4", ".vref")):
+            if filename.endswith((".mp4", ".vref")) or host.api.is_hub:
                 if host.api.is_nvr:
                     return VodRequestType.DOWNLOAD
                 return VodRequestType.PLAYBACK

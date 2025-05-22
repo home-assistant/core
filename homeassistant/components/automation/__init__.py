@@ -18,6 +18,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
     ATTR_NAME,
+    CONF_ACTIONS,
     CONF_ALIAS,
     CONF_CONDITIONS,
     CONF_DEVICE_ID,
@@ -27,6 +28,7 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_PATH,
     CONF_PLATFORM,
+    CONF_TRIGGERS,
     CONF_VARIABLES,
     CONF_ZONE,
     EVENT_HOMEASSISTANT_STARTED,
@@ -86,11 +88,9 @@ from homeassistant.util.hass_dict import HassKey
 
 from .config import AutomationConfig, ValidationStatus
 from .const import (
-    CONF_ACTIONS,
     CONF_INITIAL_STATE,
     CONF_TRACE,
     CONF_TRIGGER_VARIABLES,
-    CONF_TRIGGERS,
     DEFAULT_INITIAL_STATE,
     DOMAIN,
     LOGGER,

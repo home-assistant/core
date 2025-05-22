@@ -88,7 +88,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.data
     lists_added: set[str] = set()
 
     @callback
@@ -117,6 +117,7 @@ class BringSensorEntity(BringBaseEntity, SensorEntity):
     """A sensor entity."""
 
     entity_description: BringSensorEntityDescription
+    coordinator: BringDataUpdateCoordinator
 
     def __init__(
         self,

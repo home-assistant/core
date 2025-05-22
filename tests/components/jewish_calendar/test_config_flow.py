@@ -57,10 +57,10 @@ async def test_step_user(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
 
 async def test_single_instance_allowed(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test we abort if already setup."""
-    mock_config_entry.add_to_hass(hass)
+    config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -70,11 +70,11 @@ async def test_single_instance_allowed(
     assert result.get("reason") == "single_instance_allowed"
 
 
-async def test_options(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
+async def test_options(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test updating options."""
-    mock_config_entry.add_to_hass(hass)
+    config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
@@ -95,16 +95,16 @@ async def test_options(hass: HomeAssistant, mock_config_entry: MockConfigEntry) 
 
 
 async def test_options_reconfigure(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test that updating the options of the Jewish Calendar integration triggers a value update."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert CONF_CANDLE_LIGHT_MINUTES not in mock_config_entry.options
+    assert CONF_CANDLE_LIGHT_MINUTES not in config_entry.options
 
     # Update the CONF_CANDLE_LIGHT_MINUTES option to a new value
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
@@ -114,21 +114,17 @@ async def test_options_reconfigure(
     assert result["result"]
 
     # The value of the "upcoming_shabbat_candle_lighting" sensor should be the new value
-    assert (
-        mock_config_entry.options[CONF_CANDLE_LIGHT_MINUTES] == DEFAULT_CANDLE_LIGHT + 1
-    )
+    assert config_entry.options[CONF_CANDLE_LIGHT_MINUTES] == DEFAULT_CANDLE_LIGHT + 1
 
 
-async def test_reconfigure(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
+async def test_reconfigure(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test starting a reconfigure flow."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     # init user flow
-    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
@@ -141,4 +137,4 @@ async def test_reconfigure(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert mock_config_entry.data[CONF_DIASPORA] is not DEFAULT_DIASPORA
+    assert config_entry.data[CONF_DIASPORA] is not DEFAULT_DIASPORA

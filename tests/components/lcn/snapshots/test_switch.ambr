@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_setup_lcn_switch[switch.switch_group5-entry]
+# name: test_setup_lcn_switch[switch.testgroup_switch_group5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,8 +12,8 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.switch_group5',
-    'has_entity_name': False,
+    'entity_id': 'switch.testgroup_switch_group5',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -29,24 +29,24 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk.json-g000005-relay1',
+    'unique_id': 'lcn/config_entry_pchk_json-g000005-relay1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_lcn_switch[switch.switch_group5-state]
+# name: test_setup_lcn_switch[switch.testgroup_switch_group5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Switch_Group5',
+      'friendly_name': 'TestGroup Switch_Group5',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.switch_group5',
+    'entity_id': 'switch.testgroup_switch_group5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_lcn_switch[switch.switch_keylock1-entry]
+# name: test_setup_lcn_switch[switch.testmodule_switch_keylock1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -59,8 +59,8 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.switch_keylock1',
-    'has_entity_name': False,
+    'entity_id': 'switch.testmodule_switch_keylock1',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -76,24 +76,24 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk.json-m000007-a1',
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-a1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_lcn_switch[switch.switch_keylock1-state]
+# name: test_setup_lcn_switch[switch.testmodule_switch_keylock1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Switch_KeyLock1',
+      'friendly_name': 'TestModule Switch_KeyLock1',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.switch_keylock1',
+    'entity_id': 'switch.testmodule_switch_keylock1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_lcn_switch[switch.switch_output1-entry]
+# name: test_setup_lcn_switch[switch.testmodule_switch_output1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -106,8 +106,8 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.switch_output1',
-    'has_entity_name': False,
+    'entity_id': 'switch.testmodule_switch_output1',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -123,24 +123,24 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk.json-m000007-output1',
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-output1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_lcn_switch[switch.switch_output1-state]
+# name: test_setup_lcn_switch[switch.testmodule_switch_output1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Switch_Output1',
+      'friendly_name': 'TestModule Switch_Output1',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.switch_output1',
+    'entity_id': 'switch.testmodule_switch_output1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_lcn_switch[switch.switch_output2-entry]
+# name: test_setup_lcn_switch[switch.testmodule_switch_output2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -153,8 +153,8 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.switch_output2',
-    'has_entity_name': False,
+    'entity_id': 'switch.testmodule_switch_output2',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -170,24 +170,24 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk.json-m000007-output2',
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-output2',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_lcn_switch[switch.switch_output2-state]
+# name: test_setup_lcn_switch[switch.testmodule_switch_output2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Switch_Output2',
+      'friendly_name': 'TestModule Switch_Output2',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.switch_output2',
+    'entity_id': 'switch.testmodule_switch_output2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_lcn_switch[switch.switch_regulator1-entry]
+# name: test_setup_lcn_switch[switch.testmodule_switch_regulator1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -200,8 +200,8 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.switch_regulator1',
-    'has_entity_name': False,
+    'entity_id': 'switch.testmodule_switch_regulator1',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -217,24 +217,24 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk.json-m000007-r1varsetpoint',
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-r1varsetpoint',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_lcn_switch[switch.switch_regulator1-state]
+# name: test_setup_lcn_switch[switch.testmodule_switch_regulator1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Switch_Regulator1',
+      'friendly_name': 'TestModule Switch_Regulator1',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.switch_regulator1',
+    'entity_id': 'switch.testmodule_switch_regulator1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_lcn_switch[switch.switch_relay1-entry]
+# name: test_setup_lcn_switch[switch.testmodule_switch_relay1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -247,8 +247,8 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.switch_relay1',
-    'has_entity_name': False,
+    'entity_id': 'switch.testmodule_switch_relay1',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -264,24 +264,24 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk.json-m000007-relay1',
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-relay1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_lcn_switch[switch.switch_relay1-state]
+# name: test_setup_lcn_switch[switch.testmodule_switch_relay1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Switch_Relay1',
+      'friendly_name': 'TestModule Switch_Relay1',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.switch_relay1',
+    'entity_id': 'switch.testmodule_switch_relay1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_lcn_switch[switch.switch_relay2-entry]
+# name: test_setup_lcn_switch[switch.testmodule_switch_relay2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -294,8 +294,8 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.switch_relay2',
-    'has_entity_name': False,
+    'entity_id': 'switch.testmodule_switch_relay2',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -311,17 +311,17 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk.json-m000007-relay2',
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-relay2',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_lcn_switch[switch.switch_relay2-state]
+# name: test_setup_lcn_switch[switch.testmodule_switch_relay2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Switch_Relay2',
+      'friendly_name': 'TestModule Switch_Relay2',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.switch_relay2',
+    'entity_id': 'switch.testmodule_switch_relay2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

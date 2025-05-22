@@ -54,11 +54,6 @@ ATTR_API_DAILY_FORECAST = "daily_forecast"
 UPDATE_LISTENER = "update_listener"
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
-FORECAST_MODE_HOURLY = "hourly"
-FORECAST_MODE_DAILY = "daily"
-FORECAST_MODE_FREE_DAILY = "freedaily"
-FORECAST_MODE_ONECALL_HOURLY = "onecall_hourly"
-FORECAST_MODE_ONECALL_DAILY = "onecall_daily"
 OWM_MODE_FREE_CURRENT = "current"
 OWM_MODE_FREE_FORECAST = "forecast"
 OWM_MODE_V30 = "v3.0"

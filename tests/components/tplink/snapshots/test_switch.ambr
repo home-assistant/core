@@ -108,7 +108,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Auto off enabled',
+    'original_name': 'Auto-off enabled',
     'platform': 'tplink',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -120,7 +120,7 @@
 # name: test_states[switch.my_device_auto_off_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Auto off enabled',
+      'friendly_name': 'my_device Auto-off enabled',
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_device_auto_off_enabled',
@@ -155,7 +155,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Auto update enabled',
+    'original_name': 'Auto-update enabled',
     'platform': 'tplink',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -167,7 +167,7 @@
 # name: test_states[switch.my_device_auto_update_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Auto update enabled',
+      'friendly_name': 'my_device Auto-update enabled',
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_device_auto_update_enabled',

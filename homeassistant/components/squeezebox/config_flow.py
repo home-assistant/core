@@ -151,7 +151,8 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
                 if server.http_status == HTTPStatus.UNAUTHORIZED:
                     return "invalid_auth"
                 return "cannot_connect"
-        except Exception:  # noqa: BLE001
+        except Exception:
+            _LOGGER.exception("Unknown exception while validating connection")
             return "unknown"
 
         if "uuid" in status:

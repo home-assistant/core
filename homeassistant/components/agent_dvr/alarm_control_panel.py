@@ -12,7 +12,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AgentDVRConfigEntry
-from .const import DOMAIN as AGENT_DOMAIN
+from .const import DOMAIN
 
 CONF_HOME_MODE_NAME = "home"
 CONF_AWAY_MODE_NAME = "away"
@@ -47,7 +47,7 @@ class AgentBaseStation(AlarmControlPanelEntity):
         self._client = client
         self._attr_unique_id = f"{client.unique}_CP"
         self._attr_device_info = DeviceInfo(
-            identifiers={(AGENT_DOMAIN, client.unique)},
+            identifiers={(DOMAIN, client.unique)},
             name=f"{client.name} {CONST_ALARM_CONTROL_PANEL_NAME}",
             manufacturer="Agent",
             model=CONST_ALARM_CONTROL_PANEL_NAME,

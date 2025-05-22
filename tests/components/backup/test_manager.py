@@ -35,6 +35,7 @@ from homeassistant.components.backup import (
 from homeassistant.components.backup.agent import BackupAgentError
 from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.components.backup.manager import (
+    AddonErrorData,
     BackupManagerError,
     BackupManagerExceptionGroup,
     BackupManagerState,
@@ -68,10 +69,17 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 _EXPECTED_FILES = [
     "test.txt",
     ".storage",
+    "another_subdir",
+    "another_subdir/backups",
+    "another_subdir/backups/backup.tar",
+    "another_subdir/backups/not_backup",
+    "another_subdir/tts",
+    "another_subdir/tts/voice.mp3",
     "backups",
     "backups/not_backup",
     "tmp_backups",
     "tmp_backups/not_backup",
+    "tts",
 ]
 _EXPECTED_FILES_WITH_DATABASE = {
     True: [*_EXPECTED_FILES, "home-assistant_v2.db"],
@@ -116,7 +124,9 @@ async def test_create_backup_service(
     new_backup = NewBackup(backup_job_id="time-123")
     backup_task = AsyncMock(
         return_value=WrittenBackup(
+            addon_errors={},
             backup=TEST_BACKUP_ABC123,
+            folder_errors={},
             open_stream=AsyncMock(),
             release_stream=AsyncMock(),
         ),
@@ -313,7 +323,9 @@ async def test_async_create_backup(
     new_backup = NewBackup(backup_job_id="time-123")
     backup_task = AsyncMock(
         return_value=WrittenBackup(
+            addon_errors={},
             backup=TEST_BACKUP_ABC123,
+            folder_errors={},
             open_stream=AsyncMock(),
             release_stream=AsyncMock(),
         ),
@@ -538,7 +550,7 @@ async def test_initiate_backup(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -771,7 +783,7 @@ async def test_initiate_backup_with_agent_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -863,7 +875,7 @@ async def test_initiate_backup_with_agent_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": {
+        "last_action_event": {
             "manager_state": "create_backup",
             "reason": "upload_failed",
             "stage": None,
@@ -955,6 +967,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
     (
         "automatic_agents",
         "create_backup_command",
+        "create_backup_addon_errors",
+        "create_backup_folder_errors",
         "create_backup_side_effect",
         "upload_side_effect",
         "create_backup_result",
@@ -965,6 +979,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote"],
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
+            {},
+            {},
             None,
             None,
             True,
@@ -973,6 +989,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote"],
             {"type": "backup/generate_with_automatic_settings"},
+            {},
+            {},
             None,
             None,
             True,
@@ -982,6 +1000,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote", "test.unknown"],
             {"type": "backup/generate", "agent_ids": ["test.remote", "test.unknown"]},
+            {},
+            {},
             None,
             None,
             True,
@@ -998,6 +1018,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote", "test.unknown"],
             {"type": "backup/generate_with_automatic_settings"},
+            {},
+            {},
             None,
             None,
             True,
@@ -1019,6 +1041,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote"],
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
+            {},
+            {},
             Exception("Boom!"),
             None,
             False,
@@ -1027,6 +1051,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote"],
             {"type": "backup/generate_with_automatic_settings"},
+            {},
+            {},
             Exception("Boom!"),
             None,
             False,
@@ -1041,6 +1067,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote"],
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
+            {},
+            {},
             delayed_boom,
             None,
             True,
@@ -1049,6 +1077,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote"],
             {"type": "backup/generate_with_automatic_settings"},
+            {},
+            {},
             delayed_boom,
             None,
             True,
@@ -1063,6 +1093,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote"],
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
+            {},
+            {},
             None,
             Exception("Boom!"),
             True,
@@ -1071,6 +1103,8 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         (
             ["test.remote"],
             {"type": "backup/generate_with_automatic_settings"},
+            {},
+            {},
             None,
             Exception("Boom!"),
             True,
@@ -1081,6 +1115,157 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
                 }
             },
         ),
+        # Add-ons can't be backed up
+        (
+            ["test.remote"],
+            {"type": "backup/generate", "agent_ids": ["test.remote"]},
+            {
+                "test_addon": AddonErrorData(
+                    name="Test Add-on", errors=[("test_error", "Boom!")]
+                )
+            },
+            {},
+            None,
+            None,
+            True,
+            {},
+        ),
+        (
+            ["test.remote"],
+            {"type": "backup/generate_with_automatic_settings"},
+            {
+                "test_addon": AddonErrorData(
+                    name="Test Add-on", errors=[("test_error", "Boom!")]
+                )
+            },
+            {},
+            None,
+            None,
+            True,
+            {
+                (DOMAIN, "automatic_backup_failed"): {
+                    "translation_key": "automatic_backup_failed_addons",
+                    "translation_placeholders": {"failed_addons": "Test Add-on"},
+                }
+            },
+        ),
+        # Folders can't be backed up
+        (
+            ["test.remote"],
+            {"type": "backup/generate", "agent_ids": ["test.remote"]},
+            {},
+            {Folder.MEDIA: [("test_error", "Boom!")]},
+            None,
+            None,
+            True,
+            {},
+        ),
+        (
+            ["test.remote"],
+            {"type": "backup/generate_with_automatic_settings"},
+            {},
+            {Folder.MEDIA: [("test_error", "Boom!")]},
+            None,
+            None,
+            True,
+            {
+                (DOMAIN, "automatic_backup_failed"): {
+                    "translation_key": "automatic_backup_failed_folders",
+                    "translation_placeholders": {"failed_folders": "media"},
+                }
+            },
+        ),
+        # Add-ons and folders can't be backed up
+        (
+            ["test.remote"],
+            {"type": "backup/generate", "agent_ids": ["test.remote"]},
+            {
+                "test_addon": AddonErrorData(
+                    name="Test Add-on", errors=[("test_error", "Boom!")]
+                )
+            },
+            {Folder.MEDIA: [("test_error", "Boom!")]},
+            None,
+            None,
+            True,
+            {},
+        ),
+        (
+            ["test.remote"],
+            {"type": "backup/generate_with_automatic_settings"},
+            {
+                "test_addon": AddonErrorData(
+                    name="Test Add-on", errors=[("test_error", "Boom!")]
+                )
+            },
+            {Folder.MEDIA: [("test_error", "Boom!")]},
+            None,
+            None,
+            True,
+            {
+                (DOMAIN, "automatic_backup_failed"): {
+                    "translation_key": "automatic_backup_failed_agents_addons_folders",
+                    "translation_placeholders": {
+                        "failed_addons": "Test Add-on",
+                        "failed_agents": "-",
+                        "failed_folders": "media",
+                    },
+                },
+            },
+        ),
+        # Add-ons and folders can't be backed up, one agent unavailable
+        (
+            ["test.remote", "test.unknown"],
+            {"type": "backup/generate", "agent_ids": ["test.remote"]},
+            {
+                "test_addon": AddonErrorData(
+                    name="Test Add-on", errors=[("test_error", "Boom!")]
+                )
+            },
+            {Folder.MEDIA: [("test_error", "Boom!")]},
+            None,
+            None,
+            True,
+            {
+                (DOMAIN, "automatic_backup_agents_unavailable_test.unknown"): {
+                    "translation_key": "automatic_backup_agents_unavailable",
+                    "translation_placeholders": {
+                        "agent_id": "test.unknown",
+                        "backup_settings": "/config/backup/settings",
+                    },
+                },
+            },
+        ),
+        (
+            ["test.remote", "test.unknown"],
+            {"type": "backup/generate_with_automatic_settings"},
+            {
+                "test_addon": AddonErrorData(
+                    name="Test Add-on", errors=[("test_error", "Boom!")]
+                )
+            },
+            {Folder.MEDIA: [("test_error", "Boom!")]},
+            None,
+            None,
+            True,
+            {
+                (DOMAIN, "automatic_backup_failed"): {
+                    "translation_key": "automatic_backup_failed_agents_addons_folders",
+                    "translation_placeholders": {
+                        "failed_addons": "Test Add-on",
+                        "failed_agents": "test.unknown",
+                        "failed_folders": "media",
+                    },
+                },
+                (DOMAIN, "automatic_backup_agents_unavailable_test.unknown"): {
+                    "translation_key": "automatic_backup_agents_unavailable",
+                    "translation_placeholders": {
+                        "agent_id": "test.unknown",
+                        "backup_settings": "/config/backup/settings",
+                    },
+                },
+            },
+        ),
     ],
 )
 async def test_create_backup_failure_raises_issue(
@@ -1089,16 +1274,20 @@ async def test_create_backup_failure_raises_issue(
     create_backup: AsyncMock,
     automatic_agents: list[str],
     create_backup_command: dict[str, Any],
+    create_backup_addon_errors: dict[str, str],
+    create_backup_folder_errors: dict[Folder, str],
     create_backup_side_effect: Exception | None,
     upload_side_effect: Exception | None,
     create_backup_result: bool,
     issues_after_create_backup: dict[tuple[str, str], dict[str, Any]],
 ) -> None:
-    """Test backup issue is cleared after backup is created."""
+    """Test issue is created when create backup has error."""
     mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
 
     ws_client = await hass_ws_client(hass)
 
+    create_backup.return_value[1].result().addon_errors = create_backup_addon_errors
+    create_backup.return_value[1].result().folder_errors = create_backup_folder_errors
     create_backup.side_effect = create_backup_side_effect
 
     await ws_client.send_json_auto_id(
@@ -1153,7 +1342,7 @@ async def test_initiate_backup_non_agent_upload_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -1250,7 +1439,7 @@ async def test_initiate_backup_with_task_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -1346,7 +1535,7 @@ async def test_initiate_backup_file_error_upload_to_agents(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -1470,7 +1659,7 @@ async def test_initiate_backup_file_error_create_backup(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -1850,7 +2039,9 @@ async def test_receive_backup_busy_manager(
     # finish the backup
     backup_task.set_result(
         WrittenBackup(
+            addon_errors={},
             backup=TEST_BACKUP_ABC123,
+            folder_errors={},
             open_stream=AsyncMock(),
             release_stream=AsyncMock(),
         )
@@ -1967,7 +2158,7 @@ async def test_receive_backup_agent_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -2050,7 +2241,7 @@ async def test_receive_backup_agent_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": {
+        "last_action_event": {
             "manager_state": "receive_backup",
             "reason": None,
             "stage": None,
@@ -2103,7 +2294,7 @@ async def test_receive_backup_non_agent_upload_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -2215,7 +2406,7 @@ async def test_receive_backup_file_write_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -2311,7 +2502,7 @@ async def test_receive_backup_read_tar_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -2476,7 +2667,7 @@ async def test_receive_backup_file_read_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -3287,7 +3478,7 @@ async def test_initiate_backup_per_agent_encryption(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -3390,7 +3581,7 @@ async def test_initiate_backup_per_agent_encryption(
 
 
 @pytest.mark.parametrize(
-    ("restore_result", "last_non_idle_event"),
+    ("restore_result", "last_action_event"),
     [
         (
             {"error": None, "error_type": None, "success": True},
@@ -3416,7 +3607,7 @@ async def test_restore_progress_after_restart(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     restore_result: dict[str, Any],
-    last_non_idle_event: dict[str, Any],
+    last_action_event: dict[str, Any],
 ) -> None:
     """Test restore backup progress after restart."""
 
@@ -3434,7 +3625,7 @@ async def test_restore_progress_after_restart(
         "backups": [],
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": last_non_idle_event,
+        "last_action_event": last_action_event,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -3460,7 +3651,7 @@ async def test_restore_progress_after_restart_fail_to_remove(
         "backups": [],
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -3485,20 +3676,20 @@ async def test_manager_blocked_until_home_assistant_started(
     manager = hass.data[DATA_MANAGER]
 
     assert manager.state == BackupManagerState.BLOCKED
-    assert manager.last_non_idle_event is None
+    assert manager.last_action_event is None
 
     # Fired when Home Assistant changes to starting state
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert manager.state == BackupManagerState.BLOCKED
-    assert manager.last_non_idle_event is None
+    assert manager.last_action_event is None
 
     # Fired when Home Assistant changes to running state
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
     assert manager.state == BackupManagerState.IDLE
-    assert manager.last_non_idle_event is None
+    assert manager.last_action_event is None
 
 
 async def test_manager_not_blocked_after_restore(
@@ -3523,7 +3714,7 @@ async def test_manager_not_blocked_after_restore(
         "backups": [],
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": {
+        "last_action_event": {
             "manager_state": "restore_backup",
             "reason": None,
             "stage": None,
