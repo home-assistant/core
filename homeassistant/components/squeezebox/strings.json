@@ -162,7 +162,7 @@
       "message": "Timeout connecting to LMS {host}."
     },
     "init_auth_failed": {
-      "message": "Authentication failed for {host)."
+      "message": "Authentication failed with {host}."
     },
     "init_get_status_failed": {
       "message": "Failed to get status from LMS {host} (HTTP status: {http_status}). Will retry."
