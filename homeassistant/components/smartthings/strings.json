@@ -242,6 +242,9 @@
           "finished": "[%key:component::smartthings::entity::sensor::oven_job_state::state::finished%]"
         }
       },
+      "cooler_temperature": {
+        "name": "Cooler temperature"
+      },
       "manual_level": {
         "name": "Burner {burner_id} level"
       },
@@ -324,6 +327,9 @@
       },
       "equivalent_carbon_dioxide": {
         "name": "Equivalent carbon dioxide"
+      },
+      "freezer_temperature": {
+        "name": "Freezer temperature"
       },
       "formaldehyde": {
         "name": "Formaldehyde"
