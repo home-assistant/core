@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import logging
 
-from aioairq import AirQ
-
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -39,7 +37,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AirQLEDBrightness(CoordinatorEntity, NumberEntity):
+class AirQLEDBrightness(CoordinatorEntity[AirQCoordinator], NumberEntity):
     """Representation of the LEDs from a single AirQ."""
 
     _attr_has_entity_name = True
@@ -51,7 +49,7 @@ class AirQLEDBrightness(CoordinatorEntity, NumberEntity):
     ) -> None:
         """Initialize a single sensor."""
         super().__init__(coordinator)
-        self.entity_description: NumberEntityDescription = description
+        self.entity_description = description
 
         self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
@@ -70,11 +68,4 @@ class AirQLEDBrightness(CoordinatorEntity, NumberEntity):
         )
         self.coordinator.data["brightness"] = value
         self.async_write_ha_state()
-        await self._device.set_current_brightness(value)
-
-    @property
-    def _device(self) -> AirQ:
-        """Return the reference to the device API held by the coordinator."""
-        # the following assertion pacifies mypy:
-        assert isinstance(self.coordinator, AirQCoordinator)
-        return self.coordinator.airq
+        await self.coordinator.airq.set_current_brightness(value)
