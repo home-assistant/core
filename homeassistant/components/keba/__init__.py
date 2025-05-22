@@ -14,9 +14,16 @@ from homeassistant.helpers.typing import ConfigType
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "keba"
-PLATFORMS = (Platform.BINARY_SENSOR, Platform.SENSOR, Platform.LOCK, Platform.NOTIFY)
+PLATFORMS = (
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.LOCK,
+    Platform.NOTIFY,
+    Platform.SWITCH,
+)
 
 CONF_RFID = "rfid"
+CONF_ADD_LOCK = "add_lock_to_homeassistant"
 CONF_FS = "failsafe"
 CONF_FS_TIMEOUT = "failsafe_timeout"
 CONF_FS_FALLBACK = "failsafe_fallback"
@@ -33,6 +40,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_HOST): cv.string,
                 vol.Optional(CONF_RFID, default="00845500"): cv.string,
                 vol.Optional(CONF_FS, default=False): cv.boolean,
+                vol.Optional(CONF_ADD_LOCK, default=True): cv.boolean,
                 vol.Optional(CONF_FS_TIMEOUT, default=30): cv.positive_int,
                 vol.Optional(CONF_FS_FALLBACK, default=6): cv.positive_int,
                 vol.Optional(CONF_FS_PERSIST, default=0): cv.positive_int,
@@ -59,6 +67,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Check connectivity and version of KEBA charging station."""
     host = config[DOMAIN][CONF_HOST]
     rfid = config[DOMAIN][CONF_RFID]
+    add_lock = config[DOMAIN][CONF_ADD_LOCK]
     refresh_interval = config[DOMAIN][CONF_FS_INTERVAL]
     keba = KebaHandler(hass, host, rfid, refresh_interval)
     hass.data[DOMAIN] = keba
@@ -94,6 +103,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Load components
     for platform in PLATFORMS:
+        if platform == Platform.LOCK and not add_lock:
+            continue
+
         hass.async_create_task(
             discovery.async_load_platform(hass, platform, DOMAIN, {}, config)
         )
