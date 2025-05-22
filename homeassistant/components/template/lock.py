@@ -25,10 +25,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError, TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_PICTURE, DOMAIN
+from .entity import AbstractTemplateEntity
 from .template_entity import (
     LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
@@ -136,13 +136,13 @@ async def async_setup_platform(
     )
 
 
-class AbstractTemplateLock(LockEntity):
+class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
     """Representation of a template lock features."""
 
-    def __init__(self, config: dict[str, Any]) -> None:
+    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
+    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
-
-        self._registered_scripts: list[str] = []
 
         self._state: LockState | None = None
         self._state_template = config.get(CONF_STATE)
@@ -161,7 +161,6 @@ class AbstractTemplateLock(LockEntity):
             (CONF_OPEN, LockEntityFeature.OPEN),
         ):
             if (action_config := config.get(action_id)) is not None:
-                self._registered_scripts.append(action_id)
                 yield (action_id, action_config, supported_feature)
 
     @property
@@ -246,10 +245,8 @@ class AbstractTemplateLock(LockEntity):
 
         tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
 
-        run_script = getattr(self, "async_run_script")
-        scripts: dict[str, Script] = getattr(self, "_action_scripts")
-        await run_script(
-            scripts[CONF_LOCK],
+        await self.async_run_script(
+            self._action_scripts[CONF_LOCK],
             run_variables=tpl_vars,
             context=self._context,
         )
@@ -266,10 +263,8 @@ class AbstractTemplateLock(LockEntity):
 
         tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
 
-        run_script = getattr(self, "async_run_script")
-        scripts: dict[str, Script] = getattr(self, "_action_scripts")
-        await run_script(
-            scripts[CONF_UNLOCK],
+        await self.async_run_script(
+            self._action_scripts[CONF_UNLOCK],
             run_variables=tpl_vars,
             context=self._context,
         )
@@ -286,10 +281,8 @@ class AbstractTemplateLock(LockEntity):
 
         tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
 
-        run_script = getattr(self, "async_run_script")
-        scripts: dict[str, Script] = getattr(self, "_action_scripts")
-        await run_script(
-            scripts[CONF_OPEN],
+        await self.async_run_script(
+            self._action_scripts[CONF_OPEN],
             run_variables=tpl_vars,
             context=self._context,
         )
