@@ -167,11 +167,11 @@ def get_block_sub_device_name(device: BlockDevice, block: Block) -> str:
 
     if device.settings["device"]["type"] == MODEL_EM3:
         base = ord("A")
-        return f"Channel {chr(int(block.channel) + base)}"
+        return f"{device.name} Channel {chr(int(block.channel) + base)}"
 
     base = ord("1")
 
-    return f"Channel {chr(int(block.channel) + base)}"
+    return f"{device.name} Channel {chr(int(block.channel) + base)}"
 
 
 def is_block_momentary_input(
@@ -431,13 +431,13 @@ def get_rpc_sub_device_name(
     component_id = key.split(":")[-1]
 
     if component in ("cct", "rgb", "rgbw"):
-        return f"{component.upper()} light {component_id}"
+        return f"{device.name} {component.upper()} light {component_id}"
     if component == "em1":
-        return f"Energy Meter {component_id}"
+        return f"{device.name} Energy Meter {component_id}"
     if component == "em" and emeter_phase is not None:
-        return f"Phase {emeter_phase}"
+        return f"{device.name} Phase {emeter_phase}"
 
-    return f"{component.title()} {component_id}"
+    return f"{device.name} {component.title()} {component_id}"
 
 
 def get_rpc_entity_name(

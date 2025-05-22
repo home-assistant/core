@@ -56,8 +56,8 @@ async def test_block_reload_on_cfg_change(
 ) -> None:
     """Test block reload on config change."""
     await init_integration(hass, 1)
-    # num_outputs is 2, channel name is used
-    entity_id = "switch.channel_1"
+    # num_outputs is 2, devicename and channel name is used
+    entity_id = "switch.test_name_channel_1"
 
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "cfgChanged", 1)
     mock_block_device.mock_update()
@@ -247,8 +247,8 @@ async def test_block_polling_connection_error(
         "update",
         AsyncMock(side_effect=DeviceConnectionError),
     )
-    # num_outputs is 2, channel name is used
-    entity_id = "switch.channel_1"
+    # num_outputs is 2, device name and channel name is used
+    entity_id = "switch.test_name_channel_1"
     await init_integration(hass, 1)
 
     assert (state := hass.states.get(entity_id))

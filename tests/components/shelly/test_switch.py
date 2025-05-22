@@ -42,8 +42,8 @@ async def test_block_device_services(
 ) -> None:
     """Test block device turn on/off services."""
     await init_integration(hass, 1)
-    # num_outputs is 2, channel name is used
-    entity_id = "switch.channel_1"
+    # num_outputs is 2, device_name and channel name is used
+    entity_id = "switch.test_name_channel_1"
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -238,12 +238,12 @@ async def test_block_set_state_connection_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Device communication error occurred while calling action for switch.channel_1 of Test name",
+        match="Device communication error occurred while calling action for switch.test_name_channel_1 of Test name",
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.channel_1"},
+            {ATTR_ENTITY_ID: "switch.test_name_channel_1"},
             blocking=True,
         )
 
@@ -264,7 +264,7 @@ async def test_block_set_state_auth_error(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.channel_1"},
+        {ATTR_ENTITY_ID: "switch.test_name_channel_1"},
         blocking=True,
     )
 
@@ -289,7 +289,7 @@ async def test_block_device_update(
     monkeypatch.setattr(mock_block_device.blocks[RELAY_BLOCK_ID], "output", False)
     await init_integration(hass, 1)
 
-    entity_id = "switch.channel_1"
+    entity_id = "switch.test_name_channel_1"
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
 

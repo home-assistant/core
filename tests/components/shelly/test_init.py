@@ -345,7 +345,7 @@ async def test_sleeping_rpc_device_offline_during_setup(
 @pytest.mark.parametrize(
     ("gen", "entity_id"),
     [
-        (1, "switch.channel_1"),
+        (1, "switch.test_name_channel_1"),
         (2, "switch.test_name_test_switch_0"),
     ],
 )
@@ -484,7 +484,7 @@ async def test_entry_missing_gen(hass: HomeAssistant, mock_block_device: Mock) -
     assert entry.state is ConfigEntryState.LOADED
 
     # num_outputs is 2, channel name is used
-    assert (state := hass.states.get("switch.channel_1"))
+    assert (state := hass.states.get("switch.test_name_channel_1"))
     assert state.state == STATE_ON
 
 
