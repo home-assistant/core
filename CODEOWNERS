@@ -202,8 +202,8 @@ build.json @home-assistant/supervisor
 /tests/components/blebox/ @bbx-a @swistakm
 /homeassistant/components/blink/ @fronzbot @mkmer
 /tests/components/blink/ @fronzbot @mkmer
-/homeassistant/components/blue_current/ @Floris272 @gleeuwen
-/tests/components/blue_current/ @Floris272 @gleeuwen
+/homeassistant/components/blue_current/ @gleeuwen @NickKoepr @jtodorova23
+/tests/components/blue_current/ @gleeuwen @NickKoepr @jtodorova23
 /homeassistant/components/bluemaestro/ @bdraco
 /tests/components/bluemaestro/ @bdraco
 /homeassistant/components/blueprint/ @home-assistant/core
@@ -710,6 +710,8 @@ build.json @home-assistant/supervisor
 /tests/components/imeon_inverter/ @Imeon-Energy
 /homeassistant/components/imgw_pib/ @bieniu
 /tests/components/imgw_pib/ @bieniu
+/homeassistant/components/immich/ @mib1185
+/tests/components/immich/ @mib1185
 /homeassistant/components/improv_ble/ @emontnemery
 /tests/components/improv_ble/ @emontnemery
 /homeassistant/components/incomfort/ @jbouwh
@@ -1176,6 +1178,8 @@ build.json @home-assistant/supervisor
 /tests/components/powerwall/ @bdraco @jrester @daniel-simpson
 /homeassistant/components/private_ble_device/ @Jc2k
 /tests/components/private_ble_device/ @Jc2k
+/homeassistant/components/probe_plus/ @pantherale0
+/tests/components/probe_plus/ @pantherale0
 /homeassistant/components/profiler/ @bdraco
 /tests/components/profiler/ @bdraco
 /homeassistant/components/progettihwsw/ @ardaseremet
@@ -1484,8 +1488,8 @@ build.json @home-assistant/supervisor
 /tests/components/subaru/ @G-Two
 /homeassistant/components/suez_water/ @ooii @jb101010-2
 /tests/components/suez_water/ @ooii @jb101010-2
-/homeassistant/components/sun/ @Swamp-Ig
-/tests/components/sun/ @Swamp-Ig
+/homeassistant/components/sun/ @home-assistant/core
+/tests/components/sun/ @home-assistant/core
 /homeassistant/components/supla/ @mwegrzynek
 /homeassistant/components/surepetcare/ @benleb @danielhiversen
 /tests/components/surepetcare/ @benleb @danielhiversen
@@ -1498,8 +1502,8 @@ build.json @home-assistant/supervisor
 /tests/components/switch_as_x/ @home-assistant/core
 /homeassistant/components/switchbee/ @jafar-atili
 /tests/components/switchbee/ @jafar-atili
-/homeassistant/components/switchbot/ @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski
-/tests/components/switchbot/ @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski
+/homeassistant/components/switchbot/ @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski @zerzhang
+/tests/components/switchbot/ @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski @zerzhang
 /homeassistant/components/switchbot_cloud/ @SeraphicRav @laurence-presland @Gigatrappeur
 /tests/components/switchbot_cloud/ @SeraphicRav @laurence-presland @Gigatrappeur
 /homeassistant/components/switcher_kis/ @thecode @YogevBokobza

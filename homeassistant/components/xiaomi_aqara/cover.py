@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from xiaomi_gateway import XiaomiGateway
+
 from homeassistant.components.cover import ATTR_POSITION, CoverEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -40,7 +42,14 @@ async def async_setup_entry(
 class XiaomiGenericCover(XiaomiDevice, CoverEntity):
     """Representation of a XiaomiGenericCover."""
 
-    def __init__(self, device, name, data_key, xiaomi_hub, config_entry):
+    def __init__(
+        self,
+        device: dict[str, Any],
+        name: str,
+        data_key: str,
+        xiaomi_hub: XiaomiGateway,
+        config_entry: ConfigEntry,
+    ) -> None:
         """Initialize the XiaomiGenericCover."""
         self._data_key = data_key
         self._pos = 0

@@ -201,14 +201,22 @@ class TeslemetryStreamingWindowEntity(
     def _handle_stream_update(self, data) -> None:
         """Update the entity attributes."""
 
-        if value := data.get(Signal.FD_WINDOW):
-            self.fd = WindowState.get(value) == "closed"
-        if value := data.get(Signal.FP_WINDOW):
-            self.fp = WindowState.get(value) == "closed"
-        if value := data.get(Signal.RD_WINDOW):
-            self.rd = WindowState.get(value) == "closed"
-        if value := data.get(Signal.RP_WINDOW):
-            self.rp = WindowState.get(value) == "closed"
+        change = False
+        if value := data["data"].get(Signal.FD_WINDOW):
+            self.fd = WindowState.get(value) == "Closed"
+            change = True
+        if value := data["data"].get(Signal.FP_WINDOW):
+            self.fp = WindowState.get(value) == "Closed"
+            change = True
+        if value := data["data"].get(Signal.RD_WINDOW):
+            self.rd = WindowState.get(value) == "Closed"
+            change = True
+        if value := data["data"].get(Signal.RP_WINDOW):
+            self.rp = WindowState.get(value) == "Closed"
+            change = True
+
+        if not change:
+            return
 
         if False in (self.fd, self.fp, self.rd, self.rp):
             self._attr_is_closed = False
