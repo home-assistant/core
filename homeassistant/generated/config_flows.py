@@ -427,6 +427,7 @@ FLOWS = {
         "nina",
         "nmap_tracker",
         "nmbs",
+        "noaa_tides",
         "nobo_hub",
         "nordpool",
         "notion",

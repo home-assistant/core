@@ -1280,6 +1280,9 @@ nibe==2.17.0
 # homeassistant.components.nice_go
 nice-go==1.0.1
 
+# homeassistant.components.noaa_tides
+noaa-coops==0.4.0
+
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
 
