@@ -42,6 +42,7 @@ from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_OBJECT_ID, CONF_PICTURE, DOMAIN
+from .entity import AbstractTemplateEntity
 from .template_entity import (
     LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
@@ -266,10 +267,14 @@ async def async_setup_platform(
     )
 
 
-class AbstractTemplateAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
+class AbstractTemplateAlarmControlPanel(
+    AbstractTemplateEntity, AlarmControlPanelEntity, RestoreEntity
+):
     """Representation of a templated Alarm Control Panel features."""
 
-    def __init__(self, config: dict[str, Any]) -> None:
+    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
+    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
 
         self._registered_scripts: list[str] = []
@@ -341,72 +346,67 @@ class AbstractTemplateAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
             self._state = state
             optimistic_set = True
 
-        run_script = getattr(self, "async_run_script")
-        await run_script(script, run_variables={ATTR_CODE: code}, context=self._context)
+        if script:
+            await self.async_run_script(
+                script, run_variables={ATTR_CODE: code}, context=self._context
+            )
 
         if optimistic_set:
             self.async_write_ha_state()
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Arm the panel to Away."""
-        scripts: dict[str, Script] = getattr(self, "_action_scripts")
         await self._async_alarm_arm(
             AlarmControlPanelState.ARMED_AWAY,
-            script=scripts.get(CONF_ARM_AWAY_ACTION),
+            script=self._action_scripts.get(CONF_ARM_AWAY_ACTION),
             code=code,
         )
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Arm the panel to Home."""
-        scripts: dict[str, Script] = getattr(self, "_action_scripts")
         await self._async_alarm_arm(
             AlarmControlPanelState.ARMED_HOME,
-            script=scripts.get(CONF_ARM_HOME_ACTION),
+            script=self._action_scripts.get(CONF_ARM_HOME_ACTION),
             code=code,
         )
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Arm the panel to Night."""
-        scripts: dict[str, Script] = getattr(self, "_action_scripts")
         await self._async_alarm_arm(
             AlarmControlPanelState.ARMED_NIGHT,
-            script=scripts.get(CONF_ARM_NIGHT_ACTION),
+            script=self._action_scripts.get(CONF_ARM_NIGHT_ACTION),
             code=code,
         )
 
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Arm the panel to Vacation."""
-        scripts: dict[str, Script] = getattr(self, "_action_scripts")
         await self._async_alarm_arm(
             AlarmControlPanelState.ARMED_VACATION,
-            script=scripts.get(CONF_ARM_VACATION_ACTION),
+            script=self._action_scripts.get(CONF_ARM_VACATION_ACTION),
             code=code,
         )
 
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Arm the panel to Custom Bypass."""
-        scripts: dict[str, Script] = getattr(self, "_action_scripts")
         await self._async_alarm_arm(
             AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
-            script=scripts.get(CONF_ARM_CUSTOM_BYPASS_ACTION),
+            script=self._action_scripts.get(CONF_ARM_CUSTOM_BYPASS_ACTION),
             code=code,
         )
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Disarm the panel."""
-        scripts: dict[str, Script] = getattr(self, "_action_scripts")
         await self._async_alarm_arm(
             AlarmControlPanelState.DISARMED,
-            script=scripts.get(CONF_DISARM_ACTION),
+            script=self._action_scripts.get(CONF_DISARM_ACTION),
             code=code,
         )
 
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Trigger the panel."""
-        scripts: dict[str, Script] = getattr(self, "_action_scripts")
         await self._async_alarm_arm(
             AlarmControlPanelState.TRIGGERED,
-            script=scripts.get(CONF_TRIGGER_ACTION),
+            script=self._action_scripts.get(CONF_TRIGGER_ACTION),
             code=code,
         )
 
