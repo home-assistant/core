@@ -54,7 +54,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor from a config entry created in the integrations UI."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.user
 
     async_add_entities(
         [

@@ -43,7 +43,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the calendar platform."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.user
 
     async_add_entities(
         [

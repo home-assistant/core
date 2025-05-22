@@ -697,7 +697,7 @@ async def test_move_todo_item(
 
     habitica.reorder_task.assert_awaited_once_with(UUID(uid), 0)
     assert (
-        getattr(config_entry.runtime_data.data.user.tasksOrder, task_type)
+        getattr(config_entry.runtime_data.user.data.user.tasksOrder, task_type)
         == reorder_response.data
     )
 

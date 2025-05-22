@@ -253,7 +253,7 @@ def get_config_entry(hass: HomeAssistant, entry_id: str) -> HabiticaConfigEntry:
 async def _cast_skill(call: ServiceCall) -> ServiceResponse:
     """Skill action."""
     entry = get_config_entry(call.hass, call.data[ATTR_CONFIG_ENTRY])
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.user
 
     skill = SKILL_MAP[call.data[ATTR_SKILL]]
     cost = COST_MAP[call.data[ATTR_SKILL]]
@@ -317,7 +317,7 @@ async def _cast_skill(call: ServiceCall) -> ServiceResponse:
 async def _manage_quests(call: ServiceCall) -> ServiceResponse:
     """Accept, reject, start, leave or cancel quests."""
     entry = get_config_entry(call.hass, call.data[ATTR_CONFIG_ENTRY])
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.user
 
     FUNC_MAP = {
         SERVICE_ABORT_QUEST: coordinator.habitica.abort_quest,
@@ -365,7 +365,7 @@ async def _manage_quests(call: ServiceCall) -> ServiceResponse:
 async def _score_task(call: ServiceCall) -> ServiceResponse:
     """Score a task action."""
     entry = get_config_entry(call.hass, call.data[ATTR_CONFIG_ENTRY])
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.user
 
     direction = (
         Direction.DOWN if call.data.get(ATTR_DIRECTION) == "down" else Direction.UP
@@ -429,7 +429,7 @@ async def _transformation(call: ServiceCall) -> ServiceResponse:
     """User a transformation item on a player character."""
 
     entry = get_config_entry(call.hass, call.data[ATTR_CONFIG_ENTRY])
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.user
 
     item = ITEMID_MAP[call.data[ATTR_ITEM]]
     # check if target is self
@@ -512,7 +512,7 @@ async def _get_tasks(call: ServiceCall) -> ServiceResponse:
     """Get tasks action."""
 
     entry = get_config_entry(call.hass, call.data[ATTR_CONFIG_ENTRY])
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.user
     response: list[TaskData] = coordinator.data.tasks
 
     if types := {TaskType[x] for x in call.data.get(ATTR_TYPE, [])}:
@@ -561,7 +561,7 @@ async def _get_tasks(call: ServiceCall) -> ServiceResponse:
 async def _create_or_update_task(call: ServiceCall) -> ServiceResponse:  # noqa: C901
     """Create or update task action."""
     entry = get_config_entry(call.hass, call.data[ATTR_CONFIG_ENTRY])
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.user
     await coordinator.async_refresh()
     is_update = call.service in (
         SERVICE_UPDATE_HABIT,

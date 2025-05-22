@@ -7,6 +7,7 @@
     "unit_health_points": "HP",
     "unit_mana_points": "MP",
     "unit_experience_points": "XP",
+    "unit_items": "items",
     "config_entry_description": "Select the Habitica account to update a task.",
     "task_description": "The name (or task ID) of the task you want to update.",
     "rename_name": "Rename",
@@ -420,7 +421,37 @@
       },
       "pending_quest_items": {
         "name": "Pending quest items",
-        "unit_of_measurement": "items"
+        "unit_of_measurement": "[%key:component::habitica::common::unit_items%]"
+      },
+      "member_count": {
+        "name": "Member count",
+        "unit_of_measurement": "members"
+      },
+      "group_leader": {
+        "name": "Group leader"
+      },
+      "quest": {
+        "name": "Quest",
+        "state_attributes": {
+          "quest_details": {
+            "name": "Quest details"
+          }
+        }
+      },
+      "boss": {
+        "name": "Quest boss"
+      },
+      "boss_hp": {
+        "name": "Boss health",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_health_points%]"
+      },
+      "boss_hp_remaining": {
+        "name": "Boss health remaining",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_health_points%]"
+      },
+      "collected_items": {
+        "name": "Collected quest items",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_items%]"
       }
     },
     "switch": {

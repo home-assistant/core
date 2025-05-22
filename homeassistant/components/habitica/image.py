@@ -30,7 +30,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the habitica image platform."""
 
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.user
 
     async_add_entities([HabiticaImage(hass, coordinator)])
 
