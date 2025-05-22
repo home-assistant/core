@@ -45,6 +45,8 @@ TEST_UNIQUE_ID_CONFIG = {
     **TEST_EVENT_CONFIG,
     "unique_id": "not-so-unique-anymore",
 }
+TEST_FROZEN_INPUT = "2024-07-09 00:00:00+00:00"
+TEST_FROZEN_STATE = "2024-07-09T00:00:00.000+00:00"
 
 
 async def async_setup_modern_format(
@@ -188,7 +190,7 @@ async def test_legacy_platform_config(hass: HomeAssistant) -> None:
     assert hass.states.async_all("event") == []
 
 
-@pytest.mark.freeze_time("2024-07-09 00:00:00+00:00")
+@pytest.mark.freeze_time(TEST_FROZEN_INPUT)
 async def test_setup_config_entry(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -222,7 +224,7 @@ async def test_setup_config_entry(
     assert state == snapshot
 
 
-@pytest.mark.freeze_time("2024-07-09 00:00:00+00:00")
+@pytest.mark.freeze_time(TEST_FROZEN_INPUT)
 async def test_device_id(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -313,6 +315,42 @@ async def test_event_type_template(
 
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.attributes["event_type"] == expected
+
+
+@pytest.mark.parametrize(
+    ("count", "event_type_template", "event_types_template", "extra_config"),
+    [(1, "{{ states('sensor.event') }}", TEST_EVENT_TYPES_TEMPLATE, None)],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_event")
+@pytest.mark.freeze_time(TEST_FROZEN_INPUT)
+async def test_event_type_template_updates(
+    hass: HomeAssistant,
+) -> None:
+    """Test template event_type updates."""
+    hass.states.async_set(TEST_SENSOR, "single")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == TEST_FROZEN_STATE
+    assert state.attributes["event_type"] == "single"
+
+    hass.states.async_set(TEST_SENSOR, "double")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == TEST_FROZEN_STATE
+    assert state.attributes["event_type"] == "double"
+
+    hass.states.async_set(TEST_SENSOR, "hold")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == TEST_FROZEN_STATE
+    assert state.attributes["event_type"] == "hold"
 
 
 @pytest.mark.parametrize(
@@ -415,12 +453,50 @@ async def test_entity_picture_and_icon_templates(
 )
 @pytest.mark.usefixtures("setup_event")
 async def test_event_types_template(hass: HomeAssistant, expected: str) -> None:
-    """Test template event_type."""
+    """Test template event_types."""
     hass.states.async_set(TEST_SENSOR, "anything")
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.attributes["event_types"] == expected
+
+
+@pytest.mark.parametrize(
+    ("count", "event_type_template", "event_types_template", "extra_config"),
+    [
+        (
+            1,
+            "{{ states('sensor.event') }}",
+            "{{ state_attr('sensor.event', 'options') or ['unknown'] }}",
+            None,
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_event")
+@pytest.mark.freeze_time(TEST_FROZEN_INPUT)
+async def test_event_types_template_updates(hass: HomeAssistant) -> None:
+    """Test template event_type update with entity."""
+    hass.states.async_set(
+        TEST_SENSOR, "single", {"options": ["single", "double", "hold"]}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == TEST_FROZEN_STATE
+    assert state.attributes["event_type"] == "single"
+    assert state.attributes["event_types"] == ["single", "double", "hold"]
+
+    hass.states.async_set(TEST_SENSOR, "double", {"options": ["double", "hold"]})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == TEST_FROZEN_STATE
+    assert state.attributes["event_type"] == "double"
+    assert state.attributes["event_types"] == ["double", "hold"]
 
 
 @pytest.mark.parametrize(
