@@ -32,7 +32,7 @@
       },
       "documents_inbox": {
         "name": "Documents in inbox",
-        "unit_of_measurement": "documents"
+        "unit_of_measurement": "[%key:component::paperless_ngx::entity::sensor::documents_total::unit_of_measurement%]"
       },
       "characters_count": {
         "name": "Total characters",
