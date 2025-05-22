@@ -1,10 +1,14 @@
 """Tests for Paperless-ngx sensor platform."""
 
+from unittest.mock import AsyncMock
+
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 
-from tests.common import AsyncMock, MockConfigEntry, SnapshotAssertion
+from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
