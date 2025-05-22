@@ -562,7 +562,7 @@ bluemaestro-ble==0.4.1
 bluetooth-adapters==0.21.4
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==1.5.1
+bluetooth-auto-recovery==1.5.2
 
 # homeassistant.components.bluetooth
 # homeassistant.components.ld2410_ble
@@ -644,7 +644,7 @@ crownstone-uart==2.1.0
 datadog==0.15.0
 
 # homeassistant.components.metoffice
-datapoint==0.9.9
+datapoint==0.12.1
 
 # homeassistant.components.bluetooth
 dbus-fast==2.43.0
@@ -712,7 +712,7 @@ eagle100==0.1.1
 easyenergy==2.1.2
 
 # homeassistant.components.eheimdigital
-eheimdigital==1.1.0
+eheimdigital==1.2.0
 
 # homeassistant.components.electric_kiwi
 electrickiwi-api==0.9.14
@@ -957,7 +957,7 @@ ha-philipsjs==3.2.2
 ha-silabs-firmware-client==0.2.0
 
 # homeassistant.components.habitica
-habiticalib==0.3.7
+habiticalib==0.4.0
 
 # homeassistant.components.bluetooth
 habluetooth==3.48.2
@@ -1036,7 +1036,7 @@ idasen-ha==2.6.3
 ifaddr==0.2.0
 
 # homeassistant.components.igloohome
-igloohome-api==0.1.0
+igloohome-api==0.1.1
 
 # homeassistant.components.imeon_inverter
 imeon_inverter_api==0.3.12
@@ -1054,7 +1054,7 @@ influxdb-client==1.48.0
 influxdb==5.3.1
 
 # homeassistant.components.inkbird
-inkbird-ble==0.16.1
+inkbird-ble==0.16.2
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.5.0
@@ -1112,7 +1112,7 @@ lacrosse-view==1.1.1
 laundrify-aio==1.2.2
 
 # homeassistant.components.lcn
-lcn-frontend==0.2.4
+lcn-frontend==0.2.5
 
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
@@ -1124,7 +1124,7 @@ leaone-ble==0.3.0
 led-ble==1.1.7
 
 # homeassistant.components.lektrico
-lektricowifi==0.0.43
+lektricowifi==0.1
 
 # homeassistant.components.letpot
 letpot==0.4.0
@@ -1470,7 +1470,7 @@ py-nightscout==1.2.2
 py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.7.1
+py-synologydsm-api==2.7.2
 
 # homeassistant.components.hdmi_cec
 pyCEC==0.5.2
@@ -1711,7 +1711,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.8
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.3
+pylamarzocco==2.0.4
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -1938,7 +1938,7 @@ pyspcwebgw==0.7.0
 pyspeex-noise==1.0.2
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.12.0
+pysqueezebox==0.12.1
 
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.1.0
@@ -2208,7 +2208,7 @@ sense-energy==0.13.8
 sensirion-ble==0.1.1
 
 # homeassistant.components.sensorpro
-sensorpro-ble==0.7.0
+sensorpro-ble==0.7.1
 
 # homeassistant.components.sensorpush_cloud
 sensorpush-api==2.1.2
@@ -2507,6 +2507,9 @@ wled==0.21.0
 
 # homeassistant.components.wolflink
 wolf-comm==0.0.23
+
+# homeassistant.components.wsdot
+wsdot==0.0.1
 
 # homeassistant.components.wyoming
 wyoming==1.5.4
