@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_SESSION_TOKEN, DOMAIN
 
@@ -22,13 +23,18 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize a new config flow instance."""
-        self.auth = Authenticator.generate_login()
+        self.auth: Authenticator | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
+        if self.auth is None:
+            self.auth = Authenticator.generate_login(
+                client_session=async_get_clientsession(self.hass)
+            )
+
         if user_input is not None:
             try:
                 await self.auth.complete_login(
@@ -36,9 +42,6 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except (ValueError, InvalidSessionTokenException, HttpException):
                 errors["base"] = "invalid_auth"
-            except Exception as exc:
-                _LOGGER.exception("Unknown error during setup")
-                errors["base"] = "unknown"
             else:
                 if TYPE_CHECKING:
                     assert self.auth.account_id

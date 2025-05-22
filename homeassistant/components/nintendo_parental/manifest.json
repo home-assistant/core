@@ -7,5 +7,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["pynintendoparental"],
   "quality_scale": "bronze",
-  "requirements": ["pynintendoparental==0.6.9"]
+  "requirements": ["pynintendoparental==0.7.2"]
 }
