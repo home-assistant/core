@@ -28,7 +28,7 @@ from tests.common import (
 )
 
 
-async def test_sensor_platfom(
+async def test_sensor_platform(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
