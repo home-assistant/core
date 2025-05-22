@@ -4,14 +4,21 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import datetime
 from typing import cast
 
-from geocachingapi.models import GeocachingStatus
+from geocachingapi.models import GeocachingCache, GeocachingStatus
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -25,7 +32,7 @@ class GeocachingSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[GeocachingStatus], str | int | None]
 
 
-SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
+PROFILE_SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
     GeocachingSensorEntityDescription(
         key="find_count",
         translation_key="find_count",
@@ -62,6 +69,48 @@ SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
 )
 
 
+@dataclass(frozen=True, kw_only=True)
+class GeocachingCacheSensorDescription(SensorEntityDescription):
+    """Define Sensor entity description class."""
+
+    value_fn: Callable[[GeocachingCache], StateType | datetime.date]
+
+
+CACHE_SENSORS: tuple[GeocachingCacheSensorDescription, ...] = (
+    GeocachingCacheSensorDescription(
+        key="name",
+        value_fn=lambda cache: cache.name,
+    ),
+    GeocachingCacheSensorDescription(
+        key="owner",
+        value_fn=lambda cache: cache.owner.username,
+    ),
+    GeocachingCacheSensorDescription(
+        key="found",
+        value_fn=lambda cache: None
+        if cache.found_by_user is None
+        else "Yes"
+        if cache.found_by_user is True
+        else "No",
+    ),
+    GeocachingCacheSensorDescription(
+        key="found_date",
+        device_class=SensorDeviceClass.DATE,
+        value_fn=lambda cache: cache.found_date_time,
+    ),
+    GeocachingCacheSensorDescription(
+        key="favorite_points",
+        native_unit_of_measurement="points",
+        value_fn=lambda cache: cache.favorite_points,
+    ),
+    GeocachingCacheSensorDescription(
+        key="hidden_date",
+        device_class=SensorDeviceClass.DATE,
+        value_fn=lambda cache: cache.hidden_date,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GeocachingConfigEntry,
@@ -70,13 +119,93 @@ async def async_setup_entry(
     """Set up a Geocaching sensor entry."""
     coordinator = entry.runtime_data
     async_add_entities(
-        GeocachingSensor(coordinator, description) for description in SENSORS
+        GeocachingProfileSensor(coordinator, description)
+        for description in PROFILE_SENSORS
     )
 
+    status = coordinator.data
+    entities: list[Entity] = []
 
-class GeocachingSensor(
+    # Add entities for tracked caches
+    for cache in status.tracked_caches:
+        entities.extend(
+            [
+                GeoEntityCacheSensorEntity(coordinator, cache, description)
+                for description in CACHE_SENSORS
+            ]
+        )
+
+    async_add_entities(entities)
+
+
+class GeocachingBaseSensor(
     CoordinatorEntity[GeocachingDataUpdateCoordinator], SensorEntity
 ):
+    """Base class for Geocaching sensors."""
+
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: GeocachingDataUpdateCoordinator) -> None:
+        """Initialize the Geocaching sensor."""
+        super().__init__(coordinator)
+
+
+# Base class for a cache entity.
+# Sets the device, ID and translation settings to correctly group the entity to the correct cache device and give it the correct name.
+class GeoEntityBaseCache(GeocachingBaseSensor):
+    """Base class for cache entities."""
+
+    _attr_has_entity_name = True
+    cache: GeocachingCache
+
+    def __init__(
+        self,
+        coordinator: GeocachingDataUpdateCoordinator,
+        cache: GeocachingCache,
+        entity_type: str,
+    ) -> None:
+        """Initialize the Geocaching sensor."""
+        super().__init__(coordinator)
+        self.cache = cache
+
+        # A device can have multiple entities, and for a cache which requires multiple entities we want to group them together.
+        # Therefore, we create a device for each cache, which holds all related entities.
+        self._attr_device_info = DeviceInfo(
+            name=f"Geocache {cache.reference_code}",
+            identifiers={(DOMAIN, cast(str, cache.reference_code))},
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer="Groundspeak, Inc.",
+        )
+
+        self._attr_unique_id = f"{DOMAIN}.{cache.reference_code}_{entity_type}"
+
+        # The translation key determines the name of the entity as this is the lookup for the `strings.json` file.
+        self._attr_translation_key = f"cache_{entity_type}"
+
+
+class GeoEntityCacheSensorEntity(GeoEntityBaseCache, SensorEntity):
+    """Representation of a cache sensor."""
+
+    entity_description: GeocachingCacheSensorDescription
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: GeocachingDataUpdateCoordinator,
+        cache: GeocachingCache,
+        description: GeocachingCacheSensorDescription,
+    ) -> None:
+        """Initialize the Geocaching sensor."""
+        super().__init__(coordinator, cache, description.key)
+        self.entity_description = description
+
+    @property
+    def native_value(self) -> StateType | datetime.date:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.cache)
+
+
+class GeocachingProfileSensor(GeocachingBaseSensor):
     """Representation of a Sensor."""
 
     entity_description: GeocachingSensorEntityDescription
