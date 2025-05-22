@@ -36,10 +36,10 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_OBJECT_ID, CONF_PICTURE, DOMAIN
+from .entity import AbstractTemplateEntity
 from .template_entity import (
     LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
     TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA,
@@ -202,14 +202,13 @@ async def async_setup_platform(
     )
 
 
-class AbstractTemplateVacuum(StateVacuumEntity):
+class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
     """Representation of a template vacuum features."""
 
-    def __init__(self, config: dict[str, Any]) -> None:
+    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
+    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
-
-        self._registered_scripts: list[str] = []
-
         self._template = config.get(CONF_STATE)
         self._battery_level_template = config.get(CONF_BATTERY_LEVEL)
         self._fan_speed_template = config.get(CONF_FAN_SPEED)
@@ -234,7 +233,6 @@ class AbstractTemplateVacuum(StateVacuumEntity):
             (SERVICE_SET_FAN_SPEED, VacuumEntityFeature.FAN_SPEED),
         ):
             if (action_config := config.get(action_id)) is not None:
-                self._registered_scripts.append(action_id)
                 yield (action_id, action_config, supported_feature)
 
     @property
@@ -259,49 +257,37 @@ class AbstractTemplateVacuum(StateVacuumEntity):
 
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
-        run_script = getattr(self, "async_run_script")
-        scripts: dict[str, Script] = getattr(self, "_action_scripts")
-        await run_script(scripts[SERVICE_START], context=self._context)
+        await self.async_run_script(
+            self._action_scripts[SERVICE_START], context=self._context
+        )
 
     async def async_pause(self) -> None:
         """Pause the cleaning task."""
-        run_script = getattr(self, "async_run_script")
-        scripts: dict[str, Script] = getattr(self, "_action_scripts")
-        if script := scripts.get(SERVICE_PAUSE):
-            await run_script(script, context=self._context)
+        if script := self._action_scripts.get(SERVICE_PAUSE):
+            await self.async_run_script(script, context=self._context)
 
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the cleaning task."""
-        run_script = getattr(self, "async_run_script")
-        scripts: dict[str, Script] = getattr(self, "_action_scripts")
-        if script := scripts.get(SERVICE_STOP):
-            await run_script(script, context=self._context)
+        if script := self._action_scripts.get(SERVICE_STOP):
+            await self.async_run_script(script, context=self._context)
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
-        run_script = getattr(self, "async_run_script")
-        scripts: dict[str, Script] = getattr(self, "_action_scripts")
-        if script := scripts.get(SERVICE_RETURN_TO_BASE):
-            await run_script(script, context=self._context)
+        if script := self._action_scripts.get(SERVICE_RETURN_TO_BASE):
+            await self.async_run_script(script, context=self._context)
 
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
-        run_script = getattr(self, "async_run_script")
-        scripts: dict[str, Script] = getattr(self, "_action_scripts")
-        if script := scripts.get(SERVICE_CLEAN_SPOT):
-            await run_script(script, context=self._context)
+        if script := self._action_scripts.get(SERVICE_CLEAN_SPOT):
+            await self.async_run_script(script, context=self._context)
 
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
-        run_script = getattr(self, "async_run_script")
-        scripts: dict[str, Script] = getattr(self, "_action_scripts")
-        if script := scripts.get(SERVICE_LOCATE):
-            await run_script(script, context=self._context)
+        if script := self._action_scripts.get(SERVICE_LOCATE):
+            await self.async_run_script(script, context=self._context)
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
-        run_script = getattr(self, "async_run_script")
-        scripts: dict[str, Script] = getattr(self, "_action_scripts")
         if fan_speed not in self._attr_fan_speed_list:
             _LOGGER.error(
                 "Received invalid fan speed: %s for entity %s. Expected: %s",
@@ -311,8 +297,8 @@ class AbstractTemplateVacuum(StateVacuumEntity):
             )
             return
 
-        if script := scripts.get(SERVICE_SET_FAN_SPEED):
-            await run_script(
+        if script := self._action_scripts.get(SERVICE_SET_FAN_SPEED):
+            await self.async_run_script(
                 script, run_variables={ATTR_FAN_SPEED: fan_speed}, context=self._context
             )
 
