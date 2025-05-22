@@ -18,13 +18,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up ONVIF button based on a config entry."""
     device = hass.data[DOMAIN][config_entry.unique_id]
-    async_add_entities(
-        [
-            RebootButton(device),
-            SetSystemDateAndTimeButton(device),
-            SetIRAutoButton(device),
-        ]
-    )
+    async_add_entities([RebootButton(device), SetSystemDateAndTimeButton(device)])
 
 
 class RebootButton(ONVIFBaseEntity, ButtonEntity):
@@ -59,20 +53,3 @@ class SetSystemDateAndTimeButton(ONVIFBaseEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Send out a SetSystemDateAndTime command."""
         await self.device.async_manually_set_date_and_time()
-
-
-class SetIRAutoButton(ONVIFBaseEntity, ButtonEntity):
-    """Defines a ONVIF Set ir_lamp Auto."""
-
-    _attr_entity_category = EntityCategory.CONFIG
-
-    def __init__(self, device: ONVIFDevice) -> None:
-        """Initialize the button entity."""
-        super().__init__(device)
-        self._attr_name = f"{self.device.name} Set IR Lamp Auto"
-        self._attr_unique_id = f"{self.mac_or_serial}_setirlampauto"
-
-    async def async_press(self) -> None:
-        """Send out setting Auto for IR Lamp."""
-        profile = self.device.profiles[0]
-        await self.device.async_set_imaging_settings(profile, {"IrCutFilter": "AUTO"})
