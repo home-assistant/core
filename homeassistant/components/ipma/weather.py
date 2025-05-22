@@ -23,7 +23,6 @@ from homeassistant.components.weather import (
     WeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_MODE,
     UnitOfPressure,
@@ -35,14 +34,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.sun import is_up
 from homeassistant.util import Throttle
 
-from .const import (
-    ATTRIBUTION,
-    CONDITION_MAP,
-    DATA_API,
-    DATA_LOCATION,
-    DOMAIN,
-    MIN_TIME_BETWEEN_UPDATES,
-)
+from . import IpmaConfigEntry
+from .const import ATTRIBUTION, CONDITION_MAP, MIN_TIME_BETWEEN_UPDATES
 from .entity import IPMADevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,12 +43,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: IpmaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
-    api = hass.data[DOMAIN][config_entry.entry_id][DATA_API]
-    location = hass.data[DOMAIN][config_entry.entry_id][DATA_LOCATION]
+    location = config_entry.runtime_data.location
+    api = config_entry.runtime_data.api
     async_add_entities([IPMAWeather(api, location, config_entry)], True)
 
 
@@ -72,7 +65,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
     )
 
     def __init__(
-        self, api: IPMA_API, location: Location, config_entry: ConfigEntry
+        self, api: IPMA_API, location: Location, config_entry: IpmaConfigEntry
     ) -> None:
         """Initialise the platform with a data instance and station name."""
         IPMADevice.__init__(self, api, location)
