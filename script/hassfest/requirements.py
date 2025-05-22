@@ -32,7 +32,6 @@ FORBIDDEN_PACKAGES = {"setuptools", "wheel"}
 FORBIDDEN_PACKAGE_EXCEPTIONS = {
     # Direct dependencies
     "fitbit",  # setuptools (fitbit)
-    "habitipy",  # setuptools (habitica)
     "influxdb-client",  # setuptools (influxdb)
     "microbeespy",  # setuptools (microbees)
     "pyefergy",  # types-pytz (efergy)
