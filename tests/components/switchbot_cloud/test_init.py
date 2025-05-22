@@ -2,7 +2,6 @@
 
 from unittest.mock import patch
 
-from aiohttp.test_utils import TestClient
 import pytest
 from switchbot_api import CannotConnect, Device, InvalidAuth, PowerState, Remote
 
@@ -11,7 +10,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
-from homeassistant.setup import async_setup_component
 
 from . import configure_integration
 
@@ -53,15 +51,6 @@ def mock_setup_webhook():
     """Mock get_status."""
     with patch.object(SwitchBotAPI, "setup_webhook") as mock_setup_webhook:
         yield mock_setup_webhook
-
-
-@pytest.fixture
-async def mock_client(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
-) -> TestClient:
-    """Create http client for webhooks."""
-    await async_setup_component(hass, "webhook", {})
-    return await hass_client()
 
 
 async def test_setup_entry_success(
@@ -190,7 +179,7 @@ async def test_posting_to_webhook(
     mock_get_webook_configuration,
     mock_delete_webhook,
     mock_setup_webhook,
-    mock_client,
+    hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Test handler webhook call."""
     await async_process_ha_core_config(
@@ -216,8 +205,9 @@ async def test_posting_to_webhook(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
     webhook_id = entry.data[CONF_WEBHOOK_ID]
+    client = await hass_client_no_auth()
     # fire webhook
-    await mock_client.post(
+    await client.post(
         f"/api/webhook/{webhook_id}",
         json={
             "eventType": "changeReport",

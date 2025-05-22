@@ -219,17 +219,13 @@ async def _initialize_webhook(
         coordinator.manageable_by_webhook()
         for coordinator in coordinators_by_id.values()
     ):
-        # Need webhook because there coordinator updated by this
-        if CONF_WEBHOOK_ID not in entry.data or entry.unique_id is None:
+        if CONF_WEBHOOK_ID not in entry.data:
             new_data = entry.data.copy()
-            unique_id = str(entry.data[CONF_API_TOKEN])
             if CONF_WEBHOOK_ID not in new_data:
                 # create new id and new conf
                 new_data[CONF_WEBHOOK_ID] = webhook.async_generate_id()
 
-            hass.config_entries.async_update_entry(
-                entry, data=new_data, unique_id=unique_id
-            )
+            hass.config_entries.async_update_entry(entry, data=new_data)
 
         # register webhook
         webhook_name = ENTRY_TITLE
