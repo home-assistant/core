@@ -535,7 +535,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "itunes",
     "izone",
     "jellyfin",
-    "jewish_calendar",
     "joaoapps_join",
     "juicenet",
     "justnimbus",
