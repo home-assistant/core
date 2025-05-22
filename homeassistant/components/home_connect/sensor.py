@@ -654,5 +654,5 @@ class HomeConnectEventSensor(HomeConnectSensor):
         event = self.appliance.events.get(cast(EventKey, self.bsh_key))
         if event:
             self._update_native_value(event.value)
-        elif not self._attr_native_value:
+        elif self._attr_native_value is None:
             self._attr_native_value = self.entity_description.default_value
