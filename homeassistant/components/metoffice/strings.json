@@ -7,6 +7,11 @@
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]"
+        },
+        "data_description": {
+          "api_key": "Your DataHub API key",
+          "latitude": "Latitude of the weather site",
+          "longitude": "Longitude of the weather site"
         }
       },
       "reauth_confirm": {
@@ -14,6 +19,9 @@
         "description": "Please re-enter your DataHub API key. If you are still using an old Datapoint API key, you need to sign up for DataHub API now, see [documentation]({docs_url}) for details.",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Your DataHub API key"
         }
       }
     },

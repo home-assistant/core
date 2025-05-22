@@ -1,0 +1,87 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      No custom actions are defined.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      No custom actions are defined.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: todo
+  entity-event-setup:
+    status: exempt
+    comment: |
+      No explicit event subscriptions.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: todo
+  test-before-configure: done
+  test-before-setup:
+    status: done
+    comment: |
+      Implemented implicitly with data update coordinator
+  unique-config-entry: done
+  # Silver
+  action-exceptions:
+    status: done
+    comment: No custom actions are defined
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable:
+    status: done
+    comment: Handled by DataUpdateCoordinator
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: This is a cloud weather service that can't be discovered
+  discovery:
+    status: exempt
+    comment: This is a cloud weather service that can't be discovered
+  docs-data-update: todo
+  docs-examples: done
+  docs-known-limitations: todo
+  docs-supported-devices:
+    status: exempt
+    comment: No physical devices
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: done
+  dynamic-devices:
+    status: done
+    comment: Weather services don't become stale
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues:
+    status: done
+    comment: Reauthentication flow uses repair functionality implicitly
+  stale-devices:
+    status: done
+    comment: Weather services don't become stale
+
+  # Platinum
+  async-dependency: todo
+  inject-websession: todo
+  strict-typing: todo
