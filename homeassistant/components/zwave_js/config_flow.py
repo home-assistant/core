@@ -7,7 +7,6 @@ import base64
 from contextlib import suppress
 from datetime import datetime
 import logging
-import os
 from pathlib import Path
 from typing import Any
 
@@ -194,7 +193,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.backup_task: asyncio.Task | None = None
         self.restore_backup_task: asyncio.Task | None = None
         self.backup_data: bytes | None = None
-        self.backup_filepath: str | None = None
+        self.backup_filepath: Path | None = None
         self.use_addon = False
         self._migrating = False
         self._reconfigure_config_entry: ConfigEntry | None = None
@@ -1249,9 +1248,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="restore_failed",
             description_placeholders={
-                "file_path": self.backup_filepath,
+                "file_path": str(self.backup_filepath),
                 "file_url": f"data:application/octet-stream;base64,{base64.b64encode(self.backup_data).decode('ascii')}",
-                "file_name": os.path.basename(self.backup_filepath),
+                "file_name": self.backup_filepath.name,
             },
         )
 
@@ -1389,12 +1388,14 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             unsub()
 
         # save the backup to a file just in case
-        self.backup_filepath = self.hass.config.path(
-            f"zwavejs_nvm_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"
+        self.backup_filepath = Path(
+            self.hass.config.path(
+                f"zwavejs_nvm_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"
+            )
         )
         try:
             await self.hass.async_add_executor_job(
-                Path(self.backup_filepath).write_bytes,
+                self.backup_filepath.write_bytes,
                 self.backup_data,
             )
         except OSError as err:
