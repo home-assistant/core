@@ -335,6 +335,7 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
     package_version_check_exceptions = PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS.get(
         integration.domain, {}
     )
+    needs_package_version_check_exception = False
 
     while to_check:
         package = to_check.popleft()
@@ -371,13 +372,14 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
                         "requirements",
                         f"Package {pkg} should not be a runtime dependency in {package}",
                     )
-            check_dependency_version_range(
+            if not check_dependency_version_range(
                 integration,
                 package,
                 pkg,
                 version,
                 package_version_check_exceptions.get(package, set()),
-            )
+            ):
+                needs_package_version_check_exception = True
 
         to_check.extend(dependencies)
 
@@ -387,6 +389,13 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
             f"Integration {integration.domain} runtime dependency exceptions "
             "have been resolved, please remove from `FORBIDDEN_PACKAGE_EXCEPTIONS`",
         )
+    if package_version_check_exceptions and not needs_package_version_check_exception:
+        integration.add_error(
+            "requirements",
+            f"Integration {integration.domain} version restrictions checks have been "
+            "resolved, please remove from `PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS`",
+        )
+
     return all_requirements
 
 
@@ -396,36 +405,32 @@ def check_dependency_version_range(
     pkg: str,
     version: str,
     package_exceptions: set[str],
-) -> None:
+) -> bool:
     """Check requirement version range.
 
     We want to avoid upper version bounds that are too strict for common packages.
     """
     if (
-        version != "Any"
-        and (convention := PACKAGE_CHECK_VERSION_RANGE.get(pkg)) is not None
-        and not all(
+        version == "Any"
+        or (convention := PACKAGE_CHECK_VERSION_RANGE.get(pkg)) is None
+        or all(
             _is_dependency_version_range_valid(version_part, convention)
             for version_part in version.split(";", 1)[0].split(",")
         )
     ):
-        if pkg in package_exceptions:
-            integration.add_warning(
-                "requirements",
-                f"Version restrictions for {pkg} are too strict ({version}) in {source}",
-            )
-            return
+        return True
+
+    if pkg in package_exceptions:
+        integration.add_warning(
+            "requirements",
+            f"Version restrictions for {pkg} are too strict ({version}) in {source}",
+        )
+    else:
         integration.add_error(
             "requirements",
             f"Version restrictions for {pkg} are too strict ({version}) in {source}",
         )
-        return
-    if pkg in package_exceptions:
-        integration.add_error(
-            "requirements",
-            f"Version restrictions for {pkg} have been resolved in {source}, "
-            "please remove from `PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS`",
-        )
+    return False
 
 
 def _is_dependency_version_range_valid(version_part: str, convention: str) -> bool:
