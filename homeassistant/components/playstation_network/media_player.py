@@ -2,6 +2,8 @@
 
 import logging
 
+from psnawp_api.models.trophies import PlatformType
+
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
@@ -15,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PlaystationNetworkConfigEntry, PlaystationNetworkCoordinator
-from .const import DOMAIN, PlatformType
+from .const import DOMAIN, SUPPORTED_PLATFORMS
 from .helpers import SessionData
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +39,6 @@ async def async_setup_entry(
     """Media Player Entity Setup."""
     coordinator = config_entry.runtime_data
     devices_added: set[PlatformType] = set()
-    supported_devices = {PlatformType.PS5, PlatformType.PS4, PlatformType.PS3}
     device_reg = dr.async_get(hass)
     entities = []
 
@@ -45,7 +46,7 @@ async def async_setup_entry(
     def add_entities() -> None:
         nonlocal devices_added
 
-        if not supported_devices - devices_added:
+        if not SUPPORTED_PLATFORMS - devices_added:
             remove_listener()
 
         for console in coordinator.data.active_sessions:
@@ -55,9 +56,11 @@ async def async_setup_entry(
                 async_add_entities([PsnMediaPlayerEntity(coordinator, platform_type)])
                 devices_added.add(platform_type)
 
-    for platform in supported_devices:
+    for platform in SUPPORTED_PLATFORMS:
         if device_reg.async_get_device(
-            identifiers={(DOMAIN, f"{coordinator.config_entry.unique_id}_{platform}")}
+            identifiers={
+                (DOMAIN, f"{coordinator.config_entry.unique_id}_{platform.value}")
+            }
         ):
             entities.append(PsnMediaPlayerEntity(coordinator, platform))
             devices_added.add(platform)
@@ -102,7 +105,7 @@ class PsnMediaPlayerEntity(
             (
                 session
                 for session in self.coordinator.data.active_sessions
-                if session.platform == self.key
+                if PlatformType(session.platform) == self.key
             ),
             SessionData(),
         )
@@ -119,7 +122,7 @@ class PsnMediaPlayerEntity(
             (
                 session
                 for session in self.coordinator.data.active_sessions
-                if session.platform == self.key
+                if PlatformType(session.platform) == self.key
             ),
             SessionData(),
         )
@@ -132,7 +135,7 @@ class PsnMediaPlayerEntity(
             (
                 session
                 for session in self.coordinator.data.active_sessions
-                if session.platform == self.key
+                if PlatformType(session.platform) == self.key
             ),
             SessionData(),
         )
@@ -145,7 +148,7 @@ class PsnMediaPlayerEntity(
             (
                 session
                 for session in self.coordinator.data.active_sessions
-                if session.platform == self.key
+                if PlatformType(session.platform) == self.key
             ),
             SessionData(),
         )
