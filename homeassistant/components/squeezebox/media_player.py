@@ -150,9 +150,13 @@ async def async_setup_entry(
             _LOGGER.debug("Shared server & player device %s", sdevice)
             name = sdevice.name
             sw_version = sdevice.sw_version or sw_version
-            model = SERVER_MODEL + "/" + model
-            manufacturer = SERVER_MANUFACTURER + " / " + manufacturer
-            model_id = SERVER_MODEL_ID + "/" + model_id
+            model = SERVER_MODEL + "/" + model if model else SERVER_MODEL
+            manufacturer = (
+                SERVER_MANUFACTURER + " / " + manufacturer
+                if manufacturer
+                else SERVER_MANUFACTURER
+            )
+            model_id = SERVER_MODEL_ID + "/" + model_id if model_id else SERVER_MODEL_ID
 
         device = device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
