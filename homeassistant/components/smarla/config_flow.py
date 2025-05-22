@@ -28,13 +28,13 @@ class SmarlaConfigFlow(ConfigFlow, domain=DOMAIN):
             conn = Connection(url=HOST, token_b64=token)
         except ValueError:
             errors["base"] = "malformed_token"
-            return (errors, None)
+            return errors, None
 
         if not await conn.refresh_token():
             errors["base"] = "invalid_auth"
-            return (errors, None)
+            return errors, None
 
-        return (errors, conn.token.serialNumber)
+        return errors, conn.token.serialNumber
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

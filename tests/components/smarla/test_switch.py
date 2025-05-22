@@ -1,14 +1,13 @@
 """Test switch platform for Swing2Sleep Smarla integration."""
 
-from pysmarlaapi.federwiege.classes import Property
-import pytest
+from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.smarla.switch import SWITCHES
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SwitchEntityDescription,
-)
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -16,57 +15,73 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .common import get_entity_id_by_unique_id
+from . import setup_integration, update_property_listeners
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.parametrize("switch_desc", SWITCHES)
-async def test_switch_behavior(
+async def test_entities(
     hass: HomeAssistant,
-    switch_desc: SwitchEntityDescription,
+    mock_federwiege: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_connection,
-    mock_federwiege,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test SmarlaSwitch on/off behavior."""
-    # Assign switch property to federwiege
-    mock_property = Property[bool](None, False)
-    mock_federwiege.get_property.return_value = mock_property
-    # Add the mock entry to hass
-    mock_config_entry.add_to_hass(hass)
+    """Test the Spotify entities."""
+    with (
+        patch("homeassistant.components.smarla.PLATFORMS", [Platform.SWITCH]),
+    ):
+        await setup_integration(hass, mock_config_entry)
 
-    # Set up the platform
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+        await snapshot_platform(
+            hass, entity_registry, snapshot, mock_config_entry.entry_id
+        )
 
-    # Get entity id by unique id
-    unique_id = f"{mock_federwiege.serial_number}-{switch_desc.key}"
-    entity_id = get_entity_id_by_unique_id(hass, Platform.SWITCH, unique_id)
-    assert entity_id is not None
 
-    # Check entity initial state
-    assert hass.states.get(entity_id).state == STATE_OFF
+@pytest.mark.parametrize(
+    ("service", "parameter"),
+    [
+        (SERVICE_TURN_ON, True),
+        (SERVICE_TURN_OFF, False),
+    ],
+)
+async def test_switch_action(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_federwiege: AsyncMock,
+    mock_property: AsyncMock,
+    service: str,
+    parameter: bool,
+) -> None:
+    """Test Smarla Switch on/off behavior."""
+    await setup_integration(hass, mock_config_entry)
 
     # Turn on
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": entity_id},
+        service,
+        {ATTR_ENTITY_ID: "switch.smarla"},
         blocking=True,
     )
-    mock_property.set(True, push=False)
-    await mock_property.notify_listeners()
-    assert hass.states.get(entity_id).state == STATE_ON
+    mock_property.set.assert_called_once_with(parameter)
 
-    # Turn off
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {"entity_id": entity_id},
-        blocking=True,
-    )
-    mock_property.set(False, push=False)
-    await mock_property.notify_listeners()
-    assert hass.states.get(entity_id).state == STATE_OFF
+
+async def test_switch_state_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_federwiege: AsyncMock,
+    mock_property: AsyncMock,
+) -> None:
+    """Test Smarla Switch on/off behavior."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.smarla").state == STATE_OFF
+
+    mock_property.get.return_value = True
+
+    await update_property_listeners(mock_property)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.smarla").state == STATE_ON

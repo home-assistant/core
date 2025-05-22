@@ -1,20 +1,22 @@
 """Tests for the Smarla integration."""
 
-import base64
-import json
+from typing import Any
+from unittest.mock import AsyncMock
 
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.core import HomeAssistant
 
-MOCK_ACCESS_TOKEN_JSON = {
-    "refreshToken": "test",
-    "appIdentifier": "HA-test",
-    "serialNumber": "ABCD",
-}
+from tests.common import MockConfigEntry
 
-MOCK_SERIAL_NUMBER = MOCK_ACCESS_TOKEN_JSON["serialNumber"]
 
-MOCK_ACCESS_TOKEN = base64.b64encode(
-    json.dumps(MOCK_ACCESS_TOKEN_JSON).encode()
-).decode()
+async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Set up the component."""
+    config_entry.add_to_hass(hass)
 
-MOCK_USER_INPUT = {CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN}
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def update_property_listeners(mock: AsyncMock, value: Any = None) -> None:
+    """Update the property listeners for the mock object."""
+    for call in mock.add_listener.call_args_list:
+        await call[0][0](value)

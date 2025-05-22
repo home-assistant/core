@@ -7,7 +7,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import MOCK_SERIAL_NUMBER, MOCK_USER_INPUT
+from .const import MOCK_SERIAL_NUMBER, MOCK_USER_INPUT
 
 from tests.common import MockConfigEntry
 
