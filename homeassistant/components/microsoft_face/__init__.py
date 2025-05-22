@@ -115,7 +115,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if old_entity:
                 await component.async_remove_entity(old_entity.entity_id)
 
-            entities[g_id] = MicrosoftFaceGroupEntity(hass, face, g_id, name)
+            entities[g_id] = MicrosoftFaceGroupEntity(face, g_id, name)
             await component.async_add_entities([entities[g_id]])
         except HomeAssistantError as err:
             _LOGGER.error("Can't create group '%s' with error: %s", g_id, err)
@@ -224,11 +224,8 @@ class MicrosoftFaceGroupEntity(Entity):
 
     _attr_should_poll = False
 
-    def __init__(
-        self, hass: HomeAssistant, api: MicrosoftFace, g_id: str, name: str
-    ) -> None:
+    def __init__(self, api: MicrosoftFace, g_id: str, name: str) -> None:
         """Initialize person/group entity."""
-        self.hass = hass
         self.entity_id = f"{DOMAIN}.{g_id}"
         self._api = api
         self._id = g_id
@@ -287,9 +284,7 @@ class MicrosoftFace:
                     self._component.async_remove_entity(old_entity.entity_id)
                 )
 
-            self._entities[g_id] = MicrosoftFaceGroupEntity(
-                self.hass, self, g_id, group["name"]
-            )
+            self._entities[g_id] = MicrosoftFaceGroupEntity(self, g_id, group["name"])
             new_entities.append(self._entities[g_id])
 
             persons = await self.call_api("get", f"persongroups/{g_id}/persons")
