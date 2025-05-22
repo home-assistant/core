@@ -63,7 +63,7 @@ async def test_block_sensor(
 ) -> None:
     """Test block sensor."""
     # num_outputs is 2, channel name is used
-    entity_id = f"{SENSOR_DOMAIN}.channel_1_power"
+    entity_id = f"{SENSOR_DOMAIN}.test_name_channel_1_power"
     await init_integration(hass, 1)
 
     assert (state := hass.states.get(entity_id))
@@ -84,7 +84,7 @@ async def test_energy_sensor(
 ) -> None:
     """Test energy sensor."""
     # num_outputs is 2, channel name is used
-    entity_id = f"{SENSOR_DOMAIN}.channel_1_energy"
+    entity_id = f"{SENSOR_DOMAIN}.test_name_channel_1_energy"
     await init_integration(hass, 1)
 
     assert (state := hass.states.get(entity_id))
@@ -683,31 +683,39 @@ async def test_rpc_energy_meter_1_sensors(
     """Test RPC sensors for EM1 component."""
     await init_integration(hass, 2)
 
-    assert (state := hass.states.get("sensor.energy_meter_0_power"))
+    assert (state := hass.states.get("sensor.test_name_energy_meter_0_power"))
     assert state.state == "85.3"
 
-    assert (entry := entity_registry.async_get("sensor.energy_meter_0_power"))
+    assert (entry := entity_registry.async_get("sensor.test_name_energy_meter_0_power"))
     assert entry.unique_id == "123456789ABC-em1:0-power_em1"
 
-    assert (state := hass.states.get("sensor.energy_meter_1_power"))
+    assert (state := hass.states.get("sensor.test_name_energy_meter_1_power"))
     assert state.state == "123.3"
 
-    assert (entry := entity_registry.async_get("sensor.energy_meter_1_power"))
+    assert (entry := entity_registry.async_get("sensor.test_name_energy_meter_1_power"))
     assert entry.unique_id == "123456789ABC-em1:1-power_em1"
 
-    assert (state := hass.states.get("sensor.energy_meter_0_total_active_energy"))
+    assert (
+        state := hass.states.get("sensor.test_name_energy_meter_0_total_active_energy")
+    )
     assert state.state == "123.4564"
 
     assert (
-        entry := entity_registry.async_get("sensor.energy_meter_0_total_active_energy")
+        entry := entity_registry.async_get(
+            "sensor.test_name_energy_meter_0_total_active_energy"
+        )
     )
     assert entry.unique_id == "123456789ABC-em1data:0-total_act_energy"
 
-    assert (state := hass.states.get("sensor.energy_meter_1_total_active_energy"))
+    assert (
+        state := hass.states.get("sensor.test_name_energy_meter_1_total_active_energy")
+    )
     assert state.state == "987.6543"
 
     assert (
-        entry := entity_registry.async_get("sensor.energy_meter_1_total_active_energy")
+        entry := entity_registry.async_get(
+            "sensor.test_name_energy_meter_1_total_active_energy"
+        )
     )
     assert entry.unique_id == "123456789ABC-em1data:1-total_act_energy"
 
@@ -1375,7 +1383,7 @@ async def test_rpc_rgbw_sensors(
 
     await init_integration(hass, 2)
 
-    entity_id = f"sensor.{light_type}_light_0_power"
+    entity_id = f"sensor.test_name_{light_type}_light_0_power"
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "12.2"
@@ -1384,7 +1392,7 @@ async def test_rpc_rgbw_sensors(
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == f"123456789ABC-{light_type}:0-power_{light_type}"
 
-    entity_id = f"sensor.{light_type}_light_0_energy"
+    entity_id = f"sensor.test_name_{light_type}_light_0_energy"
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "0.045141"
@@ -1393,7 +1401,7 @@ async def test_rpc_rgbw_sensors(
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == f"123456789ABC-{light_type}:0-energy_{light_type}"
 
-    entity_id = f"sensor.{light_type}_light_0_current"
+    entity_id = f"sensor.test_name_{light_type}_light_0_current"
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "0.23"
@@ -1404,7 +1412,7 @@ async def test_rpc_rgbw_sensors(
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == f"123456789ABC-{light_type}:0-current_{light_type}"
 
-    entity_id = f"sensor.{light_type}_light_0_voltage"
+    entity_id = f"sensor.test_name_{light_type}_light_0_voltage"
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "12.4"
@@ -1415,7 +1423,7 @@ async def test_rpc_rgbw_sensors(
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == f"123456789ABC-{light_type}:0-voltage_{light_type}"
 
-    entity_id = f"sensor.{light_type}_light_0_device_temperature"
+    entity_id = f"sensor.test_name_{light_type}_light_0_device_temperature"
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "54.3"

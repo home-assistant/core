@@ -328,8 +328,8 @@ async def test_block_device_support_transition(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block device supports transition."""
-    # num_outputs is 2, channel name is used
-    entity_id = "light.channel_1"
+    # num_outputs is 2, device name and channel name is used
+    entity_id = "light.test_name_channel_1"
     monkeypatch.setitem(
         mock_block_device.settings, "fw", "20220809-122808/v1.12-g99f7e0b"
     )
@@ -381,7 +381,7 @@ async def test_block_device_relay_app_type_light(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block device relay in app type set to light mode."""
-    entity_id = "light.channel_1"
+    entity_id = "light.test_name_channel_1"
     monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "red")
     monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "green")
     monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "blue")
@@ -809,7 +809,7 @@ async def test_rpc_cct_light(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC CCT light."""
-    entity_id = f"{LIGHT_DOMAIN}.cct_light_0"
+    entity_id = f"{LIGHT_DOMAIN}.test_name_cct_light_0"
 
     config = deepcopy(mock_rpc_device.config)
     config["cct:0"] = {"id": 0, "name": None, "ct_range": [3333, 5555]}
