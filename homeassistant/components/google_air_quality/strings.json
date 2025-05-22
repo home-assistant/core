@@ -47,7 +47,7 @@
   },
   "exceptions": {
     "unable_to_fetch": {
-      "message": "Unable to fetch calendar data: {err}"
+      "message": "Unable to fetch air quality data: {err}"
     }
   },
   "entity": {
