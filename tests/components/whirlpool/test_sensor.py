@@ -4,10 +4,7 @@ from datetime import UTC, datetime, timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-<<<<<<< HEAD
 from syrupy.assertion import SnapshotAssertion
-=======
-from syrupy import SnapshotAssertion
 from whirlpool.oven import CavityState, CookMode
 >>>>>>> f7ed3664d56 (test_simple_enum_sensors)
 from whirlpool.washerdryer import MachineState
