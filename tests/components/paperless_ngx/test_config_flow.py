@@ -19,7 +19,7 @@ from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import USER_INPUT
+from .const import USER_INPUT, USER_INPUT_UPDATE
 
 from tests.common import MockConfigEntry, patch
 
@@ -53,6 +53,54 @@ async def test_full_config_flow(hass: HomeAssistant) -> None:
     assert config_entry.title == USER_INPUT[CONF_URL]
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.data == USER_INPUT
+
+
+async def test_full_reauth_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth an integration and finishing flow works."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    reauth_flow = await mock_config_entry.start_reauth_flow(hass)
+    assert reauth_flow["type"] is FlowResultType.FORM
+    assert reauth_flow["step_id"] == "reauth_confirm"
+
+    result_configure = await hass.config_entries.flow.async_configure(
+        reauth_flow["flow_id"],
+        USER_INPUT_UPDATE,
+    )
+
+    await hass.async_block_till_done()
+
+    assert result_configure["type"] is FlowResultType.ABORT
+    assert result_configure["reason"] == "reauth_successful"
+    assert mock_config_entry.data == USER_INPUT_UPDATE
+
+
+async def test_full_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure an integration and finishing flow works."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    reauth_flow = await mock_config_entry.start_reconfigure_flow(hass)
+    assert reauth_flow["type"] is FlowResultType.FORM
+    assert reauth_flow["step_id"] == "reconfigure"
+
+    result_configure = await hass.config_entries.flow.async_configure(
+        reauth_flow["flow_id"],
+        USER_INPUT_UPDATE,
+    )
+
+    await hass.async_block_till_done()
+
+    assert result_configure["type"] is FlowResultType.ABORT
+    assert result_configure["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == USER_INPUT_UPDATE
 
 
 @pytest.mark.parametrize(
@@ -95,6 +143,82 @@ async def test_config_flow_error_handling(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == USER_INPUT[CONF_URL]
     assert result["data"] == USER_INPUT
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (PaperlessConnectionError(), {CONF_URL: "cannot_connect"}),
+        (PaperlessInvalidTokenError(), {CONF_API_KEY: "invalid_api_key"}),
+        (PaperlessInactiveOrDeletedError(), {CONF_API_KEY: "user_inactive_or_deleted"}),
+        (PaperlessForbiddenError(), {CONF_API_KEY: "forbidden"}),
+        (InitializationError(), {CONF_URL: "cannot_connect"}),
+        (Exception("BOOM!"), {"base": "unknown"}),
+    ],
+)
+async def test_reauth_flow_error_handling(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_paperless: AsyncMock,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test reauth flow with various initialization errors."""
+
+    mock_config_entry.add_to_hass(hass)
+    mock_paperless.initialize.side_effect = side_effect
+
+    reauth_flow = await mock_config_entry.start_reauth_flow(hass)
+    assert reauth_flow["type"] is FlowResultType.FORM
+    assert reauth_flow["step_id"] == "reauth_confirm"
+
+    result_configure = await hass.config_entries.flow.async_configure(
+        reauth_flow["flow_id"],
+        USER_INPUT_UPDATE,
+    )
+
+    await hass.async_block_till_done()
+
+    assert result_configure["type"] is FlowResultType.FORM
+    assert result_configure["errors"] == expected_error
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (PaperlessConnectionError(), {CONF_URL: "cannot_connect"}),
+        (PaperlessInvalidTokenError(), {CONF_API_KEY: "invalid_api_key"}),
+        (PaperlessInactiveOrDeletedError(), {CONF_API_KEY: "user_inactive_or_deleted"}),
+        (PaperlessForbiddenError(), {CONF_API_KEY: "forbidden"}),
+        (InitializationError(), {CONF_URL: "cannot_connect"}),
+        (Exception("BOOM!"), {"base": "unknown"}),
+    ],
+)
+async def test_reconfigure_flow_error_handling(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_paperless: AsyncMock,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test reconfigure flow with various initialization errors."""
+
+    mock_config_entry.add_to_hass(hass)
+    mock_paperless.initialize.side_effect = side_effect
+
+    reauth_flow = await mock_config_entry.start_reconfigure_flow(hass)
+    assert reauth_flow["type"] is FlowResultType.FORM
+    assert reauth_flow["step_id"] == "reconfigure"
+
+    result_configure = await hass.config_entries.flow.async_configure(
+        reauth_flow["flow_id"],
+        USER_INPUT_UPDATE,
+    )
+
+    await hass.async_block_till_done()
+
+    assert result_configure["type"] is FlowResultType.FORM
+    assert result_configure["errors"] == expected_error
 
 
 async def test_config_already_exists(
