@@ -42,9 +42,9 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "completed": "successful completed",
-              "failed": "failed",
-              "in_progress": "in progress"
+              "completed": "Completed successfully",
+              "failed": "Failed",
+              "in_progress": "In progress"
             }
           }
         }
