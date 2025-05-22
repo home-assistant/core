@@ -1,0 +1,18 @@
+[
+  {
+    "vmid": 100,
+    "name": "vm-web",
+    "status": "running",
+    "maxmem": 2147483648,
+    "mem": 1073741824,
+    "cpu": 0.15,
+    "maxdisk": 34359738368,
+    "disk": 1234567890,
+    "uptime": 86400
+  },
+  {
+    "vmid": 101,
+    "name": "vm-db",
+    "status": "stopped"
+  }
+]
