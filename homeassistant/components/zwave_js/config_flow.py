@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 from contextlib import suppress
 from datetime import datetime
 import logging
+import os
 from pathlib import Path
 from typing import Any
 
@@ -1241,11 +1243,15 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Restore failed."""
         if user_input is not None:
             return await self.async_step_restore_nvm()
+        assert self.backup_filepath is not None
+        assert self.backup_data is not None
 
         return self.async_show_form(
             step_id="restore_failed",
             description_placeholders={
-                "file_path": str(self.backup_filepath),
+                "file_path": self.backup_filepath,
+                "file_url": f"data:application/octet-stream;base64,{base64.b64encode(self.backup_data).decode('ascii')}",
+                "file_name": os.path.basename(self.backup_filepath),
             },
         )
 
