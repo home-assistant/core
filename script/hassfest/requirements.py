@@ -23,28 +23,22 @@ from script.gen_requirements_all import (
 from .model import Config, Integration
 
 PACKAGE_CHECK_VERSION_RANGE = {
-    # Package name: versioning convention
-    # Packages in requirements.txt are added automatically as SemVer
-    # Needs to be added here if it is not present in requirements.txt
-    # or if is not SemVer compatible
+    "aiohttp": "SemVer",
     "attrs": "CalVer",
     "grpcio": "SemVer",
+    "httpx": "SemVer",
     "mashumaro": "SemVer",
     "pydantic": "SemVer",
+    "pyjwt": "SemVer",
     "pytz": "CalVer",
     "typing_extensions": "SemVer",
+    "yarl": "SemVer",
 }
 PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # In the form dict("domain": {"package": {"dependency1", "dependency2"}})
     # - domain is the integration domain
     # - package is the package (can be transitive) referencing the dependency
     # - dependencyX should be the name of the referenced dependency
-    "cloud": {
-        "hass-nabucasa": {"atomicwrites-homeassistant"},
-    },
-    "geocaching": {
-        "scipy": {"numpy"},
-    },
     "ollama": {
         # https://github.com/ollama/ollama-python/pull/445 (not yet released)
         "ollama": {"httpx"}
@@ -52,12 +46,6 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "overkiz": {
         # https://github.com/iMicknl/python-overkiz-api/issues/1644 (not yet released)
         "pyoverkiz": {"attrs"},
-    },
-    "sensorpush_cloud": {
-        "sensorpush-api": {"urllib3"},
-    },
-    "weheat": {
-        "weheat": {"urllib3"},
     },
 }
 
@@ -189,17 +177,6 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
         return
 
     # check for incompatible requirements
-
-    requirement_file = config.root / "requirements.txt"
-    with requirement_file.open(encoding="UTF-8") as fp:
-        for _, line in enumerate(fp):
-            if match := PACKAGE_REGEX.match(line):
-                pkg, _, _ = match.groups()
-
-                if pkg not in PACKAGE_CHECK_VERSION_RANGE:
-                    # Assume SemVer - for other version conventions, we need to
-                    # add manually to PACKAGE_CHECK_VERSION_RANGE
-                    PACKAGE_CHECK_VERSION_RANGE[pkg] = "SemVer"
 
     disable_tqdm = bool(config.specific_integrations or os.environ.get("CI"))
 
