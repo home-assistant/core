@@ -18,9 +18,14 @@ from homeassistant import config_entries
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN, CONF_ID, CONF_NAME
 from homeassistant.core import callback
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from . import BlueCurrentConfigEntry, Connector
-from .const import BCU_APP, CARD, DOMAIN, LOGGER
+from .const import BCU_APP, CARD, DOMAIN, LOGGER, WITHOUT_CHARGE_CARD
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_TOKEN): str})
 
@@ -102,7 +107,7 @@ class ChargeCardsFlowHandler(config_entries.OptionsFlow):
         def card_display_name(card: dict[str, Any]) -> str:
             """Get the display name of a card. When the card has a name, show the name with the card id. Otherwise, only show the card id."""
             if card[CONF_ID] == BCU_APP:
-                return "None"
+                return WITHOUT_CHARGE_CARD
             if card[CONF_NAME] == "":
                 return str(card[CONF_ID])
             return f"{card[CONF_NAME]} ({card[CONF_ID]})"
@@ -111,7 +116,7 @@ class ChargeCardsFlowHandler(config_entries.OptionsFlow):
             """Get the card id based on the display name."""
             split = card_name.rsplit("(")
             if len(split) == 1:
-                if split[0] == "None":
+                if split[0] == WITHOUT_CHARGE_CARD:
                     return BCU_APP
                 return split[0]
             return split[-1].strip(")")
@@ -121,7 +126,15 @@ class ChargeCardsFlowHandler(config_entries.OptionsFlow):
         current_charge_card_id = card_display_name(connector.selected_charge_card)
 
         card_schema = vol.Schema(
-            {vol.Required(CARD, default=current_charge_card_id): vol.In(cards)}
+            {
+                vol.Required(CARD, default=current_charge_card_id): SelectSelector(
+                    SelectSelectorConfig(
+                        options=cards,
+                        mode=SelectSelectorMode.DROPDOWN,
+                        translation_key="select_charge_card",
+                    )
+                )
+            }
         )
 
         if user_input is not None:

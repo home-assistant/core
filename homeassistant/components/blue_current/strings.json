@@ -138,5 +138,12 @@
         "name": "Reset"
       }
     }
+  },
+  "selector": {
+    "select_charge_card": {
+      "options": {
+        "without_charge_card": "Without charge card"
+      }
+    }
   }
 }

@@ -12,3 +12,4 @@ CARD = "card"
 UID = "uid"
 BCU_APP = "BCU-APP"
 DEFAULT_CARD = {"id": BCU_APP, "uid": BCU_APP}
+WITHOUT_CHARGE_CARD = "without_charge_card"
