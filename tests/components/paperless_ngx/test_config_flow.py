@@ -58,6 +58,7 @@ async def test_full_config_flow(hass: HomeAssistant) -> None:
 async def test_full_reauth_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reauth an integration and finishing flow works."""
 
@@ -71,8 +72,6 @@ async def test_full_reauth_flow(
         reauth_flow["flow_id"], USER_INPUT_REAUTH
     )
 
-    await hass.async_block_till_done()
-
     assert result_configure["type"] is FlowResultType.ABORT
     assert result_configure["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_API_KEY] == USER_INPUT_REAUTH[CONF_API_KEY]
@@ -81,6 +80,7 @@ async def test_full_reauth_flow(
 async def test_full_reconfigure_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reconfigure an integration and finishing flow works."""
 
@@ -94,8 +94,6 @@ async def test_full_reconfigure_flow(
         reconfigure_flow["flow_id"],
         USER_INPUT_UPDATE,
     )
-
-    await hass.async_block_till_done()
 
     assert result_configure["type"] is FlowResultType.ABORT
     assert result_configure["reason"] == "reconfigure_successful"

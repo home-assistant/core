@@ -45,6 +45,7 @@ class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_API_KEY: user_input[CONF_API_KEY],
                 }
             )
+
             errors = await self._validate_input(user_input)
 
             if not errors:
@@ -65,6 +66,13 @@ class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
         if user_input is not None:
+            self._async_abort_entries_match(
+                {
+                    CONF_URL: user_input[CONF_URL],
+                    CONF_API_KEY: user_input[CONF_API_KEY],
+                }
+            )
+
             errors = await self._validate_input(user_input)
 
             if not errors:
