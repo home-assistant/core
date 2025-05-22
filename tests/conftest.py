@@ -47,12 +47,15 @@ from . import patch_json  # isort:skip
 
 from homeassistant import block_async_io
 from homeassistant.exceptions import ServiceNotFound
+from homeassistant.helpers.json import save_json
 
 # Setup patching of recorder functions before any other Home Assistant imports
 from . import patch_recorder  # isort:skip
 
 # Setup patching of dt_util time functions before any other Home Assistant imports
 from . import patch_time  # isort:skip
+
+from _pytest.terminal import TerminalReporter
 
 from homeassistant import components, core as ha, loader, runner
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
@@ -128,6 +131,7 @@ if TYPE_CHECKING:
 
 pytest.register_assert_rewrite("tests.common")
 
+
 from .common import (  # noqa: E402, isort:skip
     CLIENT_ID,
     INSTANCES,
@@ -158,6 +162,38 @@ asyncio.set_event_loop_policy = lambda policy: None
 def pytest_addoption(parser: pytest.Parser) -> None:
     """Register custom pytest options."""
     parser.addoption("--dburl", action="store", default="sqlite://")
+    parser.addoption(
+        "--execution-time-report-name",
+        action="store",
+        default="pytest-execution-time-report.json",
+    )
+
+
+class PytestExecutionTimeReport:
+    """Pytest plugin to generate a JSON report with the execution time of each test."""
+
+    def pytest_terminal_summary(
+        self,
+        terminalreporter: TerminalReporter,
+        exitstatus: pytest.ExitCode,
+        config: pytest.Config,
+    ) -> None:
+        """Generate a JSON report with the execution time of each test."""
+        if config.option.collectonly:
+            return
+
+        data: dict[str, float] = {}
+        for replist in terminalreporter.stats.values():
+            for rep in replist:
+                if isinstance(rep, pytest.TestReport):
+                    location = rep.location[0]
+                    if location not in data:
+                        data[location] = rep.duration
+                    else:
+                        data[location] += rep.duration
+
+        time_report_filename = config.option.execution_time_report_name
+        save_json(time_report_filename, data)
 
 
 def pytest_configure(config: pytest.Config) -> None:
@@ -172,6 +208,7 @@ def pytest_configure(config: pytest.Config) -> None:
     # Temporary workaround until it is finalised inside syrupy
     # See https://github.com/syrupy-project/syrupy/pull/901
     SnapshotSession.finish = override_syrupy_finish
+    config.pluginmanager.register(PytestExecutionTimeReport())
 
 
 def pytest_runtest_setup() -> None:
