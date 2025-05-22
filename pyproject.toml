@@ -604,8 +604,6 @@ filterwarnings = [
   # - pkg_resources
   # https://pypi.org/project/aiomusiccast/ - v0.14.8 - 2023-03-20
   "ignore:pkg_resources is deprecated as an API:DeprecationWarning:aiomusiccast",
-  # https://pypi.org/project/habitipy/ - v0.3.3 - 2024-10-28
-  "ignore:pkg_resources is deprecated as an API:DeprecationWarning:habitipy.api",
   # https://github.com/eavanvalkenburg/pysiaalarm/blob/v3.1.1/src/pysiaalarm/data/data.py#L7 - v3.1.1 - 2023-04-17
   "ignore:pkg_resources is deprecated as an API:DeprecationWarning:pysiaalarm.data.data",
   # https://pypi.org/project/pybotvac/ - v0.0.26 - 2025-02-26

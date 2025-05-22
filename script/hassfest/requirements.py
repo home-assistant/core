@@ -22,6 +22,19 @@ from script.gen_requirements_all import (
 
 from .model import Config, Integration
 
+PACKAGE_CHECK_VERSION_RANGE = {
+    "aiohttp": "SemVer",
+    # https://github.com/iMicknl/python-overkiz-api/issues/1644
+    # "attrs": "CalVer"
+    "grpcio": "SemVer",
+    "mashumaro": "SemVer",
+    "pydantic": "SemVer",
+    "pyjwt": "SemVer",
+    "pytz": "CalVer",
+    "typing_extensions": "SemVer",
+    "yarl": "SemVer",
+}
+
 PACKAGE_REGEX = re.compile(
     r"^(?:--.+\s)?([-_,\.\w\d\[\]]+)(==|>=|<=|~=|!=|<|>|===)*(.*)$"
 )
@@ -32,7 +45,6 @@ FORBIDDEN_PACKAGES = {"setuptools", "wheel"}
 FORBIDDEN_PACKAGE_EXCEPTIONS = {
     # Direct dependencies
     "fitbit",  # setuptools (fitbit)
-    "habitipy",  # setuptools (habitica)
     "influxdb-client",  # setuptools (influxdb)
     "microbeespy",  # setuptools (microbees)
     "pyefergy",  # types-pytz (efergy)
@@ -176,7 +188,7 @@ def get_pipdeptree() -> dict[str, dict[str, Any]]:
             "key": "flake8-docstrings",
             "package_name": "flake8-docstrings",
             "installed_version": "1.5.0"
-            "dependencies": {"flake8"}
+            "dependencies": {"flake8": ">=1.2.3, <4.5.0"}
         }
     }
     """
@@ -192,7 +204,9 @@ def get_pipdeptree() -> dict[str, dict[str, Any]]:
     ):
         deptree[item["package"]["key"]] = {
             **item["package"],
-            "dependencies": {dep["key"] for dep in item["dependencies"]},
+            "dependencies": {
+                dep["key"]: dep["required_version"] for dep in item["dependencies"]
+            },
         }
     return deptree
 
@@ -223,8 +237,8 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
                 )
             continue
 
-        dependencies: set[str] = item["dependencies"]
-        for pkg in dependencies:
+        dependencies: dict[str, str] = item["dependencies"]
+        for pkg, version in dependencies.items():
             if pkg.startswith("types-") or pkg in FORBIDDEN_PACKAGES:
                 if package in FORBIDDEN_PACKAGE_EXCEPTIONS:
                     integration.add_warning(
@@ -236,10 +250,60 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
                         "requirements",
                         f"Package {pkg} should not be a runtime dependency in {package}",
                     )
+            check_dependency_version_range(integration, package, pkg, version)
 
         to_check.extend(dependencies)
 
     return all_requirements
+
+
+def check_dependency_version_range(
+    integration: Integration, source: str, pkg: str, version: str
+) -> None:
+    """Check requirement version range.
+
+    We want to avoid upper version bounds that are too strict for common packages.
+    """
+    if version == "Any" or (convention := PACKAGE_CHECK_VERSION_RANGE.get(pkg)) is None:
+        return
+
+    if not all(
+        _is_dependency_version_range_valid(version_part, convention)
+        for version_part in version.split(";", 1)[0].split(",")
+    ):
+        integration.add_error(
+            "requirements",
+            f"Version restrictions for {pkg} are too strict ({version}) in {source}",
+        )
+
+
+def _is_dependency_version_range_valid(version_part: str, convention: str) -> bool:
+    version_match = PIP_VERSION_RANGE_SEPARATOR.match(version_part)
+    operator = version_match.group(1)
+    version = version_match.group(2)
+
+    if operator in (">", ">=", "!="):
+        # Lower version binding and version exclusion are fine
+        return True
+
+    if convention == "SemVer":
+        if operator == "==":
+            # Explicit version with wildcard is allowed only on major version
+            # e.g. ==1.* is allowed, but ==1.2.* is not
+            return version.endswith(".*") and version.count(".") == 1
+
+        awesome = AwesomeVersion(version)
+        if operator in ("<", "<="):
+            # Upper version binding only allowed on major version
+            # e.g. <=3 is allowed, but <=3.1 is not
+            return awesome.section(1) == 0 and awesome.section(2) == 0
+
+        if operator == "~=":
+            # Compatible release operator is only allowed on major or minor version
+            # e.g. ~=1.2 is allowed, but ~=1.2.3 is not
+            return awesome.section(2) == 0
+
+    return False
 
 
 def install_requirements(integration: Integration, requirements: set[str]) -> bool:
