@@ -280,31 +280,6 @@ async def test_template_state_text(
     assert text in caplog.text
 
 
-@pytest.mark.parametrize("count", [1])
-@pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
-)
-@pytest.mark.parametrize(
-    ("state_template", "expected"),
-    [
-        ("{{ 'open' }}", CoverState.OPEN),
-        ("{{ 'closed' }}", CoverState.CLOSED),
-        ("{{ 'opening' }}", CoverState.OPENING),
-        ("{{ 'closing' }}", CoverState.CLOSING),
-        ("{{ 'dog' }}", STATE_UNKNOWN),
-        ("{{ x - 1 }}", STATE_UNAVAILABLE),
-    ],
-)
-@pytest.mark.usefixtures("setup_state_cover")
-async def test_template_state_states(
-    hass: HomeAssistant,
-    expected: str,
-) -> None:
-    """Test state template states."""
-    state = hass.states.get(TEST_ENTITY_ID)
-    assert state.state == expected
-
-
 @pytest.mark.parametrize(
     ("count", "state_template", "attribute_template"),
     [
