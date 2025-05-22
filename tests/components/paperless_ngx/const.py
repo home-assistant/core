@@ -11,3 +11,5 @@ USER_INPUT_UPDATE = {
     CONF_URL: "https://paperless.example.de",
     CONF_API_KEY: "87654321",
 }
+
+USER_INPUT_REAUTH = {CONF_API_KEY: "192837465"}

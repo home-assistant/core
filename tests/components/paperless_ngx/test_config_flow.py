@@ -19,7 +19,7 @@ from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import USER_INPUT, USER_INPUT_UPDATE
+from .const import USER_INPUT, USER_INPUT_REAUTH, USER_INPUT_UPDATE
 
 from tests.common import MockConfigEntry, patch
 
@@ -68,15 +68,14 @@ async def test_full_reauth_flow(
     assert reauth_flow["step_id"] == "reauth_confirm"
 
     result_configure = await hass.config_entries.flow.async_configure(
-        reauth_flow["flow_id"],
-        USER_INPUT_UPDATE,
+        reauth_flow["flow_id"], USER_INPUT_REAUTH
     )
 
     await hass.async_block_till_done()
 
     assert result_configure["type"] is FlowResultType.ABORT
     assert result_configure["reason"] == "reauth_successful"
-    assert mock_config_entry.data == USER_INPUT_UPDATE
+    assert mock_config_entry.data[CONF_API_KEY] == USER_INPUT_REAUTH[CONF_API_KEY]
 
 
 async def test_full_reconfigure_flow(
@@ -87,12 +86,12 @@ async def test_full_reconfigure_flow(
 
     mock_config_entry.add_to_hass(hass)
 
-    reauth_flow = await mock_config_entry.start_reconfigure_flow(hass)
-    assert reauth_flow["type"] is FlowResultType.FORM
-    assert reauth_flow["step_id"] == "reconfigure"
+    reconfigure_flow = await mock_config_entry.start_reconfigure_flow(hass)
+    assert reconfigure_flow["type"] is FlowResultType.FORM
+    assert reconfigure_flow["step_id"] == "reconfigure"
 
     result_configure = await hass.config_entries.flow.async_configure(
-        reauth_flow["flow_id"],
+        reconfigure_flow["flow_id"],
         USER_INPUT_UPDATE,
     )
 
@@ -173,8 +172,7 @@ async def test_reauth_flow_error_handling(
     assert reauth_flow["step_id"] == "reauth_confirm"
 
     result_configure = await hass.config_entries.flow.async_configure(
-        reauth_flow["flow_id"],
-        USER_INPUT_UPDATE,
+        reauth_flow["flow_id"], USER_INPUT_REAUTH
     )
 
     await hass.async_block_till_done()
