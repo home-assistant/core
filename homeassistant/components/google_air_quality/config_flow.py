@@ -69,12 +69,9 @@ class OAuth2FlowHandler(
         return self._show_form_user()
 
     async def async_step_coordinates(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, Any]
     ) -> ConfigFlowResult:
         """Handle coordinate input and create the config entry."""
-        if not user_input:
-            return self._show_form_user()
-
         session = aiohttp_client.async_get_clientsession(self.hass)
         auth = api.AsyncConfigFlowAuth(
             session, self._oauth_data[CONF_TOKEN][CONF_ACCESS_TOKEN]

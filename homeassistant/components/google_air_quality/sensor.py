@@ -1,10 +1,9 @@
 """Creates the sensor entities for Google Air Quality."""
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Any
 
 from google_air_quality_api.model import AirQualityData
 
@@ -16,10 +15,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -34,27 +34,12 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
-@callback
-def _get_local_aqi_extra_state_attributes(
-    data: AirQualityData,
-) -> dict[str, int] | None:
-    """Return the name of the current work area."""
-    if data.indexes[1].aqi:
-        return {
-            data.indexes[1].display_name: data.indexes[1].aqi,
-        }
-    return None
-
-
 @dataclass(frozen=True, kw_only=True)
 class AirQualitySensorEntityDescription(SensorEntityDescription):
     """Describes Air Quality sensor entity."""
 
-    exists_fn: Callable[[Any], bool] = lambda _: True
-    extra_state_attributes_fn: Callable[[Any], Mapping[str, Any] | None] = (
-        lambda _: None
-    )
-    value_fn: Callable[[Any], StateType | datetime]
+    exists_fn: Callable[[AirQualityData], bool] = lambda _: True
+    value_fn: Callable[[AirQualityData], StateType | datetime]
 
 
 AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
@@ -64,7 +49,6 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.AQI,
         value_fn=lambda x: x.indexes[0].aqi,
-        extra_state_attributes_fn=_get_local_aqi_extra_state_attributes,
     ),
     AirQualitySensorEntityDescription(
         key="uaqi_category",
@@ -80,10 +64,51 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
         value_fn=lambda x: x.indexes[0].category,
     ),
     AirQualitySensorEntityDescription(
+        key="local_aqi",
+        translation_key="local_aqi",
+        exists_fn=lambda x: x.indexes[1].aqi is not None,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.AQI,
+        value_fn=lambda x: x.indexes[1].aqi,
+    ),
+    AirQualitySensorEntityDescription(
         key="local_category",
         translation_key="local_category",
         device_class=SensorDeviceClass.ENUM,
         value_fn=lambda x: x.indexes[1].category,
+    ),
+    AirQualitySensorEntityDescription(
+        key="uaqi_dominant_pollutant",
+        translation_key="uaqi_dominant_pollutant",
+        device_class=SensorDeviceClass.ENUM,
+        value_fn=lambda x: x.indexes[0].dominant_pollutant,
+    ),
+    AirQualitySensorEntityDescription(
+        key="local_dominant_pollutant",
+        translation_key="local_dominant_pollutant",
+        device_class=SensorDeviceClass.ENUM,
+        value_fn=lambda x: x.indexes[1].dominant_pollutant,
+    ),
+    AirQualitySensorEntityDescription(
+        key="co",
+        translation_key="carbon_monoxide",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        value_fn=lambda x: x.pollutants.co.concentration.value,
+    ),
+    AirQualitySensorEntityDescription(
+        key="no2",
+        translation_key="nitrogen_dioxide",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        value_fn=lambda x: x.pollutants.no2.concentration.value,
+    ),
+    AirQualitySensorEntityDescription(
+        key="o3",
+        translation_key="ozone",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        value_fn=lambda x: x.pollutants.o3.concentration.value,
     ),
     AirQualitySensorEntityDescription(
         key="pm10",
@@ -98,6 +123,13 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         value_fn=lambda x: x.pollutants.pm25.concentration.value,
+    ),
+    AirQualitySensorEntityDescription(
+        key="so2",
+        translation_key="sulphur_dioxide",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        value_fn=lambda x: x.pollutants.so2.concentration.value,
     ),
 )
 
@@ -114,6 +146,7 @@ async def async_setup_entry(
     entities.extend(
         AirQualitySensorEntity(coordinator, description)
         for description in AIR_QUALITY_SENSOR_TYPES
+        if description.exists_fn(coordinator.data)
     )
     async_add_entities(entities)
 
@@ -151,8 +184,3 @@ class AirQualitySensorEntity(
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return the state attributes."""
-        return self.entity_description.extra_state_attributes_fn(self.coordinator.data)
