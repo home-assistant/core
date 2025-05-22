@@ -8,6 +8,7 @@ from typing import Final
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -718,4 +719,15 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
 
 STATE_CLASS_UNITS: dict[SensorStateClass | str, set[type[StrEnum] | str | None]] = {
     SensorStateClass.MEASUREMENT_ANGLE: {DEGREE},
+}
+
+AMBIGUOUS_UNITS: dict[str | None, str | None] = {
+    "\u00b5Sv/h": "μSv/h",  # aranet: radiation rate
+    "\u00b5S/cm": UnitOfConductivity.MICROSIEMENS_PER_CM,
+    "\u00b5V": UnitOfElectricPotential.MICROVOLT,
+    "\u00b5g/ft³": CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
+    "\u00b5g/m³": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    "\u00b5mol/s⋅m²": "μmol/s⋅m²",  # fyta: light
+    "\u00b5g": UnitOfMass.MICROGRAMS,
+    "\u00b5s": UnitOfTime.MICROSECONDS,
 }
