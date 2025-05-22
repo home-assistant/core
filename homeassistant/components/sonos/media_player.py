@@ -53,6 +53,7 @@ from . import media_browser
 from .config_entry import UnjoinData
 from .const import (
     DOMAIN,
+    MEDIA_TYPE_DIRECTORY,
     MEDIA_TYPES_TO_SONOS,
     MODELS_LINEIN_AND_TV,
     MODELS_LINEIN_ONLY,
@@ -661,6 +662,10 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                     media_id, timeout=LONG_SERVICE_TIMEOUT
                 )
                 soco.play_from_queue(0)
+        elif media_type == MEDIA_TYPE_DIRECTORY:
+            self._play_media_directory(
+                soco=soco, media_type=media_type, media_id=media_id, enqueue=enqueue
+            )
         elif media_type in {MediaType.MUSIC, MediaType.TRACK}:
             # If media ID is a relative URL, we serve it from HA.
             media_id = async_process_play_media_url(self.hass, media_id)
@@ -742,6 +747,25 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             )
             if enqueue == MediaPlayerEnqueue.PLAY:
                 soco.play_from_queue(new_pos - 1)
+
+    def _play_media_directory(
+        self,
+        soco: SoCo,
+        media_type: MediaType | str,
+        media_id: str,
+        enqueue: MediaPlayerEnqueue,
+    ):
+        """Play a directory from a music library share."""
+        item = media_browser.get_media(self.media.library, media_id, media_type)
+        if not item:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_media",
+                translation_placeholders={
+                    "media_id": media_id,
+                },
+            )
+        self._play_media_queue(soco, item, enqueue)
 
     @soco_error()
     def set_sleep_timer(self, sleep_time: int) -> None:
