@@ -424,7 +424,7 @@ def check_dependency_version_range(
         integration.add_error(
             "requirements",
             f"Version restrictions for {pkg} have been resolved in {source}, "
-            "please remove from `_INTEGRATION_EXCEPTIONS`",
+            "please remove from `PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS`",
         )
 
 
