@@ -165,6 +165,33 @@ async def test_temperature_conversion_wrong_device_class(
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.FAHRENHEIT
 
 
+@pytest.mark.parametrize(
+    ("ambiguous_unit", "normalized_unit"),
+    [
+        (ambiguous_unit, normalized_unit)
+        for ambiguous_unit, normalized_unit in sensor.AMBIGUOUS_UNITS.items()
+    ],
+)
+async def test_ambiguous_unit_of_measurement_compat(
+    hass: HomeAssistant, ambiguous_unit: str, normalized_unit: str
+) -> None:
+    """Test ambiguous native_unit_of_measurement values are corrected."""
+    entity0 = MockSensor(
+        name="Test",
+        native_value="0.0",
+        native_unit_of_measurement=ambiguous_unit,
+    )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    # Check temperature is not converted
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == "0.0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == normalized_unit
+
+
 @pytest.mark.parametrize("state_class", ["measurement", "total_increasing"])
 async def test_deprecated_last_reset(
     hass: HomeAssistant,
