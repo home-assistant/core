@@ -41,22 +41,116 @@ PACKAGE_REGEX = re.compile(
 PIP_REGEX = re.compile(r"^(--.+\s)?([-_\.\w\d]+.*(?:==|>=|<=|~=|!=|<|>|===)?.*$)")
 PIP_VERSION_RANGE_SEPARATOR = re.compile(r"^(==|>=|<=|~=|!=|<|>|===)?(.*)$")
 
-FORBIDDEN_PACKAGES = {"setuptools", "wheel"}
-FORBIDDEN_PACKAGE_EXCEPTIONS = {
-    # Direct dependencies
-    "fitbit",  # setuptools (fitbit)
-    "influxdb-client",  # setuptools (influxdb)
-    "microbeespy",  # setuptools (microbees)
-    "pyefergy",  # types-pytz (efergy)
-    "python-mystrom",  # setuptools (mystrom)
-    # Transitive dependencies
-    "arrow",  # types-python-dateutil (opower)
-    "asyncio-dgram",  # setuptools (guardian / keba / minecraft_server)
-    "colorzero",  # setuptools (remote_rpi_gpio / zha)
-    "incremental",  # setuptools (azure_devops / lyric / ovo_energy / system_bridge)
-    "pbr",  # setuptools (cmus / concord232 / mochad / nx584 / opnsense)
-    "pycountry-convert",  # wheel (ecovacs)
-    "unasync",  # setuptools (hive / osoenergy)
+FORBIDDEN_PACKAGES = {"codecov", "pytest", "setuptools", "wheel"}
+FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
+    # In the form dict("domain": {"package": {"reason1", "reason2"}})
+    # - domain is the integration domain
+    # - package is the package (can be transitive) referencing the dependency
+    # - reasonX should be the name of the invalid dependency
+    "azure_devops": {
+        # aioazuredevops > incremental > setuptools
+        "incremental": {"setuptools"}
+    },
+    "cmus": {
+        # pycmus > pbr > setuptools
+        "pbr": {"setuptools"}
+    },
+    "concord232": {
+        # concord232 > stevedore > pbr > setuptools
+        "pbr": {"setuptools"}
+    },
+    "ecovacs": {
+        # py-sucks > pycountry-convert > pytest-cov > pytest
+        "pytest-cov": {"pytest", "wheel"},
+        # py-sucks > pycountry-convert > pytest-mock > pytest
+        "pytest-mock": {"pytest", "wheel"},
+        # py-sucks > pycountry-convert > pytest
+        # py-sucks > pycountry-convert > wheel
+        "pycountry-convert": {"pytest", "wheel"},
+    },
+    "efergy": {
+        # pyefergy > codecov
+        # pyefergy > types-pytz
+        "pyefergy": {"codecov", "types-pytz"}
+    },
+    "fitbit": {
+        # fitbit > setuptools
+        "fitbit": {"setuptools"}
+    },
+    "guardian": {
+        # aioguardian > asyncio-dgram > setuptools
+        "asyncio-dgram": {"setuptools"}
+    },
+    "hive": {
+        # pyhive-integration > unasync > setuptools
+        "unasync": {"setuptools"}
+    },
+    "influxdb": {
+        # influxdb-client > setuptools
+        "influxdb-client": {"setuptools"}
+    },
+    "keba": {
+        # keba-kecontact > asyncio-dgram > setuptools
+        "asyncio-dgram": {"setuptools"}
+    },
+    "lyric": {
+        # aiolyric > incremental > setuptools
+        "incremental": {"setuptools"}
+    },
+    "microbees": {
+        # microbeespy > setuptools
+        "microbeespy": {"setuptools"}
+    },
+    "minecraft_server": {
+        # mcstatus > asyncio-dgram > setuptools
+        "asyncio-dgram": {"setuptools"}
+    },
+    "mochad": {
+        # pymochad > pbr > setuptools
+        "pbr": {"setuptools"}
+    },
+    "mystrom": {
+        # python-mystrom > setuptools
+        "python-mystrom": {"setuptools"}
+    },
+    "nx584": {
+        # pynx584 > stevedore > pbr > setuptools
+        "pbr": {"setuptools"}
+    },
+    "opnsense": {
+        # pyopnsense > pbr > setuptools
+        "pbr": {"setuptools"}
+    },
+    "opower": {
+        # opower > arrow > types-python-dateutil
+        "arrow": {"types-python-dateutil"}
+    },
+    "osoenergy": {
+        # pyosoenergyapi > unasync > setuptools
+        "unasync": {"setuptools"}
+    },
+    "ovo_energy": {
+        # ovoenergy > incremental > setuptools
+        "incremental": {"setuptools"}
+    },
+    "remote_rpi_gpio": {
+        # gpiozero > colorzero > setuptools
+        "colorzero": {"setuptools"}
+    },
+    "system_bridge": {
+        # systembridgeconnector > incremental > setuptools
+        "incremental": {"setuptools"}
+    },
+    "travisci": {
+        # travisci > pytest-rerunfailures > pytest
+        "pytest-rerunfailures": {"pytest"},
+        # travisci > pytest
+        "travispy": {"pytest"},
+    },
+    "zha": {
+        # zha > zigpy-zigate > gpiozero > colorzero > setuptools
+        "colorzero": {"setuptools"}
+    },
 }
 
 
@@ -219,6 +313,11 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
 
     to_check = deque(packages)
 
+    forbidden_package_exceptions = FORBIDDEN_PACKAGE_EXCEPTIONS.get(
+        integration.domain, {}
+    )
+    needs_forbidden_package_exceptions = False
+
     while to_check:
         package = to_check.popleft()
 
@@ -228,6 +327,8 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
         all_requirements.add(package)
 
         item = deptree.get(package)
+        if forbidden_package_exceptions:
+            print(f"Integration {integration.domain}: {item}")
 
         if item is None:
             # Only warn if direct dependencies could not be resolved
@@ -238,9 +339,11 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
             continue
 
         dependencies: dict[str, str] = item["dependencies"]
+        package_exceptions = forbidden_package_exceptions.get(package, set())
         for pkg, version in dependencies.items():
             if pkg.startswith("types-") or pkg in FORBIDDEN_PACKAGES:
-                if package in FORBIDDEN_PACKAGE_EXCEPTIONS:
+                needs_forbidden_package_exceptions = True
+                if pkg in package_exceptions:
                     integration.add_warning(
                         "requirements",
                         f"Package {pkg} should not be a runtime dependency in {package}",
@@ -254,6 +357,12 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
 
         to_check.extend(dependencies)
 
+    if forbidden_package_exceptions and not needs_forbidden_package_exceptions:
+        integration.add_error(
+            "requirements",
+            f"Integration {integration.domain} runtime dependency exceptions "
+            "have been resolved, please remove from `FORBIDDEN_PACKAGE_EXCEPTIONS`",
+        )
     return all_requirements
 
 
