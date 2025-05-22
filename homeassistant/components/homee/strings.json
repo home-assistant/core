@@ -234,6 +234,13 @@
       }
     },
     "select": {
+      "display_temperature_selection": {
+        "name": "Displayed temperature",
+        "state": {
+          "selected": "target",
+          "current": "measured"
+        }
+      },
       "repeater_mode": {
         "name": "Repeater mode",
         "state": {
