@@ -1826,6 +1826,9 @@ pyownet==0.10.0.post1
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.19
 
+# homeassistant.components.paperless_ngx
+pypaperless==4.1.0
+
 # homeassistant.components.lcn
 pypck==0.8.6
 
@@ -2130,6 +2133,9 @@ qingping-ble==0.10.0
 
 # homeassistant.components.qnap
 qnapstats==0.4.0
+
+# homeassistant.components.quantum_gateway
+quantum-gateway==0.0.8
 
 # homeassistant.components.radio_browser
 radios==0.3.2
