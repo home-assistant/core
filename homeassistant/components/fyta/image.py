@@ -56,14 +56,14 @@ async def async_setup_entry(
     """Set up the FYTA plant images."""
     coordinator = entry.runtime_data
 
-    entities: list[FytaPlantImageEntity] = [
-        FytaPlantImageEntity(coordinator, entry, description, plant_id)
-        for plant_id in coordinator.fyta.plant_list
-        if plant_id in coordinator.data
-        for description in IMAGES
-    ]
-
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            FytaPlantImageEntity(coordinator, entry, description, plant_id)
+            for plant_id in coordinator.fyta.plant_list
+            if plant_id in coordinator.data
+            for description in IMAGES
+        ]
+    )
 
     def _async_add_new_device(plant_id: int) -> None:
         async_add_entities(

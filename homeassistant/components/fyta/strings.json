@@ -63,10 +63,10 @@
     },
     "image": {
       "plant_image": {
-        "name": "Plant Image"
+        "name": "Plant image"
       },
       "plant_image_user": {
-        "name": "User Image"
+        "name": "User image"
       }
     },
     "sensor": {
