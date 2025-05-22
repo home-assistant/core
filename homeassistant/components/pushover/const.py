@@ -5,6 +5,7 @@ from typing import Final
 DOMAIN: Final = "pushover"
 DATA_HASS_CONFIG: Final = "pushover_hass_config"
 DEFAULT_NAME: Final = "Pushover"
+SERVICE_CANCEL: Final = "cancel"
 
 ATTR_ATTACHMENT: Final = "attachment"
 ATTR_URL: Final = "url"
@@ -16,5 +17,7 @@ ATTR_HTML: Final = "html"
 ATTR_CALLBACK_URL: Final = "callback_url"
 ATTR_EXPIRE: Final = "expire"
 ATTR_TIMESTAMP: Final = "timestamp"
+ATTR_TAG: Final = "tag"
+ATTR_TAGS: Final = "tags"
 
 CONF_USER_KEY: Final = "user_key"
