@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -112,12 +113,14 @@ class MicrosoftFaceDetectEntity(ImageProcessingFaceEntity):
 
         faces: list[FaceInformation] = []
         for face in face_data:
-            face_attr = {}
+            face_attr = FaceInformation()
             for attr in self._attributes:
+                if TYPE_CHECKING:
+                    assert attr in SUPPORTED_ATTRIBUTES
                 if attr in face["faceAttributes"]:
-                    face_attr[attr] = face["faceAttributes"][attr]
+                    face_attr[attr] = face["faceAttributes"][attr]  # type: ignore[literal-required]
 
             if face_attr:
-                faces.append(face_attr)  # type: ignore[arg-type]
+                faces.append(face_attr)
 
         self.async_process_faces(faces, len(face_data))
