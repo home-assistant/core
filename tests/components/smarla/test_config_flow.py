@@ -12,7 +12,9 @@ from . import MOCK_SERIAL_NUMBER, MOCK_USER_INPUT
 from tests.common import MockConfigEntry
 
 
-async def test_config_flow(hass: HomeAssistant, mock_connection) -> None:
+async def test_config_flow(
+    hass: HomeAssistant, mock_setup_entry, mock_connection
+) -> None:
     """Test creating a config entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -33,7 +35,9 @@ async def test_config_flow(hass: HomeAssistant, mock_connection) -> None:
     assert result["result"].unique_id == MOCK_SERIAL_NUMBER
 
 
-async def test_malformed_token(hass: HomeAssistant, mock_connection) -> None:
+async def test_malformed_token(
+    hass: HomeAssistant, mock_setup_entry, mock_connection
+) -> None:
     """Test we show user form on malformed token input."""
     with patch(
         "homeassistant.components.smarla.config_flow.Connection", side_effect=ValueError
@@ -56,7 +60,9 @@ async def test_malformed_token(hass: HomeAssistant, mock_connection) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_invalid_auth(hass: HomeAssistant, mock_connection) -> None:
+async def test_invalid_auth(
+    hass: HomeAssistant, mock_setup_entry, mock_connection
+) -> None:
     """Test we show user form on invalid auth."""
     with patch.object(
         mock_connection, "refresh_token", new=AsyncMock(return_value=False)

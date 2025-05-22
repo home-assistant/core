@@ -1,8 +1,9 @@
-"""Configuration for Sentry tests."""
+"""Configuration for smarla tests."""
 
 from __future__ import annotations
 
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pysmarlaapi.classes import AuthToken
 import pytest
@@ -27,7 +28,16 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_connection():
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.smarla.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_connection() -> Generator[MagicMock]:
     """Patch Connection object."""
     with (
         patch(
