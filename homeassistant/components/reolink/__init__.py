@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Any
 from time import time
-from collections.abc import Callable
+from typing import Any
 
 from reolink_aio.api import RETRY_ATTEMPTS
 from reolink_aio.exceptions import (
@@ -30,7 +30,13 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_BC_PORT, CONF_SUPPORTS_PRIVACY_MODE, CONF_USE_HTTPS, DOMAIN, BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL
+from .const import (
+    BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
+    CONF_BC_PORT,
+    CONF_SUPPORTS_PRIVACY_MODE,
+    CONF_USE_HTTPS,
+    DOMAIN,
+)
 from .exceptions import PasswordIncompatible, ReolinkException, UserNotAdmin
 from .host import ReolinkHost
 from .services import async_setup_services
@@ -218,6 +224,24 @@ async def async_setup_entry(
 
     hass.http.register_view(PlaybackProxyView(hass))
 
+    await register_callbacks(host, device_coordinator, hass)
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
+    config_entry.async_on_unload(
+        config_entry.add_update_listener(entry_update_listener)
+    )
+
+    return True
+
+
+async def register_callbacks(
+    host: ReolinkHost,
+    device_coordinator: DataUpdateCoordinator[None],
+    hass: HomeAssistant,
+) -> None:
+    """Register update callbacks."""
+
     async def refresh(*args: Any) -> None:
         """Request refresh of coordinator."""
         await device_coordinator.async_request_refresh()
@@ -234,8 +258,13 @@ async def async_setup_entry(
     def generate_async_camera_wake(channel: int) -> Callable[[], None]:
         def async_camera_wake() -> None:
             """Request update when a battery camera wakes up."""
-            if not host.api.sleeping(channel) and time() - host.last_wake[channel] > BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL:
+            if (
+                not host.api.sleeping(channel)
+                and time() - host.last_wake[channel]
+                > BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL
+            ):
                 hass.loop.create_task(device_coordinator.async_request_refresh())
+
         return async_camera_wake
 
     host.api.baichuan.register_callback(
@@ -244,16 +273,11 @@ async def async_setup_entry(
     for channel in host.api.channels:
         if host.api.supported(channel, "battery"):
             host.api.baichuan.register_callback(
-                f"camera_{channel}_wake", generate_async_camera_wake(channel), 145, channel
+                f"camera_{channel}_wake",
+                generate_async_camera_wake(channel),
+                145,
+                channel,
             )
-
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
-    config_entry.async_on_unload(
-        config_entry.add_update_listener(entry_update_listener)
-    )
-
-    return True
 
 
 async def entry_update_listener(

@@ -34,7 +34,15 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.storage import Store
 from homeassistant.util.ssl import SSLCipherList
 
-from .const import CONF_BC_PORT, CONF_SUPPORTS_PRIVACY_MODE, CONF_USE_HTTPS, DOMAIN, BATTERY_WAKE_UPDATE_INTERVAL, BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL, BATTERY_ALL_WAKE_UPDATE_INTERVAL
+from .const import (
+    BATTERY_ALL_WAKE_UPDATE_INTERVAL,
+    BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
+    BATTERY_WAKE_UPDATE_INTERVAL,
+    CONF_BC_PORT,
+    CONF_SUPPORTS_PRIVACY_MODE,
+    CONF_USE_HTTPS,
+    DOMAIN,
+)
 from .exceptions import (
     PasswordIncompatible,
     ReolinkSetupException,
@@ -462,7 +470,15 @@ class ReolinkHost:
             # wake the battery cameras for a complete update
             if not self._api.supported(channel, "battery"):
                 wake[channel] = True
-            elif (not self._api.sleeping(channel) and now - self.last_wake[channel] > BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL) or (now - self.last_wake[channel] > BATTERY_WAKE_UPDATE_INTERVAL) or (now - self.last_all_wake > BATTERY_ALL_WAKE_UPDATE_INTERVAL):
+            elif (
+                (
+                    not self._api.sleeping(channel)
+                    and now - self.last_wake[channel]
+                    > BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL
+                )
+                or (now - self.last_wake[channel] > BATTERY_WAKE_UPDATE_INTERVAL)
+                or (now - self.last_all_wake > BATTERY_ALL_WAKE_UPDATE_INTERVAL)
+            ):
                 # let a waking update coincide with the camera waking up by itself unless it did not wake for BATTERY_WAKE_UPDATE_INTERVAL
                 wake[channel] = True
                 self.last_wake[channel] = now
