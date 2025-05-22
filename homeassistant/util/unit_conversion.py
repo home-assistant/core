@@ -688,8 +688,8 @@ class UnitlessRatioConverter(BaseUnitConverter):
     }
 
 
-class ConcentrationConverter(BaseUnitConverter):
-    """Utility to convert concentration values."""
+class MassVolumeConcentrationConverter(BaseUnitConverter):
+    """Utility to convert mass volume concentration values."""
 
     UNIT_CLASS = "concentration"
     _UNIT_CONVERSION: dict[str | None, float] = {
