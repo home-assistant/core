@@ -28,6 +28,14 @@ class MockStreamReader:
         return self._content.read(byte_count)
 
 
+class MockStreamReaderChunked(MockStreamReader):
+    """Mock a stream reader with simulated chunked data."""
+
+    async def readchunk(self) -> tuple[bytes, bool]:
+        """Read bytes."""
+        return (self._content.read(), False)
+
+
 class MockPayloadWriter:
     """Small mock to imitate payload writer."""
 
