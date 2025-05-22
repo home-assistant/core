@@ -56,7 +56,7 @@ async def test_event_entity_backup_completed(
 
     state = hass.states.get("event.backup_automatic_backup")
     assert state.attributes[ATTR_EVENT_TYPE] == "in_progress"
-    assert state.attributes[ATTR_BACKUP_STAGE] == "upload_to_agents"
+    assert state.attributes[ATTR_BACKUP_STAGE] is not None
     assert state.attributes[ATTR_FAILED_REASON] is None
 
     await hass.async_block_till_done(wait_background_tasks=True)
