@@ -377,9 +377,7 @@ def migrate_entity_ids(
                 new_device_id,
             )
             new_identifiers = {(DOMAIN, new_device_id)}
-            device_reg.async_update_device(
-                device.id, new_identifiers=new_identifiers
-            )
+            device_reg.async_update_device(device.id, new_identifiers=new_identifiers)
 
         # Check for wrongfully combined entities in one device
         # Can be removed in HA 2025.12
@@ -389,20 +387,22 @@ def migrate_entity_ids(
             remove_ids = True  # NVR/Hub in identifiers, keep that one, remove others
         for old_id in device.identifiers:
             (old_device_uid, old_ch, old_is_chime) = get_device_uid_and_ch(old_id, host)
-            if not old_device_uid or old_device_uid[0] != host.unique_id or old_id[1] == host.unique_id:
+            if (
+                not old_device_uid
+                or old_device_uid[0] != host.unique_id
+                or old_id[1] == host.unique_id
+            ):
                 continue
             if remove_ids:
                 new_identifiers.remove(old_id)
-            remove_ids = True # after the first identifier, remove the others
+            remove_ids = True  # after the first identifier, remove the others
         if new_identifiers != device.identifiers:
             _LOGGER.debug(
                 "Updating Reolink device identifiers from %s to %s",
                 device.identifiers,
                 new_identifiers,
             )
-            device_reg.async_update_device(
-                device.id, new_identifiers=new_identifiers
-            )
+            device_reg.async_update_device(device.id, new_identifiers=new_identifiers)
             break
 
         if ch is None or is_chime:
@@ -419,14 +419,10 @@ def migrate_entity_ids(
                 device.connections,
                 new_connections,
             )
-            device_reg.async_update_device(
-                device.id, new_connections=new_connections
-            )
+            device_reg.async_update_device(device.id, new_connections=new_connections)
 
         ch_device_ids[device.id] = ch
-        if host.api.supported(ch, "UID") and device_uid[1] != host.api.camera_uid(
-            ch
-        ):
+        if host.api.supported(ch, "UID") and device_uid[1] != host.api.camera_uid(ch):
             if host.api.supported(None, "UID"):
                 new_device_id = f"{host.unique_id}_{host.api.camera_uid(ch)}"
             else:
@@ -437,9 +433,7 @@ def migrate_entity_ids(
                 new_device_id,
             )
             new_identifiers = {(DOMAIN, new_device_id)}
-            existing_device = device_reg.async_get_device(
-                identifiers=new_identifiers
-            )
+            existing_device = device_reg.async_get_device(identifiers=new_identifiers)
             if existing_device is None:
                 device_reg.async_update_device(
                     device.id, new_identifiers=new_identifiers
