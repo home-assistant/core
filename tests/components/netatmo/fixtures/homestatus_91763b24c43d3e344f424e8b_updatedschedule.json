@@ -354,7 +354,7 @@
           "heating_power_request": 0,
           "open_window": false,
           "therm_measured_temperature": 20,
-          "therm_setpoint_temperature": 20,
+          "therm_setpoint_temperature": 25,
           "therm_setpoint_start_time": 1747627205,
           "therm_setpoint_mode": "schedule"
         }

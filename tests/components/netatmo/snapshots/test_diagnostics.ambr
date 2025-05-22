@@ -49,6 +49,14 @@
                 'type': 'NRV',
               }),
               dict({
+                'bridge': '12:34:56:00:fa:d0',
+                'id': '12:34:56:03:a0:ad',
+                'name': '**REDACTED**',
+                'room_id': '100001234',
+                'setup_date': 1747739105,
+                'type': 'NRV',
+              }),
+              dict({
                 'id': '12:34:56:00:f1:62',
                 'modules_bridged': list([
                   '12:34:56:00:86:99',
@@ -530,6 +538,14 @@
                 ]),
                 'name': '**REDACTED**',
                 'type': 'toilets',
+              }),
+              dict({
+                'id': '100001234',
+                'module_ids': list([
+                  '12:34:56:03:a0:ad',
+                ]),
+                'name': '**REDACTED**',
+                'type': 'bedroom',
               }),
             ]),
             'schedules': list([
