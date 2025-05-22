@@ -1,0 +1,37 @@
+{
+  "config": {
+    "abort": {
+      "no_fuel_types": "No fuel prices found for this station"
+    },
+    "error": {
+      "fetch_failed": "Failed to fetch fuel price data, check logs",
+      "no_matching_stations": "No stations matched the provided search string",
+      "missing_fuel_types": "Please select one or more fuel types",
+      "station_exists": "Already have entry for that station. Remove and re-add to change fuel types."
+    },
+    "step": {
+      "user": {
+        "title": "Add new petrol station",
+        "description": "Enter a string to search by name or address",
+        "data": {
+          "search_string": "Name/Address search"
+        },
+        "submit": "Search"
+      },
+      "select_station": {
+        "title": "Select station",
+        "description": "Choose station from matching entries",
+        "data": {
+          "station_id": "Select station"
+        },
+        "submit": "Select"
+      },
+      "select_fuel": {
+        "description": "Choose fuel types to display",
+        "data": {
+          "fuel_types": "Fuel Types"
+        }
+      }
+    }
+  }
+}

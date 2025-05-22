@@ -2,6 +2,7 @@
   "domain": "nsw_fuel_station",
   "name": "NSW Fuel Station Price",
   "codeowners": ["@nickw444"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nsw_fuel_station",
   "iot_class": "cloud_polling",
   "loggers": ["nsw_fuel"],

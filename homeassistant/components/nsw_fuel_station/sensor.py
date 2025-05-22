@@ -4,66 +4,38 @@ from __future__ import annotations
 
 import logging
 
-import voluptuous as vol
-
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
-    SensorEntity,
-)
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CURRENCY_CENT, UnitOfVolume
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
 from . import DATA_NSW_FUEL_STATION, StationPriceData
+from .const import (
+    ATTR_FUEL_TYPE,
+    ATTR_STATION_ADDRESS,
+    ATTR_STATION_ID,
+    ATTR_STATION_NAME,
+    CONF_FUEL_TYPES,
+    CONF_STATION_ID,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_STATION_ID = "station_id"
-ATTR_STATION_NAME = "station_name"
 
-CONF_STATION_ID = "station_id"
-CONF_FUEL_TYPES = "fuel_types"
-CONF_ALLOWED_FUEL_TYPES = [
-    "E10",
-    "U91",
-    "E85",
-    "P95",
-    "P98",
-    "DL",
-    "PDL",
-    "B20",
-    "LPG",
-    "CNG",
-    "EV",
-]
-CONF_DEFAULT_FUEL_TYPES = ["E10", "U91"]
-
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_STATION_ID): cv.positive_int,
-        vol.Optional(CONF_FUEL_TYPES, default=CONF_DEFAULT_FUEL_TYPES): vol.All(
-            cv.ensure_list, [vol.In(CONF_ALLOWED_FUEL_TYPES)]
-        ),
-    }
-)
-
-
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the NSW Fuel Station sensor."""
-
-    station_id = config[CONF_STATION_ID]
-    fuel_types = config[CONF_FUEL_TYPES]
+    """Set up the sensor platform."""
+    sensors = []
+    station_id = entry.data[CONF_STATION_ID]
+    fuel_types = entry.data[CONF_FUEL_TYPES]
 
     coordinator = hass.data[DATA_NSW_FUEL_STATION]
 
@@ -71,7 +43,6 @@ def setup_platform(
         _LOGGER.error("Initial fuel station price data not available")
         return
 
-    entities = []
     for fuel_type in fuel_types:
         if coordinator.data.prices.get((station_id, fuel_type)) is None:
             _LOGGER.error(
@@ -81,9 +52,8 @@ def setup_platform(
             )
             continue
 
-        entities.append(StationPriceSensor(coordinator, station_id, fuel_type))
-
-    add_entities(entities)
+        sensors.append(StationPriceSensor(coordinator, station_id, fuel_type))
+    async_add_entities(sensors)
 
 
 class StationPriceSensor(
@@ -124,6 +94,8 @@ class StationPriceSensor(
     def extra_state_attributes(self) -> dict[str, int | str]:
         """Return the state attributes of the device."""
         return {
+            ATTR_FUEL_TYPE: self._get_fuel_type(),
+            ATTR_STATION_ADDRESS: self._get_station_address(),
             ATTR_STATION_ID: self._station_id,
             ATTR_STATION_NAME: self._get_station_name(),
         }
@@ -133,7 +105,23 @@ class StationPriceSensor(
         """Return the units of measurement."""
         return f"{CURRENCY_CENT}/{UnitOfVolume.LITERS}"
 
-    def _get_station_name(self):
+    def _get_fuel_type(self) -> str:
+        if self.coordinator.data is None:
+            return self._fuel_type
+        return self.coordinator.data.fuel_types.get(self._fuel_type, self._fuel_type)
+
+    def _get_station_address(self) -> str:
+        default_address = "Unknown address"
+        if self.coordinator.data is None:
+            return default_address
+
+        station = self.coordinator.data.stations.get(self._station_id)
+        if station is None:
+            return default_address
+
+        return station.address
+
+    def _get_station_name(self) -> str:
         default_name = f"station {self._station_id}"
         if self.coordinator.data is None:
             return default_name
