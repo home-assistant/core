@@ -345,7 +345,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
             except UnidentifiedImageError:
                 _LOGGER.warning("Unable to process image, bad data")
                 return
-            img.thumbnail((460, 460), Image.ANTIALIAS)
+            img.thumbnail((460, 460), Image.Resampling.LANCZOS)
             img_width, img_height = img.size
             inp = (
                 np.array(img.getdata())
