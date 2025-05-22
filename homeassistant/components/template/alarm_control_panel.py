@@ -276,9 +276,6 @@ class AbstractTemplateAlarmControlPanel(
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
     def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
-
-        self._registered_scripts: list[str] = []
-
         self._template = config.get(CONF_STATE)
 
         self._attr_code_arm_required: bool = config[CONF_CODE_ARM_REQUIRED]
@@ -304,7 +301,6 @@ class AbstractTemplateAlarmControlPanel(
             (CONF_TRIGGER_ACTION, AlarmControlPanelEntityFeature.TRIGGER),
         ):
             if (action_config := config.get(action_id)) is not None:
-                self._registered_scripts.append(action_id)
                 yield (action_id, action_config, supported_feature)
 
     @property
