@@ -24,16 +24,16 @@ class SmarlaSwitchEntityDescription(SwitchEntityDescription):
 
 SWITCHES: list[SmarlaSwitchEntityDescription] = [
     SmarlaSwitchEntityDescription(
-        key="cradle",
+        key="swing_active",
         name=None,
         service="babywiege",
         property="swing_active",
     ),
     SmarlaSwitchEntityDescription(
-        key="smartmode",
-        translation_key="smartmode",
+        key="smart_mode",
+        translation_key="smart_mode",
         service="babywiege",
-        property="smartmode",
+        property="smart_mode",
     ),
 ]
 

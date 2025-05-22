@@ -20,8 +20,8 @@
   },
   "entity": {
     "switch": {
-      "smartmode": {
-        "name": "Smart mode"
+      "smart_mode": {
+        "name": "Smart Mode"
       }
     }
   }

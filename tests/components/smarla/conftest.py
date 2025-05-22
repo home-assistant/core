@@ -11,7 +11,7 @@ import pytest
 from homeassistant.components.smarla.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 
-from . import MOCK_ACCESS_TOKEN_JSON, MOCK_SERIAL_NUMBER, MOCK_URL, MOCK_USER_INPUT
+from . import MOCK_ACCESS_TOKEN_JSON, MOCK_SERIAL_NUMBER, MOCK_USER_INPUT
 
 from tests.common import MockConfigEntry
 
@@ -49,7 +49,17 @@ def mock_connection() -> Generator[MagicMock]:
         ),
     ):
         connection = mock_connection.return_value
-        connection.url = MOCK_URL
         connection.token = AuthToken.from_json(MOCK_ACCESS_TOKEN_JSON)
         connection.refresh_token.return_value = True
         yield connection
+
+
+@pytest.fixture
+def mock_federwiege() -> Generator[MagicMock]:
+    """Mock the Federwiege instance."""
+    with patch(
+        "homeassistant.components.smarla.Federwiege", autospec=True
+    ) as mock_federwiege:
+        federwiege = mock_federwiege.return_value
+        federwiege.serial_number = MOCK_SERIAL_NUMBER
+        yield federwiege
