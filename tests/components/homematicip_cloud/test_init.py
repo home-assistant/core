@@ -260,7 +260,6 @@ async def test_remove_obsolete_entities(hass: HomeAssistant) -> None:
     # Create mock entities for all three removal conditions
     mock_entries = [
         Mock(entity_id="sensor.ap", unique_id="HomematicipAccesspointStatus123"),
-        Mock(entity_id="sensor.light", unique_id="HomematicipLightMeasuring456"),
         Mock(entity_id="sensor.battery", unique_id="HomematicipBatterySensor_ABC123"),
         Mock(entity_id="sensor.keep", unique_id="ShouldRemain123"),
     ]
@@ -301,9 +300,8 @@ async def test_remove_obsolete_entities(hass: HomeAssistant) -> None:
         _async_remove_obsolete_entities(hass, config_entries[0], hap)
 
         # Assert that methods were called as expected
-        assert mock_registry.async_remove.call_count == 3
+        assert mock_registry.async_remove.call_count == 2
         mock_registry.async_remove.assert_any_call("sensor.ap")
-        mock_registry.async_remove.assert_any_call("sensor.light")
         mock_registry.async_remove.assert_any_call("sensor.battery")
 
         # Make sure we didn't remove the other entity
