@@ -36,6 +36,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_OBJECT_ID, CONF_PICTURE, DOMAIN
+from .entity import AbstractTemplateEntity
 from .template_entity import (
     LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
@@ -214,13 +215,13 @@ async def async_setup_platform(
     )
 
 
-class AbstractTemplateCover(CoverEntity):
+class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
     """Representation of a template cover features."""
 
-    def __init__(self, config: dict[str, Any]) -> None:
+    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
+    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
-
-        self._registered_scripts: list[str] = []
 
         self._template = config.get(CONF_STATE)
         self._position_template = config.get(CONF_POSITION)
@@ -249,7 +250,6 @@ class AbstractTemplateCover(CoverEntity):
             (TILT_ACTION, TILT_FEATURES),
         ):
             if (action_config := config.get(action_id)) is not None:
-                self._registered_scripts.append(action_id)
                 yield (action_id, action_config, supported_feature)
 
     @property
@@ -276,7 +276,7 @@ class AbstractTemplateCover(CoverEntity):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        if self._position_template or POSITION_ACTION in self._registered_scripts:
+        if self._position_template or POSITION_ACTION in self._action_scripts:
             return self._position
         return None
 
@@ -359,12 +359,10 @@ class AbstractTemplateCover(CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Move the cover up."""
-        run_script = getattr(self, "async_run_script")
-        scripts = getattr(self, "_action_scripts")
-        if open_script := scripts.get(OPEN_ACTION):
-            await run_script(open_script, context=self._context)
-        elif position_script := scripts.get(POSITION_ACTION):
-            await run_script(
+        if open_script := self._action_scripts.get(OPEN_ACTION):
+            await self.async_run_script(open_script, context=self._context)
+        elif position_script := self._action_scripts.get(POSITION_ACTION):
+            await self.async_run_script(
                 position_script,
                 run_variables={"position": 100},
                 context=self._context,
@@ -375,12 +373,10 @@ class AbstractTemplateCover(CoverEntity):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Move the cover down."""
-        run_script = getattr(self, "async_run_script")
-        scripts = getattr(self, "_action_scripts")
-        if close_script := scripts.get(CLOSE_ACTION):
-            await run_script(close_script, context=self._context)
-        elif position_script := scripts.get(POSITION_ACTION):
-            await run_script(
+        if close_script := self._action_scripts.get(CLOSE_ACTION):
+            await self.async_run_script(close_script, context=self._context)
+        elif position_script := self._action_scripts.get(POSITION_ACTION):
+            await self.async_run_script(
                 position_script,
                 run_variables={"position": 0},
                 context=self._context,
@@ -391,18 +387,14 @@ class AbstractTemplateCover(CoverEntity):
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Fire the stop action."""
-        run_script = getattr(self, "async_run_script")
-        scripts = getattr(self, "_action_scripts")
-        if stop_script := scripts.get(STOP_ACTION):
-            await run_script(stop_script, context=self._context)
+        if stop_script := self._action_scripts.get(STOP_ACTION):
+            await self.async_run_script(stop_script, context=self._context)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set cover position."""
-        run_script = getattr(self, "async_run_script")
-        scripts = getattr(self, "_action_scripts")
         self._position = kwargs[ATTR_POSITION]
-        await run_script(
-            scripts[POSITION_ACTION],
+        await self.async_run_script(
+            self._action_scripts[POSITION_ACTION],
             run_variables={"position": self._position},
             context=self._context,
         )
@@ -411,11 +403,9 @@ class AbstractTemplateCover(CoverEntity):
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt the cover open."""
-        run_script = getattr(self, "async_run_script")
-        scripts = getattr(self, "_action_scripts")
         self._tilt_value = 100
-        await run_script(
-            scripts[TILT_ACTION],
+        await self.async_run_script(
+            self._action_scripts[TILT_ACTION],
             run_variables={"tilt": self._tilt_value},
             context=self._context,
         )
@@ -424,11 +414,9 @@ class AbstractTemplateCover(CoverEntity):
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt the cover closed."""
-        run_script = getattr(self, "async_run_script")
-        scripts = getattr(self, "_action_scripts")
         self._tilt_value = 0
-        await run_script(
-            scripts[TILT_ACTION],
+        await self.async_run_script(
+            self._action_scripts[TILT_ACTION],
             run_variables={"tilt": self._tilt_value},
             context=self._context,
         )
@@ -437,11 +425,9 @@ class AbstractTemplateCover(CoverEntity):
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        run_script = getattr(self, "async_run_script")
-        scripts = getattr(self, "_action_scripts")
         self._tilt_value = kwargs[ATTR_TILT_POSITION]
-        await run_script(
-            scripts[TILT_ACTION],
+        await self.async_run_script(
+            self._action_scripts[TILT_ACTION],
             run_variables={"tilt": self._tilt_value},
             context=self._context,
         )
