@@ -94,8 +94,6 @@ class EheimDigitalClassicLEDControlLight(
             await self._device.set_light_mode(EFFECT_TO_LIGHT_MODE[kwargs[ATTR_EFFECT]])
             return
         if ATTR_BRIGHTNESS in kwargs:
-            if self._device.light_mode == LightMode.DAYCL_MODE:
-                await self._device.set_light_mode(LightMode.MAN_MODE)
             try:
                 await self._device.turn_on(
                     int(brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS])),
@@ -106,8 +104,6 @@ class EheimDigitalClassicLEDControlLight(
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
-        if self._device.light_mode == LightMode.DAYCL_MODE:
-            await self._device.set_light_mode(LightMode.MAN_MODE)
         try:
             await self._device.turn_off(self._channel)
         except EheimDigitalClientError as err:
