@@ -246,7 +246,7 @@ async def test_manual(hass: HomeAssistant) -> None:
     assert result2["result"].unique_id == "1234"
 
 
-async def slow_server_version(*args):
+async def slow_server_version(*args: Any) -> Any:
     """Simulate a slow server version."""
     await asyncio.sleep(0.1)
 
@@ -650,10 +650,10 @@ async def test_abort_hassio_discovery_for_other_addon(hass: HomeAssistant) -> No
 )
 async def test_usb_discovery(
     hass: HomeAssistant,
-    install_addon,
+    install_addon: AsyncMock,
     mock_usb_serial_by_id: MagicMock,
-    set_addon_options,
-    start_addon,
+    set_addon_options: AsyncMock,
+    start_addon: AsyncMock,
     usb_discovery_info: UsbServiceInfo,
     device: str,
     discovery_name: str,
@@ -789,6 +789,7 @@ async def test_usb_discovery_addon_not_running(
 
     # Make sure the discovered usb device is preferred.
     data_schema = result["data_schema"]
+    assert data_schema is not None
     assert data_schema({}) == {
         "s0_legacy_key": "",
         "s2_access_control_key": "",
@@ -1566,7 +1567,7 @@ async def test_not_addon(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("supervisor", "addon_running")
 async def test_addon_running(
     hass: HomeAssistant,
-    addon_options,
+    addon_options: dict[str, Any],
 ) -> None:
     """Test add-on already running on Supervisor."""
     addon_options["device"] = "/test"
@@ -2659,15 +2660,15 @@ async def test_reconfigure_not_addon_with_addon_stop_fail(
 )
 async def test_reconfigure_addon_running(
     hass: HomeAssistant,
-    client,
-    integration,
-    addon_options,
-    set_addon_options,
-    restart_addon,
-    entry_data,
-    old_addon_options,
-    new_addon_options,
-    disconnect_calls,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+    restart_addon: AsyncMock,
+    entry_data: dict[str, Any],
+    old_addon_options: dict[str, Any],
+    new_addon_options: dict[str, Any],
+    disconnect_calls: int,
 ) -> None:
     """Test reconfigure flow and add-on already running on Supervisor."""
     addon_options.update(old_addon_options)
@@ -2784,14 +2785,14 @@ async def test_reconfigure_addon_running(
 )
 async def test_reconfigure_addon_running_no_changes(
     hass: HomeAssistant,
-    client,
-    integration,
-    addon_options,
-    set_addon_options,
-    restart_addon,
-    entry_data,
-    old_addon_options,
-    new_addon_options,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+    restart_addon: AsyncMock,
+    entry_data: dict[str, Any],
+    old_addon_options: dict[str, Any],
+    new_addon_options: dict[str, Any],
 ) -> None:
     """Test reconfigure flow without changes, and add-on already running on Supervisor."""
     addon_options.update(old_addon_options)
@@ -2943,15 +2944,15 @@ async def different_device_server_version(*args):
 )
 async def test_reconfigure_different_device(
     hass: HomeAssistant,
-    client,
-    integration,
-    addon_options,
-    set_addon_options,
-    restart_addon,
-    entry_data,
-    old_addon_options,
-    new_addon_options,
-    disconnect_calls,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+    restart_addon: AsyncMock,
+    entry_data: dict[str, Any],
+    old_addon_options: dict[str, Any],
+    new_addon_options: dict[str, Any],
+    disconnect_calls: int,
 ) -> None:
     """Test reconfigure flow and configuring a different device."""
     addon_options.update(old_addon_options)
@@ -3105,15 +3106,15 @@ async def test_reconfigure_different_device(
 )
 async def test_reconfigure_addon_restart_failed(
     hass: HomeAssistant,
-    client,
-    integration,
-    addon_options,
-    set_addon_options,
-    restart_addon,
-    entry_data,
-    old_addon_options,
-    new_addon_options,
-    disconnect_calls,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+    restart_addon: AsyncMock,
+    entry_data: dict[str, Any],
+    old_addon_options: dict[str, Any],
+    new_addon_options: dict[str, Any],
+    disconnect_calls: int,
 ) -> None:
     """Test reconfigure flow and add-on restart failure."""
     addon_options.update(old_addon_options)
@@ -3329,16 +3330,16 @@ async def test_reconfigure_addon_running_server_info_failure(
 )
 async def test_reconfigure_addon_not_installed(
     hass: HomeAssistant,
-    client,
-    install_addon,
-    integration,
-    addon_options,
-    set_addon_options,
-    start_addon,
-    entry_data,
-    old_addon_options,
-    new_addon_options,
-    disconnect_calls,
+    client: MagicMock,
+    install_addon: AsyncMock,
+    integration: MockConfigEntry,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+    start_addon: AsyncMock,
+    entry_data: dict[str, Any],
+    old_addon_options: dict[str, Any],
+    new_addon_options: dict[str, Any],
+    disconnect_calls: int,
 ) -> None:
     """Test reconfigure flow and add-on not installed on Supervisor."""
     addon_options.update(old_addon_options)
@@ -3464,7 +3465,10 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_reconfigure_migrate_no_addon(hass: HomeAssistant, integration) -> None:
+async def test_reconfigure_migrate_no_addon(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+) -> None:
     """Test migration flow fails when not using add-on."""
     entry = integration
     hass.config_entries.async_update_entry(
@@ -3525,11 +3529,11 @@ async def test_reconfigure_migrate_low_sdk_version(
 )
 async def test_reconfigure_migrate_with_addon(
     hass: HomeAssistant,
-    client,
-    integration,
-    restart_addon,
-    addon_options,
-    set_addon_options,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    restart_addon: AsyncMock,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
     get_server_version: AsyncMock,
     reset_server_version_side_effect: Exception | None,
     reset_unique_id: str,
@@ -3627,10 +3631,12 @@ async def test_reconfigure_migrate_with_addon(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "choose_serial_port"
-    assert result["data_schema"].schema[CONF_USB_PATH]
+    data_schema = result["data_schema"]
+    assert data_schema is not None
+    assert data_schema.schema[CONF_USB_PATH]
     # Ensure the old usb path is not in the list of options
     with pytest.raises(InInvalid):
-        result["data_schema"].schema[CONF_USB_PATH](addon_options["device"])
+        data_schema.schema[CONF_USB_PATH](addon_options["device"])
 
     # Reset side effect before starting the add-on.
     get_server_version.side_effect = None
@@ -3684,10 +3690,10 @@ async def test_reconfigure_migrate_with_addon(
 @pytest.mark.usefixtures("supervisor", "addon_running")
 async def test_reconfigure_migrate_reset_driver_ready_timeout(
     hass: HomeAssistant,
-    client,
-    integration,
-    restart_addon,
-    set_addon_options,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    restart_addon: AsyncMock,
+    set_addon_options: AsyncMock,
     get_server_version: AsyncMock,
 ) -> None:
     """Test migration flow with driver ready timeout after controller reset."""
@@ -3783,7 +3789,9 @@ async def test_reconfigure_migrate_reset_driver_ready_timeout(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "choose_serial_port"
-    assert result["data_schema"].schema[CONF_USB_PATH]
+    data_schema = result["data_schema"]
+    assert data_schema is not None
+    assert data_schema.schema[CONF_USB_PATH]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -3831,10 +3839,10 @@ async def test_reconfigure_migrate_reset_driver_ready_timeout(
 @pytest.mark.usefixtures("supervisor", "addon_running")
 async def test_reconfigure_migrate_restore_driver_ready_timeout(
     hass: HomeAssistant,
-    client,
-    integration,
-    restart_addon,
-    set_addon_options,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    restart_addon: AsyncMock,
+    set_addon_options: AsyncMock,
 ) -> None:
     """Test migration flow with driver ready timeout after nvm restore."""
     entry = integration
@@ -3919,7 +3927,9 @@ async def test_reconfigure_migrate_restore_driver_ready_timeout(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "choose_serial_port"
-    assert result["data_schema"].schema[CONF_USB_PATH]
+    data_schema = result["data_schema"]
+    assert data_schema is not None
+    assert data_schema.schema[CONF_USB_PATH]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -4218,9 +4228,11 @@ async def test_reconfigure_migrate_restore_failure(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "restore_failed"
-    assert result["description_placeholders"]["file_path"]
-    assert result["description_placeholders"]["file_url"]
-    assert result["description_placeholders"]["file_name"]
+    description_placeholders = result["description_placeholders"]
+    assert description_placeholders is not None
+    assert description_placeholders["file_path"]
+    assert description_placeholders["file_url"]
+    assert description_placeholders["file_name"]
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -4516,13 +4528,15 @@ async def test_intent_recommended_user(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon_user"
-    assert result["data_schema"].schema[CONF_USB_PATH] is not None
-    assert result["data_schema"].schema.get(CONF_S0_LEGACY_KEY) is None
-    assert result["data_schema"].schema.get(CONF_S2_ACCESS_CONTROL_KEY) is None
-    assert result["data_schema"].schema.get(CONF_S2_AUTHENTICATED_KEY) is None
-    assert result["data_schema"].schema.get(CONF_S2_UNAUTHENTICATED_KEY) is None
-    assert result["data_schema"].schema.get(CONF_LR_S2_ACCESS_CONTROL_KEY) is None
-    assert result["data_schema"].schema.get(CONF_LR_S2_AUTHENTICATED_KEY) is None
+    data_schema = result["data_schema"]
+    assert data_schema is not None
+    assert data_schema.schema[CONF_USB_PATH] is not None
+    assert data_schema.schema.get(CONF_S0_LEGACY_KEY) is None
+    assert data_schema.schema.get(CONF_S2_ACCESS_CONTROL_KEY) is None
+    assert data_schema.schema.get(CONF_S2_AUTHENTICATED_KEY) is None
+    assert data_schema.schema.get(CONF_S2_UNAUTHENTICATED_KEY) is None
+    assert data_schema.schema.get(CONF_LR_S2_ACCESS_CONTROL_KEY) is None
+    assert data_schema.schema.get(CONF_LR_S2_AUTHENTICATED_KEY) is None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
