@@ -4219,6 +4219,8 @@ async def test_reconfigure_migrate_restore_failure(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "restore_failed"
     assert result["description_placeholders"]["file_path"]
+    assert result["description_placeholders"]["file_url"]
+    assert result["description_placeholders"]["file_name"]
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
