@@ -92,4 +92,6 @@ def _async_make_entity(
         return SwitchBotCloudRelaySwitchSwitch(api, device, coordinator)
     if "Bot" in device.device_type:
         return SwitchBotCloudSwitch(api, device, coordinator)
+    if "Battery Circulator Fan" in device.device_type:
+        return SwitchBotCloudSwitch(api, device, coordinator)
     raise NotImplementedError(f"Unsupported device type: {device.device_type}")
