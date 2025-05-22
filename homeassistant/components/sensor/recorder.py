@@ -28,13 +28,9 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
     REVOLUTIONS_PER_MINUTE,
-    UnitOfElectricPotential,
     UnitOfIrradiance,
-    UnitOfMass,
     UnitOfSoundPressure,
-    UnitOfTime,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, State, callback, split_entity_id
@@ -49,12 +45,11 @@ from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
+    AMBIGUOUS_UNITS,
     ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     DOMAIN,
     SensorStateClass,
-    UnitOfConductivity,
     UnitOfVolumeFlowRate,
 )
 
@@ -85,15 +80,7 @@ EQUIVALENT_UNITS = {
     "ft3": UnitOfVolume.CUBIC_FEET,
     "m3": UnitOfVolume.CUBIC_METERS,
     "ft³/m": UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
-    "\u00b5Sv/h": "μSv/h",  # aranet: radiation rate
-    "\u00b5S/cm": UnitOfConductivity.MICROSIEMENS_PER_CM,
-    "\u00b5V": UnitOfElectricPotential.MICROVOLT,
-    "\u00b5g/ft³": CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
-    "\u00b5g/m³": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    "\u00b5mol/s⋅m²": "μmol/s⋅m²",  # fyta: light
-    "\u00b5g": UnitOfMass.MICROGRAMS,
-    "\u00b5s": UnitOfTime.MICROSECONDS,
-}
+} | AMBIGUOUS_UNITS
 
 
 # Keep track of entities for which a warning about decreasing value has been logged
