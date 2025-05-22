@@ -5,6 +5,7 @@ from __future__ import annotations
 import io
 import logging
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 from PIL import Image, ImageDraw, UnidentifiedImageError
 import simplehound.core as hound
@@ -109,8 +110,8 @@ class SighthoundEntity(ImageProcessingEntity):
             self._attr_name = f"sighthound_{camera_name}"
         self._attr_state = None
         self._last_detection: str | None = None
-        self._image_width = None
-        self._image_height = None
+        self._image_width: int | None = None
+        self._image_height: int | None = None
         self._save_file_folder = save_file_folder
         self._save_timestamped_file = save_timestamped_file
 
@@ -130,7 +131,7 @@ class SighthoundEntity(ImageProcessingEntity):
         if self._save_file_folder and self._attr_state > 0:
             self.save_image(image, people, self._save_file_folder)
 
-    def fire_person_detected_event(self, person):
+    def fire_person_detected_event(self, person: dict[str, Any]) -> None:
         """Send event with detected total_persons."""
         self.hass.bus.fire(
             EVENT_PERSON_DETECTED,
@@ -142,7 +143,9 @@ class SighthoundEntity(ImageProcessingEntity):
             },
         )
 
-    def save_image(self, image, people, directory):
+    def save_image(
+        self, image: bytes, people: list[dict[str, Any]], directory: Path
+    ) -> None:
         """Save a timestamped image with bounding boxes around targets."""
         try:
             img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
@@ -150,6 +153,10 @@ class SighthoundEntity(ImageProcessingEntity):
             _LOGGER.warning("Sighthound unable to process image, bad data")
             return
         draw = ImageDraw.Draw(img)
+
+        if TYPE_CHECKING:
+            assert self._image_width is not None
+            assert self._image_height is not None
 
         for person in people:
             box = hound.bbox_to_tf_style(
