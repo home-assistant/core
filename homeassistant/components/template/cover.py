@@ -12,6 +12,7 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DEVICE_CLASSES_SCHEMA,
+    DOMAIN as COVER_DOMAIN,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
     CoverEntity,
@@ -35,6 +36,7 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import TriggerUpdateCoordinator
 from .const import CONF_OBJECT_ID, CONF_PICTURE, DOMAIN
 from .entity import AbstractTemplateEntity
 from .template_entity import (
@@ -45,6 +47,7 @@ from .template_entity import (
     TemplateEntity,
     rewrite_common_legacy_to_modern_conf,
 )
+from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -204,6 +207,13 @@ async def async_setup_platform(
             hass,
             rewrite_legacy_to_modern_conf(hass, config[CONF_COVERS]),
             None,
+        )
+        return
+
+    if "coordinator" in discovery_info:
+        async_add_entities(
+            TriggerCoverEntity(hass, discovery_info["coordinator"], config)
+            for config in discovery_info["entities"]
         )
         return
 
@@ -504,3 +514,68 @@ class CoverTemplate(TemplateEntity, AbstractTemplateCover):
             return
 
         self._update_opening_and_closing(result)
+
+
+class TriggerCoverEntity(TriggerEntity, AbstractTemplateCover):
+    """Cover entity based on trigger data."""
+
+    domain = COVER_DOMAIN
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: TriggerUpdateCoordinator,
+        config: ConfigType,
+    ) -> None:
+        """Initialize the entity."""
+        TriggerEntity.__init__(self, hass, coordinator, config)
+        AbstractTemplateCover.__init__(self, config)
+
+        # The config requires (open and close scripts) or a set position script,
+        # therefore the base supported features will always include them.
+        self._attr_supported_features = (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+        )
+
+        # Render the _attr_name before initializing TriggerCoverEntity
+        self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
+
+        for action_id, action_config, supported_feature in self._register_scripts(
+            config
+        ):
+            self.add_script(action_id, action_config, name, DOMAIN)
+            self._attr_supported_features |= supported_feature
+
+        for key in (CONF_STATE, CONF_POSITION, CONF_TILT):
+            if isinstance(config.get(key), template.Template):
+                self._to_render_simple.append(key)
+                self._parse_result.add(key)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle update of the data."""
+        self._process_data()
+
+        if not self.available:
+            self.async_write_ha_state()
+            return
+
+        write_ha_state = False
+        for key, updater in (
+            (CONF_STATE, self._update_opening_and_closing),
+            (CONF_POSITION, self._update_position),
+            (CONF_TILT, self._update_tilt),
+        ):
+            if (rendered := self._rendered.get(key)) is not None:
+                updater(rendered)
+                write_ha_state = True
+
+        if not self._optimistic:
+            self.async_set_context(self.coordinator.data["context"])
+            write_ha_state = True
+        elif self._optimistic and len(self._rendered) > 0:
+            # In case any non optimistic template
+            write_ha_state = True
+
+        if write_ha_state:
+            self.async_write_ha_state()
