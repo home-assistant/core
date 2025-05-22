@@ -7,14 +7,13 @@ from typing import Any
 
 from psnawp_api import PSNAWP
 from psnawp_api.core.psnawp_exceptions import PSNAWPNotFoundError
-from psnawp_api.models.trophies import PlatformType as PSNAWPPlatformType
+from psnawp_api.models.trophies import PlatformType
 from psnawp_api.models.user import User
 from pyrate_limiter import Duration, Rate
 
-from .const import PlatformType
+from .const import SUPPORTED_PLATFORMS
 
 LEGACY_PLATFORMS = {PlatformType.PS3, PlatformType.PS4}
-SUPPORTED_PLATFORMS = {PlatformType.PS3, PlatformType.PS4, PlatformType.PS5}
 
 
 @dataclass
@@ -86,7 +85,7 @@ class PlaystationNetwork:
             "platform"
         ]
 
-        if session.platform in SUPPORTED_PLATFORMS:
+        if PlatformType(session.platform) in SUPPORTED_PLATFORMS:
             session.status = data.presence.get("basicPresence", {}).get(
                 "primaryPlatformInfo"
             )["onlineStatus"]
@@ -99,7 +98,7 @@ class PlaystationNetwork:
                 session.title_id = game_title_info[0]["npTitleId"]
                 session.title_name = game_title_info[0]["titleName"]
                 session.format = game_title_info[0]["format"]
-                if session.format == PlatformType.PS5:
+                if PlatformType(session.format) == PlatformType.PS5:
                     session.media_image_url = game_title_info[0]["conceptIconUrl"]
                 else:
                     session.media_image_url = game_title_info[0]["npTitleIconUrl"]
@@ -123,13 +122,13 @@ class PlaystationNetwork:
                 session.format = game_title_info["platform"]
                 session.platform = game_title_info["platform"]
                 session.status = game_title_info["onlineStatus"]
-                if session.format == PlatformType.PS4:
+                if PlatformType(session.format) == PlatformType.PS4:
                     session.media_image_url = game_title_info["npTitleIconUrl"]
-                elif session.format == PlatformType.PS3:
+                elif PlatformType(session.format) == PlatformType.PS3:
                     try:
                         title = self.psn.game_title(session.title_id, "me")
                         session.media_image_url = title.get_title_icon_url(
-                            PSNAWPPlatformType.PS3
+                            PlatformType.PS3
                         )
                     except PSNAWPNotFoundError:
                         session.media_image_url = None
