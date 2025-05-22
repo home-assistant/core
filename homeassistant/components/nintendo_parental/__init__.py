@@ -10,9 +10,10 @@ from pynintendoparental.exceptions import (
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
+from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_SESSION_TOKEN
+from .const import CONF_SESSION_TOKEN, DOMAIN
 from .coordinator import NintendoParentalConfigEntry, NintendoUpdateCoordinator
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -27,11 +28,13 @@ async def async_setup_entry(
             auth=None,
             response_token=entry.data[CONF_SESSION_TOKEN],
             is_session_token=True,
+            client_session=async_get_clientsession(hass),
         )
-    except InvalidSessionTokenException as err:
-        raise ConfigEntryAuthFailed(err) from err
-    except InvalidOAuthConfigurationException as err:
-        raise ConfigEntryError(err) from err
+    except (InvalidSessionTokenException, InvalidOAuthConfigurationException) as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="auth_expired",
+        ) from err
     entry.runtime_data = coordinator = NintendoUpdateCoordinator(
         hass, nintendo_auth, entry
     )

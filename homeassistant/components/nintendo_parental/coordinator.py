@@ -2,17 +2,11 @@
 
 from __future__ import annotations
 
-import asyncio
-import contextlib
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
 
 from pynintendoparental import Authenticator, NintendoParental
-from pynintendoparental.exceptions import (
-    InvalidOAuthConfigurationException,
-    InvalidSessionTokenException,
-)
+from pynintendoparental.exceptions import InvalidOAuthConfigurationException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -51,11 +45,7 @@ class NintendoUpdateCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Update data from Nintendo's API."""
         try:
-            with contextlib.suppress(InvalidSessionTokenException):
-                if TYPE_CHECKING:
-                    assert isinstance(self.update_interval, timedelta)
-                async with asyncio.timeout(self.update_interval.total_seconds() - 5):
-                    return await self.api.update()
+            return await self.api.update()
         except InvalidOAuthConfigurationException as err:
             raise ConfigEntryError(
                 err, translation_domain=DOMAIN, translation_key="invalid_auth"
