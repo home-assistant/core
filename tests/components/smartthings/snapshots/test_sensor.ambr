@@ -3635,7 +3635,7 @@
     'state': 'others',
   })
 # ---
-# name: test_all_entities[da_ks_microwave_0101x][sensor.microwave_set_point-entry]
+# name: test_all_entities[da_ks_microwave_0101x][sensor.microwave_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3648,7 +3648,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.microwave_set_point',
+    'entity_id': 'sensor.microwave_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3660,7 +3660,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Set point',
+    'original_name': 'Setpoint',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -3669,15 +3669,15 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_ks_microwave_0101x][sensor.microwave_set_point-state]
+# name: test_all_entities[da_ks_microwave_0101x][sensor.microwave_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Microwave Set point',
+      'friendly_name': 'Microwave Setpoint',
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.microwave_set_point',
+    'entity_id': 'sensor.microwave_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4033,7 +4033,7 @@
     'state': 'bake',
   })
 # ---
-# name: test_all_entities[da_ks_oven_01061][sensor.oven_set_point-entry]
+# name: test_all_entities[da_ks_oven_01061][sensor.oven_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4046,7 +4046,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.oven_set_point',
+    'entity_id': 'sensor.oven_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4058,7 +4058,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Set point',
+    'original_name': 'Setpoint',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -4067,15 +4067,15 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_ks_oven_01061][sensor.oven_set_point-state]
+# name: test_all_entities[da_ks_oven_01061][sensor.oven_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Oven Set point',
+      'friendly_name': 'Oven Setpoint',
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.oven_set_point',
+    'entity_id': 'sensor.oven_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4488,7 +4488,7 @@
     'state': 'bake',
   })
 # ---
-# name: test_all_entities[da_ks_range_0101x][sensor.vulcan_set_point-entry]
+# name: test_all_entities[da_ks_range_0101x][sensor.vulcan_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4501,7 +4501,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.vulcan_set_point',
+    'entity_id': 'sensor.vulcan_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4513,7 +4513,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Set point',
+    'original_name': 'Setpoint',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -4522,15 +4522,15 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_ks_range_0101x][sensor.vulcan_set_point-state]
+# name: test_all_entities[da_ks_range_0101x][sensor.vulcan_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Vulcan Set point',
+      'friendly_name': 'Vulcan Setpoint',
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.vulcan_set_point',
+    'entity_id': 'sensor.vulcan_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -5945,6 +5945,63 @@
     'state': '1.08249458332857e-05',
   })
 # ---
+# name: test_all_entities[da_sac_ehs_000001_sub][sensor.eco_heating_system_valve_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'room',
+        'tank',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.eco_heating_system_valve_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Valve position',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'diverter_valve_position',
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsDiverterValve_position_position',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub][sensor.eco_heating_system_valve_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Eco Heating System Valve position',
+      'options': list([
+        'room',
+        'tank',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eco_heating_system_valve_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'room',
+  })
+# ---
 # name: test_all_entities[da_sac_ehs_000001_sub_1][sensor.heat_pump_main_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -6222,6 +6279,63 @@
     'state': '4.50185416638851e-06',
   })
 # ---
+# name: test_all_entities[da_sac_ehs_000001_sub_1][sensor.heat_pump_main_valve_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'room',
+        'tank',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.heat_pump_main_valve_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Valve position',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'diverter_valve_position',
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsDiverterValve_position_position',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub_1][sensor.heat_pump_main_valve_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Heat Pump Main Valve position',
+      'options': list([
+        'room',
+        'tank',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.heat_pump_main_valve_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'room',
+  })
+# ---
 # name: test_all_entities[da_sac_ehs_000002_sub][sensor.warmepumpe_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -6497,6 +6611,63 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.000222076093320449',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][sensor.warmepumpe_valve_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'room',
+        'tank',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.warmepumpe_valve_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Valve position',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'diverter_valve_position',
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsDiverterValve_position_position',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][sensor.warmepumpe_valve_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Wärmepumpe Valve position',
+      'options': list([
+        'room',
+        'tank',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.warmepumpe_valve_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'room',
   })
 # ---
 # name: test_all_entities[da_wm_dw_000001][sensor.dishwasher_completion_time-entry]
@@ -10877,6 +11048,214 @@
     'state': '37',
   })
 # ---
+# name: test_all_entities[lumi][sensor.outdoor_temp_atmospheric_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.outdoor_temp_atmospheric_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
+    'original_icon': None,
+    'original_name': 'Atmospheric pressure',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '692ea4e9-2022-4ed8-8a57-1b884a59cc38_main_atmosphericPressureMeasurement_atmosphericPressure_atmosphericPressure',
+    'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+  })
+# ---
+# name: test_all_entities[lumi][sensor.outdoor_temp_atmospheric_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'atmospheric_pressure',
+      'friendly_name': 'Outdoor Temp Atmospheric pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.outdoor_temp_atmospheric_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1000',
+  })
+# ---
+# name: test_all_entities[lumi][sensor.outdoor_temp_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.outdoor_temp_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '692ea4e9-2022-4ed8-8a57-1b884a59cc38_main_battery_battery_battery',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[lumi][sensor.outdoor_temp_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Outdoor Temp Battery',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.outdoor_temp_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_all_entities[lumi][sensor.outdoor_temp_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.outdoor_temp_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '692ea4e9-2022-4ed8-8a57-1b884a59cc38_main_relativeHumidityMeasurement_humidity_humidity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[lumi][sensor.outdoor_temp_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Outdoor Temp Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.outdoor_temp_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '27.24',
+  })
+# ---
+# name: test_all_entities[lumi][sensor.outdoor_temp_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.outdoor_temp_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '692ea4e9-2022-4ed8-8a57-1b884a59cc38_main_temperatureMeasurement_temperature_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[lumi][sensor.outdoor_temp_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Outdoor Temp Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.outdoor_temp_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '24.4',
+  })
+# ---
 # name: test_all_entities[multipurpose_sensor][sensor.deck_door_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -11119,6 +11498,110 @@
     'state': '-1042',
   })
 # ---
+# name: test_all_entities[sensi_thermostat][sensor.thermostat_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.thermostat_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '2409a73c-918a-4d1f-b4f5-c27468c71d70_main_relativeHumidityMeasurement_humidity_humidity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensi_thermostat][sensor.thermostat_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Thermostat Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.thermostat_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '49',
+  })
+# ---
+# name: test_all_entities[sensi_thermostat][sensor.thermostat_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.thermostat_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '2409a73c-918a-4d1f-b4f5-c27468c71d70_main_temperatureMeasurement_temperature_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[sensi_thermostat][sensor.thermostat_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Thermostat Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.thermostat_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '23.6',
+  })
+# ---
 # name: test_all_entities[sensibo_airconditioner_1][sensor.office_air_conditioner_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -11166,7 +11649,7 @@
     'state': 'cool',
   })
 # ---
-# name: test_all_entities[sensibo_airconditioner_1][sensor.office_cooling_set_point-entry]
+# name: test_all_entities[sensibo_airconditioner_1][sensor.office_cooling_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11179,7 +11662,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.office_cooling_set_point',
+    'entity_id': 'sensor.office_cooling_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -11191,7 +11674,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Cooling set point',
+    'original_name': 'Cooling setpoint',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -11200,15 +11683,15 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[sensibo_airconditioner_1][sensor.office_cooling_set_point-state]
+# name: test_all_entities[sensibo_airconditioner_1][sensor.office_cooling_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Office Cooling set point',
+      'friendly_name': 'Office Cooling setpoint',
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.office_cooling_set_point',
+    'entity_id': 'sensor.office_cooling_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -52,7 +52,7 @@ dependencies = [
   "ha-ffmpeg==3.2.2",
   # hass-nabucasa is imported by helpers which don't depend on the cloud
   # integration
-  "hass-nabucasa==0.100.0",
+  "hass-nabucasa==0.101.0",
   # hassil is indirectly imported from onboarding via the import chain
   # onboarding->cloud->assist_pipeline->conversation->hassil. Onboarding needs
   # to be setup in stage 0, but we don't want to also promote cloud with all its
@@ -604,8 +604,6 @@ filterwarnings = [
   # - pkg_resources
   # https://pypi.org/project/aiomusiccast/ - v0.14.8 - 2023-03-20
   "ignore:pkg_resources is deprecated as an API:DeprecationWarning:aiomusiccast",
-  # https://pypi.org/project/habitipy/ - v0.3.3 - 2024-10-28
-  "ignore:pkg_resources is deprecated as an API:DeprecationWarning:habitipy.api",
   # https://github.com/eavanvalkenburg/pysiaalarm/blob/v3.1.1/src/pysiaalarm/data/data.py#L7 - v3.1.1 - 2023-04-17
   "ignore:pkg_resources is deprecated as an API:DeprecationWarning:pysiaalarm.data.data",
   # https://pypi.org/project/pybotvac/ - v0.0.26 - 2025-02-26
@@ -707,6 +705,7 @@ select = [
   "B002",   # Python does not support the unary prefix increment
   "B005",   # Using .strip() with multi-character strings is misleading
   "B007",   # Loop control variable {name} not used within loop body
+  "B009",   # Do not call getattr with a constant attribute value. It is not any safer than normal property access.
   "B014",   # Exception handler with duplicate exception
   "B015",   # Pointless comparison. Did you mean to assign a value? Otherwise, prepend assert or remove it.
   "B017",   # pytest.raises(BaseException) should be considered evil
