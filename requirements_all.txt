@@ -81,7 +81,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.62.2
+PySwitchbot==0.64.1
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -277,7 +277,7 @@ aiohue==4.7.4
 aioimaplib==2.0.1
 
 # homeassistant.components.immich
-aioimmich==0.5.0
+aioimmich==0.6.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -286,7 +286,7 @@ aiokafka==0.10.0
 aiokef==0.2.16
 
 # homeassistant.components.rehlko
-aiokem==0.5.10
+aiokem==0.5.11
 
 # homeassistant.components.lifx
 aiolifx-effects==0.3.2
@@ -319,7 +319,7 @@ aionanoleaf==0.2.1
 aionotion==2024.03.0
 
 # homeassistant.components.ntfy
-aiontfy==0.5.2
+aiontfy==0.5.3
 
 # homeassistant.components.nut
 aionut==4.3.4
@@ -637,7 +637,7 @@ bluemaestro-ble==0.4.1
 bluetooth-adapters==0.21.4
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==1.5.1
+bluetooth-auto-recovery==1.5.2
 
 # homeassistant.components.bluetooth
 # homeassistant.components.ld2410_ble
@@ -747,7 +747,7 @@ crownstone-uart==2.1.0
 datadog==0.15.0
 
 # homeassistant.components.metoffice
-datapoint==0.9.9
+datapoint==0.12.1
 
 # homeassistant.components.bluetooth
 dbus-fast==2.43.0
@@ -833,7 +833,7 @@ ebusdpy==0.0.17
 ecoaliface==0.4.0
 
 # homeassistant.components.eheimdigital
-eheimdigital==1.1.0
+eheimdigital==1.2.0
 
 # homeassistant.components.electric_kiwi
 electrickiwi-api==0.9.14
@@ -1115,7 +1115,7 @@ ha-philipsjs==3.2.2
 ha-silabs-firmware-client==0.2.0
 
 # homeassistant.components.habitica
-habiticalib==0.3.7
+habiticalib==0.4.0
 
 # homeassistant.components.bluetooth
 habluetooth==3.48.2
@@ -1218,7 +1218,7 @@ ifaddr==0.2.0
 iglo==1.2.7
 
 # homeassistant.components.igloohome
-igloohome-api==0.1.0
+igloohome-api==0.1.1
 
 # homeassistant.components.ihc
 ihcsdk==2.8.5
@@ -1239,7 +1239,7 @@ influxdb-client==1.48.0
 influxdb==5.3.1
 
 # homeassistant.components.inkbird
-inkbird-ble==0.16.1
+inkbird-ble==0.16.2
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.5.0
@@ -1312,7 +1312,7 @@ lakeside==0.13
 laundrify-aio==1.2.2
 
 # homeassistant.components.lcn
-lcn-frontend==0.2.4
+lcn-frontend==0.2.5
 
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
@@ -1324,7 +1324,7 @@ leaone-ble==0.3.0
 led-ble==1.1.7
 
 # homeassistant.components.lektrico
-lektricowifi==0.0.43
+lektricowifi==0.1
 
 # homeassistant.components.letpot
 letpot==0.4.0
@@ -1771,7 +1771,7 @@ py-schluter==0.1.7
 py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.7.1
+py-synologydsm-api==2.7.2
 
 # homeassistant.components.atome
 pyAtome==0.1.1
@@ -1829,7 +1829,7 @@ pyairnow==1.2.1
 pyairvisual==2023.08.1
 
 # homeassistant.components.aprilaire
-pyaprilaire==0.8.1
+pyaprilaire==0.9.0
 
 # homeassistant.components.asuswrt
 pyasuswrt==0.1.21
@@ -2093,7 +2093,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.3
+pylamarzocco==2.0.4
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2225,6 +2225,9 @@ pyownet==0.10.0.post1
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.19
+
+# homeassistant.components.paperless_ngx
+pypaperless==4.1.0
 
 # homeassistant.components.elv
 pypca==0.0.7
@@ -2362,7 +2365,7 @@ pyspcwebgw==0.7.0
 pyspeex-noise==1.0.2
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.12.0
+pysqueezebox==0.12.1
 
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.1.0
@@ -2722,7 +2725,7 @@ sense-energy==0.13.8
 sensirion-ble==0.1.1
 
 # homeassistant.components.sensorpro
-sensorpro-ble==0.7.0
+sensorpro-ble==0.7.1
 
 # homeassistant.components.sensorpush_cloud
 sensorpush-api==2.1.2
@@ -2900,7 +2903,7 @@ tesla-powerwall==0.5.2
 tesla-wall-connector==1.0.2
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.7.7
+teslemetry-stream==0.7.9
 
 # homeassistant.components.tessie
 tessie-api==0.1.1
@@ -3097,6 +3100,9 @@ wled==0.21.0
 # homeassistant.components.wolflink
 wolf-comm==0.0.23
 
+# homeassistant.components.wsdot
+wsdot==0.0.1
+
 # homeassistant.components.wyoming
 wyoming==1.5.4
 
@@ -3104,7 +3110,7 @@ wyoming==1.5.4
 xbox-webapi==2.1.0
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.38.0
+xiaomi-ble==0.39.0
 
 # homeassistant.components.knx
 xknx==3.8.0

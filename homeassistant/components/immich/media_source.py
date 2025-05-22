@@ -5,7 +5,7 @@ from __future__ import annotations
 from logging import getLogger
 import mimetypes
 
-from aiohttp.web import HTTPNotFound, Request, Response
+from aiohttp.web import HTTPNotFound, Request, Response, StreamResponse
 from aioimmich.exceptions import ImmichError
 
 from homeassistant.components.http import HomeAssistantView
@@ -20,6 +20,7 @@ from homeassistant.components.media_source import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import ChunkAsyncStreamIterator
 
 from .const import DOMAIN
 from .coordinator import ImmichConfigEntry
@@ -136,7 +137,7 @@ class ImmichMediaSource(MediaSource):
         except ImmichError:
             return []
 
-        return [
+        ret = [
             BrowseMediaSource(
                 domain=DOMAIN,
                 identifier=(
@@ -155,6 +156,28 @@ class ImmichMediaSource(MediaSource):
             for asset in album_info.assets
             if asset.mime_type.startswith("image/")
         ]
+
+        ret.extend(
+            BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=(
+                    f"{identifier.unique_id}/"
+                    f"{identifier.album_id}/"
+                    f"{asset.asset_id}/"
+                    f"{asset.file_name}"
+                ),
+                media_class=MediaClass.VIDEO,
+                media_content_type=asset.mime_type,
+                title=asset.file_name,
+                can_play=True,
+                can_expand=False,
+                thumbnail=f"/immich/{identifier.unique_id}/{asset.asset_id}/thumbnail.jpg/thumbnail",
+            )
+            for asset in album_info.assets
+            if asset.mime_type.startswith("video/")
+        )
+
+        return ret
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
@@ -184,12 +207,12 @@ class ImmichMediaView(HomeAssistantView):
 
     async def get(
         self, request: Request, source_dir_id: str, location: str
-    ) -> Response:
+    ) -> Response | StreamResponse:
         """Start a GET request."""
         if not self.hass.config_entries.async_loaded_entries(DOMAIN):
             raise HTTPNotFound
-        asset_id, file_name, size = location.split("/")
 
+        asset_id, file_name, size = location.split("/")
         mime_type, _ = mimetypes.guess_type(file_name)
         if not isinstance(mime_type, str):
             raise HTTPNotFound
@@ -202,6 +225,20 @@ class ImmichMediaView(HomeAssistantView):
         assert entry
         immich_api = entry.runtime_data.api
 
+        # stream response for videos
+        if mime_type.startswith("video/"):
+            try:
+                resp = await immich_api.assets.async_play_video_stream(asset_id)
+            except ImmichError as exc:
+                raise HTTPNotFound from exc
+            stream = ChunkAsyncStreamIterator(resp)
+            response = StreamResponse()
+            await response.prepare(request)
+            async for chunk in stream:
+                await response.write(chunk)
+            return response
+
+        # web response for images
         try:
             image = await immich_api.assets.async_view_asset(asset_id, size)
         except ImmichError as exc:

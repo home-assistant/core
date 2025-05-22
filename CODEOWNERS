@@ -1140,6 +1140,8 @@ build.json @home-assistant/supervisor
 /tests/components/palazzetti/ @dotvav
 /homeassistant/components/panel_custom/ @home-assistant/frontend
 /tests/components/panel_custom/ @home-assistant/frontend
+/homeassistant/components/paperless_ngx/ @fvgarrel
+/tests/components/paperless_ngx/ @fvgarrel
 /homeassistant/components/peblar/ @frenck
 /tests/components/peblar/ @frenck
 /homeassistant/components/peco/ @IceBotYT
@@ -1226,6 +1228,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/qnap_qsw/ @Noltari
 /tests/components/qnap_qsw/ @Noltari
 /homeassistant/components/quantum_gateway/ @cisasteelersfan
+/tests/components/quantum_gateway/ @cisasteelersfan
 /homeassistant/components/qvr_pro/ @oblogic7
 /homeassistant/components/qwikswitch/ @kellerza
 /tests/components/qwikswitch/ @kellerza
