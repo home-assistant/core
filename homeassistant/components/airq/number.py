@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -19,8 +20,9 @@ AIRQ_LED_BRIGHTNESS = NumberEntityDescription(
     key="airq_led_brightness",
     translation_key="airq_led_brightness",
     native_min_value=0.0,
-    native_max_value=10.0,
-    native_step=0.1,
+    native_max_value=100.0,
+    native_step=1.0,
+    native_unit_of_measurement=PERCENTAGE,
 )
 
 
@@ -56,16 +58,18 @@ class AirQLEDBrightness(CoordinatorEntity[AirQCoordinator], NumberEntity):
 
     @property
     def native_value(self) -> float:
-        """Return the state of the number."""
-        return float(self.coordinator.data.get("brightness", LED_VALUE_DEFAULT))
+        """Return the brightness of the LEDs in %."""
+        led_value = self.coordinator.data.get("brightness", LED_VALUE_DEFAULT)
+        return 10.0 * float(led_value)  # led_value ∈ [0, 10] thus the product
 
     async def async_set_native_value(self, value: float) -> None:
-        """Set the selected value."""
+        """Set the brightness of the LEDs to the value in %."""
+        led_value = value / 10.0
         _LOGGER.debug(
             "Changing LED brighntess from %.1f to %.1f",
             self.coordinator.data["brightness"],
-            value,
+            led_value,
         )
-        self.coordinator.data["brightness"] = value
+        self.coordinator.data["brightness"] = led_value
         self.async_write_ha_state()
-        await self.coordinator.airq.set_current_brightness(value)
+        await self.coordinator.airq.set_current_brightness(led_value)
