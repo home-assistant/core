@@ -165,10 +165,6 @@ def get_block_sub_device_name(device: BlockDevice, block: Block) -> str:
         if channel_name := device.settings[mode][int(block.channel)].get("name"):
             return cast(str, channel_name)
 
-    if device.settings["device"]["type"] == MODEL_EM3:
-        base = ord("A")
-        return f"{device.name} Channel {chr(int(block.channel) + base)}"
-
     base = ord("1")
 
     return f"{device.name} Channel {chr(int(block.channel) + base)}"
