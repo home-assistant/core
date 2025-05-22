@@ -37,7 +37,7 @@
   "entity": {
     "number": {
       "airq_led_brightness": {
-        "name": "LED Brightness"
+        "name": "LED brightness"
       }
     },
     "sensor": {
