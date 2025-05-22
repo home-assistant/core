@@ -38,6 +38,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_OBJECT_ID, CONF_PICTURE, DOMAIN
+from .entity import AbstractTemplateEntity
 from .template_entity import (
     LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
@@ -206,13 +207,13 @@ async def async_setup_platform(
     )
 
 
-class AbstractTemplateFan(FanEntity):
+class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
     """Representation of a template fan features."""
 
-    def __init__(self, config: dict[str, Any]) -> None:
+    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
+    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
-
-        self._registered_scripts: list[str] = []
 
         self._template = config.get(CONF_STATE)
         self._percentage_template = config.get(CONF_PERCENTAGE)
@@ -245,7 +246,6 @@ class AbstractTemplateFan(FanEntity):
             (CONF_SET_DIRECTION_ACTION, FanEntityFeature.DIRECTION),
         ):
             if (action_config := config.get(action_id)) is not None:
-                self._registered_scripts.append(action_id)
                 yield (action_id, action_config, supported_feature)
 
     @property
@@ -376,10 +376,8 @@ class AbstractTemplateFan(FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
-        run_script = getattr(self, "async_run_script")
-        scripts = getattr(self, "_action_scripts")
-        await run_script(
-            scripts[CONF_ON_ACTION],
+        await self.async_run_script(
+            self._action_scripts[CONF_ON_ACTION],
             run_variables={
                 ATTR_PERCENTAGE: percentage,
                 ATTR_PRESET_MODE: preset_mode,
@@ -398,9 +396,9 @@ class AbstractTemplateFan(FanEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
-        run_script = getattr(self, "async_run_script")
-        scripts = getattr(self, "_action_scripts")
-        await run_script(scripts[CONF_OFF_ACTION], context=self._context)
+        await self.async_run_script(
+            self._action_scripts[CONF_OFF_ACTION], context=self._context
+        )
 
         if self._template is None:
             self._state = False
@@ -409,11 +407,9 @@ class AbstractTemplateFan(FanEntity):
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the percentage speed of the fan."""
         self._percentage = percentage
-        run_script = getattr(self, "async_run_script")
-        scripts = getattr(self, "_action_scripts")
 
-        if script := scripts.get(CONF_SET_PERCENTAGE_ACTION):
-            await run_script(
+        if script := self._action_scripts.get(CONF_SET_PERCENTAGE_ACTION):
+            await self.async_run_script(
                 script,
                 run_variables={ATTR_PERCENTAGE: self._percentage},
                 context=self._context,
@@ -428,11 +424,9 @@ class AbstractTemplateFan(FanEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset_mode of the fan."""
         self._preset_mode = preset_mode
-        run_script = getattr(self, "async_run_script")
-        scripts = getattr(self, "_action_scripts")
 
-        if script := scripts.get(CONF_SET_PRESET_MODE_ACTION):
-            await run_script(
+        if script := self._action_scripts.get(CONF_SET_PRESET_MODE_ACTION):
+            await self.async_run_script(
                 script,
                 run_variables={ATTR_PRESET_MODE: self._preset_mode},
                 context=self._context,
@@ -447,10 +441,10 @@ class AbstractTemplateFan(FanEntity):
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set oscillation of the fan."""
         self._oscillating = oscillating
-        run_script = getattr(self, "async_run_script")
-        scripts = getattr(self, "_action_scripts")
-        if (script := scripts.get(CONF_SET_OSCILLATING_ACTION)) is not None:
-            await run_script(
+        if (
+            script := self._action_scripts.get(CONF_SET_OSCILLATING_ACTION)
+        ) is not None:
+            await self.async_run_script(
                 script,
                 run_variables={ATTR_OSCILLATING: self.oscillating},
                 context=self._context,
@@ -461,12 +455,12 @@ class AbstractTemplateFan(FanEntity):
 
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
-        run_script = getattr(self, "async_run_script")
-        scripts = getattr(self, "_action_scripts")
         if direction in _VALID_DIRECTIONS:
             self._direction = direction
-            if (script := scripts.get(CONF_SET_DIRECTION_ACTION)) is not None:
-                await run_script(
+            if (
+                script := self._action_scripts.get(CONF_SET_DIRECTION_ACTION)
+            ) is not None:
+                await self.async_run_script(
                     script,
                     run_variables={ATTR_DIRECTION: direction},
                     context=self._context,
