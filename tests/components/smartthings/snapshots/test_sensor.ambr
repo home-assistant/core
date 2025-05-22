@@ -5945,6 +5945,63 @@
     'state': '1.08249458332857e-05',
   })
 # ---
+# name: test_all_entities[da_sac_ehs_000001_sub][sensor.eco_heating_system_valve_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'room',
+        'tank',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.eco_heating_system_valve_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Valve position',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'diverter_valve_position',
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsDiverterValve_position_position',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub][sensor.eco_heating_system_valve_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Eco Heating System Valve position',
+      'options': list([
+        'room',
+        'tank',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eco_heating_system_valve_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'room',
+  })
+# ---
 # name: test_all_entities[da_sac_ehs_000001_sub_1][sensor.heat_pump_main_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -6222,6 +6279,63 @@
     'state': '4.50185416638851e-06',
   })
 # ---
+# name: test_all_entities[da_sac_ehs_000001_sub_1][sensor.heat_pump_main_valve_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'room',
+        'tank',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.heat_pump_main_valve_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Valve position',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'diverter_valve_position',
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsDiverterValve_position_position',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub_1][sensor.heat_pump_main_valve_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Heat Pump Main Valve position',
+      'options': list([
+        'room',
+        'tank',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.heat_pump_main_valve_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'room',
+  })
+# ---
 # name: test_all_entities[da_sac_ehs_000002_sub][sensor.warmepumpe_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -6497,6 +6611,63 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.000222076093320449',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][sensor.warmepumpe_valve_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'room',
+        'tank',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.warmepumpe_valve_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Valve position',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'diverter_valve_position',
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsDiverterValve_position_position',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][sensor.warmepumpe_valve_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Wärmepumpe Valve position',
+      'options': list([
+        'room',
+        'tank',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.warmepumpe_valve_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'room',
   })
 # ---
 # name: test_all_entities[da_wm_dw_000001][sensor.dishwasher_completion_time-entry]
