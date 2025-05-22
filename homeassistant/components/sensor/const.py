@@ -786,7 +786,7 @@ STATE_CLASS_UNITS: dict[SensorStateClass | str, set[type[StrEnum] | str | None]]
     SensorStateClass.MEASUREMENT_ANGLE: {DEGREE},
 }
 
-AMBIGUOUS_UNITS: dict[str | None, str | None] = {
+AMBIGUOUS_UNITS: dict[str, str] = {
     "\u00b5Sv/h": "μSv/h",  # aranet: radiation rate
     "\u00b5S/cm": UnitOfConductivity.MICROSIEMENS_PER_CM,
     "\u00b5V": UnitOfElectricPotential.MICROVOLT,
