@@ -20,6 +20,7 @@ from .coordinator import SwitchBotCoordinator
 
 _LOGGER = getLogger(__name__)
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
     Platform.LOCK,
@@ -33,6 +34,9 @@ PLATFORMS: list[Platform] = [
 class SwitchbotDevices:
     """Switchbot devices data."""
 
+    binary_sensors: list[tuple[Device, SwitchBotCoordinator]] = field(
+        default_factory=list
+    )
     buttons: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     climates: list[tuple[Remote, SwitchBotCoordinator]] = field(default_factory=list)
     switches: list[tuple[Device | Remote, SwitchBotCoordinator]] = field(
@@ -149,6 +153,7 @@ async def make_device_data(
         )
         devices_data.locks.append((device, coordinator))
         devices_data.sensors.append((device, coordinator))
+        devices_data.binary_sensors.append((device, coordinator))
 
     if isinstance(device, Device) and device.device_type in ["Bot"]:
         coordinator = await coordinator_for_device(
