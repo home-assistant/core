@@ -16,6 +16,7 @@ from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY, DPCode, DPType
 from .util import remap_value
+from dataclasses import asdict
 
 _DPTYPE_MAPPING: dict[str, DPType] = {
     "Bitmap": DPType.RAW,
@@ -117,7 +118,24 @@ class EnumTypeData:
 
 
 @dataclass
-class ElectricityTypeData:
+class BaseTypeData:
+    """Base Type Data."""
+
+    @classmethod
+    def from_json(cls, dpcode: DPCode, data: str) -> EnumTypeData | None:
+        """Load JSON string and return a BaseTypeData object."""
+
+    @classmethod
+    def from_raw(cls, data: str) -> Self:
+        """Decode base64 string and return a BaseTypeData object."""
+
+    @classmethod
+    def to_json(cls) -> str:
+        """Convert MealPlanTypeData to JSON."""
+
+
+@dataclass
+class ElectricityTypeData(BaseTypeData):
     """Electricity Type Data."""
 
     electriccurrent: str | None = None
@@ -139,6 +157,53 @@ class ElectricityTypeData:
         return cls(
             electriccurrent=str(electriccurrent), power=str(power), voltage=str(voltage)
         )
+
+
+@dataclass
+class MealPlanTypeData(BaseTypeData):
+    """MealPlan Type Data."""
+
+    days: str | None = None
+    time: str | None = None
+    portion: str | None = None
+    status: str | None = None
+
+    @classmethod
+    def from_json(cls, data: str) -> Self:
+        """Load JSON string and return a MealPlanTypeData object."""
+        return cls(**json.loads(data))
+
+    @classmethod
+    def to_json(cls, data) -> str:
+        """Convert MealPlanTypeData to JSON."""
+        return json.dumps([asdict(x) for x in cls.from_raw(data)])
+
+    @classmethod
+    def from_raw(cls, data: str) -> dict:
+        """Decode base64 string and return a MealPlanTypeData object."""
+        DAYS_OF_WEEK = [
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+        ]
+        raw = base64.b64decode(data)
+        meal_plan = {}
+        for index, chunk in enumerate(zip(*[iter(raw)] * 5, strict=True)):
+            days_bits, hour, minute, portion, status = chunk
+
+            days = [
+                DAYS_OF_WEEK[index] for index in range(7) if days_bits & (1 << index)
+            ]
+            time = f"{hour:02}:{minute:02}"
+
+            meal_plan[index] = asdict(
+                cls(days=days, time=time, portion=portion, status=status)
+            )
+        return meal_plan
 
 
 class TuyaEntity(Entity):
