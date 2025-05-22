@@ -1529,7 +1529,10 @@ class KnownBackups:
         self._backups = {
             backup["backup_id"]: KnownBackup(
                 backup_id=backup["backup_id"],
-                failed_addons=[AddonInfo(**a) for a in backup["failed_addons"]],
+                failed_addons=[
+                    AddonInfo(name=a["name"], slug=a["slug"], version=a["version"])
+                    for a in backup["failed_addons"]
+                ],
                 failed_agent_ids=backup["failed_agent_ids"],
                 failed_folders=[Folder(f) for f in backup["failed_folders"]],
             )
