@@ -31,6 +31,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
 from .const import CONF_PICTURE
+from .entity import AbstractTemplateEntity
 from .template_entity import (
     TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA,
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
@@ -127,10 +128,12 @@ async def async_setup_entry(
     async_add_entities([TemplateEvent(hass, validated_config, config_entry.entry_id)])
 
 
-class AbstractTemplateEvent(EventEntity):
+class AbstractTemplateEvent(AbstractTemplateEntity, EventEntity):
     """Representation of a template event features."""
 
-    def __init__(self, config: dict[str, Any]) -> None:
+    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
+    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
         self._event_type_template = config[CONF_EVENT_TYPE]
         self._event_types_template = config[CONF_EVENT_TYPES]
@@ -139,11 +142,6 @@ class AbstractTemplateEvent(EventEntity):
 
         self._event_type = None
         self._attr_event_types = []
-
-    @property
-    def event_types(self) -> list[str]:
-        """Return the event_types list."""
-        return self._attr_event_types
 
     @callback
     def _update_event_types(self, event_types: Any) -> None:
@@ -161,10 +159,6 @@ class AbstractTemplateEvent(EventEntity):
                 event_types,
                 self.entity_id,
             )
-            self._attr_event_types = []
-            return
-
-        if len(event_types) == 0:
             self._attr_event_types = []
             return
 
