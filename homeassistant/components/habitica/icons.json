@@ -159,6 +159,12 @@
       },
       "quest_scrolls": {
         "default": "mdi:script-text-outline"
+      },
+      "pending_damage": {
+        "default": "mdi:sword"
+      },
+      "pending_quest_items": {
+        "default": "mdi:sack"
       }
     },
     "switch": {
