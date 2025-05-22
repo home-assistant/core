@@ -24,15 +24,29 @@ from .model import Config, Integration
 
 PACKAGE_CHECK_VERSION_RANGE = {
     "aiohttp": "SemVer",
-    # https://github.com/iMicknl/python-overkiz-api/issues/1644
-    # "attrs": "CalVer"
+    "attrs": "CalVer",
     "grpcio": "SemVer",
+    "httpx": "SemVer",
     "mashumaro": "SemVer",
     "pydantic": "SemVer",
     "pyjwt": "SemVer",
     "pytz": "CalVer",
     "typing_extensions": "SemVer",
     "yarl": "SemVer",
+}
+PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
+    # In the form dict("domain": {"package": {"dependency1", "dependency2"}})
+    # - domain is the integration domain
+    # - package is the package (can be transitive) referencing the dependency
+    # - dependencyX should be the name of the referenced dependency
+    "ollama": {
+        # https://github.com/ollama/ollama-python/pull/445 (not yet released)
+        "ollama": {"httpx"}
+    },
+    "overkiz": {
+        # https://github.com/iMicknl/python-overkiz-api/issues/1644 (not yet released)
+        "pyoverkiz": {"attrs"},
+    },
 }
 
 PACKAGE_REGEX = re.compile(
@@ -318,6 +332,10 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
     )
     needs_forbidden_package_exceptions = False
 
+    package_version_check_exceptions = PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS.get(
+        integration.domain, {}
+    )
+
     while to_check:
         package = to_check.popleft()
 
@@ -353,7 +371,13 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
                         "requirements",
                         f"Package {pkg} should not be a runtime dependency in {package}",
                     )
-            check_dependency_version_range(integration, package, pkg, version)
+            check_dependency_version_range(
+                integration,
+                package,
+                pkg,
+                version,
+                package_version_check_exceptions.get(package, set()),
+            )
 
         to_check.extend(dependencies)
 
@@ -367,22 +391,40 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
 
 
 def check_dependency_version_range(
-    integration: Integration, source: str, pkg: str, version: str
+    integration: Integration,
+    source: str,
+    pkg: str,
+    version: str,
+    package_exceptions: set[str],
 ) -> None:
     """Check requirement version range.
 
     We want to avoid upper version bounds that are too strict for common packages.
     """
-    if version == "Any" or (convention := PACKAGE_CHECK_VERSION_RANGE.get(pkg)) is None:
-        return
-
-    if not all(
-        _is_dependency_version_range_valid(version_part, convention)
-        for version_part in version.split(";", 1)[0].split(",")
+    if (
+        version != "Any"
+        and (convention := PACKAGE_CHECK_VERSION_RANGE.get(pkg)) is not None
+        and not all(
+            _is_dependency_version_range_valid(version_part, convention)
+            for version_part in version.split(";", 1)[0].split(",")
+        )
     ):
+        if pkg in package_exceptions:
+            integration.add_warning(
+                "requirements",
+                f"Version restrictions for {pkg} are too strict ({version}) in {source}",
+            )
+            return
         integration.add_error(
             "requirements",
             f"Version restrictions for {pkg} are too strict ({version}) in {source}",
+        )
+        return
+    if pkg in package_exceptions:
+        integration.add_error(
+            "requirements",
+            f"Version restrictions for {pkg} have been resolved in {source}, "
+            "please remove from `_INTEGRATION_EXCEPTIONS`",
         )
 
 
