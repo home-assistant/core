@@ -76,12 +76,6 @@
             "name": "Toilettes",
             "type": "toilets",
             "module_ids": ["00:11:22:33:00:11:45:fe"]
-          },
-          {
-            "id": "100001234",
-            "name": "Guest Bedroom",
-            "type": "bedroom",
-            "module_ids": ["12:34:56:03:a0:ad"]
           }
         ],
         "modules": [
@@ -118,14 +112,6 @@
             "name": "Valve2",
             "setup_date": 1554554444,
             "room_id": "2940411577",
-            "bridge": "12:34:56:00:fa:d0"
-          },
-          {
-            "id": "12:34:56:03:a0:ad",
-            "type": "NRV",
-            "name": "Valve3",
-            "setup_date": 1747739105,
-            "room_id": "100001234",
             "bridge": "12:34:56:00:fa:d0"
           },
           {
@@ -510,10 +496,6 @@
                   {
                     "temp": 21,
                     "room_id": "2746182631"
-                  },
-                  {
-                    "temp": 20,
-                    "room_id": "100001234"
                   }
                 ],
                 "id": 0
@@ -525,10 +507,6 @@
                   {
                     "temp": 17,
                     "room_id": "2746182631"
-                  },
-                  {
-                    "temp": 18,
-                    "room_id": "100001234"
                   }
                 ],
                 "id": 1
@@ -540,10 +518,6 @@
                   {
                     "temp": 17,
                     "room_id": "2746182631"
-                  },
-                  {
-                    "temp": 19,
-                    "room_id": "100001234"
                   }
                 ],
                 "id": 4

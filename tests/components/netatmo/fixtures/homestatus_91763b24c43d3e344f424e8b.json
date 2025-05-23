@@ -346,17 +346,6 @@
           "therm_setpoint_start_time": 1647462737,
           "therm_setpoint_end_time": null,
           "therm_setpoint_mode": "home"
-        },
-        {
-          "id": "100001234",
-          "reachable": true,
-          "anticipating": false,
-          "heating_power_request": 0,
-          "open_window": false,
-          "therm_measured_temperature": 20,
-          "therm_setpoint_temperature": 20,
-          "therm_setpoint_start_time": 1747627205,
-          "therm_setpoint_mode": "schedule"
         }
       ],
       "id": "91763b24c43d3e344f424e8b",

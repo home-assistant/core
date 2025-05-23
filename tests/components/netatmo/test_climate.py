@@ -87,10 +87,10 @@ async def test_schedule_update_webhook_event(
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
 
-    room_climate_entity = "climate.guest_bedroom"
+    room_climate_entity = "climate.livingroom"
 
     # Check initial state
-    assert hass.states.get(room_climate_entity).attributes["temperature"] == 20
+    assert hass.states.get(room_climate_entity).attributes["temperature"] == 12
 
     # Modify the API request mock to return a modified schedule the 2nd time it is invoked
     async def custom_post_request(
@@ -122,7 +122,7 @@ async def test_schedule_update_webhook_event(
             # reflect the changes in the schedule
             rooms = json_data.get("body").get("home").get("rooms")
             for room in rooms:
-                if room.get("id") == "100001234":
+                if room.get("id") == "2746182631":
                     room["therm_setpoint_temperature"] = 25
 
             return AiohttpClientMockResponse(
