@@ -23,9 +23,9 @@ from homeassistant.components.media_source import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.util.aiohttp import MockRequest
+from homeassistant.util.aiohttp import MockRequest, MockStreamReaderChunked
 
-from . import MockStreamReaderChunked, setup_integration
+from . import setup_integration
 from .const import MOCK_ALBUM_WITHOUT_ASSETS
 
 from tests.common import MockConfigEntry

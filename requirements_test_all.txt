@@ -957,7 +957,7 @@ ha-philipsjs==3.2.2
 ha-silabs-firmware-client==0.2.0
 
 # homeassistant.components.habitica
-habiticalib==0.3.7
+habiticalib==0.4.0
 
 # homeassistant.components.bluetooth
 habluetooth==3.48.2
@@ -1351,7 +1351,7 @@ openhomedevice==2.2.0
 openwebifpy==4.3.1
 
 # homeassistant.components.opower
-opower==0.12.0
+opower==0.12.1
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1823,6 +1823,9 @@ pyownet==0.10.0.post1
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.19
 
+# homeassistant.components.paperless_ngx
+pypaperless==4.1.0
+
 # homeassistant.components.lcn
 pypck==0.8.6
 
@@ -1905,7 +1908,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==3.2.2
+pysmartthings==3.2.3
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -2127,6 +2130,9 @@ qingping-ble==0.10.0
 
 # homeassistant.components.qnap
 qnapstats==0.4.0
+
+# homeassistant.components.quantum_gateway
+quantum-gateway==0.0.8
 
 # homeassistant.components.radio_browser
 radios==0.3.2
@@ -2555,7 +2561,7 @@ youless-api==2.2.0
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2025.03.31
+yt-dlp[default]==2025.05.22
 
 # homeassistant.components.zamg
 zamg==0.3.6
