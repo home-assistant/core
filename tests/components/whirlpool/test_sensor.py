@@ -6,7 +6,6 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from whirlpool.oven import CavityState, CookMode
->>>>>>> f7ed3664d56 (test_simple_enum_sensors)
 from whirlpool.washerdryer import MachineState
 
 from homeassistant.components.whirlpool.sensor import SCAN_INTERVAL
