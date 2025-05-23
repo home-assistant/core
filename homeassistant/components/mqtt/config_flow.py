@@ -668,7 +668,6 @@ PLATFORM_ENTITY_FIELDS = {
         CONF_DEVICE_CLASS: PlatformField(
             selector=COVER_DEVICE_CLASS_SELECTOR,
             required=False,
-            validator=str,
         ),
     },
     Platform.NOTIFY.value: {},
@@ -789,7 +788,7 @@ PLATFORM_MQTT_FIELDS = {
         CONF_VALUE_TEMPLATE: PlatformField(
             selector=TEMPLATE_SELECTOR,
             required=False,
-            validator=cv.template,
+            validator=validate(cv.template),
             error="invalid_template",
         ),
         CONF_RETAIN: PlatformField(
@@ -801,63 +800,54 @@ PLATFORM_MQTT_FIELDS = {
         CONF_PAYLOAD_CLOSE: PlatformField(
             selector=TEXT_SELECTOR,
             required=False,
-            validator=str,
             default=DEFAULT_PAYLOAD_CLOSE,
             section="cover_payload_settings",
         ),
         CONF_PAYLOAD_OPEN: PlatformField(
             selector=TEXT_SELECTOR,
             required=False,
-            validator=str,
             default=DEFAULT_PAYLOAD_OPEN,
             section="cover_payload_settings",
         ),
         CONF_PAYLOAD_STOP: PlatformField(
             selector=TEXT_SELECTOR,
             required=False,
-            validator=str,
             default=None,
             section="cover_payload_settings",
         ),
         CONF_PAYLOAD_STOP_TILT: PlatformField(
             selector=TEXT_SELECTOR,
             required=False,
-            validator=str,
             default=DEFAULT_PAYLOAD_STOP,
             section="cover_payload_settings",
         ),
         CONF_STATE_CLOSED: PlatformField(
             selector=TEXT_SELECTOR,
             required=False,
-            validator=str,
             default=STATE_CLOSED,
             section="cover_payload_settings",
         ),
         CONF_STATE_CLOSING: PlatformField(
             selector=TEXT_SELECTOR,
             required=False,
-            validator=str,
             default=STATE_CLOSING,
             section="cover_payload_settings",
         ),
         CONF_STATE_OPEN: PlatformField(
             selector=TEXT_SELECTOR,
             required=False,
-            validator=str,
             default=STATE_OPEN,
             section="cover_payload_settings",
         ),
         CONF_STATE_OPENING: PlatformField(
             selector=TEXT_SELECTOR,
             required=False,
-            validator=str,
             default=STATE_OPENING,
             section="cover_payload_settings",
         ),
         CONF_STATE_STOPPED: PlatformField(
             selector=TEXT_SELECTOR,
             required=False,
-            validator=str,
             default=DEFAULT_STATE_STOPPED,
             section="cover_payload_settings",
         ),
@@ -871,7 +861,7 @@ PLATFORM_MQTT_FIELDS = {
         CONF_SET_POSITION_TEMPLATE: PlatformField(
             selector=TEMPLATE_SELECTOR,
             required=False,
-            validator=cv.template,
+            validator=validate(cv.template),
             error="invalid_template",
             section="cover_position_settings",
         ),
@@ -885,7 +875,7 @@ PLATFORM_MQTT_FIELDS = {
         CONF_GET_POSITION_TEMPLATE: PlatformField(
             selector=TEMPLATE_SELECTOR,
             required=False,
-            validator=cv.template,
+            validator=validate(cv.template),
             error="invalid_template",
             section="cover_position_settings",
         ),
@@ -913,7 +903,7 @@ PLATFORM_MQTT_FIELDS = {
         CONF_TILT_COMMAND_TEMPLATE: PlatformField(
             selector=TEMPLATE_SELECTOR,
             required=False,
-            validator=cv.template,
+            validator=validate(cv.template),
             error="invalid_template",
             section="cover_tilt_settings",
         ),
@@ -941,7 +931,7 @@ PLATFORM_MQTT_FIELDS = {
         CONF_TILT_STATUS_TEMPLATE: PlatformField(
             selector=TEMPLATE_SELECTOR,
             required=False,
-            validator=cv.template,
+            validator=validate(cv.template),
             error="invalid_template",
             section="cover_tilt_settings",
         ),
