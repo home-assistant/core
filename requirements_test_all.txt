@@ -1962,7 +1962,7 @@ python-awair==0.2.4
 python-bsblan==1.2.1
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.20
+python-ecobee-api==0.3.0
 
 # homeassistant.components.fully_kiosk
 python-fullykiosk==0.0.14
