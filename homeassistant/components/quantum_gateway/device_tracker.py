@@ -2,58 +2,42 @@
 
 from __future__ import annotations
 
-from requests.exceptions import RequestException
-import voluptuous as vol
-
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
-    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DEFAULT_HOST, LOGGER
+from .const import DATA_COODINATOR, DOMAIN, LOGGER, PLATFORM_SCHEMA  # noqa: F401
 from .coordinator import QuantumGatewayCoordinator
-
-PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_SSL, default=True): cv.boolean,
-        vol.Required(CONF_PASSWORD): cv.string,
-    }
-)
 
 
 async def async_get_scanner(
     hass: HomeAssistant, config: ConfigType
 ) -> QuantumGatewayDeviceScanner | None:
     """Validate the configuration and return a Quantum Gateway scanner."""
-    try:
-        scanner = QuantumGatewayDeviceScanner(hass, config[DEVICE_TRACKER_DOMAIN])
-        await scanner.coordinator._async_setup()  # noqa: SLF001
-        success_init = True
-    except RequestException:
-        success_init = False
-        LOGGER.error("Unable to connect to gateway. Check host")
+    coordinator = hass.data[DOMAIN][config[DEVICE_TRACKER_DOMAIN][CONF_HOST]][
+        DATA_COODINATOR
+    ]
+    if coordinator is None:
+        return None
 
-    if not success_init:
-        LOGGER.error("Unable to login to gateway. Check password and host")
-
-    return scanner if success_init else None
+    return QuantumGatewayDeviceScanner(hass, coordinator)
 
 
 class QuantumGatewayDeviceScanner(DeviceScanner):
     """Class which queries a Quantum Gateway."""
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+    def __init__(
+        self, hass: HomeAssistant, coordinator: QuantumGatewayCoordinator
+    ) -> None:
         """Initialize the scanner."""
 
         LOGGER.debug("Initializing")
 
-        self.coordinator = QuantumGatewayCoordinator(hass, config)
+        self.coordinator = coordinator
 
     async def async_scan_devices(self) -> list[str]:
         """Scan for new devices and return a list of found MACs."""
