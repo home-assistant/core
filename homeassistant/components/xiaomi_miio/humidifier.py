@@ -124,21 +124,10 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
         """Initialize the generic Xiaomi device."""
         super().__init__(device, entry, unique_id, coordinator=coordinator)
 
-        self._state = None
         self._attributes = {}
         self._mode = None
         self._humidity_steps = 100
-        self._target_humidity = None
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
-
-    @property
-    def mode(self):
-        """Get the current mode."""
-        return self._mode
+        self._target_humidity: float | None = None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -146,7 +135,7 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
             "Turning the miio device on failed.", self._device.on
         )
         if result:
-            self._state = True
+            self._attr_is_on = True
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -156,7 +145,7 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
         )
 
         if result:
-            self._state = False
+            self._attr_is_on = False
             self.async_write_ha_state()
 
     def translate_humidity(self, humidity: float) -> float | None:
@@ -194,7 +183,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
             self._attr_available_modes = AVAILABLE_MODES_OTHER
             self._humidity_steps = 10
 
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._attributes.update(
             {
                 key: self._extract_value_from_attribute(self.coordinator.data, value)
@@ -204,16 +193,11 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
         self._target_humidity = self._attributes[ATTR_TARGET_HUMIDITY]
         self._attr_current_humidity = self._attributes[ATTR_HUMIDITY]
         self._mode = self._attributes[ATTR_MODE]
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
 
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._attributes.update(
             {
                 key: self._extract_value_from_attribute(self.coordinator.data, value)
@@ -222,16 +206,16 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
         )
         self._target_humidity = self._attributes[ATTR_TARGET_HUMIDITY]
         self._attr_current_humidity = self._attributes[ATTR_HUMIDITY]
-        self._mode = self._attributes[ATTR_MODE]
+        self._attr_mode = self._attributes[ATTR_MODE]
         self.async_write_ha_state()
 
     @property
-    def mode(self):
+    def mode(self) -> str:
         """Return the current mode."""
         return AirhumidifierOperationMode(self._mode).name
 
     @property
-    def target_humidity(self):
+    def target_humidity(self) -> float | None:
         """Return the target humidity."""
         return (
             self._target_humidity
@@ -302,14 +286,14 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
     REVERSE_MODE_MAPPING = {v: k for k, v in MODE_MAPPING.items()}
 
     @property
-    def mode(self):
+    def mode(self) -> str:
         """Return the current mode."""
         return AirhumidifierMiotOperationMode(self._mode).name
 
     @property
-    def target_humidity(self):
+    def target_humidity(self) -> float | None:
         """Return the target humidity."""
-        if self._state:
+        if self.is_on:
             return (
                 self._target_humidity
                 if AirhumidifierMiotOperationMode(self._mode)
@@ -357,7 +341,7 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
             return
 
         _LOGGER.debug("Setting the operation mode to: %s", mode)
-        if self._state:
+        if self.is_on:
             if await self._try_command(
                 "Setting operation mode of the miio device failed.",
                 self._device.set_mode,
@@ -378,14 +362,14 @@ class XiaomiAirHumidifierMjjsq(XiaomiAirHumidifier):
     }
 
     @property
-    def mode(self):
+    def mode(self) -> str:
         """Return the current mode."""
         return AirhumidifierMjjsqOperationMode(self._mode).name
 
     @property
-    def target_humidity(self):
+    def target_humidity(self) -> float | None:
         """Return the target humidity."""
-        if self._state:
+        if self.is_on:
             if (
                 AirhumidifierMjjsqOperationMode(self._mode)
                 == AirhumidifierMjjsqOperationMode.Humidity
@@ -429,7 +413,7 @@ class XiaomiAirHumidifierMjjsq(XiaomiAirHumidifier):
             return
 
         _LOGGER.debug("Setting the operation mode to: %s", mode)
-        if self._state:
+        if self.is_on:
             if await self._try_command(
                 "Setting operation mode of the miio device failed.",
                 self._device.set_mode,
