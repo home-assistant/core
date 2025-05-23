@@ -142,9 +142,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: SonosConfigEntry) -> boo
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: SonosConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: SonosConfigEntry
+) -> bool:
     """Unload a Sonos config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
     await hass.data[DATA_SONOS_DISCOVERY_MANAGER].async_shutdown()
     return unload_ok
 
@@ -155,13 +159,13 @@ class SonosDiscoveryManager:
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: SonosConfigEntry,
+        config_entry: SonosConfigEntry,
         data: SonosData,
         hosts: list[str],
     ) -> None:
         """Init discovery manager."""
         self.hass = hass
-        self.entry = entry
+        self.config_entry = config_entry
         self.data = data
         self.hosts = set(hosts)
         self.hosts_in_error: dict[str, bool] = {}
@@ -353,7 +357,7 @@ class SonosDiscoveryManager:
                 self.data.boot_counts[soco.uid] = soco.boot_seqnum
             _LOGGER.debug("Adding new speaker: %s", speaker_info)
             speaker = SonosSpeaker(
-                self.hass, self.entry, soco, speaker_info, zone_group_state_sub
+                self.hass, self.config_entry, soco, speaker_info, zone_group_state_sub
             )
             self.data.discovered[soco.uid] = speaker
             for coordinator, coord_dict in (
@@ -363,11 +367,11 @@ class SonosDiscoveryManager:
                 c_dict: dict[str, Any] = coord_dict
                 if soco.household_id not in c_dict:
                     new_coordinator = coordinator(
-                        self.hass, soco.household_id, self.entry
+                        self.hass, soco.household_id, self.config_entry
                     )
                     new_coordinator.setup(soco)
                     c_dict[soco.household_id] = new_coordinator
-            speaker.setup(self.entry)
+            speaker.setup(self.config_entry)
         except (OSError, SoCoException, Timeout) as ex:
             _LOGGER.warning("Failed to add SonosSpeaker using %s: %s", soco, ex)
 
@@ -548,7 +552,7 @@ class SonosDiscoveryManager:
         if uid not in self.data.discovery_known:
             _LOGGER.debug("New %s discovery uid=%s: %s", source, uid, info)
             self.data.discovery_known.add(uid)
-        self.entry.async_create_background_task(
+        self.config_entry.async_create_background_task(
             self.hass,
             self._async_handle_discovery_message(
                 uid,
@@ -561,8 +565,10 @@ class SonosDiscoveryManager:
 
     async def setup_platforms_and_discovery(self) -> None:
         """Set up platforms and discovery."""
-        await self.hass.config_entries.async_forward_entry_setups(self.entry, PLATFORMS)
-        self.entry.async_on_unload(
+        await self.hass.config_entries.async_forward_entry_setups(
+            self.config_entry, PLATFORMS
+        )
+        self.config_entry.async_on_unload(
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP,
                 self._async_stop_event_listener,
@@ -570,7 +576,7 @@ class SonosDiscoveryManager:
         )
         _LOGGER.debug("Adding discovery job")
         if self.hosts:
-            self.entry.async_on_unload(
+            self.config_entry.async_on_unload(
                 self.hass.bus.async_listen_once(
                     EVENT_HOMEASSISTANT_STOP,
                     self._stop_manual_heartbeat,
@@ -578,13 +584,13 @@ class SonosDiscoveryManager:
             )
             await self.async_poll_manual_hosts()
 
-        self.entry.async_on_unload(
+        self.config_entry.async_on_unload(
             await ssdp.async_register_callback(
                 self.hass, self._async_ssdp_discovered_player, {"st": UPNP_ST}
             )
         )
 
-        self.entry.async_on_unload(
+        self.config_entry.async_on_unload(
             async_track_time_interval(
                 self.hass,
                 partial(

@@ -38,7 +38,7 @@ async def async_setup_entry(
         speaker: SonosSpeaker, audio_format: str
     ) -> None:
         _LOGGER.debug("Creating audio input format sensor on %s", speaker.zone_name)
-        entity = SonosAudioInputFormatSensorEntity(speaker, audio_format, config_entry)
+        entity = SonosAudioInputFormatSensorEntity(speaker, config_entry, audio_format)
         async_add_entities([entity])
 
     @callback
@@ -110,7 +110,7 @@ class SonosAudioInputFormatSensorEntity(SonosPollingEntity, SensorEntity):
     _attr_should_poll = True
 
     def __init__(
-        self, speaker: SonosSpeaker, audio_format: str, config_entry: SonosConfigEntry
+        self, speaker: SonosSpeaker, config_entry: SonosConfigEntry, audio_format: str
     ) -> None:
         """Initialize the audio input format sensor."""
         super().__init__(speaker, config_entry)

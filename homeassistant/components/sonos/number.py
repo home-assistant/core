@@ -94,7 +94,7 @@ async def async_setup_entry(
                 "Creating %s number control on %s", level_type, speaker.zone_name
             )
             entities.append(
-                SonosLevelEntity(speaker, level_type, valid_range, config_entry)
+                SonosLevelEntity(speaker, config_entry, level_type, valid_range)
             )
         async_add_entities(entities)
 
@@ -111,9 +111,9 @@ class SonosLevelEntity(SonosEntity, NumberEntity):
     def __init__(
         self,
         speaker: SonosSpeaker,
+        config_entry: SonosConfigEntry,
         level_type: str,
         valid_range: tuple[int, int],
-        config_entry: SonosConfigEntry,
     ) -> None:
         """Initialize the level entity."""
         super().__init__(speaker, config_entry)

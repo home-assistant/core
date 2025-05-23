@@ -62,13 +62,7 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.setup import async_setup_component
 
-from .conftest import (
-    MockConfigEntry,
-    MockMusicServiceItem,
-    MockSoCo,
-    SoCoMockFactory,
-    SonosMockEvent,
-)
+from .conftest import MockMusicServiceItem, MockSoCo, SoCoMockFactory, SonosMockEvent
 
 
 async def test_device_registry(
@@ -1034,7 +1028,6 @@ async def _setup_hass(hass: HomeAssistant):
 async def test_service_snapshot_restore(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
-    config_entry: MockConfigEntry,
 ) -> None:
     """Test the snapshot and restore services."""
     soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")

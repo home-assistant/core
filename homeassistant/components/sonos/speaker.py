@@ -95,15 +95,15 @@ class SonosSpeaker:
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: SonosConfigEntry,
+        config_entry: SonosConfigEntry,
         soco: SoCo,
         speaker_info: dict[str, Any],
         zone_group_state_sub: SubscriptionBase | None,
     ) -> None:
         """Initialize a SonosSpeaker."""
         self.hass = hass
-        self.entry = entry
-        self.data = entry.runtime_data.sonos_data
+        self.config_entry = config_entry
+        self.data = config_entry.runtime_data.sonos_data
         self.soco = soco
         self.websocket: SonosWebsocket | None = None
         self.household_id: str = soco.household_id
@@ -181,7 +181,10 @@ class SonosSpeaker:
         self._group_members_missing: set[str] = set()
 
     async def async_setup(
-        self, entry: ConfigEntry, has_battery: bool, dispatches: list[tuple[Any, ...]]
+        self,
+        config_entry: ConfigEntry,
+        has_battery: bool,
+        dispatches: list[tuple[Any, ...]],
     ) -> None:
         """Complete setup in async context."""
         # Battery events can be infrequent, polling is still necessary
@@ -205,7 +208,7 @@ class SonosSpeaker:
         )
 
         for signal, target in dispatch_pairs:
-            entry.async_on_unload(
+            config_entry.async_on_unload(
                 async_dispatcher_connect(
                     self.hass,
                     signal,
@@ -218,7 +221,7 @@ class SonosSpeaker:
 
         await self.async_subscribe()
 
-    def setup(self, entry: ConfigEntry) -> None:
+    def setup(self, config_entry: ConfigEntry) -> None:
         """Run initial setup of the speaker."""
         self.media.play_mode = self.soco.play_mode
         self.update_volume()
@@ -253,7 +256,7 @@ class SonosSpeaker:
         dispatches.append((SONOS_CREATE_MEDIA_PLAYER, self))
         dispatches.append((SONOS_SPEAKER_ADDED, self.soco.uid))
 
-        self.hass.create_task(self.async_setup(entry, has_battery, dispatches))
+        self.hass.create_task(self.async_setup(config_entry, has_battery, dispatches))
 
     #
     # Entity management
@@ -963,16 +966,16 @@ class SonosSpeaker:
     @staticmethod
     async def join_multi(
         hass: HomeAssistant,
-        entry: SonosConfigEntry,
+        config_entry: SonosConfigEntry,
         master: SonosSpeaker,
         speakers: list[SonosSpeaker],
     ) -> None:
         """Form a group with other players."""
-        async with entry.runtime_data.sonos_data.topology_condition:
+        async with config_entry.runtime_data.sonos_data.topology_condition:
             group: list[SonosSpeaker] = await hass.async_add_executor_job(
                 master.join, speakers
             )
-            await SonosSpeaker.wait_for_groups(hass, entry, [group])
+            await SonosSpeaker.wait_for_groups(hass, config_entry, [group])
 
     @soco_error()
     def unjoin(self) -> None:
@@ -984,7 +987,9 @@ class SonosSpeaker:
 
     @staticmethod
     async def unjoin_multi(
-        hass: HomeAssistant, entry: SonosConfigEntry, speakers: list[SonosSpeaker]
+        hass: HomeAssistant,
+        config_entry: SonosConfigEntry,
+        speakers: list[SonosSpeaker],
     ) -> None:
         """Unjoin several players from their group."""
 
@@ -997,9 +1002,11 @@ class SonosSpeaker:
             for speaker in joined_speakers + coordinators:
                 speaker.unjoin()
 
-        async with entry.runtime_data.sonos_data.topology_condition:
+        async with config_entry.runtime_data.sonos_data.topology_condition:
             await hass.async_add_executor_job(_unjoin_all, speakers)
-            await SonosSpeaker.wait_for_groups(hass, entry, [[s] for s in speakers])
+            await SonosSpeaker.wait_for_groups(
+                hass, config_entry, [[s] for s in speakers]
+            )
 
     @soco_error()
     def snapshot(self, with_group: bool) -> None:
