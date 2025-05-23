@@ -112,7 +112,7 @@ EVSE_FAULT_STATE_MAP = {
 }
 
 PUMP_CONTROL_MODE_MAP = {
-    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kConstantSpeed: "constant_temperature",
+    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kConstantSpeed: "constant_speed",
     clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kConstantPressure: "constant_pressure",
     clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kProportionalPressure: "proportional_pressure",
     clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kConstantFlow: "constant_flow",
