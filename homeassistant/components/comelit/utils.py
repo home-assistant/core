@@ -45,53 +45,43 @@ def load_api_data(device: ComelitSerialBridgeObject, domain: str) -> list[Any]:
 async def cleanup_stale_entity(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    device_index: int,
-    device_domain: str,
-    device_class: str | None = None,
+    entry_unique_id: str,
 ) -> None:
     """Cleanup stale entity."""
     entity_reg: er.EntityRegistry = er.async_get(hass)
 
-    entities_removed: bool = False
+    device_list: list[str] = []
 
     for entry in er.async_entries_for_config_entry(entity_reg, config_entry.entry_id):
-        if entry.domain != device_domain:
-            # Only remove entities for specified domain
-            continue
-
-        if device_class:
-            entry_unique_id = f"{config_entry.entry_id}-{device_index}-{device_class}"
-        else:
-            entry_unique_id = f"{config_entry.entry_id}-{device_index}"
-
         if entry.unique_id == entry_unique_id:
             entry_name = entry.name or entry.original_name
             _LOGGER.info("Removing entity: %s [%s]", entry.entity_id, entry_name)
             entity_reg.async_remove(entry.entity_id)
-            entities_removed = True
+            if _id := entry.device_id:
+                device_list.append(_id)
 
-    if entities_removed:
-        _async_remove_empty_devices(hass, entity_reg, config_entry)
+    if len(device_list) > 0:
+        _async_remove_state_config_entry_from_devices(hass, device_list, config_entry)
 
 
-def _async_remove_empty_devices(
-    hass: HomeAssistant, entity_reg: er.EntityRegistry, config_entry: ConfigEntry
+def _async_remove_state_config_entry_from_devices(
+    hass: HomeAssistant, device_list: list[str], config_entry: ConfigEntry
 ) -> None:
-    """Remove devices with no entities."""
+    """Remove config entry from device."""
 
-    device_reg = dr.async_get(hass)
-    device_list = dr.async_entries_for_config_entry(device_reg, config_entry.entry_id)
-    for device_entry in device_list:
-        # Skip main hub device
-        if not device_entry.via_device_id:
-            continue
-        if not er.async_entries_for_device(
-            entity_reg,
-            device_entry.id,
-            include_disabled_entities=True,
-        ):
-            _LOGGER.info("Removing device: %s", device_entry.name)
-            device_reg.async_remove_device(device_entry.id)
+    device_registry = dr.async_get(hass)
+    for device_id in device_list:
+        device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+        if device:
+            _LOGGER.info(
+                "Removing config entry %s from device %s",
+                config_entry.title,
+                device.name,
+            )
+            device_registry.async_update_device(
+                device_id=device.id,
+                remove_config_entry_id=config_entry.entry_id,
+            )
 
 
 def bridge_api_call[_T: ComelitBridgeBaseEntity, **_P](

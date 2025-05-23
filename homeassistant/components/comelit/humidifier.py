@@ -79,9 +79,7 @@ async def async_setup_entry(
                 await cleanup_stale_entity(
                     hass,
                     config_entry,
-                    device.index,
-                    HUMIDIFIER_DOMAIN,
-                    device_class,
+                    f"{config_entry.entry_id}-{device.index}-{device_class}",
                 )
 
             continue
