@@ -453,7 +453,7 @@ anova-wifi==0.17.0
 anthemav==1.4.1
 
 # homeassistant.components.anthropic
-anthropic==0.47.2
+anthropic==0.52.0
 
 # homeassistant.components.mcp_server
 anyio==4.9.0
@@ -1612,7 +1612,7 @@ pyevilgenius==2.0.0
 pyezvizapi==1.0.0.7
 
 # homeassistant.components.fibaro
-pyfibaro==0.8.2
+pyfibaro==0.8.3
 
 # homeassistant.components.fido
 pyfido==2.1.2
