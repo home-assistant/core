@@ -196,6 +196,13 @@ async def async_setup_platform(
         )
         return
 
+    if "coordinator" in discovery_info:
+        async_add_entities(
+            TriggerFanEntity(hass, discovery_info["coordinator"], config)
+            for config in discovery_info["entities"]
+        )
+        return
+
     _async_create_template_tracking_entities(
         async_add_entities,
         hass,
@@ -230,6 +237,10 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         # List of valid preset modes
         self._preset_modes: list[str] | None = config.get(CONF_PRESET_MODES)
         self._attr_assumed_state = self._template is None
+
+        self._attr_supported_features |= (
+            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
+        )
 
     def _iterate_scripts(
         self, config: dict[str, Any]
@@ -495,9 +506,6 @@ class TemplateFan(TemplateEntity, AbstractTemplateFan):
         if TYPE_CHECKING:
             assert name is not None
 
-        self._attr_supported_features |= (
-            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
-        )
         for action_id, action_config, supported_feature in self._iterate_scripts(
             config
         ):
@@ -574,9 +582,6 @@ class TriggerFanEntity(TriggerEntity, AbstractTemplateFan):
         # Render the _attr_name before initializing TemplateLightEntity
         self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
 
-        self._attr_supported_features |= (
-            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
-        )
         for action_id, action_config, supported_feature in self._iterate_scripts(
             config
         ):
