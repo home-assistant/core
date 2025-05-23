@@ -8,6 +8,7 @@ from typing import Final
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -156,7 +157,7 @@ class SensorDeviceClass(StrEnum):
     CONDUCTIVITY = "conductivity"
     """Conductivity.
 
-    Unit of measurement: `S/cm`, `mS/cm`, `µS/cm`
+    Unit of measurement: `S/cm`, `mS/cm`, `μS/cm`
     """
 
     CURRENT = "current"
@@ -188,7 +189,7 @@ class SensorDeviceClass(StrEnum):
     DURATION = "duration"
     """Fixed duration.
 
-    Unit of measurement: `d`, `h`, `min`, `s`, `ms`, `µs`
+    Unit of measurement: `d`, `h`, `min`, `s`, `ms`, `μs`
     """
 
     ENERGY = "energy"
@@ -268,25 +269,25 @@ class SensorDeviceClass(StrEnum):
     NITROGEN_DIOXIDE = "nitrogen_dioxide"
     """Amount of NO2.
 
-    Unit of measurement: `µg/m³`
+    Unit of measurement: `μg/m³`
     """
 
     NITROGEN_MONOXIDE = "nitrogen_monoxide"
     """Amount of NO.
 
-    Unit of measurement: `µg/m³`
+    Unit of measurement: `μg/m³`
     """
 
     NITROUS_OXIDE = "nitrous_oxide"
     """Amount of N2O.
 
-    Unit of measurement: `µg/m³`
+    Unit of measurement: `μg/m³`
     """
 
     OZONE = "ozone"
     """Amount of O3.
 
-    Unit of measurement: `µg/m³`
+    Unit of measurement: `μg/m³`
     """
 
     PH = "ph"
@@ -298,19 +299,19 @@ class SensorDeviceClass(StrEnum):
     PM1 = "pm1"
     """Particulate matter <= 1 μm.
 
-    Unit of measurement: `µg/m³`
+    Unit of measurement: `μg/m³`
     """
 
     PM10 = "pm10"
     """Particulate matter <= 10 μm.
 
-    Unit of measurement: `µg/m³`
+    Unit of measurement: `μg/m³`
     """
 
     PM25 = "pm25"
     """Particulate matter <= 2.5 μm.
 
-    Unit of measurement: `µg/m³`
+    Unit of measurement: `μg/m³`
     """
 
     POWER_FACTOR = "power_factor"
@@ -388,7 +389,7 @@ class SensorDeviceClass(StrEnum):
     SULPHUR_DIOXIDE = "sulphur_dioxide"
     """Amount of SO2.
 
-    Unit of measurement: `µg/m³`
+    Unit of measurement: `μg/m³`
     """
 
     TEMPERATURE = "temperature"
@@ -400,7 +401,7 @@ class SensorDeviceClass(StrEnum):
     VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
     """Amount of VOC.
 
-    Unit of measurement: `µg/m³`
+    Unit of measurement: `μg/m³`
     """
 
     VOLATILE_ORGANIC_COMPOUNDS_PARTS = "volatile_organic_compounds_parts"
@@ -412,7 +413,7 @@ class SensorDeviceClass(StrEnum):
     VOLTAGE = "voltage"
     """Voltage.
 
-    Unit of measurement: `V`, `mV`, `µV`, `kV`, `MV`
+    Unit of measurement: `V`, `mV`, `μV`, `kV`, `MV`
     """
 
     VOLUME = "volume"
@@ -459,7 +460,7 @@ class SensorDeviceClass(StrEnum):
     Weight is used instead of mass to fit with every day language.
 
     Unit of measurement: `MASS_*` units
-    - SI / metric: `µg`, `mg`, `g`, `kg`
+    - SI / metric: `μg`, `mg`, `g`, `kg`
     - USCS / imperial: `oz`, `lb`
     """
 
@@ -718,4 +719,15 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
 
 STATE_CLASS_UNITS: dict[SensorStateClass | str, set[type[StrEnum] | str | None]] = {
     SensorStateClass.MEASUREMENT_ANGLE: {DEGREE},
+}
+
+AMBIGUOUS_UNITS: dict[str, str] = {
+    "\u00b5Sv/h": "μSv/h",  # aranet: radiation rate
+    "\u00b5S/cm": UnitOfConductivity.MICROSIEMENS_PER_CM,
+    "\u00b5V": UnitOfElectricPotential.MICROVOLT,
+    "\u00b5g/ft³": CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
+    "\u00b5g/m³": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    "\u00b5mol/s⋅m²": "μmol/s⋅m²",  # fyta: light
+    "\u00b5g": UnitOfMass.MICROGRAMS,
+    "\u00b5s": UnitOfTime.MICROSECONDS,
 }
