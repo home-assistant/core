@@ -554,27 +554,27 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     ) -> SearchMedia:
         """Search the media player."""
 
-        if not query.media_content_type or query.media_content_type not in (
+        _valid_type_list = [
             key
             for key in self._browse_data.content_type_media_class
             if key not in ["apps", "app", "radios", "radio"]
+        ]
+
+        if not query.media_content_type or query.media_content_type.lower() not in (
+            _valid_type_list
         ):
             _LOGGER.debug("Invalid Media Content Type: %s", query.media_content_type)
-
-            _type_list = ", ".join(
-                str(key)
-                for key in self._browse_data.content_type_media_class
-                if key not in ["apps", "app", "radios", "radio"]
-            )
 
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_search_media_content_type",
-                translation_placeholders={"media_content_type": _type_list},
+                translation_placeholders={
+                    "media_content_type": ", ".join(_valid_type_list)
+                },
             )
 
         payload = {
-            "search_type": query.media_content_type,
+            "search_type": query.media_content_type.lower(),
             "search_id": query.media_content_id,
             "search_query": query.search_query,
         }
