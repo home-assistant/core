@@ -19,10 +19,10 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import GeocachingConfigEntry, GeocachingDataUpdateCoordinator
+from .entity import GeocachingBaseEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -138,21 +138,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class GeocachingBaseSensor(
-    CoordinatorEntity[GeocachingDataUpdateCoordinator], SensorEntity
-):
-    """Base class for Geocaching sensors."""
-
-    _attr_has_entity_name = True
-
-    def __init__(self, coordinator: GeocachingDataUpdateCoordinator) -> None:
-        """Initialize the Geocaching sensor."""
-        super().__init__(coordinator)
-
-
 # Base class for a cache entity.
 # Sets the device, ID and translation settings to correctly group the entity to the correct cache device and give it the correct name.
-class GeoEntityBaseCache(GeocachingBaseSensor):
+class GeoEntityBaseCache(GeocachingBaseEntity, SensorEntity):
     """Base class for cache entities."""
 
     _attr_has_entity_name = True
@@ -205,7 +193,7 @@ class GeoEntityCacheSensorEntity(GeoEntityBaseCache, SensorEntity):
         return self.entity_description.value_fn(self.cache)
 
 
-class GeocachingProfileSensor(GeocachingBaseSensor):
+class GeocachingProfileSensor(GeocachingBaseEntity):
     """Representation of a Sensor."""
 
     entity_description: GeocachingSensorEntityDescription
