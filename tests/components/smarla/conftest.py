@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from pysmarlaapi.classes import AuthToken
-from pysmarlaapi.federwiege.classes import Property
 import pytest
 
 from homeassistant.components.smarla.const import DOMAIN
@@ -29,12 +28,10 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
+def mock_setup_entry() -> Generator:
     """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.smarla.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
+    with patch("homeassistant.components.smarla.async_setup_entry", return_value=True):
+        yield
 
 
 @pytest.fixture
@@ -56,22 +53,11 @@ def mock_connection() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_federwiege(
-    mock_connection: AsyncMock, mock_property: AsyncMock
-) -> Generator[AsyncMock]:
+def mock_federwiege(mock_connection: MagicMock) -> Generator[MagicMock]:
     """Mock the Federwiege instance."""
     with patch(
         "homeassistant.components.smarla.Federwiege", autospec=True
     ) as mock_federwiege:
         federwiege = mock_federwiege.return_value
         federwiege.serial_number = MOCK_SERIAL_NUMBER
-        federwiege.get_property.return_value = mock_property
         yield federwiege
-
-
-@pytest.fixture
-def mock_property() -> AsyncMock:
-    """Mock the Federwiege instance."""
-    mock = AsyncMock(spec=Property)
-    mock.get.return_value = False
-    return mock

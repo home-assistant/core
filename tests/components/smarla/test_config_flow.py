@@ -1,6 +1,6 @@
 """Test config flow for Swing2Sleep Smarla integration."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.smarla.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_config_flow(
-    hass: HomeAssistant, mock_setup_entry, mock_connection
+    hass: HomeAssistant, mock_setup_entry, mock_connection: MagicMock
 ) -> None:
     """Test creating a config entry."""
     result = await hass.config_entries.flow.async_init(
@@ -36,7 +36,7 @@ async def test_config_flow(
 
 
 async def test_malformed_token(
-    hass: HomeAssistant, mock_setup_entry, mock_connection
+    hass: HomeAssistant, mock_setup_entry, mock_connection: MagicMock
 ) -> None:
     """Test we show user form on malformed token input."""
     with patch(
@@ -61,7 +61,7 @@ async def test_malformed_token(
 
 
 async def test_invalid_auth(
-    hass: HomeAssistant, mock_setup_entry, mock_connection
+    hass: HomeAssistant, mock_setup_entry, mock_connection: MagicMock
 ) -> None:
     """Test we show user form on invalid auth."""
     with patch.object(
@@ -86,7 +86,7 @@ async def test_invalid_auth(
 
 
 async def test_device_exists_abort(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_connection
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_connection: MagicMock
 ) -> None:
     """Test we abort config flow if Smarla device already configured."""
     mock_config_entry.add_to_hass(hass)
