@@ -7,8 +7,7 @@ from homeassistant.components import notify
 from homeassistant.components.telegram import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
-
-from .conftest import setup_dependencies
+from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
 
@@ -16,7 +15,21 @@ from tests.common import get_fixture_path
 async def test_reload_notify(hass: HomeAssistant) -> None:
     """Verify we can reload the notify service."""
 
-    await setup_dependencies(hass)
+    with patch("homeassistant.components.telegram_bot.async_setup", return_value=True):
+        assert await async_setup_component(
+            hass,
+            notify.DOMAIN,
+            {
+                notify.DOMAIN: [
+                    {
+                        "name": DOMAIN,
+                        "platform": DOMAIN,
+                        "chat_id": 1,
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
 
     assert hass.services.has_service(notify.DOMAIN, DOMAIN)
 

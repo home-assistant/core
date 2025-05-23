@@ -1,1 +1,1 @@
-"""Tests for Telegram integration."""
+"""Tests for telegram component."""
