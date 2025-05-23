@@ -7,8 +7,12 @@ from unittest.mock import AsyncMock, patch
 from b2sdk.v2 import RawSimulator
 import pytest
 
-from homeassistant.components.backblaze_b2.const import CONF_BUCKET, DOMAIN
-from homeassistant.components.backup import AgentBackup
+from homeassistant.components.backblaze_b2.const import (
+    CONF_APPLICATION_KEY,
+    CONF_BUCKET,
+    CONF_KEY_ID,
+    DOMAIN,
+)
 
 from .const import USER_INPUT
 
@@ -27,7 +31,11 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture(autouse=True)
 def b2_fixture():
     """Create account and application keys."""
-    with patch("b2sdk.v2.B2Api", return_value=RawSimulator()) as mock_client:
+    sim = RawSimulator()
+    with (
+        patch("b2sdk.v2.B2Api", return_value=sim) as mock_client,
+        patch("homeassistant.components.backblaze_b2.B2Api", return_value=sim),
+    ):
         RawSimulator.get_bucket_by_name = RawSimulator._get_bucket_by_name
 
         allowed = {
@@ -77,31 +85,17 @@ def b2_fixture():
 
 
 @pytest.fixture
-def backup_for_test() -> AgentBackup:
-    """Test backup fixture."""
-    return AgentBackup(
-        addons=[],
-        backup_id="23e64aec",
-        date="2024-11-22T11:48:48.727189+01:00",
-        database_included=True,
-        extra_metadata={},
-        folders=[],
-        homeassistant_included=True,
-        homeassistant_version="2024.12.0.dev0",
-        name="Core 2024.12.0.dev0",
-        protected=False,
-        size=2**20,
-    )
-
-
-@pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_entry(b2_fixture: Any) -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         entry_id="test",
         title="test",
         domain=DOMAIN,
-        data=USER_INPUT,
+        data={
+            **USER_INPUT,
+            CONF_KEY_ID: b2_fixture.key_id,
+            CONF_APPLICATION_KEY: b2_fixture.application_key,
+        },
     )
 
 
