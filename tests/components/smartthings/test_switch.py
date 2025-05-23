@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 from pysmartthings import Attribute, Capability, Command
 from pysmartthings.models import HealthStatus
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import automation, script
 from homeassistant.components.automation import automations_with_entity
@@ -107,6 +107,38 @@ async def test_command_switch_turn_on_off(
         Command.SET_DRYER_WRINKLE_PREVENT,
         MAIN,
         argument,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ref_normal_000001"])
+@pytest.mark.parametrize(
+    ("action", "command"),
+    [
+        (SERVICE_TURN_ON, Command.ACTIVATE),
+        (SERVICE_TURN_OFF, Command.DEACTIVATE),
+    ],
+)
+async def test_custom_commands(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    action: str,
+    command: Command,
+) -> None:
+    """Test switch turn on and off command."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        action,
+        {ATTR_ENTITY_ID: "switch.refrigerator_power_cool"},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "7db87911-7dce-1cf2-7119-b953432a2f09",
+        Capability.SAMSUNG_CE_POWER_COOL,
+        command,
+        MAIN,
     )
 
 

@@ -146,6 +146,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "ecobee_sensor",
         "ecobee_thermostat",
         "ecobee_thermostat_offline",
+        "sensi_thermostat",
         "fake_fan",
         "generic_fan_3_speed",
         "heatit_ztrm3_thermostat",
@@ -160,6 +161,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "aux_ac",
         "hw_q80r_soundbar",
         "gas_meter",
+        "lumi",
     ]
 )
 def device_fixture(
