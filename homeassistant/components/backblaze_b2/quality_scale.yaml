@@ -51,7 +51,7 @@ rules:
     status: exempt
     comment: This integration does not poll.
   reauthentication-flow: todo
-  test-coverage: todo
+  test-coverage: done
 
   # Gold
   devices:
