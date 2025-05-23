@@ -80,6 +80,7 @@ async def async_setup_entry(
                     hass,
                     config_entry,
                     f"{config_entry.entry_id}-{device.index}-{device_class}",
+                    device,
                 )
 
             continue

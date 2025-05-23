@@ -90,7 +90,7 @@ async def async_setup_entry(
             # No climate data, device is only a humidifier/dehumidifier
 
             await cleanup_stale_entity(
-                hass, config_entry, f"{config_entry.entry_id}-{device.index}"
+                hass, config_entry, f"{config_entry.entry_id}-{device.index}", device
             )
 
             continue

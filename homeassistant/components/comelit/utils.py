@@ -46,32 +46,32 @@ async def cleanup_stale_entity(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     entry_unique_id: str,
+    device: ComelitSerialBridgeObject,
 ) -> None:
     """Cleanup stale entity."""
     entity_reg: er.EntityRegistry = er.async_get(hass)
 
-    device_list: list[str] = []
+    identifiers: list[str] = []
 
     for entry in er.async_entries_for_config_entry(entity_reg, config_entry.entry_id):
         if entry.unique_id == entry_unique_id:
             entry_name = entry.name or entry.original_name
             _LOGGER.info("Removing entity: %s [%s]", entry.entity_id, entry_name)
             entity_reg.async_remove(entry.entity_id)
-            if _id := entry.device_id:
-                device_list.append(_id)
+            identifiers.append(f"{config_entry.entry_id}-{device.type}-{device.index}")
 
-    if len(device_list) > 0:
-        _async_remove_state_config_entry_from_devices(hass, device_list, config_entry)
+    if len(identifiers) > 0:
+        _async_remove_state_config_entry_from_devices(hass, identifiers, config_entry)
 
 
 def _async_remove_state_config_entry_from_devices(
-    hass: HomeAssistant, device_list: list[str], config_entry: ConfigEntry
+    hass: HomeAssistant, identifiers: list[str], config_entry: ConfigEntry
 ) -> None:
     """Remove config entry from device."""
 
     device_registry = dr.async_get(hass)
-    for device_id in device_list:
-        device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+    for identifier in identifiers:
+        device = device_registry.async_get_device(identifiers={(DOMAIN, identifier)})
         if device:
             _LOGGER.info(
                 "Removing config entry %s from device %s",
