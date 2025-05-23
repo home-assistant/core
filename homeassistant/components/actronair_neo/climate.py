@@ -85,20 +85,6 @@ class BaseClimateEntity(CoordinatorEntity[ActronNeoSystemCoordinator], ClimateEn
         self._serial_number = coordinator.serial_number
         self._name = name
 
-    @property
-    def min_temp(self) -> float:
-        """Return the minimum temperature that can be set."""
-        return self._this_device().min_temp
-
-    @property
-    def max_temp(self) -> float:
-        """Return the maximum temperature that can be set."""
-        return self._this_device().max_temp
-
-    def _this_device(self):
-        """Get the device this entity represents (to be implemented by subclasses)."""
-        raise NotImplementedError
-
 
 class ActronSystemClimate(BaseClimateEntity):
     """Representation of the Actron Air Neo system."""
@@ -123,14 +109,20 @@ class ActronSystemClimate(BaseClimateEntity):
             identifiers={(DOMAIN, serial_number)},
             name=self._status.ac_system.system_name,
             manufacturer="Actron Air",
-            model=self._status.ac_system.master_wc_model,
+            model_id=self._status.ac_system.master_wc_model,
             sw_version=self._status.ac_system.master_wc_firmware_version,
             serial_number=serial_number,
         )
 
-    def _this_device(self):
-        """Get the device this entity represents."""
-        return self._status
+    @property
+    def min_temp(self) -> float:
+        """Return the minimum temperature that can be set."""
+        return self._status.min_temp
+
+    @property
+    def max_temp(self) -> float:
+        """Return the maximum temperature that can be set."""
+        return self._status.max_temp
 
     @property
     def _status(self) -> ActronAirNeoStatus:
@@ -205,7 +197,7 @@ class ActronZoneClimate(BaseClimateEntity):
         super().__init__(coordinator, zone.title)
         serial_number = coordinator.serial_number
         self._zone_id: int = zone.zone_id
-        self._attr_unique_id: str = f"{serial_number}_zone_{zone.zone_id}"
+        self._attr_unique_id: str = f"{self._serial_number}_zone_{zone.zone_id}"
         self._attr_device_info: DeviceInfo = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=zone.title,
@@ -215,9 +207,15 @@ class ActronZoneClimate(BaseClimateEntity):
             via_device=(DOMAIN, serial_number),
         )
 
-    def _this_device(self):
-        """Get the device this entity represents."""
-        return self._zone
+    @property
+    def min_temp(self) -> float:
+        """Return the minimum temperature that can be set."""
+        return self._zone.min_temp
+
+    @property
+    def max_temp(self) -> float:
+        """Return the maximum temperature that can be set."""
+        return self._zone.max_temp
 
     @property
     def _zone(self) -> ActronAirNeoZone:
