@@ -1611,6 +1611,9 @@ pyevilgenius==2.0.0
 # homeassistant.components.ezviz
 pyezvizapi==1.0.0.7
 
+# homeassistant.components.family_safety
+pyfamilysafety==2.0.0b2
+
 # homeassistant.components.fibaro
 pyfibaro==0.8.2
 
