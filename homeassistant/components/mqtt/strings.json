@@ -482,8 +482,8 @@
                 "percentage_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the percentage command topic.",
                 "percentage_state_topic": "The MQTT topic subscribed to receive fan speed based on percentage. [Learn more.]({url}#percentage_state_topic)",
                 "percentage_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the speed percentage value.",
-                "speed_range_min": "The minimum of numeric output range (off not included, so speed_range_min - 1 represents 0 %). The number of speeds within the \"speed range\" / 100 will determine the percentage step.",
-                "speed_range_max": "The maximum of numeric output range (representing 100 %). The number of speeds within the \"speed range\" / 100 will determine the percentage step."
+                "speed_range_min": "The minimum of numeric output range (off not included, so speed_range_min - 1 represents 0 %). The percentage step is 100 / the number of speeds within the \"speed range\".",
+                "speed_range_max": "The maximum of numeric output range (representing 100 %). The percentage step is 100 / number of speeds within the \"speed range\"."
               }
             },
             "light_color_mode_settings": {
@@ -634,7 +634,7 @@
         "cover_tilt_status_template_must_be_used_with_tilt_status_topic": "The tilt value template must be used with the tilt status topic",
         "cover_value_template_must_be_used_with_state_topic": "The value template must be used with the state topic option",
         "fan_speed_range_max_must_be_greater_than_speed_range_min": "Speed range max must be greater than speed range min",
-        "fan_preset_mode_reset_in_preset_modes_list": "Payload \"preset mode reset\" is not a valid preset mode",
+        "fan_preset_mode_reset_in_preset_modes_list": "Payload \"reset preset mode\" is not a valid as a preset mode",
         "invalid_input": "Invalid value",
         "invalid_subscribe_topic": "Invalid subscribe topic",
         "invalid_template": "Invalid template",
