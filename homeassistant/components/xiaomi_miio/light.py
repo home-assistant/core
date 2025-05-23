@@ -841,7 +841,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
         return self._hs_color
 
     @property
-    def color_mode(self):
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self.hs_color:
             return ColorMode.HS

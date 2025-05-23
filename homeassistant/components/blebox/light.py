@@ -84,7 +84,7 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
         return color_util.color_temperature_mired_to_kelvin(self._feature.color_temp)
 
     @property
-    def color_mode(self):
+    def color_mode(self) -> ColorMode:
         """Return the color mode.
 
         Set values to _attr_ibutes if needed.
@@ -92,7 +92,7 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
         return COLOR_MODE_MAP.get(self._feature.color_mode, ColorMode.ONOFF)
 
     @property
-    def supported_color_modes(self):
+    def supported_color_modes(self) -> set[ColorMode]:
         """Return supported color modes."""
         return {self.color_mode}
 
