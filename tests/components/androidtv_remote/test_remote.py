@@ -174,6 +174,49 @@ async def test_remote_send_command_with_hold_secs(
     ]
 
 
+async def test_remote_send_command_with_keyboard_device(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
+) -> None:
+    """Test remote.send_command service with keyboard device."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        "remote",
+        "send_command",
+        {
+            "entity_id": REMOTE_ENTITY,
+            "command": "Hello World",
+            "device": "keyboard",
+        },
+        blocking=True,
+    )
+    assert mock_api.send_text.mock_calls == [call("Hello World")]
+
+
+async def test_remote_send_command_with_invalid_device(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
+) -> None:
+    """Test remote.send_command service with invalid device."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    with pytest.raises(HomeAssistantError, match="Only keyboard device is supported"):
+        await hass.services.async_call(
+            "remote",
+            "send_command",
+            {
+                "entity_id": REMOTE_ENTITY,
+                "command": "Hello World",
+                "device": "invalid",
+            },
+            blocking=True,
+        )
+    assert mock_api.send_text.call_count == 0
+
+
 async def test_remote_connection_closed(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:
@@ -197,6 +240,22 @@ async def test_remote_connection_closed(
             blocking=True,
         )
     assert mock_api.send_key_command.mock_calls == [call("DPAD_LEFT", "SHORT")]
+
+    mock_api.send_text.side_effect = ConnectionClosed()
+    with pytest.raises(
+        HomeAssistantError, match="Connection to the Android TV device is closed"
+    ):
+        await hass.services.async_call(
+            "remote",
+            "send_command",
+            {
+                "entity_id": REMOTE_ENTITY,
+                "command": "hello",
+                "device": "keyboard",
+            },
+            blocking=True,
+        )
+    assert mock_api.send_text.mock_calls == [call("hello")]
 
     mock_api.send_launch_app_command.side_effect = ConnectionClosed()
     with pytest.raises(
