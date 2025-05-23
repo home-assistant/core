@@ -4,6 +4,7 @@ from pysmhi import SMHIPointForecast
 
 from homeassistant.components.smhi.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -21,12 +22,12 @@ async def test_load_and_unload_config_entry(
     state = hass.states.get(ENTITY_ID)
     assert state
 
-    await hass.config_entries.async_remove(load_int.entry_id)
+    await hass.config_entries.async_unload(load_int.entry_id)
     await hass.async_block_till_done()
 
     assert load_int.state is ConfigEntryState.NOT_LOADED
     state = hass.states.get(ENTITY_ID)
-    assert not state
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_migrate_entry(
