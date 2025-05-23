@@ -49,35 +49,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
         bucket = await hass.async_add_executor_job(
             b2_api.get_bucket_by_name, data[CONF_BUCKET]
         )
-        allowed = b2_api.account_info.get_allowed()
-
-        # Check if capabilities contains 'writeFiles' and 'listFiles' and 'deleteFiles' and 'readFiles'
-        if allowed is not None:
-            if allowed is not None:
-                capabilities = allowed["capabilities"]
-                if not capabilities or not all(
-                    capability in capabilities
-                    for capability in (
-                        "writeFiles",
-                        "listFiles",
-                        "deleteFiles",
-                        "readFiles",
-                    )
-                ):
-                    raise ConfigEntryError(
-                        translation_domain=DOMAIN,
-                        translation_key="invalid_capability",
-                    )
-
-                allowed_prefix = cast(str, allowed.get("namePrefix", ""))
-                if allowed_prefix and not prefix.startswith(allowed_prefix):
-                    raise ConfigEntryError(
-                        translation_domain=DOMAIN,
-                        translation_key="invalid_prefix",
-                        translation_placeholders={
-                            "allowed_prefix": allowed_prefix,
-                        },
-                    )
 
     except exception.Unauthorized as err:
         raise ConfigEntryError(
@@ -113,11 +84,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
 
     entry.runtime_data = BackblazeConfig(bucket, prefix)
 
-    def notify_backup_listeners() -> None:
+    def _async_notify_backup_listeners() -> None:
         for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
             listener()
 
-    entry.async_on_unload(entry.async_on_state_change(notify_backup_listeners))
+    entry.async_on_unload(entry.async_on_state_change(_async_notify_backup_listeners))
 
     return True
 
