@@ -46,7 +46,9 @@ rules:
     status: exempt
     comment: This integration does not have entities.
   integration-owner: done
-  log-when-unavailable: todo
+  log-when-unavailable:
+    status: exempt
+    comment: This integration does not have entities.
   parallel-updates:
     status: exempt
     comment: This integration does not poll.
