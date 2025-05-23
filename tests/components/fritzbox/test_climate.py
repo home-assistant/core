@@ -651,7 +651,7 @@ async def test_holidy_summer_mode(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Hvac mode heat is not valid. Valid hvac modes are: off",
+        match="HVAC mode heat is not valid. Valid HVAC modes are: off",
     ):
         await hass.services.async_call(
             "climate",

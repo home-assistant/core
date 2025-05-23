@@ -244,7 +244,7 @@ async def test_adam_climate_entity_climate_changes(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Hvac mode dry is not valid. Valid hvac modes are: auto, heat",
+        match="HVAC mode dry is not valid. Valid HVAC modes are: auto, heat",
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
