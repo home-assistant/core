@@ -375,9 +375,6 @@
       "pump_speed": {
         "name": "Rotation speed"
       },
-      "pump_operation_mode": {
-        "name": "Pump mode"
-      },
       "evse_circuit_capacity": {
         "name": "Circuit capacity"
       },
