@@ -159,8 +159,6 @@ class InelsSwitch(InelsBaseEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the switch to turn off."""
-        if not self._device.is_available:
-            return
         self.entity_description.set_fn(self._device, self._index, False)
         await self.hass.async_add_executor_job(
             self._device.set_ha_value, self._device.state
@@ -168,8 +166,6 @@ class InelsSwitch(InelsBaseEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the switch to turn on."""
-        if not self._device.is_available:
-            return
         self.entity_description.set_fn(self._device, self._index, True)
         await self.hass.async_add_executor_job(
             self._device.set_ha_value, self._device.state
