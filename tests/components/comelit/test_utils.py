@@ -20,10 +20,10 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry
 
+ENTITY_ID_0 = "switch.switch0"
 ENTITY_ID_1 = "climate.climate0"
 ENTITY_ID_2 = "humidifier.climate0_dehumidifier"
 ENTITY_ID_3 = "humidifier.climate0_humidifier"
-ENTITY_ID_4 = "switch.climate0_switch"
 
 
 async def test_device_remove_stale(
@@ -93,7 +93,7 @@ async def test_bridge_api_call_exceptions(
 
     await setup_integration(hass, mock_serial_bridge_config_entry)
 
-    assert (state := hass.states.get(ENTITY_ID_4))
+    assert (state := hass.states.get(ENTITY_ID_0))
     assert state.state == STATE_OFF
 
     mock_serial_bridge.set_device_status.side_effect = side_effect
@@ -103,7 +103,7 @@ async def test_bridge_api_call_exceptions(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_ID_4},
+            {ATTR_ENTITY_ID: ENTITY_ID_0},
             blocking=True,
         )
 
@@ -121,7 +121,7 @@ async def test_bridge_api_call_reauth(
 
     await setup_integration(hass, mock_serial_bridge_config_entry)
 
-    assert (state := hass.states.get(ENTITY_ID_4))
+    assert (state := hass.states.get(ENTITY_ID_0))
     assert state.state == STATE_OFF
 
     mock_serial_bridge.set_device_status.side_effect = CannotAuthenticate
@@ -130,7 +130,7 @@ async def test_bridge_api_call_reauth(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID_4},
+        {ATTR_ENTITY_ID: ENTITY_ID_0},
         blocking=True,
     )
 
