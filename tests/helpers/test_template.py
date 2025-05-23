@@ -772,6 +772,23 @@ def test_add(hass: HomeAssistant) -> None:
     assert render(hass, "{{ 'no_number' | add(10, default=1) }}") == 1
 
 
+def test_as_function(hass: HomeAssistant) -> None:
+    """Test as_function."""
+    assert (
+        template.Template(
+            """
+            {%- macro macro_double(num, returns) -%}
+            {%- do returns(num * 2) -%}
+            {%- endmacro -%}
+            {%- set double = macro_double | as_function -%}
+            {{ double(5) }}
+            """,
+            hass,
+        ).async_render()
+        == 10
+    )
+
+
 def test_logarithm(hass: HomeAssistant) -> None:
     """Test logarithm."""
     tests = [
