@@ -58,7 +58,6 @@ class QbusEntity(Entity, ABC):
     """Representation of a Qbus entity."""
 
     _attr_has_entity_name = True
-    _attr_name: str | None = None
     _attr_should_poll = False
 
     def __init__(

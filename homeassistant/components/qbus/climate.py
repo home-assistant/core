@@ -57,6 +57,7 @@ async def async_setup_entry(
 class QbusClimate(QbusEntity, ClimateEntity):
     """Representation of a Qbus climate entity."""
 
+    _attr_name = None
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
