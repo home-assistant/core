@@ -1614,7 +1614,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.12.0
+opower==0.12.1
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2335,7 +2335,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==3.2.2
+pysmartthings==3.2.3
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -3156,7 +3156,7 @@ youless-api==2.2.0
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2025.03.31
+yt-dlp[default]==2025.05.22
 
 # homeassistant.components.zabbix
 zabbix-utils==2.0.2

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor_platfom[sensor.paperless_ngx_correspondents-entry]
+# name: test_sensor_platform[sensor.paperless_ngx_correspondents-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -35,7 +35,7 @@
     'unit_of_measurement': 'correspondents',
   })
 # ---
-# name: test_sensor_platfom[sensor.paperless_ngx_correspondents-state]
+# name: test_sensor_platform[sensor.paperless_ngx_correspondents-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Paperless-ngx Correspondents',
@@ -50,7 +50,7 @@
     'state': '99',
   })
 # ---
-# name: test_sensor_platfom[sensor.paperless_ngx_document_types-entry]
+# name: test_sensor_platform[sensor.paperless_ngx_document_types-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -86,7 +86,7 @@
     'unit_of_measurement': 'document types',
   })
 # ---
-# name: test_sensor_platfom[sensor.paperless_ngx_document_types-state]
+# name: test_sensor_platform[sensor.paperless_ngx_document_types-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Paperless-ngx Document types',
@@ -101,7 +101,7 @@
     'state': '99',
   })
 # ---
-# name: test_sensor_platfom[sensor.paperless_ngx_documents_in_inbox-entry]
+# name: test_sensor_platform[sensor.paperless_ngx_documents_in_inbox-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -137,7 +137,7 @@
     'unit_of_measurement': 'documents',
   })
 # ---
-# name: test_sensor_platfom[sensor.paperless_ngx_documents_in_inbox-state]
+# name: test_sensor_platform[sensor.paperless_ngx_documents_in_inbox-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Paperless-ngx Documents in inbox',
@@ -152,7 +152,7 @@
     'state': '9',
   })
 # ---
-# name: test_sensor_platfom[sensor.paperless_ngx_tags-entry]
+# name: test_sensor_platform[sensor.paperless_ngx_tags-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -188,7 +188,7 @@
     'unit_of_measurement': 'tags',
   })
 # ---
-# name: test_sensor_platfom[sensor.paperless_ngx_tags-state]
+# name: test_sensor_platform[sensor.paperless_ngx_tags-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Paperless-ngx Tags',
@@ -203,7 +203,7 @@
     'state': '99',
   })
 # ---
-# name: test_sensor_platfom[sensor.paperless_ngx_total_characters-entry]
+# name: test_sensor_platform[sensor.paperless_ngx_total_characters-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -239,7 +239,7 @@
     'unit_of_measurement': 'characters',
   })
 # ---
-# name: test_sensor_platfom[sensor.paperless_ngx_total_characters-state]
+# name: test_sensor_platform[sensor.paperless_ngx_total_characters-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Paperless-ngx Total characters',
@@ -254,7 +254,7 @@
     'state': '99999',
   })
 # ---
-# name: test_sensor_platfom[sensor.paperless_ngx_total_documents-entry]
+# name: test_sensor_platform[sensor.paperless_ngx_total_documents-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -290,7 +290,7 @@
     'unit_of_measurement': 'documents',
   })
 # ---
-# name: test_sensor_platfom[sensor.paperless_ngx_total_documents-state]
+# name: test_sensor_platform[sensor.paperless_ngx_total_documents-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Paperless-ngx Total documents',

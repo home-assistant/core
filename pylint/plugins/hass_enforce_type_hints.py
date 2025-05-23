@@ -1484,6 +1484,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="source_type",
                     return_type="SourceType",
+                    mandatory=True,
                 ),
             ],
         ),
@@ -1493,10 +1494,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="force_update",
                     return_type="bool",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="location_accuracy",
                     return_type="float",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="location_name",
@@ -1534,10 +1537,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="state",
                     return_type="str",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="is_connected",
                     return_type="bool",
+                    mandatory=True,
                 ),
             ],
         ),
