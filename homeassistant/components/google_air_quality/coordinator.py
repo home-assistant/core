@@ -42,7 +42,6 @@ class GoogleAirQualityUpdateCoordinator(DataUpdateCoordinator[AirQualityData]):
             update_interval=UPDATE_INTERVAL,
         )
         self.client = client
-        self.config_entry = config_entry
 
     async def _async_update_data(self) -> AirQualityData:
         """Fetch albums from API endpoint."""

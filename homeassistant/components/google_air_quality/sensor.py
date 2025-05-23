@@ -157,7 +157,6 @@ class AirQualitySensorEntity(
     """Defining the Air Quality Sensors with AirQualitySensorEntityDescription."""
 
     entity_description: AirQualitySensorEntityDescription
-    config_entry: GoogleAirQualityConfigEntry
     _attr_has_entity_name = True
 
     def __init__(
@@ -170,7 +169,6 @@ class AirQualitySensorEntity(
         self.entity_description = description
         name = f"{self.coordinator.config_entry.data[CONF_LATITUDE]}_{self.coordinator.config_entry.data[CONF_LONGITUDE]}"
         self._attr_unique_id = f"{description.key}_{name}"
-        self.coordinator = coordinator
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, name)},
             name=name,
