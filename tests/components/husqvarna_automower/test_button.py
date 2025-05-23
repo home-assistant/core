@@ -68,9 +68,7 @@ async def test_button_states_and_commands(
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == "2023-06-05T00:16:00+00:00"
-    getattr(mock_automower_client.commands, "error_confirm").side_effect = ApiError(
-        "Test error"
-    )
+    mock_automower_client.commands.error_confirm.side_effect = ApiError("Test error")
     with pytest.raises(
         HomeAssistantError,
         match="Failed to send command: Test error",

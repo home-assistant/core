@@ -446,6 +446,29 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
+            key="DoorLockSoundVolume",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="door_lock_sound_volume",
+            options=["silent", "low", "medium", "high"],
+            measurement_to_ha={
+                0: "silent",
+                1: "low",
+                3: "medium",
+                2: "high",
+            }.get,
+            ha_to_native_value={
+                "silent": 0,
+                "low": 1,
+                "medium": 3,
+                "high": 2,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(clusters.DoorLock.Attributes.SoundVolume,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
             key="PumpConfigurationAndControlOperationMode",
             translation_key="pump_operation_mode",
             options=list(PUMP_OPERATION_MODE_MAP.values()),
