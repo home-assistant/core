@@ -171,12 +171,8 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): vol.Any(
             cv.string, None
         ),
-        vol.Optional(CONF_POSITION_CLOSED, default=DEFAULT_POSITION_CLOSED): vol.Coerce(
-            int
-        ),
-        vol.Optional(CONF_POSITION_OPEN, default=DEFAULT_POSITION_OPEN): vol.Coerce(
-            int
-        ),
+        vol.Optional(CONF_POSITION_CLOSED, default=DEFAULT_POSITION_CLOSED): int,
+        vol.Optional(CONF_POSITION_OPEN, default=DEFAULT_POSITION_OPEN): int,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         vol.Optional(CONF_SET_POSITION_TEMPLATE): cv.template,
         vol.Optional(CONF_SET_POSITION_TOPIC): valid_publish_topic,
@@ -188,13 +184,11 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(
             CONF_TILT_CLOSED_POSITION, default=DEFAULT_TILT_CLOSED_POSITION
-        ): vol.Coerce(int),
+        ): int,
         vol.Optional(CONF_TILT_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_TILT_MAX, default=DEFAULT_TILT_MAX): vol.Coerce(int),
-        vol.Optional(CONF_TILT_MIN, default=DEFAULT_TILT_MIN): vol.Coerce(int),
-        vol.Optional(
-            CONF_TILT_OPEN_POSITION, default=DEFAULT_TILT_OPEN_POSITION
-        ): vol.Coerce(int),
+        vol.Optional(CONF_TILT_MAX, default=DEFAULT_TILT_MAX): int,
+        vol.Optional(CONF_TILT_MIN, default=DEFAULT_TILT_MIN): int,
+        vol.Optional(CONF_TILT_OPEN_POSITION, default=DEFAULT_TILT_OPEN_POSITION): int,
         vol.Optional(
             CONF_TILT_STATE_OPTIMISTIC, default=DEFAULT_TILT_OPTIMISTIC
         ): cv.boolean,
