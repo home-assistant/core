@@ -29,15 +29,15 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.async_ import create_eager_task
 
-from . import SamsungTVConfigEntry
 from .bridge import SamsungTVWSBridge
-from .const import CONF_SSDP_RENDERING_CONTROL_LOCATION, LOGGER
-from .coordinator import SamsungTVDataUpdateCoordinator
+from .const import CONF_SSDP_RENDERING_CONTROL_LOCATION, DOMAIN, LOGGER
+from .coordinator import SamsungTVConfigEntry, SamsungTVDataUpdateCoordinator
 from .entity import SamsungTVEntity
 
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
@@ -60,11 +60,14 @@ SUPPORT_SAMSUNGTV = (
 # Max delay waiting for app_list to return, as some TVs simply ignore the request
 APP_LIST_DELAY = 3
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SamsungTVConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Samsung TV from a config entry."""
     coordinator = entry.runtime_data
@@ -100,8 +103,6 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         if self._ssdp_rendering_control_location:
             self._attr_supported_features |= MediaPlayerEntityFeature.VOLUME_SET
 
-        self._bridge.register_app_list_callback(self._app_list_callback)
-
         self._dmr_device: DmrDevice | None = None
         self._upnp_server: AiohttpNotifyServer | None = None
 
@@ -128,8 +129,11 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
+
+        self._bridge.register_app_list_callback(self._app_list_callback)
         await self._async_extra_update()
         self.coordinator.async_extra_update = self._async_extra_update
+
         if self.coordinator.is_on:
             self._attr_state = MediaPlayerState.ON
             self._update_from_upnp()
@@ -297,10 +301,6 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
             return
         await self._bridge.async_send_keys(keys)
 
-    async def async_turn_off(self) -> None:
-        """Turn off media player."""
-        await super()._async_turn_off()
-
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level on the media player."""
         if (dmr_device := self._dmr_device) is None:
@@ -309,7 +309,12 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         try:
             await dmr_device.async_set_volume_level(volume)
         except UpnpActionResponseError as err:
-            LOGGER.warning("Unable to set volume level on %s: %r", self._host, err)
+            assert self._host
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="error_set_volume",
+                translation_placeholders={"error": repr(err), "host": self._host},
+            ) from err
 
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
@@ -371,10 +376,6 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
             keys=[f"KEY_{digit}" for digit in media_id] + ["KEY_ENTER"]
         )
 
-    async def async_turn_on(self) -> None:
-        """Turn the media player on."""
-        await super()._async_turn_on()
-
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if self._app_list and source in self._app_list:
@@ -385,4 +386,8 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
             await self._async_send_keys([SOURCES[source]])
             return
 
-        LOGGER.error("Unsupported source")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="source_unsupported",
+            translation_placeholders={"entity": self.entity_id, "source": source},
+        )

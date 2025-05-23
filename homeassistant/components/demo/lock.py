@@ -8,7 +8,7 @@ from typing import Any
 from homeassistant.components.lock import LockEntity, LockEntityFeature, LockState
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 LOCK_UNLOCK_DELAY = 2  # Used to give a realistic lock/unlock experience in frontend
 
@@ -16,7 +16,7 @@ LOCK_UNLOCK_DELAY = 2  # Used to give a realistic lock/unlock experience in fron
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Demo config entry."""
     async_add_entities(

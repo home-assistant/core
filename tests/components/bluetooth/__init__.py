@@ -10,15 +10,18 @@ from unittest.mock import MagicMock, patch
 from bleak import BleakClient
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
-from habluetooth import BaseHaScanner, BluetoothManager, get_manager
+from habluetooth import BaseHaScanner, get_manager
 
 from homeassistant.components.bluetooth import (
     DOMAIN,
+    MONOTONIC_TIME,
     SOURCE_LOCAL,
+    BaseHaRemoteScanner,
     BluetoothServiceInfo,
     BluetoothServiceInfoBleak,
     async_get_advertisement_callback,
 )
+from homeassistant.components.bluetooth.manager import HomeAssistantBluetoothManager
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -53,6 +56,11 @@ BLE_DEVICE_DEFAULTS = {
     "rssi": -127,
     "details": None,
 }
+
+
+HCI0_SOURCE_ADDRESS = "AA:BB:CC:DD:EE:00"
+HCI1_SOURCE_ADDRESS = "AA:BB:CC:DD:EE:11"
+NON_CONNECTABLE_REMOTE_SOURCE_ADDRESS = "AA:BB:CC:DD:EE:FF"
 
 
 @contextmanager
@@ -99,9 +107,10 @@ def generate_ble_device(
     return BLEDevice(**new)
 
 
-def _get_manager() -> BluetoothManager:
+def _get_manager() -> HomeAssistantBluetoothManager:
     """Return the bluetooth manager."""
-    return get_manager()
+    manager: HomeAssistantBluetoothManager = get_manager()
+    return manager
 
 
 def inject_advertisement(
@@ -324,3 +333,26 @@ class FakeScanner(FakeScannerMixin, BaseHaScanner):
     ) -> dict[str, tuple[BLEDevice, AdvertisementData]]:
         """Return a list of discovered devices and their advertisement data."""
         return {}
+
+
+class FakeRemoteScanner(BaseHaRemoteScanner):
+    """Fake remote scanner."""
+
+    def inject_advertisement(
+        self,
+        device: BLEDevice,
+        advertisement_data: AdvertisementData,
+        now: float | None = None,
+    ) -> None:
+        """Inject an advertisement."""
+        self._async_on_advertisement(
+            device.address,
+            advertisement_data.rssi,
+            device.name,
+            advertisement_data.service_uuids,
+            advertisement_data.service_data,
+            advertisement_data.manufacturer_data,
+            advertisement_data.tx_power,
+            {"scanner_specific_data": "test"},
+            now or MONOTONIC_TIME(),
+        )

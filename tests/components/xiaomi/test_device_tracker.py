@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, call, patch
 import requests
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
-import homeassistant.components.xiaomi.device_tracker as xiaomi
+from homeassistant.components.xiaomi import device_tracker as xiaomi
 from homeassistant.components.xiaomi.device_tracker import get_scanner
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
 from homeassistant.core import HomeAssistant

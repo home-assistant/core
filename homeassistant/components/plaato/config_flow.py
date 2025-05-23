@@ -16,7 +16,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CONF_CLOUDHOOK,
@@ -31,6 +31,8 @@ from .const import (
     PLACEHOLDER_DOCS_URL,
     PLACEHOLDER_WEBHOOK_URL,
 )
+
+AUTH_TOKEN_URL = "https://intercom.help/plaato/en/articles/5004720-auth_token"
 
 
 class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -153,7 +155,10 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="api_method",
             data_schema=data_schema,
             errors=errors,
-            description_placeholders={PLACEHOLDER_DEVICE_TYPE: device_type.name},
+            description_placeholders={
+                PLACEHOLDER_DEVICE_TYPE: device_type.name,
+                "auth_token_url": AUTH_TOKEN_URL,
+            },
         )
 
     async def _get_webhook_id(self):

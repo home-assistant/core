@@ -30,6 +30,8 @@ from .const import (
     SERVICE_WATERMETER,
 )
 
+type P1MonitorConfigEntry = ConfigEntry[P1MonitorDataUpdateCoordinator]
+
 
 class P1MonitorData(TypedDict):
     """Class for defining data in dict."""
@@ -43,17 +45,19 @@ class P1MonitorData(TypedDict):
 class P1MonitorDataUpdateCoordinator(DataUpdateCoordinator[P1MonitorData]):
     """Class to manage fetching P1 Monitor data from single endpoint."""
 
-    config_entry: ConfigEntry
+    config_entry: P1MonitorConfigEntry
     has_water_meter: bool | None = None
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: P1MonitorConfigEntry,
     ) -> None:
         """Initialize global P1 Monitor data updater."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )

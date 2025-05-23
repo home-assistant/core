@@ -1,14 +1,12 @@
-"""Support for LG webOS Smart TV."""
+"""The LG webOS TV integration."""
 
 from __future__ import annotations
 
 from contextlib import suppress
-import logging
 
 from aiowebostv import WebOsClient, WebOsTvPairError
 
 from homeassistant.components import notify as hass_notify
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_SECRET,
     CONF_HOST,
@@ -19,6 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -28,17 +27,13 @@ from .const import (
     PLATFORMS,
     WEBOSTV_EXCEPTIONS,
 )
+from .helpers import WebOsTvConfigEntry, update_client_key
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-_LOGGER = logging.getLogger(__name__)
-
-type WebOsTvConfigEntry = ConfigEntry[WebOsClient]
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the LG WebOS TV platform."""
+    """Set up the LG webOS TV platform."""
     hass.data.setdefault(DOMAIN, {DATA_HASS_CONFIG: config})
 
     return True
@@ -50,7 +45,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> b
     key = entry.data[CONF_CLIENT_SECRET]
 
     # Attempt a connection, but fail gracefully if tv is off for example.
-    entry.runtime_data = client = WebOsClient(host, key)
+    entry.runtime_data = client = WebOsClient(
+        host, key, client_session=async_get_clientsession(hass)
+    )
     with suppress(*WEBOSTV_EXCEPTIONS):
         try:
             await client.connect()
@@ -59,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> b
 
     # If pairing request accepted there will be no error
     # Update the stored key without triggering reauth
-    update_client_key(hass, entry, client)
+    update_client_key(hass, entry)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -94,31 +91,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> b
 async def async_update_options(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> None:
     """Update options."""
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-async def async_control_connect(host: str, key: str | None) -> WebOsClient:
-    """LG Connection."""
-    client = WebOsClient(host, key)
-    try:
-        await client.connect()
-    except WebOsTvPairError:
-        _LOGGER.warning("Connected to LG webOS TV %s but not paired", host)
-        raise
-
-    return client
-
-
-def update_client_key(
-    hass: HomeAssistant, entry: ConfigEntry, client: WebOsClient
-) -> None:
-    """Check and update stored client key if key has changed."""
-    host = entry.data[CONF_HOST]
-    key = entry.data[CONF_CLIENT_SECRET]
-
-    if client.client_key != key:
-        _LOGGER.debug("Updating client key for host %s", host)
-        data = {CONF_HOST: host, CONF_CLIENT_SECRET: client.client_key}
-        hass.config_entries.async_update_entry(entry, data=data)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> bool:

@@ -1,9 +1,11 @@
 """Base class for assist satellite entities."""
 
 import logging
+from pathlib import Path
 
 import voluptuous as vol
 
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -15,6 +17,8 @@ from .const import (
     CONNECTION_TEST_DATA,
     DATA_COMPONENT,
     DOMAIN,
+    PREANNOUNCE_FILENAME,
+    PREANNOUNCE_URL,
     AssistSatelliteEntityFeature,
 )
 from .entity import (
@@ -56,6 +60,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 {
                     vol.Optional("message"): str,
                     vol.Optional("media_id"): str,
+                    vol.Optional("preannounce"): bool,
+                    vol.Optional("preannounce_media_id"): str,
                 }
             ),
             cv.has_at_least_one_key("message", "media_id"),
@@ -63,9 +69,35 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "async_internal_announce",
         [AssistSatelliteEntityFeature.ANNOUNCE],
     )
+    component.async_register_entity_service(
+        "start_conversation",
+        vol.All(
+            cv.make_entity_service_schema(
+                {
+                    vol.Optional("start_message"): str,
+                    vol.Optional("start_media_id"): str,
+                    vol.Optional("preannounce"): bool,
+                    vol.Optional("preannounce_media_id"): str,
+                    vol.Optional("extra_system_prompt"): str,
+                }
+            ),
+            cv.has_at_least_one_key("start_message", "start_media_id"),
+        ),
+        "async_internal_start_conversation",
+        [AssistSatelliteEntityFeature.START_CONVERSATION],
+    )
     hass.data[CONNECTION_TEST_DATA] = {}
     async_register_websocket_api(hass)
     hass.http.register_view(ConnectionTestView())
+
+    # Default preannounce sound
+    await hass.http.async_register_static_paths(
+        [
+            StaticPathConfig(
+                PREANNOUNCE_URL, str(Path(__file__).parent / PREANNOUNCE_FILENAME)
+            )
+        ]
+    )
 
     return True
 

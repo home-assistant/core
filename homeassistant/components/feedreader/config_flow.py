@@ -18,7 +18,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
 
 import voluptuous as vol
 
@@ -49,7 +48,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
@@ -63,8 +62,10 @@ from .const import (
     CALL_TYPE_X_COILS,
     CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_BAUDRATE,
+    CONF_BRIGHTNESS_REGISTER,
     CONF_BYTESIZE,
     CONF_CLIMATES,
+    CONF_COLOR_TEMP_REGISTER,
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_FAN_MODE_AUTO,
@@ -80,6 +81,16 @@ from .const import (
     CONF_FAN_MODE_TOP,
     CONF_FAN_MODE_VALUES,
     CONF_FANS,
+    CONF_HVAC_ACTION_COOLING,
+    CONF_HVAC_ACTION_DEFROSTING,
+    CONF_HVAC_ACTION_DRYING,
+    CONF_HVAC_ACTION_FAN,
+    CONF_HVAC_ACTION_HEATING,
+    CONF_HVAC_ACTION_IDLE,
+    CONF_HVAC_ACTION_OFF,
+    CONF_HVAC_ACTION_PREHEATING,
+    CONF_HVAC_ACTION_REGISTER,
+    CONF_HVAC_ACTION_VALUES,
     CONF_HVAC_MODE_AUTO,
     CONF_HVAC_MODE_COOL,
     CONF_HVAC_MODE_DRY,
@@ -91,6 +102,7 @@ from .const import (
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_OFF_VALUE,
     CONF_HVAC_ON_VALUE,
+    CONF_HVAC_ONOFF_COIL,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_INPUT_TYPE,
     CONF_MAX_TEMP,
@@ -143,7 +155,7 @@ from .const import (
     UDP,
     DataType,
 )
-from .modbus import ModbusHub, async_modbus_setup
+from .modbus import DATA_MODBUS_HUBS, ModbusHub, async_modbus_setup
 from .validators import (
     duplicate_fan_mode_validator,
     duplicate_swing_mode_validator,
@@ -259,7 +271,8 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_MIN_TEMP, default=5): vol.Coerce(float),
             vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
-            vol.Optional(CONF_HVAC_ONOFF_REGISTER): cv.positive_int,
+            vol.Exclusive(CONF_HVAC_ONOFF_COIL, "hvac_onoff_type"): cv.positive_int,
+            vol.Exclusive(CONF_HVAC_ONOFF_REGISTER, "hvac_onoff_type"): cv.positive_int,
             vol.Optional(
                 CONF_HVAC_ON_VALUE, default=DEFAULT_HVAC_ON_VALUE
             ): cv.positive_int,
@@ -294,6 +307,45 @@ CLIMATE_SCHEMA = vol.All(
                         ),
                     },
                     vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
+                }
+            ),
+            vol.Optional(CONF_HVAC_ACTION_REGISTER): vol.Maybe(
+                {
+                    CONF_ADDRESS: cv.positive_int,
+                    CONF_HVAC_ACTION_VALUES: {
+                        vol.Optional(CONF_HVAC_ACTION_COOLING): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_DEFROSTING): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_DRYING): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_FAN): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_HEATING): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_IDLE): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_OFF): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_PREHEATING): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                    },
+                    vol.Optional(
+                        CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING
+                    ): vol.In(
+                        [
+                            CALL_TYPE_REGISTER_HOLDING,
+                            CALL_TYPE_REGISTER_INPUT,
+                        ]
+                    ),
                 }
             ),
             vol.Optional(CONF_FAN_MODE_REGISTER): vol.Maybe(
@@ -365,7 +417,14 @@ SWITCH_SCHEMA = BASE_SWITCH_SCHEMA.extend(
     }
 )
 
-LIGHT_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
+LIGHT_SCHEMA = BASE_SWITCH_SCHEMA.extend(
+    {
+        vol.Optional(CONF_BRIGHTNESS_REGISTER): cv.positive_int,
+        vol.Optional(CONF_COLOR_TEMP_REGISTER): cv.positive_int,
+        vol.Optional(CONF_MIN_TEMP): cv.positive_int,
+        vol.Optional(CONF_MAX_TEMP): cv.positive_int,
+    }
+)
 
 FAN_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
 
@@ -458,7 +517,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 def get_hub(hass: HomeAssistant, name: str) -> ModbusHub:
     """Return modbus hub with name."""
-    return cast(ModbusHub, hass.data[DOMAIN][name])
+    return hass.data[DATA_MODBUS_HUBS][name]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -468,12 +527,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _reload_config(call: Event | ServiceCall) -> None:
         """Reload Modbus."""
-        if DOMAIN not in hass.data:
+        if DATA_MODBUS_HUBS not in hass.data:
             _LOGGER.error("Modbus cannot reload, because it was never loaded")
             return
-        hubs = hass.data[DOMAIN]
-        for name in hubs:
-            await hubs[name].async_close()
+        hubs = hass.data[DATA_MODBUS_HUBS]
+        for hub in hubs.values():
+            await hub.async_close()
         reset_platforms = async_get_platforms(hass, DOMAIN)
         for reset_platform in reset_platforms:
             _LOGGER.debug("Reload modbus resetting platform: %s", reset_platform.domain)
@@ -487,7 +546,4 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
 
-    return await async_modbus_setup(
-        hass,
-        config,
-    )
+    return await async_modbus_setup(hass, config)

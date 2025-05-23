@@ -9,12 +9,12 @@ import voluptuous as vol
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.check_config import (
     CheckConfigError,
     HomeAssistantConfig,
     async_check_ha_config_file,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.requirements import RequirementsNotFound
 
 from tests.common import (

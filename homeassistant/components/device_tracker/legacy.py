@@ -10,7 +10,7 @@ from types import ModuleType
 from typing import Any, Final, Protocol, final
 
 import attr
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant import util

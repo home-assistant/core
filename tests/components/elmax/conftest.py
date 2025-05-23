@@ -18,6 +18,7 @@ import respx
 
 from . import (
     MOCK_DIRECT_HOST,
+    MOCK_DIRECT_HOST_V6,
     MOCK_DIRECT_PORT,
     MOCK_DIRECT_SSL,
     MOCK_PANEL_ID,
@@ -29,6 +30,7 @@ from tests.common import load_fixture
 MOCK_DIRECT_BASE_URI = (
     f"{'https' if MOCK_DIRECT_SSL else 'http'}://{MOCK_DIRECT_HOST}:{MOCK_DIRECT_PORT}"
 )
+MOCK_DIRECT_BASE_URI_V6 = f"{'https' if MOCK_DIRECT_SSL else 'http'}://[{MOCK_DIRECT_HOST_V6}]:{MOCK_DIRECT_PORT}"
 
 
 @pytest.fixture(autouse=True)
@@ -58,12 +60,16 @@ def httpx_mock_cloud_fixture() -> Generator[respx.MockRouter]:
         yield respx_mock
 
 
+@pytest.fixture
+def base_uri() -> str:
+    """Configure the base-uri for the respx mock fixtures."""
+    return MOCK_DIRECT_BASE_URI
+
+
 @pytest.fixture(autouse=True)
-def httpx_mock_direct_fixture() -> Generator[respx.MockRouter]:
+def httpx_mock_direct_fixture(base_uri: str) -> Generator[respx.MockRouter]:
     """Configure httpx fixture for direct Panel-API communication."""
-    with respx.mock(
-        base_url=MOCK_DIRECT_BASE_URI, assert_all_called=False
-    ) as respx_mock:
+    with respx.mock(base_url=base_uri, assert_all_called=False) as respx_mock:
         # Mock Login POST.
         login_route = respx_mock.post(f"/api/v2/{ENDPOINT_LOGIN}", name="login")
 

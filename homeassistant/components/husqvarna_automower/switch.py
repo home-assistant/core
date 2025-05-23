@@ -7,7 +7,7 @@ from aioautomower.model import MowerModes, StayOutZones, Zone
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AutomowerConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch platform."""
     coordinator = entry.runtime_data
@@ -165,14 +165,14 @@ class StayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.coordinator.api.commands.switch_stay_out_zone(
-            self.mower_id, self.stay_out_zone_uid, False
+            self.mower_id, self.stay_out_zone_uid, switch=False
         )
 
     @handle_sending_exception(poll_after_sending=True)
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.coordinator.api.commands.switch_stay_out_zone(
-            self.mower_id, self.stay_out_zone_uid, True
+            self.mower_id, self.stay_out_zone_uid, switch=True
         )
 
 
@@ -206,12 +206,12 @@ class WorkAreaSwitchEntity(WorkAreaControlEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.coordinator.api.commands.workarea_settings(
-            self.mower_id, self.work_area_id, enabled=False
-        )
+            self.mower_id, self.work_area_id
+        ).enabled(enabled=False)
 
     @handle_sending_exception(poll_after_sending=True)
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.coordinator.api.commands.workarea_settings(
-            self.mower_id, self.work_area_id, enabled=True
-        )
+            self.mower_id, self.work_area_id
+        ).enabled(enabled=True)

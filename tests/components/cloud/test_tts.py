@@ -6,13 +6,19 @@ from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from hass_nabucasa.voice import TTS_VOICES, VoiceError, VoiceTokenError
+from hass_nabucasa.voice import VoiceError, VoiceTokenError
+from hass_nabucasa.voice_data import TTS_VOICES
 import pytest
 import voluptuous as vol
 
 from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY
 from homeassistant.components.cloud.const import DEFAULT_TTS_DEFAULT_VOICE, DOMAIN
-from homeassistant.components.cloud.tts import PLATFORM_SCHEMA, SUPPORT_LANGUAGES, Voice
+from homeassistant.components.cloud.tts import (
+    DEFAULT_VOICES,
+    PLATFORM_SCHEMA,
+    SUPPORT_LANGUAGES,
+    Voice,
+)
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as DOMAIN_MP,
@@ -59,6 +65,19 @@ def test_default_exists() -> None:
     """Test our default language exists."""
     assert DEFAULT_TTS_DEFAULT_VOICE[0] in TTS_VOICES
     assert DEFAULT_TTS_DEFAULT_VOICE[1] in TTS_VOICES[DEFAULT_TTS_DEFAULT_VOICE[0]]
+
+
+def test_all_languages_have_default() -> None:
+    """Test all languages have a default voice."""
+    assert set(SUPPORT_LANGUAGES).difference(DEFAULT_VOICES) == set()
+    assert set(DEFAULT_VOICES).difference(SUPPORT_LANGUAGES) == set()
+
+
+@pytest.mark.parametrize(("language", "voice"), DEFAULT_VOICES.items())
+def test_default_voice_is_valid(language: str, voice: str) -> None:
+    """Test that the default voice is valid."""
+    assert language in TTS_VOICES
+    assert voice in TTS_VOICES[language]
 
 
 def test_schema() -> None:
@@ -185,7 +204,7 @@ async def test_provider_properties(
     assert "nl-NL" in engine.supported_languages
     supported_voices = engine.async_get_supported_voices("nl-NL")
     assert supported_voices is not None
-    assert Voice("ColetteNeural", "ColetteNeural") in supported_voices
+    assert Voice("ColetteNeural", "Colette") in supported_voices
     supported_voices = engine.async_get_supported_voices("missing_language")
     assert supported_voices is None
 

@@ -1,16 +1,13 @@
 """The Fully Kiosk Browser integration."""
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .coordinator import FullyKioskDataUpdateCoordinator
+from .coordinator import FullyKioskConfigEntry, FullyKioskDataUpdateCoordinator
 from .services import async_setup_services
-
-type FullyKioskConfigEntry = ConfigEntry[FullyKioskDataUpdateCoordinator]
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,

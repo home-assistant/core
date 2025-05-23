@@ -6,7 +6,7 @@ from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Any
 
-from propcache import cached_property
+from propcache.api import cached_property
 from sqlalchemy.engine.row import Row
 
 from homeassistant.const import (
@@ -16,7 +16,7 @@ from homeassistant.const import (
     COMPRESSED_STATE_STATE,
 )
 from homeassistant.core import Context, State
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .state_attributes import decode_attributes_from_source
 
@@ -104,7 +104,7 @@ class LazyState(State):
         return self._last_updated_ts
 
     @cached_property
-    def last_changed_timestamp(self) -> float:  # type: ignore[override]
+    def last_changed_timestamp(self) -> float:
         """Last changed timestamp."""
         ts = self._last_changed_ts or self._last_updated_ts
         if TYPE_CHECKING:
@@ -112,7 +112,7 @@ class LazyState(State):
         return ts
 
     @cached_property
-    def last_reported_timestamp(self) -> float:  # type: ignore[override]
+    def last_reported_timestamp(self) -> float:
         """Last reported timestamp."""
         ts = self._last_reported_ts or self._last_updated_ts
         if TYPE_CHECKING:

@@ -12,6 +12,7 @@ import logging
 from pyblu import Input, Player, Preset, Status, SyncStatus
 from pyblu.errors import PlayerUnreachableError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -22,6 +23,15 @@ PRESET_AND_INPUTS_INTERVAL = timedelta(minutes=15)
 
 
 @dataclass
+class BluesoundRuntimeData:
+    """Bluesound data class."""
+
+    player: Player
+    sync_status: SyncStatus
+    coordinator: BluesoundCoordinator
+
+
+@dataclass
 class BluesoundData:
     """Define a class to hold Bluesound data."""
 
@@ -29,6 +39,9 @@ class BluesoundData:
     status: Status
     presets: list[Preset]
     inputs: list[Input]
+
+
+type BluesoundConfigEntry = ConfigEntry[BluesoundRuntimeData]
 
 
 def cancel_task(task: asyncio.Task) -> Callable[[], Coroutine[None, None, None]]:
@@ -45,8 +58,14 @@ def cancel_task(task: asyncio.Task) -> Callable[[], Coroutine[None, None, None]]
 class BluesoundCoordinator(DataUpdateCoordinator[BluesoundData]):
     """Define an object to hold Bluesound data."""
 
+    config_entry: BluesoundConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, player: Player, sync_status: SyncStatus
+        self,
+        hass: HomeAssistant,
+        config_entry: BluesoundConfigEntry,
+        player: Player,
+        sync_status: SyncStatus,
     ) -> None:
         """Initialize."""
         self.player = player
@@ -55,12 +74,11 @@ class BluesoundCoordinator(DataUpdateCoordinator[BluesoundData]):
         super().__init__(
             hass,
             logger=_LOGGER,
+            config_entry=config_entry,
             name=sync_status.name,
         )
 
     async def _async_setup(self) -> None:
-        assert self.config_entry is not None
-
         preset = await self.player.presets()
         inputs = await self.player.inputs()
         status = await self.player.status()

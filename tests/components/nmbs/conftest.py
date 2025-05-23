@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from pyrail.models import StationsApiResponse
 import pytest
 
 from homeassistant.components.nmbs.const import (
@@ -38,8 +39,8 @@ def mock_nmbs_client() -> Generator[AsyncMock]:
         ),
     ):
         client = mock_client.return_value
-        client.get_stations.return_value = load_json_object_fixture(
-            "stations.json", DOMAIN
+        client.get_stations.return_value = StationsApiResponse.from_dict(
+            load_json_object_fixture("stations.json", DOMAIN)
         )
         yield client
 

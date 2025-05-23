@@ -8,7 +8,7 @@ from opendata_transport.exceptions import (
     OpendataTransportError,
 )
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.swiss_public_transport.const import (
@@ -83,7 +83,7 @@ async def test_fetching_data(
         hass.states.get("sensor.zurich_bern_departure_2").state
         == "2024-01-06T17:05:00+00:00"
     )
-    assert hass.states.get("sensor.zurich_bern_duration").state == "10"
+    assert hass.states.get("sensor.zurich_bern_trip_duration").state == "0.003"
     assert hass.states.get("sensor.zurich_bern_platform").state == "0"
     assert hass.states.get("sensor.zurich_bern_transfers").state == "0"
     assert hass.states.get("sensor.zurich_bern_delay").state == "0"

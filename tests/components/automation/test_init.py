@@ -51,8 +51,7 @@ from homeassistant.helpers.script import (
     _async_stop_scripts_at_shutdown,
 )
 from homeassistant.setup import async_setup_component
-from homeassistant.util import yaml
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util, yaml as yaml_util
 
 from tests.common import (
     MockConfigEntry,
@@ -1376,7 +1375,9 @@ async def test_reload_automation_when_blueprint_changes(
 
         # Reload the automations without any change, but with updated blueprint
         blueprint_path = automation.async_get_blueprints(hass).blueprint_folder
-        blueprint_config = yaml.load_yaml(blueprint_path / "test_event_service.yaml")
+        blueprint_config = yaml_util.load_yaml(
+            blueprint_path / "test_event_service.yaml"
+        )
         blueprint_config["actions"] = [blueprint_config["actions"]]
         blueprint_config["actions"].append(blueprint_config["actions"][-1])
 
@@ -1387,7 +1388,7 @@ async def test_reload_automation_when_blueprint_changes(
                 return_value=config,
             ),
             patch(
-                "homeassistant.components.blueprint.models.yaml.load_yaml_dict",
+                "homeassistant.components.blueprint.models.yaml_util.load_yaml_dict",
                 autospec=True,
                 return_value=blueprint_config,
             ),
@@ -2691,7 +2692,7 @@ async def test_blueprint_automation_fails_substitution(
     """Test blueprint automation with bad inputs."""
     with patch(
         "homeassistant.components.blueprint.models.BlueprintInputs.async_substitute",
-        side_effect=yaml.UndefinedSubstitution("blah"),
+        side_effect=yaml_util.UndefinedSubstitution("blah"),
     ):
         assert await async_setup_component(
             hass,

@@ -7,30 +7,36 @@ import logging
 import os
 import pathlib
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_FILE_PATH
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type FileSizeConfigEntry = ConfigEntry[FileSizeCoordinator]
+
 
 class FileSizeCoordinator(DataUpdateCoordinator[dict[str, int | float | datetime]]):
     """Filesize coordinator."""
 
+    config_entry: FileSizeConfigEntry
     path: pathlib.Path
 
-    def __init__(self, hass: HomeAssistant, unresolved_path: str) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: FileSizeConfigEntry) -> None:
         """Initialize filesize coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=60),
             always_update=False,
         )
-        self._unresolved_path = unresolved_path
+        self._unresolved_path = self.config_entry.data[CONF_FILE_PATH]
 
     def _get_full_path(self) -> pathlib.Path:
         """Check if path is valid, allowed and return full path."""

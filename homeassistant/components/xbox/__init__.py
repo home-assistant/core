@@ -6,6 +6,7 @@ import logging
 
 from xbox.webapi.api.client import XboxLiveClient
 from xbox.webapi.api.provider.smartglass.models import SmartglassConsoleList
+from xbox.webapi.common.signed_session import SignedSession
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -36,7 +37,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-    auth = api.AsyncConfigEntryAuth(session)
+    signed_session = await hass.async_add_executor_job(SignedSession)
+    auth = api.AsyncConfigEntryAuth(signed_session, session)
 
     client = XboxLiveClient(auth)
     consoles: SmartglassConsoleList = await client.smartglass.get_console_list()
@@ -46,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         consoles.dict(),
     )
 
-    coordinator = XboxUpdateCoordinator(hass, client, consoles)
+    coordinator = XboxUpdateCoordinator(hass, entry, client, consoles)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {

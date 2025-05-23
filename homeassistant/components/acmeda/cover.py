@@ -11,7 +11,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AcmedaConfigEntry
 from .const import ACMEDA_HUB_UPDATE
@@ -22,7 +22,7 @@ from .helpers import async_add_acmeda_entities
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AcmedaConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Acmeda Rollers from a config entry."""
     hub = config_entry.runtime_data

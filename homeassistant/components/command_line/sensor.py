@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 import json
-from typing import Any, cast
+from typing import Any
 
 from jsonpath import jsonpath
 
@@ -23,7 +23,10 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.trigger_template_entity import ManualTriggerSensorEntity
+from homeassistant.helpers.trigger_template_entity import (
+    ManualTriggerSensorEntity,
+    ValueTemplate,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
@@ -51,15 +54,13 @@ async def async_setup_platform(
     if not discovery_info:
         return
 
-    discovery_info = cast(DiscoveryInfoType, discovery_info)
     sensor_config = discovery_info
-
     command: str = sensor_config[CONF_COMMAND]
     command_timeout: int = sensor_config[CONF_COMMAND_TIMEOUT]
     json_attributes: list[str] | None = sensor_config.get(CONF_JSON_ATTRIBUTES)
     json_attributes_path: str | None = sensor_config.get(CONF_JSON_ATTRIBUTES_PATH)
     scan_interval: timedelta = sensor_config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
-    value_template: Template | None = sensor_config.get(CONF_VALUE_TEMPLATE)
+    value_template: ValueTemplate | None = sensor_config.get(CONF_VALUE_TEMPLATE)
     data = CommandSensorData(hass, command, command_timeout)
 
     trigger_entity_config = {
@@ -90,7 +91,7 @@ class CommandSensor(ManualTriggerSensorEntity):
         self,
         data: CommandSensorData,
         config: ConfigType,
-        value_template: Template | None,
+        value_template: ValueTemplate | None,
         json_attributes: list[str] | None,
         json_attributes_path: str | None,
         scan_interval: timedelta,
@@ -146,6 +147,11 @@ class CommandSensor(ManualTriggerSensorEntity):
         await self.data.async_update()
         value = self.data.value
 
+        variables = self._template_variables_with_value(self.data.value)
+        if not self._render_availability_template(variables):
+            self.async_write_ha_state()
+            return
+
         if self._json_attributes:
             self._attr_extra_state_attributes = {}
             if value:
@@ -170,16 +176,17 @@ class CommandSensor(ManualTriggerSensorEntity):
                     LOGGER.warning("Unable to parse output as JSON: %s", value)
             else:
                 LOGGER.warning("Empty reply found when expecting JSON data")
+
             if self._value_template is None:
                 self._attr_native_value = None
-                self._process_manual_data(value)
+                self._process_manual_data(variables)
+                self.async_write_ha_state()
                 return
 
         self._attr_native_value = None
         if self._value_template is not None and value is not None:
-            value = self._value_template.async_render_with_possible_json_value(
-                value,
-                None,
+            value = self._value_template.async_render_as_value_template(
+                self.entity_id, variables, None
             )
 
         if self.device_class not in {
@@ -192,7 +199,7 @@ class CommandSensor(ManualTriggerSensorEntity):
                 value, self.entity_id, self.device_class
             )
 
-        self._process_manual_data(value)
+        self._process_manual_data(variables)
         self.async_write_ha_state()
 
     async def async_update(self) -> None:

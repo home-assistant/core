@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
 from http import HTTPStatus
-from typing import TYPE_CHECKING, Any, cast
+import logging
+from typing import TYPE_CHECKING, Any, Protocol, cast
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPUnauthorized
@@ -19,12 +19,10 @@ from homeassistant.components.http import KEY_HASS, KEY_HASS_REFRESH_TOKEN_ID
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import area_registry as ar
-from homeassistant.helpers.hassio import is_hassio
+from homeassistant.helpers import area_registry as ar, integration_platform
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.translation import async_get_translations
-from homeassistant.setup import async_setup_component
-from homeassistant.util.async_ import create_eager_task
+from homeassistant.setup import async_setup_component, async_wait_component
 
 if TYPE_CHECKING:
     from . import OnboardingData, OnboardingStorage, OnboardingStoreData
@@ -39,30 +37,76 @@ from .const import (
     STEPS,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup(
     hass: HomeAssistant, data: OnboardingStoreData, store: OnboardingStorage
 ) -> None:
     """Set up the onboarding view."""
-    hass.http.register_view(OnboardingView(data, store))
+    await async_process_onboarding_platforms(hass)
+    hass.http.register_view(OnboardingStatusView(data, store))
     hass.http.register_view(InstallationTypeOnboardingView(data))
     hass.http.register_view(UserOnboardingView(data, store))
     hass.http.register_view(CoreConfigOnboardingView(data, store))
     hass.http.register_view(IntegrationOnboardingView(data, store))
     hass.http.register_view(AnalyticsOnboardingView(data, store))
+    hass.http.register_view(WaitIntegrationOnboardingView(data))
 
 
-class OnboardingView(HomeAssistantView):
-    """Return the onboarding status."""
+class OnboardingPlatformProtocol(Protocol):
+    """Define the format of onboarding platforms."""
+
+    async def async_setup_views(
+        self, hass: HomeAssistant, data: OnboardingStoreData
+    ) -> None:
+        """Set up onboarding views."""
+
+
+async def async_process_onboarding_platforms(hass: HomeAssistant) -> None:
+    """Start processing onboarding platforms."""
+    await integration_platform.async_process_integration_platforms(
+        hass, DOMAIN, _register_onboarding_platform, wait_for_platforms=False
+    )
+
+
+async def _register_onboarding_platform(
+    hass: HomeAssistant, integration_domain: str, platform: OnboardingPlatformProtocol
+) -> None:
+    """Register a onboarding platform."""
+    if not hasattr(platform, "async_setup_views"):
+        _LOGGER.debug(
+            "'%s.onboarding' is not a valid onboarding platform",
+            integration_domain,
+        )
+        return
+    await platform.async_setup_views(hass, hass.data[DOMAIN].steps)
+
+
+class BaseOnboardingView(HomeAssistantView):
+    """Base class for onboarding views."""
+
+    def __init__(self, data: OnboardingStoreData) -> None:
+        """Initialize the onboarding view."""
+        self._data = data
+
+
+class NoAuthBaseOnboardingView(BaseOnboardingView):
+    """Base class for unauthenticated onboarding views."""
 
     requires_auth = False
+
+
+class OnboardingStatusView(NoAuthBaseOnboardingView):
+    """Return the onboarding status."""
+
     url = "/api/onboarding"
     name = "api:onboarding"
 
     def __init__(self, data: OnboardingStoreData, store: OnboardingStorage) -> None:
         """Initialize the onboarding view."""
+        super().__init__(data)
         self._store = store
-        self._data = data
 
     async def get(self, request: web.Request) -> web.Response:
         """Return the onboarding status."""
@@ -71,16 +115,11 @@ class OnboardingView(HomeAssistantView):
         )
 
 
-class InstallationTypeOnboardingView(HomeAssistantView):
+class InstallationTypeOnboardingView(NoAuthBaseOnboardingView):
     """Return the installation type during onboarding."""
 
-    requires_auth = False
     url = "/api/onboarding/installation_type"
     name = "api:onboarding:installation_type"
-
-    def __init__(self, data: OnboardingStoreData) -> None:
-        """Initialize the onboarding installation type view."""
-        self._data = data
 
     async def get(self, request: web.Request) -> web.Response:
         """Return the onboarding status."""
@@ -92,15 +131,15 @@ class InstallationTypeOnboardingView(HomeAssistantView):
         return self.json({"installation_type": info["installation_type"]})
 
 
-class _BaseOnboardingView(HomeAssistantView):
-    """Base class for onboarding."""
+class _BaseOnboardingStepView(BaseOnboardingView):
+    """Base class for an onboarding step."""
 
     step: str
 
     def __init__(self, data: OnboardingStoreData, store: OnboardingStorage) -> None:
         """Initialize the onboarding view."""
+        super().__init__(data)
         self._store = store
-        self._data = data
         self._lock = asyncio.Lock()
 
     @callback
@@ -120,7 +159,7 @@ class _BaseOnboardingView(HomeAssistantView):
                 listener()
 
 
-class UserOnboardingView(_BaseOnboardingView):
+class UserOnboardingView(_BaseOnboardingStepView):
     """View to handle create user onboarding step."""
 
     url = "/api/onboarding/users"
@@ -158,7 +197,7 @@ class UserOnboardingView(_BaseOnboardingView):
                 {"username": data["username"]}
             )
             await hass.auth.async_link_user(user, credentials)
-            if "person" in hass.config.components:
+            if await async_wait_component(hass, "person"):
                 await person.async_create_person(hass, data["name"], user_id=user.id)
 
             # Create default areas using the users supplied language.
@@ -186,7 +225,7 @@ class UserOnboardingView(_BaseOnboardingView):
             return self.json({"auth_code": auth_code})
 
 
-class CoreConfigOnboardingView(_BaseOnboardingView):
+class CoreConfigOnboardingView(_BaseOnboardingStepView):
     """View to finish core config onboarding step."""
 
     url = "/api/onboarding/core_config"
@@ -213,37 +252,26 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
                 "shopping_list",
             ]
 
-            # pylint: disable-next=import-outside-toplevel
-            from homeassistant.components import hassio
-
-            if (
-                is_hassio(hass)
-                and (core_info := hassio.get_core_info(hass))
-                and "raspberrypi" in core_info["machine"]
-            ):
-                onboard_integrations.append("rpi_power")
-
-            coros: list[Coroutine[Any, Any, Any]] = [
-                hass.config_entries.flow.async_init(
-                    domain, context={"source": "onboarding"}
+            for domain in onboard_integrations:
+                # Create tasks so onboarding isn't affected
+                # by errors in these integrations.
+                hass.async_create_task(
+                    hass.config_entries.flow.async_init(
+                        domain, context={"source": "onboarding"}
+                    ),
+                    f"onboarding_setup_{domain}",
                 )
-                for domain in onboard_integrations
-            ]
 
             if "analytics" not in hass.config.components:
                 # If by some chance that analytics has not finished
                 # setting up, wait for it here so its ready for the
                 # next step.
-                coros.append(async_setup_component(hass, "analytics", {}))
-
-            # Set up integrations after onboarding and ensure
-            # analytics is ready for the next step.
-            await asyncio.gather(*(create_eager_task(coro) for coro in coros))
+                await async_setup_component(hass, "analytics", {})
 
             return self.json({})
 
 
-class IntegrationOnboardingView(_BaseOnboardingView):
+class IntegrationOnboardingView(_BaseOnboardingStepView):
     """View to finish integration onboarding step."""
 
     url = "/api/onboarding/integration"
@@ -290,7 +318,31 @@ class IntegrationOnboardingView(_BaseOnboardingView):
             return self.json({"auth_code": auth_code})
 
 
-class AnalyticsOnboardingView(_BaseOnboardingView):
+class WaitIntegrationOnboardingView(NoAuthBaseOnboardingView):
+    """Get backup info view."""
+
+    url = "/api/onboarding/integration/wait"
+    name = "api:onboarding:integration:wait"
+
+    @RequestDataValidator(
+        vol.Schema(
+            {
+                vol.Required("domain"): str,
+            }
+        )
+    )
+    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
+        """Handle wait for integration command."""
+        hass = request.app[KEY_HASS]
+        domain = data["domain"]
+        return self.json(
+            {
+                "integration_loaded": await async_wait_component(hass, domain),
+            }
+        )
+
+
+class AnalyticsOnboardingView(_BaseOnboardingStepView):
     """View to finish analytics onboarding step."""
 
     url = "/api/onboarding/analytics"

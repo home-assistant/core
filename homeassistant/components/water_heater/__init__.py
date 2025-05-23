@@ -8,7 +8,7 @@ import functools as ft
 import logging
 from typing import Any, final
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -25,7 +25,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.deprecation import deprecated_class
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstant,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
@@ -72,6 +77,7 @@ ATTR_OPERATION_MODE = "operation_mode"
 ATTR_OPERATION_LIST = "operation_list"
 ATTR_TARGET_TEMP_HIGH = "target_temp_high"
 ATTR_TARGET_TEMP_LOW = "target_temp_low"
+ATTR_TARGET_TEMP_STEP = "target_temp_step"
 ATTR_CURRENT_TEMPERATURE = "current_temperature"
 
 CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE]
@@ -134,11 +140,11 @@ class WaterHeaterEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes water heater entities."""
 
 
-@deprecated_class("WaterHeaterEntityDescription", breaks_in_ha_version="2026.1")
-class WaterHeaterEntityEntityDescription(
-    WaterHeaterEntityDescription, frozen_or_thawed=True
-):
-    """A (deprecated) class that describes water heater entities."""
+_DEPRECATED_WaterHeaterEntityEntityDescription = DeprecatedConstant(
+    WaterHeaterEntityDescription,
+    "WaterHeaterEntityDescription",
+    breaks_in_ha_version="2026.1",
+)
 
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
@@ -149,6 +155,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "target_temperature",
     "target_temperature_high",
     "target_temperature_low",
+    "target_temperature_step",
     "is_away_mode_on",
 }
 
@@ -157,7 +164,12 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for water heater entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_OPERATION_LIST, ATTR_MIN_TEMP, ATTR_MAX_TEMP}
+        {
+            ATTR_OPERATION_LIST,
+            ATTR_MIN_TEMP,
+            ATTR_MAX_TEMP,
+            ATTR_TARGET_TEMP_STEP,
+        }
     )
 
     entity_description: WaterHeaterEntityDescription
@@ -174,6 +186,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_target_temperature_low: float | None = None
     _attr_target_temperature: float | None = None
     _attr_temperature_unit: str
+    _attr_target_temperature_step: float | None = None
 
     @final
     @property
@@ -201,6 +214,8 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 self.hass, self.max_temp, self.temperature_unit, self.precision
             ),
         }
+        if target_temperature_step := self.target_temperature_step:
+            data[ATTR_TARGET_TEMP_STEP] = target_temperature_step
 
         if WaterHeaterEntityFeature.OPERATION_MODE in self.supported_features:
             data[ATTR_OPERATION_LIST] = self.operation_list
@@ -283,6 +298,11 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         return self._attr_target_temperature_low
+
+    @cached_property
+    def target_temperature_step(self) -> float | None:
+        """Return the supported step of target temperature."""
+        return self._attr_target_temperature_step
 
     @cached_property
     def is_away_mode_on(self) -> bool | None:
@@ -414,3 +434,11 @@ async def async_service_temperature_set(
             kwargs[value] = temp
 
     await entity.async_set_temperature(**kwargs)
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = ft.partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientConnectorError, ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
@@ -26,7 +26,10 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.decorator import Registry
 
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES, LOGGER
+if TYPE_CHECKING:
+    from . import OverkizDataConfigEntry
+
+from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES, LOGGER, UPDATE_INTERVAL
 
 EVENT_HANDLERS: Registry[
     str, Callable[[OverkizDataUpdateCoordinator, Event], Coroutine[Any, Any, None]]
@@ -36,26 +39,26 @@ EVENT_HANDLERS: Registry[
 class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     """Class to manage fetching data from Overkiz platform."""
 
+    config_entry: OverkizDataConfigEntry
     _default_update_interval: timedelta
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: OverkizDataConfigEntry,
         logger: logging.Logger,
         *,
-        name: str,
         client: OverkizClient,
         devices: list[Device],
         places: Place | None,
-        update_interval: timedelta,
-        config_entry_id: str,
     ) -> None:
         """Initialize global data updater."""
         super().__init__(
             hass,
             logger,
-            name=name,
-            update_interval=update_interval,
+            config_entry=config_entry,
+            name="device events",
+            update_interval=UPDATE_INTERVAL,
         )
 
         self.data = {}
@@ -63,8 +66,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.devices: dict[str, Device] = {d.device_url: d for d in devices}
         self.executions: dict[str, dict[str, str]] = {}
         self.areas = self._places_to_area(places) if places else None
-        self.config_entry_id = config_entry_id
-        self._default_update_interval = update_interval
+        self._default_update_interval = UPDATE_INTERVAL
 
         self.is_stateless = all(
             device.protocol in (Protocol.RTS, Protocol.INTERNAL)
@@ -77,7 +79,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         """Fetch Overkiz data via event listener."""
         try:
             events = await self.client.fetch_events()
-        except BadCredentialsException as exception:
+        except (BadCredentialsException, NotAuthenticatedException) as exception:
             raise ConfigEntryAuthFailed("Invalid authentication.") from exception
         except TooManyConcurrentRequestsException as exception:
             raise UpdateFailed("Too many concurrent requests.") from exception
@@ -96,7 +98,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             try:
                 await self.client.login()
                 self.devices = await self._get_devices()
-            except BadCredentialsException as exception:
+            except (BadCredentialsException, NotAuthenticatedException) as exception:
                 raise ConfigEntryAuthFailed("Invalid authentication.") from exception
             except TooManyRequestsException as exception:
                 raise UpdateFailed("Too many requests, try again later.") from exception
@@ -164,7 +166,7 @@ async def on_device_created_updated(
 ) -> None:
     """Handle device unavailable / disabled event."""
     coordinator.hass.async_create_task(
-        coordinator.hass.config_entries.async_reload(coordinator.config_entry_id)
+        coordinator.hass.config_entries.async_reload(coordinator.config_entry.entry_id)
     )
 
 

@@ -33,7 +33,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_MODEL_DESCRIPTION,
@@ -56,7 +56,7 @@ from .const import (
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_DPI_RESTRICTIONS,
-    DOMAIN as UNIFI_DOMAIN,
+    DOMAIN,
 )
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import UnifiHub, get_unifi_api
@@ -72,7 +72,7 @@ MODEL_PORTS = {
 }
 
 
-class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
+class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a UniFi Network config flow."""
 
     VERSION = 1

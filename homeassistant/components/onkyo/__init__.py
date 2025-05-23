@@ -1,6 +1,7 @@
 """The onkyo component."""
 
 from dataclasses import dataclass
+import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
@@ -9,9 +10,17 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, OPTION_INPUT_SOURCES, InputSource
+from .const import (
+    DOMAIN,
+    OPTION_INPUT_SOURCES,
+    OPTION_LISTENING_MODES,
+    InputSource,
+    ListeningMode,
+)
 from .receiver import Receiver, async_interview
 from .services import DATA_MP_ENTITIES, async_register_services
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
@@ -24,6 +33,7 @@ class OnkyoData:
 
     receiver: Receiver
     sources: dict[InputSource, str]
+    sound_modes: dict[ListeningMode, str]
 
 
 type OnkyoConfigEntry = ConfigEntry[OnkyoData]
@@ -50,7 +60,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
     sources_store: dict[str, str] = entry.options[OPTION_INPUT_SOURCES]
     sources = {InputSource(k): v for k, v in sources_store.items()}
 
-    entry.runtime_data = OnkyoData(receiver, sources)
+    sound_modes_store: dict[str, str] = entry.options.get(OPTION_LISTENING_MODES, {})
+    sound_modes = {ListeningMode(k): v for k, v in sound_modes_store.items()}
+
+    entry.runtime_data = OnkyoData(receiver, sources, sound_modes)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

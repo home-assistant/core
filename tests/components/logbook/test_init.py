@@ -10,6 +10,7 @@ from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
+from homeassistant import core as ha
 from homeassistant.components import logbook, recorder
 
 # pylint: disable-next=hass-component-root-import
@@ -40,12 +41,11 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-import homeassistant.core as ha
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import MockRow, mock_humanify
 

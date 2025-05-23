@@ -15,7 +15,7 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import SIGNAL_DEVICE_ADD
 from .coordinator import SwitcherDataUpdateCoordinator
@@ -28,7 +28,7 @@ API_STOP = "stop_shutter"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Switcher cover from config entry."""
 
@@ -68,12 +68,6 @@ class SwitcherBaseCoverEntity(SwitcherEntity, CoverEntity):
         | CoverEntityFeature.STOP
     )
     _cover_id: int
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._update_data()
-        self.async_write_ha_state()
 
     def _update_data(self) -> None:
         """Update data from device."""

@@ -39,7 +39,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event as HassEvent, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import JsonObjectType, load_json_object
@@ -475,7 +475,7 @@ class MatrixBot:
         file_stat = await aiofiles.os.stat(image_path)
 
         _LOGGER.debug("Uploading file from path, %s", image_path)
-        async with aiofiles.open(image_path, "r+b") as image_file:
+        async with aiofiles.open(image_path, "rb") as image_file:
             response, _ = await self._client.upload(
                 image_file,
                 content_type=mime_type,

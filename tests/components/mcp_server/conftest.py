@@ -22,13 +22,19 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup_entry
 
 
+@pytest.fixture(name="llm_hass_api")
+def llm_hass_api_fixture() -> str:
+    """Fixture for the config entry llm_hass_api."""
+    return llm.LLM_API_ASSIST
+
+
 @pytest.fixture(name="config_entry")
-def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+def mock_config_entry(hass: HomeAssistant, llm_hass_api: str) -> MockConfigEntry:
     """Fixture to load the integration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_LLM_HASS_API: llm_hass_api,
         },
     )
     config_entry.add_to_hass(hass)

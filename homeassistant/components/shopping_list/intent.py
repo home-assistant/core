@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import intent
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, intent
 
 from . import DOMAIN, EVENT_SHOPPING_LIST_UPDATED
 

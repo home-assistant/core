@@ -9,6 +9,7 @@ from typing import Any
 from pyvizio.const import APPS
 from pyvizio.util import gen_apps_list_from_url
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
@@ -22,11 +23,19 @@ _LOGGER = logging.getLogger(__name__)
 class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     """Define an object to hold Vizio app config data."""
 
-    def __init__(self, hass: HomeAssistant, store: Store[list[dict[str, Any]]]) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        store: Store[list[dict[str, Any]]],
+    ) -> None:
         """Initialize."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(days=1),
         )

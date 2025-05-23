@@ -36,8 +36,8 @@
   "options": {
     "step": {
       "init": {
-        "title": "ISY Options",
-        "description": "Set the options for the ISY Integration: \n • Node Sensor String: Any device or folder that contains 'Node Sensor String' in the name will be treated as a sensor or binary sensor. \n • Ignore String: Any device with 'Ignore String' in the name will be ignored. \n • Variable Sensor String: Any variable that contains 'Variable Sensor String' will be added as a sensor. \n • Restore Light Brightness: If enabled, the previous brightness will be restored when turning on a light instead of the device's built-in On-Level.",
+        "title": "ISY options",
+        "description": "Set the options for the ISY integration: \n • Node Sensor String: Any device or folder that contains 'Node Sensor String' in the name will be treated as a sensor or binary sensor. \n • Ignore String: Any device with 'Ignore String' in the name will be ignored. \n • Variable Sensor String: Any variable that contains 'Variable Sensor String' will be added as a sensor. \n • Restore Light Brightness: If enabled, the previous brightness will be restored when turning on a light instead of the device's built-in On-Level.",
         "data": {
           "sensor_string": "Node Sensor String",
           "ignore_string": "Ignore String",
@@ -49,20 +49,20 @@
   },
   "system_health": {
     "info": {
-      "host_reachable": "Host Reachable",
-      "device_connected": "ISY Connected",
-      "last_heartbeat": "Last Heartbeat Time",
-      "websocket_status": "Event Socket Status"
+      "host_reachable": "Host reachable",
+      "device_connected": "ISY connected",
+      "last_heartbeat": "Last heartbeat time",
+      "websocket_status": "Event socket status"
     }
   },
   "services": {
     "send_raw_node_command": {
       "name": "Send raw node command",
-      "description": "[%key:component::isy994::options::step::init::description%]",
+      "description": "Sends a “raw” (e.g., DON, DOF) ISY REST device command to a node using its Home Assistant entity ID. This is useful for devices that aren’t fully supported in Home Assistant yet, such as controls for many NodeServer nodes.",
       "fields": {
         "command": {
           "name": "Command",
-          "description": "The ISY REST Command to be sent to the device."
+          "description": "The ISY REST command to be sent to the device."
         },
         "value": {
           "name": "Value",
@@ -74,13 +74,13 @@
         },
         "unit_of_measurement": {
           "name": "Unit of measurement",
-          "description": "The ISY Unit of Measurement (UOM) to send with the command, if required."
+          "description": "The ISY unit of measurement (UOM) to send with the command, if required."
         }
       }
     },
     "send_node_command": {
       "name": "Send node command",
-      "description": "Sends a command to an ISY Device using its Home Assistant entity ID. Valid commands are: beep, brighten, dim, disable, enable, fade_down, fade_stop, fade_up, fast_off, fast_on, and query.",
+      "description": "Sends a command to an ISY device using its Home Assistant entity ID. Valid commands are: beep, brighten, dim, disable, enable, fade_down, fade_stop, fade_up, fast_off, fast_on, and query.",
       "fields": {
         "command": {
           "name": "Command",
@@ -89,8 +89,8 @@
       }
     },
     "get_zwave_parameter": {
-      "name": "Get Z-Wave Parameter",
-      "description": "Requests a Z-Wave Device parameter via the ISY. The parameter value will be returned as a entity extra state attribute with the name \"ZW_#\" where \"#\" is the parameter number.",
+      "name": "Get Z-Wave parameter",
+      "description": "Requests a Z-Wave device parameter via the ISY. The parameter value will be returned as an entity extra state attribute with the name \"ZW_#\" where \"#\" is the parameter number.",
       "fields": {
         "parameter": {
           "name": "Parameter",
@@ -99,8 +99,8 @@
       }
     },
     "set_zwave_parameter": {
-      "name": "Set Z-Wave Parameter",
-      "description": "Updates a Z-Wave Device parameter via the ISY. The parameter value will also be returned as a entity extra state attribute with the name \"ZW_#\" where \"#\" is the parameter number.",
+      "name": "Set Z-Wave parameter",
+      "description": "Updates a Z-Wave device parameter via the ISY. The parameter value will also be returned as an entity extra state attribute with the name \"ZW_#\" where \"#\" is the parameter number.",
       "fields": {
         "parameter": {
           "name": "[%key:component::isy994::services::get_zwave_parameter::fields::parameter::name%]",
@@ -117,8 +117,8 @@
       }
     },
     "set_zwave_lock_user_code": {
-      "name": "Set Z-Wave Lock User Code",
-      "description": "Sets a Z-Wave Lock User Code via the ISY.",
+      "name": "Set Z-Wave lock user code",
+      "description": "Sets a user code for a Z-Wave lock via the ISY.",
       "fields": {
         "user_num": {
           "name": "User Number",
@@ -131,8 +131,8 @@
       }
     },
     "delete_zwave_lock_user_code": {
-      "name": "Delete Z-Wave Lock User Code",
-      "description": "Delete a Z-Wave Lock User Code via the ISY.",
+      "name": "Delete Z-Wave lock user code",
+      "description": "Deletes a user code for a Z-Wave lock via the ISY.",
       "fields": {
         "user_num": {
           "name": "[%key:component::isy994::services::set_zwave_lock_user_code::fields::user_num::name%]",
@@ -141,8 +141,8 @@
       }
     },
     "rename_node": {
-      "name": "Rename Node on ISY",
-      "description": "Renames a node or group (scene) on the ISY. Note: this will not automatically change the Home Assistant Entity Name or Entity ID to match. The entity name and ID will only be updated after reloading the integration or restarting Home Assistant, and ONLY IF you have not already customized the name within Home Assistant.",
+      "name": "Rename node on ISY",
+      "description": "Renames a node or group (scene) on the ISY. Note: this will not automatically change the Home Assistant entity name or entity ID to match. The entity name and ID will only be updated after reloading the integration or restarting Home Assistant, and ONLY IF you have not already customized the name within Home Assistant.",
       "fields": {
         "name": {
           "name": "New Name",
@@ -164,7 +164,7 @@
         },
         "command": {
           "name": "Command",
-          "description": "The ISY Program Command to be sent."
+          "description": "The ISY program command to be sent."
         },
         "isy": {
           "name": "ISY",

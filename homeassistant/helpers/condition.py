@@ -42,8 +42,6 @@ from homeassistant.const import (
     ENTITY_MATCH_ANY,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    SUN_EVENT_SUNRISE,
-    SUN_EVENT_SUNSET,
     WEEKDAYS,
 )
 from homeassistant.core import HomeAssistant, State, callback
@@ -56,11 +54,10 @@ from homeassistant.exceptions import (
     TemplateError,
 )
 from homeassistant.loader import IntegrationNotFound, async_get_integration
+from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
-import homeassistant.util.dt as dt_util
 
 from . import config_validation as cv, entity_registry as er
-from .sun import get_astral_event_date
 from .template import Template, render_complex
 from .trace import (
     TraceElement,
@@ -85,7 +82,6 @@ _PLATFORM_ALIASES = {
     "numeric_state": None,
     "or": None,
     "state": None,
-    "sun": None,
     "template": None,
     "time": None,
     "trigger": None,
@@ -98,12 +94,7 @@ INPUT_ENTITY_ID = re.compile(
 
 
 class ConditionProtocol(Protocol):
-    """Define the format of device_condition modules.
-
-    Each module must define either CONDITION_SCHEMA or async_validate_condition_config.
-    """
-
-    CONDITION_SCHEMA: vol.Schema
+    """Define the format of condition modules."""
 
     async def async_validate_condition_config(
         self, hass: HomeAssistant, config: ConfigType
@@ -655,105 +646,6 @@ def state_from_config(config: ConfigType) -> ConditionCheckerType:
     return if_state
 
 
-def sun(
-    hass: HomeAssistant,
-    before: str | None = None,
-    after: str | None = None,
-    before_offset: timedelta | None = None,
-    after_offset: timedelta | None = None,
-) -> bool:
-    """Test if current time matches sun requirements."""
-    utcnow = dt_util.utcnow()
-    today = dt_util.as_local(utcnow).date()
-    before_offset = before_offset or timedelta(0)
-    after_offset = after_offset or timedelta(0)
-
-    sunrise = get_astral_event_date(hass, SUN_EVENT_SUNRISE, today)
-    sunset = get_astral_event_date(hass, SUN_EVENT_SUNSET, today)
-
-    has_sunrise_condition = SUN_EVENT_SUNRISE in (before, after)
-    has_sunset_condition = SUN_EVENT_SUNSET in (before, after)
-
-    after_sunrise = today > dt_util.as_local(cast(datetime, sunrise)).date()
-    if after_sunrise and has_sunrise_condition:
-        tomorrow = today + timedelta(days=1)
-        sunrise = get_astral_event_date(hass, SUN_EVENT_SUNRISE, tomorrow)
-
-    after_sunset = today > dt_util.as_local(cast(datetime, sunset)).date()
-    if after_sunset and has_sunset_condition:
-        tomorrow = today + timedelta(days=1)
-        sunset = get_astral_event_date(hass, SUN_EVENT_SUNSET, tomorrow)
-
-    # Special case: before sunrise OR after sunset
-    # This will handle the very rare case in the polar region when the sun rises/sets
-    # but does not set/rise.
-    # However this entire condition does not handle those full days of darkness
-    # or light, the following should be used instead:
-    #
-    #    condition:
-    #      condition: state
-    #      entity_id: sun.sun
-    #      state: 'above_horizon' (or 'below_horizon')
-    #
-    if before == SUN_EVENT_SUNRISE and after == SUN_EVENT_SUNSET:
-        wanted_time_before = cast(datetime, sunrise) + before_offset
-        condition_trace_update_result(wanted_time_before=wanted_time_before)
-        wanted_time_after = cast(datetime, sunset) + after_offset
-        condition_trace_update_result(wanted_time_after=wanted_time_after)
-        return utcnow < wanted_time_before or utcnow > wanted_time_after
-
-    if sunrise is None and has_sunrise_condition:
-        # There is no sunrise today
-        condition_trace_set_result(False, message="no sunrise today")
-        return False
-
-    if sunset is None and has_sunset_condition:
-        # There is no sunset today
-        condition_trace_set_result(False, message="no sunset today")
-        return False
-
-    if before == SUN_EVENT_SUNRISE:
-        wanted_time_before = cast(datetime, sunrise) + before_offset
-        condition_trace_update_result(wanted_time_before=wanted_time_before)
-        if utcnow > wanted_time_before:
-            return False
-
-    if before == SUN_EVENT_SUNSET:
-        wanted_time_before = cast(datetime, sunset) + before_offset
-        condition_trace_update_result(wanted_time_before=wanted_time_before)
-        if utcnow > wanted_time_before:
-            return False
-
-    if after == SUN_EVENT_SUNRISE:
-        wanted_time_after = cast(datetime, sunrise) + after_offset
-        condition_trace_update_result(wanted_time_after=wanted_time_after)
-        if utcnow < wanted_time_after:
-            return False
-
-    if after == SUN_EVENT_SUNSET:
-        wanted_time_after = cast(datetime, sunset) + after_offset
-        condition_trace_update_result(wanted_time_after=wanted_time_after)
-        if utcnow < wanted_time_after:
-            return False
-
-    return True
-
-
-def sun_from_config(config: ConfigType) -> ConditionCheckerType:
-    """Wrap action method with sun based condition."""
-    before = config.get("before")
-    after = config.get("after")
-    before_offset = config.get("before_offset")
-    after_offset = config.get("after_offset")
-
-    @trace_condition_function
-    def sun_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
-        """Validate time based if-condition."""
-        return sun(hass, before, after, before_offset, after_offset)
-
-    return sun_if
-
-
 def template(
     hass: HomeAssistant, value_template: Template, variables: TemplateVarsType = None
 ) -> bool:
@@ -884,10 +776,8 @@ def time(
 
         condition_trace_update_result(weekday=weekday, now_weekday=now_weekday)
         if (
-            isinstance(weekday, str)
-            and weekday != now_weekday
-            or now_weekday not in weekday
-        ):
+            isinstance(weekday, str) and weekday != now_weekday
+        ) or now_weekday not in weekday:
             return False
 
     return True
@@ -1056,7 +946,7 @@ async def async_validate_condition_config(
         return config
 
     platform = await _async_get_condition_platform(hass, config)
-    if platform is not None and hasattr(platform, "async_validate_condition_config"):
+    if platform is not None:
         return await platform.async_validate_condition_config(hass, config)
     if platform is None and condition in ("numeric_state", "state"):
         validator = cast(

@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Subaru Starlink Configuration",
+        "title": "Subaru Starlink configuration",
         "description": "Please enter your MySubaru credentials\nNOTE: Initial setup may take up to 30 seconds",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
@@ -12,7 +12,7 @@
       },
       "two_factor": {
         "title": "[%key:component::subaru::config::step::user::title%]",
-        "description": "Two factor authentication required",
+        "description": "Two-factor authentication required",
         "data": {
           "contact_method": "Please select a contact method:"
         }
@@ -49,7 +49,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "Subaru Starlink Options",
+        "title": "Subaru Starlink options",
         "description": "When enabled, vehicle polling will send a remote command to your vehicle every 2 hours to obtain new sensor data. Without vehicle polling, new sensor data is only received when the vehicle automatically pushes data (normally after engine shutdown).",
         "data": {
           "update_enabled": "Enable vehicle polling"
@@ -106,7 +106,7 @@
       "fields": {
         "door": {
           "name": "Door",
-          "description": "One of the following: 'all', 'driver', 'tailgate'."
+          "description": "Which door(s) to open."
         }
       }
     }

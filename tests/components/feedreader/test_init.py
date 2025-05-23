@@ -14,7 +14,7 @@ from homeassistant.components.feedreader.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import async_setup_config_entry, create_mock_entry
 from .const import (

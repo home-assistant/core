@@ -3,7 +3,6 @@
 from collections.abc import Iterable
 from functools import partial
 from itertools import chain
-from typing import cast
 
 import pypck
 
@@ -14,13 +13,19 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
     CONF_DOMAIN,
     CONF_ENTITIES,
     CONF_SOURCE,
     CONF_UNIT_OF_MEASUREMENT,
+    LIGHT_LUX,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -45,12 +50,25 @@ DEVICE_CLASS_MAPPING = {
     pypck.lcn_defs.VarUnit.METERPERSECOND: SensorDeviceClass.SPEED,
     pypck.lcn_defs.VarUnit.VOLT: SensorDeviceClass.VOLTAGE,
     pypck.lcn_defs.VarUnit.AMPERE: SensorDeviceClass.CURRENT,
+    pypck.lcn_defs.VarUnit.PPM: SensorDeviceClass.CO2,
+}
+
+UNIT_OF_MEASUREMENT_MAPPING = {
+    pypck.lcn_defs.VarUnit.CELSIUS: UnitOfTemperature.CELSIUS,
+    pypck.lcn_defs.VarUnit.KELVIN: UnitOfTemperature.KELVIN,
+    pypck.lcn_defs.VarUnit.FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
+    pypck.lcn_defs.VarUnit.LUX_T: LIGHT_LUX,
+    pypck.lcn_defs.VarUnit.LUX_I: LIGHT_LUX,
+    pypck.lcn_defs.VarUnit.METERPERSECOND: UnitOfSpeed.METERS_PER_SECOND,
+    pypck.lcn_defs.VarUnit.VOLT: UnitOfElectricPotential.VOLT,
+    pypck.lcn_defs.VarUnit.AMPERE: UnitOfElectricCurrent.AMPERE,
+    pypck.lcn_defs.VarUnit.PPM: CONCENTRATION_PARTS_PER_MILLION,
 }
 
 
 def add_lcn_entities(
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     entity_configs: Iterable[ConfigType],
 ) -> None:
     """Add entities for this domain."""
@@ -69,7 +87,7 @@ def add_lcn_entities(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LCN switch entities from a config entry."""
     add_entities = partial(
@@ -103,8 +121,10 @@ class LcnVariableSensor(LcnEntity, SensorEntity):
             config[CONF_DOMAIN_DATA][CONF_UNIT_OF_MEASUREMENT]
         )
 
-        self._attr_native_unit_of_measurement = cast(str, self.unit.value)
-        self._attr_device_class = DEVICE_CLASS_MAPPING.get(self.unit, None)
+        self._attr_native_unit_of_measurement = UNIT_OF_MEASUREMENT_MAPPING.get(
+            self.unit
+        )
+        self._attr_device_class = DEVICE_CLASS_MAPPING.get(self.unit)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""

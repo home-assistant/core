@@ -14,7 +14,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -104,7 +104,7 @@ class CiscoDeviceScanner(DeviceScanner):
         """Open connection to the router and get arp entries."""
 
         try:
-            cisco_ssh: pxssh.pxssh[str] = pxssh.pxssh(encoding="uft-8")
+            cisco_ssh: pxssh.pxssh[str] = pxssh.pxssh(encoding="utf-8")
             cisco_ssh.login(
                 self.host,
                 self.username,

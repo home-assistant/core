@@ -8,6 +8,9 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up OWServer from {host}?"
+      },
       "reconfigure": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -71,11 +74,17 @@
       "humidity_raw": {
         "name": "Raw humidity"
       },
+      "latest_voltage_id": {
+        "name": "Latest voltage {id}"
+      },
       "moisture_id": {
         "name": "Moisture {id}"
       },
       "thermocouple_temperature_k": {
         "name": "Thermocouple K temperature"
+      },
+      "voltage_id": {
+        "name": "Voltage {id}"
       },
       "voltage_vad": {
         "name": "VAD voltage"
@@ -131,14 +140,14 @@
           "device_selection": "[%key:component::onewire::options::error::device_not_selected%]"
         },
         "description": "Select what configuration steps to process",
-        "title": "OneWire Device Options"
+        "title": "1-Wire device options"
       },
       "configure_device": {
         "data": {
-          "precision": "Sensor Precision"
+          "precision": "Sensor precision"
         },
         "description": "Select sensor precision for {sensor_id}",
-        "title": "OneWire Sensor Precision"
+        "title": "1-Wire sensor precision"
       }
     }
   }

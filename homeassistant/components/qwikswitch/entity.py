@@ -35,7 +35,7 @@ class QSEntity(Entity):
         """Receive update packet from QSUSB. Match dispather_send signature."""
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Listen for updates from QSUSb via dispatcher."""
         self.async_on_remove(
             async_dispatcher_connect(self.hass, self.qsid, self.update_packet)

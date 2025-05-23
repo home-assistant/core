@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -> bool:
     """Set up Govee light local from a config entry."""
-    coordinator = GoveeLocalApiCoordinator(hass=hass)
+    coordinator = GoveeLocalApiCoordinator(hass, entry)
 
     async def await_cleanup():
         cleanup_complete: asyncio.Event = coordinator.cleanup()

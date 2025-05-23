@@ -8,7 +8,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PlexServer
 from .const import CONF_SERVER_IDENTIFIER, DOMAIN, PLEX_UPDATE_PLATFORMS_SIGNAL
@@ -18,7 +18,7 @@ from .helpers import get_plex_server
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Plex button from config entry."""
     server_id: str = config_entry.data[CONF_SERVER_IDENTIFIER]

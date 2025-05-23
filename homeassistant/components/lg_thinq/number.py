@@ -16,7 +16,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import PERCENTAGE, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ThinqConfigEntry
 from .entity import ThinQEntity
@@ -118,19 +118,13 @@ DEVICE_TYPE_NUMBER_MAP: dict[DeviceType, tuple[NumberEntityDescription, ...]] = 
     DeviceType.WASHTOWER_DRYER: WASHER_NUMBERS,
     DeviceType.WASHTOWER: WASHER_NUMBERS,
     DeviceType.WASHTOWER_WASHER: WASHER_NUMBERS,
-    DeviceType.WATER_HEATER: (
-        NumberEntityDescription(
-            key=ThinQProperty.TARGET_TEMPERATURE,
-            native_max_value=60,
-            native_min_value=35,
-            native_step=1,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            translation_key=ThinQProperty.TARGET_TEMPERATURE,
-        ),
-    ),
+    DeviceType.WATER_HEATER: (NUMBER_DESC[ThinQProperty.TARGET_TEMPERATURE],),
     DeviceType.WINE_CELLAR: (
         NUMBER_DESC[ThinQProperty.LIGHT_STATUS],
         NUMBER_DESC[ThinQProperty.TARGET_TEMPERATURE],
+    ),
+    DeviceType.VENTILATOR: (
+        TIMER_NUMBER_DESC[ThinQProperty.SLEEP_TIMER_RELATIVE_HOUR_TO_STOP],
     ),
 }
 
@@ -140,7 +134,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ThinqConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up an entry for number platform."""
     entities: list[ThinQNumberEntity] = []
@@ -179,7 +173,7 @@ class ThinQNumberEntity(ThinQEntity, NumberEntity):
         ) is not None:
             self._attr_native_unit_of_measurement = unit_of_measurement
 
-        # Undate range.
+        # Update range.
         if (
             self.entity_description.native_min_value is None
             and (min_value := self.data.min) is not None

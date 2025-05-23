@@ -52,6 +52,8 @@ async def async_get_connect_info(
 class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage the data update for the Screenlogic component."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -60,7 +62,6 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator[None]):
         gateway: ScreenLogicGateway,
     ) -> None:
         """Initialize the Screenlogic Data Update Coordinator."""
-        self.config_entry = config_entry
         self.gateway = gateway
 
         interval = timedelta(
@@ -69,6 +70,7 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator[None]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=interval,
             # Debounced option since the device takes
@@ -91,7 +93,6 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_update_data(self) -> None:
         """Fetch data from the Screenlogic gateway."""
-        assert self.config_entry is not None
         try:
             if not self.gateway.is_connected:
                 connect_info = await async_get_connect_info(

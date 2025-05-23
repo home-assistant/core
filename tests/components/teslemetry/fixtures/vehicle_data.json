@@ -192,7 +192,7 @@
       "api_version": 71,
       "autopark_state_v2": "unavailable",
       "calendar_supported": true,
-      "car_version": "2023.44.30.8 06f534d46010",
+      "car_version": "2026.0.0 06f534d46010",
       "center_display_state": 0,
       "dashcam_clip_save_available": true,
       "dashcam_state": "Recording",

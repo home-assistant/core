@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -38,7 +39,6 @@
       'access_token': '1caab5c3b3',
       'entity_picture': '/api/camera_proxy/camera.my_camera_live_view?token=1caab5c3b3',
       'friendly_name': 'my_camera Live view',
-      'frontend_stream_type': <StreamType.HLS: 'hls'>,
       'supported_features': <CameraEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -53,6 +53,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(

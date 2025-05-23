@@ -5,7 +5,7 @@ from unittest.mock import call, patch
 
 import pytest
 
-import homeassistant.components.tcp.common as tcp
+from homeassistant.components.tcp import common as tcp
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 

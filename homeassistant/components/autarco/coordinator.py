@@ -22,6 +22,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
+type AutarcoConfigEntry = ConfigEntry[list[AutarcoDataUpdateCoordinator]]
+
 
 class AutarcoData(NamedTuple):
     """Class for defining data in dict."""
@@ -35,11 +37,12 @@ class AutarcoData(NamedTuple):
 class AutarcoDataUpdateCoordinator(DataUpdateCoordinator[AutarcoData]):
     """Class to manage fetching Autarco data from the API."""
 
-    config_entry: ConfigEntry
+    config_entry: AutarcoConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: AutarcoConfigEntry,
         client: Autarco,
         account_site: AccountSite,
     ) -> None:
@@ -47,6 +50,7 @@ class AutarcoDataUpdateCoordinator(DataUpdateCoordinator[AutarcoData]):
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )

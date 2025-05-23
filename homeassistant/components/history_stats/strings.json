@@ -24,7 +24,7 @@
         }
       },
       "options": {
-        "description": "Read the documention for further details on how to configure the history stats sensor using these options.",
+        "description": "Read the documentation for further details on how to configure the history stats sensor using these options.",
         "data": {
           "start": "Start",
           "end": "End",

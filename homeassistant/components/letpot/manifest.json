@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "quality_scale": "bronze",
-  "requirements": ["letpot==0.2.0"]
+  "requirements": ["letpot==0.4.0"]
 }

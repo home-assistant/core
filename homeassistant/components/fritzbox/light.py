@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from requests.exceptions import HTTPError
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
@@ -14,7 +12,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import COLOR_MODE, LOGGER
 from .coordinator import FritzboxConfigEntry, FritzboxDataUpdateCoordinator
@@ -24,7 +22,7 @@ from .entity import FritzBoxDeviceEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FritzboxConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the FRITZ!SmartHome light from ConfigEntry."""
     coordinator = entry.runtime_data
@@ -122,26 +120,24 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
         """Turn the light on."""
         if kwargs.get(ATTR_BRIGHTNESS) is not None:
             level = kwargs[ATTR_BRIGHTNESS]
-            await self.hass.async_add_executor_job(self.data.set_level, level)
+            await self.hass.async_add_executor_job(self.data.set_level, level, True)
         if kwargs.get(ATTR_HS_COLOR) is not None:
-            # Try setunmappedcolor first. This allows free color selection,
-            # but we don't know if its supported by all devices.
-            try:
-                # HA gives 0..360 for hue, fritz light only supports 0..359
-                unmapped_hue = int(kwargs[ATTR_HS_COLOR][0] % 360)
-                unmapped_saturation = round(
-                    cast(float, kwargs[ATTR_HS_COLOR][1]) * 255.0 / 100.0
-                )
+            # HA gives 0..360 for hue, fritz light only supports 0..359
+            unmapped_hue = int(kwargs[ATTR_HS_COLOR][0] % 360)
+            unmapped_saturation = round(
+                cast(float, kwargs[ATTR_HS_COLOR][1]) * 255.0 / 100.0
+            )
+            if self.data.fullcolorsupport:
+                LOGGER.debug("device has fullcolorsupport, using 'setunmappedcolor'")
                 await self.hass.async_add_executor_job(
-                    self.data.set_unmapped_color, (unmapped_hue, unmapped_saturation)
+                    self.data.set_unmapped_color,
+                    (unmapped_hue, unmapped_saturation),
+                    0,
+                    True,
                 )
-            # This will raise 400 BAD REQUEST if the setunmappedcolor is not available
-            except HTTPError as err:
-                if err.response.status_code != 400:
-                    raise
+            else:
                 LOGGER.debug(
-                    "fritzbox does not support method 'setunmappedcolor', fallback to"
-                    " 'setcolor'"
+                    "device has no fullcolorsupport, using supported colors with 'setcolor'"
                 )
                 # find supported hs values closest to what user selected
                 hue = min(
@@ -152,18 +148,18 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
                     key=lambda x: abs(x - unmapped_saturation),
                 )
                 await self.hass.async_add_executor_job(
-                    self.data.set_color, (hue, saturation)
+                    self.data.set_color, (hue, saturation), 0, True
                 )
 
         if kwargs.get(ATTR_COLOR_TEMP_KELVIN) is not None:
             await self.hass.async_add_executor_job(
-                self.data.set_color_temp, kwargs[ATTR_COLOR_TEMP_KELVIN]
+                self.data.set_color_temp, kwargs[ATTR_COLOR_TEMP_KELVIN], 0, True
             )
 
-        await self.hass.async_add_executor_job(self.data.set_state_on)
+        await self.hass.async_add_executor_job(self.data.set_state_on, True)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        await self.hass.async_add_executor_job(self.data.set_state_off)
+        await self.hass.async_add_executor_job(self.data.set_state_off, True)
         await self.coordinator.async_refresh()

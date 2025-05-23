@@ -3,6 +3,11 @@
     "data": {
       "settings": [
         {
+          "key": "BSH.Common.Setting.ChildLock",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
           "key": "BSH.Common.Setting.AmbientLightEnabled",
           "value": true,
           "type": "Boolean"
@@ -26,7 +31,13 @@
         {
           "key": "BSH.Common.Setting.PowerState",
           "value": "BSH.Common.EnumType.PowerState.On",
-          "type": "BSH.Common.EnumType.PowerState"
+          "type": "BSH.Common.EnumType.PowerState",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.PowerState.On",
+              "BSH.Common.EnumType.PowerState.Off"
+            ]
+          }
         },
         {
           "key": "BSH.Common.Setting.ChildLock",
@@ -57,9 +68,16 @@
           "type": "Double"
         },
         {
-          "key": "BSH.Common.Setting.ColorTemperature",
+          "key": "Cooking.Hood.Setting.ColorTemperature",
           "value": "Cooking.Hood.EnumType.ColorTemperature.warmToNeutral",
-          "type": "BSH.Common.EnumType.ColorTemperature"
+          "type": "BSH.Common.EnumType.ColorTemperature",
+          "constraints": {
+            "allowedvalues": [
+              "Cooking.Hood.EnumType.ColorTemperature.warm",
+              "Cooking.Hood.EnumType.ColorTemperature.neutral",
+              "Cooking.Hood.EnumType.ColorTemperature.cold"
+            ]
+          }
         },
         {
           "key": "BSH.Common.Setting.AmbientLightEnabled",
@@ -92,6 +110,11 @@
           "key": "BSH.Common.Setting.PowerState",
           "value": "BSH.Common.EnumType.PowerState.On",
           "type": "BSH.Common.EnumType.PowerState"
+        },
+        {
+          "key": "BSH.Common.Setting.AlarmClock",
+          "value": 0,
+          "type": "Integer"
         }
       ]
     }
@@ -108,6 +131,11 @@
           "key": "BSH.Common.Setting.ChildLock",
           "value": false,
           "type": "Boolean"
+        },
+        {
+          "key": "LaundryCare.Washer.Setting.IDos2BaseLevel",
+          "value": 0,
+          "type": "Integer"
         }
       ]
     }
@@ -154,6 +182,12 @@
             "max": 100,
             "access": "readWrite"
           }
+        },
+        {
+          "key": "Refrigeration.FridgeFreezer.Setting.SetpointTemperatureRefrigerator",
+          "value": 8,
+          "unit": "°C",
+          "type": "Double"
         }
       ]
     }

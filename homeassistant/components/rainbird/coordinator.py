@@ -58,26 +58,28 @@ def async_create_clientsession() -> aiohttp.ClientSession:
 class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
     """Coordinator for rainbird API calls."""
 
+    config_entry: RainbirdConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        name: str,
+        config_entry: RainbirdConfigEntry,
         controller: AsyncRainbirdController,
-        unique_id: str | None,
         model_info: ModelAndVersion,
     ) -> None:
         """Initialize RainbirdUpdateCoordinator."""
         super().__init__(
             hass,
             _LOGGER,
-            name=name,
+            config_entry=config_entry,
+            name=config_entry.title,
             update_interval=UPDATE_INTERVAL,
             request_refresh_debouncer=Debouncer(
                 hass, _LOGGER, cooldown=DEBOUNCER_COOLDOWN, immediate=False
             ),
         )
         self._controller = controller
-        self._unique_id = unique_id
+        self._unique_id = config_entry.unique_id
         self._zones: set[int] | None = None
         self._model_info = model_info
 
@@ -145,14 +147,15 @@ class RainbirdScheduleUpdateCoordinator(DataUpdateCoordinator[Schedule]):
     def __init__(
         self,
         hass: HomeAssistant,
-        name: str,
+        config_entry: RainbirdConfigEntry,
         controller: AsyncRainbirdController,
     ) -> None:
         """Initialize ZoneStateUpdateCoordinator."""
         super().__init__(
             hass,
             _LOGGER,
-            name=name,
+            config_entry=config_entry,
+            name=f"{config_entry.title} Schedule",
             update_method=self._async_update_data,
             update_interval=CALENDAR_UPDATE_INTERVAL,
         )

@@ -8,6 +8,7 @@ from music_assistant_client.music import Music
 from music_assistant_client.player_queues import PlayerQueues
 from music_assistant_client.players import Players
 from music_assistant_models.api import ServerInfoMessage
+from music_assistant_models.config_entries import PlayerConfig
 import pytest
 
 from homeassistant.components.music_assistant.config_flow import CONF_URL
@@ -68,6 +69,21 @@ async def music_assistant_client_fixture() -> AsyncGenerator[MagicMock]:
         client.music = Music(client)
         client.server_url = client.server_info.base_url
         client.get_media_item_image_url = MagicMock(return_value=None)
+        client.config = MagicMock()
+
+        async def get_player_configs() -> list[PlayerConfig]:
+            """Mock get player configs."""
+            # simply return a mock config for each player
+            return [
+                PlayerConfig(
+                    values={},
+                    provider=player.provider,
+                    player_id=player.player_id,
+                )
+                for player in client.players
+            ]
+
+        client.config.get_player_configs = get_player_configs
 
         yield client
 

@@ -89,8 +89,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
     except SENSE_WEBSOCKET_EXCEPTIONS as err:
         raise ConfigEntryNotReady(str(err) or "Error during realtime update") from err
 
-    trends_coordinator = SenseTrendCoordinator(hass, gateway)
-    realtime_coordinator = SenseRealtimeCoordinator(hass, gateway)
+    trends_coordinator = SenseTrendCoordinator(hass, entry, gateway)
+    realtime_coordinator = SenseRealtimeCoordinator(hass, entry, gateway)
 
     # This can take longer than 60s and we already know
     # sense is online since get_discovered_device_data was

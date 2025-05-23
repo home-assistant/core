@@ -58,7 +58,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonObjectType
 
 from tests.common import (
@@ -103,6 +103,7 @@ ENTITY_IDS_BY_NUMBER = {
     "26": "light.living_room_rgbww_lights",
     "27": "media_player.group",
     "28": "media_player.browse",
+    "29": "media_player.search",
 }
 
 ENTITY_NUMBERS_BY_ID = {v: k for k, v in ENTITY_IDS_BY_NUMBER.items()}

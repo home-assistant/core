@@ -26,9 +26,9 @@ import voluptuous as vol
 from homeassistant.config import load_yaml_config_file
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.hassio import get_supervisor_ip, is_hassio
-from homeassistant.util import dt as dt_util, yaml
+from homeassistant.util import dt as dt_util, yaml as yaml_util
 
 from .const import KEY_HASS
 from .view import HomeAssistantView
@@ -244,7 +244,7 @@ class IpBanManager:
                 str(ip_ban.ip_address): {ATTR_BANNED_AT: ip_ban.banned_at.isoformat()}
             }
             # Write in a single write call to avoid interleaved writes
-            out.write("\n" + yaml.dump(ip_))
+            out.write("\n" + yaml_util.dump(ip_))
 
     async def async_add_ban(self, remote_addr: IPv4Address | IPv6Address) -> None:
         """Add a new IP address to the banned list."""

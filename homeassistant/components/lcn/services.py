@@ -6,10 +6,8 @@ import pypck
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_ADDRESS,
     CONF_BRIGHTNESS,
     CONF_DEVICE_ID,
-    CONF_HOST,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
 )
@@ -20,9 +18,7 @@ from homeassistant.core import (
     SupportsResponse,
 )
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import device_registry as dr
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import (
     CONF_KEYS,
@@ -52,12 +48,7 @@ from .const import (
     VAR_UNITS,
     VARIABLES,
 )
-from .helpers import (
-    DeviceConnectionType,
-    get_device_connection,
-    is_address,
-    is_states_string,
-)
+from .helpers import DeviceConnectionType, is_states_string
 
 
 class LcnServiceCall:
@@ -65,8 +56,7 @@ class LcnServiceCall:
 
     schema = vol.Schema(
         {
-            vol.Optional(CONF_DEVICE_ID): cv.string,
-            vol.Optional(CONF_ADDRESS): is_address,
+            vol.Required(CONF_DEVICE_ID): cv.string,
         }
     )
     supports_response = SupportsResponse.NONE
@@ -77,46 +67,18 @@ class LcnServiceCall:
 
     def get_device_connection(self, service: ServiceCall) -> DeviceConnectionType:
         """Get address connection object."""
-        if CONF_DEVICE_ID not in service.data and CONF_ADDRESS not in service.data:
+        device_id = service.data[CONF_DEVICE_ID]
+        device_registry = dr.async_get(self.hass)
+        if not (device := device_registry.async_get(device_id)):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="no_device_identifier",
+                translation_key="invalid_device_id",
+                translation_placeholders={"device_id": device_id},
             )
 
-        if CONF_DEVICE_ID in service.data:
-            device_id = service.data[CONF_DEVICE_ID]
-            device_registry = dr.async_get(self.hass)
-            if not (device := device_registry.async_get(device_id)):
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="invalid_device_id",
-                    translation_placeholders={"device_id": device_id},
-                )
-
-            return self.hass.data[DOMAIN][device.primary_config_entry][
-                DEVICE_CONNECTIONS
-            ][device_id]
-
-        async_create_issue(
-            self.hass,
-            DOMAIN,
-            "deprecated_address_parameter",
-            breaks_in_ha_version="2025.6.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_address_parameter",
-        )
-
-        address, host_name = service.data[CONF_ADDRESS]
-        for config_entry in self.hass.config_entries.async_entries(DOMAIN):
-            if config_entry.data[CONF_HOST] == host_name:
-                device_connection = get_device_connection(
-                    self.hass, address, config_entry
-                )
-                if device_connection is None:
-                    raise ValueError("Wrong address.")
-                return device_connection
-        raise ValueError("Invalid host name.")
+        return self.hass.data[DOMAIN][device.primary_config_entry][DEVICE_CONNECTIONS][
+            device_id
+        ]
 
     async def async_call_service(self, service: ServiceCall) -> ServiceResponse:
         """Execute service call."""

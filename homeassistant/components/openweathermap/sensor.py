@@ -21,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -45,12 +45,10 @@ from .const import (
     ATTR_API_WIND_BEARING,
     ATTR_API_WIND_SPEED,
     ATTRIBUTION,
-    DEFAULT_NAME,
     DOMAIN,
     MANUFACTURER,
     OWM_MODE_FREE_FORECAST,
 )
-from .coordinator import WeatherUpdateCoordinator
 
 WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -89,7 +87,8 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=ATTR_API_WIND_BEARING,
         name="Wind bearing",
         native_unit_of_measurement=DEGREE,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     SensorEntityDescription(
         key=ATTR_API_HUMIDITY,
@@ -156,11 +155,13 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: OpenweathermapConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up OpenWeatherMap sensor entities based on a config entry."""
     domain_data = config_entry.runtime_data
     name = domain_data.name
+    unique_id = config_entry.unique_id
+    assert unique_id is not None
     weather_coordinator = domain_data.coordinator
 
     if domain_data.mode == OWM_MODE_FREE_FORECAST:
@@ -174,7 +175,7 @@ async def async_setup_entry(
         async_add_entities(
             OpenWeatherMapSensor(
                 name,
-                f"{config_entry.unique_id}-{description.key}",
+                unique_id,
                 description,
                 weather_coordinator,
             )
@@ -187,6 +188,7 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
 
     _attr_should_poll = False
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -199,14 +201,12 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
         self.entity_description = description
         self._coordinator = coordinator
 
-        self._attr_name = f"{name} {description.name}"
-        self._attr_unique_id = unique_id
-        split_unique_id = unique_id.split("-")
+        self._attr_unique_id = f"{unique_id}-{description.key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, f"{split_unique_id[0]}-{split_unique_id[1]}")},
+            identifiers={(DOMAIN, unique_id)},
             manufacturer=MANUFACTURER,
-            name=DEFAULT_NAME,
+            name=name,
         )
 
     @property
@@ -228,20 +228,7 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
 class OpenWeatherMapSensor(AbstractOpenWeatherMapSensor):
     """Implementation of an OpenWeatherMap sensor."""
 
-    def __init__(
-        self,
-        name: str,
-        unique_id: str,
-        description: SensorEntityDescription,
-        weather_coordinator: WeatherUpdateCoordinator,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(name, unique_id, description, weather_coordinator)
-        self._weather_coordinator = weather_coordinator
-
     @property
     def native_value(self) -> StateType:
         """Return the state of the device."""
-        return self._weather_coordinator.data[ATTR_API_CURRENT].get(
-            self.entity_description.key
-        )
+        return self._coordinator.data[ATTR_API_CURRENT].get(self.entity_description.key)

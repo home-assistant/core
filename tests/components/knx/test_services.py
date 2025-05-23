@@ -111,7 +111,7 @@ async def test_send(
     expected_apci,
 ) -> None:
     """Test `knx.send` service."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
 
     await hass.services.async_call(
         "knx",
@@ -127,7 +127,7 @@ async def test_send(
 
 async def test_read(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test `knx.read` service."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
 
     # send read telegram
     await hass.services.async_call("knx", "read", {"address": "1/1/1"}, blocking=True)
@@ -150,7 +150,7 @@ async def test_event_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
     events = async_capture_events(hass, "knx_event")
     test_address = "1/2/3"
 
-    await knx.setup_integration({})
+    await knx.setup_integration()
 
     # no event registered
     await knx.receive_write(test_address, True)
@@ -200,7 +200,7 @@ async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
     test_entity = "fake.entity"
     test_attribute = "fake_attribute"
 
-    await knx.setup_integration({})
+    await knx.setup_integration()
 
     # no exposure registered
     hass.states.async_set(test_entity, STATE_ON, {})
@@ -265,7 +265,7 @@ async def test_reload_service(
     knx: KNXTestKit,
 ) -> None:
     """Test reload service."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
 
     with (
         patch(
@@ -285,7 +285,7 @@ async def test_reload_service(
 
 async def test_service_setup_failed(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test service setup failed."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     await hass.config_entries.async_unload(knx.mock_config_entry.entry_id)
 
     with pytest.raises(HomeAssistantError) as exc_info:

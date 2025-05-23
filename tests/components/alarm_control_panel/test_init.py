@@ -1,7 +1,6 @@
 """Test for the alarm control panel const module."""
 
 from typing import Any
-from unittest.mock import patch
 
 import pytest
 
@@ -23,7 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import entity_registry as er, frame
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from . import help_async_setup_entry_init, help_async_unload_entry
@@ -222,7 +221,6 @@ async def test_alarm_control_panel_with_default_code(
     mock_alarm_control_panel_entity.calls_disarm.assert_called_with("1234")
 
 
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_alarm_control_panel_not_log_deprecated_state_warning(
     hass: HomeAssistant,
     mock_alarm_control_panel_entity: MockAlarmControlPanel,
@@ -238,7 +236,6 @@ async def test_alarm_control_panel_not_log_deprecated_state_warning(
 
 
 @pytest.mark.usefixtures("mock_as_custom_component")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_alarm_control_panel_log_deprecated_state_warning_using_state_prop(
     hass: HomeAssistant,
     code_format: CodeFormat | None,
@@ -292,18 +289,17 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_state_prop
     assert state is not None
 
     assert (
-        "Detected that custom integration 'alarm_control_panel' is setting state"
-        " directly. Entity None (<class 'tests.components.alarm_control_panel."
+        "Detected that custom integration 'test' is setting state "
+        "directly. Entity None (<class 'tests.components.alarm_control_panel."
         "test_init.test_alarm_control_panel_log_deprecated_state_warning_using"
         "_state_prop.<locals>.MockLegacyAlarmControlPanel'>) should implement"
         " the 'alarm_state' property and return its state using the AlarmControlPanelState"
-        " enum at test_init.py, line 123: yield. This will stop working in Home Assistant"
-        " 2025.11, please create a bug report at" in caplog.text
+        " enum. This will stop working in Home Assistant 2025.11, please report it to"
+        " the author of the 'test' custom integration" in caplog.text
     )
 
 
 @pytest.mark.usefixtures("mock_as_custom_component")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_alarm_control_panel_log_deprecated_state_warning_using_attr_state_attr(
     hass: HomeAssistant,
     code_format: CodeFormat | None,
@@ -345,6 +341,7 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_attr_state
             async_setup_entry=help_async_setup_entry_init,
             async_unload_entry=help_async_unload_entry,
         ),
+        built_in=False,
     )
     setup_test_component_platform(
         hass, ALARM_CONTROL_PANEL_DOMAIN, [entity], from_config_entry=True
@@ -355,7 +352,7 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_attr_state
     assert state is not None
 
     assert (
-        "Detected that custom integration 'alarm_control_panel' is setting state directly."
+        "Detected that custom integration 'test' is setting state directly."
         not in caplog.text
     )
 
@@ -364,14 +361,14 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_attr_state
     )
 
     assert (
-        "Detected that custom integration 'alarm_control_panel' is setting state directly."
+        "Detected that custom integration 'test' is setting state directly."
         " Entity alarm_control_panel.test_alarm_control_panel"
         " (<class 'tests.components.alarm_control_panel.test_init."
         "test_alarm_control_panel_log_deprecated_state_warning_using_attr_state_attr."
         "<locals>.MockLegacyAlarmControlPanel'>) should implement the 'alarm_state' property"
-        " and return its state using the AlarmControlPanelState enum at test_init.py, line 123:"
-        " yield. This will stop working in Home Assistant 2025.11,"
-        " please create a bug report at" in caplog.text
+        " and return its state using the AlarmControlPanelState enum. "
+        "This will stop working in Home Assistant 2025.11, please report "
+        "it to the author of the 'test' custom integration" in caplog.text
     )
     caplog.clear()
     await help_test_async_alarm_control_panel_service(
@@ -379,13 +376,12 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_attr_state
     )
     # Test we only log once
     assert (
-        "Detected that custom integration 'alarm_control_panel' is setting state directly."
+        "Detected that custom integration 'test' is setting state directly."
         not in caplog.text
     )
 
 
 @pytest.mark.usefixtures("mock_as_custom_component")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_alarm_control_panel_deprecated_state_does_not_break_state(
     hass: HomeAssistant,
     code_format: CodeFormat | None,
@@ -428,6 +424,7 @@ async def test_alarm_control_panel_deprecated_state_does_not_break_state(
             async_setup_entry=help_async_setup_entry_init,
             async_unload_entry=help_async_unload_entry,
         ),
+        built_in=False,
     )
     setup_test_component_platform(
         hass, ALARM_CONTROL_PANEL_DOMAIN, [entity], from_config_entry=True

@@ -26,6 +26,7 @@ from homeassistant.components.homekit.const import (
     CONF_VIDEO_CODEC,
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
+    CONF_VIDEO_PROFILE_NAMES,
     DEFAULT_AUDIO_CODEC,
     DEFAULT_AUDIO_MAP,
     DEFAULT_AUDIO_PACKET_SIZE,
@@ -39,6 +40,7 @@ from homeassistant.components.homekit.const import (
     DEFAULT_VIDEO_CODEC,
     DEFAULT_VIDEO_MAP,
     DEFAULT_VIDEO_PACKET_SIZE,
+    DEFAULT_VIDEO_PROFILE_NAMES,
     DOMAIN,
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
@@ -126,6 +128,7 @@ def test_validate_entity_config() -> None:
             }
         },
         {"switch.test": {CONF_TYPE: "invalid_type"}},
+        {"fan.test": {CONF_TYPE: "invalid_type"}},
     ]
 
     for conf in configs:
@@ -235,6 +238,7 @@ def test_validate_entity_config() -> None:
             CONF_VIDEO_MAP: DEFAULT_VIDEO_MAP,
             CONF_STREAM_COUNT: DEFAULT_STREAM_COUNT,
             CONF_VIDEO_CODEC: DEFAULT_VIDEO_CODEC,
+            CONF_VIDEO_PROFILE_NAMES: DEFAULT_VIDEO_PROFILE_NAMES,
             CONF_AUDIO_PACKET_SIZE: DEFAULT_AUDIO_PACKET_SIZE,
             CONF_VIDEO_PACKET_SIZE: DEFAULT_VIDEO_PACKET_SIZE,
             CONF_LOW_BATTERY_THRESHOLD: DEFAULT_LOW_BATTERY_THRESHOLD,

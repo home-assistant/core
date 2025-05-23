@@ -66,7 +66,7 @@
       }
     },
     "set_state": {
-      "name": "Set State",
+      "name": "Set state",
       "description": "Sets a color/brightness and possibly turn the light on/off.",
       "fields": {
         "infrared": {
@@ -201,7 +201,7 @@
     },
     "effect_morph": {
       "name": "Morph effect",
-      "description": "Starts the firmware-based Morph effect on LIFX Tiles on Candle.",
+      "description": "Starts the firmware-based Morph effect on LIFX Tiles or Candle.",
       "fields": {
         "speed": {
           "name": "Speed",
@@ -209,11 +209,11 @@
         },
         "palette": {
           "name": "Palette",
-          "description": "List of at least 2 and at most 16 colors as hue (0-360), saturation (0-100), brightness (0-100) and kelvin (1500-900) values to use for this effect. Overrides the theme attribute."
+          "description": "List of at least 2 and at most 16 colors as hue (0-360), saturation (0-100), brightness (0-100) and Kelvin (1500-9000) values to use for this effect. Overrides the 'Theme' attribute."
         },
         "theme": {
           "name": "[%key:component::lifx::entity::select::theme::name%]",
-          "description": "Predefined color theme to use for the effect. Overridden by the palette attribute."
+          "description": "Predefined color theme to use for the effect. Overridden by the 'Palette' attribute."
         },
         "power_on": {
           "name": "Power on",
@@ -223,27 +223,27 @@
     },
     "effect_sky": {
       "name": "Sky effect",
-      "description": "Starts the firmware-based Sky effect on LIFX Ceiling.",
+      "description": "Starts a firmware-based effect on LIFX Ceiling lights that animates a sky scene across the device.",
       "fields": {
         "speed": {
           "name": "Speed",
-          "description": "How long the Sunrise and Sunset sky types will take to complete. For the Cloud sky type, it is the speed of the clouds across the device."
+          "description": "How long the Sunrise and Sunset sky types will take to complete. For the Clouds sky type, it is the speed of the clouds across the device."
         },
         "sky_type": {
           "name": "Sky type",
           "description": "The style of sky that will be animated by the effect."
         },
         "cloud_saturation_min": {
-          "name": "Cloud saturation Minimum",
-          "description": "Minimum cloud saturation."
+          "name": "Cloud saturation minimum",
+          "description": "The minimum cloud saturation for the Clouds sky type."
         },
         "cloud_saturation_max": {
-          "name": "Cloud Saturation maximum",
-          "description": "Maximum cloud saturation."
+          "name": "Cloud saturation maximum",
+          "description": "The maximum cloud saturation for the Clouds sky type."
         },
         "palette": {
           "name": "Palette",
-          "description": "List of 1 to 6 colors as hue (0-360), saturation (0-100), brightness (0-100) and kelvin (1500-9000) values to use for this effect."
+          "description": "List of 1 to 6 colors as hue (0-360), saturation (0-100), brightness (0-100) and Kelvin (1500-9000) values to use for this effect."
         },
         "power_on": {
           "name": "Power on",
@@ -254,6 +254,28 @@
     "effect_stop": {
       "name": "Stop effect",
       "description": "Stops a running effect."
+    },
+    "paint_theme": {
+      "name": "Paint theme",
+      "description": "Paints either a provided theme or custom palette across one or more LIFX lights.",
+      "fields": {
+        "palette": {
+          "name": "Palette",
+          "description": "List of at least 2 and at most 16 colors as hue (0-360), saturation (0-100), brightness (0-100) and Kelvin (1500-9000) values to paint across the target lights. Overrides the 'Theme' attribute."
+        },
+        "theme": {
+          "name": "[%key:component::lifx::entity::select::theme::name%]",
+          "description": "Predefined color theme to paint. Overridden by the 'Palette' attribute."
+        },
+        "transition": {
+          "name": "Transition",
+          "description": "Duration in seconds to paint the theme."
+        },
+        "power_on": {
+          "name": "Power on",
+          "description": "Powered off lights will be turned on before painting the theme."
+        }
+      }
     }
   }
 }

@@ -21,7 +21,7 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.aiohttp_client as client
+from homeassistant.helpers import aiohttp_client as client
 from homeassistant.util.color import RGBColor
 from homeassistant.util.ssl import SSLCipherList
 
@@ -249,7 +249,6 @@ async def test_get_clientsession_patched_close(hass: HomeAssistant) -> None:
         assert mock_close.call_count == 0
 
 
-@patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
 async def test_warning_close_session_integration(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -292,7 +291,6 @@ async def test_warning_close_session_integration(
     ) in caplog.text
 
 
-@patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
 async def test_warning_close_session_custom(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -403,3 +401,15 @@ async def test_async_mdnsresolver(
     resp = await session.post("http://localhost/xyz", json={"x": 1})
     assert resp.status == 200
     assert await resp.json() == {"x": 1}
+
+
+async def test_resolver_is_singleton(hass: HomeAssistant) -> None:
+    """Test that the resolver is a singleton."""
+    session = client.async_get_clientsession(hass)
+    session2 = client.async_get_clientsession(hass)
+    session3 = client.async_create_clientsession(hass)
+    assert isinstance(session._connector, aiohttp.TCPConnector)
+    assert isinstance(session2._connector, aiohttp.TCPConnector)
+    assert isinstance(session3._connector, aiohttp.TCPConnector)
+    assert session._connector._resolver is session2._connector._resolver
+    assert session._connector._resolver is session3._connector._resolver

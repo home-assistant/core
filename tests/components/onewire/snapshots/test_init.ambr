@@ -3,6 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -27,7 +28,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '3.2',
     'via_device_id': None,
   })
 # ---
@@ -35,6 +36,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -59,7 +61,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '3.2',
     'via_device_id': None,
   })
 # ---
@@ -67,6 +69,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -91,7 +94,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '3.2',
     'via_device_id': None,
   })
 # ---
@@ -99,6 +102,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -123,7 +127,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '3.2',
     'via_device_id': <ANY>,
   })
 # ---
@@ -131,6 +135,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -155,7 +160,40 @@
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '3.2',
+    'via_device_id': None,
+  })
+# ---
+# name: test_registry[20.111111111111-entry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'onewire',
+        '20.111111111111',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Maxim Integrated',
+    'model': 'DS2450',
+    'model_id': 'DS2450',
+    'name': '20.111111111111',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '111111111111',
+    'suggested_area': None,
+    'sw_version': '3.2',
     'via_device_id': None,
   })
 # ---
@@ -163,6 +201,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -187,7 +226,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '3.2',
     'via_device_id': None,
   })
 # ---
@@ -195,6 +234,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -219,7 +259,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '3.2',
     'via_device_id': None,
   })
 # ---
@@ -227,6 +267,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -251,7 +292,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '3.2',
     'via_device_id': None,
   })
 # ---
@@ -259,6 +300,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -283,7 +325,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': '222222222222',
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '3.2',
     'via_device_id': None,
   })
 # ---
@@ -291,6 +333,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -315,7 +358,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': '222222222223',
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '3.2',
     'via_device_id': None,
   })
 # ---
@@ -323,6 +366,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -347,7 +391,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '3.2',
     'via_device_id': None,
   })
 # ---
@@ -355,6 +399,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -379,7 +424,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '3.2',
     'via_device_id': None,
   })
 # ---
@@ -387,6 +432,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -411,7 +457,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '3.2',
     'via_device_id': None,
   })
 # ---
@@ -419,6 +465,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -443,7 +490,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '3.2',
     'via_device_id': None,
   })
 # ---
@@ -451,6 +498,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -475,7 +523,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '3.2',
     'via_device_id': None,
   })
 # ---
@@ -483,6 +531,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -507,7 +556,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '3.2',
     'via_device_id': None,
   })
 # ---
@@ -515,6 +564,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -539,7 +589,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': '222222222222',
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '3.2',
     'via_device_id': None,
   })
 # ---
@@ -547,6 +597,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -571,7 +622,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '3.2',
     'via_device_id': None,
   })
 # ---
@@ -579,6 +630,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -603,7 +655,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '3.2',
     'via_device_id': None,
   })
 # ---
@@ -611,6 +663,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -635,7 +688,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': '111111111112',
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '3.2',
     'via_device_id': None,
   })
 # ---
@@ -643,6 +696,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -667,7 +721,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': '111111111113',
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '3.2',
     'via_device_id': None,
   })
 # ---

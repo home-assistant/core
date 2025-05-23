@@ -18,7 +18,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CONF_HOSTNAME,
@@ -68,7 +68,7 @@ async def async_validate_hostname(
         result = False
         with contextlib.suppress(DNSError):
             result = bool(
-                await aiodns.DNSResolver(
+                await aiodns.DNSResolver(  # type: ignore[call-overload]
                     nameservers=[resolver], udp_port=port, tcp_port=port
                 ).query(hostname, qtype)
             )

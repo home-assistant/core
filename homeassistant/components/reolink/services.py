@@ -40,7 +40,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             if (
                 config_entry is None
                 or device is None
-                or config_entry.state == ConfigEntryState.NOT_LOADED
+                or config_entry.state != ConfigEntryState.LOADED
             ):
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,

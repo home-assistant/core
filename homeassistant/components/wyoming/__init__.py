@@ -8,14 +8,18 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from .const import ATTR_SPEAKER, DOMAIN
 from .data import WyomingService
 from .devices import SatelliteDevice
 from .models import DomainDataItem
+from .websocket_api import async_register_websocket_api
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 SATELLITE_PLATFORMS = [
     Platform.ASSIST_SATELLITE,
@@ -28,9 +32,17 @@ SATELLITE_PLATFORMS = [
 __all__ = [
     "ATTR_SPEAKER",
     "DOMAIN",
+    "async_setup",
     "async_setup_entry",
     "async_unload_entry",
 ]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Wyoming integration."""
+    async_register_websocket_api(hass)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

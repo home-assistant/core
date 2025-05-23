@@ -10,7 +10,6 @@ from google.oauth2.credentials import Credentials
 import voluptuous as vol
 
 from homeassistant.components import conversation
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, Platform
 from homeassistant.core import (
     HomeAssistant,
@@ -26,15 +25,11 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_LANGUAGE_CODE,
-    DATA_MEM_STORAGE,
-    DATA_SESSION,
-    DOMAIN,
-    SUPPORTED_LANGUAGE_CODES,
-)
+from .const import CONF_LANGUAGE_CODE, DOMAIN, SUPPORTED_LANGUAGE_CODES
 from .helpers import (
     GoogleAssistantSDKAudioView,
+    GoogleAssistantSDKConfigEntry,
+    GoogleAssistantSDKRuntimeData,
     InMemoryStorage,
     async_send_text_commands,
     best_matching_language_code,
@@ -66,10 +61,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: GoogleAssistantSDKConfigEntry
+) -> bool:
     """Set up Google Assistant SDK from a config entry."""
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {}
-
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
     try:
@@ -82,29 +77,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady from err
-    hass.data[DOMAIN][entry.entry_id][DATA_SESSION] = session
 
     mem_storage = InMemoryStorage(hass)
-    hass.data[DOMAIN][entry.entry_id][DATA_MEM_STORAGE] = mem_storage
     hass.http.register_view(GoogleAssistantSDKAudioView(mem_storage))
 
     await async_setup_service(hass)
 
+    entry.runtime_data = GoogleAssistantSDKRuntimeData(
+        session=session, mem_storage=mem_storage
+    )
     agent = GoogleAssistantConversationAgent(hass, entry)
     conversation.async_set_agent(hass, entry, agent)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: GoogleAssistantSDKConfigEntry
+) -> bool:
     """Unload a config entry."""
-    hass.data[DOMAIN].pop(entry.entry_id)
-    loaded_entries = [
-        entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.state == ConfigEntryState.LOADED
-    ]
-    if len(loaded_entries) == 1:
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
         for service_name in hass.services.async_services_for_domain(DOMAIN):
             hass.services.async_remove(DOMAIN, service_name)
 
@@ -146,7 +138,9 @@ async def async_setup_service(hass: HomeAssistant) -> None:
 class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
     """Google Assistant SDK conversation agent."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: GoogleAssistantSDKConfigEntry
+    ) -> None:
         """Initialize the agent."""
         self.hass = hass
         self.entry = entry
@@ -166,7 +160,7 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
         if self.session:
             session = self.session
         else:
-            session = self.hass.data[DOMAIN][self.entry.entry_id][DATA_SESSION]
+            session = self.entry.runtime_data.session
             self.session = session
         if not session.valid_token:
             await session.async_ensure_token_valid()

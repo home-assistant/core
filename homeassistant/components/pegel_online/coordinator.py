@@ -4,6 +4,7 @@ import logging
 
 from aiopegelonline import CONNECT_ERRORS, PegelOnline, Station, StationMeasurements
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -11,12 +12,20 @@ from .const import DOMAIN, MIN_TIME_BETWEEN_UPDATES
 
 _LOGGER = logging.getLogger(__name__)
 
+type PegelOnlineConfigEntry = ConfigEntry[PegelOnlineDataUpdateCoordinator]
+
 
 class PegelOnlineDataUpdateCoordinator(DataUpdateCoordinator[StationMeasurements]):
     """DataUpdateCoordinator for the pegel_online integration."""
 
+    config_entry: PegelOnlineConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, name: str, api: PegelOnline, station: Station
+        self,
+        hass: HomeAssistant,
+        config_entry: PegelOnlineConfigEntry,
+        api: PegelOnline,
+        station: Station,
     ) -> None:
         """Initialize the PegelOnlineDataUpdateCoordinator."""
         self.api = api
@@ -24,7 +33,8 @@ class PegelOnlineDataUpdateCoordinator(DataUpdateCoordinator[StationMeasurements
         super().__init__(
             hass,
             _LOGGER,
-            name=name,
+            config_entry=config_entry,
+            name=config_entry.title,
             update_interval=MIN_TIME_BETWEEN_UPDATES,
         )
 

@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from typing import cast
 
-from python_picnic_api import PicnicAPI
+from python_picnic_api2 import PicnicAPI
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
     ATTR_AMOUNT,

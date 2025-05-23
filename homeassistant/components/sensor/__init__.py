@@ -12,7 +12,7 @@ import logging
 from math import ceil, floor, isfinite, log10
 from typing import Any, Final, Self, cast, final, override
 
-from propcache import cached_property
+from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
@@ -44,6 +44,7 @@ from .const import (  # noqa: F401
     DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     NON_NUMERIC_DEVICE_CLASSES,
+    STATE_CLASS_UNITS,
     STATE_CLASSES,
     STATE_CLASSES_SCHEMA,
     UNIT_CONVERTERS,
@@ -675,22 +676,13 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ):
                 # Deduce the precision by finding the decimal point, if any
                 value_s = str(value)
-                precision = (
-                    len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
-                )
-
                 # Scale the precision when converting to a larger unit
                 # For example 1.1 Wh should be rendered as 0.0011 kWh, not 0.0 kWh
-                ratio_log = max(
-                    0,
-                    log10(
-                        converter.get_unit_ratio(
-                            native_unit_of_measurement, unit_of_measurement
-                        )
-                    ),
+                precision = (
+                    len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
+                ) + converter.get_unit_floored_log_ratio(
+                    native_unit_of_measurement, unit_of_measurement
                 )
-                precision = precision + floor(ratio_log)
-
                 value = f"{converted_numerical_value:z.{precision}f}"
             else:
                 value = converted_numerical_value
@@ -720,6 +712,18 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 device_class,
                 [str(unit) if unit else "no unit of measurement" for unit in units],
                 report_issue,
+            )
+
+        # Validate unit of measurement used for sensors with a state class
+        if (
+            state_class
+            and (units := STATE_CLASS_UNITS.get(state_class)) is not None
+            and native_unit_of_measurement not in units
+        ):
+            raise ValueError(
+                f"Sensor {self.entity_id} ({type(self)}) is using native unit of "
+                f"measurement '{native_unit_of_measurement}' which is not a valid unit "
+                f"for the state class ('{state_class}') it is using; expected one of {units};"
             )
 
         return value

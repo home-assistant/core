@@ -53,6 +53,13 @@ REMOTE_SERVICE_EXC_TRANSLATION = (
     "Error executing remote service on vehicle. HTTPStatusError: 502 Bad Gateway"
 )
 
+BIMMER_CONNECTED_LOGIN_PATCH = (
+    "homeassistant.components.bmw_connected_drive.config_flow.MyBMWAuthentication.login"
+)
+BIMMER_CONNECTED_VEHICLE_PATCH = (
+    "homeassistant.components.bmw_connected_drive.coordinator.MyBMWAccount.get_vehicles"
+)
+
 
 async def setup_mocked_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Mock a fully setup config entry and all components based on fixtures."""

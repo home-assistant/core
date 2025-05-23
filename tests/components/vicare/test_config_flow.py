@@ -9,12 +9,12 @@ from PyViCare.PyViCareUtils import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import dhcp
 from homeassistant.components.vicare.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import MOCK_MAC, MODULE
 
@@ -28,7 +28,7 @@ VALID_CONFIG = {
     CONF_CLIENT_ID: "5678",
 }
 
-DHCP_INFO = dhcp.DhcpServiceInfo(
+DHCP_INFO = DhcpServiceInfo(
     ip="1.1.1.1",
     hostname="mock_hostname",
     macaddress=MOCK_MAC.lower().replace(":", ""),

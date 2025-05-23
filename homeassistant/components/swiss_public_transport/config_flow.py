@@ -11,8 +11,8 @@ from opendata_transport.exceptions import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
     DurationSelector,
     SelectSelector,
@@ -190,7 +190,7 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
             return "cannot_connect"
         except OpendataTransportError:
             return "bad_config"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unknown error")
             return "unknown"
         return None

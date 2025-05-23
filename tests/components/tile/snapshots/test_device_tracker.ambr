@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -37,7 +38,7 @@
     'attributes': ReadOnlyDict({
       'altitude': 0,
       'friendly_name': 'Wallet',
-      'gps_accuracy': 1,
+      'gps_accuracy': 13.496111,
       'is_lost': False,
       'last_lost_timestamp': datetime.datetime(1970, 1, 1, 3, 0, tzinfo=datetime.timezone.utc),
       'last_timestamp': datetime.datetime(2020, 8, 13, 0, 55, 26, tzinfo=datetime.timezone.utc),

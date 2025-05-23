@@ -7,18 +7,18 @@ from typing import Any
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import VersionConfigEntry
 from .const import CONF_SOURCE, DEFAULT_NAME
+from .coordinator import VersionConfigEntry
 from .entity import VersionEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: VersionConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up version sensors."""
     coordinator = entry.runtime_data

@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_URL, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util.hass_dict import HassKey
 
-from .const import CONF_MAX_ENTRIES, DOMAIN
-from .coordinator import FeedReaderCoordinator, StoredData
-
-type FeedReaderConfigEntry = ConfigEntry[FeedReaderCoordinator]
+from .const import DOMAIN
+from .coordinator import FeedReaderConfigEntry, FeedReaderCoordinator, StoredData
 
 CONF_URLS = "urls"
 
@@ -23,12 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) -
     if not storage.is_initialized:
         await storage.async_setup()
 
-    coordinator = FeedReaderCoordinator(
-        hass,
-        entry.data[CONF_URL],
-        entry.options[CONF_MAX_ENTRIES],
-        storage,
-    )
+    coordinator = FeedReaderCoordinator(hass, entry, storage)
 
     await coordinator.async_setup()
 
@@ -53,7 +45,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) 
     # if this is the last entry, remove the storage
     if len(entries) == 1:
         hass.data.pop(MY_KEY)
-    return await hass.config_entries.async_unload_platforms(entry, Platform.EVENT)
+    return await hass.config_entries.async_unload_platforms(entry, [Platform.EVENT])
 
 
 async def _async_update_listener(

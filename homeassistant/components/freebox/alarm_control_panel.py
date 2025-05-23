@@ -7,13 +7,12 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, FreeboxHomeCategory
+from .const import FreeboxHomeCategory
 from .entity import FreeboxHomeEntity
-from .router import FreeboxRouter
+from .router import FreeboxConfigEntry, FreeboxRouter
 
 FREEBOX_TO_STATUS = {
     "alarm1_arming": AlarmControlPanelState.ARMING,
@@ -28,10 +27,12 @@ FREEBOX_TO_STATUS = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FreeboxConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up alarm panel."""
-    router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
+    router = entry.runtime_data
 
     async_add_entities(
         (

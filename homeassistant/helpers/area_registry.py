@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
+from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
@@ -19,6 +20,7 @@ from .json import json_bytes, json_fragment
 from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryEntry,
     NormalizedNameBaseRegistryItems,
+    normalize_name,
 )
 from .registry import BaseRegistry, RegistryIndexType
 from .singleton import singleton
@@ -27,9 +29,9 @@ from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
     # mypy cannot workout _cache Protocol with dataclasses
-    from propcache import cached_property as under_cached_property
+    from propcache.api import cached_property as under_cached_property
 else:
-    from propcache import under_cached_property
+    from propcache.api import under_cached_property
 
 
 DATA_REGISTRY: HassKey[AreaRegistry] = HassKey("area_registry")
@@ -38,7 +40,7 @@ EVENT_AREA_REGISTRY_UPDATED: EventType[EventAreaRegistryUpdatedData] = EventType
 )
 STORAGE_KEY = "core.area_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 7
+STORAGE_VERSION_MINOR = 8
 
 
 class _AreaStoreData(TypedDict):
@@ -46,11 +48,13 @@ class _AreaStoreData(TypedDict):
 
     aliases: list[str]
     floor_id: str | None
+    humidity_entity_id: str | None
     icon: str | None
     id: str
     labels: list[str]
     name: str
     picture: str | None
+    temperature_entity_id: str | None
     created_at: str
     modified_at: str
 
@@ -74,10 +78,12 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
 
     aliases: set[str]
     floor_id: str | None
+    humidity_entity_id: str | None
     icon: str | None
     id: str
     labels: set[str] = field(default_factory=set)
     picture: str | None
+    temperature_entity_id: str | None
     _cache: dict[str, Any] = field(default_factory=dict, compare=False, init=False)
 
     @under_cached_property
@@ -89,10 +95,12 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
                     "aliases": list(self.aliases),
                     "area_id": self.id,
                     "floor_id": self.floor_id,
+                    "humidity_entity_id": self.humidity_entity_id,
                     "icon": self.icon,
                     "labels": list(self.labels),
                     "name": self.name,
                     "picture": self.picture,
+                    "temperature_entity_id": self.temperature_entity_id,
                     "created_at": self.created_at.timestamp(),
                     "modified_at": self.modified_at.timestamp(),
                 }
@@ -138,10 +146,16 @@ class AreaRegistryStore(Store[AreasRegistryStoreData]):
                     area["labels"] = []
 
             if old_minor_version < 7:
-                # Version 1.7 adds created_at and modiefied_at
+                # Version 1.7 adds created_at and modified_at
                 created_at = utc_from_timestamp(0).isoformat()
                 for area in old_data["areas"]:
                     area["created_at"] = area["modified_at"] = created_at
+
+            if old_minor_version < 8:
+                # Version 1.8 adds humidity_entity_id and temperature_entity_id
+                for area in old_data["areas"]:
+                    area["humidity_entity_id"] = None
+                    area["temperature_entity_id"] = None
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -156,6 +170,7 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
         super().__init__()
         self._labels_index: RegistryIndexType = defaultdict(dict)
         self._floors_index: RegistryIndexType = defaultdict(dict)
+        self._aliases_index: RegistryIndexType = defaultdict(dict)
 
     def _index_entry(self, key: str, entry: AreaEntry) -> None:
         """Index an entry."""
@@ -164,6 +179,9 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
             self._floors_index[entry.floor_id][key] = True
         for label in entry.labels:
             self._labels_index[label][key] = True
+        for alias in entry.aliases:
+            normalized_alias = normalize_name(alias)
+            self._aliases_index[normalized_alias][key] = True
 
     def _unindex_entry(
         self, key: str, replacement_entry: AreaEntry | None = None
@@ -171,6 +189,10 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
         # always call base class before other indices
         super()._unindex_entry(key, replacement_entry)
         entry = self.data[key]
+        if aliases := entry.aliases:
+            for alias in aliases:
+                normalized_alias = normalize_name(alias)
+                self._unindex_entry_value(key, normalized_alias, self._aliases_index)
         if labels := entry.labels:
             for label in labels:
                 self._unindex_entry_value(key, label, self._labels_index)
@@ -186,6 +208,12 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
         """Get areas for floor."""
         data = self.data
         return [data[key] for key in self._floors_index.get(floor, ())]
+
+    def get_areas_for_alias(self, alias: str) -> list[AreaEntry]:
+        """Get areas for alias."""
+        data = self.data
+        normalized_alias = normalize_name(alias)
+        return [data[key] for key in self._aliases_index.get(normalized_alias, ())]
 
 
 class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
@@ -220,6 +248,11 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         return self.areas.get_by_name(name)
 
     @callback
+    def async_get_areas_by_alias(self, alias: str) -> list[AreaEntry]:
+        """Get areas by alias."""
+        return self.areas.get_areas_for_alias(alias)
+
+    @callback
     def async_list_areas(self) -> Iterable[AreaEntry]:
         """Get all areas."""
         return self.areas.values()
@@ -242,11 +275,14 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         *,
         aliases: set[str] | None = None,
         floor_id: str | None = None,
+        humidity_entity_id: str | None = None,
         icon: str | None = None,
         labels: set[str] | None = None,
         picture: str | None = None,
+        temperature_entity_id: str | None = None,
     ) -> AreaEntry:
         """Create a new area."""
+
         self.hass.verify_event_loop_thread("area_registry.async_create")
 
         if area := self.async_get_area_by_name(name):
@@ -254,14 +290,22 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
                 f"The name {name} ({area.normalized_name}) is already in use"
             )
 
+        if humidity_entity_id is not None:
+            _validate_humidity_entity(self.hass, humidity_entity_id)
+
+        if temperature_entity_id is not None:
+            _validate_temperature_entity(self.hass, temperature_entity_id)
+
         area = AreaEntry(
             aliases=aliases or set(),
             floor_id=floor_id,
+            humidity_entity_id=humidity_entity_id,
             icon=icon,
             id=self._generate_id(name),
             labels=labels or set(),
             name=name,
             picture=picture,
+            temperature_entity_id=temperature_entity_id,
         )
         area_id = area.id
         self.areas[area_id] = area
@@ -298,20 +342,24 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         *,
         aliases: set[str] | UndefinedType = UNDEFINED,
         floor_id: str | None | UndefinedType = UNDEFINED,
+        humidity_entity_id: str | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
         labels: set[str] | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
         picture: str | None | UndefinedType = UNDEFINED,
+        temperature_entity_id: str | None | UndefinedType = UNDEFINED,
     ) -> AreaEntry:
         """Update name of area."""
         updated = self._async_update(
             area_id,
             aliases=aliases,
             floor_id=floor_id,
+            humidity_entity_id=humidity_entity_id,
             icon=icon,
             labels=labels,
             name=name,
             picture=picture,
+            temperature_entity_id=temperature_entity_id,
         )
         # Since updated may be the old or the new and we always fire
         # an event even if nothing has changed we cannot use async_fire_internal
@@ -330,10 +378,12 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         *,
         aliases: set[str] | UndefinedType = UNDEFINED,
         floor_id: str | None | UndefinedType = UNDEFINED,
+        humidity_entity_id: str | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
         labels: set[str] | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
         picture: str | None | UndefinedType = UNDEFINED,
+        temperature_entity_id: str | None | UndefinedType = UNDEFINED,
     ) -> AreaEntry:
         """Update name of area."""
         old = self.areas[area_id]
@@ -342,13 +392,21 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             attr_name: value
             for attr_name, value in (
                 ("aliases", aliases),
+                ("floor_id", floor_id),
+                ("humidity_entity_id", humidity_entity_id),
                 ("icon", icon),
                 ("labels", labels),
                 ("picture", picture),
-                ("floor_id", floor_id),
+                ("temperature_entity_id", temperature_entity_id),
             )
             if value is not UNDEFINED and value != getattr(old, attr_name)
         }
+
+        if "humidity_entity_id" in new_values and humidity_entity_id is not None:
+            _validate_humidity_entity(self.hass, new_values["humidity_entity_id"])
+
+        if "temperature_entity_id" in new_values and temperature_entity_id is not None:
+            _validate_temperature_entity(self.hass, new_values["temperature_entity_id"])
 
         if name is not UNDEFINED and name != old.name:
             new_values["name"] = name
@@ -378,11 +436,13 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
                 areas[area["id"]] = AreaEntry(
                     aliases=set(area["aliases"]),
                     floor_id=area["floor_id"],
+                    humidity_entity_id=area["humidity_entity_id"],
                     icon=area["icon"],
                     id=area["id"],
                     labels=set(area["labels"]),
                     name=area["name"],
                     picture=area["picture"],
+                    temperature_entity_id=area["temperature_entity_id"],
                     created_at=datetime.fromisoformat(area["created_at"]),
                     modified_at=datetime.fromisoformat(area["modified_at"]),
                 )
@@ -398,11 +458,13 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
                 {
                     "aliases": list(entry.aliases),
                     "floor_id": entry.floor_id,
+                    "humidity_entity_id": entry.humidity_entity_id,
                     "icon": entry.icon,
                     "id": entry.id,
                     "labels": list(entry.labels),
                     "name": entry.name,
                     "picture": entry.picture,
+                    "temperature_entity_id": entry.temperature_entity_id,
                     "created_at": entry.created_at.isoformat(),
                     "modified_at": entry.modified_at.isoformat(),
                 }
@@ -477,3 +539,33 @@ def async_entries_for_floor(registry: AreaRegistry, floor_id: str) -> list[AreaE
 def async_entries_for_label(registry: AreaRegistry, label_id: str) -> list[AreaEntry]:
     """Return entries that match a label."""
     return registry.areas.get_areas_for_label(label_id)
+
+
+def _validate_temperature_entity(hass: HomeAssistant, entity_id: str) -> None:
+    """Validate temperature entity."""
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.components.sensor import SensorDeviceClass
+
+    if not (state := hass.states.get(entity_id)):
+        raise ValueError(f"Entity {entity_id} does not exist")
+
+    if (
+        state.domain != "sensor"
+        or state.attributes.get(ATTR_DEVICE_CLASS) != SensorDeviceClass.TEMPERATURE
+    ):
+        raise ValueError(f"Entity {entity_id} is not a temperature sensor")
+
+
+def _validate_humidity_entity(hass: HomeAssistant, entity_id: str) -> None:
+    """Validate humidity entity."""
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.components.sensor import SensorDeviceClass
+
+    if not (state := hass.states.get(entity_id)):
+        raise ValueError(f"Entity {entity_id} does not exist")
+
+    if (
+        state.domain != "sensor"
+        or state.attributes.get(ATTR_DEVICE_CLASS) != SensorDeviceClass.HUMIDITY
+    ):
+        raise ValueError(f"Entity {entity_id} is not a humidity sensor")

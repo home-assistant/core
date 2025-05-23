@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -22,19 +23,14 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_platform,
-    entity_registry as er,
-)
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from . import LinkPlayConfigEntry, LinkPlayData
-from .const import CONTROLLER_KEY, DOMAIN
+from . import SHARED_DATA, LinkPlayConfigEntry
+from .const import DOMAIN
 from .entity import LinkPlayBaseEntity, exception_wrap
 
 _LOGGER = logging.getLogger(__name__)
@@ -86,15 +82,9 @@ REPEAT_MAP: dict[LoopMode, RepeatMode] = {
 
 REPEAT_MAP_INV: dict[RepeatMode, LoopMode] = {v: k for k, v in REPEAT_MAP.items()}
 
-EQUALIZER_MAP: dict[EqualizerMode, str] = {
-    EqualizerMode.NONE: "None",
-    EqualizerMode.CLASSIC: "Classic",
-    EqualizerMode.POP: "Pop",
-    EqualizerMode.JAZZ: "Jazz",
-    EqualizerMode.VOCAL: "Vocal",
+EQUALIZER_MAP_INV: dict[str, EqualizerMode] = {
+    mode.value: mode for mode in EqualizerMode
 }
-
-EQUALIZER_MAP_INV: dict[str, EqualizerMode] = {v: k for k, v in EQUALIZER_MAP.items()}
 
 DEFAULT_FEATURES: MediaPlayerEntityFeature = (
     MediaPlayerEntityFeature.PLAY
@@ -125,11 +115,15 @@ SERVICE_PLAY_PRESET_SCHEMA = cv.make_entity_service_schema(
     }
 )
 
+RETRY_POLL_MAXIMUM = 3
+SCAN_INTERVAL = timedelta(seconds=5)
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LinkPlayConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a media player from a config entry."""
 
@@ -146,7 +140,6 @@ async def async_setup_entry(
 class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
     """Representation of a LinkPlay media player."""
 
-    _attr_sound_mode_list = list(EQUALIZER_MAP.values())
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _attr_media_content_type = MediaType.MUSIC
     _attr_name = None
@@ -156,19 +149,33 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
 
         super().__init__(bridge)
         self._attr_unique_id = bridge.device.uuid
+        self._retry_count = 0
 
         self._attr_source_list = [
             SOURCE_MAP[playing_mode] for playing_mode in bridge.device.playmode_support
         ]
+        self._attr_sound_mode_list = [
+            mode.value for mode in bridge.player.available_equalizer_modes
+        ]
+
+    async def async_added_to_hass(self) -> None:
+        """Handle common setup when added to hass."""
+        await super().async_added_to_hass()
+        self.hass.data[DOMAIN][SHARED_DATA].entity_to_bridge[self.entity_id] = (
+            self._bridge.device.uuid
+        )
 
     @exception_wrap
     async def async_update(self) -> None:
         """Update the state of the media player."""
         try:
             await self._bridge.player.update_status()
+            self._retry_count = 0
             self._update_properties()
         except LinkPlayRequestException:
-            self._attr_available = False
+            self._retry_count += 1
+            if self._retry_count >= RETRY_POLL_MAXIMUM:
+                self._attr_available = False
 
     @exception_wrap
     async def async_select_source(self, source: str) -> None:
@@ -271,62 +278,63 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
 
-        controller: LinkPlayController = self.hass.data[DOMAIN][CONTROLLER_KEY]
+        controller: LinkPlayController = self.hass.data[DOMAIN][SHARED_DATA].controller
         multiroom = self._bridge.multiroom
         if multiroom is None:
             multiroom = LinkPlayMultiroom(self._bridge)
 
         for group_member in group_members:
-            bridge = self._get_linkplay_bridge(group_member)
+            bridge = await self._get_linkplay_bridge(group_member)
             if bridge:
                 await multiroom.add_follower(bridge)
 
         await controller.discover_multirooms()
 
-    def _get_linkplay_bridge(self, entity_id: str) -> LinkPlayBridge:
+    async def _get_linkplay_bridge(self, entity_id: str) -> LinkPlayBridge:
         """Get linkplay bridge from entity_id."""
 
-        entity_registry = er.async_get(self.hass)
+        shared_data = self.hass.data[DOMAIN][SHARED_DATA]
+        controller = shared_data.controller
+        bridge_uuid = shared_data.entity_to_bridge.get(entity_id, None)
+        bridge = await controller.find_bridge(bridge_uuid)
 
-        # Check for valid linkplay media_player entity
-        entity_entry = entity_registry.async_get(entity_id)
-
-        if (
-            entity_entry is None
-            or entity_entry.domain != Platform.MEDIA_PLAYER
-            or entity_entry.platform != DOMAIN
-            or entity_entry.config_entry_id is None
-        ):
+        if bridge is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_grouping_entity",
                 translation_placeholders={"entity_id": entity_id},
             )
 
-        config_entry = self.hass.config_entries.async_get_entry(
-            entity_entry.config_entry_id
-        )
-        assert config_entry
-
-        # Return bridge
-        data: LinkPlayData = config_entry.runtime_data
-        return data.bridge
+        return bridge
 
     @property
     def group_members(self) -> list[str]:
         """List of players which are grouped together."""
         multiroom = self._bridge.multiroom
-        if multiroom is not None:
-            return [multiroom.leader.device.uuid] + [
-                follower.device.uuid for follower in multiroom.followers
-            ]
+        if multiroom is None:
+            return []
 
-        return []
+        shared_data = self.hass.data[DOMAIN][SHARED_DATA]
+
+        return [
+            entity_id
+            for entity_id, bridge in shared_data.entity_to_bridge.items()
+            if bridge
+            in [multiroom.leader.device.uuid]
+            + [follower.device.uuid for follower in multiroom.followers]
+        ]
+
+    @property
+    def media_image_url(self) -> str | None:
+        """Image url of playing media."""
+        if self._bridge.player.status in [PlayingStatus.PLAYING, PlayingStatus.PAUSED]:
+            return str(self._bridge.player.album_art)
+        return None
 
     @exception_wrap
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
-        controller: LinkPlayController = self.hass.data[DOMAIN][CONTROLLER_KEY]
+        controller: LinkPlayController = self.hass.data[DOMAIN][SHARED_DATA].controller
 
         multiroom = self._bridge.multiroom
         if multiroom is not None:
@@ -342,7 +350,7 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         self._attr_is_volume_muted = self._bridge.player.muted
         self._attr_repeat = REPEAT_MAP[self._bridge.player.loop_mode]
         self._attr_shuffle = self._bridge.player.loop_mode == LoopMode.RANDOM_PLAYBACK
-        self._attr_sound_mode = EQUALIZER_MAP[self._bridge.player.equalizer_mode]
+        self._attr_sound_mode = self._bridge.player.equalizer_mode.value
         self._attr_supported_features = DEFAULT_FEATURES
 
         if self._bridge.player.status == PlayingStatus.PLAYING:

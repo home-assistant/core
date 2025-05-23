@@ -9,13 +9,14 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 
-from . import HomeWizardConfigEntry
+from .coordinator import HomeWizardConfigEntry
 
 TO_REDACT = {
     CONF_IP_ADDRESS,
     "gas_unique_id",
     "id",
     "serial",
+    "token",
     "unique_id",
     "unique_meter_id",
     "wifi_ssid",

@@ -1,11 +1,14 @@
 """Support for PlayStation 4 consoles."""
 
+from __future__ import annotations
+
+from dataclasses import dataclass
 import logging
 import os
+from typing import TYPE_CHECKING
 
-from pyps4_2ndscreen.ddp import async_create_ddp_endpoint
+from pyps4_2ndscreen.ddp import DDPProtocol, async_create_ddp_endpoint
 from pyps4_2ndscreen.media_art import COUNTRIES
-import voluptuous as vol
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.media_player import (
@@ -14,66 +17,48 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_COMMAND,
-    ATTR_ENTITY_ID,
-    ATTR_LOCKED,
-    CONF_REGION,
-    CONF_TOKEN,
-    Platform,
-)
-from homeassistant.core import HomeAssistant, ServiceCall, split_entity_id
+from homeassistant.const import ATTR_LOCKED, CONF_REGION, CONF_TOKEN, Platform
+from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import location
+from homeassistant.util import location as location_util
 from homeassistant.util.json import JsonObjectType, load_json_object
 
 from .config_flow import PlayStation4FlowHandler  # noqa: F401
-from .const import (
-    ATTR_MEDIA_IMAGE_URL,
-    COMMANDS,
-    COUNTRYCODE_NAMES,
-    DOMAIN,
-    GAMES_FILE,
-    PS4_DATA,
-)
+from .const import ATTR_MEDIA_IMAGE_URL, COUNTRYCODE_NAMES, DOMAIN, GAMES_FILE, PS4_DATA
+from .services import register_services
+
+if TYPE_CHECKING:
+    from .media_player import PS4Device
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_COMMAND = "send_command"
-
-PS4_COMMAND_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_COMMAND): vol.In(list(COMMANDS)),
-    }
-)
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
+@dataclass
 class PS4Data:
     """Init Data Class."""
 
-    def __init__(self):
-        """Init Class."""
-        self.devices = []
-        self.protocol = None
+    devices: list[PS4Device]
+    protocol: DDPProtocol
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the PS4 Component."""
-    hass.data[PS4_DATA] = PS4Data()
-
     transport, protocol = await async_create_ddp_endpoint()
-    hass.data[PS4_DATA].protocol = protocol
+    hass.data[PS4_DATA] = PS4Data(
+        devices=[],
+        protocol=protocol,
+    )
     _LOGGER.debug("PS4 DDP endpoint created: %s, %s", transport, protocol)
-    service_handle(hass)
+    register_services(hass)
     return True
 
 
@@ -103,7 +88,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Migrate Version 1 -> Version 2: New region codes.
     if version == 1:
-        loc = await location.async_detect_location_info(async_get_clientsession(hass))
+        loc = await location_util.async_detect_location_info(
+            async_get_clientsession(hass)
+        )
         if loc:
             country = COUNTRYCODE_NAMES.get(loc.country_code)
             if country in COUNTRIES:
@@ -214,19 +201,3 @@ def _reformat_data(hass: HomeAssistant, games: dict, unique_id: str) -> dict:
     if data_reformatted:
         save_games(hass, games, unique_id)
     return games
-
-
-def service_handle(hass: HomeAssistant):
-    """Handle for services."""
-
-    async def async_service_command(call: ServiceCall) -> None:
-        """Service for sending commands."""
-        entity_ids = call.data[ATTR_ENTITY_ID]
-        command = call.data[ATTR_COMMAND]
-        for device in hass.data[PS4_DATA].devices:
-            if device.entity_id in entity_ids:
-                await device.async_send_command(command)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_COMMAND, async_service_command, schema=PS4_COMMAND_SCHEMA
-    )

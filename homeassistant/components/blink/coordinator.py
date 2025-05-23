@@ -23,12 +23,17 @@ type BlinkConfigEntry = ConfigEntry[BlinkUpdateCoordinator]
 class BlinkUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """BlinkUpdateCoordinator - In charge of downloading the data for a site."""
 
-    def __init__(self, hass: HomeAssistant, api: Blink) -> None:
+    config_entry: BlinkConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: BlinkConfigEntry, api: Blink
+    ) -> None:
         """Initialize the data service."""
         self.api = api
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )

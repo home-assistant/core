@@ -31,7 +31,7 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.util.network import is_ip_address
 
 from . import async_last_update_was_successful
-from .const import DOMAIN
+from .const import CONFIG_ENTRY_COOKIE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -257,8 +257,10 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
                 {CONF_IP_ADDRESS: reauth_entry.data[CONF_IP_ADDRESS], **user_input}
             )
             if not errors:
+                # We have a new valid connection, old cookie is no longer valid
+                user_input[CONFIG_ENTRY_COOKIE] = None
                 return self.async_update_reload_and_abort(
-                    reauth_entry, data_updates=user_input
+                    reauth_entry, data_updates={**user_input, CONFIG_ENTRY_COOKIE: None}
                 )
 
         self.context["title_placeholders"] = {
