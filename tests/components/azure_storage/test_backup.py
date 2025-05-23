@@ -6,7 +6,7 @@ from collections.abc import AsyncGenerator
 from io import StringIO
 from unittest.mock import ANY, Mock, patch
 
-from azure.core.exceptions import HttpResponseError
+from azure.core.exceptions import AzureError, HttpResponseError, ServiceRequestError
 from azure.storage.blob import BlobProperties
 import pytest
 
@@ -276,14 +276,33 @@ async def test_agents_error_on_download_not_found(
     assert mock_client.download_blob.call_count == 0
 
 
+@pytest.mark.parametrize(
+    ("error", "message"),
+    [
+        (
+            HttpResponseError("http error"),
+            "Error during backup operation in async_delete_backup: Status None, message: http error",
+        ),
+        (
+            ServiceRequestError("timeout"),
+            "Timeout during backup operation in async_delete_backup",
+        ),
+        (
+            AzureError("generic error"),
+            "Error during backup operation in async_delete_backup: generic error",
+        ),
+    ],
+)
 async def test_error_during_delete(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    error: Exception,
+    message: str,
 ) -> None:
     """Test the error wrapper."""
-    mock_client.delete_blob.side_effect = HttpResponseError("Failed to delete backup")
+    mock_client.delete_blob.side_effect = error
 
     client = await hass_ws_client(hass)
 
@@ -297,12 +316,7 @@ async def test_error_during_delete(
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {
-            f"{DOMAIN}.{mock_config_entry.entry_id}": (
-                "Error during backup operation in async_delete_backup: "
-                "Status None, message: Failed to delete backup"
-            )
-        }
+        "agent_errors": {f"{DOMAIN}.{mock_config_entry.entry_id}": message}
     }
 
 

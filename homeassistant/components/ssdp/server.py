@@ -170,11 +170,12 @@ class Server:
         for source_ip in await async_build_source_set(self.hass):
             source_ip_str = str(source_ip)
             if source_ip.version == 6:
+                assert source_ip.scope_id is not None
                 source_tuple: AddressTupleVXType = (
                     source_ip_str,
                     0,
                     0,
-                    int(getattr(source_ip, "scope_id")),
+                    int(source_ip.scope_id),
                 )
             else:
                 source_tuple = (source_ip_str, 0)
