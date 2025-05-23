@@ -453,7 +453,7 @@ anova-wifi==0.17.0
 anthemav==1.4.1
 
 # homeassistant.components.anthropic
-anthropic==0.47.2
+anthropic==0.52.0
 
 # homeassistant.components.mcp_server
 anyio==4.9.0
@@ -653,7 +653,7 @@ dbus-fast==2.43.0
 debugpy==1.8.14
 
 # homeassistant.components.ecovacs
-deebot-client==13.2.0
+deebot-client==13.2.1
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1467,7 +1467,7 @@ py-nextbusnext==2.1.2
 py-nightscout==1.2.2
 
 # homeassistant.components.ecovacs
-py-sucks==0.9.10
+py-sucks==0.9.11
 
 # homeassistant.components.synology_dsm
 py-synologydsm-api==2.7.2
@@ -1612,7 +1612,7 @@ pyevilgenius==2.0.0
 pyezvizapi==1.0.0.7
 
 # homeassistant.components.fibaro
-pyfibaro==0.8.2
+pyfibaro==0.8.3
 
 # homeassistant.components.fido
 pyfido==2.1.2

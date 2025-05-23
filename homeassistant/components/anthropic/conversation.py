@@ -294,6 +294,8 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
         elif isinstance(response, RawMessageDeltaEvent):
             if (usage := response.usage) is not None:
                 chat_log.async_trace(_create_token_stats(input_usage, usage))
+            if response.delta.stop_reason == "refusal":
+                raise HomeAssistantError("Potential policy violation detected")
         elif isinstance(response, RawMessageStopEvent):
             if current_message is not None:
                 messages.append(current_message)

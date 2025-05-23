@@ -59,15 +59,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # concord232 > stevedore > pbr > setuptools
         "pbr": {"setuptools"}
     },
-    "ecovacs": {
-        # py-sucks > pycountry-convert > pytest-cov > pytest
-        "pytest-cov": {"pytest", "wheel"},
-        # py-sucks > pycountry-convert > pytest-mock > pytest
-        "pytest-mock": {"pytest", "wheel"},
-        # py-sucks > pycountry-convert > pytest
-        # py-sucks > pycountry-convert > wheel
-        "pycountry-convert": {"pytest", "wheel"},
-    },
     "efergy": {
         # pyefergy > codecov
         # pyefergy > types-pytz
