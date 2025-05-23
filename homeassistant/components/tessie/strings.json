@@ -112,6 +112,9 @@
       "charge_state_minutes_to_full_charge": {
         "name": "Time to full charge"
       },
+      "charge_state_lifetime_energy_used": {
+        "name": "Lifetime energy used"
+      },
       "drive_state_speed": {
         "name": "Speed"
       },
