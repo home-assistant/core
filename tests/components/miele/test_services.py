@@ -72,7 +72,7 @@ async def test_service_api_errors(
 
     # Test http error
     mock_miele_client.set_program.side_effect = ClientResponseError("TestInfo", "test")
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="'Set program' action failed"):
         await hass.services.async_call(
             DOMAIN,
             "set_program",
@@ -96,7 +96,7 @@ async def test_service_validation_errors(
     device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_APPLIANCE)})
 
     # Test missing program_id
-    with pytest.raises(MultipleInvalid):
+    with pytest.raises(MultipleInvalid, match="required key not provided"):
         await hass.services.async_call(
             DOMAIN,
             "set_program",
@@ -106,7 +106,7 @@ async def test_service_validation_errors(
     mock_miele_client.set_program.assert_not_called()
 
     # Test invalid program_id
-    with pytest.raises(MultipleInvalid):
+    with pytest.raises(MultipleInvalid, match="expected int for dictionary value"):
         await hass.services.async_call(
             DOMAIN,
             "set_program",
@@ -116,7 +116,9 @@ async def test_service_validation_errors(
     mock_miele_client.set_program.assert_not_called()
 
     # Test invalid device
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(
+        ServiceValidationError, match="'Set program' action failed: No device"
+    ):
         await hass.services.async_call(
             DOMAIN,
             "set_program",
