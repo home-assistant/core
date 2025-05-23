@@ -144,7 +144,7 @@ class BaseSelectorConfig(TypedDict, total=False):
     read_only: bool
 
 
-ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
     {
         # Integration that provided the entity
         vol.Optional("integration"): str,
@@ -160,7 +160,7 @@ ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
 )
 
 
-class EntityFilterSelectorConfig(BaseSelectorConfig, total=False):
+class EntityFilterSelectorConfig(TypedDict, total=False):
     """Class to represent a single entity selector config."""
 
     integration: str
@@ -196,7 +196,7 @@ class DeviceFilterSelectorConfig(TypedDict, total=False):
     model_id: str
 
 
-class ActionSelectorConfig(TypedDict):
+class ActionSelectorConfig(BaseSelectorConfig):
     """Class to represent an action selector config."""
 
 
@@ -206,7 +206,7 @@ class ActionSelector(Selector[ActionSelectorConfig]):
 
     selector_type = "action"
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
 
     def __init__(self, config: ActionSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -217,7 +217,7 @@ class ActionSelector(Selector[ActionSelectorConfig]):
         return data
 
 
-class AddonSelectorConfig(TypedDict, total=False):
+class AddonSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent an addon selector config."""
 
     name: str
@@ -230,7 +230,7 @@ class AddonSelector(Selector[AddonSelectorConfig]):
 
     selector_type = "addon"
 
-    CONFIG_SCHEMA = vol.Schema(
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
         {
             vol.Optional("name"): str,
             vol.Optional("slug"): str,
@@ -247,7 +247,7 @@ class AddonSelector(Selector[AddonSelectorConfig]):
         return addon
 
 
-class AreaSelectorConfig(TypedDict, total=False):
+class AreaSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent an area selector config."""
 
     entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
@@ -261,7 +261,7 @@ class AreaSelector(Selector[AreaSelectorConfig]):
 
     selector_type = "area"
 
-    CONFIG_SCHEMA = vol.Schema(
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
         {
             vol.Optional("entity"): vol.All(
                 cv.ensure_list,
@@ -289,7 +289,7 @@ class AreaSelector(Selector[AreaSelectorConfig]):
         return [vol.Schema(str)(val) for val in data]
 
 
-class AssistPipelineSelectorConfig(TypedDict, total=False):
+class AssistPipelineSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent an assist pipeline selector config."""
 
 
@@ -299,7 +299,7 @@ class AssistPipelineSelector(Selector[AssistPipelineSelectorConfig]):
 
     selector_type = "assist_pipeline"
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
 
     def __init__(self, config: AssistPipelineSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -311,7 +311,7 @@ class AssistPipelineSelector(Selector[AssistPipelineSelectorConfig]):
         return pipeline
 
 
-class AttributeSelectorConfig(TypedDict, total=False):
+class AttributeSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent an attribute selector config."""
 
     entity_id: Required[str]
@@ -324,7 +324,7 @@ class AttributeSelector(Selector[AttributeSelectorConfig]):
 
     selector_type = "attribute"
 
-    CONFIG_SCHEMA = vol.Schema(
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
         {
             vol.Required("entity_id"): cv.entity_id,
             # hide_attributes is used to hide attributes in the frontend.
@@ -343,7 +343,7 @@ class AttributeSelector(Selector[AttributeSelectorConfig]):
         return attribute
 
 
-class BackupLocationSelectorConfig(TypedDict, total=False):
+class BackupLocationSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a backup location selector config."""
 
 
@@ -353,7 +353,7 @@ class BackupLocationSelector(Selector[BackupLocationSelectorConfig]):
 
     selector_type = "backup_location"
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
 
     def __init__(self, config: BackupLocationSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -365,7 +365,7 @@ class BackupLocationSelector(Selector[BackupLocationSelectorConfig]):
         return name
 
 
-class BooleanSelectorConfig(TypedDict):
+class BooleanSelectorConfig(BaseSelectorConfig):
     """Class to represent a boolean selector config."""
 
 
@@ -375,7 +375,7 @@ class BooleanSelector(Selector[BooleanSelectorConfig]):
 
     selector_type = "boolean"
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
 
     def __init__(self, config: BooleanSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -387,7 +387,7 @@ class BooleanSelector(Selector[BooleanSelectorConfig]):
         return value
 
 
-class ColorRGBSelectorConfig(TypedDict):
+class ColorRGBSelectorConfig(BaseSelectorConfig):
     """Class to represent a color RGB selector config."""
 
 
@@ -397,7 +397,7 @@ class ColorRGBSelector(Selector[ColorRGBSelectorConfig]):
 
     selector_type = "color_rgb"
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
 
     def __init__(self, config: ColorRGBSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -409,7 +409,7 @@ class ColorRGBSelector(Selector[ColorRGBSelectorConfig]):
         return value
 
 
-class ColorTempSelectorConfig(TypedDict, total=False):
+class ColorTempSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a color temp selector config."""
 
     unit: ColorTempSelectorUnit
@@ -432,7 +432,7 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
 
     selector_type = "color_temp"
 
-    CONFIG_SCHEMA = vol.Schema(
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
         {
             vol.Optional("unit", default=ColorTempSelectorUnit.MIRED): vol.All(
                 vol.Coerce(ColorTempSelectorUnit), lambda val: val.value
@@ -469,7 +469,7 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
         return value
 
 
-class ConditionSelectorConfig(TypedDict):
+class ConditionSelectorConfig(BaseSelectorConfig):
     """Class to represent an condition selector config."""
 
 
@@ -479,7 +479,7 @@ class ConditionSelector(Selector[ConditionSelectorConfig]):
 
     selector_type = "condition"
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
 
     def __init__(self, config: ConditionSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -490,7 +490,7 @@ class ConditionSelector(Selector[ConditionSelectorConfig]):
         return vol.Schema(cv.CONDITIONS_SCHEMA)(data)
 
 
-class ConfigEntrySelectorConfig(TypedDict, total=False):
+class ConfigEntrySelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a config entry selector config."""
 
     integration: str
@@ -502,7 +502,7 @@ class ConfigEntrySelector(Selector[ConfigEntrySelectorConfig]):
 
     selector_type = "config_entry"
 
-    CONFIG_SCHEMA = vol.Schema(
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
         {
             vol.Optional("integration"): str,
         }
@@ -518,7 +518,7 @@ class ConfigEntrySelector(Selector[ConfigEntrySelectorConfig]):
         return config
 
 
-class ConstantSelectorConfig(TypedDict, total=False):
+class ConstantSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a constant selector config."""
 
     label: str
@@ -532,7 +532,7 @@ class ConstantSelector(Selector[ConstantSelectorConfig]):
 
     selector_type = "constant"
 
-    CONFIG_SCHEMA = vol.Schema(
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
         {
             vol.Optional("label"): str,
             vol.Optional("translation_key"): cv.string,
@@ -559,7 +559,7 @@ class QrErrorCorrectionLevel(StrEnum):
     HIGH = "high"
 
 
-class QrCodeSelectorConfig(TypedDict, total=False):
+class QrCodeSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a QR code selector config."""
 
     data: str
@@ -573,7 +573,7 @@ class QrCodeSelector(Selector[QrCodeSelectorConfig]):
 
     selector_type = "qr_code"
 
-    CONFIG_SCHEMA = vol.Schema(
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
         {
             vol.Required("data"): str,
             vol.Optional("scale"): int,
@@ -593,7 +593,7 @@ class QrCodeSelector(Selector[QrCodeSelectorConfig]):
         return self.config["data"]
 
 
-class ConversationAgentSelectorConfig(TypedDict, total=False):
+class ConversationAgentSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a conversation agent selector config."""
 
     language: str
@@ -605,7 +605,7 @@ class ConversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
 
     selector_type = "conversation_agent"
 
-    CONFIG_SCHEMA = vol.Schema(
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
         {
             vol.Optional("language"): str,
         }
@@ -621,7 +621,7 @@ class ConversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
         return agent
 
 
-class CountrySelectorConfig(TypedDict, total=False):
+class CountrySelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a country selector config."""
 
     countries: list[str]
@@ -634,7 +634,7 @@ class CountrySelector(Selector[CountrySelectorConfig]):
 
     selector_type = "country"
 
-    CONFIG_SCHEMA = vol.Schema(
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
         {
             vol.Optional("countries"): [str],
             vol.Optional("no_sort", default=False): cv.boolean,
@@ -655,7 +655,7 @@ class CountrySelector(Selector[CountrySelectorConfig]):
         return country
 
 
-class DateSelectorConfig(TypedDict):
+class DateSelectorConfig(BaseSelectorConfig):
     """Class to represent a date selector config."""
 
 
@@ -665,7 +665,7 @@ class DateSelector(Selector[DateSelectorConfig]):
 
     selector_type = "date"
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
 
     def __init__(self, config: DateSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -677,7 +677,7 @@ class DateSelector(Selector[DateSelectorConfig]):
         return data
 
 
-class DateTimeSelectorConfig(TypedDict):
+class DateTimeSelectorConfig(BaseSelectorConfig):
     """Class to represent a date time selector config."""
 
 
@@ -687,7 +687,7 @@ class DateTimeSelector(Selector[DateTimeSelectorConfig]):
 
     selector_type = "datetime"
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
 
     def __init__(self, config: DateTimeSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -699,7 +699,7 @@ class DateTimeSelector(Selector[DateTimeSelectorConfig]):
         return data
 
 
-class DeviceSelectorConfig(DeviceFilterSelectorConfig, total=False):
+class DeviceSelectorConfig(BaseSelectorConfig, DeviceFilterSelectorConfig, total=False):
     """Class to represent a device selector config."""
 
     entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
@@ -713,7 +713,9 @@ class DeviceSelector(Selector[DeviceSelectorConfig]):
 
     selector_type = "device"
 
-    CONFIG_SCHEMA = DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+        DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA.schema
+    ).extend(
         {
             vol.Optional("multiple", default=False): cv.boolean,
             vol.Optional("filter"): vol.All(
@@ -737,7 +739,7 @@ class DeviceSelector(Selector[DeviceSelectorConfig]):
         return [vol.Schema(str)(val) for val in data]
 
 
-class DurationSelectorConfig(TypedDict, total=False):
+class DurationSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a duration selector config."""
 
     enable_day: bool
@@ -751,7 +753,7 @@ class DurationSelector(Selector[DurationSelectorConfig]):
 
     selector_type = "duration"
 
-    CONFIG_SCHEMA = vol.Schema(
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
         {
             # Enable day field in frontend. A selection with `days` set is allowed
             # even if `enable_day` is not set
@@ -776,7 +778,7 @@ class DurationSelector(Selector[DurationSelectorConfig]):
         return cast(dict[str, float], data)
 
 
-class EntitySelectorConfig(EntityFilterSelectorConfig, total=False):
+class EntitySelectorConfig(BaseSelectorConfig, EntityFilterSelectorConfig, total=False):
     """Class to represent an entity selector config."""
 
     exclude_entities: list[str]
@@ -791,7 +793,9 @@ class EntitySelector(Selector[EntitySelectorConfig]):
 
     selector_type = "entity"
 
-    CONFIG_SCHEMA = ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+        ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA.schema
+    ).extend(
         {
             vol.Optional("exclude_entities"): [str],
             vol.Optional("include_entities"): [str],
@@ -837,7 +841,7 @@ class EntitySelector(Selector[EntitySelectorConfig]):
         return cast(list, vol.Schema([validate])(data))  # Output is a list
 
 
-class FloorSelectorConfig(TypedDict, total=False):
+class FloorSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent an floor selector config."""
 
     entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
@@ -851,7 +855,7 @@ class FloorSelector(Selector[FloorSelectorConfig]):
 
     selector_type = "floor"
 
-    CONFIG_SCHEMA = vol.Schema(
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
         {
             vol.Optional("entity"): vol.All(
                 cv.ensure_list,
@@ -879,7 +883,7 @@ class FloorSelector(Selector[FloorSelectorConfig]):
         return [vol.Schema(str)(val) for val in data]
 
 
-class IconSelectorConfig(TypedDict, total=False):
+class IconSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent an icon selector config."""
 
     placeholder: str
@@ -891,7 +895,7 @@ class IconSelector(Selector[IconSelectorConfig]):
 
     selector_type = "icon"
 
-    CONFIG_SCHEMA = vol.Schema(
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
         {vol.Optional("placeholder"): str}
         # Frontend also has a fallbackPath option, this is not used by core
     )
@@ -906,7 +910,7 @@ class IconSelector(Selector[IconSelectorConfig]):
         return icon
 
 
-class LabelSelectorConfig(TypedDict, total=False):
+class LabelSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a label selector config."""
 
     multiple: bool
@@ -918,7 +922,7 @@ class LabelSelector(Selector[LabelSelectorConfig]):
 
     selector_type = "label"
 
-    CONFIG_SCHEMA = vol.Schema(
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
         {
             vol.Optional("multiple", default=False): cv.boolean,
         }
@@ -938,7 +942,7 @@ class LabelSelector(Selector[LabelSelectorConfig]):
         return [vol.Schema(str)(val) for val in data]
 
 
-class LanguageSelectorConfig(TypedDict, total=False):
+class LanguageSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent an language selector config."""
 
     languages: list[str]
@@ -952,7 +956,7 @@ class LanguageSelector(Selector[LanguageSelectorConfig]):
 
     selector_type = "language"
 
-    CONFIG_SCHEMA = vol.Schema(
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
         {
             vol.Optional("languages"): [str],
             vol.Optional("native_name", default=False): cv.boolean,
@@ -972,7 +976,7 @@ class LanguageSelector(Selector[LanguageSelectorConfig]):
         return language
 
 
-class LocationSelectorConfig(TypedDict, total=False):
+class LocationSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a location selector config."""
 
     radius: bool
@@ -985,7 +989,7 @@ class LocationSelector(Selector[LocationSelectorConfig]):
 
     selector_type = "location"
 
-    CONFIG_SCHEMA = vol.Schema(
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
         {vol.Optional("radius"): bool, vol.Optional("icon"): str}
     )
     DATA_SCHEMA = vol.Schema(
@@ -1006,7 +1010,7 @@ class LocationSelector(Selector[LocationSelectorConfig]):
         return location
 
 
-class MediaSelectorConfig(TypedDict):
+class MediaSelectorConfig(BaseSelectorConfig):
     """Class to represent a media selector config."""
 
 
@@ -1016,7 +1020,7 @@ class MediaSelector(Selector[MediaSelectorConfig]):
 
     selector_type = "media"
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
     DATA_SCHEMA = vol.Schema(
         {
             # Although marked as optional in frontend, this field is required
@@ -1039,7 +1043,7 @@ class MediaSelector(Selector[MediaSelectorConfig]):
         return media
 
 
-class NumberSelectorConfig(TypedDict, total=False):
+class NumberSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a number selector config."""
 
     min: float
@@ -1074,7 +1078,7 @@ class NumberSelector(Selector[NumberSelectorConfig]):
     selector_type = "number"
 
     CONFIG_SCHEMA = vol.All(
-        vol.Schema(
+        BASE_SELECTOR_CONFIG_SCHEMA.extend(
             {
                 vol.Optional("min"): vol.Coerce(float),
                 vol.Optional("max"): vol.Coerce(float),
@@ -1109,7 +1113,7 @@ class NumberSelector(Selector[NumberSelectorConfig]):
         return value
 
 
-class ObjectSelectorConfig(TypedDict):
+class ObjectSelectorConfig(BaseSelectorConfig):
     """Class to represent an object selector config."""
 
 
@@ -1119,7 +1123,7 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
 
     selector_type = "object"
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
 
     def __init__(self, config: ObjectSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -1212,14 +1216,14 @@ class SelectSelector(Selector[SelectSelectorConfig]):
         return [parent_schema(vol.Schema(str)(val)) for val in data]
 
 
-class TargetSelectorConfig(TypedDict, total=False):
+class TargetSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a target selector config."""
 
     entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
     device: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
 
 
-class StateSelectorConfig(TypedDict, total=False):
+class StateSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent an state selector config."""
 
     entity_id: Required[str]
@@ -1231,7 +1235,7 @@ class StateSelector(Selector[StateSelectorConfig]):
 
     selector_type = "state"
 
-    CONFIG_SCHEMA = vol.Schema(
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
         {
             vol.Required("entity_id"): cv.entity_id,
             # The attribute to filter on, is currently deliberately not
@@ -1261,7 +1265,7 @@ class TargetSelector(Selector[TargetSelectorConfig]):
 
     selector_type = "target"
 
-    CONFIG_SCHEMA = vol.Schema(
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
         {
             vol.Optional("entity"): vol.All(
                 cv.ensure_list,
@@ -1286,7 +1290,7 @@ class TargetSelector(Selector[TargetSelectorConfig]):
         return target
 
 
-class TemplateSelectorConfig(TypedDict):
+class TemplateSelectorConfig(BaseSelectorConfig):
     """Class to represent an template selector config."""
 
 
@@ -1296,7 +1300,7 @@ class TemplateSelector(Selector[TemplateSelectorConfig]):
 
     selector_type = "template"
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
 
     def __init__(self, config: TemplateSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -1372,7 +1376,7 @@ class TextSelector(Selector[TextSelectorConfig]):
         return [vol.Schema(str)(val) for val in data]
 
 
-class ThemeSelectorConfig(TypedDict):
+class ThemeSelectorConfig(BaseSelectorConfig):
     """Class to represent a theme selector config."""
 
 
@@ -1382,7 +1386,7 @@ class ThemeSelector(Selector[ThemeSelectorConfig]):
 
     selector_type = "theme"
 
-    CONFIG_SCHEMA = vol.Schema(
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
         {
             vol.Optional("include_default", default=False): cv.boolean,
         }
@@ -1398,7 +1402,7 @@ class ThemeSelector(Selector[ThemeSelectorConfig]):
         return theme
 
 
-class TimeSelectorConfig(TypedDict):
+class TimeSelectorConfig(BaseSelectorConfig):
     """Class to represent a time selector config."""
 
 
@@ -1408,7 +1412,7 @@ class TimeSelector(Selector[TimeSelectorConfig]):
 
     selector_type = "time"
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
 
     def __init__(self, config: TimeSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -1420,7 +1424,7 @@ class TimeSelector(Selector[TimeSelectorConfig]):
         return cast(str, data)
 
 
-class TriggerSelectorConfig(TypedDict):
+class TriggerSelectorConfig(BaseSelectorConfig):
     """Class to represent an trigger selector config."""
 
 
@@ -1430,7 +1434,7 @@ class TriggerSelector(Selector[TriggerSelectorConfig]):
 
     selector_type = "trigger"
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
 
     def __init__(self, config: TriggerSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -1441,7 +1445,7 @@ class TriggerSelector(Selector[TriggerSelectorConfig]):
         return vol.Schema(cv.TRIGGER_SCHEMA)(data)
 
 
-class FileSelectorConfig(TypedDict):
+class FileSelectorConfig(BaseSelectorConfig):
     """Class to represent a file selector config."""
 
     accept: str  # required
@@ -1453,7 +1457,7 @@ class FileSelector(Selector[FileSelectorConfig]):
 
     selector_type = "file"
 
-    CONFIG_SCHEMA = vol.Schema(
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
         {
             # https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file#accept
             vol.Required("accept"): str,
