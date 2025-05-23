@@ -791,12 +791,8 @@ PLATFORM_MQTT_FIELDS = {
             validator=validate(cv.template),
             error="invalid_template",
         ),
-        CONF_RETAIN: PlatformField(
-            selector=BOOLEAN_SELECTOR, required=False, validator=bool
-        ),
-        CONF_OPTIMISTIC: PlatformField(
-            selector=BOOLEAN_SELECTOR, required=False, validator=bool
-        ),
+        CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
+        CONF_OPTIMISTIC: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
         CONF_PAYLOAD_CLOSE: PlatformField(
             selector=TEXT_SELECTOR,
             required=False,
@@ -952,7 +948,6 @@ PLATFORM_MQTT_FIELDS = {
         CONF_TILT_STATE_OPTIMISTIC: PlatformField(
             selector=BOOLEAN_SELECTOR,
             required=False,
-            validator=bool,
             section="cover_tilt_settings",
         ),
     },
