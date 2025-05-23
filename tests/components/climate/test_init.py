@@ -325,7 +325,7 @@ async def test_mode_validation(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Hvac mode auto is not valid. Valid hvac modes are: off, heat",
+        match="HVAC mode auto is not valid. Valid HVAC modes are: off, heat",
     ) as exc:
         await hass.services.async_call(
             DOMAIN,
@@ -337,7 +337,7 @@ async def test_mode_validation(
             blocking=True,
         )
     assert (
-        str(exc.value) == "Hvac mode auto is not valid. Valid hvac modes are: off, heat"
+        str(exc.value) == "HVAC mode auto is not valid. Valid HVAC modes are: off, heat"
     )
     assert exc.value.translation_key == "not_valid_hvac_mode"
 

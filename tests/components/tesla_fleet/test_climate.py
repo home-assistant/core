@@ -402,7 +402,7 @@ async def test_climate_noscope(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Hvac mode off is not valid. Valid hvac modes are: heat_cool",
+        match="HVAC mode off is not valid. Valid HVAC modes are: heat_cool",
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
