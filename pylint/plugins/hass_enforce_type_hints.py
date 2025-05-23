@@ -1484,6 +1484,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="source_type",
                     return_type="SourceType",
+                    mandatory=True,
                 ),
             ],
         ),
@@ -1493,10 +1494,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="force_update",
                     return_type="bool",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="location_accuracy",
                     return_type="float",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="location_name",
@@ -1534,10 +1537,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="state",
                     return_type="str",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="is_connected",
                     return_type="bool",
+                    mandatory=True,
                 ),
             ],
         ),
@@ -1811,6 +1816,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="color_mode",
                     return_type=["ColorMode", "str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="hs_color",
@@ -1823,26 +1829,32 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="rgb_color",
                     return_type=["tuple[int, int, int]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="rgbw_color",
                     return_type=["tuple[int, int, int, int]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="rgbww_color",
                     return_type=["tuple[int, int, int, int, int]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="color_temp",
                     return_type=["int", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="min_mireds",
                     return_type="int",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="max_mireds",
                     return_type="int",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="effect_list",
@@ -1859,10 +1871,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="supported_color_modes",
                     return_type=["set[ColorMode]", "set[str]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_features",
                     return_type="LightEntityFeature",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="turn_on",
@@ -1887,6 +1901,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
             ],
         ),

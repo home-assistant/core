@@ -92,6 +92,41 @@ MOCK_SUBENTRY_BUTTON_COMPONENT = {
         "entity_picture": "https://example.com/365d05e6607c4dfb8ae915cff71a954b",
     },
 }
+MOCK_SUBENTRY_COVER_COMPONENT = {
+    "b37acf667fa04c688ad7dfb27de2178b": {
+        "platform": "cover",
+        "name": "Blind",
+        "device_class": "blind",
+        "command_topic": "test-topic",
+        "payload_stop": None,
+        "payload_stop_tilt": "STOP",
+        "payload_open": "OPEN",
+        "payload_close": "CLOSE",
+        "position_closed": 0,
+        "position_open": 100,
+        "position_template": "{{ value_json.position }}",
+        "position_topic": "test-topic/position",
+        "set_position_template": "{{ value }}",
+        "set_position_topic": "test-topic/position-set",
+        "state_closed": "closed",
+        "state_closing": "closing",
+        "state_open": "open",
+        "state_opening": "opening",
+        "state_stopped": "stopped",
+        "state_topic": "test-topic",
+        "tilt_closed_value": 0,
+        "tilt_max": 100,
+        "tilt_min": 0,
+        "tilt_opened_value": 100,
+        "tilt_optimistic": False,
+        "tilt_command_topic": "test-topic/tilt-set",
+        "tilt_command_template": "{{ value }}",
+        "tilt_status_topic": "test-topic/tilt",
+        "tilt_status_template": "{{ value_json.position }}",
+        "retain": False,
+        "entity_picture": "https://example.com/b37acf667fa04c688ad7dfb27de2178b",
+    },
+}
 MOCK_SUBENTRY_NOTIFY_COMPONENT1 = {
     "363a7ecad6be4a19b939a016ea93e994": {
         "platform": "notify",
@@ -224,6 +259,10 @@ MOCK_BINARY_SENSOR_SUBENTRY_DATA_SINGLE = {
 MOCK_BUTTON_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 2}},
     "components": MOCK_SUBENTRY_BUTTON_COMPONENT,
+}
+MOCK_COVER_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_COVER_COMPONENT,
 }
 MOCK_NOTIFY_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},
