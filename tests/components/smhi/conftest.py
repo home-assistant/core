@@ -48,7 +48,7 @@ async def load_int(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=TEST_CONFIG,
-        entry_id="1",
+        entry_id="01JMZDH8N5PFHGJNYKKYCSCWER",
         unique_id="59.32624-17.84197",
         version=3,
         title="Test",
@@ -70,10 +70,16 @@ async def get_client(
 ) -> AsyncGenerator[MagicMock]:
     """Mock SMHIPointForecast client."""
 
-    with patch(
-        "homeassistant.components.smhi.coordinator.SMHIPointForecast",
-        autospec=True,
-    ) as mock_client:
+    with (
+        patch(
+            "homeassistant.components.smhi.coordinator.SMHIPointForecast",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.smhi.config_flow.SMHIPointForecast",
+            return_value=mock_client.return_value,
+        ),
+    ):
         client = mock_client.return_value
         client.async_get_daily_forecast.return_value = get_data[0]
         client.async_get_twice_daily_forecast.return_value = get_data[1]

@@ -71,6 +71,7 @@ async def test_clear_night(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test for successfully setting up the smhi integration."""
+    await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
 
     assert state
