@@ -53,7 +53,7 @@ standard-aifc==3.13.0
 standard-telnetlib==3.13.0
 typing-extensions>=4.13.0,<5.0
 ulid-transform==1.4.0
-urllib3==2.4.0
+urllib3>=2
 uv==0.7.1
 voluptuous==0.15.2
 voluptuous-serialize==2.6.0

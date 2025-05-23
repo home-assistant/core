@@ -114,7 +114,7 @@ dependencies = [
   "typing-extensions>=4.13.0,<5.0",
   "ulid-transform==1.4.0",
   # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
-  "urllib3==2.4.0",
+  "urllib3>=2",
   "uv==0.7.1",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.6.0",
