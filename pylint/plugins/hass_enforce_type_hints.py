@@ -1829,14 +1829,17 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="rgb_color",
                     return_type=["tuple[int, int, int]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="rgbw_color",
                     return_type=["tuple[int, int, int, int]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="rgbww_color",
                     return_type=["tuple[int, int, int, int, int]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="color_temp",
