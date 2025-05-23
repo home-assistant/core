@@ -18,7 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo, format_mac
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.hass_dict import HassKey
@@ -50,8 +50,6 @@ class QbusControllerCoordinator(DataUpdateCoordinator[list[QbusMqttOutput]]):
             name=entry.unique_id or entry.entry_id,
             always_update=False,
         )
-
-        self.device_info: DeviceInfo | None = None
 
         self._message_factory = QbusMqttMessageFactory()
         self._topic_factory = QbusMqttTopicFactory()
@@ -105,8 +103,9 @@ class QbusControllerCoordinator(DataUpdateCoordinator[list[QbusMqttOutput]]):
             return
 
         device_registry = dr.async_get(self.hass)
-        device_entry = device_registry.async_get_or_create(
+        device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, self._controller.mac)},
             identifiers={(DOMAIN, format_mac(self._controller.mac))},
             manufacturer=MANUFACTURER,
             model="CTD3.x",
@@ -114,8 +113,6 @@ class QbusControllerCoordinator(DataUpdateCoordinator[list[QbusMqttOutput]]):
             serial_number=self._controller.serial_number,
             sw_version=self._controller.version,
         )
-
-        self.device_info = DeviceInfo(identifiers=device_entry.identifiers)
 
     async def _async_subscribe_to_controller_state(self) -> None:
         if self._controller is None or self._subscribed_to_controller_state is True:
