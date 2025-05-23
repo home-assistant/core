@@ -86,14 +86,16 @@ async def test_agents_list_backups(
                 }
             },
             "backup_id": "23e64aec",
-            "date": "2025-02-10T17:47:22.727189+01:00",
             "database_included": True,
+            "date": "2025-02-10T17:47:22.727189+01:00",
             "extra_metadata": {},
+            "failed_addons": [],
+            "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": [],
             "homeassistant_included": True,
             "homeassistant_version": "2025.2.1",
             "name": "Automatic backup 2025.2.1",
-            "failed_agent_ids": [],
             "with_automatic_settings": None,
         }
     ]
@@ -122,14 +124,16 @@ async def test_agents_get_backup(
             }
         },
         "backup_id": "23e64aec",
-        "date": "2025-02-10T17:47:22.727189+01:00",
         "database_included": True,
+        "date": "2025-02-10T17:47:22.727189+01:00",
         "extra_metadata": {},
+        "failed_addons": [],
+        "failed_agent_ids": [],
+        "failed_folders": [],
         "folders": [],
         "homeassistant_included": True,
         "homeassistant_version": "2025.2.1",
         "name": "Automatic backup 2025.2.1",
-        "failed_agent_ids": [],
         "with_automatic_settings": None,
     }
 
