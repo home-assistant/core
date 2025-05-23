@@ -1,0 +1,53 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "key_id": "Key ID",
+          "application_key": "Application key",
+          "bucket": "Bucket name",
+          "prefix": "Folder prefix (optional)"
+        },
+        "data_description": {
+          "key_id": "Key ID to connect to Backblaze",
+          "application_key": "Application key to connect to Backblaze",
+          "bucket": "Bucket must already exist and be writable by the provided credentials.",
+          "prefix": "Prefix folder to store back files in (no trailing slash). Leave empty to store in the root."
+        },
+        "title": "Add Backblaze B2 backup"
+      }
+    },
+    "error": {
+      "restricted_bucket": "[%key:component::backblaze_b2::exceptions::restricted_bucket::message%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_bucket_name": "[%key:component::backblaze_b2::exceptions::invalid_bucket_name::message%]",
+      "invalid_credentials": "[%key:component::backblaze_b2::exceptions::invalid_credentials::message%]",
+      "invalid_capability": "[%key:component::backblaze_b2::exceptions::invalid_capability::message%]",
+      "invalid_prefix": "[%key:component::backblaze_b2::exceptions::invalid_prefix::message%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "exceptions": {
+    "restricted_bucket": {
+      "message": "Application key is restricted to bucket {restricted_bucket_name}."
+    },
+    "cannot_connect": {
+      "message": "Cannot connect to endpoint"
+    },
+    "invalid_bucket_name": {
+      "message": "Bucket does not exist or is not writable by the provided credentials."
+    },
+    "invalid_credentials": {
+      "message": "Bucket cannot be accessed using provided of key ID and application key."
+    },
+    "invalid_capability": {
+      "message": "Application key does not have the required read/write capabilities."
+    },
+    "invalid_prefix": {
+      "message": "Prefix is not allowed for provided key. Must start with {allowed_prefix}."
+    }
+  }
+}
