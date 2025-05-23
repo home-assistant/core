@@ -490,7 +490,7 @@ async def test_template_state_text_with_position(
         (
             1,
             "{{ states.cover.test_state.state }}",
-            "{{ states.cover.test_position.attributes.position }}",
+            "{{ state_attr('cover.test_state', 'position') }}",
         )
     ],
 )
@@ -1260,18 +1260,20 @@ async def test_icon_template(
     ],
 )
 @pytest.mark.parametrize(
-    ("style", "attribute"),
+    ("style", "attribute", "initial_expected_state"),
     [
-        (ConfigurationStyle.LEGACY, "entity_picture_template"),
-        (ConfigurationStyle.MODERN, "picture"),
-        (ConfigurationStyle.TRIGGER, "picture"),
+        (ConfigurationStyle.LEGACY, "entity_picture_template", ""),
+        (ConfigurationStyle.MODERN, "picture", ""),
+        (ConfigurationStyle.TRIGGER, "picture", None),
     ],
 )
 @pytest.mark.usefixtures("setup_single_attribute_state_cover")
-async def test_entity_picture_template(hass: HomeAssistant) -> None:
+async def test_entity_picture_template(
+    hass: HomeAssistant, initial_expected_state: str | None
+) -> None:
     """Test icon template."""
     state = hass.states.get(TEST_ENTITY_ID)
-    assert state.attributes.get("entity_picture") in ("", None)
+    assert state.attributes.get("entity_picture") == initial_expected_state
 
     state = hass.states.async_set("cover.test_state", CoverState.OPEN)
     await hass.async_block_till_done()
