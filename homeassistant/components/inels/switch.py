@@ -49,12 +49,13 @@ SWITCH_TYPES = [
         set_fn=lambda device, index, value: setattr(
             device.state.simple_relay[index], "is_on", value
         ),
-        name_fn=lambda device, key, index: key
-        if index is None
-        else f"{key} {index + 1}",
+        name_fn=(
+            lambda device, key, index: key if index is None else f"{key} {index + 1}"
+        ),
         get_state_fn=lambda device, index: device.state.simple_relay[index],
-        get_last_state_fn=lambda device,
-        index: device.last_values.ha_value.simple_relay[index],
+        get_last_state_fn=(
+            lambda device, index: device.last_values.ha_value.simple_relay[index]
+        ),
     ),
     InelsSwitchEntityDescription(
         key="relay",
@@ -62,13 +63,13 @@ SWITCH_TYPES = [
         set_fn=lambda device, index, value: setattr(
             device.state.relay[index], "is_on", value
         ),
-        name_fn=lambda device, key, index: key
-        if index is None
-        else f"{key} {index + 1}",
+        name_fn=(
+            lambda device, key, index: key if index is None else f"{key} {index + 1}"
+        ),
         get_state_fn=lambda device, index: device.state.relay[index],
-        get_last_state_fn=lambda device, index: device.last_values.ha_value.relay[
-            index
-        ],
+        get_last_state_fn=(
+            lambda device, index: device.last_values.ha_value.relay[index]
+        ),
         alerts=[("overflow", "Relay overflow in %s of %s")],
     ),
 ]
