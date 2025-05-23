@@ -1521,6 +1521,7 @@ async def test_rpc_device_virtual_number_sensor_with_device_class(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.HUMIDITY
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_rpc_switch_energy_sensors(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
@@ -1552,6 +1553,7 @@ async def test_rpc_switch_energy_sensors(
         assert entry == snapshot(name=f"{entity_id}-entry")
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_rpc_switch_no_returned_energy_sensor(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
