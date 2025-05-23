@@ -146,11 +146,6 @@ class InelsSwitch(InelsBaseEntity, SwitchEntity):
                     return False
         return super().available
 
-    @property
-    def icon(self) -> str | None:
-        """Switch icon."""
-        return self.entity_description.icon
-
     @callback
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
