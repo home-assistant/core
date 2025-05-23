@@ -1753,42 +1753,51 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="available_modes",
                     return_type=["list[str]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="device_class",
                     return_type=["HumidifierDeviceClass", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="min_humidity",
                     return_type=["float"],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="max_humidity",
                     return_type=["float"],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="mode",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_features",
                     return_type="HumidifierEntityFeature",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="target_humidity",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="set_humidity",
                     arg_types={1: "int"},
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="set_mode",
                     arg_types={1: "str"},
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
             ],
         ),
