@@ -319,11 +319,10 @@ class GoogleGenerativeAIConversationEntity(
             tools.append(Tool(google_search=GoogleSearch()))
 
         model_name = self.entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
-        # Gemini 1.0 doesn't support system_instruction while 1.5 does.
-        # Assume future versions will support it (if not, the request fails with a
-        # clear message at which point we can fix).
+        # Avoid INVALID_ARGUMENT Developer instruction is not enabled for <model>
         supports_system_instruction = (
-            "gemini-1.0" not in model_name and "gemini-pro" not in model_name
+            "gemma" not in model_name
+            and "gemini-2.0-flash-preview-image-generation" not in model_name
         )
 
         prompt_content = cast(

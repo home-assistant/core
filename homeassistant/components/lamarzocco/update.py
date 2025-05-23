@@ -4,7 +4,7 @@ import asyncio
 from dataclasses import dataclass
 from typing import Any
 
-from pylamarzocco.const import FirmwareType, UpdateCommandStatus
+from pylamarzocco.const import FirmwareType, UpdateStatus
 from pylamarzocco.exceptions import RequestNotSuccessful
 
 from homeassistant.components.update import (
@@ -125,7 +125,7 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
             await self.coordinator.device.update_firmware()
             while (
                 update_progress := await self.coordinator.device.get_firmware()
-            ).command_status is UpdateCommandStatus.IN_PROGRESS:
+            ).command_status is UpdateStatus.IN_PROGRESS:
                 if counter >= MAX_UPDATE_WAIT:
                     _raise_timeout_error()
                 self._attr_update_percentage = update_progress.progress_percentage
