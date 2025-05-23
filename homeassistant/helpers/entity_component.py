@@ -73,7 +73,8 @@ def async_get_entity_suggested_object_id(
 ) -> str | None:
     """Get the suggested object id for an entity.
 
-    Raises HomeAssistantError if the entity is not in the registry.
+    Raises HomeAssistantError if the entity is not in the registry or
+    is not backed by an object.
     """
     entity_registry = er.async_get(hass)
     if not (entity_entry := entity_registry.async_get(entity_id)):
@@ -88,14 +89,12 @@ def async_get_entity_suggested_object_id(
         return entity_entry.name
 
     entity_comp = hass.data.get(DATA_INSTANCES, {}).get(domain)
-    entity_obj = entity_comp.get_entity(entity_id) if entity_comp else None
-    if entity_obj:
-        device: dr.DeviceEntry | None = None
-        if device_id := entity_entry.device_id:
-            device = dr.async_get(hass).async_get(device_id)
-        return async_calculate_suggested_object_id(entity_obj, device)
-
-    return entity_entry.calculated_object_id
+    if not (entity_obj := entity_comp.get_entity(entity_id) if entity_comp else None):
+        raise HomeAssistantError(f"Entity {entity_id} has no object.")
+    device: dr.DeviceEntry | None = None
+    if device_id := entity_entry.device_id:
+        device = dr.async_get(hass).async_get(device_id)
+    return async_calculate_suggested_object_id(entity_obj, device)
 
 
 class EntityComponent[_EntityT: entity.Entity = entity.Entity]:

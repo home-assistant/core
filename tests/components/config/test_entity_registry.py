@@ -1306,66 +1306,39 @@ async def test_get_automatic_entity_ids(
             "test_domain.test_1": RegistryEntryWithDefaults(
                 entity_id="test_domain.test_1",
                 unique_id="uniq1",
-                platform="test_platform",
+                platform="test_domain",
             ),
             "test_domain.test_2": RegistryEntryWithDefaults(
                 entity_id="test_domain.test_2",
                 unique_id="uniq2",
-                platform="test_platform",
-                suggested_object_id="suggested_2",
+                platform="test_domain",
+                suggested_object_id="collision",
             ),
             "test_domain.test_3": RegistryEntryWithDefaults(
                 entity_id="test_domain.test_3",
+                name="name_by_user_3",
                 unique_id="uniq3",
-                platform="test_platform",
-                suggested_object_id="collision",
+                platform="test_domain",
+                suggested_object_id="suggested_3",
             ),
             "test_domain.test_4": RegistryEntryWithDefaults(
-                calculated_object_id="calculated_4",
                 entity_id="test_domain.test_4",
+                name="name_by_user_4",
                 unique_id="uniq4",
-                platform="test_platform",
-                suggested_object_id="suggested_4",
+                platform="test_domain",
             ),
             "test_domain.test_5": RegistryEntryWithDefaults(
-                calculated_object_id="calculated_5",
                 entity_id="test_domain.test_5",
+                name="name_by_user_5",
                 unique_id="uniq5",
-                platform="test_platform",
+                platform="test_domain",
+                suggested_object_id="suggested_5",
             ),
             "test_domain.test_6": RegistryEntryWithDefaults(
-                calculated_object_id="calculated_6",
                 entity_id="test_domain.test_6",
                 unique_id="uniq6",
                 platform="test_domain",
-                suggested_object_id="suggested_6",
-            ),
-            "test_domain.test_7": RegistryEntryWithDefaults(
-                calculated_object_id="calculated_7",
-                entity_id="test_domain.test_7",
-                unique_id="uniq7",
-                platform="test_domain",
-            ),
-            "test_domain.test_8": RegistryEntryWithDefaults(
-                calculated_object_id="calculated_8",
-                entity_id="test_domain.test_8",
-                name="name_by_user_8",
-                unique_id="uniq8",
-                platform="test_domain",
-                suggested_object_id="suggested_8",
-            ),
-            "test_domain.test_9": RegistryEntryWithDefaults(
-                calculated_object_id="calculated_9",
-                entity_id="test_domain.test_9",
-                name="name_by_user_9",
-                unique_id="uniq9",
-                platform="test_domain",
-            ),
-            "test_domain.test_10": RegistryEntryWithDefaults(
-                entity_id="test_domain.test_10",
-                unique_id="uniq10",
-                platform="test_domain",
-                suggested_object_id="test_10",
+                suggested_object_id="test_6",
             ),
             "test_domain.collision": RegistryEntryWithDefaults(
                 entity_id="test_domain.collision",
@@ -1377,11 +1350,12 @@ async def test_get_automatic_entity_ids(
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     await component.async_setup({})
-    entity6 = MockEntity(unique_id="uniq6", name="entity_name_6")
-    entity7 = MockEntity(unique_id="uniq7", name="entity_name_7")
-    entity8 = MockEntity(unique_id="uniq8", name="entity_name_8")
-    entity9 = MockEntity(unique_id="uniq9", name="entity_name_9")
-    await component.async_add_entities([entity6, entity7, entity8, entity9])
+    entity2 = MockEntity(unique_id="uniq3", name="entity_name_3")
+    entity3 = MockEntity(unique_id="uniq6", name="entity_name_6")
+    entity4 = MockEntity(unique_id="uniq7", name="entity_name_7")
+    entity5 = MockEntity(unique_id="uniq8", name="entity_name_8")
+    entity6 = MockEntity(unique_id="uniq10", name="test_10")
+    await component.async_add_entities([entity2, entity3, entity4, entity5, entity6])
 
     await client.send_json_auto_id(
         {
@@ -1393,10 +1367,6 @@ async def test_get_automatic_entity_ids(
                 "test_domain.test_4",
                 "test_domain.test_5",
                 "test_domain.test_6",
-                "test_domain.test_7",
-                "test_domain.test_8",
-                "test_domain.test_9",
-                "test_domain.test_10",
                 "test_domain.unknown",
             ],
         }
@@ -1406,15 +1376,16 @@ async def test_get_automatic_entity_ids(
 
     assert msg["success"]
     assert msg["result"] == {
-        "test_domain.test_1": "test_domain.test_platform_uniq1",  # platform + unique_id
-        "test_domain.test_2": "test_domain.suggested_2",  # suggested_object_id
-        "test_domain.test_3": "test_domain.collision_2",  # suggested_object_id + _2
-        "test_domain.test_4": "test_domain.suggested_4",  # suggested_object_id
-        "test_domain.test_5": "test_domain.calculated_5",  # calculated_object_id
-        "test_domain.test_6": "test_domain.suggested_6",  # suggested_object_id
-        "test_domain.test_7": "test_domain.entity_name_7",  # entity name property
-        "test_domain.test_8": "test_domain.suggested_8",  # suggested_object_id
-        "test_domain.test_9": "test_domain.name_by_user_9",  # name by user in registry
-        "test_domain.test_10": None,  # automatic entity id matches current entity id
+        # No entity object for test_domain.test_1
+        "test_domain.test_1": None,
+        # The suggested_object_id is taken, fall back to suggested_object_id + _2
+        "test_domain.test_2": "test_domain.collision_2",
+        # suggested_object_id has higher priority than name set by user or entity
+        "test_domain.test_3": "test_domain.suggested_3",
+        # name set by user has higher priority than entity properties
+        "test_domain.test_4": "test_domain.name_by_user_4",
+        # No suggested_object_id or name, fall back to entity properties
+        "test_domain.test_5": "test_domain.suggested_5",
+        "test_domain.test_6": None,  # automatic entity id matches current entity id
         "test_domain.unknown": None,  # no test_domain.unknown in registry
     }

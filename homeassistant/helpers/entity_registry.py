@@ -195,7 +195,6 @@ class RegistryEntry:
     name: str | None = attr.ib(default=None)
     options: ReadOnlyEntityOptionsType = attr.ib(converter=_protect_entity_options)
     # As set by integration
-    calculated_object_id: str | None = attr.ib()
     original_device_class: str | None = attr.ib()
     original_icon: str | None = attr.ib()
     original_name: str | None = attr.ib()
@@ -339,7 +338,6 @@ class RegistryEntry:
                 {
                     "aliases": list(self.aliases),
                     "area_id": self.area_id,
-                    "calculated_object_id": self.calculated_object_id,
                     "categories": self.categories,
                     "capabilities": self.capabilities,
                     "config_entry_id": self.config_entry_id,
@@ -554,9 +552,8 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     entity["config_subentry_id"] = None
 
             if old_minor_version < 17:
-                # Version 1.17 adds calculated_object_id and suggested_object_id
+                # Version 1.17 adds suggested_object_id
                 for entity in data["entities"]:
-                    entity["calculated_object_id"] = None
                     entity["suggested_object_id"] = None
 
         if old_major_version > 1:
@@ -954,7 +951,6 @@ class EntityRegistry(BaseRegistry):
             original_icon=none_if_undefined(original_icon),
             original_name=none_if_undefined(original_name),
             platform=platform,
-            calculated_object_id=calculated_object_id,
             suggested_object_id=suggested_object_id,
             supported_features=none_if_undefined(supported_features) or 0,
             translation_key=none_if_undefined(translation_key),
@@ -1365,7 +1361,6 @@ class EntityRegistry(BaseRegistry):
                 entities[entity["entity_id"]] = RegistryEntry(
                     aliases=set(entity["aliases"]),
                     area_id=entity["area_id"],
-                    calculated_object_id=entity["calculated_object_id"],
                     categories=entity["categories"],
                     capabilities=entity["capabilities"],
                     config_entry_id=entity["config_entry_id"],
