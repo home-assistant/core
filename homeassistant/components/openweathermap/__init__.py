@@ -12,7 +12,7 @@ from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_MODE, CONF_NAM
 from homeassistant.core import HomeAssistant
 
 from .const import CONFIG_FLOW_VERSION, DEFAULT_OWM_MODE, OWM_MODES, PLATFORMS
-from .coordinator import WeatherUpdateCoordinator
+from .coordinator import OWMUpdateCoordinator, get_owm_update_coordinator
 from .repairs import async_create_issue, async_delete_issue
 from .utils import build_data_and_options
 
@@ -27,7 +27,7 @@ class OpenweathermapData:
 
     name: str
     mode: str
-    coordinator: WeatherUpdateCoordinator
+    coordinator: OWMUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -45,13 +45,13 @@ async def async_setup_entry(
         async_delete_issue(hass, entry.entry_id)
 
     owm_client = create_owm_client(api_key, mode, lang=language)
-    weather_coordinator = WeatherUpdateCoordinator(hass, entry, owm_client)
+    owm_coordinator = get_owm_update_coordinator(mode)(hass, entry, owm_client)
 
-    await weather_coordinator.async_config_entry_first_refresh()
+    await owm_coordinator.async_config_entry_first_refresh()
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
-    entry.runtime_data = OpenweathermapData(name, mode, weather_coordinator)
+    entry.runtime_data = OpenweathermapData(name, mode, owm_coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
