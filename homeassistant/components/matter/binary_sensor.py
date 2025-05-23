@@ -384,14 +384,9 @@ DISCOVERY_SCHEMAS = [
             translation_key="dishwasher_alarm_inflow",
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
-            measurement_to_ha={
-                clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kInflowError: True,
-                clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kDrainError: False,
-                clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kDoorError: False,
-                clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kTempTooLow: False,
-                clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kTempTooHigh: False,
-                clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kWaterLevelError: False,
-            }.get,
+            measurement_to_ha=lambda x: (
+                x == clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kInflowError
+            ),
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.DishwasherAlarm.Attributes.State,),
@@ -404,14 +399,9 @@ DISCOVERY_SCHEMAS = [
             translation_key="dishwasher_alarm_door",
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
-            measurement_to_ha={
-                clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kInflowError: False,
-                clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kDrainError: False,
-                clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kDoorError: True,
-                clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kTempTooLow: False,
-                clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kTempTooHigh: False,
-                clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kWaterLevelError: False,
-            }.get,
+            measurement_to_ha=lambda x: (
+                x == clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kDoorError
+            ),
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.DishwasherAlarm.Attributes.State,),
