@@ -21,7 +21,7 @@ async def async_setup_entry(
     config_entry: BackupConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Sensor set up for backup config entry."""
+    """Event set up for backup config entry."""
     coordinator = config_entry.runtime_data
     async_add_entities([AutomaticBackupEvent(coordinator)])
 
@@ -39,15 +39,9 @@ class AutomaticBackupEvent(BackupManagerBaseEntity, EventEntity):
         self._attr_unique_id = "automatic_backup_event"
         self._attr_translation_key = "automatic_backup_event"
 
-    async def async_added_to_hass(self) -> None:
-        """Entity added to hass."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self._async_handle_update)
-        )
-
     @callback
-    def _async_handle_update(self) -> None:
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         if (
             (data := self.coordinator.data) is None
             or not data
