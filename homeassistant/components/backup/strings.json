@@ -46,7 +46,9 @@
               "failed": "Failed",
               "in_progress": "In progress"
             }
-          }
+          },
+          "backup_stage": { "name": "Backup stage" },
+          "failed_reason": { "name": "Failed reason" }
         }
       }
     },
