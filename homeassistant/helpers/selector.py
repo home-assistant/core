@@ -1020,11 +1020,15 @@ class MediaSelector(Selector[MediaSelectorConfig]):
 
     selector_type = "media"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+        {
+            vol.Optional("accept"): [str],
+        }
+    )
     DATA_SCHEMA = vol.Schema(
         {
-            # Although marked as optional in frontend, this field is required
-            vol.Required("entity_id"): cv.entity_id_or_uuid,
+            # If accept is set, the entity_id field will not be present
+            vol.Optional("entity_id"): cv.entity_id_or_uuid,
             # Although marked as optional in frontend, this field is required
             vol.Required("media_content_id"): str,
             # Although marked as optional in frontend, this field is required
