@@ -12,7 +12,6 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_MODEL,
@@ -61,8 +60,6 @@ from .const import (
     FEATURE_SET_MOTOR_SPEED,
     FEATURE_SET_OSCILLATION_ANGLE,
     FEATURE_SET_VOLUME,
-    KEY_COORDINATOR,
-    KEY_DEVICE,
     MODEL_AIRFRESH_A1,
     MODEL_AIRFRESH_T2017,
     MODEL_AIRFRESH_VA2,
@@ -99,6 +96,7 @@ from .const import (
     MODELS_PURIFIER_MIOT,
 )
 from .entity import XiaomiCoordinatedMiioEntity
+from .typing import XiaomiMiioConfigEntry
 
 ATTR_DELAY_OFF_COUNTDOWN = "delay_off_countdown"
 ATTR_FAN_LEVEL = "fan_level"
@@ -288,7 +286,7 @@ FAVORITE_LEVEL_VALUES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: XiaomiMiioConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Selectors from a config entry."""
@@ -296,7 +294,8 @@ async def async_setup_entry(
     if config_entry.data[CONF_FLOW_TYPE] != CONF_DEVICE:
         return
     model = config_entry.data[CONF_MODEL]
-    device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+    device = config_entry.runtime_data.device
+    coordinator = config_entry.runtime_data.device_coordinator
 
     if model in MODEL_TO_FEATURES_MAP:
         features = MODEL_TO_FEATURES_MAP[model]
@@ -343,7 +342,7 @@ async def async_setup_entry(
                     device,
                     config_entry,
                     f"{description.key}_{config_entry.unique_id}",
-                    hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+                    coordinator,
                     description,
                 )
             )
@@ -359,7 +358,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
     def __init__(
         self,
         device: Device,
-        entry: ConfigEntry,
+        entry: XiaomiMiioConfigEntry,
         unique_id: str,
         coordinator: DataUpdateCoordinator,
         description: XiaomiMiioNumberDescription,

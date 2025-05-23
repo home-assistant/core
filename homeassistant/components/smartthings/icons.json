@@ -59,6 +59,9 @@
       },
       "flexible_detergent_amount": {
         "default": "mdi:car-coolant-level"
+      },
+      "spin_level": {
+        "default": "mdi:rotate-right"
       }
     },
     "sensor": {
@@ -69,6 +72,12 @@
           "run": "mdi:play",
           "paused": "mdi:pause",
           "finished": "mdi:food-turkey"
+        }
+      },
+      "diverter_valve_position": {
+        "state": {
+          "room": "mdi:sofa",
+          "tank": "mdi:water-boiler"
         }
       },
       "manual_level": {
@@ -108,6 +117,12 @@
       },
       "ice_maker": {
         "default": "mdi:delete-variant"
+      },
+      "power_cool": {
+        "default": "mdi:snowflake-alert"
+      },
+      "power_freeze": {
+        "default": "mdi:snowflake"
       },
       "sanitize": {
         "default": "mdi:lotion"

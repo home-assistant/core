@@ -609,6 +609,150 @@
     'state': 'ReadyToRun',
   })
 # ---
+# name: test_sensors[sensor.generator_1_last_exercise-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.generator_1_last_exercise',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last exercise',
+    'platform': 'rehlko',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_exercise',
+    'unique_id': 'myemail@email.com_12345_lastStartTimestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.generator_1_last_exercise-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Generator 1 Last exercise',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.generator_1_last_exercise',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-04-12T14:00:00+00:00',
+  })
+# ---
+# name: test_sensors[sensor.generator_1_last_maintainance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.generator_1_last_maintainance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last maintainance',
+    'platform': 'rehlko',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_maintainance',
+    'unique_id': 'myemail@email.com_12345_lastMaintenanceTimestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.generator_1_last_maintainance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Generator 1 Last maintainance',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.generator_1_last_maintainance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-04-10T13:12:59+00:00',
+  })
+# ---
+# name: test_sensors[sensor.generator_1_last_run-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.generator_1_last_run',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last run',
+    'platform': 'rehlko',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_run',
+    'unique_id': 'myemail@email.com_12345_lastRanTimestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.generator_1_last_run-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Generator 1 Last run',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.generator_1_last_run',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-04-12T14:00:00+00:00',
+  })
+# ---
 # name: test_sensors[sensor.generator_1_lube_oil_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -659,6 +803,102 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '6.0',
+  })
+# ---
+# name: test_sensors[sensor.generator_1_next_exercise-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.generator_1_next_exercise',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Next exercise',
+    'platform': 'rehlko',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'next_exercise',
+    'unique_id': 'myemail@email.com_12345_nextStartTimestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.generator_1_next_exercise-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Generator 1 Next exercise',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.generator_1_next_exercise',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-04-19T14:00:00+00:00',
+  })
+# ---
+# name: test_sensors[sensor.generator_1_next_maintainance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.generator_1_next_maintainance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Next maintainance',
+    'platform': 'rehlko',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'next_maintainance',
+    'unique_id': 'myemail@email.com_12345_nextMaintenanceTimestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.generator_1_next_maintainance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Generator 1 Next maintainance',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.generator_1_next_maintainance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-04-10T13:12:59+00:00',
   })
 # ---
 # name: test_sensors[sensor.generator_1_power_source-entry]

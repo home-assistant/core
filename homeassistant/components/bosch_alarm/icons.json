@@ -1,4 +1,9 @@
 {
+  "services": {
+    "set_date_time": {
+      "service": "mdi:clock-edit"
+    }
+  },
   "entity": {
     "sensor": {
       "alarms_gas": {

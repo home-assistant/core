@@ -77,7 +77,10 @@ class _BackupStore(Store[StoredBackupData]):
                 for agent in data["config"]["agents"]:
                     data["config"]["agents"][agent]["retention"] = None
 
-        # Note: We allow reading data with major version 2.
+        # Note: We allow reading data with major version 2 in which the unused key
+        # data["config"]["schedule"]["state"] will be removed. The bump to 2 is
+        # planned to happen after a 6 month quiet period with no minor version
+        # changes.
         # Reject if major version is higher than 2.
         if old_major_version > 2:
             raise NotImplementedError

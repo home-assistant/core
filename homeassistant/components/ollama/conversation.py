@@ -89,9 +89,11 @@ def _parse_tool_args(arguments: dict[str, Any]) -> dict[str, Any]:
 
 
 def _convert_content(
-    chat_content: conversation.Content
-    | conversation.ToolResultContent
-    | conversation.AssistantContent,
+    chat_content: (
+        conversation.Content
+        | conversation.ToolResultContent
+        | conversation.AssistantContent
+    ),
 ) -> ollama.Message:
     """Create tool response content."""
     if isinstance(chat_content, conversation.ToolResultContent):
@@ -172,6 +174,7 @@ class OllamaConversationEntity(
     """Ollama conversation agent."""
 
     _attr_has_entity_name = True
+    _attr_supports_streaming = True
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the agent."""

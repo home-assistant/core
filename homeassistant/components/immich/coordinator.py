@@ -16,6 +16,7 @@ from aioimmich.server.models import (
 )
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -48,6 +49,10 @@ class ImmichDataUpdateCoordinator(DataUpdateCoordinator[ImmichData]):
         """Initialize the data update coordinator."""
         self.api = api
         self.is_admin = is_admin
+        self.configuration_url = (
+            f"{'https' if entry.data[CONF_SSL] else 'http'}://"
+            f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+        )
         super().__init__(
             hass,
             _LOGGER,

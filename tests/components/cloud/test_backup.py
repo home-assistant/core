@@ -24,18 +24,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
-from homeassistant.util.aiohttp import MockStreamReader
+from homeassistant.util.aiohttp import MockStreamReaderChunked
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
-
-
-class MockStreamReaderChunked(MockStreamReader):
-    """Mock a stream reader with simulated chunked data."""
-
-    async def readchunk(self) -> tuple[bytes, bool]:
-        """Read bytes."""
-        return (self._content.read(), False)
 
 
 @pytest.fixture(autouse=True)

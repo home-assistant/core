@@ -688,8 +688,7 @@ async def test_search_and_play_media_player_intent(hass: HomeAssistant) -> None:
     # Response should contain a "media" slot with the matched item.
     assert not response.speech
     media = response.speech_slots.get("media")
-    assert isinstance(media, BrowseMedia)
-    assert media.title == "Test Track"
+    assert media["title"] == "Test Track"
 
     assert len(search_calls) == 1
     search_call = search_calls[0]

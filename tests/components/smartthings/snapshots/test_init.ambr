@@ -1751,6 +1751,39 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[sensi_thermostat]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '2409a73c-918a-4d1f-b4f5-c27468c71d70',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Emerson',
+    'model': '1F95U-42WF',
+    'model_id': None,
+    'name': 'Thermostat',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '6004971003',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[sensibo_airconditioner_1]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
