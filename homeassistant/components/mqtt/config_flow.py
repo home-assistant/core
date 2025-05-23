@@ -143,6 +143,10 @@ from .const import (
     CONF_COMMAND_ON_TEMPLATE,
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
+    CONF_DIRECTION_COMMAND_TEMPLATE,
+    CONF_DIRECTION_COMMAND_TOPIC,
+    CONF_DIRECTION_STATE_TOPIC,
+    CONF_DIRECTION_VALUE_TEMPLATE,
     CONF_DISCOVERY_PREFIX,
     CONF_EFFECT_COMMAND_TEMPLATE,
     CONF_EFFECT_COMMAND_TOPIC,
@@ -169,15 +173,32 @@ from .const import (
     CONF_OFF_DELAY,
     CONF_ON_COMMAND_TYPE,
     CONF_OPTIONS,
+    CONF_OSCILLATION_COMMAND_TEMPLATE,
+    CONF_OSCILLATION_COMMAND_TOPIC,
+    CONF_OSCILLATION_STATE_TOPIC,
+    CONF_OSCILLATION_VALUE_TEMPLATE,
     CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_CLOSE,
     CONF_PAYLOAD_NOT_AVAILABLE,
     CONF_PAYLOAD_OPEN,
+    CONF_PAYLOAD_OSCILLATION_OFF,
+    CONF_PAYLOAD_OSCILLATION_ON,
     CONF_PAYLOAD_PRESS,
+    CONF_PAYLOAD_RESET_PERCENTAGE,
+    CONF_PAYLOAD_RESET_PRESET_MODE,
     CONF_PAYLOAD_STOP,
     CONF_PAYLOAD_STOP_TILT,
+    CONF_PERCENTAGE_COMMAND_TEMPLATE,
+    CONF_PERCENTAGE_COMMAND_TOPIC,
+    CONF_PERCENTAGE_STATE_TOPIC,
+    CONF_PERCENTAGE_VALUE_TEMPLATE,
     CONF_POSITION_CLOSED,
     CONF_POSITION_OPEN,
+    CONF_PRESET_MODE_COMMAND_TEMPLATE,
+    CONF_PRESET_MODE_COMMAND_TOPIC,
+    CONF_PRESET_MODE_STATE_TOPIC,
+    CONF_PRESET_MODE_VALUE_TEMPLATE,
+    CONF_PRESET_MODES_LIST,
     CONF_QOS,
     CONF_RED_TEMPLATE,
     CONF_RETAIN,
@@ -196,6 +217,8 @@ from .const import (
     CONF_SCHEMA,
     CONF_SET_POSITION_TEMPLATE,
     CONF_SET_POSITION_TOPIC,
+    CONF_SPEED_RANGE_MAX,
+    CONF_SPEED_RANGE_MIN,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
     CONF_STATE_OPEN,
@@ -239,7 +262,10 @@ from .const import (
     DEFAULT_PAYLOAD_OFF,
     DEFAULT_PAYLOAD_ON,
     DEFAULT_PAYLOAD_OPEN,
+    DEFAULT_PAYLOAD_OSCILLATE_OFF,
+    DEFAULT_PAYLOAD_OSCILLATE_ON,
     DEFAULT_PAYLOAD_PRESS,
+    DEFAULT_PAYLOAD_RESET,
     DEFAULT_PAYLOAD_STOP,
     DEFAULT_PORT,
     DEFAULT_POSITION_CLOSED,
@@ -247,6 +273,8 @@ from .const import (
     DEFAULT_PREFIX,
     DEFAULT_PROTOCOL,
     DEFAULT_QOS,
+    DEFAULT_SPEED_RANGE_MAX,
+    DEFAULT_SPEED_RANGE_MIN,
     DEFAULT_STATE_STOPPED,
     DEFAULT_TILT_CLOSED_POSITION,
     DEFAULT_TILT_MAX,
@@ -353,6 +381,7 @@ SUBENTRY_PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.COVER,
+    Platform.FAN,
     Platform.LIGHT,
     Platform.NOTIFY,
     Platform.SENSOR,
@@ -436,6 +465,17 @@ TIMEOUT_SELECTOR = NumberSelector(
 
 # Cover specific selectors
 POSITION_SELECTOR = NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX))
+
+# Fan specific selectors
+FAN_SPEED_RANGE_MIN_SELECTOR = vol.All(
+    NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1)),
+    vol.Coerce(int),
+)
+FAN_SPEED_RANGE_MAX_SELECTOR = vol.All(
+    NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=2)),
+    vol.Coerce(int),
+)
+PRESET_MODES_SELECTOR = OPTIONS_SELECTOR
 
 # Switch specific selectors
 SWITCH_DEVICE_CLASS_SELECTOR = SelectSelector(
@@ -538,6 +578,29 @@ def validate_cover_platform_config(
 
 
 @callback
+def validate_fan_platform_config(config: dict[str, Any]) -> dict[str, str]:
+    """Validate the fan config options."""
+    errors: dict[str, str] = {}
+    if (
+        CONF_SPEED_RANGE_MIN in config
+        and CONF_SPEED_RANGE_MAX in config
+        and config[CONF_SPEED_RANGE_MIN] >= config[CONF_SPEED_RANGE_MAX]
+    ):
+        errors["fan_speed_settings"] = (
+            "fan_speed_range_max_must_be_greater_than_speed_range_min"
+        )
+    if (
+        CONF_PRESET_MODES_LIST in config
+        and config.get(CONF_PAYLOAD_RESET_PRESET_MODE) in config[CONF_PRESET_MODES_LIST]
+    ):
+        errors["fan_preset_mode_settings"] = (
+            "fan_preset_mode_reset_in_preset_modes_list"
+        )
+
+    return errors
+
+
+@callback
 def validate_sensor_platform_config(
     config: dict[str, Any],
 ) -> dict[str, str]:
@@ -597,9 +660,12 @@ class PlatformField:
     required: bool
     validator: Callable[..., Any] | None = None
     error: str | None = None
-    default: str | int | bool | None | vol.Undefined = vol.UNDEFINED
+    default: (
+        str | int | bool | None | Callable[[dict[str, Any]], Any] | vol.Undefined
+    ) = vol.UNDEFINED
     is_schema_default: bool = False
     exclude_from_reconfig: bool = False
+    exclude_from_config: bool = False
     conditions: tuple[dict[str, Any], ...] | None = None
     custom_filtering: bool = False
     section: str | None = None
@@ -634,7 +700,7 @@ def validate_light_platform_config(user_data: dict[str, Any]) -> dict[str, str]:
     return errors
 
 
-COMMON_ENTITY_FIELDS = {
+COMMON_ENTITY_FIELDS: dict[str, PlatformField] = {
     CONF_PLATFORM: PlatformField(
         selector=SUBENTRY_PLATFORM_SELECTOR,
         required=True,
@@ -651,7 +717,7 @@ COMMON_ENTITY_FIELDS = {
     ),
 }
 
-PLATFORM_ENTITY_FIELDS = {
+PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
     Platform.BINARY_SENSOR.value: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=BINARY_SENSOR_DEVICE_CLASS_SELECTOR,
@@ -668,6 +734,32 @@ PLATFORM_ENTITY_FIELDS = {
         CONF_DEVICE_CLASS: PlatformField(
             selector=COVER_DEVICE_CLASS_SELECTOR,
             required=False,
+        ),
+    },
+    Platform.FAN.value: {
+        "fan_feature_speed": PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=False,
+            exclude_from_config=True,
+            default=lambda config: bool(config.get(CONF_PERCENTAGE_COMMAND_TOPIC)),
+        ),
+        "fan_feature_preset_modes": PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=False,
+            exclude_from_config=True,
+            default=lambda config: bool(config.get(CONF_PRESET_MODE_COMMAND_TOPIC)),
+        ),
+        "fan_feature_oscillation": PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=False,
+            exclude_from_config=True,
+            default=lambda config: bool(config.get(CONF_OSCILLATION_COMMAND_TOPIC)),
+        ),
+        "fan_feature_direction": PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=False,
+            exclude_from_config=True,
+            default=lambda config: bool(config.get(CONF_DIRECTION_COMMAND_TOPIC)),
         ),
     },
     Platform.NOTIFY.value: {},
@@ -715,7 +807,7 @@ PLATFORM_ENTITY_FIELDS = {
         ),
     },
 }
-PLATFORM_MQTT_FIELDS = {
+PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
     Platform.BINARY_SENSOR.value: {
         CONF_STATE_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
@@ -949,6 +1041,226 @@ PLATFORM_MQTT_FIELDS = {
             selector=BOOLEAN_SELECTOR,
             required=False,
             section="cover_tilt_settings",
+        ),
+    },
+    Platform.FAN.value: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+        ),
+        CONF_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+        ),
+        CONF_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_PAYLOAD_OFF: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            default=DEFAULT_PAYLOAD_OFF,
+        ),
+        CONF_PAYLOAD_ON: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            default=DEFAULT_PAYLOAD_ON,
+        ),
+        CONF_RETAIN: PlatformField(
+            selector=BOOLEAN_SELECTOR, required=False, validator=bool
+        ),
+        CONF_OPTIMISTIC: PlatformField(
+            selector=BOOLEAN_SELECTOR, required=False, validator=bool
+        ),
+        CONF_PERCENTAGE_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            section="fan_speed_settings",
+            conditions=({"fan_feature_speed": True},),
+        ),
+        CONF_PERCENTAGE_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="fan_speed_settings",
+            conditions=({"fan_feature_speed": True},),
+        ),
+        CONF_PERCENTAGE_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            section="fan_speed_settings",
+            conditions=({"fan_feature_speed": True},),
+        ),
+        CONF_PERCENTAGE_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="fan_speed_settings",
+            conditions=({"fan_feature_speed": True},),
+        ),
+        CONF_SPEED_RANGE_MIN: PlatformField(
+            selector=FAN_SPEED_RANGE_MIN_SELECTOR,
+            required=False,
+            validator=int,
+            default=DEFAULT_SPEED_RANGE_MIN,
+            section="fan_speed_settings",
+            conditions=({"fan_feature_speed": True},),
+        ),
+        CONF_SPEED_RANGE_MAX: PlatformField(
+            selector=FAN_SPEED_RANGE_MAX_SELECTOR,
+            required=False,
+            validator=int,
+            default=DEFAULT_SPEED_RANGE_MAX,
+            section="fan_speed_settings",
+            conditions=({"fan_feature_speed": True},),
+        ),
+        CONF_PAYLOAD_RESET_PERCENTAGE: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            default=DEFAULT_PAYLOAD_RESET,
+            section="fan_speed_settings",
+            conditions=({"fan_feature_speed": True},),
+        ),
+        CONF_PRESET_MODES_LIST: PlatformField(
+            selector=PRESET_MODES_SELECTOR,
+            required=True,
+            section="fan_preset_mode_settings",
+            conditions=({"fan_feature_preset_modes": True},),
+        ),
+        CONF_PRESET_MODE_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            section="fan_preset_mode_settings",
+            conditions=({"fan_feature_preset_modes": True},),
+        ),
+        CONF_PRESET_MODE_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="fan_preset_mode_settings",
+            conditions=({"fan_feature_preset_modes": True},),
+        ),
+        CONF_PRESET_MODE_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            section="fan_preset_mode_settings",
+            conditions=({"fan_feature_preset_modes": True},),
+        ),
+        CONF_PRESET_MODE_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="fan_preset_mode_settings",
+            conditions=({"fan_feature_preset_modes": True},),
+        ),
+        CONF_PAYLOAD_RESET_PRESET_MODE: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            default=DEFAULT_PAYLOAD_RESET,
+            section="fan_preset_mode_settings",
+            conditions=({"fan_feature_preset_modes": True},),
+        ),
+        CONF_OSCILLATION_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            section="fan_oscillation_settings",
+            conditions=({"fan_feature_oscillation": True},),
+        ),
+        CONF_OSCILLATION_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="fan_oscillation_settings",
+            conditions=({"fan_feature_oscillation": True},),
+        ),
+        CONF_OSCILLATION_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            section="fan_oscillation_settings",
+            conditions=({"fan_feature_oscillation": True},),
+        ),
+        CONF_OSCILLATION_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="fan_oscillation_settings",
+            conditions=({"fan_feature_oscillation": True},),
+        ),
+        CONF_PAYLOAD_OSCILLATION_OFF: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            default=DEFAULT_PAYLOAD_OSCILLATE_OFF,
+            section="fan_oscillation_settings",
+            conditions=({"fan_feature_oscillation": True},),
+        ),
+        CONF_PAYLOAD_OSCILLATION_ON: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            default=DEFAULT_PAYLOAD_OSCILLATE_ON,
+            section="fan_oscillation_settings",
+            conditions=({"fan_feature_oscillation": True},),
+        ),
+        CONF_DIRECTION_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            section="fan_direction_settings",
+            conditions=({"fan_feature_direction": True},),
+        ),
+        CONF_DIRECTION_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="fan_direction_settings",
+            conditions=({"fan_feature_direction": True},),
+        ),
+        CONF_DIRECTION_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            section="fan_direction_settings",
+            conditions=({"fan_feature_direction": True},),
+        ),
+        CONF_DIRECTION_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="fan_direction_settings",
+            conditions=({"fan_feature_direction": True},),
         ),
     },
     Platform.NOTIFY.value: {
@@ -1510,6 +1822,7 @@ ENTITY_CONFIG_VALIDATOR: dict[
     Platform.BINARY_SENSOR.value: None,
     Platform.BUTTON.value: None,
     Platform.COVER.value: validate_cover_platform_config,
+    Platform.FAN.value: validate_fan_platform_config,
     Platform.LIGHT.value: validate_light_platform_config,
     Platform.NOTIFY.value: None,
     Platform.SENSOR.value: validate_sensor_platform_config,
@@ -1667,6 +1980,14 @@ def data_schema_from_fields(
     device_data: MqttDeviceData | None = None,
 ) -> vol.Schema:
     """Generate custom data schema from platform fields or device data."""
+
+    def get_default(field_details: PlatformField) -> Any:
+        if callable(field_details.default):
+            if TYPE_CHECKING:
+                assert component_data is not None
+            return field_details.default(component_data)
+        return field_details.default
+
     if device_data is not None:
         component_data_with_user_input: dict[str, Any] | None = dict(device_data)
         if TYPE_CHECKING:
@@ -1693,7 +2014,7 @@ def data_schema_from_fields(
             if field_details.required
             else vol.Optional(
                 field_name,
-                default=field_details.default
+                default=get_default(field_details)
                 if field_details.default is not None
                 else vol.UNDEFINED,
             ): field_details.selector(component_data_with_user_input)  # type: ignore[operator]
@@ -2581,13 +2902,21 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         """Update component data defaults."""
         for component_data in self._subentry_data["components"].values():
             platform = component_data[CONF_PLATFORM]
-            subentry_default_data = subentry_schema_default_data_from_fields(
+            platform_fields: dict[str, PlatformField] = (
                 COMMON_ENTITY_FIELDS
                 | PLATFORM_ENTITY_FIELDS[platform]
-                | PLATFORM_MQTT_FIELDS[platform],
+                | PLATFORM_MQTT_FIELDS[platform]
+            )
+            subentry_default_data = subentry_schema_default_data_from_fields(
+                platform_fields,
                 component_data,
             )
             component_data.update(subentry_default_data)
+            for key, platform_field in platform_fields.items():
+                if not platform_field.exclude_from_config:
+                    continue
+                if key in component_data:
+                    component_data.pop(key)
 
     @callback
     def _async_create_subentry(
