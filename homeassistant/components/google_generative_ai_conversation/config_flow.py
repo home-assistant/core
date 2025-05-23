@@ -256,9 +256,9 @@ async def google_generative_ai_config_option_schema(
         if (
             api_model.display_name
             and api_model.name
-            and api_model.supported_actions
             and "tts" not in api_model.name
             and "vision" not in api_model.name
+            and api_model.supported_actions
             and "generateContent" in api_model.supported_actions
         )
     ]
