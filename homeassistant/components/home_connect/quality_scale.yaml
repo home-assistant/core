@@ -52,9 +52,10 @@ rules:
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default:
-    status: exempt
+    status: done
     comment: |
-      There aren't noisy entities in this integration.
+      Event entities are disabled by default to prevent user confusion regarding
+      which events are supported by its appliance.
   entity-translations: done
   exception-translations: done
   icon-translations: done
