@@ -249,7 +249,13 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
         self._is_closing = False
         self._tilt_value: int | None = None
 
-    def _register_scripts(
+        # The config requires (open and close scripts) or a set position script,
+        # therefore the base supported features will always include them.
+        self._attr_supported_features: CoverEntityFeature = (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+        )
+
+    def _iterate_scripts(
         self, config: dict[str, Any]
     ) -> Generator[tuple[str, Sequence[dict[str, Any]], CoverEntityFeature | int]]:
         for action_id, supported_feature in (
@@ -469,13 +475,7 @@ class CoverTemplate(TemplateEntity, AbstractTemplateCover):
         if TYPE_CHECKING:
             assert name is not None
 
-        # The config requires (open and close scripts) or a set position script,
-        # therefore the base supported features will always include them.
-        self._attr_supported_features = (
-            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
-        )
-
-        for action_id, action_config, supported_feature in self._register_scripts(
+        for action_id, action_config, supported_feature in self._iterate_scripts(
             config
         ):
             self.add_script(action_id, action_config, name, DOMAIN)
@@ -531,16 +531,10 @@ class TriggerCoverEntity(TriggerEntity, AbstractTemplateCover):
         TriggerEntity.__init__(self, hass, coordinator, config)
         AbstractTemplateCover.__init__(self, config)
 
-        # The config requires (open and close scripts) or a set position script,
-        # therefore the base supported features will always include them.
-        self._attr_supported_features = (
-            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
-        )
-
         # Render the _attr_name before initializing TriggerCoverEntity
         self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
 
-        for action_id, action_config, supported_feature in self._register_scripts(
+        for action_id, action_config, supported_feature in self._iterate_scripts(
             config
         ):
             self.add_script(action_id, action_config, name, DOMAIN)

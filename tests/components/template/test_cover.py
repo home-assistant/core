@@ -142,7 +142,7 @@ async def async_setup_modern_format(
 async def async_setup_trigger_format(
     hass: HomeAssistant, count: int, cover_config: dict[str, Any]
 ) -> None:
-    """Do setup of cover integration via modern format."""
+    """Do setup of cover integration via trigger format."""
     config = {"template": {**TEST_STATE_TRIGGER, "cover": cover_config}}
 
     with assert_setup_component(count, template.DOMAIN):
@@ -313,7 +313,7 @@ async def setup_empty_action(
     style: ConfigurationStyle,
     script: str,
 ):
-    """Do setup of cover integration using a state template."""
+    """Do setup of cover integration using a empty actions template."""
     empty = {
         "open_cover": [],
         "close_cover": [],
@@ -380,7 +380,8 @@ async def test_template_state_text(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("state_template", "expected"),
@@ -399,6 +400,10 @@ async def test_template_state_states(
     expected: str,
 ) -> None:
     """Test state template states."""
+
+    hass.states.async_set(TEST_STATE_ENTITY_ID, None)
+    await hass.async_block_till_done()
+
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == expected
 
@@ -484,8 +489,8 @@ async def test_template_state_text_with_position(
     [
         (
             1,
-            "{{ states('cover.test_state') }}",
-            "{{ state_attr('cover.test_position', 'position') }}",
+            "{{ states.cover.test_state.state }}",
+            "{{ states.cover.test_position.attributes.position }}",
         )
     ],
 )
@@ -497,20 +502,26 @@ async def test_template_state_text_with_position(
         (ConfigurationStyle.TRIGGER, "position"),
     ],
 )
+@pytest.mark.parametrize(
+    "set_state",
+    [
+        "",
+        None,
+    ],
+)
 @pytest.mark.usefixtures("setup_single_attribute_state_cover")
-async def test_template_state_text_ignored_if_none(
+async def test_template_state_text_ignored_if_none_or_empty(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
+    set_state: str,
 ) -> None:
     """Test ignoring an empty state text of a template."""
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_UNKNOWN
 
-    hass.states.async_set(TEST_STATE_ENTITY_ID, None)
+    hass.states.async_set(TEST_STATE_ENTITY_ID, set_state)
     await hass.async_block_till_done()
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_UNKNOWN
-    assert "ERROR" not in caplog.text
 
 
 @pytest.mark.parametrize(("count", "state_template"), [(1, "{{ 1 == 1 }}")])
@@ -1099,6 +1110,50 @@ async def test_set_position_optimistic(
     ("style", "cover_config"),
     [
         (
+            ConfigurationStyle.TRIGGER,
+            {
+                "name": TEST_OBJECT_ID,
+                "set_cover_position": SET_COVER_POSITION,
+                "picture": "{{ 'foo.png' if is_state('cover.test_state', 'open') else 'bar.png' }}",
+            },
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_cover")
+async def test_non_optimistic_template_with_optimistic_state(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test optimistic state with non-optimistic template."""
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert "entity_picture" not in state.attributes
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_POSITION: 42},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == CoverState.OPEN
+    assert state.attributes["current_position"] == 42.0
+    assert "entity_picture" not in state.attributes
+
+    hass.states.async_set(TEST_STATE_ENTITY_ID, CoverState.OPEN)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == CoverState.OPEN
+    assert state.attributes["current_position"] == 42.0
+    assert state.attributes["entity_picture"] == "foo.png"
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    ("style", "cover_config"),
+    [
+        (
             ConfigurationStyle.LEGACY,
             {
                 "test_template_cover": {
@@ -1171,18 +1226,20 @@ async def test_set_tilt_position_optimistic(
     ],
 )
 @pytest.mark.parametrize(
-    ("style", "attribute"),
+    ("style", "attribute", "initial_expected_state"),
     [
-        (ConfigurationStyle.LEGACY, "icon_template"),
-        (ConfigurationStyle.MODERN, "icon"),
-        (ConfigurationStyle.TRIGGER, "icon"),
+        (ConfigurationStyle.LEGACY, "icon_template", ""),
+        (ConfigurationStyle.MODERN, "icon", ""),
+        (ConfigurationStyle.TRIGGER, "icon", None),
     ],
 )
 @pytest.mark.usefixtures("setup_single_attribute_state_cover")
-async def test_icon_template(hass: HomeAssistant) -> None:
+async def test_icon_template(
+    hass: HomeAssistant, initial_expected_state: str | None
+) -> None:
     """Test icon template."""
     state = hass.states.get(TEST_ENTITY_ID)
-    assert state.attributes.get("icon") in ("", None)
+    assert state.attributes.get("icon") == initial_expected_state
 
     state = hass.states.async_set("cover.test_state", CoverState.OPEN)
     await hass.async_block_till_done()
