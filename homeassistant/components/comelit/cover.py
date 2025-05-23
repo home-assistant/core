@@ -14,6 +14,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
 from .entity import ComelitBridgeBaseEntity
+from .utils import bridge_api_call
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -83,6 +84,7 @@ class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
         """Return if the cover is opening."""
         return self._current_action("opening")
 
+    @bridge_api_call
     async def _cover_set_state(self, action: int, state: int) -> None:
         """Set desired cover state."""
         self._last_state = self.state
