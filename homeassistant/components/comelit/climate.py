@@ -22,8 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
 from .entity import ComelitBridgeBaseEntity
-from .utils import cleanup_stale_entity, load_api_data
-from .utils import bridge_api_call
+from .utils import bridge_api_call, cleanup_stale_entity, load_api_data
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0

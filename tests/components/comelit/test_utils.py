@@ -4,11 +4,17 @@ from unittest.mock import AsyncMock
 
 from aiocomelit.api import ComelitSerialBridgeObject
 from aiocomelit.const import CLIMATE, WATT
+from aiocomelit.exceptions import CannotAuthenticate, CannotConnect, CannotRetrieveData
+import pytest
 
 from homeassistant.components.climate import HVACMode
+from homeassistant.components.comelit.const import DOMAIN
 from homeassistant.components.humidifier import ATTR_HUMIDITY
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TURN_ON
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_integration
 
@@ -17,6 +23,7 @@ from tests.common import MockConfigEntry
 ENTITY_ID_1 = "climate.climate0"
 ENTITY_ID_2 = "humidifier.climate0_dehumidifier"
 ENTITY_ID_3 = "humidifier.climate0_humidifier"
+ENTITY_ID_4 = "switch.climate0_switch"
 
 
 async def test_device_remove_stale(
@@ -67,27 +74,6 @@ async def test_device_remove_stale(
     assert (state := hass.states.get(ENTITY_ID_3)) is None
 
 
-"""Tests for Comelit SimpleHome switch platform."""
-
-from unittest.mock import AsyncMock
-
-from aiocomelit.exceptions import CannotAuthenticate, CannotConnect, CannotRetrieveData
-import pytest
-
-from homeassistant.components.comelit.const import DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TURN_ON
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-
-from . import setup_integration
-
-from tests.common import MockConfigEntry
-
-ENTITY_ID = "switch.switch0"
-
-
 @pytest.mark.parametrize(
     ("side_effect", "key", "error"),
     [
@@ -107,7 +93,7 @@ async def test_bridge_api_call_exceptions(
 
     await setup_integration(hass, mock_serial_bridge_config_entry)
 
-    assert (state := hass.states.get(ENTITY_ID))
+    assert (state := hass.states.get(ENTITY_ID_4))
     assert state.state == STATE_OFF
 
     mock_serial_bridge.set_device_status.side_effect = side_effect
@@ -117,7 +103,7 @@ async def test_bridge_api_call_exceptions(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            {ATTR_ENTITY_ID: ENTITY_ID_4},
             blocking=True,
         )
 
@@ -135,7 +121,7 @@ async def test_bridge_api_call_reauth(
 
     await setup_integration(hass, mock_serial_bridge_config_entry)
 
-    assert (state := hass.states.get(ENTITY_ID))
+    assert (state := hass.states.get(ENTITY_ID_4))
     assert state.state == STATE_OFF
 
     mock_serial_bridge.set_device_status.side_effect = CannotAuthenticate
@@ -144,7 +130,7 @@ async def test_bridge_api_call_reauth(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        {ATTR_ENTITY_ID: ENTITY_ID_4},
         blocking=True,
     )
 

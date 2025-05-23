@@ -1,12 +1,10 @@
 """Utils for Comelit."""
 
-from typing import Any
-
-from aiocomelit import ComelitSerialBridgeObject
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from typing import Any, Concatenate
 
+from aiocomelit import ComelitSerialBridgeObject
 from aiocomelit.exceptions import CannotAuthenticate, CannotConnect, CannotRetrieveData
 from aiohttp import ClientSession, CookieJar
 
@@ -14,16 +12,13 @@ from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     aiohttp_client,
     device_registry as dr,
     entity_registry as er,
 )
 
-from .const import _LOGGER
-
-from .const import DOMAIN
+from .const import _LOGGER, DOMAIN
 from .entity import ComelitBridgeBaseEntity
 
 
@@ -34,7 +29,7 @@ async def async_client_session(hass: HomeAssistant) -> ClientSession:
     )
 
 
-def load_api_data(device: ComelitSerialBridgeObject, domain: str) -> dict[Any, Any]:
+def load_api_data(device: ComelitSerialBridgeObject, domain: str) -> list[Any]:
     """Load data from the API."""
     # This function is called when the data is loaded from the API
     if not isinstance(device.val, list):
