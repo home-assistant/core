@@ -48,7 +48,7 @@
             }
           },
           "backup_stage": { "name": "Backup stage" },
-          "failed_reason": { "name": "Failed reason" }
+          "failed_reason": { "name": "Failure reason" }
         }
       }
     },
