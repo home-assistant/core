@@ -43,9 +43,8 @@ class AutomaticBackupEvent(BackupManagerBaseEntity, EventEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if (
-            (data := self.coordinator.data) is None
-            or not data
-            or (event := self.coordinator.data.last_event) is None
+            not (data := self.coordinator.data)
+            or (event := data.last_event) is None
             or not isinstance(event, CreateBackupEvent)
         ):
             return
