@@ -51,6 +51,8 @@ class SupportedModels(StrEnum):
     EVAPORATIVE_HUMIDIFIER = "evaporative_humidifier"
     FLOOR_LAMP = "floor_lamp"
     STRIP_LIGHT_3 = "strip_light_3"
+    GARAGE_DOOR_OPENER = "garage_door_opener"
+    RELAY_SWITCH_2PM = "relay_switch_2pm"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -81,6 +83,8 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.EVAPORATIVE_HUMIDIFIER: SupportedModels.EVAPORATIVE_HUMIDIFIER,
     SwitchbotModel.FLOOR_LAMP: SupportedModels.FLOOR_LAMP,
     SwitchbotModel.STRIP_LIGHT_3: SupportedModels.STRIP_LIGHT_3,
+    SwitchbotModel.GARAGE_DOOR_OPENER: SupportedModels.GARAGE_DOOR_OPENER,
+    SwitchbotModel.RELAY_SWITCH_2PM: SupportedModels.RELAY_SWITCH_2PM,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -112,6 +116,8 @@ ENCRYPTED_MODELS = {
     SwitchbotModel.EVAPORATIVE_HUMIDIFIER,
     SwitchbotModel.FLOOR_LAMP,
     SwitchbotModel.STRIP_LIGHT_3,
+    SwitchbotModel.GARAGE_DOOR_OPENER,
+    SwitchbotModel.RELAY_SWITCH_2PM,
 }
 
 ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
@@ -128,6 +134,8 @@ ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
     SwitchbotModel.EVAPORATIVE_HUMIDIFIER: switchbot.SwitchbotEvaporativeHumidifier,
     SwitchbotModel.FLOOR_LAMP: switchbot.SwitchbotStripLight3,
     SwitchbotModel.STRIP_LIGHT_3: switchbot.SwitchbotStripLight3,
+    SwitchbotModel.GARAGE_DOOR_OPENER: switchbot.SwitchbotRelaySwitch,
+    SwitchbotModel.RELAY_SWITCH_2PM: switchbot.SwitchbotRelaySwitch2PM,
 }
 
 HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {
