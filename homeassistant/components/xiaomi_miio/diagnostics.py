@@ -29,9 +29,9 @@ async def async_get_config_entry_diagnostics(
     }
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
-        data = config_entry.runtime_data.device_coordinator
-        if isinstance(data, dict):
-            diagnostics_data["coordinator_data"] = data
+        coordinator = config_entry.runtime_data.device_coordinator
+        if isinstance(coordinator.data, dict):
+            diagnostics_data["coordinator_data"] = coordinator.data
         else:
-            diagnostics_data["coordinator_data"] = repr(data)
+            diagnostics_data["coordinator_data"] = repr(coordinator.data)
     return diagnostics_data
