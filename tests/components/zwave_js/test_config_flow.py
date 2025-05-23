@@ -153,19 +153,6 @@ def mock_sdk_version(client: MagicMock) -> Generator[None]:
         client.driver.controller.data["sdkVersion"] = original_sdk_version
 
 
-@pytest.fixture(name="driver_ready_timeout")
-def mock_driver_ready_timeout() -> Generator[None]:
-    """Mock migration nvm restore driver ready timeout."""
-    with patch(
-        (
-            "homeassistant.components.zwave_js.config_flow."
-            "RESTORE_NVM_DRIVER_READY_TIMEOUT"
-        ),
-        new=0,
-    ):
-        yield
-
-
 async def test_manual(hass: HomeAssistant) -> None:
     """Test we create an entry with manual step."""
 
@@ -861,8 +848,11 @@ async def test_usb_discovery_migration(
     restart_addon: AsyncMock,
     client: MagicMock,
     integration: MockConfigEntry,
+    get_server_version: AsyncMock,
 ) -> None:
     """Test usb discovery migration."""
+    version_info = get_server_version.return_value
+    version_info.home_id = 4321
     addon_options["device"] = "/dev/ttyUSB0"
     entry = integration
     assert client.connect.call_count == 1
@@ -886,6 +876,13 @@ async def test_usb_discovery_migration(
     client.driver.controller.async_backup_nvm_raw = AsyncMock(
         side_effect=mock_backup_nvm_raw
     )
+
+    async def mock_reset_controller():
+        client.driver.emit(
+            "driver ready", {"event": "driver ready", "source": "driver"}
+        )
+
+    client.driver.async_hard_reset = AsyncMock(side_effect=mock_reset_controller)
 
     async def mock_restore_nvm(data: bytes):
         client.driver.controller.emit(
@@ -918,15 +915,15 @@ async def test_usb_discovery_migration(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "intent_migrate"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch("pathlib.Path.write_bytes", MagicMock()) as mock_file:
+    with patch("pathlib.Path.write_bytes") as mock_file:
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
         assert mock_file.call_count == 1
@@ -936,13 +933,14 @@ async def test_usb_discovery_migration(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "instruct_unplug"
+    assert entry.unique_id == "4321"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
     assert set_addon_options.call_args == call(
         "core_zwave_js", AddonsOptions(config={"device": USB_DISCOVERY_INFO.device})
@@ -952,9 +950,11 @@ async def test_usb_discovery_migration(
 
     assert restart_addon.call_args == call("core_zwave_js")
 
+    version_info.home_id = 5678
+
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "restore_nvm"
     assert client.connect.call_count == 2
 
@@ -970,9 +970,10 @@ async def test_usb_discovery_migration(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "migration_successful"
-    assert integration.data["url"] == "ws://host1:3001"
-    assert integration.data["usb_path"] == USB_DISCOVERY_INFO.device
-    assert integration.data["use_addon"] is True
+    assert entry.data["url"] == "ws://host1:3001"
+    assert entry.data["usb_path"] == USB_DISCOVERY_INFO.device
+    assert entry.data["use_addon"] is True
+    assert entry.unique_id == "5678"
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running", "get_addon_discovery_info")
@@ -989,10 +990,9 @@ async def test_usb_discovery_migration(
         ]
     ],
 )
-async def test_usb_discovery_migration_driver_ready_timeout(
+async def test_usb_discovery_migration_restore_driver_ready_timeout(
     hass: HomeAssistant,
     addon_options: dict[str, Any],
-    driver_ready_timeout: None,
     mock_usb_serial_by_id: MagicMock,
     set_addon_options: AsyncMock,
     restart_addon: AsyncMock,
@@ -1024,6 +1024,13 @@ async def test_usb_discovery_migration_driver_ready_timeout(
         side_effect=mock_backup_nvm_raw
     )
 
+    async def mock_reset_controller():
+        client.driver.emit(
+            "driver ready", {"event": "driver ready", "source": "driver"}
+        )
+
+    client.driver.async_hard_reset = AsyncMock(side_effect=mock_reset_controller)
+
     async def mock_restore_nvm(data: bytes):
         client.driver.controller.emit(
             "nvm convert progress",
@@ -1052,15 +1059,15 @@ async def test_usb_discovery_migration_driver_ready_timeout(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "intent_migrate"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch("pathlib.Path.write_bytes", MagicMock()) as mock_file:
+    with patch("pathlib.Path.write_bytes") as mock_file:
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
         assert mock_file.call_count == 1
@@ -1070,13 +1077,13 @@ async def test_usb_discovery_migration_driver_ready_timeout(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "instruct_unplug"
     assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
     assert set_addon_options.call_args == call(
         "core_zwave_js", AddonsOptions(config={"device": USB_DISCOVERY_INFO.device})
@@ -1086,21 +1093,25 @@ async def test_usb_discovery_migration_driver_ready_timeout(
 
     assert restart_addon.call_args == call("core_zwave_js")
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    with patch(
+        ("homeassistant.components.zwave_js.config_flow.DRIVER_READY_TIMEOUT"),
+        new=0,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "restore_nvm"
-    assert client.connect.call_count == 2
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "restore_nvm"
+        assert client.connect.call_count == 2
 
-    await hass.async_block_till_done()
-    assert client.connect.call_count == 3
-    assert entry.state is config_entries.ConfigEntryState.LOADED
-    assert client.driver.controller.async_restore_nvm.call_count == 1
-    assert len(events) == 2
-    assert events[0].data["progress"] == 0.25
-    assert events[1].data["progress"] == 0.75
+        await hass.async_block_till_done()
+        assert client.connect.call_count == 3
+        assert entry.state is config_entries.ConfigEntryState.LOADED
+        assert client.driver.controller.async_restore_nvm.call_count == 1
+        assert len(events) == 2
+        assert events[0].data["progress"] == 0.25
+        assert events[1].data["progress"] == 0.75
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "migration_successful"
@@ -3656,6 +3667,20 @@ async def test_reconfigure_migrate_low_sdk_version(
         ]
     ],
 )
+@pytest.mark.parametrize(
+    (
+        "reset_server_version_side_effect",
+        "reset_unique_id",
+        "restore_server_version_side_effect",
+        "final_unique_id",
+    ),
+    [
+        (None, "4321", None, "8765"),
+        (aiohttp.ClientError("Boom"), "1234", None, "8765"),
+        (None, "4321", aiohttp.ClientError("Boom"), "5678"),
+        (aiohttp.ClientError("Boom"), "1234", aiohttp.ClientError("Boom"), "5678"),
+    ],
+)
 async def test_reconfigure_migrate_with_addon(
     hass: HomeAssistant,
     client,
@@ -3665,8 +3690,16 @@ async def test_reconfigure_migrate_with_addon(
     restart_addon,
     set_addon_options,
     get_addon_discovery_info,
+    get_server_version: AsyncMock,
+    reset_server_version_side_effect: Exception | None,
+    reset_unique_id: str,
+    restore_server_version_side_effect: Exception | None,
+    final_unique_id: str,
 ) -> None:
     """Test migration flow with add-on."""
+    get_server_version.side_effect = reset_server_version_side_effect
+    version_info = get_server_version.return_value
+    version_info.home_id = 4321
     entry = integration
     assert client.connect.call_count == 1
     hass.config_entries.async_update_entry(
@@ -3690,6 +3723,13 @@ async def test_reconfigure_migrate_with_addon(
         side_effect=mock_backup_nvm_raw
     )
 
+    async def mock_reset_controller():
+        client.driver.emit(
+            "driver ready", {"event": "driver ready", "source": "driver"}
+        )
+
+    client.driver.async_hard_reset = AsyncMock(side_effect=mock_reset_controller)
+
     async def mock_restore_nvm(data: bytes):
         client.driver.controller.emit(
             "nvm convert progress",
@@ -3712,22 +3752,22 @@ async def test_reconfigure_migrate_with_addon(
 
     result = await entry.start_reconfigure_flow(hass)
 
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "intent_migrate"}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "intent_migrate"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch("pathlib.Path.write_bytes", MagicMock()) as mock_file:
+    with patch("pathlib.Path.write_bytes") as mock_file:
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
         assert mock_file.call_count == 1
@@ -3737,15 +3777,20 @@ async def test_reconfigure_migrate_with_addon(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "instruct_unplug"
     assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert entry.unique_id == reset_unique_id
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "choose_serial_port"
     assert result["data_schema"].schema[CONF_USB_PATH]
+
+    # Reset side effect before starting the add-on.
+    get_server_version.side_effect = None
+    version_info.home_id = 5678
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -3754,7 +3799,7 @@ async def test_reconfigure_migrate_with_addon(
         },
     )
 
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
     assert set_addon_options.call_args == call(
         "core_zwave_js", AddonsOptions(config={"device": "/test"})
@@ -3766,7 +3811,11 @@ async def test_reconfigure_migrate_with_addon(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert entry.unique_id == "5678"
+    get_server_version.side_effect = restore_server_version_side_effect
+    version_info.home_id = 8765
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "restore_nvm"
     assert client.connect.call_count == 2
 
@@ -3782,9 +3831,10 @@ async def test_reconfigure_migrate_with_addon(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "migration_successful"
-    assert integration.data["url"] == "ws://host1:3001"
-    assert integration.data["usb_path"] == "/test"
-    assert integration.data["use_addon"] is True
+    assert entry.data["url"] == "ws://host1:3001"
+    assert entry.data["usb_path"] == "/test"
+    assert entry.data["use_addon"] is True
+    assert entry.unique_id == final_unique_id
 
 
 @pytest.mark.parametrize(
@@ -3800,13 +3850,174 @@ async def test_reconfigure_migrate_with_addon(
         ]
     ],
 )
-async def test_reconfigure_migrate_driver_ready_timeout(
+async def test_reconfigure_migrate_reset_driver_ready_timeout(
     hass: HomeAssistant,
     client,
     supervisor,
     integration,
     addon_running,
-    driver_ready_timeout: None,
+    restart_addon,
+    set_addon_options,
+    get_addon_discovery_info,
+    get_server_version: AsyncMock,
+) -> None:
+    """Test migration flow with driver ready timeout after controller reset."""
+    version_info = get_server_version.return_value
+    version_info.home_id = 4321
+    entry = integration
+    assert client.connect.call_count == 1
+    hass.config_entries.async_update_entry(
+        entry,
+        unique_id="1234",
+        data={
+            "url": "ws://localhost:3000",
+            "use_addon": True,
+            "usb_path": "/dev/ttyUSB0",
+        },
+    )
+
+    async def mock_backup_nvm_raw():
+        await asyncio.sleep(0)
+        client.driver.controller.emit(
+            "nvm backup progress", {"bytesRead": 100, "total": 200}
+        )
+        return b"test_nvm_data"
+
+    client.driver.controller.async_backup_nvm_raw = AsyncMock(
+        side_effect=mock_backup_nvm_raw
+    )
+
+    async def mock_reset_controller():
+        await asyncio.sleep(0)
+
+    client.driver.async_hard_reset = AsyncMock(side_effect=mock_reset_controller)
+
+    async def mock_restore_nvm(data: bytes):
+        client.driver.controller.emit(
+            "nvm convert progress",
+            {"event": "nvm convert progress", "bytesRead": 100, "total": 200},
+        )
+        await asyncio.sleep(0)
+        client.driver.controller.emit(
+            "nvm restore progress",
+            {"event": "nvm restore progress", "bytesWritten": 100, "total": 200},
+        )
+        client.driver.emit(
+            "driver ready", {"event": "driver ready", "source": "driver"}
+        )
+
+    client.driver.controller.async_restore_nvm = AsyncMock(side_effect=mock_restore_nvm)
+
+    events = async_capture_events(
+        hass, data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "intent_migrate"
+
+    with (
+        patch(
+            ("homeassistant.components.zwave_js.config_flow.DRIVER_READY_TIMEOUT"),
+            new=0,
+        ),
+        patch("pathlib.Path.write_bytes") as mock_file,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "backup_nvm"
+
+        await hass.async_block_till_done()
+        assert client.driver.controller.async_backup_nvm_raw.call_count == 1
+        assert mock_file.call_count == 1
+        assert len(events) == 1
+        assert events[0].data["progress"] == 0.5
+        events.clear()
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "instruct_unplug"
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert entry.unique_id == "4321"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "choose_serial_port"
+    assert result["data_schema"].schema[CONF_USB_PATH]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USB_PATH: "/test",
+        },
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+    assert set_addon_options.call_args == call(
+        "core_zwave_js", AddonsOptions(config={"device": "/test"})
+    )
+
+    await hass.async_block_till_done()
+
+    assert restart_addon.call_args == call("core_zwave_js")
+
+    version_info.home_id = 5678
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "restore_nvm"
+    assert client.connect.call_count == 2
+
+    await hass.async_block_till_done()
+    assert client.connect.call_count == 3
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert client.driver.controller.async_restore_nvm.call_count == 1
+    assert len(events) == 2
+    assert events[0].data["progress"] == 0.25
+    assert events[1].data["progress"] == 0.75
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "migration_successful"
+    assert entry.data["url"] == "ws://host1:3001"
+    assert entry.data["usb_path"] == "/test"
+    assert entry.data["use_addon"] is True
+    assert entry.unique_id == "5678"
+
+
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_zwave_js",
+                service="zwave_js",
+                uuid=uuid4(),
+                config=ADDON_DISCOVERY_INFO,
+            )
+        ]
+    ],
+)
+async def test_reconfigure_migrate_restore_driver_ready_timeout(
+    hass: HomeAssistant,
+    client,
+    supervisor,
+    integration,
+    addon_running,
     restart_addon,
     set_addon_options,
     get_addon_discovery_info,
@@ -3835,6 +4046,13 @@ async def test_reconfigure_migrate_driver_ready_timeout(
         side_effect=mock_backup_nvm_raw
     )
 
+    async def mock_reset_controller():
+        client.driver.emit(
+            "driver ready", {"event": "driver ready", "source": "driver"}
+        )
+
+    client.driver.async_hard_reset = AsyncMock(side_effect=mock_reset_controller)
+
     async def mock_restore_nvm(data: bytes):
         client.driver.controller.emit(
             "nvm convert progress",
@@ -3854,22 +4072,22 @@ async def test_reconfigure_migrate_driver_ready_timeout(
 
     result = await entry.start_reconfigure_flow(hass)
 
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "intent_migrate"}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "intent_migrate"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch("pathlib.Path.write_bytes", MagicMock()) as mock_file:
+    with patch("pathlib.Path.write_bytes") as mock_file:
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
         assert mock_file.call_count == 1
@@ -3879,13 +4097,13 @@ async def test_reconfigure_migrate_driver_ready_timeout(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "instruct_unplug"
     assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "choose_serial_port"
     assert result["data_schema"].schema[CONF_USB_PATH]
 
@@ -3896,7 +4114,7 @@ async def test_reconfigure_migrate_driver_ready_timeout(
         },
     )
 
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
     assert set_addon_options.call_args == call(
         "core_zwave_js", AddonsOptions(config={"device": "/test"})
@@ -3906,21 +4124,25 @@ async def test_reconfigure_migrate_driver_ready_timeout(
 
     assert restart_addon.call_args == call("core_zwave_js")
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    with patch(
+        ("homeassistant.components.zwave_js.config_flow.DRIVER_READY_TIMEOUT"),
+        new=0,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "restore_nvm"
-    assert client.connect.call_count == 2
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "restore_nvm"
+        assert client.connect.call_count == 2
 
-    await hass.async_block_till_done()
-    assert client.connect.call_count == 3
-    assert entry.state is config_entries.ConfigEntryState.LOADED
-    assert client.driver.controller.async_restore_nvm.call_count == 1
-    assert len(events) == 2
-    assert events[0].data["progress"] == 0.25
-    assert events[1].data["progress"] == 0.75
+        await hass.async_block_till_done()
+        assert client.connect.call_count == 3
+        assert entry.state is config_entries.ConfigEntryState.LOADED
+        assert client.driver.controller.async_restore_nvm.call_count == 1
+        assert len(events) == 2
+        assert events[0].data["progress"] == 0.25
+        assert events[1].data["progress"] == 0.75
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "migration_successful"
@@ -3944,19 +4166,19 @@ async def test_reconfigure_migrate_backup_failure(
 
     result = await entry.start_reconfigure_flow(hass)
 
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "intent_migrate"}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "intent_migrate"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "backup_failed"
 
 
@@ -3979,30 +4201,28 @@ async def test_reconfigure_migrate_backup_file_failure(
 
     result = await entry.start_reconfigure_flow(hass)
 
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "intent_migrate"}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "intent_migrate"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch(
-        "pathlib.Path.write_bytes", MagicMock(side_effect=OSError("test_error"))
-    ):
+    with patch("pathlib.Path.write_bytes", side_effect=OSError("test_error")):
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "backup_failed"
 
 
@@ -4041,41 +4261,45 @@ async def test_reconfigure_migrate_start_addon_failure(
     client.driver.controller.async_backup_nvm_raw = AsyncMock(
         side_effect=mock_backup_nvm_raw
     )
-    client.driver.controller.async_restore_nvm = AsyncMock(
-        side_effect=FailedCommand("test_error", "unknown_error")
-    )
+
+    async def mock_reset_controller():
+        client.driver.emit(
+            "driver ready", {"event": "driver ready", "source": "driver"}
+        )
+
+    client.driver.async_hard_reset = AsyncMock(side_effect=mock_reset_controller)
 
     result = await entry.start_reconfigure_flow(hass)
 
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "intent_migrate"}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "intent_migrate"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch("pathlib.Path.write_bytes", MagicMock()) as mock_file:
+    with patch("pathlib.Path.write_bytes") as mock_file:
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
         assert mock_file.call_count == 1
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "instruct_unplug"
     assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "choose_serial_port"
 
     result = await hass.config_entries.flow.async_configure(
@@ -4090,13 +4314,13 @@ async def test_reconfigure_migrate_start_addon_failure(
         "core_zwave_js", AddonsOptions(config={"device": "/test"})
     )
 
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
     await hass.async_block_till_done()
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_start_failed"
 
 
@@ -4136,41 +4360,48 @@ async def test_reconfigure_migrate_restore_failure(
     client.driver.controller.async_backup_nvm_raw = AsyncMock(
         side_effect=mock_backup_nvm_raw
     )
+
+    async def mock_reset_controller():
+        client.driver.emit(
+            "driver ready", {"event": "driver ready", "source": "driver"}
+        )
+
+    client.driver.async_hard_reset = AsyncMock(side_effect=mock_reset_controller)
     client.driver.controller.async_restore_nvm = AsyncMock(
         side_effect=FailedCommand("test_error", "unknown_error")
     )
 
     result = await entry.start_reconfigure_flow(hass)
 
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "intent_migrate"}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "intent_migrate"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch("pathlib.Path.write_bytes", MagicMock()) as mock_file:
+    with patch("pathlib.Path.write_bytes") as mock_file:
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
         assert mock_file.call_count == 1
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "instruct_unplug"
     assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "choose_serial_port"
 
     result = await hass.config_entries.flow.async_configure(
@@ -4180,13 +4411,13 @@ async def test_reconfigure_migrate_restore_failure(
         },
     )
 
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
     await hass.async_block_till_done()
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "restore_nvm"
 
     await hass.async_block_till_done()
@@ -4195,13 +4426,13 @@ async def test_reconfigure_migrate_restore_failure(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "restore_failed"
     assert result["description_placeholders"]["file_path"]
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "restore_nvm"
 
     await hass.async_block_till_done()
@@ -4210,7 +4441,7 @@ async def test_reconfigure_migrate_restore_failure(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "restore_failed"
 
     hass.config_entries.flow.async_abort(result["flow_id"])
@@ -4218,28 +4449,76 @@ async def test_reconfigure_migrate_restore_failure(
     assert len(hass.config_entries.flow.async_progress()) == 0
 
 
-async def test_get_driver_failure(hass: HomeAssistant, integration, client) -> None:
-    """Test get driver failure."""
+async def test_get_driver_failure_intent_migrate(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+) -> None:
+    """Test get driver failure in intent migrate step."""
     entry = integration
     hass.config_entries.async_update_entry(
         integration, unique_id="1234", data={**integration.data, "use_addon": True}
     )
     result = await entry.start_reconfigure_flow(hass)
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "reconfigure"
+
+    await hass.config_entries.async_unload(integration.entry_id)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "config_entry_not_loaded"
+
+
+async def test_get_driver_failure_instruct_unplug(
+    hass: HomeAssistant,
+    client: MagicMock,
+    integration: MockConfigEntry,
+) -> None:
+    """Test get driver failure in instruct unplug step."""
+
+    async def mock_backup_nvm_raw():
+        await asyncio.sleep(0)
+        client.driver.controller.emit(
+            "nvm backup progress", {"bytesRead": 100, "total": 200}
+        )
+        return b"test_nvm_data"
+
+    client.driver.controller.async_backup_nvm_raw = AsyncMock(
+        side_effect=mock_backup_nvm_raw
+    )
+    entry = integration
+    hass.config_entries.async_update_entry(
+        integration, unique_id="1234", data={**integration.data, "use_addon": True}
+    )
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "intent_migrate"}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "intent_migrate"
-
-    await hass.config_entries.async_unload(integration.entry_id)
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "backup_nvm"
+
+    with patch("pathlib.Path.write_bytes") as mock_file:
+        await hass.async_block_till_done()
+        assert client.driver.controller.async_backup_nvm_raw.call_count == 1
+        assert mock_file.call_count == 1
+
+    await hass.config_entries.async_unload(integration.entry_id)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "config_entry_not_loaded"
 
 
@@ -4263,29 +4542,29 @@ async def test_hard_reset_failure(hass: HomeAssistant, integration, client) -> N
 
     result = await entry.start_reconfigure_flow(hass)
 
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "intent_migrate"}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "intent_migrate"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch("pathlib.Path.write_bytes", MagicMock()) as mock_file:
+    with patch("pathlib.Path.write_bytes") as mock_file:
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
         assert mock_file.call_count == 1
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reset_failed"
 
 
@@ -4306,31 +4585,38 @@ async def test_choose_serial_port_usb_ports_failure(
         side_effect=mock_backup_nvm_raw
     )
 
+    async def mock_reset_controller():
+        client.driver.emit(
+            "driver ready", {"event": "driver ready", "source": "driver"}
+        )
+
+    client.driver.async_hard_reset = AsyncMock(side_effect=mock_reset_controller)
+
     result = await entry.start_reconfigure_flow(hass)
 
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "intent_migrate"}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "intent_migrate"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch("pathlib.Path.write_bytes", MagicMock()) as mock_file:
+    with patch("pathlib.Path.write_bytes") as mock_file:
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
         assert mock_file.call_count == 1
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "instruct_unplug"
     assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
@@ -4339,7 +4625,7 @@ async def test_choose_serial_port_usb_ports_failure(
         side_effect=OSError("test_error"),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "usb_ports_failed"
 
 
@@ -4350,14 +4636,14 @@ async def test_configure_addon_usb_ports_failure(
     entry = integration
     result = await entry.start_reconfigure_flow(hass)
 
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "intent_reconfigure"}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor_reconfigure"
 
     with patch(
@@ -4367,5 +4653,5 @@ async def test_configure_addon_usb_ports_failure(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"use_addon": True}
         )
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "usb_ports_failed"
