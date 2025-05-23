@@ -21,7 +21,6 @@ from soco.snapshot import Snapshot
 from sonos_websocket import SonosWebsocket
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -182,7 +181,7 @@ class SonosSpeaker:
 
     async def async_setup(
         self,
-        config_entry: ConfigEntry,
+        entry: SonosConfigEntry,
         has_battery: bool,
         dispatches: list[tuple[Any, ...]],
     ) -> None:
@@ -208,7 +207,7 @@ class SonosSpeaker:
         )
 
         for signal, target in dispatch_pairs:
-            config_entry.async_on_unload(
+            entry.async_on_unload(
                 async_dispatcher_connect(
                     self.hass,
                     signal,
@@ -221,7 +220,7 @@ class SonosSpeaker:
 
         await self.async_subscribe()
 
-    def setup(self, config_entry: ConfigEntry) -> None:
+    def setup(self, entry: SonosConfigEntry) -> None:
         """Run initial setup of the speaker."""
         self.media.play_mode = self.soco.play_mode
         self.update_volume()
@@ -256,7 +255,7 @@ class SonosSpeaker:
         dispatches.append((SONOS_CREATE_MEDIA_PLAYER, self))
         dispatches.append((SONOS_SPEAKER_ADDED, self.soco.uid))
 
-        self.hass.create_task(self.async_setup(config_entry, has_battery, dispatches))
+        self.hass.create_task(self.async_setup(entry, has_battery, dispatches))
 
     #
     # Entity management
