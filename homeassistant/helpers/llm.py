@@ -27,7 +27,12 @@ from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.todo import DOMAIN as TODO_DOMAIN, TodoServices
 from homeassistant.components.weather import INTENT_GET_WEATHER
 from homeassistant.const import (
+    ATTR_AREA_ID,
+    ATTR_DEVICE_ID,
     ATTR_DOMAIN,
+    ATTR_ENTITY_ID,
+    ATTR_FLOOR_ID,
+    ATTR_LABEL_ID,
     ATTR_SERVICE,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_SERVICE_REMOVED,
@@ -52,7 +57,7 @@ from . import (
 from .singleton import singleton
 
 ACTION_PARAMETERS_CACHE: HassKey[
-    dict[str, dict[str, tuple[str | None, vol.Schema]]]
+    dict[tuple[str, str], tuple[str | None, vol.Schema]]
 ] = HassKey("llm_action_parameters_cache")
 
 
@@ -806,7 +811,7 @@ def _get_cached_action_parameters(
     hass: HomeAssistant, domain: str, action: str
 ) -> tuple[str | None, vol.Schema]:
     """Get action description and schema."""
-    description = None
+    description: str | None = None
     parameters = vol.Schema({})
 
     parameters_cache = hass.data.get(ACTION_PARAMETERS_CACHE)
@@ -817,12 +822,10 @@ def _get_cached_action_parameters(
         @callback
         def clear_cache(event: Event) -> None:
             """Clear action parameter cache on action removal."""
-            if (
-                event.data[ATTR_DOMAIN] in parameters_cache
-                and event.data[ATTR_SERVICE]
-                in parameters_cache[event.data[ATTR_DOMAIN]]
-            ):
-                parameters_cache[event.data[ATTR_DOMAIN]].pop(event.data[ATTR_SERVICE])
+            if (event.data[ATTR_DOMAIN], event.data[ATTR_SERVICE]) in parameters_cache:
+                parameters_cache.pop(
+                    (event.data[ATTR_DOMAIN], event.data[ATTR_SERVICE])
+                )
 
         cancel = hass.bus.async_listen(EVENT_SERVICE_REMOVED, clear_cache)
 
@@ -833,13 +836,15 @@ def _get_cached_action_parameters(
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, on_homeassistant_close)
 
-    if domain in parameters_cache and action in parameters_cache[domain]:
-        return parameters_cache[domain][action]
+    if (domain, action) in parameters_cache:
+        return parameters_cache[(domain, action)]
 
     if action_desc := service.async_get_cached_service_description(
         hass, domain, action
     ):
-        description = action_desc.get("description")
+        description_list: list[str] = []
+        if descr := action_desc.get("description"):
+            description_list.append(descr.removesuffix("."))
         schema: dict[vol.Marker, Any] = {}
         fields = action_desc.get("fields", {})
 
@@ -857,6 +862,37 @@ def _get_cached_action_parameters(
             else:
                 schema[key] = cv.string
 
+        if target := action_desc.get("target"):
+            entity_filter = target.get("entity", {})
+            device_filter = target.get("device", {})
+            schema[vol.Optional(ATTR_ENTITY_ID)] = selector.selector(
+                {"entity": {"multiple": True, "filter": entity_filter}}
+            )
+            schema[vol.Optional(ATTR_DEVICE_ID)] = selector.selector(
+                {"device": {"multiple": True, "filter": device_filter}}
+            )
+            schema[vol.Optional(ATTR_AREA_ID)] = selector.selector(
+                {
+                    "area": {
+                        "multiple": True,
+                        "entity": entity_filter,
+                        "device": device_filter,
+                    }
+                }
+            )
+            schema[vol.Optional(ATTR_FLOOR_ID)] = selector.selector(
+                {
+                    "floor": {
+                        "multiple": True,
+                        "entity": entity_filter,
+                        "device": device_filter,
+                    }
+                }
+            )
+            schema[vol.Optional(ATTR_LABEL_ID)] = selector.selector(
+                {"label": {"multiple": True}}
+            )
+
         parameters = vol.Schema(schema)
 
         if domain == SCRIPT_DOMAIN:
@@ -870,12 +906,11 @@ def _get_cached_action_parameters(
                 if entity_entry.aliases:
                     aliases.extend(entity_entry.aliases)
                 if aliases:
-                    if description:
-                        description = description + ". Aliases: " + str(list(aliases))
-                    else:
-                        description = "Aliases: " + str(list(aliases))
+                    description_list.append(f"Aliases: {aliases}")
 
-        parameters_cache.setdefault(domain, {})[action] = (description, parameters)
+        description = ". ".join(description_list) or None
+
+        parameters_cache[(domain, action)] = (description, parameters)
 
     return description, parameters
 
@@ -892,7 +927,7 @@ class ActionTool(Tool):
         """Init the class."""
         self._domain = domain
         self._action = action
-        self.name = f"{domain}.{action}"
+        self.name = f"{domain}_{action}"
         self.description, self.parameters = _get_cached_action_parameters(
             hass, domain, action
         )
