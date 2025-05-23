@@ -967,7 +967,9 @@ def async_rounded_state(hass: HomeAssistant, entity_id: str, state: State) -> st
     value = state.state
     if (precision := _display_precision(hass, entity_id)) is None:
         return value
+
     with suppress(TypeError, ValueError):
         numerical_value = float(value)
         value = f"{numerical_value:z.{precision}f}"
+
     return value
