@@ -48,7 +48,7 @@
   },
   "exceptions": {
     "api_exception": {
-      "message": "API exception: {error}"
+      "message": "Could not turn on/off monitoring: {error}"
     }
   }
 }
