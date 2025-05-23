@@ -111,7 +111,9 @@ DATA_SCHEMA_OPTIONS = vol.Schema(
         ),
         vol.Optional(CONF_STATE_CHARACTERISTIC): SelectSelector(
             SelectSelectorConfig(
-                options=list(STATS_BINARY_SUPPORT) + list(STATS_NUMERIC_SUPPORT),
+                options=list(
+                    set(list(STATS_BINARY_SUPPORT) + list(STATS_NUMERIC_SUPPORT))
+                ),
                 translation_key=CONF_STATE_CHARACTERISTIC,
                 mode=SelectSelectorMode.DROPDOWN,
                 read_only=True,
