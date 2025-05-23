@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -10,6 +11,7 @@ from homeassistant import config_entries
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ERR_NOT_FOUND, require_admin
 from homeassistant.core import HomeAssistant, callback, split_entity_id
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -17,6 +19,8 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity_component import async_get_entity_suggested_object_id
 from homeassistant.helpers.json import json_dumps
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -342,6 +346,18 @@ def websocket_get_automatic_entity_ids(
     automatic_entity_ids: dict[str, str | None] = {}
     for entity_id in entity_ids:
         if not (entry := registry.entities.get(entity_id)):
+            automatic_entity_ids[entity_id] = None
+            continue
+        try:
+            suggested = async_get_entity_suggested_object_id(hass, entity_id)
+        except HomeAssistantError as err:
+            # This is raised if the entity has no object.
+            _LOGGER.debug(
+                "Unable to get suggested object ID for %s, entity ID: %s (%s)",
+                entry.entity_id,
+                entity_id,
+                err,
+            )
             automatic_entity_ids[entity_id] = None
             continue
         if (

@@ -764,7 +764,7 @@ class EntityPlatform:
                 already_exists = True
         return (already_exists, restored)
 
-    async def _async_add_entity(
+    async def _async_add_entity(  # noqa: C901
         self,
         entity: Entity,
         update_before_add: bool,
@@ -843,18 +843,23 @@ class EntityPlatform:
             else:
                 device = None
 
-            # An entity may suggest the entity_id by setting entity_id itself
             calculated_object_id: str | None = None
+            # An entity may suggest the entity_id by setting entity_id itself
             suggested_entity_id: str | None = entity.entity_id
             if suggested_entity_id is not None:
                 suggested_object_id = split_entity_id(entity.entity_id)[1]
-            else:
+                if self.entity_namespace is not None:
+                    suggested_object_id = (
+                        f"{self.entity_namespace} {suggested_object_id}"
+                    )
+            if not registered_entity_id and suggested_entity_id is None:
+                # Do not bother working out a suggested_object_id
+                # if the entity is already registered as it will
+                # be ignored.
+                #
                 calculated_object_id = async_calculate_suggested_object_id(
                     entity, device
                 )
-
-            if self.entity_namespace is not None and suggested_object_id is not None:
-                suggested_object_id = f"{self.entity_namespace} {suggested_object_id}"
 
             disabled_by: RegistryEntryDisabler | None = None
             if not entity.entity_registry_enabled_default:

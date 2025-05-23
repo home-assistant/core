@@ -1532,7 +1532,6 @@ async def test_entity_info_added_to_entity_registry(
         entity_id="test_domain.best_name",
         unique_id="default",
         platform="test_domain",
-        calculated_object_id="best name",
         capabilities={"max": 100},
         config_entry_id=None,
         config_subentry_id=None,
