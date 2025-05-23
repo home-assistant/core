@@ -3108,7 +3108,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'constant_temperature',
+        'constant_speed',
         'constant_pressure',
         'proportional_pressure',
         'constant_flow',
@@ -3150,7 +3150,7 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Pump Control mode',
       'options': list([
-        'constant_temperature',
+        'constant_speed',
         'constant_pressure',
         'proportional_pressure',
         'constant_flow',
