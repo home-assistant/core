@@ -1550,3 +1550,24 @@ async def test_rpc_switch_energy_sensors(
 
         entry = entity_registry.async_get(entity_id)
         assert entry == snapshot(name=f"{entity_id}-entry")
+
+
+async def test_rpc_switch_no_returned_energy_sensor(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test switch component without returned energy sensor."""
+    status = {
+        "sys": {},
+        "switch:0": {
+            "id": 0,
+            "output": True,
+            "apower": 85.3,
+            "aenergy": {"total": 1234567.89},
+        },
+    }
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    await init_integration(hass, 3)
+
+    assert hass.states.get("sensor.test_switch_0_returned_energy") is None
