@@ -40,7 +40,6 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.plex import PLEX_URI_SCHEME
 from homeassistant.components.plex.services import process_plex_payload
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TIME
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -111,7 +110,7 @@ ATTR_QUEUE_POSITION = "queue_position"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SonosConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sonos from a config entry."""
