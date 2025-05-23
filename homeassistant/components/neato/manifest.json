@@ -4,6 +4,7 @@
   "codeowners": [],
   "config_flow": true,
   "dependencies": ["application_credentials"],
+  "disabled": "pybotvac is not compatible with urllib3 >= 2",
   "documentation": "https://www.home-assistant.io/integrations/neato",
   "iot_class": "cloud_polling",
   "loggers": ["pybotvac"],
