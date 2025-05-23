@@ -44,7 +44,7 @@ async def test_paired_depaired_devices_flow(
 ) -> None:
     """Test that removed devices are correctly removed from and added to hass on API events."""
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     assert device
@@ -131,7 +131,7 @@ async def test_connected_devices(
     )
     client.get_all_programs = AsyncMock(side_effect=get_all_programs_side_effect)
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     client.get_available_commands = get_available_commands_original_mock
     client.get_all_programs = get_all_programs_mock
 
@@ -182,7 +182,7 @@ async def test_button_entity_availability(
         "button.washer_stop_program",
     ]
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     for entity_id in entity_ids:
         state = hass.states.get(entity_id)
@@ -244,7 +244,7 @@ async def test_button_functionality(
 ) -> None:
     """Test if button entities availability are based on the appliance connection state."""
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     entity = hass.states.get(entity_id)
     assert entity
@@ -279,7 +279,7 @@ async def test_command_button_exception(
         )
     )
     assert await integration_setup(client_with_exception)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     entity = hass.states.get(entity_id)
     assert entity
@@ -304,7 +304,7 @@ async def test_stop_program_button_exception(
     entity_id = "button.washer_stop_program"
 
     assert await integration_setup(client_with_exception)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     entity = hass.states.get(entity_id)
     assert entity

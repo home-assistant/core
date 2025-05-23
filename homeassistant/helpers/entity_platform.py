@@ -843,24 +843,31 @@ class EntityPlatform:
             else:
                 device = None
 
-            # An entity may suggest the entity_id by setting entity_id itself
-            suggested_entity_id: str | None = entity.entity_id
-            if suggested_entity_id is not None:
-                suggested_object_id = split_entity_id(entity.entity_id)[1]
-            else:
-                if device and entity.has_entity_name:
-                    device_name = device.name_by_user or device.name
-                    if entity.use_device_name:
-                        suggested_object_id = device_name
-                    else:
-                        suggested_object_id = (
-                            f"{device_name} {entity.suggested_object_id}"
-                        )
-                if not suggested_object_id:
-                    suggested_object_id = entity.suggested_object_id
+            if not registered_entity_id:
+                # Do not bother working out a suggested_object_id
+                # if the entity is already registered as it will
+                # be ignored.
+                #
+                # An entity may suggest the entity_id by setting entity_id itself
+                suggested_entity_id: str | None = entity.entity_id
+                if suggested_entity_id is not None:
+                    suggested_object_id = split_entity_id(entity.entity_id)[1]
+                else:
+                    if device and entity.has_entity_name:
+                        device_name = device.name_by_user or device.name
+                        if entity.use_device_name:
+                            suggested_object_id = device_name
+                        else:
+                            suggested_object_id = (
+                                f"{device_name} {entity.suggested_object_id}"
+                            )
+                    if not suggested_object_id:
+                        suggested_object_id = entity.suggested_object_id
 
-            if self.entity_namespace is not None:
-                suggested_object_id = f"{self.entity_namespace} {suggested_object_id}"
+                if self.entity_namespace is not None:
+                    suggested_object_id = (
+                        f"{self.entity_namespace} {suggested_object_id}"
+                    )
 
             disabled_by: RegistryEntryDisabler | None = None
             if not entity.entity_registry_enabled_default:

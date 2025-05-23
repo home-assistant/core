@@ -90,7 +90,7 @@
               'BrewingMode',
               'StandBy',
             ]),
-            'brewing_start_time': None,
+            'brewing_start_time': '2025-05-07T18:04:20+00:00',
             'mode': 'BrewingMode',
             'next_status': dict({
               'start_time': '2025-03-24T22:59:55.332000+00:00',
@@ -297,7 +297,7 @@
                 'BrewingMode',
                 'StandBy',
               ]),
-              'brewing_start_time': None,
+              'brewing_start_time': '2025-05-07T18:04:20+00:00',
               'mode': 'BrewingMode',
               'next_status': dict({
                 'start_time': '2025-03-24T22:59:55.332000+00:00',
