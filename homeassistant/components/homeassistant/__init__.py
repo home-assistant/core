@@ -31,14 +31,21 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
-from homeassistant.helpers import config_validation as cv, recorder, restore_state
+from homeassistant.helpers import (
+    config_validation as cv,
+    issue_registry as ir,
+    recorder,
+    restore_state,
+)
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
     async_extract_referenced_entity_ids,
     async_register_admin_service,
 )
 from homeassistant.helpers.signal import KEY_HA_STOP
+from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.template import async_load_custom_templates
 from homeassistant.helpers.typing import ConfigType
 
@@ -385,6 +392,36 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     await exposed_entities.async_initialize()
     hass.data[DATA_EXPOSED_ENTITIES] = exposed_entities
     async_set_stop_handler(hass, _async_stop)
+
+    info = await async_get_system_info(hass)
+
+    unsupported_method = info["installation_type"] in {
+        "Home Assistant Core",
+        "Home Assistant Supervised",
+    }
+    arch = info["arch"]
+    unsupported_architecture = False
+    if arch in {"i386", "armhf", "armv7"}:
+        unsupported_architecture = True
+    if unsupported_method or unsupported_architecture:
+        issue_id = "unsupported"
+        if unsupported_method:
+            issue_id += "_method"
+        if unsupported_architecture:
+            issue_id += "_architecture"
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            breaks_in_ha_version="2025.12.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key=issue_id,
+            translation_placeholders={
+                "method": info["installation_type"],
+                "arch": arch,
+            },
+        )
 
     return True
 
