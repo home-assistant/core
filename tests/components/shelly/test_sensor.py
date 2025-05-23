@@ -1519,3 +1519,34 @@ async def test_rpc_device_virtual_number_sensor_with_device_class(
     assert state.state == "34"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.HUMIDITY
+
+
+async def test_rpc_switch_energy_sensors(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test energy sensors for switch component."""
+    status = {
+        "sys": {},
+        "switch:0": {
+            "id": 0,
+            "output": True,
+            "apower": 85.3,
+            "aenergy": {"total": 1234567.89},
+            "ret_aenergy": {"total": 98765.43},
+        },
+    }
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    await init_integration(hass, 3)
+
+    for entity in ("energy", "returned_energy"):
+        entity_id = f"{SENSOR_DOMAIN}.test_switch_0_{entity}"
+
+        state = hass.states.get(entity_id)
+        assert state == snapshot(name=f"{entity_id}-state")
+
+        entry = entity_registry.async_get(entity_id)
+        assert entry == snapshot(name=f"{entity_id}-entry")
