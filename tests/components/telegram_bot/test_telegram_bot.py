@@ -269,7 +269,10 @@ async def test_webhook_endpoint_generates_telegram_callback_event(
 
 
 async def test_polling_platform_message_text_update(
-    hass: HomeAssistant, config_polling, update_message_text
+    hass: HomeAssistant,
+    config_polling,
+    update_message_text,
+    mock_external_calls: None,
 ) -> None:
     """Provide the `BaseTelegramBotEntity.update_handler` with an `Update` and assert fired `telegram_text` event."""
     events = async_capture_events(hass, "telegram_text")
@@ -326,6 +329,7 @@ async def test_polling_platform_add_error_handler(
     hass: HomeAssistant,
     config_polling: dict[str, Any],
     update_message_text: dict[str, Any],
+    mock_external_calls: None,
     caplog: pytest.LogCaptureFixture,
     error: Exception,
     log_message: str,
@@ -372,6 +376,7 @@ async def test_polling_platform_start_polling_error_callback(
     hass: HomeAssistant,
     config_polling: dict[str, Any],
     caplog: pytest.LogCaptureFixture,
+    mock_external_calls: None,
     error: Exception,
     log_message: str,
 ) -> None:

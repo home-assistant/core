@@ -1,4 +1,70 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "title": "Telegram bot setup",
+        "description": "Create a new Telegram bot",
+        "data": {
+          "platform": "Platform",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "parse_mode": "Parse mode",
+          "proxy_url": "Proxy URL"
+        },
+        "data_description": {
+          "platform": "Telegram bot implementation",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "parse_mode": "Default parser for messages if not explicit in message data.",
+          "proxy_url": "Proxy URL if working behind one, optionally including username and password."
+        }
+      }
+    },
+    "error": {
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
+  "config_subentries": {
+    "allowed_chat_ids": {
+      "initiate_flow": {
+        "user": "Add allowed chat ID"
+      },
+      "step": {
+        "user": {
+          "title": "Add chat",
+          "data": {
+            "chat_id": "Chat ID"
+          },
+          "data_description": {
+            "chat_id": "ID representing the users and group chats to which messages can be sent."
+          }
+        }
+      },
+      "error": {
+        "chat_not_found": "Chat not found"
+      },
+      "abort": {
+        "already_configured": "Chat already configured"
+      }
+    }
+  },
+  "selector": {
+    "platforms": {
+      "options": {
+        "broadcast": "Broadcast",
+        "polling": "Polling",
+        "webhooks": "Webhooks"
+      }
+    },
+    "parsers": {
+      "options": {
+        "markdown": "Markdown (Legacy)",
+        "markdownv2": "MarkdownV2",
+        "html": "HTML"
+      }
+    }
+  },
   "services": {
     "send_message": {
       "name": "Send message",
