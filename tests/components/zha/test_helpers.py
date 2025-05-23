@@ -16,12 +16,14 @@ from homeassistant.components.zha.helpers import (
     create_zha_config,
     exclude_none_values,
     get_zha_data,
+    migrate_entities_unique_ids,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_registry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -216,3 +218,95 @@ async def test_create_zha_config_remove_unused(
 
     # Does not error out
     create_zha_config(hass, ha_zha_data)
+
+
+class MockInfoObject:
+    """Mock entity info object."""
+
+    def __init__(self, unique_id: str, migrate_unique_ids: frozenset[str]) -> None:
+        """Initialize a mocked entity info object."""
+        self.unique_id = unique_id
+        self.migrate_unique_ids = migrate_unique_ids
+
+
+class MockEntity:
+    """Mock entity."""
+
+    def __init__(self, info_object: MockInfoObject) -> None:
+        """Initialize a mocked entity."""
+        self.info_object: MockInfoObject = info_object
+
+
+class MockEntityData:
+    """Mock entity data."""
+
+    def __init__(self, entity: MockEntity) -> None:
+        """Initialize a mocked entity data."""
+        self.entity: MockEntity = entity
+
+
+async def test_migrate_entities_unique_ids(hass: HomeAssistant) -> None:
+    """Test migration of ZHA entities to new unique ids."""
+
+    test_platform = "test_platform"
+    test_entity1_id = f"{test_platform}.test_entity1_id"
+    test_entity1_unique_id = "zha.test_entity1-unique-id"
+
+    test_entity2_id = f"{test_platform}.test_entity2_id"
+    test_entity2_unique_id = "zha.test_entity-unique-id2"
+
+    entity_registry = mock_registry(
+        hass,
+        {
+            test_entity1_id: RegistryEntry(
+                entity_id=test_entity1_id,
+                unique_id=test_entity1_unique_id,
+                platform=zha_const.DOMAIN,
+                device_id="mock-zha.test_entity-dev-id1",
+            ),
+            test_entity2_id: RegistryEntry(
+                entity_id=test_entity2_id,
+                unique_id=test_entity2_unique_id,
+                platform=zha_const.DOMAIN,
+                device_id="mock-zha.test_entity-dev-id2",
+            ),
+        },
+    )
+
+    test_entity1_new_unique_id = "zha.test_entity-new-unique-id"
+    mock_entity1_data = MockEntityData(
+        entity=MockEntity(
+            info_object=MockInfoObject(
+                unique_id=test_entity1_new_unique_id,
+                migrate_unique_ids=frozenset(
+                    {
+                        test_entity1_unique_id,
+                        test_entity1_unique_id + "non_existent_suffix",
+                    }
+                ),
+            )
+        )
+    )
+
+    mock_entity2_data = MockEntityData(
+        entity=MockEntity(
+            info_object=MockInfoObject(
+                unique_id=test_entity2_unique_id,
+                migrate_unique_ids=frozenset(),
+            )
+        )
+    )
+
+    await migrate_entities_unique_ids(
+        hass, test_platform, [mock_entity1_data, mock_entity2_data]
+    )
+
+    # First entity has a new unique id
+    registry_entry = entity_registry.async_get(test_entity1_id)
+    assert registry_entry.entity_id == test_entity1_id
+    assert registry_entry.unique_id == test_entity1_new_unique_id
+
+    # Second entity is left unchanged
+    registry_entry2 = entity_registry.async_get(test_entity2_id)
+    assert registry_entry2.entity_id == test_entity2_id
+    assert registry_entry2.unique_id == test_entity2_unique_id
