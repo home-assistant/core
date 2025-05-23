@@ -405,29 +405,28 @@ async def test_state_template_states(
 
 
 @pytest.mark.parametrize(
-    ("count", "state_template", "attribute_template"),
+    ("count", "state_template", "attribute_template", "attribute"),
     [
         (
             1,
             "{{ 'disarmed' }}",
             "{% if states.switch.test_state.state %}mdi:check{% endif %}",
+            "icon",
         )
     ],
 )
 @pytest.mark.parametrize(
-    ("style", "attribute"),
+    ("style", "initial_state"),
     [
-        (ConfigurationStyle.MODERN, "icon"),
-        (ConfigurationStyle.TRIGGER, "icon"),
+        (ConfigurationStyle.MODERN, ""),
+        (ConfigurationStyle.TRIGGER, None),
     ],
 )
 @pytest.mark.usefixtures("setup_single_attribute_state_panel")
-async def test_icon_template(
-    hass: HomeAssistant,
-) -> None:
+async def test_icon_template(hass: HomeAssistant, initial_state: str) -> None:
     """Test icon template."""
     state = hass.states.get(TEST_ENTITY_ID)
-    assert state.attributes.get("icon") in ("", None)
+    assert state.attributes.get("icon") == initial_state
 
     hass.states.async_set(TEST_SWITCH, STATE_ON)
     await hass.async_block_till_done()
@@ -437,29 +436,28 @@ async def test_icon_template(
 
 
 @pytest.mark.parametrize(
-    ("count", "state_template", "attribute_template"),
+    ("count", "state_template", "attribute_template", "attribute"),
     [
         (
             1,
             "{{ 'disarmed' }}",
             "{% if states.switch.test_state.state %}local/panel.png{% endif %}",
+            "picture",
         )
     ],
 )
 @pytest.mark.parametrize(
-    ("style", "attribute"),
+    ("style", "initial_state"),
     [
-        (ConfigurationStyle.MODERN, "picture"),
-        (ConfigurationStyle.TRIGGER, "picture"),
+        (ConfigurationStyle.MODERN, ""),
+        (ConfigurationStyle.TRIGGER, None),
     ],
 )
 @pytest.mark.usefixtures("setup_single_attribute_state_panel")
-async def test_picture_template(
-    hass: HomeAssistant,
-) -> None:
+async def test_picture_template(hass: HomeAssistant, initial_state: str) -> None:
     """Test icon template."""
     state = hass.states.get(TEST_ENTITY_ID)
-    assert state.attributes.get("entity_picture") in ("", None)
+    assert state.attributes.get("entity_picture") == initial_state
 
     hass.states.async_set(TEST_SWITCH, STATE_ON)
     await hass.async_block_till_done()

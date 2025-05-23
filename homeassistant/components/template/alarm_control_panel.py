@@ -292,6 +292,9 @@ class AbstractTemplateAlarmControlPanel(
         self._attr_code_format = config[CONF_CODE_FORMAT].value
 
         self._state: AlarmControlPanelState | None = None
+        self._attr_supported_features: AlarmControlPanelEntityFeature = (
+            AlarmControlPanelEntityFeature(0)
+        )
 
     def _iterate_scripts(
         self, config: dict[str, Any]
@@ -441,7 +444,6 @@ class AlarmControlPanelTemplate(TemplateEntity, AbstractTemplateAlarmControlPane
         if TYPE_CHECKING:
             assert name is not None
 
-        self._attr_supported_features = AlarmControlPanelEntityFeature(0)
         for action_id, action_config, supported_feature in self._iterate_scripts(
             config
         ):
@@ -498,7 +500,6 @@ class TriggerAlarmControlPanelEntity(TriggerEntity, AbstractTemplateAlarmControl
             self._to_render_simple.append(CONF_STATE)
             self._parse_result.add(CONF_STATE)
 
-        self._attr_supported_features = AlarmControlPanelEntityFeature(0)
         for action_id, action_config, supported_feature in self._iterate_scripts(
             config
         ):
