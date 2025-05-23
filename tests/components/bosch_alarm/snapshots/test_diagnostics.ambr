@@ -89,7 +89,6 @@
     'entry_data': dict({
       'host': '0.0.0.0',
       'installer_code': '**REDACTED**',
-      'mac': None,
       'model': 'AMAX 3000',
       'password': '**REDACTED**',
       'port': 7700,
@@ -185,7 +184,6 @@
     }),
     'entry_data': dict({
       'host': '0.0.0.0',
-      'mac': None,
       'model': 'B5512 (US1B)',
       'password': '**REDACTED**',
       'port': 7700,
@@ -281,7 +279,6 @@
     }),
     'entry_data': dict({
       'host': '0.0.0.0',
-      'mac': None,
       'model': 'Solution 3000',
       'port': 7700,
       'user_code': '**REDACTED**',
