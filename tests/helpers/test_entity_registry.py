@@ -2586,6 +2586,7 @@ async def test_restore_entity(
         original_device_class="device_class_2",
         original_icon="original_icon_2",
         original_name="original_name_2",
+        suggested_object_id="suggested_2",
         supported_features=2,
         translation_key="translation_key_2",
         unit_of_measurement="unit_2",
