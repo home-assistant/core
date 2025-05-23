@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from base64 import b64decode
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Final
 
 from kasa import Device, Module
 from kasa.smart.modules.clean import Clean, Status
+import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
@@ -15,7 +17,9 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
+from homeassistant.helpers import entity_platform
+from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TPLinkConfigEntry
@@ -25,6 +29,7 @@ from .entity import (
     TPLinkModuleEntityDescription,
     async_refresh_after,
 )
+from .map_parser import GetRoomsResponse, MapData, TpLinkMapParser
 
 # Coordinator is used to centralize the data updates
 # For actions the integration handles locking of concurrent device request
@@ -41,6 +46,24 @@ STATUS_TO_ACTIVITY = {
     Status.Paused: VacuumActivity.PAUSED,
     Status.Error: VacuumActivity.ERROR,
 }
+
+GET_ROOM_SERVICE_SCHEMA: Final = make_entity_service_schema(
+    {vol.Optional("map_id"): int}
+)
+
+CLEAN_ROOMS_SERVICE_SCHEMA: Final = make_entity_service_schema(
+    {
+        vol.Required("map_id"): int,
+        vol.Required("room_ids"): [int],
+    }
+)
+
+CUSTOM_QUERY_SERVICE_SCHEMA: Final = make_entity_service_schema(
+    {
+        vol.Required("query"): str,
+        vol.Optional("params"): dict,
+    }
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -89,6 +112,43 @@ async def async_setup_entry(
     _check_device()
     first_check = False
     config_entry.async_on_unload(parent_coordinator.async_add_listener(_check_device))
+
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        "get_maps",
+        None,
+        TPLinkVacuumEntity.get_maps.__name__,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    platform.async_register_entity_service(
+        "get_rooms",
+        GET_ROOM_SERVICE_SCHEMA,
+        TPLinkVacuumEntity.get_rooms.__name__,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    platform.async_register_entity_service(
+        "get_current_room",
+        None,
+        TPLinkVacuumEntity.get_current_room.__name__,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    platform.async_register_entity_service(
+        "clean_rooms",
+        CLEAN_ROOMS_SERVICE_SCHEMA,
+        TPLinkVacuumEntity.clean_rooms.__name__,
+        supports_response=SupportsResponse.NONE,
+    )
+
+    platform.async_register_entity_service(
+        "custom_query",
+        CUSTOM_QUERY_SERVICE_SCHEMA,
+        TPLinkVacuumEntity.custom_query.__name__,
+        supports_response=SupportsResponse.ONLY,
+    )
 
 
 class TPLinkVacuumEntity(CoordinatedTPLinkModuleEntity, StateVacuumEntity):
@@ -145,6 +205,30 @@ class TPLinkVacuumEntity(CoordinatedTPLinkModuleEntity, StateVacuumEntity):
         """Set fan speed."""
         await self._vacuum_module.set_fan_speed_preset(fan_speed.capitalize())
 
+    async def custom_query(
+        self, query: str, params: dict | None = None
+    ) -> ServiceResponse:
+        """Execute a custom query."""
+        return await self._vacuum_module.call(query, params)
+
+    async def clean_rooms(self, map_id: int, room_ids: list[int]) -> None:
+        """Start cleaning the specified rooms."""
+        if self._vacuum_module.status is Status.Paused:
+            await self._vacuum_module.resume()
+            return
+
+        await self._vacuum_module.call(
+            "setSwitchClean",
+            {
+                "clean_mode": 3,
+                "clean_on": True,
+                "clean_order": True,
+                "force_clean": False,
+                "map_id": map_id,
+                "room_list": room_ids,
+            },
+        )
+
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the device."""
         await self._speaker_module.locate()
@@ -153,6 +237,43 @@ class TPLinkVacuumEntity(CoordinatedTPLinkModuleEntity, StateVacuumEntity):
     def battery_level(self) -> int | None:
         """Return battery level."""
         return self._vacuum_module.battery
+
+    async def get_maps(self) -> ServiceResponse:
+        """Get map information such as map id and room ids."""
+        res = await self._vacuum_module.call("getMapInfo")
+
+        return {
+            "maps": [
+                {
+                    "id": vacuum_map["map_id"],
+                    "name": b64decode(vacuum_map["map_name"]).decode("utf-8"),
+                    # JsonValueType does not accept a int as a key - was not a
+                    # issue with previous asdict() implementation.
+                    "rooms": (await self._get_rooms(vacuum_map["map_id"]))["rooms"],  # type: ignore[dict-item]
+                }
+                for vacuum_map in res["getMapInfo"]["map_list"]
+            ]
+        }
+
+    async def get_rooms(self, map_id: int | None) -> ServiceResponse:
+        """Get room information for a specific map."""
+        if map_id is None:
+            map_id = -1
+
+        return await self._get_rooms(map_id)  # type: ignore[return-value]
+
+    async def _get_rooms(self, map_id: int) -> GetRoomsResponse:
+        res = await self._vacuum_module.call("getMapData", {"map_id": map_id})
+        map_data: MapData = res["getMapData"]
+        parser = TpLinkMapParser(map_data)
+        return {"rooms": parser.get_rooms(), "map_id": map_data["map_id"]}
+
+    async def get_current_room(self) -> ServiceResponse:
+        """Get the current position of the vacuum from the map."""
+        # Get the current map
+        res = await self._vacuum_module.call("getMapData", {"map_id": -1})
+        parser = TpLinkMapParser(res["getMapData"])
+        return parser.get_current_room()  # type: ignore[return-value]
 
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""

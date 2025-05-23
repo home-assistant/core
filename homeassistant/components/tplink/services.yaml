@@ -169,3 +169,61 @@ random_effect:
           min: 1
           step: 1
           max: 600
+get_maps:
+  target:
+    entity:
+      integration: tplink
+      domain: vacuum
+get_rooms:
+  target:
+    entity:
+      integration: tplink
+      domain: vacuum
+  fields:
+    map_id:
+      example: 1
+      required: false
+      selector:
+        number:
+get_vacuum_current_position:
+  target:
+    entity:
+      integration: tplink
+      domain: vacuum
+clean_rooms:
+  target:
+    entity:
+      integration: tplink
+      domain: vacuum
+  fields:
+    map_id:
+      example: 1
+      required: true
+      selector:
+        number:
+    room_ids:
+      example: [1, 2, 3]
+      required: true
+      selector:
+        object:
+get_current_room:
+  target:
+    entity:
+      integration: tplink
+      domain: vacuum
+custom_query:
+  target:
+    entity:
+      integration: tplink
+      domain: vacuum
+  fields:
+    query:
+      example: "get_schedule_rules"
+      required: true
+      selector:
+        text:
+    params:
+      example: { "map_id": 1 }
+      required: false
+      selector:
+        object:

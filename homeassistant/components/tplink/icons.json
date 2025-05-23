@@ -207,6 +207,20 @@
     },
     "random_effect": {
       "service": "mdi:shuffle-variant"
-    }
+    },
+    "get_rooms": {
+      "service": "mdi:door"
+    },
+    "get_maps": {
+      "service": "mdi:floor-plan"
+    },
+    "get_vacuum_current_position": {
+      "service": "mdi:crosshairs-gps"
+    },
+    "clean_rooms": {
+      "service": "mdi:robot-vacuum"
+    },
+    "get_current_room": { "service": "mdi:map-marker" },
+    "custom_query": { "service": "mdi:code-json" }
   }
 }

@@ -469,6 +469,56 @@
           "description": "Random seed."
         }
       }
+    },
+    "get_maps": {
+      "name": "Get maps",
+      "description": "Get the map list from the device."
+    },
+    "get_rooms": {
+      "name": "Get rooms",
+      "description": "Get the room list from the device.",
+      "fields": {
+        "map_id": {
+          "name": "Map ID",
+          "description": "The map ID to get the room list from."
+        }
+      }
+    },
+    "get_vacuum_current_position": {
+      "name": "Get vacuum current position",
+      "description": "Get the current position of the vacuum."
+    },
+    "clean_rooms": {
+      "name": "Clean Rooms",
+      "description": "Start cleaning the specified rooms on the vacuum.",
+      "fields": {
+        "map_id": {
+          "name": "Map ID",
+          "description": "The ID of the map to use."
+        },
+        "room_ids": {
+          "name": "Room IDs",
+          "description": "List of room IDs to clean."
+        }
+      }
+    },
+    "get_current_room": {
+      "name": "Get Current Room",
+      "description": "Get the current position of the vacuum from the map."
+    },
+    "custom_query": {
+      "name": "Custom Query",
+      "description": "Execute a custom query on the vacuum.",
+      "fields": {
+        "query": {
+          "name": "Query",
+          "description": "The query to execute."
+        },
+        "params": {
+          "name": "Parameters",
+          "description": "Optional parameters for the query."
+        }
+      }
     }
   },
   "exceptions": {

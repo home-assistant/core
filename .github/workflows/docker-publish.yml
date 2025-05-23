@@ -1,0 +1,50 @@
+name: Build and publish Docker image to GHCR
+
+# yamllint disable-line rule:truthy
+on:
+  workflow_dispatch:
+    inputs:
+      BASE_VERSION:
+        description: "Base image version (e.g. 3.21)"
+        required: true
+        default: "3.21"
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: alex-zissis/homeassistant-core
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up image tags
+        id: prep
+        run: |
+          SHA_TAG="${GITHUB_SHA::7}"
+          TAGS="$SHA_TAG,latest"
+          echo "sha_tag=$SHA_TAG" >> $GITHUB_OUTPUT
+          echo "tags=$TAGS" >> $GITHUB_OUTPUT
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        run: |
+          docker build \
+            --build-arg=BUILD_ARCH=arm64 \
+            --build-arg=BUILD_FROM=ghcr.io/home-assistant/aarch64-base:${{ github.event.inputs.BASE_VERSION || '3.21' }} \
+            -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.prep.outputs.sha_tag }} \
+            -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            -f ./Dockerfile .
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.prep.outputs.sha_tag }}
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest

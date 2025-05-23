@@ -61,3 +61,4 @@ voluptuous-openapi==0.1.0
 yarl==1.20.0
 webrtc-models==0.3.0
 zeroconf==0.147.0
+lz4>=4.4.4

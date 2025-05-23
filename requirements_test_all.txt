@@ -33,6 +33,7 @@ Mastodon.py==2.0.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
+# homeassistant.components.tplink
 Pillow==11.2.1
 
 # homeassistant.components.plex
@@ -1159,6 +1160,9 @@ lupupy==0.3.2
 # homeassistant.components.scrape
 lxml==5.3.0
 
+# homeassistant.components.tplink
+lz4==4.4.4
+
 # homeassistant.components.matrix
 matrix-nio==0.25.2
 
@@ -1299,6 +1303,7 @@ numato-gpio==0.13.0
 # homeassistant.components.iqvia
 # homeassistant.components.stream
 # homeassistant.components.tensorflow
+# homeassistant.components.tplink
 # homeassistant.components.trend
 numpy==2.2.2
 
