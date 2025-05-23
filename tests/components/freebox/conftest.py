@@ -19,6 +19,7 @@ from .const import (
     DATA_LAN_GET_HOSTS_LIST_GUEST,
     DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE,
     DATA_LAN_GET_INTERFACES,
+    DATA_LAN_GET_PORT_FORWARDING_CONFIG_LIST,
     DATA_STORAGE_GET_DISKS,
     DATA_STORAGE_GET_RAIDS,
     DATA_SYSTEM_GET_CONFIG,
@@ -86,6 +87,9 @@ def mock_router(mock_device_registry_devices):
         # switch
         instance.wifi.get_global_config = AsyncMock(
             return_value=DATA_WIFI_GET_GLOBAL_CONFIG
+        )
+        instance.fw.get_all_port_forwarding_configuration = AsyncMock(
+            return_value=DATA_LAN_GET_PORT_FORWARDING_CONFIG_LIST
         )
         # home devices
         instance.home.get_home_nodes = AsyncMock(return_value=DATA_HOME_GET_NODES)
