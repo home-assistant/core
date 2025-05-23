@@ -380,19 +380,41 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
         entity_description=MatterBinarySensorEntityDescription(
-            key="DishwasherAlarmState",
-            translation_key="dishwasher_alarm",
+            key="DishwasherAlarmInflowError",
+            translation_key="dishwasher_alarm_inflow",
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
             measurement_to_ha={
-                clusters.PumpConfigurationAndControl.Bitmaps.AlarmBitmap.kDrainError: True,
-                clusters.PumpConfigurationAndControl.Bitmaps.AlarmBitmap.kDoorError: True,
+                clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kInflowError: True,
+                clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kDrainError: False,
+                clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kDoorError: False,
+                clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kTempTooLow: False,
+                clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kTempTooHigh: False,
+                clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kWaterLevelError: True,
             }.get,
         ),
         entity_class=MatterBinarySensor,
-        required_attributes=(
-            clusters.DishwasherAlarm.Attributes.State,
+        required_attributes=(clusters.DishwasherAlarm.Attributes.State,),
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="DishwasherAlarmDoorError",
+            translation_key="dishwasher_alarm_door",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            measurement_to_ha={
+                clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kInflowError: False,
+                clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kDrainError: False,
+                clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kDoorError: True,
+                clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kTempTooLow: False,
+                clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kTempTooHigh: False,
+                clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kWaterLevelError: True,
+            }.get,
         ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.DishwasherAlarm.Attributes.State,),
         allow_multi=True,
     ),
 ]
