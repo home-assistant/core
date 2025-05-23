@@ -31,12 +31,12 @@ class QuantumGatewayCoordinator(DataUpdateCoordinator[dict[str, str]]):
             always_update=False,
         )
         self.options = options
-        self._scanner: QuantumGatewayScanner | None = None
+        self.scanner: QuantumGatewayScanner | None = None
 
     @override
     async def _async_setup(self):
         """Set up the Quantum Gateway device scanner."""
-        self._scanner = await self.hass.async_add_executor_job(
+        self.scanner = await self.hass.async_add_executor_job(
             get_scanner,
             self.options[CONF_HOST],
             self.options[CONF_PASSWORD],
@@ -46,10 +46,10 @@ class QuantumGatewayCoordinator(DataUpdateCoordinator[dict[str, str]]):
     @override
     async def _async_update_data(self):
         """Fetch the latest data from the Quantum Gateway."""
-        if self._scanner is None:
+        if self.scanner is None:
             raise UpdateFailed("Scanner not initialized.")
         try:
-            macs = await self.hass.async_add_executor_job(self._scanner.scan_devices)
-            return {mac: self._scanner.get_device_name(mac) for mac in macs}
+            macs = await self.hass.async_add_executor_job(self.scanner.scan_devices)
+            return {mac: self.scanner.get_device_name(mac) for mac in macs}
         except Exception as err:
             raise UpdateFailed(f"Error scanning for devices: {err}") from err
