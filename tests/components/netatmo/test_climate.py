@@ -103,20 +103,30 @@ async def test_schedule_update_webhook_event(
         endpoint = kwargs["endpoint"].split("/")[-1]
 
         if endpoint == "homesdata":
+            json_data = json.loads(load_fixture("netatmo/homesdata.json"))
+            # adapt the schedule
+            schedules = json_data.get("body").get("homes")[0].get("schedules")
+            for schedule in schedules:
+                if schedule.get("selected"):
+                    schedule["name"] = "Updated schedule"
+
             return AiohttpClientMockResponse(
                 method="POST",
                 url=endpoint,
-                json=json.loads(load_fixture("netatmo/homesdata_updatedschedule.json")),
+                json=json_data,
             )
         if endpoint == "homestatus":
+            json_data = json.loads(
+                load_fixture("netatmo/homestatus_91763b24c43d3e344f424e8b.json")
+            )
+            # reflect the changes in the schedule
+            rooms = json_data.get("body").get("home").get("rooms")
+            for room in rooms:
+                if room.get("id") == "100001234":
+                    room["therm_setpoint_temperature"] = 25
+
             return AiohttpClientMockResponse(
-                method="POST",
-                url=endpoint,
-                json=json.loads(
-                    load_fixture(
-                        "netatmo/homestatus_91763b24c43d3e344f424e8b_updatedschedule.json"
-                    )
-                ),
+                method="POST", url=endpoint, json=json_data
             )
 
         return await fake_post_request(*args, **kwargs)
@@ -131,7 +141,12 @@ async def test_schedule_update_webhook_event(
     }
     await simulate_webhook(hass, webhook_id, response)
 
-    # Temperature should be updated according to the new schedule
+    # Check that the schedule name has been updated
+    assert (
+        hass.states.get(room_climate_entity).attributes["selected_schedule"]
+        == "Updated schedule"
+    )
+    # Temperature should be updated according to home status response
     assert hass.states.get(room_climate_entity).attributes["temperature"] == 25
 
 
