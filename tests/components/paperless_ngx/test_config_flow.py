@@ -19,7 +19,7 @@ from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import USER_INPUT, USER_INPUT_REAUTH, USER_INPUT_UPDATE
+from .const import USER_INPUT_ONE, USER_INPUT_REAUTH, USER_INPUT_TWO
 
 from tests.common import MockConfigEntry, patch
 
@@ -46,13 +46,13 @@ async def test_full_config_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        USER_INPUT,
+        USER_INPUT_ONE,
     )
 
     config_entry = result["result"]
-    assert config_entry.title == USER_INPUT[CONF_URL]
+    assert config_entry.title == USER_INPUT_ONE[CONF_URL]
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.data == USER_INPUT
+    assert config_entry.data == USER_INPUT_ONE
 
 
 async def test_full_reauth_flow(
@@ -92,12 +92,12 @@ async def test_full_reconfigure_flow(
 
     result_configure = await hass.config_entries.flow.async_configure(
         reconfigure_flow["flow_id"],
-        USER_INPUT_UPDATE,
+        USER_INPUT_TWO,
     )
 
     assert result_configure["type"] is FlowResultType.ABORT
     assert result_configure["reason"] == "reconfigure_successful"
-    assert mock_config_entry.data == USER_INPUT_UPDATE
+    assert mock_config_entry.data == USER_INPUT_TWO
 
 
 @pytest.mark.parametrize(
@@ -123,7 +123,7 @@ async def test_config_flow_error_handling(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data=USER_INPUT,
+        data=USER_INPUT_ONE,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -134,12 +134,12 @@ async def test_config_flow_error_handling(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input=USER_INPUT,
+        user_input=USER_INPUT_ONE,
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == USER_INPUT[CONF_URL]
-    assert result["data"] == USER_INPUT
+    assert result["title"] == USER_INPUT_ONE[CONF_URL]
+    assert result["data"] == USER_INPUT_ONE
 
 
 @pytest.mark.parametrize(
@@ -208,7 +208,7 @@ async def test_reconfigure_flow_error_handling(
 
     result_configure = await hass.config_entries.flow.async_configure(
         reauth_flow["flow_id"],
-        USER_INPUT_UPDATE,
+        USER_INPUT_TWO,
     )
 
     await hass.async_block_till_done()
@@ -225,8 +225,31 @@ async def test_config_already_exists(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data=USER_INPUT,
+        data=USER_INPUT_ONE,
         context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_config_already_exists_reconfigure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_config_entry_two: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test we only allow a single config if reconfiguring an entry."""
+    mock_config_entry.add_to_hass(hass)
+    mock_config_entry_two.add_to_hass(hass)
+
+    reconfigure_flow = await mock_config_entry_two.start_reconfigure_flow(hass)
+    assert reconfigure_flow["type"] is FlowResultType.FORM
+    assert reconfigure_flow["step_id"] == "reconfigure"
+
+    result_configure = await hass.config_entries.flow.async_configure(
+        reconfigure_flow["flow_id"],
+        USER_INPUT_ONE,
+    )
+
+    assert result_configure["type"] is FlowResultType.ABORT
+    assert result_configure["reason"] == "already_configured"
