@@ -27,6 +27,7 @@
     'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <VacuumEntityFeature: 12308>,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000042-MatterNodeDevice-1-MatterVacuumCleaner-84-1',
