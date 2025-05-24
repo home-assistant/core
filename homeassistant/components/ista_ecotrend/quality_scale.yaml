@@ -50,14 +50,18 @@ rules:
   discovery:
     status: exempt
     comment: The integration is a web service, there are no discoverable devices.
-  docs-data-update: todo
-  docs-examples: todo
+  docs-data-update: done
+  docs-examples:
+    status: done
+    comment: describes how to use the integration with the statistics dashboard
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting: todo
+  docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: todo
+  dynamic-devices:
+    status: exempt
+    comment: changes are very rare (usually takes years)
   entity-category:
     status: done
     comment: The default category is appropriate.
@@ -67,8 +71,12 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  repair-issues: todo
-  stale-devices: todo
+  repair-issues:
+    status: exempt
+    comment: integration has no repairs
+  stale-devices:
+    status: exempt
+    comment: integration has no stale devices
 
   # Platinum
   async-dependency: todo
