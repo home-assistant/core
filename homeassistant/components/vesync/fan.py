@@ -182,7 +182,7 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
             if not success:
                 raise HomeAssistantError("An error occurred while turning on.")
 
-        success = await self.device.manual_mode()
+        success = await self.device.set_manual_mode()
         if not success:
             raise HomeAssistantError("An error occurred while manual mode.")
         success = self.device.change_fan_speed(
