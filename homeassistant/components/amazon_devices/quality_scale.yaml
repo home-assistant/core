@@ -4,7 +4,7 @@ rules:
     status: exempt
     comment: no actions
   appropriate-polling: done
-  brands: todo
+  brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
