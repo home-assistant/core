@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DATA_COMPONENT
@@ -26,3 +27,13 @@ def get_camera_from_entity_id(hass: HomeAssistant, entity_id: str) -> Camera:
         raise HomeAssistantError("Camera is off")
 
     return camera
+
+
+@callback
+def get_camera_entities(hass: HomeAssistant) -> Iterable[Camera]:
+    """Get all camera entities."""
+    component = hass.data.get(DATA_COMPONENT)
+    if component is None:
+        raise HomeAssistantError("Camera integration not set up")
+
+    return component.entities

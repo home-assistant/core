@@ -14,7 +14,7 @@ import logging
 import os
 from random import SystemRandom
 import time
-from typing import Any, Final, final
+from typing import TYPE_CHECKING, Any, Final, final
 
 from aiohttp import hdrs, web
 import attr
@@ -23,6 +23,7 @@ import voluptuous as vol
 from webrtc_models import RTCIceCandidateInit, RTCIceServer
 
 from homeassistant.components import websocket_api
+from homeassistant.components.go2rtc import create_go2rtc_client
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
@@ -96,6 +97,9 @@ from .webrtc import (
     async_register_webrtc_provider,  # noqa: F401
     async_register_ws,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.components.go2rtc import Go2RtcClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -240,6 +244,10 @@ async def _async_get_stream_image(
     height: int | None = None,
     wait_for_next_keyframe: bool = False,
 ) -> bytes | None:
+    if camera.go2rtc_client:
+        return await camera.go2rtc_client.async_get_image(
+            camera, width=width, height=height
+        )
     if not camera.stream and CameraEntityFeature.STREAM in camera.supported_features:
         camera.stream = await camera.async_create_stream()
     if camera.stream:
@@ -465,6 +473,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Initialize a camera."""
         self._cache: dict[str, Any] = {}
         self.stream: Stream | None = None
+        self.go2rtc_client: Go2RtcClient | None = None
         self.stream_options: dict[str, str | bool | float] = {}
         self.content_type: str = DEFAULT_CONTENT_TYPE
         self.access_tokens: collections.deque = collections.deque([], 2)
@@ -587,6 +596,11 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         Integrations can override with a native WebRTC implementation.
         """
+        if self.go2rtc_client:
+            await self.go2rtc_client.async_handle_async_webrtc_offer(
+                self, offer_sdp, session_id, send_message
+            )
+            return
         if self._webrtc_provider:
             await self._webrtc_provider.async_handle_async_webrtc_offer(
                 self, offer_sdp, session_id, send_message
@@ -704,6 +718,13 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             self.supported_features_compat & CameraEntityFeature.STREAM
         )
         await self.async_refresh_providers(write_state=False)
+        await self.async_create_go2rtc_client_if_needed()
+
+    async def async_internal_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        await super().async_internal_will_remove_from_hass()
+        if self.go2rtc_client:
+            await self.go2rtc_client.teardown()
 
     async def async_refresh_providers(self, *, write_state: bool = True) -> None:
         """Determine if any of the registered providers are suitable for this entity.
@@ -760,7 +781,9 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self, session_id: str, candidate: RTCIceCandidateInit
     ) -> None:
         """Handle a WebRTC candidate."""
-        if self._webrtc_provider:
+        if self.go2rtc_client:
+            await self.go2rtc_client.async_on_webrtc_candidate(session_id, candidate)
+        elif self._webrtc_provider:
             await self._webrtc_provider.async_on_webrtc_candidate(session_id, candidate)
         else:
             raise HomeAssistantError("Cannot handle WebRTC candidate")
@@ -768,6 +791,8 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @callback
     def close_webrtc_session(self, session_id: str) -> None:
         """Close a WebRTC session."""
+        if self.go2rtc_client:
+            self.go2rtc_client.async_close_session(session_id)
         if self._webrtc_provider:
             self._webrtc_provider.async_close_session(session_id)
 
@@ -788,7 +813,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             else:
                 frontend_stream_types.add(StreamType.HLS)
 
-                if self._webrtc_provider:
+                if self._webrtc_provider or self.go2rtc_client:
                     frontend_stream_types.add(StreamType.WEB_RTC)
 
         return CameraCapabilities(frontend_stream_types)
@@ -806,7 +831,29 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         ):
             self.__supports_stream = supports_stream
             self._invalidate_camera_capabilities_cache()
-            self.hass.async_create_task(self.async_refresh_providers())
+
+            async def refresh() -> None:
+                await self.async_refresh_providers()
+                await self.async_create_go2rtc_client_if_needed()
+
+            self.hass.async_create_task(refresh())
+
+    async def async_create_go2rtc_client_if_needed(self) -> None:
+        """Create a Go2RTC client for the camera if supported and needed."""
+        if (
+            not self.go2rtc_client
+            and CameraEntityFeature.STREAM in self.supported_features
+        ):
+
+            @callback
+            def remove_go2rtc_client() -> None:
+                if self.go2rtc_client:
+                    self.go2rtc_client = None
+                    self._invalidate_camera_capabilities_cache()
+
+            self.go2rtc_client = await create_go2rtc_client(self, remove_go2rtc_client)
+            if self.go2rtc_client:
+                self._invalidate_camera_capabilities_cache()
 
 
 class CameraView(HomeAssistantView):
