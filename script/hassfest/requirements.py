@@ -27,6 +27,7 @@ PACKAGE_CHECK_VERSION_RANGE = {
     # https://github.com/iMicknl/python-overkiz-api/issues/1644
     # "attrs": "CalVer"
     "grpcio": "SemVer",
+    "httpx": "SemVer",
     "mashumaro": "SemVer",
     "pydantic": "SemVer",
     "pyjwt": "SemVer",
