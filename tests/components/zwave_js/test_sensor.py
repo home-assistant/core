@@ -564,6 +564,17 @@ async def test_special_meters(
             "value": 659.813,
         },
     )
+    node_data["endpoints"].append(
+        {
+            "nodeId": 102,
+            "index": 10,
+            "installerIcon": 1792,
+            "userIcon": 1792,
+            "commandClasses": [
+                {"id": 50, "name": "Meter", "version": 3, "isSecure": False}
+            ],
+        }
+    )
     # Add an ElectricScale.KILOVOLT_AMPERE_REACTIVE value to the state so we can test that
     # it is handled differently (no device class)
     node_data["values"].append(
@@ -586,6 +597,17 @@ async def test_special_meters(
             },
             "value": 659.813,
         },
+    )
+    node_data["endpoints"].append(
+        {
+            "nodeId": 102,
+            "index": 11,
+            "installerIcon": 1792,
+            "userIcon": 1792,
+            "commandClasses": [
+                {"id": 50, "name": "Meter", "version": 3, "isSecure": False}
+            ],
+        }
     )
     node = Node(client, node_data)
     event = {"node": node}
