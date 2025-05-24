@@ -372,8 +372,8 @@
               "name": "Tilt settings",
               "data": {
                 "tilt_closed_value": "Tilt \"closed\" value",
-                "tilt_command_template": "Set tilt template",
-                "tilt_command_topic": "Set tilt topic",
+                "tilt_command_template": "Tilt command template",
+                "tilt_command_topic": "Tilt command topic",
                 "tilt_max": "Tilt max",
                 "tilt_min": "Tilt min",
                 "tilt_opened_value": "Tilt \"opened\" value",
