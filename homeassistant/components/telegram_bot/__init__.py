@@ -6,7 +6,7 @@ import asyncio
 import io
 from ipaddress import IPv4Network, ip_network
 import logging
-from types import MappingProxyType
+from types import MappingProxyType, ModuleType
 from typing import Any
 
 import httpx
@@ -49,7 +49,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_loaded_integration
+from homeassistant.loader import Integration, async_get_loaded_integration
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 _LOGGER = logging.getLogger(__name__)
@@ -304,6 +304,10 @@ SERVICE_MAP = {
 
 type TelegramBotConfigEntry = ConfigEntry[Bot]
 
+# this will be loaded in async_setup once
+# thereafter, async_setup_entry will lookup the modules and perform the setup
+MODULES: dict[str, ModuleType] = {}
+
 
 def _read_file_as_bytesio(file_path: str) -> io.BytesIO:
     """Read a file and return it as a BytesIO object."""
@@ -389,6 +393,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telegram bot component."""
     domain_config: list[dict[str, Any]] = config[DOMAIN]
 
+    integration: Integration = async_get_loaded_integration(hass, DOMAIN)
+    modules: dict[str, ModuleType] = await integration.async_get_platforms(
+        [PLATFORM_BROADCAST, PLATFORM_POLLING, PLATFORM_WEBHOOKS]
+    )
+    MODULES.update(modules)
+
     # create config entries from YAML
     for config_import in domain_config:
         trusted_networks: list[IPv4Network] = config_import.get(
@@ -420,15 +430,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> bool:
     """Create the Telegram bot from config entry."""
-    platforms = await async_get_loaded_integration(hass, DOMAIN).async_get_platforms(
-        {entry.data[CONF_PLATFORM]}
-    )
-
     bot: Bot = await hass.async_add_executor_job(initialize_bot, hass, entry.data)
     entry.runtime_data = bot
 
     p_type: str = entry.data[CONF_PLATFORM]
-    platform = platforms[p_type]
+    platform = MODULES[p_type]
 
     _LOGGER.debug("Setting up %s.%s", DOMAIN, p_type)
     try:
