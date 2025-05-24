@@ -210,7 +210,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="smart_cmonx",
-        translation_key="detections_co",
+        translation_key="detections_co_alarm",
         icon="mdi:molecule-co",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="can_detect_co",

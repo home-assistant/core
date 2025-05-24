@@ -226,7 +226,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
     ),
     ProtectSwitchEntityDescription(
         key="smart_cmonx",
-        translation_key="detections_co",
+        translation_key="detections_co_alarm",
         icon="mdi:molecule-co",
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="can_detect_co",

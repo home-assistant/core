@@ -180,8 +180,8 @@
       "detections_smoke": {
         "name": "Detections: smoke"
       },
-      "detections_co": {
-        "name": "Detections: CO"
+      "detections_co_alarm": {
+        "name": "Detections: CO alarm"
       },
       "detections_siren": {
         "name": "Detections: siren"
@@ -534,8 +534,8 @@
       "detections_smoke": {
         "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_smoke::name%]"
       },
-      "detections_co": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_co::name%]"
+      "detections_co_alarm": {
+        "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_co_alarm::name%]"
       },
       "detections_siren": {
         "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_siren::name%]"
