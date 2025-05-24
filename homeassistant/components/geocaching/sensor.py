@@ -22,7 +22,7 @@ from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 from .coordinator import GeocachingConfigEntry, GeocachingDataUpdateCoordinator
-from .entity import GeocachingBaseEntity
+from .entity import GeocachingBaseEntity, GeocachingCacheEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -118,13 +118,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Geocaching sensor entry."""
     coordinator = entry.runtime_data
-    async_add_entities(
+
+    entities: list[Entity] = []
+
+    entities.extend(
         GeocachingProfileSensor(coordinator, description)
         for description in PROFILE_SENSORS
     )
 
     status = coordinator.data
-    entities: list[Entity] = []
 
     # Add entities for tracked caches
     for cache in status.tracked_caches:
@@ -140,7 +142,7 @@ async def async_setup_entry(
 
 # Base class for a cache entity.
 # Sets the device, ID and translation settings to correctly group the entity to the correct cache device and give it the correct name.
-class GeoEntityBaseCache(GeocachingBaseEntity, SensorEntity):
+class GeoEntityBaseCache(GeocachingCacheEntity, SensorEntity):
     """Base class for cache entities."""
 
     _attr_has_entity_name = True
@@ -153,17 +155,8 @@ class GeoEntityBaseCache(GeocachingBaseEntity, SensorEntity):
         entity_type: str,
     ) -> None:
         """Initialize the Geocaching sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, cache)
         self.cache = cache
-
-        # A device can have multiple entities, and for a cache which requires multiple entities we want to group them together.
-        # Therefore, we create a device for each cache, which holds all related entities.
-        self._attr_device_info = DeviceInfo(
-            name=f"Geocache {cache.reference_code}",
-            identifiers={(DOMAIN, cast(str, cache.reference_code))},
-            entry_type=DeviceEntryType.SERVICE,
-            manufacturer="Groundspeak, Inc.",
-        )
 
         self._attr_unique_id = f"{DOMAIN}.{cache.reference_code}_{entity_type}"
 
