@@ -84,7 +84,6 @@ class SwitchbotMultiChannelSwitch(SwitchbotSwitchedEntity, SwitchEntity):
     """Representation of a Switchbot multi-channel switch."""
 
     _attr_device_class = SwitchDeviceClass.SWITCH
-    _attr_translation_key = "multi_channel_switch"
     _device: switchbot.Switchbot
 
     def __init__(
@@ -94,7 +93,7 @@ class SwitchbotMultiChannelSwitch(SwitchbotSwitchedEntity, SwitchEntity):
         super().__init__(coordinator)
         self._channel = channel
         self._attr_unique_id = f"{coordinator.base_unique_id}-{channel}"
-        self._attr_name = f"{coordinator.device_name}_{channel}"
+        self._attr_name = f"{coordinator.device_name} {channel}"
 
     async def async_added_to_hass(self) -> None:
         """Active acquisition of current and voltage."""
