@@ -442,7 +442,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 translation_domain=DOMAIN,
                 translation_key="missing_config_entry",
             )
-        notify_service: TelegramNotificationService = config_entries[0].runtime_data
+        notify_service = config_entries[0].runtime_data
 
         messages = None
         if msgtype == SERVICE_SEND_MESSAGE:
@@ -533,7 +533,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
         _LOGGER.exception("Error setting up Telegram bot %s", p_type)
         return False
 
-    notify_service: TelegramNotificationService = TelegramNotificationService(
+    notify_service = TelegramNotificationService(
         hass, bot, entry, entry.data[ATTR_PARSER]
     )
     entry.runtime_data = notify_service

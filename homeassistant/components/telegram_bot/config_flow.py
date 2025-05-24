@@ -241,7 +241,7 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
 
         if user_input is not None:
             config_entry: TelegramBotConfigEntry = self._get_entry()
-            notify_service: TelegramNotificationService = config_entry.runtime_data
+            notify_service = config_entry.runtime_data
             bot: Bot = notify_service.bot
 
             chat_id: int = user_input[CONF_CHAT_ID]
