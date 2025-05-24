@@ -237,8 +237,8 @@
       "display_temperature_selection": {
         "name": "Displayed temperature",
         "state": {
-          "selected": "target",
-          "current": "measured"
+          "selected": "Target",
+          "current": "Measured"
         }
       },
       "repeater_mode": {
