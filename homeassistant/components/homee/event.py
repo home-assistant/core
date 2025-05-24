@@ -34,7 +34,7 @@ class HomeeEvent(HomeeEntity, EventEntity):
     _attr_has_entity_name = True
     _attr_translation_key = "up_down_remote"
     _attr_event_types = [
-        "none",
+        "released",
         "up",
         "down",
         "stop",
