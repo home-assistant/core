@@ -20,7 +20,6 @@ from homeassistant.components.humidifier import (
     HumidifierEntity,
     HumidifierEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MODE, CONF_DEVICE, CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -28,9 +27,6 @@ from homeassistant.util.percentage import percentage_to_ranged_value
 
 from .const import (
     CONF_FLOW_TYPE,
-    DOMAIN,
-    KEY_COORDINATOR,
-    KEY_DEVICE,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1,
@@ -38,6 +34,7 @@ from .const import (
     MODELS_HUMIDIFIER_MJJSQ,
 )
 from .entity import XiaomiCoordinatedMiioEntity
+from .typing import XiaomiMiioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,7 +67,7 @@ AVAILABLE_MODES_OTHER = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: XiaomiMiioConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Humidifier from a config entry."""
@@ -81,28 +78,26 @@ async def async_setup_entry(
     entity: HumidifierEntity
     model = config_entry.data[CONF_MODEL]
     unique_id = config_entry.unique_id
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
+    device = config_entry.runtime_data.device
+    coordinator = config_entry.runtime_data.device_coordinator
 
     if model in MODELS_HUMIDIFIER_MIOT:
-        air_humidifier = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
         entity = XiaomiAirHumidifierMiot(
-            air_humidifier,
+            device,
             config_entry,
             unique_id,
             coordinator,
         )
     elif model in MODELS_HUMIDIFIER_MJJSQ:
-        air_humidifier = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
         entity = XiaomiAirHumidifierMjjsq(
-            air_humidifier,
+            device,
             config_entry,
             unique_id,
             coordinator,
         )
     else:
-        air_humidifier = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
         entity = XiaomiAirHumidifier(
-            air_humidifier,
+            device,
             config_entry,
             unique_id,
             coordinator,

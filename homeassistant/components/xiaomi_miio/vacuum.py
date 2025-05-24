@@ -14,7 +14,6 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -25,9 +24,6 @@ from homeassistant.util.dt import as_utc
 from . import VacuumCoordinatorData
 from .const import (
     CONF_FLOW_TYPE,
-    DOMAIN,
-    KEY_COORDINATOR,
-    KEY_DEVICE,
     SERVICE_CLEAN_SEGMENT,
     SERVICE_CLEAN_ZONE,
     SERVICE_GOTO,
@@ -37,6 +33,7 @@ from .const import (
     SERVICE_STOP_REMOTE_CONTROL,
 )
 from .entity import XiaomiCoordinatedMiioEntity
+from .typing import XiaomiMiioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +75,7 @@ STATE_CODE_TO_STATE = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: XiaomiMiioConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Xiaomi vacuum cleaner robot from a config entry."""
@@ -88,10 +85,10 @@ async def async_setup_entry(
         unique_id = config_entry.unique_id
 
         mirobo = MiroboVacuum(
-            hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE],
+            config_entry.runtime_data.device,
             config_entry,
             unique_id,
-            hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+            config_entry.runtime_data.device_coordinator,
         )
         entities.append(mirobo)
 
