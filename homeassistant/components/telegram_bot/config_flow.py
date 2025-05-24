@@ -45,6 +45,7 @@ from . import (
     PLATFORM_POLLING,
     PLATFORM_WEBHOOKS,
     TelegramBotConfigEntry,
+    TelegramNotificationService,
     initialize_bot,
 )
 
@@ -240,7 +241,8 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
 
         if user_input is not None:
             config_entry: TelegramBotConfigEntry = self._get_entry()
-            bot: Bot = config_entry.runtime_data
+            notify_service: TelegramNotificationService = config_entry.runtime_data
+            bot: Bot = notify_service.bot
 
             chat_id: int = user_input[CONF_CHAT_ID]
             for existing_subentry in config_entry.subentries.values():

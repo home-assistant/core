@@ -760,6 +760,14 @@
       }
     }
   },
+  "exceptions": {
+    "missing_config_entry": {
+      "message": "No config entries found or setup failed. Please set up the Telegram Bot first."
+    },
+    "missing_allowed_chat_ids": {
+      "message": "No allowed chat IDs found. Please add allowed chat IDs for {bot_name}."
+    }
+  },
   "issues": {
     "deprecated_yaml": {
       "title": "The {integration_title} YAML configuration is being removed",

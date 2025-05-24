@@ -302,7 +302,7 @@ SERVICE_MAP = {
 }
 
 
-type TelegramBotConfigEntry = ConfigEntry[Bot]
+type TelegramBotConfigEntry = ConfigEntry[TelegramNotificationService]
 
 # this will be loaded in async_setup once
 # thereafter, async_setup_entry will lookup the modules and perform the setup
@@ -425,33 +425,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         )
 
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> bool:
-    """Create the Telegram bot from config entry."""
-    bot: Bot = await hass.async_add_executor_job(initialize_bot, hass, entry.data)
-    entry.runtime_data = bot
-
-    p_type: str = entry.data[CONF_PLATFORM]
-    platform = MODULES[p_type]
-
-    _LOGGER.debug("Setting up %s.%s", DOMAIN, p_type)
-    try:
-        receiver_service = await platform.async_setup_platform(hass, bot, entry)
-        if receiver_service is False:
-            _LOGGER.error("Failed to initialize Telegram bot %s", p_type)
-            return False
-
-    except Exception:
-        _LOGGER.exception("Error setting up platform %s", p_type)
-        return False
-
-    notify_service: TelegramNotificationService = TelegramNotificationService(
-        hass, bot, entry, entry.data[ATTR_PARSER]
-    )
-    TelegramNotificationService.notify_service = notify_service
-
     async def async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
         """Handle sending Telegram Bot message service calls."""
 
@@ -459,12 +432,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
         kwargs = dict(service.data)
         _LOGGER.debug("New telegram message %s: %s", msgtype, kwargs)
 
-        if not TelegramNotificationService.notify_service:
-            # shouldn't happen since service is registered only after config entry setup is completed
-            raise ServiceValidationError("No service found")
-        notify_service: TelegramNotificationService = (
-            TelegramNotificationService.notify_service
+        # use the first config entry as default
+        config_entries: list[TelegramBotConfigEntry] = (
+            service.hass.config_entries.async_entries(DOMAIN)
         )
+        if not config_entries or not hasattr(config_entries[0], "runtime_data"):
+            raise ServiceValidationError(
+                "No config entries found or setup failed. Please set up the Telegram Bot first.",
+                translation_domain=DOMAIN,
+                translation_key="missing_config_entry",
+            )
+        notify_service: TelegramNotificationService = config_entries[0].runtime_data
 
         messages = None
         if msgtype == SERVICE_SEND_MESSAGE:
@@ -538,6 +516,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
     return True
 
 
+async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> bool:
+    """Create the Telegram bot from config entry."""
+    bot: Bot = await hass.async_add_executor_job(initialize_bot, hass, entry.data)
+    p_type: str = entry.data[CONF_PLATFORM]
+    platform = MODULES[p_type]
+
+    _LOGGER.debug("Setting up %s.%s", DOMAIN, p_type)
+    try:
+        receiver_service = await platform.async_setup_platform(hass, bot, entry)
+        if receiver_service is False:
+            _LOGGER.error("Failed to initialize Telegram bot %s", p_type)
+            return False
+
+    except Exception:
+        _LOGGER.exception("Error setting up Telegram bot %s", p_type)
+        return False
+
+    notify_service: TelegramNotificationService = TelegramNotificationService(
+        hass, bot, entry, entry.data[ATTR_PARSER]
+    )
+    entry.runtime_data = notify_service
+
+    return True
+
+
 def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) -> Bot:
     """Initialize telegram bot with proxy support."""
     api_key: str = p_config[CONF_API_KEY]
@@ -597,8 +600,6 @@ def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) ->
 class TelegramNotificationService:
     """Implement the notification services for the Telegram Bot domain."""
 
-    notify_service: TelegramNotificationService | None = None
-
     def __init__(
         self, hass: HomeAssistant, bot: Bot, config: TelegramBotConfigEntry, parser: str
     ) -> None:
@@ -614,10 +615,27 @@ class TelegramNotificationService:
         self.bot = bot
         self.hass = hass
 
+    def get_bot(self) -> Bot:
+        """Return the Telegram bot instance."""
+        return self.bot
+
     def _get_allowed_chat_ids(self) -> list[int]:
-        return [
+        allowed_chat_ids: list[int] = [
             subentry.data[CONF_CHAT_ID] for subentry in self.config.subentries.values()
         ]
+
+        if not allowed_chat_ids:
+            bot_name: str = self.config.title
+            raise ServiceValidationError(
+                "No allowed chat IDs found for bot",
+                translation_domain=DOMAIN,
+                translation_key="missing_allowed_chat_ids",
+                translation_placeholders={
+                    "bot_name": bot_name,
+                },
+            )
+
+        return allowed_chat_ids
 
     def _get_last_message_id(self):
         return dict.fromkeys(self._get_allowed_chat_ids())
