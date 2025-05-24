@@ -54,7 +54,6 @@ async def test_full_flow(
     [
         (CannotConnect, "cannot_connect"),
         (CannotAuthenticate, "invalid_auth"),
-        (Exception, "unknown"),
     ],
 )
 async def test_flow_errors(

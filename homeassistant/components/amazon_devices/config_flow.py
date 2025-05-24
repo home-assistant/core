@@ -13,7 +13,7 @@ from homeassistant.const import CONF_CODE, CONF_COUNTRY, CONF_PASSWORD, CONF_USE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import CountrySelector
 
-from .const import _LOGGER, CONF_LOGIN_DATA, DOMAIN
+from .const import CONF_LOGIN_DATA, DOMAIN
 
 
 class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -36,9 +36,6 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except CannotAuthenticate:
                 errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(data["customer_info"]["user_id"])
                 self._abort_if_unique_id_configured()
