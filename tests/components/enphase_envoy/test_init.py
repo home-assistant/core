@@ -510,7 +510,6 @@ async def test_coordinator_interface_information_no_device(
     )
 
     # update device to force no device found in mac verification
-    device_registry = dr.async_get(hass)
     envoy_device = device_registry.async_get_device(
         identifiers={
             (
@@ -549,8 +548,6 @@ async def test_coordinator_interface_information_mac_also_in_other_device(
     logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
         logging.DEBUG
     )
-
-    device_registry = dr.async_get(hass)
 
     # add existing device with MAC and sparsely populated i.e. unifi that found envoy
     other_config_entry = MockConfigEntry(domain="test", data={})
