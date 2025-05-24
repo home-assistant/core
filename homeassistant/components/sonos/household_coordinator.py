@@ -5,15 +5,17 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from soco import SoCo
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 
-from .const import DATA_SONOS
 from .exception import SonosUpdateError
+
+if TYPE_CHECKING:
+    from .config_entry import SonosConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,12 +25,15 @@ class SonosHouseholdCoordinator:
 
     cache_update_lock: asyncio.Lock
 
-    def __init__(self, hass: HomeAssistant, household_id: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, household_id: str, config_entry: SonosConfigEntry
+    ) -> None:
         """Initialize the data."""
         self.hass = hass
         self.household_id = household_id
         self.async_poll: Callable[[], Coroutine[None, None, None]] | None = None
         self.last_processed_event_id: int | None = None
+        self.config_entry = config_entry
 
     def setup(self, soco: SoCo) -> None:
         """Set up the SonosAlarm instance."""
@@ -54,7 +59,7 @@ class SonosHouseholdCoordinator:
 
     async def _async_poll(self) -> None:
         """Poll any known speaker."""
-        discovered = self.hass.data[DATA_SONOS].discovered
+        discovered = self.config_entry.runtime_data.sonos_data.discovered
 
         for uid, speaker in discovered.items():
             _LOGGER.debug("Polling %s using %s", self.class_type, speaker.soco)

@@ -12,7 +12,7 @@ from soco.events_base import Event as SonosEvent
 
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DATA_SONOS, SONOS_ALARMS_UPDATED, SONOS_CREATE_ALARM
+from .const import SONOS_ALARMS_UPDATED, SONOS_CREATE_ALARM
 from .helpers import soco_error
 from .household_coordinator import SonosHouseholdCoordinator
 
@@ -52,7 +52,9 @@ class SonosAlarms(SonosHouseholdCoordinator):
         for alarm_id, alarm in self.alarms.alarms.items():
             if alarm_id in self.created_alarm_ids:
                 continue
-            speaker = self.hass.data[DATA_SONOS].discovered.get(alarm.zone.uid)
+            speaker = self.config_entry.runtime_data.sonos_data.discovered.get(
+                alarm.zone.uid
+            )
             if speaker:
                 async_dispatcher_send(
                     self.hass, SONOS_CREATE_ALARM, speaker, [alarm_id]

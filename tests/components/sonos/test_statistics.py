@@ -1,14 +1,19 @@
 """Tests for the Sonos statistics."""
 
-from homeassistant.components.sonos.const import DATA_SONOS
 from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 
 async def test_statistics_duplicate(
-    hass: HomeAssistant, async_autosetup_sonos, soco, device_properties_event
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    soco,
+    device_properties_event,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test Sonos statistics."""
-    speaker = list(hass.data[DATA_SONOS].discovered.values())[0]
+    speaker = list(config_entry.runtime_data.sonos_data.discovered.values())[0]
 
     subscription = soco.deviceProperties.subscribe.return_value
     sub_callback = subscription.callback

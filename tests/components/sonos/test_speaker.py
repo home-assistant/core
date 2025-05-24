@@ -9,13 +9,18 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_PLAY,
 )
 from homeassistant.components.sonos import DOMAIN
-from homeassistant.components.sonos.const import DATA_SONOS, SCAN_INTERVAL
+from homeassistant.components.sonos.const import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .conftest import MockSoCo, SonosMockEvent
 
-from tests.common import async_fire_time_changed, load_fixture, load_json_value_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_fixture,
+    load_json_value_fixture,
+)
 
 
 async def test_fallback_to_polling(
@@ -33,7 +38,7 @@ async def test_fallback_to_polling(
     await hass.async_block_till_done()
     await fire_zgs_event()
 
-    speaker = list(hass.data[DATA_SONOS].discovered.values())[0]
+    speaker = list(config_entry.runtime_data.sonos_data.discovered.values())[0]
     assert speaker.soco is soco
     assert speaker._subscriptions
     assert not speaker.subscriptions_failed
@@ -56,7 +61,7 @@ async def test_fallback_to_polling(
 
 
 async def test_subscription_creation_fails(
-    hass: HomeAssistant, async_setup_sonos
+    hass: HomeAssistant, async_setup_sonos, config_entry: MockConfigEntry
 ) -> None:
     """Test that subscription creation failures are handled."""
     with patch(
@@ -66,7 +71,7 @@ async def test_subscription_creation_fails(
         await async_setup_sonos()
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    speaker = list(hass.data[DATA_SONOS].discovered.values())[0]
+    speaker = list(config_entry.runtime_data.sonos_data.discovered.values())[0]
     assert not speaker._subscriptions
 
     with patch.object(speaker, "_resub_cooldown_expires_at", None):

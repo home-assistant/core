@@ -5,12 +5,15 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, SERVICE_JOIN
-from homeassistant.components.sonos.const import DATA_SONOS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
+from tests.common import MockConfigEntry
 
-async def test_media_player_join(hass: HomeAssistant, async_autosetup_sonos) -> None:
+
+async def test_media_player_join(
+    hass: HomeAssistant, async_autosetup_sonos, config_entry: MockConfigEntry
+) -> None:
     """Test join service."""
     valid_entity_id = "media_player.zone_a"
     mocked_entity_id = "media_player.mocked"
@@ -29,7 +32,10 @@ async def test_media_player_join(hass: HomeAssistant, async_autosetup_sonos) -> 
     mock_entity_id_mappings = {mocked_entity_id: mocked_speaker}
 
     with (
-        patch.dict(hass.data[DATA_SONOS].entity_id_mappings, mock_entity_id_mappings),
+        patch.dict(
+            config_entry.runtime_data.sonos_data.entity_id_mappings,
+            mock_entity_id_mappings,
+        ),
         patch(
             "homeassistant.components.sonos.speaker.SonosSpeaker.join_multi"
         ) as mock_join_multi,
@@ -41,5 +47,9 @@ async def test_media_player_join(hass: HomeAssistant, async_autosetup_sonos) -> 
             blocking=True,
         )
 
-        found_speaker = hass.data[DATA_SONOS].entity_id_mappings[valid_entity_id]
-        mock_join_multi.assert_called_with(hass, found_speaker, [mocked_speaker])
+        found_speaker = config_entry.runtime_data.sonos_data.entity_id_mappings[
+            valid_entity_id
+        ]
+        mock_join_multi.assert_called_with(
+            hass, config_entry, found_speaker, [mocked_speaker]
+        )
