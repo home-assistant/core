@@ -13,7 +13,7 @@ rules:
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name:
@@ -41,8 +41,8 @@ rules:
   # Silver
   action-exceptions: done
   config-entry-unloading: done
-  docs-configuration-parameters: todo
-  docs-installation-parameters: todo
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable:
@@ -64,21 +64,24 @@ rules:
     comment: |
       YAML entities don't support devices. UI entities support user-defined devices.
   diagnostics: done
-  discovery-update-info: todo
+  discovery-update-info:
+    status: exempt
+    comment: |
+      KNX doesn't support any provided discovery method.
   discovery:
     status: exempt
     comment: |
       KNX doesn't support any provided discovery method.
-  docs-data-update: todo
+  docs-data-update: done
   docs-examples: done
-  docs-known-limitations: todo
+  docs-known-limitations: done
   docs-supported-devices:
     status: exempt
     comment: |
       Devices aren't supported directly since communication is on group address level.
   docs-supported-functions: done
   docs-troubleshooting: done
-  docs-use-cases: todo
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: |
