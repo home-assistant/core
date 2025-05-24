@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, CONF_LOGIN_DATA, DOMAIN, SCAN_INTERVAL
+from .const import _LOGGER, CONF_LOGIN_DATA, SCAN_INTERVAL
 
 type AmazonConfigEntry = ConfigEntry[AmazonDevicesCoordinator]
 
@@ -24,7 +24,6 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
     """Base coordinator for Amazon Devices."""
 
     config_entry: AmazonConfigEntry
-    api: AmazonEchoApi
 
     def __init__(
         self,
@@ -32,17 +31,16 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         entry: AmazonConfigEntry,
     ) -> None:
         """Initialize the scanner."""
-        username = entry.data[CONF_USERNAME]
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{DOMAIN} {username}",
+            name=entry.title,
             config_entry=entry,
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
         self.api = AmazonEchoApi(
             entry.data[CONF_COUNTRY],
-            username,
+            entry.data[CONF_USERNAME],
             entry.data[CONF_PASSWORD],
             entry.data[CONF_LOGIN_DATA],
         )
@@ -53,6 +51,6 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             await self.api.login_mode_stored_data()
             return await self.api.get_devices_data()
         except (CannotConnect, CannotRetrieveData) as err:
-            raise UpdateFailed(repr(err)) from err
+            raise UpdateFailed(...) from err
         except CannotAuthenticate as err:
             raise ConfigEntryError("Could not authenticate") from err

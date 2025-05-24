@@ -102,7 +102,7 @@ async def test_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_duplicate(
+async def test_already_configured(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_setup_entry: AsyncMock,

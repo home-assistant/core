@@ -63,12 +63,12 @@ def mock_config_entry() -> MockConfigEntry:
     """Mock a config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title="Test",
+        title="Amazon Test Account",
         data={
             CONF_COUNTRY: "IT",
-            CONF_USERNAME: "test",
-            CONF_PASSWORD: "test",
-            CONF_LOGIN_DATA: {"test": "test"},
+            CONF_USERNAME: "fake_email@gmail.com",
+            CONF_PASSWORD: "fake_password",
+            CONF_LOGIN_DATA: {"session": "test-session"},
         },
         unique_id="test",
     )

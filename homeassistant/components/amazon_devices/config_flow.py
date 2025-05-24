@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from aioamazondevices.api import AmazonEchoApi
@@ -14,15 +13,11 @@ from homeassistant.const import CONF_CODE, CONF_COUNTRY, CONF_PASSWORD, CONF_USE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import CountrySelector
 
-from .const import CONF_LOGIN_DATA, DEFAULT_COUNTRY, DOMAIN
-
-_LOGGER = logging.getLogger(__package__)
+from .const import _LOGGER, CONF_LOGIN_DATA, DOMAIN
 
 
 class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Amazon Devices."""
-
-    VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -61,7 +56,7 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_COUNTRY, default=DEFAULT_COUNTRY
+                        CONF_COUNTRY, default=self.hass.config.country
                     ): CountrySelector(),
                     vol.Required(CONF_USERNAME): cv.string,
                     vol.Required(CONF_PASSWORD): cv.string,
