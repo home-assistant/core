@@ -37,6 +37,7 @@ from . import (
     CONF_PROXY_URL,
     CONF_TRUSTED_NETWORKS,
     CONF_URL,
+    DEFAULT_TRUSTED_NETWORKS,
     DOMAIN,
     PARSER_HTML,
     PARSER_MD,
@@ -45,11 +46,31 @@ from . import (
     PLATFORM_POLLING,
     PLATFORM_WEBHOOKS,
     TelegramBotConfigEntry,
-    TelegramNotificationService,
     initialize_bot,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+OPTIONS_SCHEMA: vol.Schema = vol.Schema(
+    {
+        vol.Required(
+            ATTR_PARSER,
+        ): SelectSelector(
+            SelectSelectorConfig(
+                options=[PARSER_MD, PARSER_MD2, PARSER_HTML],
+                translation_key="parsers",
+            )
+        )
+    }
+)
+WEBHOOKS_OPTIONS_SCHEMA: vol.Schema = OPTIONS_SCHEMA.extend(
+    {
+        vol.Optional(CONF_URL): TextSelector(
+            config=TextSelectorConfig(type=TextSelectorType.URL)
+        ),
+        vol.Required(CONF_TRUSTED_NETWORKS): vol.Coerce(str),
+    }
+)
 
 
 class OptionsFlowHandler(OptionsFlow):
@@ -61,41 +82,50 @@ class OptionsFlowHandler(OptionsFlow):
         """Manage the options."""
 
         errors: dict[str, str] = {}
+        description_placeholders: Mapping[str, str] = {}
 
         platform: str = self.config_entry.data[CONF_PLATFORM]
-        if platform != PLATFORM_WEBHOOKS:
-            return self.async_abort(
-                reason="no_options", description_placeholders={CONF_PLATFORM: platform}
-            )
-
-        description_placeholders: Mapping[str, str] = {}
         if user_input is not None:
-            trusted_networks_str: str = user_input[CONF_TRUSTED_NETWORKS]
-            trusted_networks_list: list[str] = self._parse_trusted_networks(
-                trusted_networks_str, errors
-            )
+            if platform == PLATFORM_WEBHOOKS:
+                trusted_networks_str: str = user_input[CONF_TRUSTED_NETWORKS]
+                trusted_networks_list: list[str] = self._parse_trusted_networks(
+                    trusted_networks_str, errors
+                )
+
+                if errors:
+                    description_placeholders = {
+                        "trusted_network_error": trusted_networks_list[0]
+                    }
+                else:
+                    user_input[CONF_TRUSTED_NETWORKS] = trusted_networks_list
 
             if not errors:
-                user_input[CONF_TRUSTED_NETWORKS] = trusted_networks_list
                 return self.async_create_entry(data=user_input)
 
-            description_placeholders = {
-                "trusted_network_error": trusted_networks_list[0]
-            }
+        # format list to str
+        default_trusted_networks: list[str] = [
+            str(network) for network in DEFAULT_TRUSTED_NETWORKS
+        ]
+        trusted_networks: list[str] = self.config_entry.options.get(
+            CONF_TRUSTED_NETWORKS, default_trusted_networks
+        )
+        trusted_networks_csv: str = ",".join(trusted_networks)
+
+        schema: vol.Schema = (
+            WEBHOOKS_OPTIONS_SCHEMA if platform == PLATFORM_WEBHOOKS else OPTIONS_SCHEMA
+        )
+        schema = self.add_suggested_values_to_schema(
+            schema,
+            {
+                ATTR_PARSER: self.config_entry.options.get(ATTR_PARSER),
+                CONF_URL: self.config_entry.options.get(CONF_URL, ""),
+                CONF_TRUSTED_NETWORKS: trusted_networks_csv,
+            },
+        )
 
         return self.async_show_form(
             step_id="init",
-            data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
-                    {
-                        vol.Optional(CONF_URL): TextSelector(
-                            config=TextSelectorConfig(type=TextSelectorType.URL)
-                        ),
-                        vol.Required(CONF_TRUSTED_NETWORKS): str,
-                    }
-                ),
-                self.config_entry.options,
-            ),
+            data_schema=schema,
             errors=errors,
             description_placeholders=description_placeholders,
         )
@@ -107,14 +137,19 @@ class OptionsFlowHandler(OptionsFlow):
     ) -> list[str]:
         """Convert CSV to list of strings."""
 
+        csv_trusted_networks: list[str] = []
+
         # validate entries in the csv
-        csv_trusted_networks: list[str] = cv.ensure_list_csv(trusted_networks)
-        for trusted_network in csv_trusted_networks:
+        formatted_trusted_networks: str = trusted_networks.lstrip("[").rstrip("]")
+        for trusted_network in cv.ensure_list_csv(formatted_trusted_networks):
+            formatted_trusted_network: str = trusted_network.strip("'")
             try:
-                IPv4Network(trusted_network)
+                IPv4Network(formatted_trusted_network)
             except (AddressValueError, ValueError) as err:
                 errors["base"] = "invalid_trusted_networks"
                 return [str(err)]
+            else:
+                csv_trusted_networks.append(formatted_trusted_network)
 
         return csv_trusted_networks
 
@@ -181,17 +216,22 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     subentries.append(subentry)
 
+                default_trusted_networks: list[str] = [
+                    str(network) for network in DEFAULT_TRUSTED_NETWORKS
+                ]
                 return self.async_create_entry(
                     title=bot_name,
                     data={
                         CONF_PLATFORM: user_input.get(CONF_PLATFORM),
                         CONF_API_KEY: user_input.get(CONF_API_KEY),
-                        ATTR_PARSER: user_input.get(ATTR_PARSER),
                         CONF_PROXY_URL: user_input.get(CONF_PROXY_URL),
                     },
                     options={
+                        ATTR_PARSER: user_input.get(ATTR_PARSER, PARSER_MD),
                         CONF_URL: user_input.get(CONF_URL),
-                        CONF_TRUSTED_NETWORKS: user_input.get(CONF_TRUSTED_NETWORKS),
+                        CONF_TRUSTED_NETWORKS: user_input.get(
+                            CONF_TRUSTED_NETWORKS, default_trusted_networks
+                        ),
                     },
                     subentries=subentries,
                 )
@@ -216,13 +256,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                             autocomplete="current-password",
                         )
                     ),
-                    vol.Required(ATTR_PARSER, default=PARSER_MD): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[PARSER_MD, PARSER_MD2, PARSER_HTML],
-                            translation_key="parsers",
-                        )
+                    vol.Optional(CONF_PROXY_URL): TextSelector(
+                        config=TextSelectorConfig(type=TextSelectorType.URL)
                     ),
-                    vol.Optional(CONF_PROXY_URL): str,
                 }
             ),
             errors=errors,

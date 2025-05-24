@@ -534,11 +534,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
         return False
 
     notify_service = TelegramNotificationService(
-        hass, bot, entry, entry.data[ATTR_PARSER]
+        hass, bot, entry, entry.options[ATTR_PARSER]
     )
     entry.runtime_data = notify_service
 
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
     return True
+
+
+async def update_listener(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> None:
+    """Handle options update."""
+
+    # hass.config_entries.async_reload only reloads platforms not modules
+    # handle module reload ourselves
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) -> Bot:

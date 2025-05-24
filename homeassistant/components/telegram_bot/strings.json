@@ -7,14 +7,12 @@
         "data": {
           "platform": "Platform",
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "parse_mode": "Parse mode",
           "proxy_url": "Proxy URL"
         },
         "data_description": {
           "platform": "Telegram bot implementation",
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "parse_mode": "Default parser for messages if not explicit in message data.",
-          "proxy_url": "Proxy URL if working behind one, optionally including username and password."
+          "api_key": "The API token of your bot.",
+          "proxy_url": "Proxy URL if working behind one, optionally including username and password.\n(socks5://username:password@proxy_ip:proxy_port)"
         }
       }
     },
@@ -28,22 +26,21 @@
   "options": {
     "step": {
       "init": {
-        "title": "Configure webhook Telegram bot",
+        "title": "Configure Telegram bot",
         "data": {
+          "parse_mode": "Parse mode",
           "url": "[%key:common::config_flow::data::url%]",
           "trusted_networks": "Trusted networks"
         },
         "data_description": {
+          "parse_mode": "Default parse mode for messages if not explicit in message data.",
           "url": "Allow to overwrite the external URL from the Home Assistant configuration for different setups.",
-          "trusted_networks": "Telegram server access ACL as list."
+          "trusted_networks": "Telegram server access ACL as list.\nDefault: 149.154.160.0/20, 91.108.4.0/22"
         }
       }
     },
     "error": {
       "invalid_trusted_networks": "Invalid trusted network: {trusted_network_error}"
-    },
-    "abort": {
-      "no_options": "No configuration required for {platform} Telegram bot."
     }
   },
   "config_subentries": {
