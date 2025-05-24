@@ -137,6 +137,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -166,7 +169,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.530',
+    'state': '0.529722222222222',
   })
 # ---
 # name: test_all_entities[sensor.henk_average_heart_rate-entry]
@@ -295,6 +298,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
@@ -503,6 +509,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -531,7 +540,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.617',
+    'state': '1.61666666666667',
   })
 # ---
 # name: test_all_entities[sensor.henk_diastolic_blood_pressure-entry]
@@ -859,6 +868,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
@@ -910,6 +922,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
@@ -963,6 +978,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
     'original_icon': None,
@@ -1835,6 +1853,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
     'original_icon': None,
@@ -1887,6 +1908,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
@@ -1943,6 +1967,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
     'original_icon': None,
@@ -1993,6 +2020,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
@@ -2245,6 +2275,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -2273,7 +2306,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.900',
+    'state': '2.9',
   })
 # ---
 # name: test_all_entities[sensor.henk_maximum_heart_rate-entry]
@@ -2504,6 +2537,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
@@ -2533,7 +2569,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '24.8',
+    'state': '24.7833333333333',
   })
 # ---
 # name: test_all_entities[sensor.henk_muscle_mass-entry]
@@ -2888,6 +2924,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
@@ -2942,6 +2981,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
@@ -2994,6 +3036,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -3022,7 +3067,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.667',
+    'state': '0.666666666666667',
   })
 # ---
 # name: test_all_entities[sensor.henk_skin_temperature-entry]
@@ -3049,6 +3094,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
@@ -3101,6 +3149,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -3129,7 +3180,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '8.000',
+    'state': '8.0',
   })
 # ---
 # name: test_all_entities[sensor.henk_sleep_score-entry]
@@ -3207,6 +3258,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
@@ -3312,6 +3366,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
@@ -3341,7 +3398,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '25.3',
+    'state': '25.2666666666667',
   })
 # ---
 # name: test_all_entities[sensor.henk_spo2-entry]
@@ -3573,6 +3630,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
@@ -3625,6 +3685,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -3653,7 +3716,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.150',
+    'state': '0.15',
   })
 # ---
 # name: test_all_entities[sensor.henk_time_to_wakeup-entry]
@@ -3680,6 +3743,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -3708,7 +3774,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.317',
+    'state': '0.316666666666667',
   })
 # ---
 # name: test_all_entities[sensor.henk_total_calories_burnt_today-entry]
@@ -3986,6 +4052,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -4014,7 +4083,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.850',
+    'state': '0.85',
   })
 # ---
 # name: test_all_entities[sensor.henk_weight-entry]
@@ -4096,6 +4165,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
     'original_icon': None,

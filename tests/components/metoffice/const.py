@@ -35,7 +35,7 @@ METOFFICE_CONFIG_KINGSLYNN = {
 
 KINGSLYNN_SENSOR_RESULTS = {
     "weather": "rainy",
-    "temperature": "7.87",
+    "temperature": "7.9",
     "uv_index": "1",
     "probability_of_precipitation": "67",
     "pressure": "998.20",
@@ -44,7 +44,7 @@ KINGSLYNN_SENSOR_RESULTS = {
 
 WAVERTREE_SENSOR_RESULTS = {
     "weather": "rainy",
-    "temperature": "9.28",
+    "temperature": "9.3",
     "uv_index": "1",
     "probability_of_precipitation": "61",
     "pressure": "987.50",
