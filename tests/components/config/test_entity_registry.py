@@ -1,6 +1,7 @@
 """Test entity_registry API."""
 
 from datetime import datetime
+import logging
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -11,6 +12,7 @@ from homeassistant.const import ATTR_ICON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_registry import (
     RegistryEntryDisabler,
     RegistryEntryHider,
@@ -1288,3 +1290,102 @@ async def test_remove_non_existing_entity(
     msg = await client.receive_json()
 
     assert not msg["success"]
+
+
+_LOGGER = logging.getLogger(__name__)
+DOMAIN = "test_domain"
+
+
+async def test_get_automatic_entity_ids(
+    hass: HomeAssistant, client: MockHAClientWebSocket
+) -> None:
+    """Test get_automatic_entity_ids."""
+    mock_registry(
+        hass,
+        {
+            "test_domain.test_1": RegistryEntryWithDefaults(
+                entity_id="test_domain.test_1",
+                unique_id="uniq1",
+                platform="test_domain",
+            ),
+            "test_domain.test_2": RegistryEntryWithDefaults(
+                entity_id="test_domain.test_2",
+                unique_id="uniq2",
+                platform="test_domain",
+                suggested_object_id="collision",
+            ),
+            "test_domain.test_3": RegistryEntryWithDefaults(
+                entity_id="test_domain.test_3",
+                name="name_by_user_3",
+                unique_id="uniq3",
+                platform="test_domain",
+                suggested_object_id="suggested_3",
+            ),
+            "test_domain.test_4": RegistryEntryWithDefaults(
+                entity_id="test_domain.test_4",
+                name="name_by_user_4",
+                unique_id="uniq4",
+                platform="test_domain",
+            ),
+            "test_domain.test_5": RegistryEntryWithDefaults(
+                entity_id="test_domain.test_5",
+                name="name_by_user_5",
+                unique_id="uniq5",
+                platform="test_domain",
+                suggested_object_id="suggested_5",
+            ),
+            "test_domain.test_6": RegistryEntryWithDefaults(
+                entity_id="test_domain.test_6",
+                unique_id="uniq6",
+                platform="test_domain",
+                suggested_object_id="test_6",
+            ),
+            "test_domain.collision": RegistryEntryWithDefaults(
+                entity_id="test_domain.collision",
+                unique_id="uniq_collision",
+                platform="test_platform",
+            ),
+        },
+    )
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
+    entity2 = MockEntity(unique_id="uniq3", name="entity_name_3")
+    entity3 = MockEntity(unique_id="uniq6", name="entity_name_6")
+    entity4 = MockEntity(unique_id="uniq7", name="entity_name_7")
+    entity5 = MockEntity(unique_id="uniq8", name="entity_name_8")
+    entity6 = MockEntity(unique_id="uniq10", name="test_10")
+    await component.async_add_entities([entity2, entity3, entity4, entity5, entity6])
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/get_automatic_entity_ids",
+            "entity_ids": [
+                "test_domain.test_1",
+                "test_domain.test_2",
+                "test_domain.test_3",
+                "test_domain.test_4",
+                "test_domain.test_5",
+                "test_domain.test_6",
+                "test_domain.unknown",
+            ],
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {
+        # No entity object for test_domain.test_1
+        "test_domain.test_1": None,
+        # The suggested_object_id is taken, fall back to suggested_object_id + _2
+        "test_domain.test_2": "test_domain.collision_2",
+        # suggested_object_id has higher priority than name set by user or entity
+        "test_domain.test_3": "test_domain.suggested_3",
+        # name set by user has higher priority than entity properties
+        "test_domain.test_4": "test_domain.name_by_user_4",
+        # No suggested_object_id or name, fall back to entity properties
+        "test_domain.test_5": "test_domain.suggested_5",
+        "test_domain.test_6": None,  # automatic entity id matches current entity id
+        "test_domain.unknown": None,  # no test_domain.unknown in registry
+    }
