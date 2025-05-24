@@ -3,11 +3,7 @@
 from pyHomee.const import AttributeType
 from pyHomee.model import HomeeAttribute
 
-from homeassistant.components.event import (
-    EventDeviceClass,
-    EventEntity,
-    EventEntityDescription,
-)
+from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -20,31 +16,36 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
-    async_add_devices: AddConfigEntryEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the homee platform for the event component."""
+    """Add event entities for homee."""
 
-    devices: list[HomeeEvent] = []
-    for node in config_entry.runtime_data.nodes:
-        devices.extend(
-            HomeeEvent(attribute, config_entry)
-            for attribute in node.attributes
-            if (attribute.type == AttributeType.UP_DOWN_REMOTE)
-        )
-    if devices:
-        async_add_devices(devices)
+    async_add_entities(
+        HomeeEvent(attribute, config_entry)
+        for node in config_entry.runtime_data.nodes
+        for attribute in node.attributes
+        if (attribute.type == AttributeType.UP_DOWN_REMOTE)
+    )
 
 
 class HomeeEvent(HomeeEntity, EventEntity):
     """Representation of a homee event."""
 
-    entity_description = EventEntityDescription(
-        key="up_down_remote",
-        device_class=EventDeviceClass.BUTTON,
-        event_types=["0", "1", "2", "3", "4", "5", "6", "7", "9"],
-        translation_key="up_down_remote",
-        has_entity_name=True,
-    )
+    _attr_has_entity_name = True
+    _attr_translation_key = "up_down_remote"
+    _attr_event_types = [
+        "none",
+        "up",
+        "down",
+        "stop",
+        "up_long",
+        "down_long",
+        "stop_long",
+        "c_button",
+        "b_button",
+        "a_button",
+    ]
+    _attr_device_class = EventDeviceClass.BUTTON
 
     async def async_added_to_hass(self) -> None:
         """Add the homee attribute entity to home assistant."""
@@ -53,14 +54,9 @@ class HomeeEvent(HomeeEntity, EventEntity):
             self._attribute.add_on_changed_listener(self._event_triggered)
         )
 
-    @property
-    def old_unique_id(self) -> str:
-        """Return the old not so unique id of the event entity."""
-        return f"{self._attribute.node_id}-event-{self._attribute.id}"
-
     @callback
     def _event_triggered(self, event: HomeeAttribute) -> None:
         """Handle a homee event."""
         if event.type == AttributeType.UP_DOWN_REMOTE:
-            self._trigger_event(str(int(event.current_value)))
+            self._trigger_event(self.event_types[int(event.current_value)])
             self.schedule_update_ha_state()
