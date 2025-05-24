@@ -18,5 +18,13 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
+  },
+  "exceptions": {
+    "upnp_error": {
+      "message": "Unable to play media. UPnP setup not ready for Devialet device."
+    },
+    "media_error": {
+      "message": "Unable to play media. Unsupported media type."
+    }
   }
 }
