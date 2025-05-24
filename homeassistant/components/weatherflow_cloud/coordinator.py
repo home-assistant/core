@@ -140,7 +140,7 @@ class WeatherFlowCloudDataCallbackCoordinator[
 
         # configure the websocket data structure
         self._ws_data: dict[int, dict[int, T | None]] = {
-            station: {device: None for device in devices}
+            station: dict.fromkeys(devices)
             for station, devices in self.stations.station_device_map.items()
         }
 
