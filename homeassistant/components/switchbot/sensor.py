@@ -177,7 +177,7 @@ class SwitchBotSensor(SwitchbotEntity, SensorEntity):
             self._attr_unique_id = (
                 f"{coordinator.base_unique_id}-{sensor}-{self._channel}"
             )
-            self._attr_name = f"{self._sensor}_{self._channel}"
+            self._attr_name = f"{self._sensor} {self._channel}"
 
     @property
     def native_value(self) -> str | int | None:
