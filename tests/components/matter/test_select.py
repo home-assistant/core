@@ -99,6 +99,24 @@ async def test_attribute_select_entities(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state.state == "on"
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {
+            "entity_id": entity_id,
+            "option": "off",
+        },
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.OnOff.Attributes.StartUpOnOff,
+        ),
+        value=0,
+    )
     # test that an invalid value (e.g. 253) leads to an unknown state
     set_node_attribute(matter_node, 1, 6, 16387, 253)
     await trigger_subscription_callback(hass, matter_client)
@@ -198,3 +216,22 @@ async def test_map_select_entities(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("select.laundrywasher_number_of_rinses")
     assert state.state == "normal"
+
+
+@pytest.mark.parametrize("node_fixture", ["pump"])
+async def test_pump(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test MatterAttributeSelectEntity entities are discovered and working from a pump fixture."""
+    # OperationMode
+    state = hass.states.get("select.mock_pump_mode")
+    assert state
+    assert state.state == "normal"
+    assert state.attributes["options"] == ["normal", "minimum", "maximum", "local"]
+
+    set_node_attribute(matter_node, 1, 512, 32, 3)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("select.mock_pump_mode")
+    assert state.state == "local"

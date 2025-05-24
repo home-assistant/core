@@ -297,10 +297,17 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         # It's inefficient to let core do all the copying so we want to let
         # supervisor handle as much as possible.
         # Therefore, we split the locations into two lists: encrypted and decrypted.
-        # The longest list will be sent to supervisor, and the remaining locations
-        # will be handled by async_upload_backup.
-        # If the lists are the same length, it does not matter which one we send,
-        # we send the encrypted list to have a well defined behavior.
+        # The backup will be created in the first location in the list sent to
+        # supervisor, and if that location is not available, the backup will
+        # fail.
+        # To make it less likely that the backup fails, we prefer to create the
+        # backup in the local storage location if included in the list of
+        # locations.
+        # Hence, we send the list of locations to supervisor in this priority order:
+        # 1. The list which has local storage
+        # 2. The longest list of locations
+        # 3. The list of encrypted locations
+        # In any case the remaining locations will be handled by async_upload_backup.
         encrypted_locations: list[str] = []
         decrypted_locations: list[str] = []
         agents_settings = manager.config.data.agents
@@ -315,16 +322,26 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                     encrypted_locations.append(hassio_agent.location)
             else:
                 decrypted_locations.append(hassio_agent.location)
+        locations = []
+        if LOCATION_LOCAL_STORAGE in decrypted_locations:
+            locations = decrypted_locations
+            password = None
+            # Move local storage to the front of the list
+            decrypted_locations.remove(LOCATION_LOCAL_STORAGE)
+            decrypted_locations.insert(0, LOCATION_LOCAL_STORAGE)
+        elif LOCATION_LOCAL_STORAGE in encrypted_locations:
+            locations = encrypted_locations
+            # Move local storage to the front of the list
+            encrypted_locations.remove(LOCATION_LOCAL_STORAGE)
+            encrypted_locations.insert(0, LOCATION_LOCAL_STORAGE)
         _LOGGER.debug("Encrypted locations: %s", encrypted_locations)
         _LOGGER.debug("Decrypted locations: %s", decrypted_locations)
-        if hassio_agents:
+        if not locations and hassio_agents:
             if len(encrypted_locations) >= len(decrypted_locations):
                 locations = encrypted_locations
             else:
                 locations = decrypted_locations
                 password = None
-        else:
-            locations = []
         locations = locations or [LOCATION_CLOUD_BACKUP]
 
         date = dt_util.now().isoformat()

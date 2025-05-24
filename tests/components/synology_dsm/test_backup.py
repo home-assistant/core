@@ -34,7 +34,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
-from homeassistant.util.aiohttp import MockStreamReader
+from homeassistant.util.aiohttp import MockStreamReader, MockStreamReaderChunked
 
 from .common import mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
@@ -43,14 +43,6 @@ from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 BASE_FILENAME = "Automatic_backup_2025.2.0.dev0_2025-01-09_20.14_35457323"
-
-
-class MockStreamReaderChunked(MockStreamReader):
-    """Mock a stream reader with simulated chunked data."""
-
-    async def readchunk(self) -> tuple[bytes, bool]:
-        """Read bytes."""
-        return (self._content.read(), False)
 
 
 async def _mock_download_file(path: str, filename: str) -> MockStreamReader:

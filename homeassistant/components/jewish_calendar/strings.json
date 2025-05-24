@@ -185,5 +185,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "sunset_event": {
+      "message": "Sunset event cannot be calculated for the provided date and location"
+    }
   }
 }

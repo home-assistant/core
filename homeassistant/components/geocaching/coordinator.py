@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from geocachingapi.exceptions import GeocachingApiError
+from geocachingapi.exceptions import GeocachingApiError, GeocachingInvalidSettingsError
 from geocachingapi.geocachingapi import GeocachingApi
 from geocachingapi.models import GeocachingStatus
 
@@ -39,6 +39,7 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
             return str(token)
 
         client_session = async_get_clientsession(hass)
+
         self.geocaching = GeocachingApi(
             environment=ENVIRONMENT,
             token=session.token["access_token"],
@@ -55,7 +56,10 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
         )
 
     async def _async_update_data(self) -> GeocachingStatus:
+        """Fetch the latest Geocaching status."""
         try:
             return await self.geocaching.update()
+        except GeocachingInvalidSettingsError as error:
+            raise UpdateFailed(f"Invalid integration configuration: {error}") from error
         except GeocachingApiError as error:
             raise UpdateFailed(f"Invalid response from API: {error}") from error

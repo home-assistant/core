@@ -3,6 +3,7 @@
   "name": "SwitchBot Cloud",
   "codeowners": ["@SeraphicRav", "@laurence-presland", "@Gigatrappeur"],
   "config_flow": true,
+  "dependencies": ["webhook"],
   "documentation": "https://www.home-assistant.io/integrations/switchbot_cloud",
   "integration_type": "hub",
   "iot_class": "cloud_polling",

@@ -17,7 +17,6 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -72,8 +71,6 @@ from .const import (
     FEATURE_SET_LEARN_MODE,
     FEATURE_SET_LED,
     FEATURE_SET_PTC,
-    KEY_COORDINATOR,
-    KEY_DEVICE,
     MODEL_AIRFRESH_A1,
     MODEL_AIRFRESH_T2017,
     MODEL_AIRFRESH_VA2,
@@ -116,7 +113,7 @@ from .const import (
     SUCCESS,
 )
 from .entity import XiaomiCoordinatedMiioEntity, XiaomiGatewayDevice, XiaomiMiioEntity
-from .typing import ServiceMethodDetails
+from .typing import ServiceMethodDetails, XiaomiMiioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -340,7 +337,7 @@ SWITCH_TYPES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: XiaomiMiioConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the switch from a config entry."""
@@ -351,12 +348,16 @@ async def async_setup_entry(
         await async_setup_other_entry(hass, config_entry, async_add_entities)
 
 
-async def async_setup_coordinated_entry(hass, config_entry, async_add_entities):
+async def async_setup_coordinated_entry(
+    hass: HomeAssistant,
+    config_entry: XiaomiMiioConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up the coordinated switch from a config entry."""
     model = config_entry.data[CONF_MODEL]
     unique_id = config_entry.unique_id
-    device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
+    device = config_entry.runtime_data.device
+    coordinator = config_entry.runtime_data.device_coordinator
 
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
@@ -387,24 +388,26 @@ async def async_setup_coordinated_entry(hass, config_entry, async_add_entities):
     )
 
 
-async def async_setup_other_entry(hass, config_entry, async_add_entities):
+async def async_setup_other_entry(
+    hass: HomeAssistant,
+    config_entry: XiaomiMiioConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up the other type switch from a config entry."""
-    entities = []
+    entities: list[SwitchEntity] = []
     host = config_entry.data[CONF_HOST]
     token = config_entry.data[CONF_TOKEN]
     name = config_entry.title
     model = config_entry.data[CONF_MODEL]
     unique_id = config_entry.unique_id
     if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
-        gateway = hass.data[DOMAIN][config_entry.entry_id][CONF_GATEWAY]
+        gateway = config_entry.runtime_data.gateway
         # Gateway sub devices
         sub_devices = gateway.devices
         for sub_device in sub_devices.values():
             if sub_device.device_type != "Switch":
                 continue
-            coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR][
-                sub_device.sid
-            ]
+            coordinator = config_entry.runtime_data.gateway_coordinators[sub_device.sid]
             switch_variables = set(sub_device.status) & set(GATEWAY_SWITCH_VARS)
             if switch_variables:
                 entities.extend(
@@ -420,13 +423,14 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
         config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY
         and model == "lumi.acpartner.v3"
     ):
+        device: SwitchEntity
         if DATA_KEY not in hass.data:
             hass.data[DATA_KEY] = {}
 
         _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
         if model in ["chuangmi.plug.v1", "chuangmi.plug.v3", "chuangmi.plug.hmi208"]:
-            plug = ChuangmiPlug(host, token, model=model)
+            chuangmi_plug = ChuangmiPlug(host, token, model=model)
 
             # The device has two switchable channels (mains and a USB port).
             # A switch device per channel will be created.
@@ -436,13 +440,13 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
                 else:
                     unique_id_ch = f"{unique_id}-mains"
                 device = ChuangMiPlugSwitch(
-                    name, plug, config_entry, unique_id_ch, channel_usb
+                    name, chuangmi_plug, config_entry, unique_id_ch, channel_usb
                 )
                 entities.append(device)
                 hass.data[DATA_KEY][host] = device
         elif model in ["qmi.powerstrip.v1", "zimi.powerstrip.v2"]:
-            plug = PowerStrip(host, token, model=model)
-            device = XiaomiPowerStripSwitch(name, plug, config_entry, unique_id)
+            power_strip = PowerStrip(host, token, model=model)
+            device = XiaomiPowerStripSwitch(name, power_strip, config_entry, unique_id)
             entities.append(device)
             hass.data[DATA_KEY][host] = device
         elif model in [
@@ -452,14 +456,16 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
             "chuangmi.plug.hmi205",
             "chuangmi.plug.hmi206",
         ]:
-            plug = ChuangmiPlug(host, token, model=model)
-            device = XiaomiPlugGenericSwitch(name, plug, config_entry, unique_id)
+            chuangmi_plug = ChuangmiPlug(host, token, model=model)
+            device = XiaomiPlugGenericSwitch(
+                name, chuangmi_plug, config_entry, unique_id
+            )
             entities.append(device)
             hass.data[DATA_KEY][host] = device
         elif model in ["lumi.acpartner.v3"]:
-            plug = AirConditioningCompanionV3(host, token)
+            ac_companion = AirConditioningCompanionV3(host, token)
             device = XiaomiAirConditioningCompanionSwitch(
-                name, plug, config_entry, unique_id
+                name, ac_companion, config_entry, unique_id
             )
             entities.append(device)
             hass.data[DATA_KEY][host] = device

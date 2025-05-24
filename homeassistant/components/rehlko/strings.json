@@ -31,6 +31,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "auto_run": {
+        "name": "Auto run"
+      },
+      "oil_pressure": {
+        "name": "Oil pressure"
+      }
+    },
     "sensor": {
       "engine_speed": {
         "name": "Engine speed"

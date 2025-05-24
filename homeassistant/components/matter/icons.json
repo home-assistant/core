@@ -57,6 +57,9 @@
       "bat_replacement_description": {
         "default": "mdi:battery-sync"
       },
+      "flow": {
+        "default": "mdi:pipe"
+      },
       "hepa_filter_condition": {
         "default": "mdi:filter-check"
       },
@@ -86,6 +89,15 @@
       },
       "evse_fault_state": {
         "default": "mdi:ev-station"
+      },
+      "pump_control_mode": {
+        "default": "mdi:pipe-wrench"
+      },
+      "pump_speed": {
+        "default": "mdi:speedometer"
+      },
+      "pump_status": {
+        "default": "mdi:pump"
       }
     },
     "switch": {

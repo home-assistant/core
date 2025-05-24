@@ -1300,6 +1300,16 @@ async def test_reader_writer_create_job_done(
             False,
             [],
         ),
+        # LOCATION_LOCAL_STORAGE should be moved to the front of the list
+        (
+            [],
+            None,
+            ["hassio.share1", "hassio.local", "hassio.share2", "hassio.share3"],
+            None,
+            [LOCATION_LOCAL_STORAGE, "share1", "share2", "share3"],
+            False,
+            [],
+        ),
         (
             [],
             "hunter2",
@@ -1309,54 +1319,86 @@ async def test_reader_writer_create_job_done(
             True,
             [],
         ),
+        # LOCATION_LOCAL_STORAGE should be moved to the front of the list
         (
-            [
-                {
-                    "type": "backup/config/update",
-                    "agents": {
-                        "hassio.local": {"protected": False},
-                    },
-                }
-            ],
+            [],
             "hunter2",
-            ["hassio.local", "hassio.share1", "hassio.share2", "hassio.share3"],
+            ["hassio.share1", "hassio.local", "hassio.share2", "hassio.share3"],
             "hunter2",
-            ["share1", "share2", "share3"],
+            [LOCATION_LOCAL_STORAGE, "share1", "share2", "share3"],
             True,
-            [LOCATION_LOCAL_STORAGE],
+            [],
         ),
+        # Prefer the list of locations which has LOCATION_LOCAL_STORAGE
         (
             [
                 {
                     "type": "backup/config/update",
                     "agents": {
                         "hassio.local": {"protected": False},
-                        "hassio.share1": {"protected": False},
-                    },
-                }
-            ],
-            "hunter2",
-            ["hassio.local", "hassio.share1", "hassio.share2", "hassio.share3"],
-            "hunter2",
-            ["share2", "share3"],
-            True,
-            [LOCATION_LOCAL_STORAGE, "share1"],
-        ),
-        (
-            [
-                {
-                    "type": "backup/config/update",
-                    "agents": {
-                        "hassio.local": {"protected": False},
-                        "hassio.share1": {"protected": False},
-                        "hassio.share2": {"protected": False},
                     },
                 }
             ],
             "hunter2",
             ["hassio.local", "hassio.share1", "hassio.share2", "hassio.share3"],
             None,
-            [LOCATION_LOCAL_STORAGE, "share1", "share2"],
+            [LOCATION_LOCAL_STORAGE],
+            True,
+            ["share1", "share2", "share3"],
+        ),
+        # If the list of locations does not have LOCATION_LOCAL_STORAGE, send the
+        # longest list
+        (
+            [
+                {
+                    "type": "backup/config/update",
+                    "agents": {
+                        "hassio.share0": {"protected": False},
+                    },
+                }
+            ],
+            "hunter2",
+            ["hassio.share0", "hassio.share1", "hassio.share2", "hassio.share3"],
+            "hunter2",
+            ["share1", "share2", "share3"],
+            True,
+            ["share0"],
+        ),
+        # Prefer the list of encrypted locations if the lists are the same length
+        (
+            [
+                {
+                    "type": "backup/config/update",
+                    "agents": {
+                        "hassio.share0": {"protected": False},
+                        "hassio.share1": {"protected": False},
+                    },
+                }
+            ],
+            "hunter2",
+            ["hassio.share0", "hassio.share1", "hassio.share2", "hassio.share3"],
+            "hunter2",
+            ["share2", "share3"],
+            True,
+            ["share0", "share1"],
+        ),
+        # If the list of locations does not have LOCATION_LOCAL_STORAGE, send the
+        # longest list
+        (
+            [
+                {
+                    "type": "backup/config/update",
+                    "agents": {
+                        "hassio.share0": {"protected": False},
+                        "hassio.share1": {"protected": False},
+                        "hassio.share2": {"protected": False},
+                    },
+                }
+            ],
+            "hunter2",
+            ["hassio.share0", "hassio.share1", "hassio.share2", "hassio.share3"],
+            None,
+            ["share0", "share1", "share2"],
             True,
             ["share3"],
         ),
@@ -1407,7 +1449,7 @@ async def test_reader_writer_create_per_agent_encryption(
                 server=f"share{i}",
                 type=supervisor_mounts.MountType.CIFS,
             )
-            for i in range(1, 4)
+            for i in range(4)
         ],
     )
     supervisor_client.backups.partial_backup.return_value.job_id = UUID(TEST_JOB_ID)

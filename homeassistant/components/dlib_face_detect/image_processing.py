@@ -25,37 +25,28 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Dlib Face detection platform."""
+    source: list[dict[str, str]] = config[CONF_SOURCE]
     add_entities(
         DlibFaceDetectEntity(camera[CONF_ENTITY_ID], camera.get(CONF_NAME))
-        for camera in config[CONF_SOURCE]
+        for camera in source
     )
 
 
 class DlibFaceDetectEntity(ImageProcessingFaceEntity):
     """Dlib Face API entity for identify."""
 
-    def __init__(self, camera_entity, name=None):
+    def __init__(self, camera_entity: str, name: str | None) -> None:
         """Initialize Dlib face entity."""
         super().__init__()
 
-        self._camera = camera_entity
+        self._attr_camera_entity = camera_entity
 
         if name:
-            self._name = name
+            self._attr_name = name
         else:
-            self._name = f"Dlib Face {split_entity_id(camera_entity)[1]}"
+            self._attr_name = f"Dlib Face {split_entity_id(camera_entity)[1]}"
 
-    @property
-    def camera_entity(self):
-        """Return camera entity id from process pictures."""
-        return self._camera
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name
-
-    def process_image(self, image):
+    def process_image(self, image: bytes) -> None:
         """Process image."""
 
         fak_file = io.BytesIO(image)

@@ -241,7 +241,7 @@ async def test_websocket_resolve_media(
     # Validate url is relative and signed.
     assert msg["result"]["url"][0] == "/"
     parsed = yarl.URL(msg["result"]["url"])
-    assert parsed.path == getattr(media, "url")
+    assert parsed.path == media.url
     assert "authSig" in parsed.query
 
     with patch(

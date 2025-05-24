@@ -23,8 +23,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util.aiohttp import MockStreamReaderChunked
 
-from . import MockStreamReaderChunked
 from .const import MOCK_ALBUM_WITH_ASSETS, MOCK_ALBUM_WITHOUT_ASSETS
 
 from tests.common import MockConfigEntry

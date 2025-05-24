@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator, Sequence
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -37,6 +38,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_OBJECT_ID, CONF_PICTURE, DOMAIN
+from .entity import AbstractTemplateEntity
 from .template_entity import (
     LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
@@ -205,48 +207,19 @@ async def async_setup_platform(
     )
 
 
-class TemplateFan(TemplateEntity, FanEntity):
-    """A template fan component."""
+class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
+    """Representation of a template fan features."""
 
-    _attr_should_poll = False
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: dict[str, Any],
-        unique_id,
-    ) -> None:
-        """Initialize the fan."""
-        super().__init__(hass, config=config, fallback_name=None, unique_id=unique_id)
-        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
-            self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, object_id, hass=hass
-            )
-        name = self._attr_name
-        if TYPE_CHECKING:
-            assert name is not None
+    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
+    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
+        """Initialize the features."""
 
         self._template = config.get(CONF_STATE)
         self._percentage_template = config.get(CONF_PERCENTAGE)
         self._preset_mode_template = config.get(CONF_PRESET_MODE)
         self._oscillating_template = config.get(CONF_OSCILLATING)
         self._direction_template = config.get(CONF_DIRECTION)
-
-        self._attr_supported_features |= (
-            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
-        )
-        for action_id, supported_feature in (
-            (CONF_ON_ACTION, 0),
-            (CONF_OFF_ACTION, 0),
-            (CONF_SET_PERCENTAGE_ACTION, FanEntityFeature.SET_SPEED),
-            (CONF_SET_PRESET_MODE_ACTION, FanEntityFeature.PRESET_MODE),
-            (CONF_SET_OSCILLATING_ACTION, FanEntityFeature.OSCILLATE),
-            (CONF_SET_DIRECTION_ACTION, FanEntityFeature.DIRECTION),
-        ):
-            # Scripts can be an empty list, therefore we need to check for None
-            if (action_config := config.get(action_id)) is not None:
-                self.add_script(action_id, action_config, name, DOMAIN)
-                self._attr_supported_features |= supported_feature
 
         self._state: bool | None = False
         self._percentage: int | None = None
@@ -260,6 +233,20 @@ class TemplateFan(TemplateEntity, FanEntity):
         # List of valid preset modes
         self._preset_modes: list[str] | None = config.get(CONF_PRESET_MODES)
         self._attr_assumed_state = self._template is None
+
+    def _register_scripts(
+        self, config: dict[str, Any]
+    ) -> Generator[tuple[str, Sequence[dict[str, Any]], FanEntityFeature | int]]:
+        for action_id, supported_feature in (
+            (CONF_ON_ACTION, 0),
+            (CONF_OFF_ACTION, 0),
+            (CONF_SET_PERCENTAGE_ACTION, FanEntityFeature.SET_SPEED),
+            (CONF_SET_PRESET_MODE_ACTION, FanEntityFeature.PRESET_MODE),
+            (CONF_SET_OSCILLATING_ACTION, FanEntityFeature.OSCILLATE),
+            (CONF_SET_DIRECTION_ACTION, FanEntityFeature.DIRECTION),
+        ):
+            if (action_config := config.get(action_id)) is not None:
+                yield (action_id, action_config, supported_feature)
 
     @property
     def speed_count(self) -> int:
@@ -295,6 +282,92 @@ class TemplateFan(TemplateEntity, FanEntity):
     def current_direction(self) -> str | None:
         """Return the oscillation state."""
         return self._direction
+
+    def _handle_state(self, result) -> None:
+        if isinstance(result, bool):
+            self._state = result
+            return
+
+        if isinstance(result, str):
+            self._state = result.lower() in ("true", STATE_ON)
+            return
+
+        self._state = False
+
+    @callback
+    def _update_percentage(self, percentage):
+        # Validate percentage
+        try:
+            percentage = int(float(percentage))
+        except (ValueError, TypeError):
+            _LOGGER.error(
+                "Received invalid percentage: %s for entity %s",
+                percentage,
+                self.entity_id,
+            )
+            self._percentage = 0
+            return
+
+        if 0 <= percentage <= 100:
+            self._percentage = percentage
+        else:
+            _LOGGER.error(
+                "Received invalid percentage: %s for entity %s",
+                percentage,
+                self.entity_id,
+            )
+            self._percentage = 0
+
+    @callback
+    def _update_preset_mode(self, preset_mode):
+        # Validate preset mode
+        preset_mode = str(preset_mode)
+
+        if self.preset_modes and preset_mode in self.preset_modes:
+            self._preset_mode = preset_mode
+        elif preset_mode in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            self._preset_mode = None
+        else:
+            _LOGGER.error(
+                "Received invalid preset_mode: %s for entity %s. Expected: %s",
+                preset_mode,
+                self.entity_id,
+                self.preset_mode,
+            )
+            self._preset_mode = None
+
+    @callback
+    def _update_oscillating(self, oscillating):
+        # Validate osc
+        if oscillating == "True" or oscillating is True:
+            self._oscillating = True
+        elif oscillating == "False" or oscillating is False:
+            self._oscillating = False
+        elif oscillating in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            self._oscillating = None
+        else:
+            _LOGGER.error(
+                "Received invalid oscillating: %s for entity %s. Expected: True/False",
+                oscillating,
+                self.entity_id,
+            )
+            self._oscillating = None
+
+    @callback
+    def _update_direction(self, direction):
+        # Validate direction
+        if direction in _VALID_DIRECTIONS:
+            self._direction = direction
+        elif direction in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            self._direction = None
+        else:
+            _LOGGER.error(
+                "Received invalid direction: %s for entity %s. Expected: %s",
+                direction,
+                self.entity_id,
+                ", ".join(_VALID_DIRECTIONS),
+            )
+            self._direction = None
 
     async def async_turn_on(
         self,
@@ -402,6 +475,40 @@ class TemplateFan(TemplateEntity, FanEntity):
                 ", ".join(_VALID_DIRECTIONS),
             )
 
+
+class TemplateFan(TemplateEntity, AbstractTemplateFan):
+    """A template fan component."""
+
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: dict[str, Any],
+        unique_id,
+    ) -> None:
+        """Initialize the fan."""
+        TemplateEntity.__init__(
+            self, hass, config=config, fallback_name=None, unique_id=unique_id
+        )
+        AbstractTemplateFan.__init__(self, config)
+        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
+            self.entity_id = async_generate_entity_id(
+                ENTITY_ID_FORMAT, object_id, hass=hass
+            )
+        name = self._attr_name
+        if TYPE_CHECKING:
+            assert name is not None
+
+        self._attr_supported_features |= (
+            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
+        )
+        for action_id, action_config, supported_feature in self._register_scripts(
+            config
+        ):
+            self.add_script(action_id, action_config, name, DOMAIN)
+            self._attr_supported_features |= supported_feature
+
     @callback
     def _update_state(self, result):
         super()._update_state(result)
@@ -409,15 +516,7 @@ class TemplateFan(TemplateEntity, FanEntity):
             self._state = None
             return
 
-        if isinstance(result, bool):
-            self._state = result
-            return
-
-        if isinstance(result, str):
-            self._state = result.lower() in ("true", STATE_ON)
-            return
-
-        self._state = False
+        self._handle_state(result)
 
     @callback
     def _async_setup_templates(self) -> None:
@@ -460,78 +559,3 @@ class TemplateFan(TemplateEntity, FanEntity):
                 none_on_template_error=True,
             )
         super()._async_setup_templates()
-
-    @callback
-    def _update_percentage(self, percentage):
-        # Validate percentage
-        try:
-            percentage = int(float(percentage))
-        except (ValueError, TypeError):
-            _LOGGER.error(
-                "Received invalid percentage: %s for entity %s",
-                percentage,
-                self.entity_id,
-            )
-            self._percentage = 0
-            return
-
-        if 0 <= percentage <= 100:
-            self._percentage = percentage
-        else:
-            _LOGGER.error(
-                "Received invalid percentage: %s for entity %s",
-                percentage,
-                self.entity_id,
-            )
-            self._percentage = 0
-
-    @callback
-    def _update_preset_mode(self, preset_mode):
-        # Validate preset mode
-        preset_mode = str(preset_mode)
-
-        if self.preset_modes and preset_mode in self.preset_modes:
-            self._preset_mode = preset_mode
-        elif preset_mode in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            self._preset_mode = None
-        else:
-            _LOGGER.error(
-                "Received invalid preset_mode: %s for entity %s. Expected: %s",
-                preset_mode,
-                self.entity_id,
-                self.preset_mode,
-            )
-            self._preset_mode = None
-
-    @callback
-    def _update_oscillating(self, oscillating):
-        # Validate osc
-        if oscillating == "True" or oscillating is True:
-            self._oscillating = True
-        elif oscillating == "False" or oscillating is False:
-            self._oscillating = False
-        elif oscillating in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            self._oscillating = None
-        else:
-            _LOGGER.error(
-                "Received invalid oscillating: %s for entity %s. Expected: True/False",
-                oscillating,
-                self.entity_id,
-            )
-            self._oscillating = None
-
-    @callback
-    def _update_direction(self, direction):
-        # Validate direction
-        if direction in _VALID_DIRECTIONS:
-            self._direction = direction
-        elif direction in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            self._direction = None
-        else:
-            _LOGGER.error(
-                "Received invalid direction: %s for entity %s. Expected: %s",
-                direction,
-                self.entity_id,
-                ", ".join(_VALID_DIRECTIONS),
-            )
-            self._direction = None

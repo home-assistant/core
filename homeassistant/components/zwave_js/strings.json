@@ -131,6 +131,14 @@
           "usb_path": "[%key:common::config_flow::data::usb_path%]"
         },
         "title": "Select your Z-Wave device"
+      },
+      "installation_type": {
+        "title": "Set up Z-Wave",
+        "description": "Choose the installation type for your Z-Wave integration.",
+        "menu_options": {
+          "intent_recommended": "Recommended installation",
+          "intent_custom": "Custom installation"
+        }
       }
     }
   },

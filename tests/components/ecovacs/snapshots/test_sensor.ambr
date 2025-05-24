@@ -518,9 +518,6 @@
     }),
     'name': None,
     'options': dict({
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
@@ -546,7 +543,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0060',
+    'state': '60',
   })
 # ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_total_cleaning_duration:entity-registry]
@@ -1269,9 +1266,6 @@
     }),
     'name': None,
     'options': dict({
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
@@ -1963,9 +1957,6 @@
     }),
     'name': None,
     'options': dict({
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
