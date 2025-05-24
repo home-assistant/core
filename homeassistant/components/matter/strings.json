@@ -108,6 +108,9 @@
       }
     },
     "climate": {
+      "temperature_control": {
+        "name": "Temperature control"
+      },
       "thermostat": {
         "name": "Thermostat"
       }
