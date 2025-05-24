@@ -560,7 +560,13 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
             if key not in ["apps", "app", "radios", "radio"]
         ]
 
-        if not query.media_content_type or query.media_content_type.lower() not in (
+        _media_content_type_list = (
+            query.media_content_type.lower().replace(", ", ",").split(",")
+            if query.media_content_type
+            else ["albums", "tracks", "artists", "genres"]
+        )
+
+        if query.media_content_type and set(_media_content_type_list).difference(
             _valid_type_list
         ):
             _LOGGER.debug("Invalid Media Content Type: %s", query.media_content_type)
@@ -573,31 +579,40 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
                 },
             )
 
-        payload = {
-            "search_type": query.media_content_type.lower(),
-            "search_id": query.media_content_id,
-            "search_query": query.search_query,
-        }
+        search_response_list: list[BrowseMedia] = []
 
-        search_response: BrowseMedia = await build_item_response(
-            self,
-            self._player,
-            payload,
-            self.browse_limit,
-            self._browse_data,
-        )
+        for _content_type in _media_content_type_list:
+            payload = {
+                "search_type": _content_type,
+                "search_id": query.media_content_id,
+                "search_query": query.search_query,
+            }
 
-        if query.media_filter_classes and search_response.children:
-            search_response.children = [
-                child
-                for child in search_response.children
-                if child.media_content_type in query.media_filter_classes
-            ]
+            try:
+                search_response_list.append(
+                    await build_item_response(
+                        self,
+                        self._player,
+                        payload,
+                        self.browse_limit,
+                        self._browse_data,
+                    )
+                )
+            except BrowseError:
+                _LOGGER.debug("Search Failure: Payload %s", payload)
 
         result: list[BrowseMedia] = []
 
-        if search_response.children:
-            result = list(search_response.children)
+        for search_response in search_response_list:
+            # Apply the media_filter_classes to the result if specified
+            if query.media_filter_classes and search_response.children:
+                search_response.children = [
+                    child
+                    for child in search_response.children
+                    if child.media_content_type in query.media_filter_classes
+                ]
+            if search_response.children:
+                result.extend(list(search_response.children))
 
         return SearchMedia(result=result)
 
