@@ -1,0 +1,74 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.
+  appropriate-polling:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.
+  brands:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.
+  common-modules:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.
+  config-flow-test-coverage:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.
+  config-flow:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.
+  dependency-transparency:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.
+  docs-high-level-description:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.
+  docs-installation-instructions:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.
+  docs-removal-instructions:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.
+  entity-event-setup:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.
+  entity-unique-id:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.
+  has-entity-name:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.
+  runtime-data:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.
+  test-before-configure:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.
+  test-before-setup:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.
+  unique-config-entry:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.
