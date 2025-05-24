@@ -1,0 +1,27 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "TheSilentWave Setup",
+        "description": "Setup TheSilentWave integration",
+        "data": {
+          "name": "Name",
+          "host": "IP Address",
+          "scan_interval": "Update interval in seconds (5-300)"
+        },
+        "data_description": {
+          "name": "A custom name for this device",
+          "host": "The IP address of your TheSilentWave device",
+          "scan_interval": "How often to update the data (in seconds)"
+        }
+      }
+    },
+    "error": {
+      "invalid_ip": "Invalid IP address format",
+      "cannot_connect": "Cannot connect to the device"
+    },
+    "abort": {
+      "already_configured": "This device is already configured"
+    }
+  }
+}
