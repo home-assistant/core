@@ -117,6 +117,7 @@ class ComelitClimateEntity(ComelitBridgeBaseEntity, ClimateEntity):
     _attr_target_temperature_step = PRECISION_TENTHS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_name = None
+    _attr_translation_key = "thermostat"
 
     def __init__(
         self,

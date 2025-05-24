@@ -76,8 +76,7 @@
       }
     },
     "climate": {
-      "comelit": {
-        "name": "Climate",
+      "thermostat": {
         "state_attributes": {
           "preset_mode": {
             "state": {

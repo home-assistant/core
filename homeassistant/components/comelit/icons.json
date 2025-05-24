@@ -6,12 +6,12 @@
       }
     },
     "climate": {
-      "comelit": {
+      "thermostat": {
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "automatic": "mdi:thermometer-auto",
-              "manual": "mdi:knob"
+              "automatic": "mdi:refresh-auto",
+              "manual": "mdi:alpha-m"
             }
           }
         }
