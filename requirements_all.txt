@@ -1329,6 +1329,9 @@ lektricowifi==0.1
 # homeassistant.components.letpot
 letpot==0.4.0
 
+# homeassistant.components.axion_dmx
+libaxion_dmx==1.0.6
+
 # homeassistant.components.foscam
 libpyfoscam==1.2.2
 
