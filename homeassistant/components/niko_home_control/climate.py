@@ -72,7 +72,7 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        await self._action.set_temperature(kwargs.get(ATTR_TEMPERATURE, 20) * 10)
+        await self._action.set_temperature(kwargs.get(ATTR_TEMPERATURE, 20))
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
@@ -98,5 +98,5 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
             self._attr_hvac_mode = HVACMode.AUTO
             self._attr_preset_mode = THERMOSTAT_MODES[self._action.state]
 
-        self._attr_target_temperature = self._action.setpoint / 10
-        self._attr_current_temperature = self._action.measured / 10
+        self._attr_target_temperature = self._action.setpoint
+        self._attr_current_temperature = self._action.measured
