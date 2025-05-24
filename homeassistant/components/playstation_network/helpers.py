@@ -65,11 +65,7 @@ class PlaystationNetwork:
 
         data.registered_platforms = {
             device["deviceType"] for device in self.client.get_account_devices()
-        } & {
-            PlatformType.PS3,
-            PlatformType.PS4,
-            PlatformType.PS5,
-        }
+        } & SUPPORTED_PLATFORMS
 
         data.username = self.user.online_id
         data.account_id = self.user.account_id
@@ -98,7 +94,7 @@ class PlaystationNetwork:
                 session.title_id = game_title_info[0]["npTitleId"]
                 session.title_name = game_title_info[0]["titleName"]
                 session.format = game_title_info[0]["format"]
-                if PlatformType(session.format) == PlatformType.PS5:
+                if PlatformType(session.format) is PlatformType.PS5:
                     session.media_image_url = game_title_info[0]["conceptIconUrl"]
                 else:
                     session.media_image_url = game_title_info[0]["npTitleIconUrl"]
@@ -122,14 +118,14 @@ class PlaystationNetwork:
                 session.format = game_title_info["platform"]
                 session.platform = game_title_info["platform"]
                 session.status = game_title_info["onlineStatus"]
-                if PlatformType(session.format) == PlatformType.PS4:
+                if PlatformType(session.format) is PlatformType.PS4:
                     session.media_image_url = game_title_info["npTitleIconUrl"]
-                elif PlatformType(session.format) == PlatformType.PS3:
+                elif PlatformType(session.format) is PlatformType.PS3:
                     try:
-                        title = self.psn.game_title(session.title_id, "me")
-                        session.media_image_url = title.get_title_icon_url(
-                            PlatformType.PS3
+                        title = self.psn.game_title(
+                            session.title_id, platform=PlatformType.PS3, account_id="me"
                         )
+                        session.media_image_url = title.get_title_icon_url()
                     except PSNAWPNotFoundError:
                         session.media_image_url = None
 
