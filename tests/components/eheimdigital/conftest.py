@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from datetime import time, timedelta, timezone
+import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from eheimdigital.classic_led_ctrl import EheimDigitalClassicLEDControl
@@ -9,12 +10,15 @@ from eheimdigital.classic_vario import EheimDigitalClassicVario
 from eheimdigital.heater import EheimDigitalHeater
 from eheimdigital.hub import EheimDigitalHub
 from eheimdigital.types import (
+    CCVPacket,
+    ClockPacket,
     EheimDeviceType,
     FilterErrorCode,
     FilterMode,
     HeaterMode,
     HeaterUnit,
-    LightMode,
+    MsgTitle,
+    UsrDtaPacket,
 )
 import pytest
 
@@ -37,17 +41,62 @@ def mock_config_entry() -> MockConfigEntry:
 def classic_led_ctrl_mock():
     """Mock a classicLEDcontrol device."""
     classic_led_ctrl_mock = MagicMock(spec=EheimDigitalClassicLEDControl)
-    classic_led_ctrl_mock.tankconfig = [["CLASSIC_DAYLIGHT"], []]
-    classic_led_ctrl_mock.mac_address = "00:00:00:00:00:01"
-    classic_led_ctrl_mock.device_type = (
-        EheimDeviceType.VERSION_EHEIM_CLASSIC_LED_CTRL_PLUS_E
+    classic_led_ctrl_mock.usrdta = UsrDtaPacket(
+        {
+            "aqName": "Mock Aquarium",
+            "demoUse": 0,
+            "dst": 0,
+            "emailAddr": "",
+            "firmwareAvailable": 0,
+            "firstStart": 0,
+            "from": "00:00:00:00:00:01",
+            "groupID": 0,
+            "host": "",
+            "language": "DE",
+            "latestAvailableRevision": [-1, -1],
+            "liveTime": 10,
+            "meshing": 1,
+            "name": "Mock classicLEDcontrol+e",
+            "netmode": "ST",
+            "power": "",
+            "remote": 0,
+            "revision": [1000, 1000],
+            "sysLED": 20,
+            "tankconfig": '[["CLASSIC_DAYLIGHT"], []]',
+            "tID": 0,
+            "timezone": 60,
+            "title": MsgTitle.USRDTA,
+            "to": "USER",
+            "unit": 0,
+            "usrName": "",
+            "version": EheimDeviceType.VERSION_EHEIM_CLASSIC_LED_CTRL_PLUS_E,
+        }
     )
-    classic_led_ctrl_mock.name = "Mock classicLEDcontrol+e"
-    classic_led_ctrl_mock.aquarium_name = "Mock Aquarium"
-    classic_led_ctrl_mock.sw_version = "1.0.0_1.0.0"
-    classic_led_ctrl_mock.light_mode = LightMode.DAYCL_MODE
-    classic_led_ctrl_mock.light_level = (10, 39)
-    classic_led_ctrl_mock.sys_led = 20
+    classic_led_ctrl_mock.ccv = CCVPacket(
+        {
+            "title": MsgTitle.CCV,
+            "from": "00:00:00:00:00:01",
+            "to": "USER",
+            "currentValues": [10, 39],
+        }
+    )
+    classic_led_ctrl_mock.clock = ClockPacket(
+        {
+            "title": MsgTitle.CLOCK,
+            "from": "00:00:00:00:00:01",
+            "year": 2025,
+            "month": 3,
+            "day": 10,
+            "hour": 11,
+            "min": 0,
+            "sec": 45,
+            "mode": "DAYCL_MODE",
+            "valid": 1,
+        }
+    )
+    classic_led_ctrl_mock.tankconfig = json.loads(
+        classic_led_ctrl_mock.usrdta["tankconfig"]
+    )
     return classic_led_ctrl_mock
 
 
