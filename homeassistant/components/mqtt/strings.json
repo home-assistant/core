@@ -383,7 +383,7 @@
               },
               "data_description": {
                 "tilt_closed_value": "The value that will be sent to the \"tilt command topic\" when the cover tilt is closed.",
-                "tilt_command_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to define the position to be sent to the set tilt topic. Within the template the following variables are available: `entity_id`, `tilt_position` (the target tilt position percentage), `position_open`, `position_closed`, `tilt_min` and `tilt_max`. [Learn more.]({url}#tilt_command_template)",
+                "tilt_command_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to define the position to be sent to the tilt command topic. Within the template the following variables are available: `entity_id`, `tilt_position` (the target tilt position percentage), `position_open`, `position_closed`, `tilt_min` and `tilt_max`. [Learn more.]({url}#tilt_command_template)",
                 "tilt_command_topic": "The MQTT topic to publish commands to control the cover tilt. [Learn more.]({url}#tilt_command_topic)",
                 "tilt_max": "The maximum tilt value.",
                 "tilt_min": "The minimum tilt value.",
