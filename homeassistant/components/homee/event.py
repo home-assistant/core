@@ -48,7 +48,7 @@ class HomeeEvent(HomeeEntity, EventEntity):
     _attr_device_class = EventDeviceClass.BUTTON
 
     async def async_added_to_hass(self) -> None:
-        """Add the homee attribute entity to home assistant."""
+        """Add the homee event entity to home assistant."""
         await super().async_added_to_hass()
         self.async_on_remove(
             self._attribute.add_on_changed_listener(self._event_triggered)

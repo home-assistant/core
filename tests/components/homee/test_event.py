@@ -20,6 +20,7 @@ async def test_event_fires(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that the correct event fires when the attribute changes."""
+
     EVENT_TYPES = [
         "released",
         "up",
