@@ -59,7 +59,7 @@ async def test_media_player_join(
         soco_bedroom.zoneGroupTopology.subscribe.return_value._callback(event)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Code logs wanring messages if the join is not successful, so we check
+    # Code logs warning messages if the join is not successful, so we check
     # that no warning messages were logged.
     assert len(caplog.records) == 0
     assert soco_bedroom.join.call_count == 1
