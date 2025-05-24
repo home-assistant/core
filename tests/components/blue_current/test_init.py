@@ -32,6 +32,7 @@ async def test_load_unload_entry(
     with (
         patch("homeassistant.components.blue_current.Client.validate_api_token"),
         patch("homeassistant.components.blue_current.Client.wait_for_charge_points"),
+        patch("homeassistant.components.blue_current.Client.get_charge_cards"),
         patch("homeassistant.components.blue_current.Client.disconnect"),
         patch(
             "homeassistant.components.blue_current.Client.connect",
