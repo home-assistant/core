@@ -1,6 +1,7 @@
 """The tests for the Met Office sensor component."""
 
 import datetime
+from datetime import timedelta
 import json
 import re
 
@@ -11,6 +12,7 @@ from homeassistant.components.metoffice.const import ATTRIBUTION, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import utcnow
 
 from .const import (
     DEVICE_KEY_KINGSLYNN,
@@ -24,13 +26,14 @@ from .const import (
     WAVERTREE_SENSOR_RESULTS,
 )
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 
 
 @pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
 async def test_one_sensor_site_running(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     requests_mock: requests_mock.Mocker,
 ) -> None:
     """Test the Met Office sensor platform."""
@@ -72,6 +75,19 @@ async def test_one_sensor_site_running(
         assert sensor.state == sensor_value
         assert sensor.attributes.get("last_update").isoformat() == TEST_DATETIME_STRING
         assert sensor.attributes.get("attribution") == ATTRIBUTION
+
+    entity_registry.async_update_entity(
+        "sensor.met_office_wavertree_station_name",
+        disabled_by=None,
+    )
+
+    await hass.async_block_till_done()
+    future_time = utcnow() + timedelta(minutes=1)
+    async_fire_time_changed(hass, future_time)
+    await hass.async_block_till_done()
+
+    station_name = hass.states.get("sensor.met_office_wavertree_station_name")
+    assert station_name.state == "Wavertree"
 
 
 @pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
