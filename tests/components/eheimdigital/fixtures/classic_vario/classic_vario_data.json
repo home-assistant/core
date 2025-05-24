@@ -1,0 +1,22 @@
+{
+  "title": "CLASSIC_VARIO_DATA",
+  "from": "00:00:00:00:00:03",
+  "rel_speed": 75,
+  "pumpMode": 16,
+  "filterActive": 1,
+  "turnOffTime": 0,
+  "serviceHour": 360,
+  "rel_manual_motor_speed": 75,
+  "rel_motor_speed_day": 80,
+  "rel_motor_speed_night": 20,
+  "startTime_day": 480,
+  "startTime_night": 1200,
+  "pulse_motorSpeed_High": 100,
+  "pulse_motorSpeed_Low": 20,
+  "pulse_Time_High": 100,
+  "pulse_Time_Low": 50,
+  "turnTimeFeeding": 0,
+  "errorCode": 0,
+  "version": 0,
+  "to": "USER"
+}
