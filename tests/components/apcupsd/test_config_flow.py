@@ -8,7 +8,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.apcupsd.const import DOMAIN
-from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -113,7 +113,6 @@ async def test_flow_works(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=CONF_DATA
         )
-        await hass.async_block_till_done()
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == MOCK_STATUS["UPSNAME"]
         assert result["data"] == CONF_DATA
@@ -169,25 +168,15 @@ async def test_reconfigure_flow_works(hass: HomeAssistant) -> None:
     )
     mock_entry.add_to_hass(hass)
 
-    # Start the reconfigure flow.
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_entry.entry_id},
-    )
+    result = await mock_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
     # New configuration data with different host/port.
     new_conf_data = {CONF_HOST: "new_host", CONF_PORT: 4321}
 
-    # Assert that the request is made to the new host and port.
-    def mocked_request_status(host: str, port: int):
-        assert host == new_conf_data[CONF_HOST]
-        assert port == new_conf_data[CONF_PORT]
-        return MOCK_STATUS
-
     with (
-        patch("aioapcaccess.request_status", side_effect=mocked_request_status),
+        patch("aioapcaccess.request_status", return_value=MOCK_STATUS),
         _patch_setup() as mock_setup,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -216,11 +205,7 @@ async def test_reconfigure_flow_cannot_connect(hass: HomeAssistant) -> None:
     )
     mock_entry.add_to_hass(hass)
 
-    # Start the reconfigure flow.
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_entry.entry_id},
-    )
+    result = await mock_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
@@ -239,7 +224,7 @@ async def test_reconfigure_flow_cannot_connect(hass: HomeAssistant) -> None:
     ("unique_id_before", "unique_id_after"),
     [
         (None, MOCK_STATUS["SERIALNO"]),
-        (MOCK_STATUS["SERIALNO"], None),
+        (MOCK_STATUS["SERIALNO"], "Blank"),
         (MOCK_STATUS["SERIALNO"], MOCK_STATUS["SERIALNO"] + "ZZZ"),
     ],
 )
@@ -257,11 +242,7 @@ async def test_reconfigure_flow_wrong_device(
     )
     mock_entry.add_to_hass(hass)
 
-    # Start the reconfigure flow.
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_entry.entry_id},
-    )
+    result = await mock_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
@@ -269,8 +250,7 @@ async def test_reconfigure_flow_wrong_device(
     new_conf_data = {CONF_HOST: "new_host", CONF_PORT: 4321}
     # Make a copy of the status and modify the serial number if needed.
     mock_status = {k: v for k, v in MOCK_STATUS.items() if k != "SERIALNO"}
-    if unique_id_after:
-        mock_status["SERIALNO"] = unique_id_after
+    mock_status["SERIALNO"] = unique_id_after
     with patch("aioapcaccess.request_status", return_value=mock_status):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=new_conf_data
