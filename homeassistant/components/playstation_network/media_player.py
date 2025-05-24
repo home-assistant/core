@@ -89,7 +89,7 @@ class PsnMediaPlayerEntity(
         """Initialize PSN MediaPlayer."""
         super().__init__(coordinator)
 
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{platform}"
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{platform.value}"
         self.key = platform
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
@@ -105,7 +105,7 @@ class PsnMediaPlayerEntity(
             (
                 session
                 for session in self.coordinator.data.active_sessions
-                if PlatformType(session.platform) == self.key
+                if PlatformType(session.platform) is self.key
             ),
             SessionData(),
         )
@@ -122,7 +122,7 @@ class PsnMediaPlayerEntity(
             (
                 session
                 for session in self.coordinator.data.active_sessions
-                if PlatformType(session.platform) == self.key
+                if PlatformType(session.platform) is self.key
             ),
             SessionData(),
         )
@@ -135,7 +135,7 @@ class PsnMediaPlayerEntity(
             (
                 session
                 for session in self.coordinator.data.active_sessions
-                if PlatformType(session.platform) == self.key
+                if PlatformType(session.platform) is self.key
             ),
             SessionData(),
         )
