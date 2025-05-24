@@ -20,12 +20,7 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    DOMAIN,
-    PRESET_MODE_AUTO,
-    PRESET_MODE_AUTO_TARGET_TEMP,
-    PRESET_MODE_MANUAL,
-)
+from .const import PRESET_MODE_AUTO, PRESET_MODE_AUTO_TARGET_TEMP, PRESET_MODE_MANUAL
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
 from .entity import ComelitBridgeBaseEntity
 from .utils import bridge_api_call, cleanup_stale_entity, load_api_data
