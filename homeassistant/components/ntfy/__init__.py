@@ -12,19 +12,29 @@ from aiontfy.exceptions import (
     NtfyUnauthorizedAuthenticationError,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
+from .services import async_setup_services
+from .typedefs import NtfyConfigEntry
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
+
 PLATFORMS: list[Platform] = [Platform.NOTIFY]
 
 
-type NtfyConfigEntry = ConfigEntry[Ntfy]
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the ntfy services."""
+
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NtfyConfigEntry) -> bool:
