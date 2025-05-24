@@ -180,7 +180,7 @@ class MetOfficeWeather(
         weather_now = self.coordinator.data.now()
         value = get_attribute(weather_now, "significantWeatherCode")
 
-        if value:
+        if value is not None:
             return CONDITION_MAP.get(value)
         return None
 
