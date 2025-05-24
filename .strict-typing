@@ -270,6 +270,7 @@ homeassistant.components.image_processing.*
 homeassistant.components.image_upload.*
 homeassistant.components.imap.*
 homeassistant.components.imgw_pib.*
+homeassistant.components.immich.*
 homeassistant.components.incomfort.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
@@ -385,6 +386,7 @@ homeassistant.components.overseerr.*
 homeassistant.components.p1_monitor.*
 homeassistant.components.pandora.*
 homeassistant.components.panel_custom.*
+homeassistant.components.paperless_ngx.*
 homeassistant.components.peblar.*
 homeassistant.components.peco.*
 homeassistant.components.pegel_online.*
@@ -434,7 +436,6 @@ homeassistant.components.roku.*
 homeassistant.components.romy.*
 homeassistant.components.rpi_power.*
 homeassistant.components.rss_feed_template.*
-homeassistant.components.rtsp_to_webrtc.*
 homeassistant.components.russound_rio.*
 homeassistant.components.ruuvi_gateway.*
 homeassistant.components.ruuvitag_ble.*

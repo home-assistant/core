@@ -57,7 +57,7 @@ def mock_serial_bridge() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_serial_bridge_config_entry() -> Generator[MockConfigEntry]:
+def mock_serial_bridge_config_entry() -> MockConfigEntry:
     """Mock a Comelit config entry for Comelit bridge."""
     return MockConfigEntry(
         domain=COMELIT_DOMAIN,
@@ -94,7 +94,7 @@ def mock_vedo() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_vedo_config_entry() -> Generator[MockConfigEntry]:
+def mock_vedo_config_entry() -> MockConfigEntry:
     """Mock a Comelit config entry for Comelit vedo."""
     return MockConfigEntry(
         domain=COMELIT_DOMAIN,

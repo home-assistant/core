@@ -238,7 +238,7 @@
     'platform': 'fronius',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'current_dc_2',
+    'translation_key': 'current_dc_mppt_no',
     'unique_id': '12345678-current_dc_2',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -342,7 +342,7 @@
     'platform': 'fronius',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_dc_2',
+    'translation_key': 'voltage_dc_mppt_no',
     'unique_id': '12345678-voltage_dc_2',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -3798,7 +3798,7 @@
     'platform': 'fronius',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'current_dc_2',
+    'translation_key': 'current_dc_mppt_no',
     'unique_id': '12345678-current_dc_2',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -3902,7 +3902,7 @@
     'platform': 'fronius',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_dc_2',
+    'translation_key': 'voltage_dc_mppt_no',
     'unique_id': '12345678-voltage_dc_2',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })

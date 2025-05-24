@@ -44,6 +44,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 
     _default_update_interval = SCAN_INTERVAL
     config_entry: LaMarzoccoConfigEntry
+    websocket_terminated = True
 
     def __init__(
         self,
@@ -92,15 +93,9 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
         await self.device.get_dashboard()
         _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
 
-        _LOGGER.debug("Init WebSocket in background task")
-
         self.config_entry.async_create_background_task(
             hass=self.hass,
-            target=self.device.connect_dashboard_websocket(
-                update_callback=lambda _: self.async_set_updated_data(None),
-                connect_callback=self.async_update_listeners,
-                disconnect_callback=self.async_update_listeners,
-            ),
+            target=self.connect_websocket(),
             name="lm_websocket_task",
         )
 
@@ -111,6 +106,23 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, websocket_close)
         )
         self.config_entry.async_on_unload(websocket_close)
+
+    async def connect_websocket(self) -> None:
+        """Connect to the websocket."""
+
+        _LOGGER.debug("Init WebSocket in background task")
+
+        self.websocket_terminated = False
+        self.async_update_listeners()
+
+        await self.device.connect_dashboard_websocket(
+            update_callback=lambda _: self.async_set_updated_data(None),
+            connect_callback=self.async_update_listeners,
+            disconnect_callback=self.async_update_listeners,
+        )
+
+        self.websocket_terminated = True
+        self.async_update_listeners()
 
 
 class LaMarzoccoSettingsUpdateCoordinator(LaMarzoccoUpdateCoordinator):

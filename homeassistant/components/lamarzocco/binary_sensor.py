@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import cast
 
 from pylamarzocco import LaMarzoccoMachine
-from pylamarzocco.const import BackFlushStatus, MachineState, WidgetType
+from pylamarzocco.const import BackFlushStatus, MachineState, ModelName, WidgetType
 from pylamarzocco.models import BackFlush, MachineStatus
 
 from homeassistant.components.binary_sensor import (
@@ -52,7 +52,7 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
             ).status
             is MachineState.BREWING
         ),
-        available_fn=lambda device: device.websocket.connected,
+        available_fn=lambda coordinator: not coordinator.websocket_terminated,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     LaMarzoccoBinarySensorEntityDescription(
@@ -66,6 +66,9 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
             is BackFlushStatus.REQUESTED
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
+        supported_fn=lambda coordinator: (
+            coordinator.device.dashboard.model_name != ModelName.GS3_MP
+        ),
     ),
     LaMarzoccoBinarySensorEntityDescription(
         key="websocket_connected",
