@@ -1,5 +1,8 @@
 """Config flow for Telegram Bot."""
 
+from collections.abc import Mapping
+from ipaddress import AddressValueError, IPv4Network
+import logging
 from types import MappingProxyType
 from typing import Any
 
@@ -12,11 +15,19 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     ConfigSubentryData,
     ConfigSubentryFlow,
+    OptionsFlow,
     SubentryFlowResult,
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
-from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from . import (
     ATTR_PARSER,
@@ -30,15 +41,95 @@ from . import (
     PARSER_HTML,
     PARSER_MD,
     PARSER_MD2,
+    PLATFORM_BROADCAST,
+    PLATFORM_POLLING,
+    PLATFORM_WEBHOOKS,
     TelegramBotConfigEntry,
     initialize_bot,
 )
+
+_LOGGER = logging.getLogger(__name__)
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """Options flow for webhooks."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+
+        errors: dict[str, str] = {}
+
+        platform: str = self.config_entry.data[CONF_PLATFORM]
+        if platform != PLATFORM_WEBHOOKS:
+            return self.async_abort(
+                reason="no_options", description_placeholders={CONF_PLATFORM: platform}
+            )
+
+        description_placeholders: Mapping[str, str] = {}
+        if user_input is not None:
+            trusted_networks_str: str = user_input[CONF_TRUSTED_NETWORKS]
+            trusted_networks_list: list[str] = self._parse_trusted_networks(
+                trusted_networks_str, errors
+            )
+
+            if not errors:
+                user_input[CONF_TRUSTED_NETWORKS] = trusted_networks_list
+                return self.async_create_entry(data=user_input)
+
+            description_placeholders = {
+                "trusted_network_error": trusted_networks_list[0]
+            }
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Optional(CONF_URL): TextSelector(
+                            config=TextSelectorConfig(type=TextSelectorType.URL)
+                        ),
+                        vol.Required(CONF_TRUSTED_NETWORKS): str,
+                    }
+                ),
+                self.config_entry.options,
+            ),
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
+
+    def _parse_trusted_networks(
+        self,
+        trusted_networks: str,
+        errors: dict[str, str],
+    ) -> list[str]:
+        """Convert CSV to list of strings."""
+
+        # validate entries in the csv
+        csv_trusted_networks: list[str] = cv.ensure_list_csv(trusted_networks)
+        for trusted_network in csv_trusted_networks:
+            try:
+                IPv4Network(trusted_network)
+            except (AddressValueError, ValueError) as err:
+                errors["base"] = "invalid_trusted_networks"
+                return [str(err)]
+
+        return csv_trusted_networks
 
 
 class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Telegram."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: TelegramBotConfigEntry,
+    ) -> OptionsFlowHandler:
+        """Create the options flow."""
+        return OptionsFlowHandler()
 
     @classmethod
     @callback
@@ -71,6 +162,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 user: User = await bot.get_me()
             except InvalidToken:
+                _LOGGER.warning("Invalid API token")
                 errors["base"] = "invalid_api_key"
 
             bot_name: str = user.full_name
@@ -109,11 +201,20 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_PLATFORM): SelectSelector(
                         SelectSelectorConfig(
-                            options=["broadcast", "polling", "webhooks"],
+                            options=[
+                                PLATFORM_BROADCAST,
+                                PLATFORM_POLLING,
+                                PLATFORM_WEBHOOKS,
+                            ],
                             translation_key="platforms",
                         )
                     ),
-                    vol.Required(CONF_API_KEY): str,
+                    vol.Required(CONF_API_KEY): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.PASSWORD,
+                            autocomplete="current-password",
+                        )
+                    ),
                     vol.Required(ATTR_PARSER, default=PARSER_MD): SelectSelector(
                         SelectSelectorConfig(
                             options=[PARSER_MD, PARSER_MD2, PARSER_HTML],

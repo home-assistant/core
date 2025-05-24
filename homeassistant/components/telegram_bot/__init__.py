@@ -110,6 +110,10 @@ CONF_TRUSTED_NETWORKS = "trusted_networks"
 
 DOMAIN = "telegram_bot"
 
+PLATFORM_BROADCAST = "broadcast"
+PLATFORM_POLLING = "polling"
+PLATFORM_WEBHOOKS = "webhooks"
+
 SERVICE_SEND_MESSAGE = "send_message"
 SERVICE_SEND_PHOTO = "send_photo"
 SERVICE_SEND_STICKER = "send_sticker"
@@ -384,9 +388,6 @@ async def load_data(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telegram bot component."""
     domain_config: list[dict[str, Any]] = config[DOMAIN]
-
-    if not domain_config:
-        return False
 
     # create config entries from YAML
     for config_import in domain_config:

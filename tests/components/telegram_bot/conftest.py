@@ -17,6 +17,7 @@ from homeassistant.components.telegram_bot import (
     DEFAULT_TRUSTED_NETWORKS,
     DOMAIN,
     PARSER_MD,
+    PLATFORM_WEBHOOKS,
 )
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import (
@@ -37,7 +38,7 @@ def config_webhooks() -> dict[str, Any]:
     return {
         DOMAIN: [
             {
-                CONF_PLATFORM: "webhooks",
+                CONF_PLATFORM: PLATFORM_WEBHOOKS,
                 CONF_URL: "https://test",
                 CONF_TRUSTED_NETWORKS: ["127.0.0.1"],
                 CONF_API_KEY: "1234567890:ABC",

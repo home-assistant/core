@@ -25,6 +25,27 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure webhook Telegram bot",
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "trusted_networks": "Trusted networks"
+        },
+        "data_description": {
+          "url": "Allow to overwrite the external URL from the Home Assistant configuration for different setups.",
+          "trusted_networks": "Telegram server access ACL as list."
+        }
+      }
+    },
+    "error": {
+      "invalid_trusted_networks": "Invalid trusted network: {trusted_network_error}"
+    },
+    "abort": {
+      "no_options": "No configuration required for {platform} Telegram bot."
+    }
+  },
   "config_subentries": {
     "allowed_chat_ids": {
       "initiate_flow": {
@@ -740,6 +761,14 @@
     }
   },
   "issues": {
+    "deprecated_yaml": {
+      "title": "The {integration_title} YAML configuration is being removed",
+      "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove both the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "title": "YAML import failed due to an unknown error",
+      "description": "Configuring {integration_title} using YAML is being removed but there was an unknown error while importing your existing configuration.\nSetup will not proceed.\n\nVerify that your {integration_title} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually."
+    },
     "proxy_params_auth_deprecation": {
       "title": "{telegram_bot}: Proxy authentication should be moved to the URL",
       "description": "Authentication details for the the proxy configured in the {telegram_bot} integration should be moved into the {proxy_url} instead. Please update your configuration and restart Home Assistant to fix this issue.\n\nThe {proxy_params} config key will be removed in a future release."
