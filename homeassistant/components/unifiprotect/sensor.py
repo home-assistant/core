@@ -201,7 +201,6 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ),
     ProtectSensorEntityDescription(
         key="voltage",
-        translation_key="voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -331,7 +330,6 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ),
     ProtectSensorEntityDescription(
         key="temperature_level",
-        translation_key="temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,

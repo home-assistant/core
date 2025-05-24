@@ -300,7 +300,6 @@ LIGHT_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="motion",
-        translation_key="motion_detected",
         device_class=BinarySensorDeviceClass.MOTION,
         ufp_value="is_pir_motion_detected",
     ),
@@ -346,28 +345,24 @@ MOUNTABLE_SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
 SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="leak",
-        translation_key="leak",
         device_class=BinarySensorDeviceClass.MOISTURE,
         ufp_value="is_leak_detected",
         ufp_enabled="is_leak_sensor_enabled",
     ),
     ProtectBinaryEntityDescription(
         key="battery_low",
-        translation_key="battery_low",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="battery_status.is_low",
     ),
     ProtectBinaryEntityDescription(
         key="motion",
-        translation_key="motion_detected",
         device_class=BinarySensorDeviceClass.MOTION,
         ufp_value="is_motion_detected",
         ufp_enabled="is_motion_sensor_enabled",
     ),
     ProtectBinaryEntityDescription(
         key="tampering",
-        translation_key="tampering_detected",
         device_class=BinarySensorDeviceClass.TAMPER,
         ufp_value="is_tampering_detected",
     ),
@@ -431,7 +426,6 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
     ),
     ProtectBinaryEventEntityDescription(
         key="motion",
-        translation_key="motion_detected",
         device_class=BinarySensorDeviceClass.MOTION,
         ufp_enabled="is_motion_detection_on",
         ufp_event_obj="last_motion_event",
@@ -575,7 +569,6 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
 DOORLOCK_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="battery_low",
-        translation_key="battery_low",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="battery_status.is_low",

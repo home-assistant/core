@@ -207,23 +207,11 @@
       "tracking_person": {
         "name": "Tracking: person"
       },
-      "motion_detected": {
-        "name": "Motion detected"
-      },
       "flood_light": {
         "name": "Flood light"
       },
       "contact": {
         "name": "Contact"
-      },
-      "leak": {
-        "name": "Leak"
-      },
-      "battery_low": {
-        "name": "Battery low"
-      },
-      "tampering_detected": {
-        "name": "[%key:component::binary_sensor::entity_component::tamper::state::on%]"
       },
       "temperature_sensor": {
         "name": "Temperature sensor"
@@ -388,9 +376,6 @@
       "disk_write_rate": {
         "name": "Disk write rate"
       },
-      "voltage": {
-        "name": "[%key:component::sensor::entity_component::voltage::name%]"
-      },
       "last_doorbell_ring": {
         "name": "Last doorbell ring"
       },
@@ -525,8 +510,8 @@
       "color_night_vision": {
         "name": "Color night vision"
       },
-      "motion_detected": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::motion_detected::name%]"
+      "motion": {
+        "name": "[%key:component::binary_sensor::entity_component::motion::name%]"
       },
       "detections_motion": {
         "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_motion::name%]"

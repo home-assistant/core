@@ -150,7 +150,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
     ),
     ProtectSwitchEntityDescription(
         key="motion",
-        translation_key="motion_detected",
+        translation_key="motion",
         icon="mdi:run-fast",
         entity_category=EntityCategory.CONFIG,
         ufp_value="recording_settings.enable_motion_detection",
