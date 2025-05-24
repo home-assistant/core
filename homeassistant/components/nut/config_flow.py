@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from types import MappingProxyType
 from typing import Any
 
 from aionut import NUTError, NUTLoginError
@@ -33,7 +32,7 @@ PASSWORD_NOT_CHANGED = "__**password_not_changed**__"
 
 
 def _base_schema(
-    nut_config: dict[str, Any] | MappingProxyType[str, Any],
+    nut_config: Mapping[str, Any],
     use_password_not_changed: bool = False,
 ) -> vol.Schema:
     """Generate base schema."""

@@ -1,0 +1,24 @@
+{
+  "entity": {
+    "sensor": {
+      "documents_total": {
+        "default": "mdi:file-document-multiple"
+      },
+      "documents_inbox": {
+        "default": "mdi:tray-full"
+      },
+      "characters_count": {
+        "default": "mdi:alphabet-latin"
+      },
+      "tag_count": {
+        "default": "mdi:tag"
+      },
+      "correspondent_count": {
+        "default": "mdi:account-group"
+      },
+      "document_type_count": {
+        "default": "mdi:format-list-bulleted-type"
+      }
+    }
+  }
+}

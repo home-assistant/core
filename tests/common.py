@@ -28,10 +28,11 @@ from types import FrameType, ModuleType
 from typing import Any, Literal, NoReturn
 from unittest.mock import AsyncMock, Mock, patch
 
-from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
+from aiohttp.test_utils import unused_port as get_test_instance_port
 from annotatedyaml import load_yaml_dict, loader as yaml_loader
+import attr
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant import auth, bootstrap, config_entries, loader
@@ -43,7 +44,7 @@ from homeassistant.auth import (
 )
 from homeassistant.auth.permissions import system_policies
 from homeassistant.components import device_automation, persistent_notification as pn
-from homeassistant.components.device_automation import (  # noqa: F401
+from homeassistant.components.device_automation import (
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
 from homeassistant.components.logger import (
@@ -98,7 +99,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder, json_dumps
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import dt as dt_util, ulid as ulid_util
+from homeassistant.util import dt as dt_util, ulid as ulid_util, uuid as uuid_util
 from homeassistant.util.async_ import (
     _SHUTDOWN_RUN_CALLBACK_THREADSAFE,
     get_scheduled_timer_handles,
@@ -119,6 +120,11 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 from .testing_config.custom_components.test_constant_deprecation import (
     import_deprecated_constant,
 )
+
+__all__ = [
+    "async_get_device_automation_capabilities",
+    "get_test_instance_port",
+]
 
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
@@ -643,6 +649,34 @@ def mock_registry(
     hass.data[er.DATA_REGISTRY] = registry
     er.async_get.cache_clear()
     return registry
+
+
+@attr.s(frozen=True, kw_only=True, slots=True)
+class RegistryEntryWithDefaults(er.RegistryEntry):
+    """Helper to create a registry entry with defaults."""
+
+    capabilities: Mapping[str, Any] | None = attr.ib(default=None)
+    config_entry_id: str | None = attr.ib(default=None)
+    config_subentry_id: str | None = attr.ib(default=None)
+    created_at: datetime = attr.ib(factory=dt_util.utcnow)
+    device_id: str | None = attr.ib(default=None)
+    disabled_by: er.RegistryEntryDisabler | None = attr.ib(default=None)
+    entity_category: er.EntityCategory | None = attr.ib(default=None)
+    hidden_by: er.RegistryEntryHider | None = attr.ib(default=None)
+    id: str = attr.ib(
+        default=None,
+        converter=attr.converters.default_if_none(factory=uuid_util.random_uuid_hex),  # type: ignore[misc]
+    )
+    has_entity_name: bool = attr.ib(default=False)
+    options: er.ReadOnlyEntityOptionsType = attr.ib(
+        default=None, converter=er._protect_entity_options
+    )
+    original_device_class: str | None = attr.ib(default=None)
+    original_icon: str | None = attr.ib(default=None)
+    original_name: str | None = attr.ib(default=None)
+    supported_features: int = attr.ib(default=0)
+    translation_key: str | None = attr.ib(default=None)
+    unit_of_measurement: str | None = attr.ib(default=None)
 
 
 def mock_area_registry(
@@ -1911,3 +1945,16 @@ def get_quality_scale(integration: str) -> dict[str, QualityScaleStatus]:
         )
         for rule, details in raw["rules"].items()
     }
+
+
+def get_schema_suggested_value(schema: vol.Schema, key: str) -> Any | None:
+    """Get suggested value for key in voluptuous schema."""
+    for schema_key in schema:
+        if schema_key == key:
+            if (
+                schema_key.description is None
+                or "suggested_value" not in schema_key.description
+            ):
+                return None
+            return schema_key.description["suggested_value"]
+    return None

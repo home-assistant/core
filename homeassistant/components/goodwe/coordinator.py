@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -9,22 +10,34 @@ from goodwe import Inverter, InverterError, RequestFailedException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
+type GoodweConfigEntry = ConfigEntry[GoodweRuntimeData]
+
+
+@dataclass
+class GoodweRuntimeData:
+    """Data class for runtime data."""
+
+    inverter: Inverter
+    coordinator: GoodweUpdateCoordinator
+    device_info: DeviceInfo
+
 
 class GoodweUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Gather data for the energy device."""
 
-    config_entry: ConfigEntry
+    config_entry: GoodweConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: GoodweConfigEntry,
         inverter: Inverter,
     ) -> None:
         """Initialize update coordinator."""
