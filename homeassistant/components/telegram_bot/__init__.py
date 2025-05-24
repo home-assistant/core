@@ -399,9 +399,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     MODULES.update(modules)
 
-    # create config entries from YAML
-    for config_import in domain_config:
-        trusted_networks: list[IPv4Network] = config_import.get(
+    # import the last YAML config since existing behavior only works with the last config
+    if domain_config:
+        trusted_networks: list[IPv4Network] = domain_config[-1].get(
             CONF_TRUSTED_NETWORKS, []
         )
         trusted_networks_str: list[str] = (
@@ -414,12 +414,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 DOMAIN,
                 context={CONF_SOURCE: SOURCE_IMPORT},
                 data={
-                    CONF_PLATFORM: config_import.get(CONF_PLATFORM),
-                    CONF_API_KEY: config_import.get(CONF_API_KEY),
-                    CONF_ALLOWED_CHAT_IDS: config_import.get(CONF_ALLOWED_CHAT_IDS),
-                    ATTR_PARSER: config_import.get(ATTR_PARSER),
-                    CONF_PROXY_URL: config_import.get(CONF_PROXY_URL),
-                    CONF_URL: config_import.get(CONF_URL),
+                    CONF_PLATFORM: domain_config[-1].get(CONF_PLATFORM),
+                    CONF_API_KEY: domain_config[-1].get(CONF_API_KEY),
+                    CONF_ALLOWED_CHAT_IDS: domain_config[-1].get(CONF_ALLOWED_CHAT_IDS),
+                    ATTR_PARSER: domain_config[-1].get(ATTR_PARSER),
+                    CONF_PROXY_URL: domain_config[-1].get(CONF_PROXY_URL),
+                    CONF_URL: domain_config[-1].get(CONF_URL),
                     CONF_TRUSTED_NETWORKS: trusted_networks_str,
                 },
             )
