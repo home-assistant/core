@@ -525,12 +525,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
     _LOGGER.debug("Setting up %s.%s", DOMAIN, p_type)
     try:
         receiver_service = await platform.async_setup_platform(hass, bot, entry)
-        if receiver_service is False:
-            _LOGGER.error("Failed to initialize Telegram bot %s", p_type)
-            return False
-
     except Exception:
         _LOGGER.exception("Error setting up Telegram bot %s", p_type)
+        return False
+
+    if receiver_service is False:
+        _LOGGER.error("Failed to initialize Telegram bot %s", p_type)
         return False
 
     notify_service = TelegramNotificationService(
