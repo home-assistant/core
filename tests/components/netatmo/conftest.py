@@ -97,4 +97,4 @@ def netatmo_auth() -> AsyncMock:
         mock_auth.return_value.async_get_image.side_effect = fake_get_image
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
-        yield
+        yield mock_auth.return_value
