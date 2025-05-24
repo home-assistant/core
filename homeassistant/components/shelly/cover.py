@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any, cast
 
 from aioshelly.block_device import Block
@@ -17,6 +18,7 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import RPC_COVER_UPDATE_TIME_SEC
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import ShellyBlockEntity, ShellyRpcEntity
 from .utils import get_device_entry_gen, get_rpc_key_ids
@@ -158,6 +160,7 @@ class RpcShellyCover(ShellyRpcEntity, CoverEntity):
         """Initialize rpc cover."""
         super().__init__(coordinator, f"cover:{id_}")
         self._id = id_
+        self._update_task: asyncio.Task | None = None
         if self.status["pos_control"]:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
         if coordinator.device.config[f"cover:{id_}"].get("slat", {}).get("enable"):
@@ -199,19 +202,42 @@ class RpcShellyCover(ShellyRpcEntity, CoverEntity):
         """Return if the cover is opening."""
         return cast(bool, self.status["state"] == "opening")
 
+    def launch_update_task(self) -> None:
+        """Launch the update position task if needed."""
+        if not self._update_task:
+            self._update_task = (
+                self.coordinator.config_entry.async_create_background_task(
+                    self.hass, self.update_position(), "Shelly cover update"
+                )
+            )
+
+    async def update_position(self) -> None:
+        """Update the cover position every second."""
+        await self.coordinator.device.update_status()
+        self.async_write_ha_state()
+        await asyncio.sleep(RPC_COVER_UPDATE_TIME_SEC)
+        while self.is_closing or self.is_opening:
+            await self.coordinator.device.update_status()
+            self.async_write_ha_state()
+            await asyncio.sleep(RPC_COVER_UPDATE_TIME_SEC)
+        self._update_task = None
+
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         await self.call_rpc("Cover.Close", {"id": self._id})
+        self.launch_update_task()
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
         await self.call_rpc("Cover.Open", {"id": self._id})
+        self.launch_update_task()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self.call_rpc(
             "Cover.GoToPosition", {"id": self._id, "pos": kwargs[ATTR_POSITION]}
         )
+        self.launch_update_task()
 
     async def async_stop_cover(self, **_kwargs: Any) -> None:
         """Stop the cover."""
@@ -220,10 +246,12 @@ class RpcShellyCover(ShellyRpcEntity, CoverEntity):
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         await self.call_rpc("Cover.GoToPosition", {"id": self._id, "slat_pos": 100})
+        self.launch_update_task()
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         await self.call_rpc("Cover.GoToPosition", {"id": self._id, "slat_pos": 0})
+        self.launch_update_task()
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
@@ -231,6 +259,7 @@ class RpcShellyCover(ShellyRpcEntity, CoverEntity):
             "Cover.GoToPosition",
             {"id": self._id, "slat_pos": kwargs[ATTR_TILT_POSITION]},
         )
+        self.launch_update_task()
 
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover."""
