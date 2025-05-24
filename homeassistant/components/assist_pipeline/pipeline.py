@@ -1178,31 +1178,50 @@ class PipelineRun:
                 if role := delta.get("role"):
                     chat_log_role = role
 
-                # We are only interested in assistant deltas with content
-                if chat_log_role != "assistant" or not (
-                    content := delta.get("content")
-                ):
+                # We are only interested in assistant deltas
+                if chat_log_role != "assistant":
                     return
 
-                tts_input_stream.put_nowait(content)
+                if content := delta.get("content"):
+                    tts_input_stream.put_nowait(content)
 
                 if self._streamed_response_text:
                     return
 
                 nonlocal delta_character_count
 
-                delta_character_count += len(content)
-                if delta_character_count < STREAM_RESPONSE_CHARS:
+                # Streamed responses are not cached. That's why we only start streaming text after
+                # we have received enough characters that indicates it will be a long response
+                # or if we have received text, and then a tool call.
+
+                # Tool call after we already received text
+                start_streaming = delta_character_count > 0 and delta.get("tool_calls")
+
+                # Count characters in the content and test if we exceed streaming threshold
+                if not start_streaming and content:
+                    delta_character_count += len(content)
+                    start_streaming = delta_character_count > STREAM_RESPONSE_CHARS
+
+                if not start_streaming:
                     return
 
-                # Streamed responses are not cached. We only start streaming text after
-                # we have received a couple of words that indicates it will be a long response.
                 self._streamed_response_text = True
 
                 async def tts_input_stream_generator() -> AsyncGenerator[str]:
                     """Yield TTS input stream."""
                     while (tts_input := await tts_input_stream.get()) is not None:
                         yield tts_input
+
+                # Concatenate all existing queue items
+                parts = []
+                while not tts_input_stream.empty():
+                    parts.append(tts_input_stream.get_nowait())
+                tts_input_stream.put_nowait(
+                    "".join(
+                        # At this point parts is only strings, None indicates end of queue
+                        cast(list[str], parts)
+                    )
+                )
 
                 assert self.tts_stream is not None
                 self.tts_stream.async_set_message_stream(tts_input_stream_generator())
