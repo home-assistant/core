@@ -230,6 +230,9 @@ async def mock_async_browse(
         return None
 
     if search_query:
+        if search_query not in [x["title"] for x in fake_items]:
+            return None
+
         for item in fake_items:
             if (
                 item["title"] == search_query

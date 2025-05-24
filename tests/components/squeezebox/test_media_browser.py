@@ -268,6 +268,32 @@ async def test_async_search_media_invalid_type(
         assert err_message in response["error"]["message"]
 
 
+async def test_async_search_media_not_found(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test trying to play an item that doesn't exist."""
+    with patch(
+        "homeassistant.components.squeezebox.browse_media.is_internal_request",
+        return_value=False,
+    ):
+        client = await hass_ws_client()
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "media_player/search_media",
+                "entity_id": "media_player.test_player",
+                "media_content_id": "",
+                "media_content_type": "",
+                "search_query": "Unknown Item",
+            },
+        )
+        response = await client.receive_json()
+
+        assert len(response["result"]["result"]) == 0
+
+
 async def test_generate_playlist_for_app(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
