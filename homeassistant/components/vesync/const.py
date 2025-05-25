@@ -57,7 +57,7 @@ HUMIDIFIER_NIGHT_LIGHT_LEVEL_BRIGHT = "bright"
 HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM = "dim"
 HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF = "off"
 
-
+# need to remove this.  light and sensor need it still.
 DEV_TYPE_TO_HA = {
     "wifi-switch-1.3": "outlet",
     "ESW03-USA": "outlet",
@@ -81,6 +81,7 @@ DEV_TYPE_TO_HA = {
     "ESL100CW": "bulb-tunable-white",
 }
 
+# need to remove this.  light and sensor need it still.
 SKU_TO_BASE_DEVICE = {
     # Air Purifiers
     "LV-PUR131S": "LV-PUR131S",

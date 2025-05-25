@@ -15,15 +15,14 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
-    percentage_to_ranged_value,
-    ranged_value_to_percentage,
+    ordered_list_item_to_percentage,
+    percentage_to_ordered_list_item,
 )
 from homeassistant.util.scaling import int_states_in_range
 
 from .common import is_fan, is_purifier
 from .const import (
     DOMAIN,
-    SKU_TO_BASE_DEVICE,
     VS_COORDINATOR,
     VS_DEVICES,
     VS_DISCOVERY,
@@ -41,18 +40,6 @@ from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-SPEED_RANGE = {  # off is not included
-    "LV-PUR131S": (1, 3),
-    "Core200S": (1, 3),
-    "Core300S": (1, 3),
-    "Core400S": (1, 4),
-    "Core600S": (1, 4),
-    "EverestAir": (1, 3),
-    "Vital200S": (1, 4),
-    "Vital100S": (1, 4),
-    "SmartTowerFan": (1, 13),
-}
 
 
 async def async_setup_entry(
@@ -117,17 +104,15 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
             self.device.state.mode == VS_FAN_MODE_MANUAL
             and (current_level := self.device.state.fan_level) is not None
         ):
-            return ranged_value_to_percentage(
-                SPEED_RANGE[SKU_TO_BASE_DEVICE[self.device.device_type]], current_level
+            return ordered_list_item_to_percentage(
+                self.device.fan_levels, current_level
             )
         return None
 
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
-        return int_states_in_range(
-            SPEED_RANGE[SKU_TO_BASE_DEVICE[self.device.device_type]]
-        )
+        return int_states_in_range(self.device.fan_levels)
 
     @property
     def preset_modes(self) -> list[str]:
@@ -187,9 +172,7 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
             raise HomeAssistantError("An error occurred while manual mode.")
         success = self.device.change_fan_speed(
             math.ceil(
-                percentage_to_ranged_value(
-                    SPEED_RANGE[SKU_TO_BASE_DEVICE[self.device.device_type]], percentage
-                )
+                percentage_to_ordered_list_item(self.device.fan_levels, percentage)
             )
         )
         if not success:
