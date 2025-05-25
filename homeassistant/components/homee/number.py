@@ -31,6 +31,22 @@ class HomeeNumberEntityDescription(NumberEntityDescription):
 
 
 NUMBER_DESCRIPTIONS = {
+    AttributeType.BUTTON_BRIGHTNESS_ACTIVE: HomeeNumberEntityDescription(
+        key="button_brightness_active",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    AttributeType.BUTTON_BRIGHTNESS_DIMMED: HomeeNumberEntityDescription(
+        key="button_brightness_dimmed",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    AttributeType.DISPLAY_BRIGHTNESS_ACTIVE: HomeeNumberEntityDescription(
+        key="display_brightness_active",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    AttributeType.DISPLAY_BRIGHTNESS_DIMMED: HomeeNumberEntityDescription(
+        key="display_brightness_dimmed",
+        entity_category=EntityCategory.CONFIG,
+    ),
     AttributeType.DOWN_POSITION: HomeeNumberEntityDescription(
         key="down_position",
         entity_category=EntityCategory.CONFIG,
@@ -46,6 +62,14 @@ NUMBER_DESCRIPTIONS = {
     ),
     AttributeType.ENDPOSITION_CONFIGURATION: HomeeNumberEntityDescription(
         key="endposition_configuration",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    AttributeType.EXTERNAL_TEMPERATURE_OFFSET: HomeeNumberEntityDescription(
+        key="external_temperature_offset",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    AttributeType.FLOOR_TEMPERATURE_OFFSET: HomeeNumberEntityDescription(
+        key="floor_temperature_offset",
         entity_category=EntityCategory.CONFIG,
     ),
     AttributeType.MOTION_ALARM_CANCELATION_DELAY: HomeeNumberEntityDescription(
@@ -81,6 +105,11 @@ NUMBER_DESCRIPTIONS = {
     ),
     AttributeType.TEMPERATURE_OFFSET: HomeeNumberEntityDescription(
         key="temperature_offset",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    AttributeType.TEMPERATURE_REPORT_INTERVAL: HomeeNumberEntityDescription(
+        key="temperature_report_interval",
+        device_class=NumberDeviceClass.DURATION,
         entity_category=EntityCategory.CONFIG,
     ),
     AttributeType.UP_TIME: HomeeNumberEntityDescription(
