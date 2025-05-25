@@ -1423,7 +1423,7 @@ async def test_rpc_rgbw_sensors(
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == f"123456789ABC-{light_type}:0-voltage_{light_type}"
 
-    entity_id = f"sensor.test_name_{light_type}_light_0_device_temperature"
+    entity_id = f"sensor.test_name_{light_type}_light_0_relay_temperature"
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "54.3"
