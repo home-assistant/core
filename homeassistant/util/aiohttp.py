@@ -42,7 +42,7 @@ class MockPayloadWriter:
     def enable_chunking(self) -> None:
         """Enable chunking."""
 
-    async def send_headers(self, *args: Any, **kwargs: Any) -> None:
+    def send_headers(self, *args: Any, **kwargs: Any) -> None:
         """Write headers."""
 
     async def write_headers(self, *args: Any, **kwargs: Any) -> None:
