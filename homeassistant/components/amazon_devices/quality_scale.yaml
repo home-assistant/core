@@ -42,8 +42,10 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery-update-info: todo
-  discovery: todo
+  discovery-update-info:
+    status: exempt
+    comment: Network information not relevant
+  discovery: done
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo

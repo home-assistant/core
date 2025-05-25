@@ -3,6 +3,17 @@
   "name": "Amazon Devices",
   "codeowners": ["@chemelli74"],
   "config_flow": true,
+  "dhcp": [
+    { "macaddress": "10BF67*" },
+    { "macaddress": "48B423*" },
+    { "macaddress": "4C1744*" },
+    { "macaddress": "50DCE7*" },
+    { "macaddress": "74D637*" },
+    { "macaddress": "9CC8E9*" },
+    { "macaddress": "C095CF*" },
+    { "macaddress": "D8BE65*" },
+    { "macaddress": "EC2BEB*" }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/amazon_devices",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
