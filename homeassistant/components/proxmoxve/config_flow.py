@@ -169,7 +169,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         selected_nodes: list[dict[str, Any]] = []
-        for node in self._proxmox_setup["nodes"]:
+        for node in self._proxmox_nodes:
             if node["node"] in user_input[CONF_NODES]:
                 updated_node = {
                     CONF_NODE: node["node"],
