@@ -13,7 +13,7 @@ from .const import DOMAIN
 from .coordinator import CCLCoordinator
 
 
-class CCLEntity(CoordinatorEntity, Entity):
+class CCLEntity(CoordinatorEntity[..]):
     """Representation of a CCL Entity."""
 
     _attr_has_entity_name = True
