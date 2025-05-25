@@ -27,9 +27,9 @@ async def test_media_player_join(
     soco_living_room = sonos_setup_two_speakers[0]
     soco_bedroom = sonos_setup_two_speakers[1]
 
-    # After dispatching the join to the speakers, the code waits for the
-    # group to be updated before returning. To simulate this we will create
-    # a ZGS event to simulate the speakers being grouped. This event is
+    # After dispatching the join to the speakers, the integration waits for the
+    # group to be updated before returning. To simulate this we will dispatch
+    # a ZGS event to group the speaker. This event is
     # triggered by the firing of the join_complete_event in the join mock.
     join_complete_event = asyncio.Event()
 
@@ -52,12 +52,13 @@ async def test_media_player_join(
         await join_complete_event.wait()
         # Fire the ZGS event to update the speaker grouping as the join method is waiting
         # for the speakers to be regrouped.
-        group_speakers(soco_living_room, soco_bedroom, create_uui_ds=True)
+        group_speakers(soco_living_room, soco_bedroom)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     # Code logs warning messages if the join is not successful, so we check
     # that no warning messages were logged.
     assert len(caplog.records) == 0
+    # The API joins the group members to the entity_id speaker.
     assert soco_bedroom.join.call_count == 1
     assert soco_bedroom.join.call_args[0][0] == soco_living_room
     assert soco_living_room.join.call_count == 0
@@ -135,7 +136,7 @@ async def test_media_player_unjoin(
     soco_bedroom = sonos_setup_two_speakers[1]
 
     # First group the speakers together
-    group_speakers(soco_living_room, soco_bedroom, create_uui_ds=True)
+    group_speakers(soco_living_room, soco_bedroom)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # Now that the speaker are joined, test unjoining
@@ -157,7 +158,7 @@ async def test_media_player_unjoin(
         await unjoin_complete_event.wait()
         # Fire the ZGS event to ungroup the speakers as the unjoin method is waiting
         # for the speakers to be ungrouped.
-        ungroup_speakers(soco_living_room, soco_bedroom, create_uui_ds=False)
+        ungroup_speakers(soco_living_room, soco_bedroom)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(caplog.records) == 0

@@ -121,7 +121,7 @@ async def test_zgs_event_group_speakers(
     soco_br.play.reset_mock()
 
     # Test 2 - Group the speakers, living room is the coordinator
-    group_speakers(soco_lr, soco_br, create_uui_ds=True)
+    group_speakers(soco_lr, soco_br)
 
     await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("media_player.living_room")
@@ -144,7 +144,7 @@ async def test_zgs_event_group_speakers(
     soco_br.play.reset_mock()
 
     # Test 3 - Ungroup the speakers
-    ungroup_speakers(soco_lr, soco_br, create_uui_ds=False)
+    ungroup_speakers(soco_lr, soco_br)
 
     await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("media_player.living_room")
@@ -179,7 +179,7 @@ async def test_zgs_avtransport_group_speakers(
     soco_br.play.reset_mock()
 
     # Test 2- Send a zgs event to return living room to its own coordinator
-    ungroup_speakers(soco_lr, soco_br, create_uui_ds=False)
+    ungroup_speakers(soco_lr, soco_br)
     await hass.async_block_till_done(wait_background_tasks=True)
     # Call should route to the living room
     await _media_play(hass, "media_player.living_room")
