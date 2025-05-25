@@ -1,6 +1,5 @@
 """Tests for Shelly cover platform."""
 
-import asyncio
 from copy import deepcopy
 from unittest.mock import Mock
 
@@ -22,7 +21,6 @@ from homeassistant.components.cover import (
     SERVICE_STOP_COVER_TILT,
     CoverState,
 )
-from homeassistant.components.shelly.const import RPC_COVER_UPDATE_TIME_SEC
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -307,7 +305,6 @@ async def test_update_position_closing(
             monkeypatch, mock_rpc_device, "cover:0", "current_pos", position
         )
         mock_rpc_device.mock_update()
-        await asyncio.sleep(RPC_COVER_UPDATE_TIME_SEC + 0.1)
 
         assert (state := hass.states.get(entity_id))
         assert state.attributes[ATTR_CURRENT_POSITION] == position
@@ -346,7 +343,6 @@ async def test_update_position_opening(
             monkeypatch, mock_rpc_device, "cover:0", "current_pos", position
         )
         mock_rpc_device.mock_update()
-        await asyncio.sleep(RPC_COVER_UPDATE_TIME_SEC + 0.1)
 
         assert (state := hass.states.get(entity_id))
         assert state.attributes[ATTR_CURRENT_POSITION] == position
@@ -386,7 +382,6 @@ async def test_update_position_no_movement(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    await asyncio.sleep(RPC_COVER_UPDATE_TIME_SEC + 0.1)
 
     assert (state := hass.states.get(entity_id))
     assert state.state == CoverState.OPEN

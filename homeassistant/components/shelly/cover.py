@@ -204,7 +204,7 @@ class RpcShellyCover(ShellyRpcEntity, CoverEntity):
 
     def launch_update_task(self) -> None:
         """Launch the update position task if needed."""
-        if not self._update_task:
+        if not self._update_task or self._update_task.done():
             self._update_task = (
                 self.coordinator.config_entry.async_create_background_task(
                     self.hass, self.update_position(), "Shelly cover update"
@@ -213,31 +213,33 @@ class RpcShellyCover(ShellyRpcEntity, CoverEntity):
 
     async def update_position(self) -> None:
         """Update the cover position every second."""
-        await self.coordinator.device.update_status()
-        self.async_write_ha_state()
-        await asyncio.sleep(RPC_COVER_UPDATE_TIME_SEC)
-        while self.is_closing or self.is_opening:
-            await self.coordinator.device.update_status()
-            self.async_write_ha_state()
-            await asyncio.sleep(RPC_COVER_UPDATE_TIME_SEC)
-        self._update_task = None
+        try:
+            while self.is_closing or self.is_opening:
+                await self.coordinator.device.update_status()
+                self.async_write_ha_state()
+                await asyncio.sleep(RPC_COVER_UPDATE_TIME_SEC)
+        finally:
+            self._update_task = None
+
+    def _update_callback(self) -> None:
+        """Handle device update. Use a task when opening/closing is in progress."""
+        super()._update_callback()
+        if self.is_closing or self.is_opening:
+            self.launch_update_task()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         await self.call_rpc("Cover.Close", {"id": self._id})
-        self.launch_update_task()
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
         await self.call_rpc("Cover.Open", {"id": self._id})
-        self.launch_update_task()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self.call_rpc(
             "Cover.GoToPosition", {"id": self._id, "pos": kwargs[ATTR_POSITION]}
         )
-        self.launch_update_task()
 
     async def async_stop_cover(self, **_kwargs: Any) -> None:
         """Stop the cover."""
