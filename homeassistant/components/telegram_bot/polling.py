@@ -2,34 +2,39 @@
 
 import logging
 
-from telegram import Update
+from telegram import Bot, Update
 from telegram.error import NetworkError, RetryAfter, TelegramError, TimedOut
 from telegram.ext import ApplicationBuilder, CallbackContext, TypeHandler
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 
-from . import BaseTelegramBotEntity
+from . import BaseTelegramBotEntity, TelegramBotConfigEntry
+from .const import EVENT_TELEGRAMBOT_TERMINATE
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, bot, config):
+async def async_setup_platform(
+    hass: HomeAssistant, bot: Bot, config: TelegramBotConfigEntry
+):
     """Set up the Telegram polling platform."""
     pollbot = PollBot(hass, bot, config)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, pollbot.start_polling)
+    hass.bus.async_listen_once(EVENT_TELEGRAMBOT_TERMINATE, pollbot.stop_polling)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, pollbot.stop_polling)
 
     return True
 
 
-async def process_error(update: Update, context: CallbackContext) -> None:
+async def process_error(update: object, context: CallbackContext) -> None:
     """Telegram bot error handler."""
     if context.error:
         error_callback(context.error, update)
 
 
-def error_callback(error: Exception, update: Update | None = None) -> None:
+def error_callback(error: Exception, update: object | None = None) -> None:
     """Log the error."""
     try:
         raise error
@@ -49,7 +54,9 @@ class PollBot(BaseTelegramBotEntity):
     The application is set up to pass telegram updates to `self.handle_update`
     """
 
-    def __init__(self, hass, bot, config):
+    def __init__(
+        self, hass: HomeAssistant, bot: Bot, config: TelegramBotConfigEntry
+    ) -> None:
         """Create Application to poll for updates."""
         super().__init__(hass, config)
         self.bot = bot

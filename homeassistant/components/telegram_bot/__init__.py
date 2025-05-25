@@ -52,6 +52,8 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_loaded_integration
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
+from .const import EVENT_TELEGRAMBOT_TERMINATE
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DATA = "data"
@@ -538,7 +540,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
     )
     entry.runtime_data = notify_service
 
-    entry.async_on_unload(entry.add_update_listener(update_listener))
+    if not entry.update_listeners:
+        entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 
@@ -546,9 +549,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
 async def update_listener(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> None:
     """Handle options update."""
 
-    # hass.config_entries.async_reload only reloads platforms not modules
-    # handle module reload ourselves
-    await hass.config_entries.async_reload(entry.entry_id)
+    hass.bus.async_fire(EVENT_TELEGRAMBOT_TERMINATE)
+
+    await async_setup_entry(hass, entry)
 
 
 def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) -> Bot:

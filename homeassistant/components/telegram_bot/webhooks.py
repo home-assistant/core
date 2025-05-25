@@ -7,12 +7,13 @@ import logging
 import secrets
 import string
 
-from telegram import Update
+from telegram import Bot, Update
 from telegram.error import TimedOut
 from telegram.ext import Application, TypeHandler
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import get_url
 
 from . import (
@@ -21,6 +22,7 @@ from . import (
     BaseTelegramBotEntity,
     TelegramBotConfigEntry,
 )
+from .const import EVENT_TELEGRAMBOT_TERMINATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +31,9 @@ REMOVE_WEBHOOK_URL = ""
 SECRET_TOKEN_LENGTH = 32
 
 
-async def async_setup_platform(hass, bot, config):
+async def async_setup_platform(
+    hass: HomeAssistant, bot: Bot, config: TelegramBotConfigEntry
+):
     """Set up the Telegram webhooks platform."""
 
     # Generate an ephemeral secret token
@@ -47,6 +51,7 @@ async def async_setup_platform(hass, bot, config):
     if not webhook_registered:
         return False
 
+    hass.bus.async_listen_once(EVENT_TELEGRAMBOT_TERMINATE, pushbot.stop_application)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, pushbot.stop_application)
     hass.http.register_view(
         PushBotView(
@@ -68,7 +73,13 @@ def _get_trusted_networks(config: TelegramBotConfigEntry) -> list[IPv4Network]:
 class PushBot(BaseTelegramBotEntity):
     """Handles all the push/webhook logic and passes telegram updates to `self.handle_update`."""
 
-    def __init__(self, hass, bot, config, secret_token):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        bot: Bot,
+        config: TelegramBotConfigEntry,
+        secret_token: str,
+    ) -> None:
         """Create Application before calling super()."""
         self.bot = bot
         self.trusted_networks = _get_trusted_networks(config)
@@ -147,7 +158,14 @@ class PushBotView(HomeAssistantView):
     url = TELEGRAM_WEBHOOK_URL
     name = "telegram_webhooks"
 
-    def __init__(self, hass, bot, application, trusted_networks, secret_token):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        bot: Bot,
+        application,
+        trusted_networks: list[IPv4Network],
+        secret_token: str,
+    ) -> None:
         """Initialize by storing stuff needed for setting up our webhook endpoint."""
         self.hass = hass
         self.bot = bot
