@@ -16,7 +16,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
+from .coordinator import AmazonConfigEntry
 from .entity import AmazonEntity
 
 # Coordinator is used to centralize the data updates
@@ -65,17 +65,6 @@ class AmazonBinarySensorEntity(AmazonEntity, BinarySensorEntity):
     """Binary sensor device."""
 
     entity_description: AmazonBinarySensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: AmazonDevicesCoordinator,
-        serial_num: str,
-        description: AmazonBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator, serial_num)
-        self.entity_description = description
-        self._attr_unique_id = f"{serial_num}-{description.key}"
 
     @property
     def is_on(self) -> bool:

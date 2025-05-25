@@ -12,7 +12,7 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
+from .coordinator import AmazonConfigEntry
 from .entity import AmazonEntity
 
 PARALLEL_UPDATES = 1
@@ -57,17 +57,6 @@ class AmazonSwitchEntity(AmazonEntity, SwitchEntity):
     """Switch device."""
 
     entity_description: AmazonSwitchEntityDescription
-
-    def __init__(
-        self,
-        coordinator: AmazonDevicesCoordinator,
-        serial_num: str,
-        description: AmazonSwitchEntityDescription,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator, serial_num)
-        self.entity_description = description
-        self._attr_unique_id = f"{serial_num}-{description.key}"
 
     async def _switch_set_state(self, state: bool) -> None:
         """Set desired switch state."""
