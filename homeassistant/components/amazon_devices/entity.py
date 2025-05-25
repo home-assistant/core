@@ -8,8 +8,9 @@ from aioamazondevices.const import DEVICE_TYPE_TO_MODEL, SPEAKER_GROUP_MODEL
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.loader import async_suggest_report_issue
 
-from .const import DOMAIN
+from .const import _LOGGER, DOMAIN
 from .coordinator import AmazonDevicesCoordinator
 
 
@@ -30,6 +31,16 @@ class AmazonEntity(CoordinatorEntity[AmazonDevicesCoordinator]):
         model_details: dict[str, str] = cast(
             "dict", DEVICE_TYPE_TO_MODEL.get(self.device.device_type)
         )
+        if not model_details:
+            report_issue = async_suggest_report_issue(
+                self.hass, integration_domain=DOMAIN
+            )
+            _LOGGER.warning(
+                "Unknown device type '%s' for %s: please %s",
+                self.device.device_type,
+                self.device.account_name,
+                report_issue,
+            )
         model = model_details["model"] if model_details else None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial_num)},
