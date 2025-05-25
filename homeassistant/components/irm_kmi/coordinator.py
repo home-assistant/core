@@ -7,9 +7,8 @@ from typing import Any
 from irm_kmi_api import IrmKmiApiClientHa, IrmKmiApiError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_ZONE
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_LOCATION
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import (
     TimestampDataUpdateCoordinator,
     UpdateFailed,
@@ -17,9 +16,8 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN, OUT_OF_BENELUX
 from .data import ProcessedCoordinatorData
-from .utils import disable_from_config, get_config_value, preferred_language
+from .utils import get_config_value, preferred_language
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +39,7 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator):
             update_interval=timedelta(minutes=7),
         )
         self._api = api_client
-        self._zone = get_config_value(entry, CONF_ZONE)
+        self._location = get_config_value(entry, CONF_LOCATION)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint.
@@ -51,13 +49,11 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator):
         """
 
         self._api.expire_cache()
-        if (zone := self.hass.states.get(self._zone)) is None:
-            raise UpdateFailed(f"Zone '{self._zone}' not found")
         try:
             await self._api.refresh_forecasts_coord(
                 {
-                    "lat": zone.attributes[ATTR_LATITUDE],
-                    "long": zone.attributes[ATTR_LONGITUDE],
+                    "lat": self._location[ATTR_LATITUDE],
+                    "long": self._location[ATTR_LONGITUDE],
                 }
             )
 
@@ -77,34 +73,6 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator):
                 f"Error communicating with API for general forecast: {err}. "
                 f"Last success time is: {self.last_update_success_time}"
             ) from err
-
-        if self._api.get_city() in OUT_OF_BENELUX:
-            _LOGGER.error(
-                "The zone %s is now out of Benelux and forecast is only available in Benelux. "
-                "Associated device is now disabled. Move the zone back in Benelux and re-enable to fix "
-                "this",
-                self._zone,
-            )
-
-            # This is always true but mypy complains that it might be None.
-            assert self.config_entry is not None
-
-            disable_from_config(self.hass, self.config_entry)
-
-            ir.async_create_issue(
-                self.hass,
-                DOMAIN,
-                "zone_moved",
-                is_fixable=True,
-                severity=ir.IssueSeverity.ERROR,
-                translation_key="zone_moved",
-                data={
-                    "config_entry_id": self.config_entry.entry_id,
-                    "zone": self._zone,
-                },
-                translation_placeholders={"zone": self._zone},
-            )
-            return ProcessedCoordinatorData()
 
         return await self.process_api_data()
 

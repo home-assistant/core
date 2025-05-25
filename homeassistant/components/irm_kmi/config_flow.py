@@ -5,14 +5,12 @@ import logging
 from irm_kmi_api import IrmKmiApiClient, IrmKmiApiError
 import voluptuous as vol
 
-from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_ZONE
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_LOCATION, CONF_ZONE
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
-    EntitySelector,
-    EntitySelectorConfig,
+    LocationSelector,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -22,6 +20,7 @@ from .const import (
     CONF_LANGUAGE_OVERRIDE,
     CONF_LANGUAGE_OVERRIDE_OPTIONS,
     DOMAIN,
+    HOME_LOCATION_NAME,
     OUT_OF_BENELUX,
     USER_AGENT,
 )
@@ -44,28 +43,27 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Define the user step of the configuration flow."""
-        errors = {}
+        errors: dict = {}
+
+        home_location = {
+            ATTR_LATITUDE: self.hass.config.latitude,
+            ATTR_LONGITUDE: self.hass.config.longitude,
+        }
 
         if user_input:
             _LOGGER.debug("Provided config user is: %s", user_input)
 
-            if (zone := self.hass.states.get(user_input[CONF_ZONE])) is None:
-                errors[CONF_ZONE] = "zone_not_exist"
+            lat: float = user_input[CONF_LOCATION][ATTR_LATITUDE]
+            lon: float = user_input[CONF_LOCATION][ATTR_LONGITUDE]
 
-            # Check if zone is in Benelux.
+            # Check if location is in Benelux.
             if not errors:
-                assert zone is not None  # Assert is here for mypy linting.
                 api_data = {}
                 try:
                     api_data = await IrmKmiApiClient(
                         session=async_get_clientsession(self.hass),
                         user_agent=USER_AGENT,
-                    ).get_forecasts_coord(
-                        {
-                            "lat": zone.attributes[ATTR_LATITUDE],
-                            "long": zone.attributes[ATTR_LONGITUDE],
-                        }
-                    )
+                    ).get_forecasts_coord({"lat": lat, "long": lon})
                 except IrmKmiApiError:
                     errors["base"] = "api_error"
                     _LOGGER.exception(
@@ -76,30 +74,21 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors[CONF_ZONE] = "out_of_benelux"
 
                 if not errors:
-                    await self.async_set_unique_id(user_input[CONF_ZONE])
+                    await self.async_set_unique_id(f"{lat}-{lon}")
                     self._abort_if_unique_id_configured()
 
-                    state = self.hass.states.get(user_input[CONF_ZONE])
-                    return self.async_create_entry(
-                        title=state.name if state else "IRM KMI",
-                        data={
-                            CONF_ZONE: user_input[CONF_ZONE],
-                        },
-                    )
+                    name: str = api_data.get("cityName", "")
+                    if user_input[CONF_LOCATION] == home_location:
+                        name = HOME_LOCATION_NAME
+
+                    return self.async_create_entry(title=name, data=user_input)
 
         return self.async_show_form(
             step_id="user",
-            errors=errors,
-            description_placeholders={
-                "zone": user_input.get("zone", "") if user_input is not None else ""
-            },
             data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_ZONE): EntitySelector(
-                        EntitySelectorConfig(domain=ZONE_DOMAIN)
-                    )
-                }
+                {vol.Required(CONF_LOCATION, default=home_location): LocationSelector()}
             ),
+            errors=errors,
         )
 
 
