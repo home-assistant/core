@@ -42,7 +42,7 @@ class IrmKmiWeather(CoordinatorEntity, WeatherEntity, IrmKmiBaseEntity):
         coordinator = entry.runtime_data.coordinator
         CoordinatorEntity.__init__(self, coordinator)
         WeatherEntity.__init__(self)
-        IrmKmiBaseEntity.__init__(self, entry)
+        IrmKmiBaseEntity.__init__(self, entry, "Forecast")
         self._name = entry.title
         self._attr_unique_id = entry.entry_id
 
