@@ -66,6 +66,7 @@ homeassistant.components.alarm_control_panel.*
 homeassistant.components.alert.*
 homeassistant.components.alexa.*
 homeassistant.components.alpha_vantage.*
+homeassistant.components.amazon_devices.*
 homeassistant.components.amazon_polly.*
 homeassistant.components.amberelectric.*
 homeassistant.components.ambient_network.*
@@ -270,6 +271,7 @@ homeassistant.components.image_processing.*
 homeassistant.components.image_upload.*
 homeassistant.components.imap.*
 homeassistant.components.imgw_pib.*
+homeassistant.components.immich.*
 homeassistant.components.incomfort.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
@@ -385,6 +387,7 @@ homeassistant.components.overseerr.*
 homeassistant.components.p1_monitor.*
 homeassistant.components.pandora.*
 homeassistant.components.panel_custom.*
+homeassistant.components.paperless_ngx.*
 homeassistant.components.peblar.*
 homeassistant.components.peco.*
 homeassistant.components.pegel_online.*

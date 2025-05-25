@@ -17,6 +17,8 @@ from .const import DOMAIN, PROCESS_ACTION, MieleActions, MieleAppliance
 from .coordinator import MieleConfigEntry
 from .entity import MieleEntity
 
+PARALLEL_UPDATES = 1
+
 _LOGGER = logging.getLogger(__name__)
 
 
