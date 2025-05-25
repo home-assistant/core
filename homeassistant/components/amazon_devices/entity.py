@@ -1,7 +1,9 @@
 """Defines a base Amazon Devices entity."""
 
+from typing import cast
+
 from aioamazondevices.api import AmazonDevice
-from aioamazondevices.const import DEVICE_TYPE_TO_MODEL
+from aioamazondevices.const import DEVICE_TYPE_TO_MODEL, SKEAKER_GROUP_MODEL
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -25,14 +27,21 @@ class AmazonEntity(CoordinatorEntity[AmazonDevicesCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._serial_num = serial_num
+        model_details: dict[str, str] = cast(
+            "dict", DEVICE_TYPE_TO_MODEL.get(self.device.device_type)
+        )
+        model = model_details["model"] if model_details else None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial_num)},
             name=self.device.account_name,
-            model=DEVICE_TYPE_TO_MODEL.get(self.device.device_type),
+            model=model,
+            model_id=self.device.device_type,
             manufacturer="Amazon",
-            hw_version=self.device.device_type,
-            sw_version=self.device.software_version,
-            serial_number=serial_num,
+            hw_version=model_details["hw_version"] if model_details else None,
+            sw_version=self.device.software_version
+            if model != SKEAKER_GROUP_MODEL
+            else None,
+            serial_number=serial_num if model != SKEAKER_GROUP_MODEL else None,
         )
         self.entity_description = description
         self._attr_unique_id = f"{serial_num}-{description.key}"

@@ -51,6 +51,6 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             await self.api.login_mode_stored_data()
             return await self.api.get_devices_data()
         except (CannotConnect, CannotRetrieveData) as err:
-            raise UpdateFailed(...) from err
+            raise UpdateFailed(f"Error occurred while updating {self.name}") from err
         except CannotAuthenticate as err:
             raise ConfigEntryError("Could not authenticate") from err
