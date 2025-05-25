@@ -235,11 +235,16 @@ async def test_config_already_exists(
 async def test_config_already_exists_reconfigure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_config_entry_two: MockConfigEntry,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test we only allow a single config if reconfiguring an entry."""
     mock_config_entry.add_to_hass(hass)
+    mock_config_entry_two = MockConfigEntry(
+        entry_id="J87G00V55WEVTJ0CJHM0GADBH5",
+        title="Paperless-ngx - Two",
+        domain=DOMAIN,
+        data=USER_INPUT_TWO,
+    )
     mock_config_entry_two.add_to_hass(hass)
 
     reconfigure_flow = await mock_config_entry_two.start_reconfigure_flow(hass)

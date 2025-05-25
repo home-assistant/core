@@ -31,7 +31,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'correspondent_count',
-    'unique_id': 'paperless_ngx_test_correspondent_count',
+    'unique_id': '0KLG00V55WEVTJ0CJHM0GADNGH_correspondent_count',
     'unit_of_measurement': 'correspondents',
   })
 # ---
@@ -82,7 +82,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'document_type_count',
-    'unique_id': 'paperless_ngx_test_document_type_count',
+    'unique_id': '0KLG00V55WEVTJ0CJHM0GADNGH_document_type_count',
     'unit_of_measurement': 'document types',
   })
 # ---
@@ -133,7 +133,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'documents_inbox',
-    'unique_id': 'paperless_ngx_test_documents_inbox',
+    'unique_id': '0KLG00V55WEVTJ0CJHM0GADNGH_documents_inbox',
     'unit_of_measurement': 'documents',
   })
 # ---
@@ -184,7 +184,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'tag_count',
-    'unique_id': 'paperless_ngx_test_tag_count',
+    'unique_id': '0KLG00V55WEVTJ0CJHM0GADNGH_tag_count',
     'unit_of_measurement': 'tags',
   })
 # ---
@@ -235,7 +235,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'characters_count',
-    'unique_id': 'paperless_ngx_test_characters_count',
+    'unique_id': '0KLG00V55WEVTJ0CJHM0GADNGH_characters_count',
     'unit_of_measurement': 'characters',
   })
 # ---
@@ -286,7 +286,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'documents_total',
-    'unique_id': 'paperless_ngx_test_documents_total',
+    'unique_id': '0KLG00V55WEVTJ0CJHM0GADNGH_documents_total',
     'unit_of_measurement': 'documents',
   })
 # ---

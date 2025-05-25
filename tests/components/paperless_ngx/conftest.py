@@ -11,7 +11,7 @@ from homeassistant.components.paperless_ngx.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-from .const import USER_INPUT_ONE, USER_INPUT_TWO
+from .const import USER_INPUT_ONE
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -59,21 +59,10 @@ def mock_paperless(mock_statistic_data: MagicMock) -> Generator[AsyncMock]:
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        entry_id="paperless_ngx_test",
+        entry_id="0KLG00V55WEVTJ0CJHM0GADNGH",
         title="Paperless-ngx",
         domain=DOMAIN,
         data=USER_INPUT_ONE,
-    )
-
-
-@pytest.fixture
-def mock_config_entry_two() -> MockConfigEntry:
-    """Return the default mocked config entry."""
-    return MockConfigEntry(
-        entry_id="paperless_ngx_test_two",
-        title="Paperless-ngx",
-        domain=DOMAIN,
-        data=USER_INPUT_TWO,
     )
 
 
