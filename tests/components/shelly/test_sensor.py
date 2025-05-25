@@ -1556,7 +1556,7 @@ async def test_rpc_switch_energy_sensors(
     await init_integration(hass, 3)
 
     for entity in ("energy", "returned_energy"):
-        entity_id = f"{SENSOR_DOMAIN}.test_switch_0_{entity}"
+        entity_id = f"{SENSOR_DOMAIN}.test_name_test_switch_0_{entity}"
 
         state = hass.states.get(entity_id)
         assert state == snapshot(name=f"{entity_id}-state")
@@ -1584,4 +1584,4 @@ async def test_rpc_switch_no_returned_energy_sensor(
     monkeypatch.setattr(mock_rpc_device, "status", status)
     await init_integration(hass, 3)
 
-    assert hass.states.get("sensor.test_switch_0_returned_energy") is None
+    assert hass.states.get("sensor.test_name_test_switch_0_returned_energy") is None

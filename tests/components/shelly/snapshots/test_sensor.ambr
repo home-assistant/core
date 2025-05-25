@@ -154,7 +154,7 @@
     'state': '0',
   })
 # ---
-# name: test_rpc_switch_energy_sensors[sensor.test_switch_0_energy-entry]
+# name: test_rpc_switch_energy_sensors[sensor.test_name_test_switch_0_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -169,8 +169,8 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_switch_0_energy',
-    'has_entity_name': False,
+    'entity_id': 'sensor.test_name_test_switch_0_energy',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -196,23 +196,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_rpc_switch_energy_sensors[sensor.test_switch_0_energy-state]
+# name: test_rpc_switch_energy_sensors[sensor.test_name_test_switch_0_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'test switch_0 energy',
+      'friendly_name': 'Test name test switch_0 energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_switch_0_energy',
+    'entity_id': 'sensor.test_name_test_switch_0_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1234.56789',
   })
 # ---
-# name: test_rpc_switch_energy_sensors[sensor.test_switch_0_returned_energy-entry]
+# name: test_rpc_switch_energy_sensors[sensor.test_name_test_switch_0_returned_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -227,8 +227,8 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_switch_0_returned_energy',
-    'has_entity_name': False,
+    'entity_id': 'sensor.test_name_test_switch_0_returned_energy',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -254,16 +254,16 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_rpc_switch_energy_sensors[sensor.test_switch_0_returned_energy-state]
+# name: test_rpc_switch_energy_sensors[sensor.test_name_test_switch_0_returned_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'test switch_0 returned energy',
+      'friendly_name': 'Test name test switch_0 returned energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_switch_0_returned_energy',
+    'entity_id': 'sensor.test_name_test_switch_0_returned_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
