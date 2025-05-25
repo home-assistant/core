@@ -27,8 +27,10 @@ from homeassistant.components.camera import (
     WebRTCError,
     WebRTCMessage,
     WebRTCSendMessage,
+    async_get_image,
 )
 from homeassistant.components.default_config import DOMAIN as DEFAULT_CONFIG_DOMAIN
+from homeassistant.components.go2rtc import HomeAssistant, WebRTCProvider
 from homeassistant.components.go2rtc.const import (
     CONF_DEBUG_UI,
     DEBUG_UI_URL_MESSAGE,
@@ -37,14 +39,14 @@ from homeassistant.components.go2rtc.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL
-from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from . import MockCamera
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture_bytes
 
 # The go2rtc provider does not inspect the details of the offer and answer,
 # and is only a pass through.
@@ -148,7 +150,7 @@ async def _test_setup_and_signaling(
     await test()
 
     rest_client.streams.add.assert_not_called()
-    assert camera.go2rtc_client
+    assert isinstance(camera._webrtc_provider, WebRTCProvider)
 
     # Set stream source to None and provider should be skipped
     rest_client.streams.list.return_value = {}
@@ -329,7 +331,7 @@ async def test_on_candidate(
     # Session doesn't exist
     await camera.async_on_webrtc_candidate(session_id, RTCIceCandidateInit("candidate"))
     assert (
-        "homeassistant.components.go2rtc.client",
+        "homeassistant.components.go2rtc",
         logging.DEBUG,
         f"Unknown session {session_id}. Ignoring candidate",
     ) in caplog.record_tuples
@@ -625,3 +627,29 @@ async def test_setup_with_recommended_version_repair(
         "recommended_version": RECOMMENDED_VERSION,
         "current_version": "1.9.5",
     }
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_async_get_image(
+    hass: HomeAssistant,
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test getting snapshot from go2rtc."""
+    camera = init_test_integration
+    assert isinstance(camera._webrtc_provider, WebRTCProvider)
+
+    image_bytes = load_fixture_bytes("snapshot.jpg", DOMAIN)
+
+    rest_client.get_jpeg_snapshot.return_value = image_bytes
+    assert await camera._webrtc_provider.async_get_image(camera) == image_bytes
+
+    image = await async_get_image(hass, camera.entity_id)
+    assert image.content == image_bytes
+
+    camera.set_stream_source("invalid://not_supported")
+
+    with pytest.raises(
+        HomeAssistantError, match="Stream source is not supported by go2rtc"
+    ):
+        await async_get_image(hass, camera.entity_id)
