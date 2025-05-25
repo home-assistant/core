@@ -32,8 +32,8 @@ class GeocachingCacheEntity(GeocachingBaseEntity):
         # A device can have multiple entities, and for a cache which requires multiple entities we want to group them together.
         # Therefore, we create a device for each cache, which holds all related entities.
         self._attr_device_info = DeviceInfo(
-            name=f"Geocache {cache.reference_code}",
+            name=f"Geocache {cache.name}",
             identifiers={(DOMAIN, cast(str, cache.reference_code))},
             entry_type=DeviceEntryType.SERVICE,
-            manufacturer="Groundspeak, Inc.",
+            manufacturer=cache.owner.username,
         )
