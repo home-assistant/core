@@ -94,7 +94,6 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
         self._power_state = 0  # default is Off
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._hvac_mode = HVACMode.OFF
-        self._power_state = 0  # default is Off
         self._target_temperature = None
         self._current_temperature = None
         self._attr_supported_features = (
@@ -102,6 +101,8 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
             | ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.SWING_MODE
             | ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
         )
 
         # Define fan modes here, this could depend on the device's capabilities
@@ -407,6 +408,22 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
         json_data = json.dumps(data)
 
         # Send the updated swing mode to the device
+        await self.set_thing_state(json_data)
+
+    async def async_turn_on(self) -> None:
+        """Turn on the climate device."""
+        _LOGGER.debug("Turning on the device: %s", self.entity_id)
+
+        data = prepare_device_payload(power=1)
+        json_data = json.dumps(data)
+        await self.set_thing_state(json_data)
+
+    async def async_turn_off(self) -> None:
+        """Turn off the climate device."""
+        _LOGGER.debug("Turning off the device: %s", self.entity_id)
+
+        data = prepare_device_payload(power=0)
+        json_data = json.dumps(data)
         await self.set_thing_state(json_data)
 
     async def set_thing_state(self, data):

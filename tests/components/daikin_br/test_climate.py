@@ -4,7 +4,12 @@ import json
 import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pyiotdevice import InvalidDataException, map_fan_speed, map_hvac_mode
+from pyiotdevice import (
+    InvalidDataException,
+    map_fan_speed,
+    map_hvac_mode,
+    prepare_device_payload,
+)
 import pytest
 
 from homeassistant.components.climate import (
@@ -1133,3 +1138,26 @@ async def test_handle_coordinator_update_valid_calls_write_state(
     )
     # Verify that the entity is marked as available.
     assert entity.available is True
+
+
+@pytest.mark.asyncio
+async def test_async_turn_on_and_off(hass: HomeAssistant, mock_config_entry) -> None:
+    """Test that async_turn_on and async_turn_off call set_thing_state with correct payload."""
+    # Create the entity and set up hass/context
+    climate_entity = DaikinClimate(mock_config_entry)
+    climate_entity.hass = hass
+    climate_entity.entity_id = "climate.test_device"
+
+    # Patch set_thing_state to be an AsyncMock
+    climate_entity.set_thing_state = AsyncMock()
+
+    # --- Turn On ---
+    await climate_entity.async_turn_on()
+    expected_on = json.dumps(prepare_device_payload(power=1))
+    climate_entity.set_thing_state.assert_awaited_once_with(expected_on)
+
+    # Reset and test Turn Off
+    climate_entity.set_thing_state.reset_mock()
+    await climate_entity.async_turn_off()
+    expected_off = json.dumps(prepare_device_payload(power=0))
+    climate_entity.set_thing_state.assert_awaited_once_with(expected_off)
