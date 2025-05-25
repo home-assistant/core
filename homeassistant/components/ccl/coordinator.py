@@ -29,7 +29,7 @@ class CCLCoordinator(DataUpdateCoordinator[..]):
             name=DOMAIN,
             always_update=True,
         )
-        self.device: CCLDevice = device
+        self.device = device
         self._data: dict[str, dict[str, CCLSensor]] = {}
 
     async def _async_update_data(self) -> dict[str, dict[str, CCLSensor]]:
