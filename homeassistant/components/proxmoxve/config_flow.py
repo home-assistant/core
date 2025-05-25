@@ -183,7 +183,6 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
                 selected_nodes.append(updated_node)
 
         user_input[CONF_NODES] = selected_nodes
-        assert self._user_input
         self._user_input |= user_input
 
         await self.async_set_unique_id(self._user_input[CONF_HOST])
