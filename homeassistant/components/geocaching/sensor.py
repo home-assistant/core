@@ -180,7 +180,7 @@ class GeoEntityCacheSensorEntity(GeoEntityBaseCache, SensorEntity):
         return self.entity_description.value_fn(self.cache)
 
 
-class GeocachingProfileSensor(GeocachingBaseEntity):
+class GeocachingProfileSensor(GeocachingBaseEntity, SensorEntity):
     """Representation of a Sensor."""
 
     entity_description: GeocachingSensorEntityDescription
