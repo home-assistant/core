@@ -11,7 +11,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.amazon_devices.const import SCAN_INTERVAL
+from homeassistant.components.amazon_devices.coordinator import SCAN_INTERVAL
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er

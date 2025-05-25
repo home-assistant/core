@@ -15,7 +15,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, CONF_LOGIN_DATA, SCAN_INTERVAL
+from .const import _LOGGER, CONF_LOGIN_DATA
+
+SCAN_INTERVAL = 30
 
 type AmazonConfigEntry = ConfigEntry[AmazonDevicesCoordinator]
 

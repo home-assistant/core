@@ -6,5 +6,3 @@ _LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "amazon_devices"
 CONF_LOGIN_DATA = "login_data"
-
-SCAN_INTERVAL = 30

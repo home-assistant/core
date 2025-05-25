@@ -38,9 +38,9 @@ class AmazonEntity(CoordinatorEntity[AmazonDevicesCoordinator]):
             model_id=self.device.device_type,
             manufacturer="Amazon",
             hw_version=model_details["hw_version"] if model_details else None,
-            sw_version=self.device.software_version
-            if model != SKEAKER_GROUP_MODEL
-            else None,
+            sw_version=(
+                self.device.software_version if model != SKEAKER_GROUP_MODEL else None
+            ),
             serial_number=serial_num if model != SKEAKER_GROUP_MODEL else None,
         )
         self.entity_description = description
