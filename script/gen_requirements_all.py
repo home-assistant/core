@@ -94,8 +94,6 @@ OVERRIDDEN_REQUIREMENTS_ACTIONS = {
     },
 }
 
-IGNORE_PIN = ("colorlog>2.1,<3", "urllib3")
-
 URL_PIN = (
     "https://developers.home-assistant.io/docs/"
     "creating_platform_code_review.html#1-requirements"
@@ -425,7 +423,7 @@ def process_requirements(
     for req in module_requirements:
         if "://" in req:
             errors.append(f"{package}[Only pypi dependencies are allowed: {req}]")
-        if req.partition("==")[1] == "" and req not in IGNORE_PIN:
+        if req.partition("==")[1] == "":
             errors.append(f"{package}[Please pin requirement {req}, see {URL_PIN}]")
         reqs.setdefault(req, []).append(package)
 
