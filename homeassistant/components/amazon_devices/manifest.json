@@ -5,6 +5,7 @@
   "config_flow": true,
   "dhcp": [
     { "macaddress": "10BF67*" },
+    { "macaddress": "4C1744*" },
     { "macaddress": "74D637*" },
     { "macaddress": "9CC8E9*" },
     { "macaddress": "C095CF*" }

@@ -32,6 +32,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "amazon_devices",
+        "macaddress": "4C1744*",
+    },
+    {
+        "domain": "amazon_devices",
         "macaddress": "74D637*",
     },
     {
