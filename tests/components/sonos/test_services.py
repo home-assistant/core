@@ -15,7 +15,7 @@ from homeassistant.components.media_player import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .conftest import MockSoCo, create_zgs_sonos_event
+from .conftest import MockSoCo, group_speakers, ungroup_speakers
 
 
 async def test_media_player_join(
@@ -52,11 +52,7 @@ async def test_media_player_join(
         await join_complete_event.wait()
         # Fire the ZGS event to update the speaker grouping as the join method is waiting
         # for the speakers to be regrouped.
-        event = create_zgs_sonos_event(
-            "zgs_group.xml", soco_living_room, soco_bedroom, create_uui_ds=True
-        )
-        soco_living_room.zoneGroupTopology.subscribe.return_value._callback(event)
-        soco_bedroom.zoneGroupTopology.subscribe.return_value._callback(event)
+        group_speakers(soco_living_room, soco_bedroom, create_uui_ds=True)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     # Code logs warning messages if the join is not successful, so we check
@@ -139,11 +135,7 @@ async def test_media_player_unjoin(
     soco_bedroom = sonos_setup_two_speakers[1]
 
     # First group the speakers together
-    event = create_zgs_sonos_event(
-        "zgs_group.xml", soco_living_room, soco_bedroom, create_uui_ds=True
-    )
-    soco_living_room.zoneGroupTopology.subscribe.return_value._callback(event)
-    soco_bedroom.zoneGroupTopology.subscribe.return_value._callback(event)
+    group_speakers(soco_living_room, soco_bedroom, create_uui_ds=True)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # Now that the speaker are joined, test unjoining
@@ -165,11 +157,7 @@ async def test_media_player_unjoin(
         await unjoin_complete_event.wait()
         # Fire the ZGS event to ungroup the speakers as the unjoin method is waiting
         # for the speakers to be ungrouped.
-        event = create_zgs_sonos_event(
-            "zgs_two_single.xml", soco_living_room, soco_bedroom, create_uui_ds=False
-        )
-        soco_living_room.zoneGroupTopology.subscribe.return_value._callback(event)
-        soco_bedroom.zoneGroupTopology.subscribe.return_value._callback(event)
+        ungroup_speakers(soco_living_room, soco_bedroom, create_uui_ds=False)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(caplog.records) == 0

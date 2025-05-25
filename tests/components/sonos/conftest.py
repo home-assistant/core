@@ -816,3 +816,25 @@ def create_zgs_sonos_event(
         variables["zone_player_uui_ds_in_group"] = f"{soco_1.uid},{soco_2.uid}"
     uui_ds = f"{soco_1.uid},{soco_2.uid}" if create_uui_ds else None
     return SonosMockEvent(soco_1, soco_1.zoneGroupTopology, variables, uui_ds)
+
+
+def group_speakers(
+    coordinator: MockSoCo, group_member: MockSoCo, create_uui_ds: bool
+) -> None:
+    """Generate events to group two speakers together."""
+    event = create_zgs_sonos_event(
+        "zgs_group.xml", coordinator, group_member, create_uui_ds=create_uui_ds
+    )
+    coordinator.zoneGroupTopology.subscribe.return_value._callback(event)
+    group_member.zoneGroupTopology.subscribe.return_value._callback(event)
+
+
+def ungroup_speakers(
+    coordinator: MockSoCo, group_member: MockSoCo, create_uui_ds: bool
+) -> None:
+    """Generate events to ungroup two speakers."""
+    event = create_zgs_sonos_event(
+        "zgs_two_single.xml", coordinator, group_member, create_uui_ds=create_uui_ds
+    )
+    coordinator.zoneGroupTopology.subscribe.return_value._callback(event)
+    group_member.zoneGroupTopology.subscribe.return_value._callback(event)

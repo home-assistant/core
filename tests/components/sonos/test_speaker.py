@@ -13,7 +13,7 @@ from homeassistant.components.sonos.const import DATA_SONOS, SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .conftest import MockSoCo, SonosMockEvent, create_zgs_sonos_event
+from .conftest import MockSoCo, SonosMockEvent, group_speakers, ungroup_speakers
 
 from tests.common import async_fire_time_changed, load_json_value_fixture
 
@@ -121,11 +121,8 @@ async def test_zgs_event_group_speakers(
     soco_br.play.reset_mock()
 
     # Test 2 - Group the speakers, living room is the coordinator
-    event = create_zgs_sonos_event(
-        "zgs_group.xml", soco_lr, soco_br, create_uui_ds=True
-    )
-    soco_lr.zoneGroupTopology.subscribe.return_value._callback(event)
-    soco_br.zoneGroupTopology.subscribe.return_value._callback(event)
+    group_speakers(soco_lr, soco_br, create_uui_ds=True)
+
     await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("media_player.living_room")
     assert state.attributes["group_members"] == [
@@ -147,11 +144,8 @@ async def test_zgs_event_group_speakers(
     soco_br.play.reset_mock()
 
     # Test 3 - Ungroup the speakers
-    event = create_zgs_sonos_event(
-        "zgs_two_single.xml", soco_lr, soco_br, create_uui_ds=False
-    )
-    soco_lr.zoneGroupTopology.subscribe.return_value._callback(event)
-    soco_br.zoneGroupTopology.subscribe.return_value._callback(event)
+    ungroup_speakers(soco_lr, soco_br, create_uui_ds=False)
+
     await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("media_player.living_room")
     assert state.attributes["group_members"] == ["media_player.living_room"]
@@ -185,11 +179,7 @@ async def test_zgs_avtransport_group_speakers(
     soco_br.play.reset_mock()
 
     # Test 2- Send a zgs event to return living room to its own coordinator
-    event = create_zgs_sonos_event(
-        "zgs_two_single.xml", soco_lr, soco_br, create_uui_ds=False
-    )
-    soco_lr.zoneGroupTopology.subscribe.return_value._callback(event)
-    soco_br.zoneGroupTopology.subscribe.return_value._callback(event)
+    ungroup_speakers(soco_lr, soco_br, create_uui_ds=False)
     await hass.async_block_till_done(wait_background_tasks=True)
     # Call should route to the living room
     await _media_play(hass, "media_player.living_room")
