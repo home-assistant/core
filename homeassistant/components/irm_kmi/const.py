@@ -28,13 +28,9 @@ OUT_OF_BENELUX: Final = [
 LANGS: Final = ["en", "fr", "nl", "de"]
 
 CONF_LANGUAGE_OVERRIDE: Final = "language_override"
-
 CONF_LANGUAGE_OVERRIDE_OPTIONS: Final = ["none", "fr", "nl", "de", "en"]
 
-REPAIR_SOLUTION: Final = "repair_solution"
-REPAIR_OPT_MOVE: Final = "repair_option_move"
-REPAIR_OPT_DELETE: Final = "repair_option_delete"
-REPAIR_OPTIONS: Final = [REPAIR_OPT_MOVE, REPAIR_OPT_DELETE]
+HOME_LOCATION_NAME = "Home"
 
 # Dict to map ('ww', 'dayNight') tuple from IRM KMI to HA conditions.
 IRM_KMI_TO_HA_CONDITION_MAP: Final = {

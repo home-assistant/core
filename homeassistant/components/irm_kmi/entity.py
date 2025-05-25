@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 class IrmKmiBaseEntity(Entity):
     """Base methods for IRM KMI entities."""
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry, name: str | None) -> None:
         """Init base properties for IRM KMI entities."""
         self._attr_attribution = (
             "Weather data from the Royal Meteorological Institute of Belgium meteo.be"
@@ -24,5 +24,5 @@ class IrmKmiBaseEntity(Entity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry.entry_id)},
             manufacturer=IRM_KMI_NAME.get(preferred_language(self.hass, entry)),
-            name=entry.title,
+            name=name if name is not None else entry.title,
         )
