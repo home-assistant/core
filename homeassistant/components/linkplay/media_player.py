@@ -7,13 +7,7 @@ import logging
 from typing import Any
 
 from linkplay.bridge import LinkPlayBridge
-from linkplay.consts import (
-    AudioOutputHwMode,
-    EqualizerMode,
-    LoopMode,
-    PlayingMode,
-    PlayingStatus,
-)
+from linkplay.consts import EqualizerMode, LoopMode, PlayingMode, PlayingStatus
 from linkplay.controller import LinkPlayController, LinkPlayMultiroom
 from linkplay.exceptions import LinkPlayRequestException
 import voluptuous as vol
@@ -31,11 +25,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_platform,
-)
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
@@ -116,31 +106,12 @@ SEEKABLE_FEATURES: MediaPlayerEntityFeature = (
     | MediaPlayerEntityFeature.SEEK
 )
 
-AUDIO_OUTPUT_HW_MODE_MAP: dict[AudioOutputHwMode, str] = {
-    AudioOutputHwMode.OPTICAL: "Optical",
-    AudioOutputHwMode.LINE_OUT: "Line Out",
-    AudioOutputHwMode.COAXIAL: "Coaxial",
-    AudioOutputHwMode.HEADPHONES: "Headphones",
-}
-
-AUDIO_OUTPUT_HW_MODE_MA_INV: dict[str, AudioOutputHwMode] = {
-    v: k for k, v in AUDIO_OUTPUT_HW_MODE_MAP.items()
-}
-
 SERVICE_PLAY_PRESET = "play_preset"
 ATTR_PRESET_NUMBER = "preset_number"
-SERVICE_AUDIO_OUTPUT_HW_MODE_SET = "audio_output_hw_mode_set"
-ATTR_AUDIO_OUTPUT_HW_MODE = "audio_output_hw_mode"
 
 SERVICE_PLAY_PRESET_SCHEMA = cv.make_entity_service_schema(
     {
         vol.Required(ATTR_PRESET_NUMBER): cv.positive_int,
-    }
-)
-
-SERVICE_AUDIO_OUTPUT_HW_MODE_SET_SCHEMA = cv.make_entity_service_schema(
-    {
-        vol.Required(ATTR_AUDIO_OUTPUT_HW_MODE): cv.string,
     }
 )
 
@@ -161,15 +132,6 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_PLAY_PRESET, SERVICE_PLAY_PRESET_SCHEMA, "async_play_preset"
     )
-
-    device_registry = dr.async_get(hass)
-    for dev_entry in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
-        if dev_entry.manufacturer == "WiiM":
-            platform.async_register_entity_service(
-                SERVICE_AUDIO_OUTPUT_HW_MODE_SET,
-                SERVICE_AUDIO_OUTPUT_HW_MODE_SET_SCHEMA,
-                "async_audio_output_hw_mode",
-            )
 
     # add entities
     async_add_entities([LinkPlayMediaPlayerEntity(entry.runtime_data.bridge)])
@@ -304,17 +266,6 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         """Play preset number."""
         try:
             await self._bridge.player.play_preset(preset_number)
-        except ValueError as err:
-            raise HomeAssistantError(err) from err
-
-    @exception_wrap
-    async def async_audio_output_hw_mode(self, audio_output_hw_mode: str) -> None:
-        """Send audio to a specific output."""
-        _LOGGER.debug("mode: %s", audio_output_hw_mode)
-        try:
-            await self._bridge.player.set_audio_output_hw_mode(
-                AUDIO_OUTPUT_HW_MODE_MA_INV[audio_output_hw_mode]
-            )
         except ValueError as err:
             raise HomeAssistantError(err) from err
 
