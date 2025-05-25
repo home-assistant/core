@@ -41,6 +41,9 @@ from .const import (
 )
 from .helpers import get_attribute
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 ATTR_LAST_UPDATE = "last_update"
 
 
@@ -219,6 +222,11 @@ class MetOfficeCurrentSensor(
             coordinates=hass_data[METOFFICE_COORDINATES], name=hass_data[METOFFICE_NAME]
         )
         self._attr_unique_id = f"{description.key}_{hass_data[METOFFICE_COORDINATES]}"
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self.coordinator.data.now() is not None
 
     @property
     def native_value(self) -> StateType:
