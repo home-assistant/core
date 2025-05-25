@@ -672,6 +672,33 @@ class ONVIFDevice:
             else:
                 LOGGER.error("Error trying to set Imaging settings: %s", err)
 
+    async def async_get_imaging_settings(
+        self,
+        profile: Profile,
+    ) -> dict:
+        """Get imaging settings from the ONVIF imaging service."""
+        # The Imaging Service is defined by ONVIF standard
+        # https://www.onvif.org/specs/srv/img/ONVIF-Imaging-Service-Spec-v210.pdf
+        if not self.capabilities.imaging:
+            LOGGER.warning(
+                "The imaging service is not supported on device '%s'", self.name
+            )
+            return None
+
+        imaging_service = await self.device.create_imaging_service()
+
+        try:
+            req = imaging_service.create_type("GetImagingSettings")
+            req.VideoSourceToken = profile.video_source_token
+            return await imaging_service.GetImagingSettings(req)
+        except ONVIFError as err:
+            if "Bad Request" in err.reason:
+                LOGGER.warning(
+                    "Device '%s' doesn't support the Imaging Service", self.name
+                )
+            else:
+                LOGGER.error("Error trying to get Imaging settings: %s", err)
+
 
 def get_device(
     hass: HomeAssistant,
