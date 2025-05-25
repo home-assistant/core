@@ -1,7 +1,5 @@
 """The Paperless-ngx integration."""
 
-from datetime import timedelta
-
 from pypaperless import Paperless
 from pypaperless.exceptions import (
     InitializationError,
@@ -28,9 +26,6 @@ from .coordinator import (
     PaperlessStatusCoordinator,
 )
 
-UPDATE_INTERVAL_STATISTICS = timedelta(seconds=120)
-UPDATE_INTERNAL_STATUS = timedelta(seconds=300)
-
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
@@ -39,15 +34,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) ->
 
     api = await _get_paperless_api(hass, entry)
 
-    statistics_coordinator = PaperlessStatisticCoordinator(
-        hass, entry, api, "statistics", UPDATE_INTERVAL_STATISTICS
-    )
+    statistics_coordinator = PaperlessStatisticCoordinator(hass, entry, api)
+    status_coordinator = PaperlessStatusCoordinator(hass, entry, api)
+
     await statistics_coordinator.async_config_entry_first_refresh()
 
     try:
-        status_coordinator = PaperlessStatusCoordinator(
-            hass, entry, api, "status", UPDATE_INTERNAL_STATUS
-        )
         await status_coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady as err:
         # Catch the error so the integration doesn't fail just because status coordinator fails.
@@ -77,6 +69,8 @@ async def _get_paperless_api(
     hass: HomeAssistant,
     entry: PaperlessConfigEntry,
 ) -> Paperless:
+    """Create and initialize paperless-ngx API."""
+
     api = Paperless(
         entry.data[CONF_URL],
         entry.data[CONF_API_KEY],

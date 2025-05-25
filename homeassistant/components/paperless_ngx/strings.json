@@ -83,53 +83,47 @@
         "state": {
           "ok": "Ok",
           "warning": "Warning",
-          "error": "Error",
-          "unknown": "Unknown"
+          "error": "Error"
         }
       },
       "index_status": {
         "name": "Status index",
         "state": {
-          "ok": "Ok",
-          "warning": "Warning",
-          "error": "Error",
-          "unknown": "Unknown"
+          "ok": "[%key:component::paperless_ngx::entity::sensor::database_status::state::ok%]",
+          "warning": "[%key:component::paperless_ngx::entity::sensor::database_status::state::warning%]",
+          "error": "[%key:component::paperless_ngx::entity::sensor::database_status::state::error%]"
         }
       },
       "classifier_status": {
         "name": "Status classifier",
         "state": {
-          "ok": "Ok",
-          "warning": "Warning",
-          "error": "Error",
-          "unknown": "Unknown"
+          "ok": "[%key:component::paperless_ngx::entity::sensor::database_status::state::ok%]",
+          "warning": "[%key:component::paperless_ngx::entity::sensor::database_status::state::warning%]",
+          "error": "[%key:component::paperless_ngx::entity::sensor::database_status::state::error%]"
         }
       },
       "celery_status": {
         "name": "Status celery",
         "state": {
-          "ok": "Ok",
-          "warning": "Warning",
-          "error": "Error",
-          "unknown": "Unknown"
+          "ok": "[%key:component::paperless_ngx::entity::sensor::database_status::state::ok%]",
+          "warning": "[%key:component::paperless_ngx::entity::sensor::database_status::state::warning%]",
+          "error": "[%key:component::paperless_ngx::entity::sensor::database_status::state::error%]"
         }
       },
       "redis_status": {
         "name": "Status redis",
         "state": {
-          "ok": "Ok",
-          "warning": "Warning",
-          "error": "Error",
-          "unknown": "Unknown"
+          "ok": "[%key:component::paperless_ngx::entity::sensor::database_status::state::ok%]",
+          "warning": "[%key:component::paperless_ngx::entity::sensor::database_status::state::warning%]",
+          "error": "[%key:component::paperless_ngx::entity::sensor::database_status::state::error%]"
         }
       },
       "sanity_check_status": {
         "name": "Status sanity",
         "state": {
-          "ok": "Ok",
-          "warning": "Warning",
-          "error": "Error",
-          "unknown": "Unknown"
+          "ok": "[%key:component::paperless_ngx::entity::sensor::database_status::state::ok%]",
+          "warning": "[%key:component::paperless_ngx::entity::sensor::database_status::state::warning%]",
+          "error": "[%key:component::paperless_ngx::entity::sensor::database_status::state::error%]"
         }
       }
     }

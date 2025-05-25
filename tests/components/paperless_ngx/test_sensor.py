@@ -10,7 +10,9 @@ from pypaperless.exceptions import (
 from pypaperless.models import Statistic
 import pytest
 
-from homeassistant.components.paperless_ngx import UPDATE_INTERVAL_STATISTICS
+from homeassistant.components.paperless_ngx.coordinator import (
+    UPDATE_INTERVAL_STATISTICS,
+)
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er

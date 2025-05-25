@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import TypeVar
@@ -25,6 +26,9 @@ from .const import DOMAIN, LOGGER
 type PaperlessConfigEntry = ConfigEntry[PaperlessData]
 
 TData = TypeVar("TData")
+
+UPDATE_INTERVAL_STATISTICS = timedelta(seconds=120)
+UPDATE_INTERVAL_STATUS = timedelta(seconds=300)
 
 
 @dataclass
@@ -84,13 +88,28 @@ class PaperlessCoordinator(DataUpdateCoordinator[TData]):
                 translation_key="forbidden",
             ) from err
 
+    @abstractmethod
     async def _async_update_data_internal(self) -> TData:
-        """Update data via library."""
-        raise NotImplementedError("Update method not implemented")
+        """Update data via paperless-ngx API."""
 
 
 class PaperlessStatisticCoordinator(PaperlessCoordinator[Statistic]):
     """Coordinator to manage Paperless-ngx statistic updates."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: PaperlessConfigEntry,
+        api: Paperless,
+    ) -> None:
+        """Initialize Paperless-ngx status coordinator."""
+        super().__init__(
+            hass,
+            entry,
+            api,
+            name="Statistics Coordinator",
+            update_interval=UPDATE_INTERVAL_STATISTICS,
+        )
 
     async def _async_update_data_internal(self) -> Statistic:
         """Fetch statistics data from API endpoint."""
@@ -99,6 +118,21 @@ class PaperlessStatisticCoordinator(PaperlessCoordinator[Statistic]):
 
 class PaperlessStatusCoordinator(PaperlessCoordinator[Status]):
     """Coordinator to manage Paperless-ngx status updates."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: PaperlessConfigEntry,
+        api: Paperless,
+    ) -> None:
+        """Initialize Paperless-ngx status coordinator."""
+        super().__init__(
+            hass,
+            entry,
+            api,
+            name="Status Coordinator",
+            update_interval=UPDATE_INTERVAL_STATUS,
+        )
 
     async def _async_update_data_internal(self) -> Status:
         """Fetch status data from API endpoint."""
