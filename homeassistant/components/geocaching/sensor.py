@@ -121,22 +121,19 @@ async def async_setup_entry(
 class GeoEntityBaseCache(GeocachingCacheEntity, SensorEntity):
     """Base class for cache entities."""
 
-    cache: GeocachingCache
-
     def __init__(
         self,
         coordinator: GeocachingDataUpdateCoordinator,
         cache: GeocachingCache,
-        entity_type: str,
+        key: str,
     ) -> None:
         """Initialize the Geocaching sensor."""
         super().__init__(coordinator, cache)
-        self.cache = cache
 
-        self._attr_unique_id = f"{DOMAIN}.{cache.reference_code}_{entity_type}"
+        self._attr_unique_id = f"{cache.reference_code}_{key}"
 
         # The translation key determines the name of the entity as this is the lookup for the `strings.json` file.
-        self._attr_translation_key = f"cache_{entity_type}"
+        self._attr_translation_key = f"cache_{key}"
 
 
 class GeoEntityCacheSensorEntity(GeoEntityBaseCache, SensorEntity):
