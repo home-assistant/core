@@ -116,7 +116,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     _proxmox_setup: dict[str, Any] | None = None
-    _user_input: dict[str, Any] | None = None
+    _user_input: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
