@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
 import logging
 
 from google_air_quality_api.model import AirQualityData
@@ -40,7 +39,7 @@ class AirQualitySensorEntityDescription(SensorEntityDescription):
     """Describes Air Quality sensor entity."""
 
     exists_fn: Callable[[AirQualityData], bool] = lambda _: True
-    value_fn: Callable[[AirQualityData], StateType | datetime]
+    value_fn: Callable[[AirQualityData], StateType]
 
 
 AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
@@ -180,6 +179,6 @@ class AirQualitySensorEntity(
         }
 
     @property
-    def native_value(self) -> StateType | datetime:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
