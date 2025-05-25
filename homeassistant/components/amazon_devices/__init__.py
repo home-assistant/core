@@ -5,7 +5,10 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
 
-PLATFORMS = [Platform.BINARY_SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.NOTIFY,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bool:
