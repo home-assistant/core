@@ -624,6 +624,27 @@ async def test_conversation_agent_with_assist(
     [
         ({}, {"num_ctx": 8192}),
         ({"num_ctx": 16384}, {"num_ctx": 16384}),
+        (
+            {ollama.CONF_CHAT_OPTIONS: "temperature: 0.65\nnum_thread: 10"},
+            {"num_ctx": 8192, "temperature": 0.65, "num_thread": 10},
+        ),
+        (
+            {
+                "num_ctx": 16384,
+                ollama.CONF_CHAT_OPTIONS: "temperature: 0.65\nnum_thread: 10",
+            },
+            {"num_ctx": 16384, "temperature": 0.65, "num_thread": 10},
+        ),
+        (
+            {
+                ollama.CONF_CHAT_OPTIONS: "num_ctx: 16384\ntemperature: 0.65\nnum_thread: 10"
+            },
+            {"num_ctx": 16384, "temperature": 0.65, "num_thread": 10},
+        ),
+        (
+            {ollama.CONF_CHAT_OPTIONS: "num_ctx: 16384\ninvalid_yaml\n"},
+            {"num_ctx": 8192},
+        ),
     ],
 )
 async def test_options(

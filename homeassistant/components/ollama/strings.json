@@ -30,11 +30,13 @@
           "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
           "max_history": "Max history messages",
           "num_ctx": "Context window size",
-          "keep_alive": "Keep alive"
+          "keep_alive": "Keep alive",
+          "chat_options": "Chat options"
         },
         "data_description": {
           "prompt": "Instruct how the LLM should respond. This can be a template.",
           "keep_alive": "Duration in seconds for Ollama to keep model in memory. -1 = indefinite, 0 = never.",
+          "chat_options": "Ollama chat request API options (in YAML format), e.g. \"temperature: 0.5\". This is an advanced tuning option. Check the Ollama API description for details.",
           "num_ctx": "Maximum number of text tokens the model can process. Lower to reduce Ollama RAM, or increase for a large number of exposed entities."
         }
       }

@@ -36,11 +36,13 @@ from homeassistant.helpers.selector import (
 from homeassistant.util.ssl import get_default_context
 
 from .const import (
+    CONF_CHAT_OPTIONS,
     CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
     CONF_MODEL,
     CONF_NUM_CTX,
     CONF_PROMPT,
+    DEFAULT_CHAT_OPTIONS,
     DEFAULT_KEEP_ALIVE,
     DEFAULT_MAX_HISTORY,
     DEFAULT_MODEL,
@@ -280,6 +282,12 @@ def ollama_config_option_schema(
                 min=-1, max=sys.maxsize, step=1, mode=NumberSelectorMode.BOX
             )
         ),
+        vol.Optional(
+            CONF_CHAT_OPTIONS,
+            description={
+                "suggested_value": options.get(CONF_CHAT_OPTIONS, DEFAULT_CHAT_OPTIONS)
+            },
+        ): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiline=True)),
     }
 
 
