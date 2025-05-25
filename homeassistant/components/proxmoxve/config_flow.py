@@ -149,8 +149,6 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the setup step."""
-        assert self._proxmox_setup
-
         if user_input is None:
             return self.async_show_form(
                 step_id="setup",
