@@ -181,6 +181,9 @@ aioairzone-cloud==0.6.12
 # homeassistant.components.airzone
 aioairzone==1.0.0
 
+# homeassistant.components.amazon_devices
+aioamazondevices==2.0.1
+
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
 aioambient==2024.08.0
@@ -1614,7 +1617,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.12.1
+opower==0.12.2
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
