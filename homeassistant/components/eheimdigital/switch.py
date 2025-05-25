@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import EheimDigitalConfigEntry, EheimDigitalUpdateCoordinator
-from .entity import EheimDigitalEntity
+from .entity import EheimDigitalEntity, exception_handler
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -58,10 +58,12 @@ class EheimDigitalClassicVarioSwitch(
         self._async_update_attrs()
 
     @override
+    @exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         await self._device.set_active(active=False)
 
     @override
+    @exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         await self._device.set_active(active=True)
 
