@@ -1,9 +1,6 @@
 {
   "entity": {
     "sensor": {
-      "wind_direction": {
-        "default": "mdi:windsock"
-      },
       "ch_sensor_type": {
         "default": "mdi:thermometer",
         "state": {
@@ -20,9 +17,6 @@
       },
       "aqi": {
         "default": "mdi:grain"
-      },
-      "battery": {
-        "default": "mdi:battery"
       },
       "leakage": {
         "default": "mdi:pipe-leak",

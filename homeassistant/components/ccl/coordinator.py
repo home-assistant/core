@@ -14,7 +14,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class CCLCoordinator(DataUpdateCoordinator[..]):
+class CCLCoordinator(DataUpdateCoordinator[dict[str, dict[str, CCLSensor]]]):
     """Class to manage processing CCL data."""
 
     def __init__(
@@ -30,7 +30,6 @@ class CCLCoordinator(DataUpdateCoordinator[..]):
             always_update=True,
         )
         self.device = device
-        self._data: dict[str, dict[str, CCLSensor]] = {}
 
     async def _async_update_data(self) -> dict[str, dict[str, CCLSensor]]:
         """Fetch data from CCL device."""
@@ -41,5 +40,4 @@ class CCLCoordinator(DataUpdateCoordinator[..]):
 
     def async_push_update(self, data) -> None:
         """Process data and update coordinator."""
-        self._data = data
-        self.async_set_updated_data(self._data)
+        self.async_set_updated_data(data)

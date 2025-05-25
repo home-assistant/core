@@ -31,7 +31,10 @@ rules:
     status: exempt
     comment: |
       The integration only receives and reads data from devices, no connection is needed.
-  unique-config-entry: done
+  unique-config-entry:
+    status: exempt
+    comment: |
+      Data will only be pushed to one config entry from the device via webhook.
   # Silver
   action-exceptions:
     status: exempt
@@ -53,7 +56,7 @@ rules:
   reauthentication-flow:
     status: exempt
     comment: |
-      The integration does not provide any authentication. 
+      The integration does not provide any authentication.
   test-coverage: done
   # Gold
   devices: done

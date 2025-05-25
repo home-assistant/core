@@ -58,9 +58,9 @@ CCL_SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     CCLSensorTypes.WIND_DIRECITON: SensorEntityDescription(
         key="WIND_DIRECTION",
-        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
         native_unit_of_measurement=DEGREE,
-        translation_key="wind_direction",
     ),
     CCLSensorTypes.WIND_SPEED: SensorEntityDescription(
         key="WIND_SPEED",
@@ -131,11 +131,14 @@ CCL_SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     CCLSensorTypes.AQI: SensorEntityDescription(
         key="AQI",
+        device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
         translation_key="aqi",
     ),
     CCLSensorTypes.BATTERY: SensorEntityDescription(
         key="BATTERY",
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
         translation_key="battery",
     ),
     CCLSensorTypes.LIGHTNING_DISTANCE: SensorEntityDescription(
@@ -188,8 +191,7 @@ async def async_setup_entry(
 
     if coordinator.data is not None:
         if "sensors" in coordinator.data:
-            for sensor in coordinator.data["sensors"].values():
-                _new_sensor(sensor)
+            _new_sensor(list(coordinator.data["sensors"].values()))
 
 
 class CCLSensorEntity(CCLEntity, SensorEntity):

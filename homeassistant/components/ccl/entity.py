@@ -2,18 +2,16 @@
 
 from __future__ import annotations
 
-from aioccl import CCLDevice, CCLSensor
+from aioccl import CCLSensor
 
-from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import CCLCoordinator
 
 
-class CCLEntity(CoordinatorEntity[..]):
+class CCLEntity(CoordinatorEntity[CCLCoordinator]):
     """Representation of a CCL Entity."""
 
     _attr_has_entity_name = True
@@ -51,9 +49,6 @@ class CCLEntity(CoordinatorEntity[..]):
     @property
     def available(self) -> bool:
         """Return the availability."""
-        return self._internal.value is not None
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self.async_write_ha_state()
+        if super().available:
+            return self._internal.value is not None
+        return False
