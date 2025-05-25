@@ -299,7 +299,7 @@ STATE_PROGRAM_PHASE_ROBOT_VACUUM_CLEANER = {
     5910: "remote_controlled",
     65535: "not_running",
 }
-STATE_PROGRAM_PHASE_MICROWAVE_OVEN_COMBO = {
+STATE_PROGRAM_PHASE_STEAM_OVEN = {
     0: "not_running",
     3863: "steam_reduction",
     7938: "process_running",
@@ -322,12 +322,19 @@ STATE_PROGRAM_PHASE: dict[int, dict[int, str]] = {
     MieleAppliance.DISHWASHER_SEMI_PROFESSIONAL: STATE_PROGRAM_PHASE_DISHWASHER,
     MieleAppliance.DISHWASHER_PROFESSIONAL: STATE_PROGRAM_PHASE_DISHWASHER,
     MieleAppliance.OVEN: STATE_PROGRAM_PHASE_OVEN,
-    MieleAppliance.OVEN_MICROWAVE: STATE_PROGRAM_PHASE_MICROWAVE_OVEN_COMBO,
-    MieleAppliance.STEAM_OVEN: STATE_PROGRAM_PHASE_OVEN,
+    MieleAppliance.OVEN_MICROWAVE: STATE_PROGRAM_PHASE_MICROWAVE,
+    MieleAppliance.STEAM_OVEN: STATE_PROGRAM_PHASE_STEAM_OVEN,
+    MieleAppliance.STEAM_OVEN_COMBI: STATE_PROGRAM_PHASE_OVEN
+    | STATE_PROGRAM_PHASE_STEAM_OVEN,
+    MieleAppliance.STEAM_OVEN_MICRO: STATE_PROGRAM_PHASE_MICROWAVE
+    | STATE_PROGRAM_PHASE_STEAM_OVEN,
+    MieleAppliance.STEAM_OVEN_MK2: STATE_PROGRAM_PHASE_OVEN
+    | STATE_PROGRAM_PHASE_STEAM_OVEN,
     MieleAppliance.DIALOG_OVEN: STATE_PROGRAM_PHASE_OVEN,
     MieleAppliance.MICROWAVE: STATE_PROGRAM_PHASE_MICROWAVE,
     MieleAppliance.COFFEE_SYSTEM: STATE_PROGRAM_PHASE_COFFEE_SYSTEM,
     MieleAppliance.ROBOT_VACUUM_CLEANER: STATE_PROGRAM_PHASE_ROBOT_VACUUM_CLEANER,
+    MieleAppliance.DISH_WARMER: STATE_PROGRAM_PHASE_WARMING_DRAWER,
 }
 
 
@@ -339,7 +346,7 @@ class StateProgramType(MieleEnum):
     automatic_program = 2
     cleaning_care_program = 3
     maintenance_program = 4
-    unknown = -9999
+    missing2none = -9999
 
 
 class StateDryingStep(MieleEnum):
@@ -353,7 +360,7 @@ class StateDryingStep(MieleEnum):
     hand_iron_2 = 5
     machine_iron = 6
     smoothing = 7
-    unknown = -9999
+    missing2none = -9999
 
 
 WASHING_MACHINE_PROGRAM_ID: dict[int, str] = {
@@ -428,15 +435,27 @@ DISHWASHER_PROGRAM_ID: dict[int, str] = {
 TUMBLE_DRYER_PROGRAM_ID: dict[int, str] = {
     -1: "no_program",  # Extrapolated from other device types.
     0: "no_program",  # Extrapolated from other device types
+    1: "automatic_plus",
     2: "cottons",
     3: "minimum_iron",
     4: "woollens_handcare",
     5: "delicates",
     6: "warm_air",
+    7: "cool_air",
     8: "express",
+    9: "cottons_eco",
     10: "automatic_plus",
+    12: "proofing",
+    13: "denim",
+    14: "shirts",
+    15: "sportswear",
+    16: "outerwear",
+    17: "silks_handcare",
+    19: "standard_pillows",
     20: "cottons",
+    22: "basket_program",
     23: "cottons_hygiene",
+    24: "steam_smoothing",
     30: "minimum_iron",
     31: "bed_linen",
     40: "woollens_handcare",

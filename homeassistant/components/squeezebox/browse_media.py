@@ -19,7 +19,7 @@ from homeassistant.components.media_player import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import is_internal_request
 
-from .const import UNPLAYABLE_TYPES
+from .const import DOMAIN, UNPLAYABLE_TYPES
 
 LIBRARY = [
     "favorites",
@@ -315,7 +315,14 @@ async def build_item_response(
             children.append(child_media)
 
     if children is None:
-        raise BrowseError(f"Media not found: {search_type} / {search_id}")
+        raise BrowseError(
+            translation_domain=DOMAIN,
+            translation_key="browse_media_not_found",
+            translation_placeholders={
+                "type": str(search_type),
+                "id": str(search_id),
+            },
+        )
 
     assert media_class["item"] is not None
     if not search_id:
@@ -398,7 +405,13 @@ async def generate_playlist(
     media_id = payload["search_id"]
 
     if media_type not in browse_media.squeezebox_id_by_type:
-        raise BrowseError(f"Media type not supported: {media_type}")
+        raise BrowseError(
+            translation_domain=DOMAIN,
+            translation_key="browse_media_type_not_supported",
+            translation_placeholders={
+                "media_type": str(media_type),
+            },
+        )
 
     browse_id = (browse_media.squeezebox_id_by_type[media_type], media_id)
     if media_type.startswith("app-"):
@@ -412,4 +425,11 @@ async def generate_playlist(
     if result and "items" in result:
         items: list = result["items"]
         return items
-    raise BrowseError(f"Media not found: {media_type} / {media_id}")
+    raise BrowseError(
+        translation_domain=DOMAIN,
+        translation_key="browse_media_not_found",
+        translation_placeholders={
+            "type": str(media_type),
+            "id": str(media_id),
+        },
+    )

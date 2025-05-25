@@ -111,13 +111,11 @@ class WebRTCClientConfiguration:
 
     configuration: RTCConfiguration = field(default_factory=RTCConfiguration)
     data_channel: str | None = None
-    get_candidates_upfront: bool = False
 
     def to_frontend_dict(self) -> dict[str, Any]:
         """Return a dict that can be used by the frontend."""
         data: dict[str, Any] = {
             "configuration": self.configuration.to_dict(),
-            "getCandidatesUpfront": self.get_candidates_upfront,
         }
         if self.data_channel is not None:
             data["dataChannel"] = self.data_channel
