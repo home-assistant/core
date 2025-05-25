@@ -9,6 +9,7 @@ from aiocomelit import ComelitSerialBridgeObject
 from aiocomelit.const import CLIMATE
 
 from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -17,18 +18,12 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    DOMAIN,
-    PRESET_MODE_AUTO,
-    PRESET_MODE_AUTO_TARGET_TEMP,
-    PRESET_MODE_MANUAL,
-)
+from .const import PRESET_MODE_AUTO, PRESET_MODE_AUTO_TARGET_TEMP, PRESET_MODE_MANUAL
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
 from .entity import ComelitBridgeBaseEntity
-from .utils import bridge_api_call
+from .utils import bridge_api_call, cleanup_stale_entity, load_api_data
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -95,10 +90,23 @@ async def async_setup_entry(
 
     coordinator = cast(ComelitSerialBridge, config_entry.runtime_data)
 
-    async_add_entities(
-        ComelitClimateEntity(coordinator, device, config_entry.entry_id)
-        for device in coordinator.data[CLIMATE].values()
-    )
+    entities: list[ClimateEntity] = []
+    for device in coordinator.data[CLIMATE].values():
+        values = load_api_data(device, CLIMATE_DOMAIN)
+        if values[0] == 0 and values[4] == 0:
+            # No climate data, device is only a humidifier/dehumidifier
+
+            await cleanup_stale_entity(
+                hass, config_entry, f"{config_entry.entry_id}-{device.index}", device
+            )
+
+            continue
+
+        entities.append(
+            ComelitClimateEntity(coordinator, device, config_entry.entry_id)
+        )
+
+    async_add_entities(entities)
 
 
 class ComelitClimateEntity(ComelitBridgeBaseEntity, ClimateEntity):
@@ -132,15 +140,7 @@ class ComelitClimateEntity(ComelitBridgeBaseEntity, ClimateEntity):
     def _update_attributes(self) -> None:
         """Update class attributes."""
         device = self.coordinator.data[CLIMATE][self._device.index]
-        if not isinstance(device.val, list):
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="invalid_clima_data"
-            )
-
-        # CLIMATE has a 2 item tuple:
-        # - first  for Clima
-        # - second for Humidifier
-        values = device.val[0]
+        values = load_api_data(device, CLIMATE_DOMAIN)
 
         _active = values[1]
         _mode = values[2]  # Values from API: "O", "L", "U"
