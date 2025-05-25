@@ -7,7 +7,7 @@ from collections.abc import AsyncGenerator, Callable
 from dataclasses import replace
 from typing import Any, Literal, cast
 
-from google.genai.errors import APIError
+from google.genai.errors import APIError, ClientError
 from google.genai.types import (
     AutomaticFunctionCallingConfig,
     Content,
@@ -262,18 +262,15 @@ async def _transform_stream(
 
             if (
                 candidate.finish_reason is not None
-                and candidate.finish_reason == "STOP"
+                and candidate.finish_reason != "STOP"
             ):
-                # End of the message
-                new_message = True
-            elif candidate.finish_reason is not None:
                 # The message ended due to a content error as explained in: https://ai.google.dev/api/generate-content#FinishReason
                 LOGGER.error(
                     "Error in Google Generative AI response: %s, see: https://ai.google.dev/api/generate-content#FinishReason",
                     candidate.finish_reason,
                 )
                 raise HomeAssistantError(
-                    f"Sorry, I had a problem getting a response from Google Generative AI. Reason: {candidate.finish_reason}"
+                    f"{ERROR_GETTING_RESPONSE} Reason: {candidate.finish_reason}"
                 )
 
             response_parts = (
@@ -308,7 +305,7 @@ async def _transform_stream(
             message = err.message
         else:
             message = type(err).__name__
-        error = f"Sorry, I had a problem talking to Google Generative AI: {message}"
+        error = f"{ERROR_GETTING_RESPONSE}: {message}"
         raise HomeAssistantError(error) from err
 
 
@@ -505,9 +502,19 @@ class GoogleGenerativeAIConversationEntity(
         chat_request: str | list[Part] = user_input.text
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
-            chat_response_generator = await chat.send_message_stream(
-                message=chat_request
-            )
+            try:
+                chat_response_generator = await chat.send_message_stream(
+                    message=chat_request
+                )
+            except (
+                APIError,
+                ClientError,
+                ValueError,
+            ) as err:
+                LOGGER.error("Error sending message: %s %s", type(err), err)
+                error = ERROR_GETTING_RESPONSE
+                raise HomeAssistantError(error) from err
+
             chat_request = _create_google_tool_response_parts(
                 [
                     content
@@ -524,9 +531,11 @@ class GoogleGenerativeAIConversationEntity(
 
         response = intent.IntentResponse(language=user_input.language)
         if not isinstance(chat_log.content[-1], conversation.AssistantContent):
-            raise TypeError(
-                f"Unexpected last message type: {type(chat_log.content[-1])}"
+            LOGGER.error(
+                "Last content in chat log is not an AssistantContent: %s. This could be due to the model not returning a valid response",
+                chat_log.content[-1],
             )
+            raise HomeAssistantError(f"{ERROR_GETTING_RESPONSE}")
         response.async_set_speech(chat_log.content[-1].content or "")
         return conversation.ConversationResult(
             response=response,
