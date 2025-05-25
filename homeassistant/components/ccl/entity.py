@@ -26,7 +26,7 @@ class CCLEntity(CoordinatorEntity[..]):
         """Initialize a CCL Entity."""
         super().__init__(coordinator)
         self._internal = internal
-        self._device: CCLDevice = coordinator.device
+        self._device = coordinator.device
 
         if internal.compartment is not None:
             self.device_id = (
