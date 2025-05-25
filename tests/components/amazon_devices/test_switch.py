@@ -54,6 +54,7 @@ async def test_switch_dnd(
         blocking=True,
     )
 
+    assert mock_amazon_devices_client.set_do_not_disturb.call_count == 1
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
@@ -64,5 +65,6 @@ async def test_switch_dnd(
         blocking=True,
     )
 
+    assert mock_amazon_devices_client.set_do_not_disturb.call_count == 2
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
