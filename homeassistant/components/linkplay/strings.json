@@ -43,7 +43,7 @@
     },
     "select": {
       "audio_output_hardware_mode": {
-        "name": "Audio Output Hardware Mode"
+        "name": "Audio output hardware mode"
       }
     }
   },
