@@ -11,6 +11,8 @@ from homeassistant.const import CONF_CODE, CONF_COUNTRY, CONF_PASSWORD, CONF_USE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .const import TEST_CODE, TEST_COUNTRY, TEST_PASSWORD, TEST_USERNAME
+
 from tests.common import MockConfigEntry
 
 
@@ -30,23 +32,23 @@ async def test_full_flow(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_COUNTRY: "IT",
-            CONF_USERNAME: "test",
-            CONF_PASSWORD: "test",
-            CONF_CODE: 123123,
+            CONF_COUNTRY: TEST_COUNTRY,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_CODE: TEST_CODE,
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test"
+    assert result["title"] == TEST_USERNAME
     assert result["data"] == {
-        CONF_COUNTRY: "IT",
-        CONF_USERNAME: "test",
-        CONF_PASSWORD: "test",
+        CONF_COUNTRY: TEST_COUNTRY,
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: TEST_PASSWORD,
         CONF_LOGIN_DATA: {
-            "customer_info": {"user_id": "test"},
+            "customer_info": {"user_id": TEST_USERNAME},
         },
     }
-    assert result["result"].unique_id == "test"
+    assert result["result"].unique_id == TEST_USERNAME
 
 
 @pytest.mark.parametrize(
@@ -77,10 +79,10 @@ async def test_flow_errors(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_COUNTRY: "IT",
-            CONF_USERNAME: "test",
-            CONF_PASSWORD: "test",
-            CONF_CODE: 123123,
+            CONF_COUNTRY: TEST_COUNTRY,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_CODE: TEST_CODE,
         },
     )
 
@@ -92,10 +94,10 @@ async def test_flow_errors(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_COUNTRY: "IT",
-            CONF_USERNAME: "test",
-            CONF_PASSWORD: "test",
-            CONF_CODE: 123123,
+            CONF_COUNTRY: TEST_COUNTRY,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_CODE: TEST_CODE,
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -121,10 +123,10 @@ async def test_already_configured(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_COUNTRY: "IT",
-            CONF_USERNAME: "test",
-            CONF_PASSWORD: "test",
-            CONF_CODE: 123123,
+            CONF_COUNTRY: TEST_COUNTRY,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_CODE: TEST_CODE,
         },
     )
 

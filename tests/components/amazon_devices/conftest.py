@@ -9,6 +9,8 @@ import pytest
 from homeassistant.components.amazon_devices.const import CONF_LOGIN_DATA, DOMAIN
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
 
+from .const import TEST_COUNTRY, TEST_PASSWORD, TEST_SERIAL_NUMBER, TEST_USERNAME
+
 from tests.common import MockConfigEntry
 
 
@@ -37,19 +39,19 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
     ):
         client = mock_client.return_value
         client.login_mode_interactive.return_value = {
-            "customer_info": {"user_id": "test"},
+            "customer_info": {"user_id": TEST_USERNAME},
         }
         client.get_devices_data.return_value = {
-            "test": AmazonDevice(
+            TEST_SERIAL_NUMBER: AmazonDevice(
                 account_name="Echo Test",
                 capabilities=["AUDIO_PLAYER", "MICROPHONE"],
                 device_family="mine",
                 device_type="echo",
-                device_owner_customer_id="test",
-                device_cluster_members=["test"],
+                device_owner_customer_id="amazon_ower_id",
+                device_cluster_members=[TEST_SERIAL_NUMBER],
                 online=True,
-                serial_number="test",
-                software_version="test",
+                serial_number=TEST_SERIAL_NUMBER,
+                software_version="echo_test_software_version",
                 do_not_disturb=False,
                 response_style=None,
                 bluetooth_state=True,
@@ -65,10 +67,10 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="Amazon Test Account",
         data={
-            CONF_COUNTRY: "IT",
-            CONF_USERNAME: "fake_email@gmail.com",
-            CONF_PASSWORD: "fake_password",
+            CONF_COUNTRY: TEST_COUNTRY,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
             CONF_LOGIN_DATA: {"session": "test-session"},
         },
-        unique_id="test",
+        unique_id=TEST_USERNAME,
     )

@@ -14,7 +14,7 @@
     'identifiers': set({
       tuple(
         'amazon_devices',
-        'test',
+        'echo_test_serial_number',
       ),
     }),
     'is_new': False,
@@ -26,9 +26,9 @@
     'name': 'Echo Test',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': 'test',
+    'serial_number': 'echo_test_serial_number',
     'suggested_area': None,
-    'sw_version': 'test',
+    'sw_version': 'echo_test_software_version',
     'via_device_id': None,
   })
 # ---
