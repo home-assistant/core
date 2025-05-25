@@ -268,7 +268,7 @@ aioimmich==0.6.0
 aiokafka==0.10.0
 
 # homeassistant.components.rehlko
-aiokem==0.5.11
+aiokem==0.5.12
 
 # homeassistant.components.lifx
 aiolifx-effects==0.3.2
@@ -444,7 +444,7 @@ amberelectric==2.0.12
 androidtv[async]==0.0.75
 
 # homeassistant.components.androidtv_remote
-androidtvremote2==0.2.1
+androidtvremote2==0.2.2
 
 # homeassistant.components.anova
 anova-wifi==0.17.0
@@ -1045,7 +1045,7 @@ imeon_inverter_api==0.3.12
 imgw_pib==1.0.10
 
 # homeassistant.components.incomfort
-incomfort-client==0.6.8
+incomfort-client==0.6.9
 
 # homeassistant.components.influxdb
 influxdb-client==1.48.0
@@ -1351,7 +1351,7 @@ openhomedevice==2.2.0
 openwebifpy==4.3.1
 
 # homeassistant.components.opower
-opower==0.12.1
+opower==0.12.2
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1708,7 +1708,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.8
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.4
+pylamarzocco==2.0.5
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -1989,7 +1989,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.10.2
 
 # homeassistant.components.linkplay
-python-linkplay==0.2.5
+python-linkplay==0.2.8
 
 # homeassistant.components.matter
 python-matter-server==7.0.0
