@@ -35,9 +35,6 @@ from .entity import VeSyncBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-MIN_HUMIDITY = 30
-MAX_HUMIDITY = 80
-
 VS_TO_HA_MODE_MAP = {
     VS_HUMIDIFIER_MODE_AUTO: MODE_AUTO,
     VS_HUMIDIFIER_MODE_HUMIDITY: MODE_AUTO,
@@ -94,8 +91,6 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     # The base VeSyncBaseEntity has _attr_has_entity_name and this is to follow the device name
     _attr_name = None
 
-    _attr_max_humidity = MAX_HUMIDITY
-    _attr_min_humidity = MIN_HUMIDITY
     _attr_supported_features = HumidifierEntityFeature.MODES
 
     # device: VeSyncHumidifierDevice
@@ -114,6 +109,8 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
 
         self._ha_to_vs_mode_map: dict[str, str] = {}
         self._available_modes: list[str] = []
+        self._attr_max_humidity = max(device.target_minmax)
+        self._attr_min_humidity = min(device.target_minmax)
 
         # Populate maps once.
         for vs_mode in self.device.mist_modes:

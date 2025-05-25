@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import math
 from typing import Any
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
@@ -170,10 +169,8 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         success = await self.device.set_manual_mode()
         if not success:
             raise HomeAssistantError("An error occurred while manual mode.")
-        success = self.device.change_fan_speed(
-            math.ceil(
-                percentage_to_ordered_list_item(self.device.fan_levels, percentage)
-            )
+        success = await self.device.change_fan_speed(
+            percentage_to_ordered_list_item(self.device.fan_levels, percentage)
         )
         if not success:
             raise HomeAssistantError("An error occurred while changing fan speed.")

@@ -30,6 +30,8 @@ class VeSyncNumberEntityDescription(NumberEntityDescription):
 
     exists_fn: Callable[[VeSyncBaseDevice], bool]
     value_fn: Callable[[VeSyncBaseDevice], float]
+    native_min_value_lambda: Callable[[VeSyncBaseDevice], float]
+    native_max_value_lambda: Callable[[VeSyncBaseDevice], float]
     set_value_fn: Callable[[VeSyncBaseDevice, float], Awaitable[bool]]
 
 
@@ -37,8 +39,8 @@ NUMBER_DESCRIPTIONS: list[VeSyncNumberEntityDescription] = [
     VeSyncNumberEntityDescription(
         key="mist_level",
         translation_key="mist_level",
-        native_min_value=1,
-        native_max_value=9,
+        native_min_value_lambda=lambda device: min(device.mist_levels),
+        native_max_value_lambda=lambda device: max(device.mist_levels),
         native_step=1,
         mode=NumberMode.SLIDER,
         exists_fn=is_humidifier,
@@ -108,7 +110,18 @@ class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
         """Return the value reported by the number."""
         return self.entity_description.value_fn(self.device)
 
+    @property
+    def native_min_value(self) -> float:
+        """Return the value reported by the number."""
+        return self.entity_description.native_min_value_lambda(self.device)
+
+    @property
+    def native_max_value(self) -> float:
+        """Return the value reported by the number."""
+        return self.entity_description.native_max_value_lambda(self.device)
+
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
+        # Doesn't set correct on mine.  Needs testing.
         if await self.entity_description.set_value_fn(self.device, value):
             await self.coordinator.async_request_refresh()

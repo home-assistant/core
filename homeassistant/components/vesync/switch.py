@@ -48,7 +48,7 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
     ),
     VeSyncSwitchEntityDescription(
         key="display",
-        is_on=lambda device: device.state.display_status,
+        is_on=lambda device: device.state.display_status == "on",
         exists_fn=lambda device: rgetattr(device, "state.display_status") is not None,
         translation_key="display",
         on_fn=lambda device: device.turn_on_display(),
