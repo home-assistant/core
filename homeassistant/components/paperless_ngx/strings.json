@@ -83,7 +83,7 @@
         "state": {
           "ok": "Ok",
           "warning": "Warning",
-          "error": "ERROR",
+          "error": "Error",
           "unknown": "Unknown"
         }
       },
