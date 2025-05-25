@@ -20,7 +20,9 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
@@ -178,7 +180,44 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
     # triggered by async_setup() from __init__.py
     async def async_step_import(self, import_data: dict[str, str]) -> ConfigFlowResult:
         """Handle import of config entry from configuration.yaml."""
-        return await self.async_step_user(import_data)
+        config_flow_result: ConfigFlowResult = await self.async_step_user(import_data)
+
+        if config_flow_result["type"] == FlowResultType.FORM:
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                "deprecated_yaml_import_issue_unknown",
+                breaks_in_ha_version="2025.9.0",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_yaml_import_issue_unknown",
+                translation_placeholders={
+                    "domain": DOMAIN,
+                    "integration_title": "Telegram Bot",
+                },
+                learn_more_url="https://github.com/home-assistant/core/pull/144617",
+            )
+
+            return self.async_abort(reason="import_failed")
+
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "deprecated_yaml",
+            breaks_in_ha_version="2025.9.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Telegram Bot",
+            },
+            learn_more_url="https://github.com/home-assistant/core/pull/144617",
+        )
+
+        return config_flow_result
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -201,9 +240,8 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.warning("Invalid API token")
                 errors["base"] = "invalid_api_key"
 
-            bot_name: str = user.full_name
-
             if not errors:
+                # create subentries for allowed chat IDs
                 subentries: list[ConfigSubentryData] = []
                 allowed_chat_ids: list[int] = user_input.get(CONF_ALLOWED_CHAT_IDS, [])
                 for chat_id in allowed_chat_ids:
@@ -216,6 +254,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     subentries.append(subentry)
 
+                bot_name: str = user.full_name
                 default_trusted_networks: list[str] = [
                     str(network) for network in DEFAULT_TRUSTED_NETWORKS
                 ]
