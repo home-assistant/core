@@ -108,7 +108,7 @@ def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> list[dict[str,
         )
 
     _LOGGER.debug("Nodes with data: %s", nodes_data)
-    return {"nodes": nodes_data}
+    return nodes_data
 
 
 class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
