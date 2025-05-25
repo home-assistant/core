@@ -123,13 +123,11 @@ async def async_setup_entry(
     status = coordinator.data
 
     # Add entities for tracked caches
-    for cache in status.tracked_caches:
-        entities.extend(
-            [
-                GeoEntityCacheSensorEntity(coordinator, cache, description)
-                for description in CACHE_SENSORS
-            ]
-        )
+    entities.extend(
+        GeoEntityCacheSensorEntity(coordinator, cache, description)
+        for cache in status.tracked_caches
+        for description in CACHE_SENSORS
+    )
 
     async_add_entities(entities)
 
@@ -139,7 +137,6 @@ async def async_setup_entry(
 class GeoEntityBaseCache(GeocachingCacheEntity, SensorEntity):
     """Base class for cache entities."""
 
-    _attr_has_entity_name = True
     cache: GeocachingCache
 
     def __init__(
@@ -162,7 +159,6 @@ class GeoEntityCacheSensorEntity(GeoEntityBaseCache, SensorEntity):
     """Representation of a cache sensor."""
 
     entity_description: GeocachingCacheSensorDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
