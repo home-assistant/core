@@ -287,7 +287,7 @@ def ollama_config_option_schema(
             description={
                 "suggested_value": options.get(CONF_CHAT_OPTIONS, DEFAULT_CHAT_OPTIONS)
             },
-        ): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiline=True)),
+        ): TemplateSelector(),
     }
 
 

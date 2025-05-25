@@ -177,7 +177,7 @@ async def test_options(
         ollama.CONF_PROMPT: "test prompt",
         ollama.CONF_MAX_HISTORY: 100,
         ollama.CONF_NUM_CTX: 32768,
-        ollama.CONF_CHAT_OPTIONS: "temperature: 0.65\nnum_thread: 8\n",
+        ollama.CONF_CHAT_OPTIONS: "temperature: 0.65\nnum_thread: 8",
     }
 
 
