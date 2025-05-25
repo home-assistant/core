@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[binary_sensor.echo_test_bluetooth_state-entry]
+# name: test_all_entities[binary_sensor.echo_test_bluetooth-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.echo_test_bluetooth_state',
+    'entity_id': 'binary_sensor.echo_test_bluetooth',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,7 +24,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
-    'original_name': 'Bluetooth state',
+    'original_name': 'Bluetooth',
     'platform': 'amazon_devices',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -33,14 +33,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.echo_test_bluetooth_state-state]
+# name: test_all_entities[binary_sensor.echo_test_bluetooth-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
-      'friendly_name': 'Echo Test Bluetooth state',
+      'friendly_name': 'Echo Test Bluetooth',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.echo_test_bluetooth_state',
+    'entity_id': 'binary_sensor.echo_test_bluetooth',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

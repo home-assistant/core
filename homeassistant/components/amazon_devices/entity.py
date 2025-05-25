@@ -3,7 +3,7 @@
 from typing import cast
 
 from aioamazondevices.api import AmazonDevice
-from aioamazondevices.const import DEVICE_TYPE_TO_MODEL, SKEAKER_GROUP_MODEL
+from aioamazondevices.const import DEVICE_TYPE_TO_MODEL, SPEAKER_GROUP_MODEL
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -39,9 +39,9 @@ class AmazonEntity(CoordinatorEntity[AmazonDevicesCoordinator]):
             manufacturer="Amazon",
             hw_version=model_details["hw_version"] if model_details else None,
             sw_version=(
-                self.device.software_version if model != SKEAKER_GROUP_MODEL else None
+                self.device.software_version if model != SPEAKER_GROUP_MODEL else None
             ),
-            serial_number=serial_num if model != SKEAKER_GROUP_MODEL else None,
+            serial_number=serial_num if model != SPEAKER_GROUP_MODEL else None,
         )
         self.entity_description = description
         self._attr_unique_id = f"{serial_num}-{description.key}"
