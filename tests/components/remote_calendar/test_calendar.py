@@ -1,11 +1,13 @@
 """Tests for calendar platform of Remote Calendar."""
 
 from datetime import datetime
+import pathlib
 import textwrap
 
 from httpx import Response
 import pytest
 import respx
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -20,6 +22,13 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry
+
+# Test data files with known calendars from various sources. You can add a new file
+# in the testdata directory and add it will be parsed and tested.
+TESTDATA_FILES = sorted(
+    pathlib.Path("tests/components/remote_calendar/testdata/").glob("*.ics")
+)
+TESTDATA_IDS = [f.stem for f in TESTDATA_FILES]
 
 
 @respx.mock
@@ -392,3 +401,24 @@ async def test_all_day_iter_order(
 
     events = await get_events("2022-10-06T00:00:00Z", "2022-10-09T00:00:00Z")
     assert [event["summary"] for event in events] == event_order
+
+
+@respx.mock
+@pytest.mark.parametrize("ics_filename", TESTDATA_FILES, ids=TESTDATA_IDS)
+async def test_calendar_examples(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    get_events: GetEventsFn,
+    ics_filename: pathlib.Path,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test parsing known calendars form test data files."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=ics_filename.read_text(),
+        )
+    )
+    await setup_integration(hass, config_entry)
+    events = await get_events("1997-07-14T00:00:00", "2025-07-01T00:00:00")
+    assert events == snapshot

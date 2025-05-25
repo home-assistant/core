@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN as BMW_DOMAIN, BMWConfigEntry
+from . import DOMAIN, BMWConfigEntry
 from .coordinator import BMWDataUpdateCoordinator
 from .entity import BMWBaseEntity
 
@@ -110,7 +110,7 @@ class BMWNumber(BMWBaseEntity, NumberEntity):
             await self.entity_description.remote_service(self.vehicle, value)
         except MyBMWAPIError as ex:
             raise HomeAssistantError(
-                translation_domain=BMW_DOMAIN,
+                translation_domain=DOMAIN,
                 translation_key="remote_service_error",
                 translation_placeholders={"exception": str(ex)},
             ) from ex

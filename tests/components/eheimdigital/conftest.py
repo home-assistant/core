@@ -1,6 +1,7 @@
 """Configurations for the EHEIM Digital tests."""
 
 from collections.abc import Generator
+from datetime import time, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from eheimdigital.classic_led_ctrl import EheimDigitalClassicLEDControl
@@ -46,6 +47,7 @@ def classic_led_ctrl_mock():
     classic_led_ctrl_mock.sw_version = "1.0.0_1.0.0"
     classic_led_ctrl_mock.light_mode = LightMode.DAYCL_MODE
     classic_led_ctrl_mock.light_level = (10, 39)
+    classic_led_ctrl_mock.sys_led = 20
     return classic_led_ctrl_mock
 
 
@@ -61,9 +63,14 @@ def heater_mock():
     heater_mock.temperature_unit = HeaterUnit.CELSIUS
     heater_mock.current_temperature = 24.2
     heater_mock.target_temperature = 25.5
+    heater_mock.temperature_offset = 0.1
+    heater_mock.night_temperature_offset = -0.2
     heater_mock.is_heating = True
     heater_mock.is_active = True
     heater_mock.operation_mode = HeaterMode.MANUAL
+    heater_mock.day_start_time = time(8, 0, tzinfo=timezone(timedelta(hours=1)))
+    heater_mock.night_start_time = time(20, 0, tzinfo=timezone(timedelta(hours=1)))
+    heater_mock.sys_led = 20
     return heater_mock
 
 
@@ -77,6 +84,13 @@ def classic_vario_mock():
     classic_vario_mock.aquarium_name = "Mock Aquarium"
     classic_vario_mock.sw_version = "1.0.0_1.0.0"
     classic_vario_mock.current_speed = 75
+    classic_vario_mock.manual_speed = 75
+    classic_vario_mock.day_speed = 80
+    classic_vario_mock.day_start_time = time(8, 0, tzinfo=timezone(timedelta(hours=1)))
+    classic_vario_mock.night_start_time = time(
+        20, 0, tzinfo=timezone(timedelta(hours=1))
+    )
+    classic_vario_mock.night_speed = 20
     classic_vario_mock.is_active = True
     classic_vario_mock.filter_mode = FilterMode.MANUAL
     classic_vario_mock.error_code = FilterErrorCode.NO_ERROR

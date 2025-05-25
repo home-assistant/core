@@ -63,6 +63,8 @@ from .utils import (
     is_rpc_wifi_stations_disabled,
 )
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class BlockSensorDescription(BlockEntityDescription, SensorEntityDescription):
@@ -833,6 +835,21 @@ RPC_SENSORS: Final = {
         suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "ret_energy": RpcSensorDescription(
+        key="switch",
+        sub_key="ret_aenergy",
+        name="Returned energy",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value=lambda status, _: status["total"],
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        removal_condition=lambda _config, status, key: (
+            status[key].get("ret_aenergy") is None
+        ),
     ),
     "energy_light": RpcSensorDescription(
         key="light",

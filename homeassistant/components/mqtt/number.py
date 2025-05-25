@@ -70,8 +70,8 @@ MQTT_NUMBER_ATTRIBUTES_BLOCKED = frozenset(
 
 def validate_config(config: ConfigType) -> ConfigType:
     """Validate that the configuration is valid, throws if it isn't."""
-    if config[CONF_MIN] >= config[CONF_MAX]:
-        raise vol.Invalid(f"'{CONF_MAX}' must be > '{CONF_MIN}'")
+    if config[CONF_MIN] > config[CONF_MAX]:
+        raise vol.Invalid(f"{CONF_MAX} must be >= {CONF_MIN}")
 
     return config
 
