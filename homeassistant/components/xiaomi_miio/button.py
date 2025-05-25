@@ -11,20 +11,13 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    DOMAIN,
-    KEY_COORDINATOR,
-    KEY_DEVICE,
-    MODEL_AIRFRESH_A1,
-    MODEL_AIRFRESH_T2017,
-    MODELS_VACUUM,
-)
+from .const import MODEL_AIRFRESH_A1, MODEL_AIRFRESH_T2017, MODELS_VACUUM
 from .entity import XiaomiCoordinatedMiioEntity
+from .typing import XiaomiMiioConfigEntry
 
 # Fans
 ATTR_RESET_DUST_FILTER = "reset_dust_filter"
@@ -123,7 +116,7 @@ MODEL_TO_BUTTON_MAP: dict[str, tuple[str, ...]] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: XiaomiMiioConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the button from a config entry."""
@@ -135,8 +128,8 @@ async def async_setup_entry(
     entities = []
     buttons = MODEL_TO_BUTTON_MAP[model]
     unique_id = config_entry.unique_id
-    device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
+    device = config_entry.runtime_data.device
+    coordinator = config_entry.runtime_data.device_coordinator
 
     for description in BUTTON_TYPES:
         if description.key not in buttons:

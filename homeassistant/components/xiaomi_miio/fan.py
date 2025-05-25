@@ -30,7 +30,6 @@ from miio.integrations.fan.zhimi.zhimi_miot import (
 import voluptuous as vol
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_DEVICE, CONF_MODEL
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
@@ -64,8 +63,6 @@ from .const import (
     FEATURE_FLAGS_FAN_ZA5,
     FEATURE_RESET_FILTER,
     FEATURE_SET_EXTRA_FEATURES,
-    KEY_COORDINATOR,
-    KEY_DEVICE,
     MODEL_AIRFRESH_A1,
     MODEL_AIRFRESH_T2017,
     MODEL_AIRPURIFIER_2H,
@@ -94,7 +91,7 @@ from .const import (
     SERVICE_SET_EXTRA_FEATURES,
 )
 from .entity import XiaomiCoordinatedMiioEntity
-from .typing import ServiceMethodDetails
+from .typing import ServiceMethodDetails, XiaomiMiioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -204,7 +201,7 @@ FAN_DIRECTIONS_MAP = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: XiaomiMiioConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Fan from a config entry."""
@@ -218,8 +215,8 @@ async def async_setup_entry(
 
     model = config_entry.data[CONF_MODEL]
     unique_id = config_entry.unique_id
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
-    device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+    device = config_entry.runtime_data.device
+    coordinator = config_entry.runtime_data.device_coordinator
 
     if model in (MODEL_AIRPURIFIER_3C, MODEL_AIRPURIFIER_3C_REV_A):
         entity = XiaomiAirPurifierMB4(

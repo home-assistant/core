@@ -1,0 +1,307 @@
+# serializer version: 1
+# name: test_sensor_platform[sensor.paperless_ngx_correspondents-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.paperless_ngx_correspondents',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Correspondents',
+    'platform': 'paperless_ngx',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'correspondent_count',
+    'unique_id': 'paperless_ngx_test_correspondent_count',
+    'unit_of_measurement': 'correspondents',
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_correspondents-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Paperless-ngx Correspondents',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'correspondents',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.paperless_ngx_correspondents',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '99',
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_document_types-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.paperless_ngx_document_types',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Document types',
+    'platform': 'paperless_ngx',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'document_type_count',
+    'unique_id': 'paperless_ngx_test_document_type_count',
+    'unit_of_measurement': 'document types',
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_document_types-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Paperless-ngx Document types',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'document types',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.paperless_ngx_document_types',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '99',
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_documents_in_inbox-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.paperless_ngx_documents_in_inbox',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Documents in inbox',
+    'platform': 'paperless_ngx',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'documents_inbox',
+    'unique_id': 'paperless_ngx_test_documents_inbox',
+    'unit_of_measurement': 'documents',
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_documents_in_inbox-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Paperless-ngx Documents in inbox',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'documents',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.paperless_ngx_documents_in_inbox',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9',
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_tags-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.paperless_ngx_tags',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tags',
+    'platform': 'paperless_ngx',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'tag_count',
+    'unique_id': 'paperless_ngx_test_tag_count',
+    'unit_of_measurement': 'tags',
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_tags-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Paperless-ngx Tags',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'tags',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.paperless_ngx_tags',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '99',
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_total_characters-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.paperless_ngx_total_characters',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total characters',
+    'platform': 'paperless_ngx',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'characters_count',
+    'unique_id': 'paperless_ngx_test_characters_count',
+    'unit_of_measurement': 'characters',
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_total_characters-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Paperless-ngx Total characters',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'characters',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.paperless_ngx_total_characters',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '99999',
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_total_documents-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.paperless_ngx_total_documents',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total documents',
+    'platform': 'paperless_ngx',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'documents_total',
+    'unique_id': 'paperless_ngx_test_documents_total',
+    'unit_of_measurement': 'documents',
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_total_documents-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Paperless-ngx Total documents',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'documents',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.paperless_ngx_total_documents',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '999',
+  })
+# ---

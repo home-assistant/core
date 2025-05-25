@@ -110,6 +110,38 @@ async def test_command_switch_turn_on_off(
     )
 
 
+@pytest.mark.parametrize("device_fixture", ["da_ref_normal_000001"])
+@pytest.mark.parametrize(
+    ("action", "command"),
+    [
+        (SERVICE_TURN_ON, Command.ACTIVATE),
+        (SERVICE_TURN_OFF, Command.DEACTIVATE),
+    ],
+)
+async def test_custom_commands(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    action: str,
+    command: Command,
+) -> None:
+    """Test switch turn on and off command."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        action,
+        {ATTR_ENTITY_ID: "switch.refrigerator_power_cool"},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "7db87911-7dce-1cf2-7119-b953432a2f09",
+        Capability.SAMSUNG_CE_POWER_COOL,
+        command,
+        MAIN,
+    )
+
+
 @pytest.mark.parametrize("device_fixture", ["c2c_arlo_pro_3_switch"])
 async def test_state_update(
     hass: HomeAssistant,
