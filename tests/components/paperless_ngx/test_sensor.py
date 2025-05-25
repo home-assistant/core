@@ -1,7 +1,5 @@
 """Tests for Paperless-ngx sensor platform."""
 
-from datetime import timedelta
-
 from freezegun.api import FrozenDateTimeFactory
 from pypaperless.exceptions import (
     PaperlessConnectionError,
@@ -12,7 +10,7 @@ from pypaperless.exceptions import (
 from pypaperless.models import Statistic
 import pytest
 
-from homeassistant.components.paperless_ngx.coordinator import UPDATE_INTERVAL
+from homeassistant.components.paperless_ngx import UPDATE_INTERVAL_STATISTICS
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -61,7 +59,7 @@ async def test_statistic_sensor_state(
         )
     )
 
-    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
+    freezer.tick(UPDATE_INTERVAL_STATISTICS)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -91,7 +89,7 @@ async def test__statistic_sensor_state_on_error(
     # simulate error
     mock_paperless.statistics.side_effect = error_cls
 
-    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
+    freezer.tick(UPDATE_INTERVAL_STATISTICS)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -105,7 +103,7 @@ async def test__statistic_sensor_state_on_error(
         )
     )
 
-    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
+    freezer.tick(UPDATE_INTERVAL_STATISTICS)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

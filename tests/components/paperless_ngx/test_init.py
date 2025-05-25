@@ -37,7 +37,7 @@ async def test_load_unload_config_entry(
 @pytest.mark.parametrize(
     ("side_effect", "expected_state", "expected_error_key"),
     [
-        (PaperlessConnectionError(), ConfigEntryState.SETUP_RETRY, None),
+        (PaperlessConnectionError(), ConfigEntryState.SETUP_RETRY, "cannot_connect"),
         (PaperlessInvalidTokenError(), ConfigEntryState.SETUP_ERROR, "invalid_api_key"),
         (
             PaperlessInactiveOrDeletedError(),

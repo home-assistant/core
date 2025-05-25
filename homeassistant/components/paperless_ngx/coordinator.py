@@ -2,38 +2,41 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
+from typing import TypeVar
 
 from pypaperless import Paperless
 from pypaperless.exceptions import (
-    InitializationError,
     PaperlessConnectionError,
     PaperlessForbiddenError,
     PaperlessInactiveOrDeletedError,
     PaperlessInvalidTokenError,
 )
-from pypaperless.models import Statistic
+from pypaperless.models import Statistic, Status
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryError,
-    ConfigEntryNotReady,
-)
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
 
-type PaperlessConfigEntry = ConfigEntry[PaperlessCoordinator]
+type PaperlessConfigEntry = ConfigEntry[PaperlessData]
 
-UPDATE_INTERVAL = 120
+TData = TypeVar("TData")
 
 
-class PaperlessCoordinator(DataUpdateCoordinator[Statistic]):
-    """Coordinator to manage Paperless-ngx statistic updates."""
+@dataclass
+class PaperlessData:
+    """Data for the Paperless-ngx integration."""
+
+    statistics: PaperlessStatisticCoordinator
+    status: PaperlessStatusCoordinator
+
+
+class PaperlessCoordinator(DataUpdateCoordinator[TData]):
+    """Coordinator to manage fetching Paperless-ngx API."""
 
     config_entry: PaperlessConfigEntry
 
@@ -41,28 +44,27 @@ class PaperlessCoordinator(DataUpdateCoordinator[Statistic]):
         self,
         hass: HomeAssistant,
         entry: PaperlessConfigEntry,
+        api: Paperless,
+        name: str,
+        update_interval: timedelta,
     ) -> None:
-        """Initialize my coordinator."""
+        """Initialize Paperless-ngx statistics coordinator."""
+        self.api = api
+
         super().__init__(
             hass,
             LOGGER,
             config_entry=entry,
-            name="Paperless-ngx Coordinator",
-            update_interval=timedelta(seconds=UPDATE_INTERVAL),
+            name=name,
+            update_interval=update_interval,
         )
 
-        self.api = Paperless(
-            entry.data[CONF_URL],
-            entry.data[CONF_API_KEY],
-            session=async_get_clientsession(self.hass),
-        )
-
-    async def _async_setup(self) -> None:
+    async def _async_update_data(self) -> TData:
+        """Update data via internal method."""
         try:
-            await self.api.initialize()
-            await self.api.statistics()  # test permissions on api
+            return await self._async_update_data_internal()
         except PaperlessConnectionError as err:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             ) from err
@@ -77,37 +79,27 @@ class PaperlessCoordinator(DataUpdateCoordinator[Statistic]):
                 translation_key="user_inactive_or_deleted",
             ) from err
         except PaperlessForbiddenError as err:
-            raise ConfigEntryError(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="forbidden",
-            ) from err
-        except InitializationError as err:
-            raise ConfigEntryError(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
             ) from err
 
-    async def _async_update_data(self) -> Statistic:
-        """Fetch data from API endpoint."""
-        try:
-            return await self.api.statistics()
-        except PaperlessConnectionError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            ) from err
-        except PaperlessForbiddenError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="forbidden",
-            ) from err
-        except PaperlessInvalidTokenError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_api_key",
-            ) from err
-        except PaperlessInactiveOrDeletedError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="user_inactive_or_deleted",
-            ) from err
+    async def _async_update_data_internal(self) -> TData:
+        """Update data via library."""
+        raise NotImplementedError("Update method not implemented")
+
+
+class PaperlessStatisticCoordinator(PaperlessCoordinator[Statistic]):
+    """Coordinator to manage Paperless-ngx statistic updates."""
+
+    async def _async_update_data_internal(self) -> Statistic:
+        """Fetch statistics data from API endpoint."""
+        return await self.api.statistics()
+
+
+class PaperlessStatusCoordinator(PaperlessCoordinator[Status]):
+    """Coordinator to manage Paperless-ngx status updates."""
+
+    async def _async_update_data_internal(self) -> Status:
+        """Fetch status data from API endpoint."""
+        return await self.api.status()

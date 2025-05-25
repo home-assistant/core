@@ -71,6 +71,66 @@
       "document_type_count": {
         "name": "Document types",
         "unit_of_measurement": "document types"
+      },
+      "storage_total": {
+        "name": "Total storage"
+      },
+      "storage_available": {
+        "name": "Available storage"
+      },
+      "database_status": {
+        "name": "Status database",
+        "state": {
+          "ok": "Ok",
+          "warning": "Warning",
+          "error": "ERROR",
+          "unknown": "Unknown"
+        }
+      },
+      "index_status": {
+        "name": "Status index",
+        "state": {
+          "ok": "Ok",
+          "warning": "Warning",
+          "error": "Error",
+          "unknown": "Unknown"
+        }
+      },
+      "classifier_status": {
+        "name": "Status classifier",
+        "state": {
+          "ok": "Ok",
+          "warning": "Warning",
+          "error": "Error",
+          "unknown": "Unknown"
+        }
+      },
+      "celery_status": {
+        "name": "Status celery",
+        "state": {
+          "ok": "Ok",
+          "warning": "Warning",
+          "error": "Error",
+          "unknown": "Unknown"
+        }
+      },
+      "redis_status": {
+        "name": "Status redis",
+        "state": {
+          "ok": "Ok",
+          "warning": "Warning",
+          "error": "Error",
+          "unknown": "Unknown"
+        }
+      },
+      "sanity_check_status": {
+        "name": "Status sanity",
+        "state": {
+          "ok": "Ok",
+          "warning": "Warning",
+          "error": "Error",
+          "unknown": "Unknown"
+        }
       }
     }
   },
