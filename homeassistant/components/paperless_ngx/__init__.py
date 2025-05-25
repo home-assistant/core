@@ -39,14 +39,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) ->
 
     api = await _get_paperless_api(hass, entry)
 
-    try:
-        statistics_coordinator = PaperlessStatisticCoordinator(
-            hass, entry, api, "statistics", UPDATE_INTERVAL_STATISTICS
-        )
-        await statistics_coordinator.async_config_entry_first_refresh()
-    except ConfigEntryNotReady as err:
-        # Catch the error so the integration doesn't fail just because one coordinator fails.
-        LOGGER.warning("Could not initialize statistics coordinator: %s", err)
+    statistics_coordinator = PaperlessStatisticCoordinator(
+        hass, entry, api, "statistics", UPDATE_INTERVAL_STATISTICS
+    )
+    await statistics_coordinator.async_config_entry_first_refresh()
 
     try:
         status_coordinator = PaperlessStatusCoordinator(
