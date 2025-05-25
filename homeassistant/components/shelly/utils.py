@@ -131,7 +131,7 @@ def get_block_channel_name(device: BlockDevice, block: Block | None) -> str | No
     """Get name based on device and channel name."""
     if (
         not block
-        or block.type in ("device", "light", "relay")
+        or block.type in ("device", "light", "relay", "emeter")
         or get_number_of_channels(device, block) == 1
     ):
         return None
@@ -145,10 +145,6 @@ def get_block_channel_name(device: BlockDevice, block: Block | None) -> str | No
 
     if channel_name:
         return channel_name
-
-    if device.settings["device"]["type"] == MODEL_EM3:
-        base = ord("A")
-        return f"Channel {chr(int(block.channel) + base)}"
 
     base = ord("1")
 
@@ -164,6 +160,10 @@ def get_block_sub_device_name(device: BlockDevice, block: Block) -> str:
     if mode in device.settings:
         if channel_name := device.settings[mode][int(block.channel)].get("name"):
             return cast(str, channel_name)
+
+    if device.settings["device"]["type"] == MODEL_EM3:
+        base = ord("A")
+        return f"{device.name} Phase {chr(int(block.channel) + base)}"
 
     base = ord("1")
 
@@ -809,7 +809,7 @@ def get_block_device_info(
     """Return device info for Block device."""
     if (
         block is None
-        or block.type not in ("light", "relay")
+        or block.type not in ("light", "relay", "emeter")
         or device.settings.get("mode") == "roller"
         or get_number_of_channels(device, block) < 2
     ):
