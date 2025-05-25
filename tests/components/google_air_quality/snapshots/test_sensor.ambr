@@ -24,30 +24,31 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.CO: 'carbon_monoxide'>,
     'original_icon': None,
     'original_name': 'Carbon monoxide',
     'platform': 'google_air_quality',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'carbon_monoxide',
+    'translation_key': None,
     'unique_id': 'co_48_9',
-    'unit_of_measurement': 'ppb',
+    'unit_of_measurement': 'ppm',
   })
 # ---
 # name: test_sensor_snapshot[sensor.48_9_carbon_monoxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'carbon_monoxide',
       'friendly_name': '48_9 Carbon monoxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppb',
+      'unit_of_measurement': 'ppm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.48_9_carbon_monoxide',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '269.02',
+    'state': '0.26902',
   })
 # ---
 # name: test_sensor_snapshot[sensor.48_9_lqi_de_category-entry]

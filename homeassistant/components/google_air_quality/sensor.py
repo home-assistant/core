@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
 )
@@ -91,10 +92,10 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
     ),
     AirQualitySensorEntityDescription(
         key="co",
-        translation_key="carbon_monoxide",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
-        value_fn=lambda x: x.pollutants.co.concentration.value,
+        device_class=SensorDeviceClass.CO,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        value_fn=lambda x: x.pollutants.co.concentration.value / 1000,
     ),
     AirQualitySensorEntityDescription(
         key="no2",

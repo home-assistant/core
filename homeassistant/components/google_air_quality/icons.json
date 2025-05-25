@@ -1,9 +1,6 @@
 {
   "entity": {
     "sensor": {
-      "carbon_monoxide": {
-        "default": "mdi:molecule-co"
-      },
       "nitrogen_dioxide": {
         "default": "mdi:molecule"
       },
