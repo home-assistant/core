@@ -158,7 +158,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
                             SelectSelectorConfig(
                                 options=[
                                     node["node"]
-                                    for node in self._proxmox_setup["nodes"]
+                                    for node in self._proxmox_nodes
                                 ],
                                 mode=SelectSelectorMode.LIST,
                                 multiple=True,
