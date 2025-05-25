@@ -73,14 +73,6 @@ class GeocachingCacheSensorDescription(SensorEntityDescription):
 
 CACHE_SENSORS: tuple[GeocachingCacheSensorDescription, ...] = (
     GeocachingCacheSensorDescription(
-        key="found",
-        value_fn=lambda cache: None
-        if cache.found_by_user is None
-        else "Yes"
-        if cache.found_by_user is True
-        else "No",
-    ),
-    GeocachingCacheSensorDescription(
         key="found_date",
         device_class=SensorDeviceClass.DATE,
         value_fn=lambda cache: cache.found_date_time,
