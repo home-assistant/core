@@ -56,6 +56,9 @@
       },
       "tilt": {
         "name": "Tilt"
+      },
+      "valve_state": {
+        "name": "Heating"
       }
     },
     "button": {
@@ -210,6 +213,12 @@
       },
       "down_delay": {
         "name": "Down delay"
+      },
+      "backlight_brightness": {
+        "name": "Backlight brightness"
+      },
+      "temperature_correction": {
+        "name": "Temperature correction"
       }
     },
     "select": {
@@ -448,6 +457,13 @@
           "3": "Mood 3",
           "4": "Mood 4",
           "5": "Mood 5"
+        }
+      },
+      "sensor_choose": {
+        "name": "Sensor selection",
+        "state": {
+          "out": "External",
+          "in": "Internal"
         }
       },
       "weather_delay": {
@@ -833,6 +849,18 @@
       },
       "energy_saving": {
         "name": "Energy saving"
+      },
+      "open_valve_detection": {
+        "name": "Valve Open detection"
+      },
+      "keypad_sound": {
+        "name": "Keypad sound"
+      },
+      "economy_mode": {
+        "name": "Economy mode"
+      },
+      "frost_protection": {
+        "name": "Frost protection"
       },
       "open_window_detection": {
         "name": "Open window detection"
