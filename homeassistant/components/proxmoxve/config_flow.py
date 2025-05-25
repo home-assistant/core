@@ -54,7 +54,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> list[dict[str, Any]]:
     """Validate the user input and fetch data."""
 
     def create_proxmox_client() -> ProxmoxAPI:
