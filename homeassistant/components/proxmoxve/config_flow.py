@@ -115,7 +115,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Proxmox VE."""
 
     VERSION = 1
-    _proxmox_setup: dict[str, Any] | None = None
+    _proxmox_nodes: list[dict[str, Any]] = []
     _user_input: dict[str, Any] = {}
 
     async def async_step_user(
