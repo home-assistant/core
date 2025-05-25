@@ -14,7 +14,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class BresserCoordinator(DataUpdateCoordinator):
+class BresserCoordinator(DataUpdateCoordinator[dict[str, dict[str, CCLSensor]]]):
     """Class to manage processing Bresser data."""
 
     def __init__(
@@ -30,7 +30,6 @@ class BresserCoordinator(DataUpdateCoordinator):
             always_update=True,
         )
         self.device: CCLDevice = device
-        self._data: dict[str, dict[str, CCLSensor]] = {}
 
     async def _async_update_data(self) -> dict[str, dict[str, CCLSensor]]:
         """Fetch data from GARNI device."""
@@ -41,5 +40,4 @@ class BresserCoordinator(DataUpdateCoordinator):
 
     def async_push_update(self, data) -> None:
         """Process data and update coordinator."""
-        self._data = data
-        self.async_set_updated_data(self._data)
+        self.async_set_updated_data(data)
