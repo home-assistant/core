@@ -8,6 +8,7 @@ import logging
 from typing import Any
 
 from linkplay.bridge import LinkPlayPlayer
+from linkplay.manufacturers import MANUFACTURER_WIIM
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
@@ -55,7 +56,7 @@ async def async_setup_entry(
     for dev_entry in dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     ):
-        if dev_entry.manufacturer == "WiiM":
+        if dev_entry.manufacturer == MANUFACTURER_WIIM:
             async_add_entities(
                 LinkPlaySelect(config_entry.runtime_data.bridge, description)
                 for description in SELECT_TYPES_WIIM
