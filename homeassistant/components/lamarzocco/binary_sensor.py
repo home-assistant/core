@@ -61,7 +61,10 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.RUNNING,
         is_on_fn=(
             lambda machine: cast(
-                BackFlush, machine.dashboard.config.get(WidgetType.CM_BACK_FLUSH)
+                BackFlush,
+                machine.dashboard.config.get(
+                    WidgetType.CM_BACK_FLUSH, BackFlush(status=BackFlushStatus.OFF)
+                ),
             ).status
             is BackFlushStatus.REQUESTED
         ),
