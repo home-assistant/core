@@ -23,7 +23,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION
-from .coordinator import AmberConfigEntry, AmberUpdateCoordinator, normalize_descriptor
+from .coordinator import AmberConfigEntry, AmberUpdateCoordinator
+from .helpers import normalize_descriptor
 
 UNIT = f"{CURRENCY_DOLLAR}/{UnitOfEnergy.KILO_WATT_HOUR}"
 
