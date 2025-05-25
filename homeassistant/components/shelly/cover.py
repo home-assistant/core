@@ -248,12 +248,10 @@ class RpcShellyCover(ShellyRpcEntity, CoverEntity):
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         await self.call_rpc("Cover.GoToPosition", {"id": self._id, "slat_pos": 100})
-        self.launch_update_task()
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         await self.call_rpc("Cover.GoToPosition", {"id": self._id, "slat_pos": 0})
-        self.launch_update_task()
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
@@ -261,7 +259,6 @@ class RpcShellyCover(ShellyRpcEntity, CoverEntity):
             "Cover.GoToPosition",
             {"id": self._id, "slat_pos": kwargs[ATTR_TILT_POSITION]},
         )
-        self.launch_update_task()
 
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover."""
