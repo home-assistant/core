@@ -36,6 +36,8 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType as HAMediaType,
     RepeatMode,
+    SearchMedia,
+    SearchMediaQuery,
     async_process_play_media_url,
 )
 from homeassistant.const import ATTR_NAME, STATE_OFF
@@ -74,7 +76,7 @@ from .const import (
     DOMAIN,
 )
 from .entity import MusicAssistantEntity
-from .media_browser import async_browse_media
+from .media_browser import async_browse_media, async_search_media
 from .schemas import QUEUE_DETAILS_SCHEMA, queue_item_dict_from_mass_item
 
 if TYPE_CHECKING:
@@ -91,6 +93,7 @@ SUPPORTED_FEATURES_BASE = (
     | MediaPlayerEntityFeature.PLAY_MEDIA
     | MediaPlayerEntityFeature.CLEAR_PLAYLIST
     | MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.SEARCH_MEDIA
     | MediaPlayerEntityFeature.MEDIA_ENQUEUE
     | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
     | MediaPlayerEntityFeature.SEEK
@@ -151,6 +154,11 @@ async def async_setup_entry(
             assert event.object_id is not None
         if event.object_id in added_ids:
             return
+        player = mass.players.get(event.object_id)
+        if TYPE_CHECKING:
+            assert player is not None
+        if not player.expose_to_ha:
+            return
         added_ids.add(event.object_id)
         async_add_entities([MusicAssistantPlayer(mass, event.object_id)])
 
@@ -159,6 +167,8 @@ async def async_setup_entry(
     mass_players = []
     # add all current players
     for player in mass.players:
+        if not player.expose_to_ha:
+            continue
         added_ids.add(player.player_id)
         mass_players.append(MusicAssistantPlayer(mass, player.player_id))
 
@@ -587,6 +597,13 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             self.mass,
             media_content_id,
             media_content_type,
+        )
+
+    async def async_search_media(self, query: SearchMediaQuery) -> SearchMedia:
+        """Search media."""
+        return await async_search_media(
+            self.mass,
+            query,
         )
 
     def _update_media_image_url(

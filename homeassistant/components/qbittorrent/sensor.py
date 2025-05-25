@@ -218,7 +218,7 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         key=SENSOR_TYPE_PAUSED_TORRENTS,
         translation_key="paused_torrents",
         value_fn=lambda coordinator: count_torrents_in_states(
-            coordinator, ["pausedDL", "pausedUP"]
+            coordinator, ["stoppedDL", "stoppedUP"]
         ),
     ),
 )

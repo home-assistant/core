@@ -57,7 +57,7 @@
       "3": "[%key:component::hue::device_automation::trigger_subtype::button_3%]",
       "4": "[%key:component::hue::device_automation::trigger_subtype::button_4%]",
       "clock_wise": "Rotation clockwise",
-      "counter_clock_wise": "Rotation counter-clockwise"
+      "counter_clock_wise": "Rotation counterclockwise"
     },
     "trigger_type": {
       "remote_button_long_release": "\"{subtype}\" released after long press",
@@ -96,7 +96,7 @@
           "event_type": {
             "state": {
               "clock_wise": "Clockwise",
-              "counter_clock_wise": "Counter clockwise"
+              "counter_clock_wise": "Counterclockwise"
             }
           }
         }
@@ -196,6 +196,12 @@
           "description": "Set brightness for the scene."
         }
       }
+    }
+  },
+  "issues": {
+    "deprecated_effect_none": {
+      "title": "Light turned on with deprecated effect",
+      "description": "A light was turned on with the deprecated effect `None`. This has been replaced with `off`. Please update any automations, scenes, or scripts that use this effect."
     }
   }
 }

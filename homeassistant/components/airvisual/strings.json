@@ -16,8 +16,8 @@
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "city": "City",
-          "country": "Country",
-          "state": "State"
+          "state": "State",
+          "country": "[%key:common::config_flow::data::country%]"
         }
       },
       "reauth_confirm": {
@@ -56,12 +56,12 @@
     "sensor": {
       "pollutant_label": {
         "state": {
-          "co": "Carbon monoxide",
-          "n2": "Nitrogen dioxide",
-          "o3": "Ozone",
-          "p1": "PM10",
-          "p2": "PM2.5",
-          "s2": "Sulfur dioxide"
+          "co": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+          "n2": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
+          "o3": "[%key:component::sensor::entity_component::ozone::name%]",
+          "p1": "[%key:component::sensor::entity_component::pm10::name%]",
+          "p2": "[%key:component::sensor::entity_component::pm25::name%]",
+          "s2": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
         }
       },
       "pollutant_level": {

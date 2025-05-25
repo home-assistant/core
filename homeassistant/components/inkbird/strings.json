@@ -17,5 +17,10 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "exceptions": {
+    "no_advertisement": {
+      "message": "The device with address {address} is not advertising; Make sure it is in range and powered on."
+    }
   }
 }

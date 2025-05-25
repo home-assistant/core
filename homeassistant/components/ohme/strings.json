@@ -89,7 +89,7 @@
         "state": {
           "smart_charge": "Smart charge",
           "max_charge": "Max charge",
-          "paused": "Paused"
+          "paused": "[%key:common::state::paused%]"
         }
       },
       "vehicle": {
@@ -100,8 +100,8 @@
       "status": {
         "name": "Status",
         "state": {
-          "unplugged": "Unplugged",
-          "plugged_in": "Plugged in",
+          "unplugged": "[%key:component::binary_sensor::entity_component::plug::state::off%]",
+          "plugged_in": "[%key:component::binary_sensor::entity_component::plug::state::on%]",
           "charging": "[%key:common::state::charging%]",
           "paused": "[%key:common::state::paused%]",
           "pending_approval": "Pending approval",
@@ -140,7 +140,7 @@
   },
   "exceptions": {
     "auth_failed": {
-      "message": "Unable to login to Ohme"
+      "message": "Unable to log in to Ohme"
     },
     "device_info_failed": {
       "message": "Unable to get Ohme device information"

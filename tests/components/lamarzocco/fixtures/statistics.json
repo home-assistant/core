@@ -1,26 +1,183 @@
-[
-  {
-    "count": 1047,
-    "coffeeType": 0
-  },
-  {
-    "count": 560,
-    "coffeeType": 1
-  },
-  {
-    "count": 468,
-    "coffeeType": 2
-  },
-  {
-    "count": 312,
-    "coffeeType": 3
-  },
-  {
-    "count": 2252,
-    "coffeeType": 4
-  },
-  {
-    "coffeeType": -1,
-    "count": 1740
-  }
-]
+{
+  "serialNumber": "MR123456",
+  "type": "CoffeeMachine",
+  "name": "MR123456",
+  "location": null,
+  "modelCode": "LINEAMICRA",
+  "modelName": "LINEA MICRA",
+  "connected": true,
+  "connectionDate": 1742526019892,
+  "offlineMode": false,
+  "requireFirmwareUpdate": false,
+  "availableFirmwareUpdate": false,
+  "coffeeStation": null,
+  "imageUrl": "https://lion.lamarzocco.io/img/thing-model/detail/lineamicra/lineamicra-1-c-bianco.png",
+  "bleAuthToken": null,
+  "firmwares": null,
+  "selectedWidgetCodes": ["COFFEE_AND_FLUSH_TREND", "LAST_COFFEE"],
+  "allWidgetCodes": ["LAST_COFFEE", "COFFEE_AND_FLUSH_TREND"],
+  "selectedWidgets": [
+    {
+      "code": "COFFEE_AND_FLUSH_TREND",
+      "index": 1,
+      "output": {
+        "days": 7,
+        "timezone": "Europe/Berlin",
+        "coffees": [
+          { "timestamp": 1741993200000, "value": 2 },
+          { "timestamp": 1742079600000, "value": 2 },
+          { "timestamp": 1742166000000, "value": 2 },
+          { "timestamp": 1742252400000, "value": 2 },
+          { "timestamp": 1742338800000, "value": 4 },
+          { "timestamp": 1742425200000, "value": 3 },
+          { "timestamp": 1742511600000, "value": 1 }
+        ],
+        "flushes": [
+          { "timestamp": 1741993200000, "value": 1 },
+          { "timestamp": 1742079600000, "value": 1 },
+          { "timestamp": 1742166000000, "value": 0 },
+          { "timestamp": 1742252400000, "value": 0 },
+          { "timestamp": 1742338800000, "value": 4 },
+          { "timestamp": 1742425200000, "value": 2 },
+          { "timestamp": 1742511600000, "value": 1 }
+        ]
+      }
+    },
+    {
+      "code": "LAST_COFFEE",
+      "index": 1,
+      "output": {
+        "lastCoffees": [
+          {
+            "time": 1742535679203,
+            "extractionSeconds": 30.44,
+            "doseMode": "Continuous",
+            "doseIndex": "Continuous",
+            "doseValue": null,
+            "doseValueNumerator": null
+          },
+          {
+            "time": 1742489827722,
+            "extractionSeconds": 10.8,
+            "doseMode": "Continuous",
+            "doseIndex": "Continuous",
+            "doseValue": null,
+            "doseValueNumerator": null
+          },
+          {
+            "time": 1742448826919,
+            "extractionSeconds": 12.457,
+            "doseMode": "Continuous",
+            "doseIndex": "Continuous",
+            "doseValue": null,
+            "doseValueNumerator": null
+          },
+          {
+            "time": 1742448702812,
+            "extractionSeconds": 23.504,
+            "doseMode": "Continuous",
+            "doseIndex": "Continuous",
+            "doseValue": null,
+            "doseValueNumerator": null
+          },
+          {
+            "time": 1742396255439,
+            "extractionSeconds": 16.031,
+            "doseMode": "Continuous",
+            "doseIndex": "Continuous",
+            "doseValue": null,
+            "doseValueNumerator": null
+          },
+          {
+            "time": 1742396142154,
+            "extractionSeconds": 27.413,
+            "doseMode": "Continuous",
+            "doseIndex": "Continuous",
+            "doseValue": null,
+            "doseValueNumerator": null
+          },
+          {
+            "time": 1742364379903,
+            "extractionSeconds": 14.182,
+            "doseMode": "Continuous",
+            "doseIndex": "Continuous",
+            "doseValue": null,
+            "doseValueNumerator": null
+          },
+          {
+            "time": 1742364235304,
+            "extractionSeconds": 23.228,
+            "doseMode": "Continuous",
+            "doseIndex": "Continuous",
+            "doseValue": null,
+            "doseValueNumerator": null
+          },
+          {
+            "time": 1742277098548,
+            "extractionSeconds": 12.98,
+            "doseMode": "PulsesType",
+            "doseIndex": "DoseA",
+            "doseValue": 0,
+            "doseValueNumerator": null
+          },
+          {
+            "time": 1742277006774,
+            "extractionSeconds": 26.99,
+            "doseMode": "PulsesType",
+            "doseIndex": "DoseA",
+            "doseValue": 0,
+            "doseValueNumerator": null
+          },
+          {
+            "time": 1742190219197,
+            "extractionSeconds": 11.069,
+            "doseMode": "PulsesType",
+            "doseIndex": "DoseA",
+            "doseValue": 0,
+            "doseValueNumerator": null
+          },
+          {
+            "time": 1742190123385,
+            "extractionSeconds": 35.472,
+            "doseMode": "PulsesType",
+            "doseIndex": "DoseA",
+            "doseValue": 0,
+            "doseValueNumerator": null
+          },
+          {
+            "time": 1742106228119,
+            "extractionSeconds": 11.494,
+            "doseMode": "PulsesType",
+            "doseIndex": "DoseA",
+            "doseValue": 0,
+            "doseValueNumerator": null
+          },
+          {
+            "time": 1742106147433,
+            "extractionSeconds": 39.915,
+            "doseMode": "PulsesType",
+            "doseIndex": "DoseA",
+            "doseValue": 0,
+            "doseValueNumerator": null
+          },
+          {
+            "time": 1742017890205,
+            "extractionSeconds": 13.891,
+            "doseMode": "PulsesType",
+            "doseIndex": "DoseA",
+            "doseValue": 0,
+            "doseValueNumerator": null
+          }
+        ]
+      }
+    },
+    {
+      "code": "COFFEE_AND_FLUSH_COUNTER",
+      "index": 1,
+      "output": {
+        "totalCoffee": 1620,
+        "totalFlush": 1366
+      }
+    }
+  ]
+}
