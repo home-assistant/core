@@ -340,7 +340,18 @@ async def test_climate_preset_mode_when_off(
     mock_serial_bridge.set_clima_status.assert_called()
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state.state == HVACMode.AUTO
+    assert state.state == HVACMode.OFF
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_MODE_AUTO},
+        blocking=True,
+    )
+    mock_serial_bridge.set_clima_status.assert_called()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == HVACMode.OFF
 
 
 async def test_climate_remove_stale(
@@ -378,16 +389,4 @@ async def test_climate_remove_stale(
     await hass.config_entries.async_reload(mock_serial_bridge_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert state.state == HVACMode.OFF
-
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_MODE_AUTO},
-        blocking=True,
-    )
-    mock_serial_bridge.set_clima_status.assert_called()
-
-    assert (state := hass.states.get(ENTITY_ID))
-    assert state.state == HVACMode.OFF
-
+    assert (state := hass.states.get(ENTITY_ID)) is None
