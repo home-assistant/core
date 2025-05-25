@@ -2,7 +2,7 @@
 
 import datetime as dt
 from http import HTTPStatus
-from ipaddress import ip_address
+from ipaddress import IPv4Network, ip_address
 import logging
 import secrets
 import string
@@ -15,7 +15,12 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.network import get_url
 
-from . import CONF_TRUSTED_NETWORKS, CONF_URL, BaseTelegramBotEntity
+from . import (
+    CONF_TRUSTED_NETWORKS,
+    CONF_URL,
+    BaseTelegramBotEntity,
+    TelegramBotConfigEntry,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,11 +53,16 @@ async def async_setup_platform(hass, bot, config):
             hass,
             bot,
             pushbot.application,
-            config[CONF_TRUSTED_NETWORKS],
+            _get_trusted_networks(config),
             secret_token,
         )
     )
     return True
+
+
+def _get_trusted_networks(config: TelegramBotConfigEntry) -> list[IPv4Network]:
+    trusted_networks_str: list[str] = config.options[CONF_TRUSTED_NETWORKS]
+    return [IPv4Network(trusted_network) for trusted_network in trusted_networks_str]
 
 
 class PushBot(BaseTelegramBotEntity):
@@ -61,14 +71,14 @@ class PushBot(BaseTelegramBotEntity):
     def __init__(self, hass, bot, config, secret_token):
         """Create Application before calling super()."""
         self.bot = bot
-        self.trusted_networks = config[CONF_TRUSTED_NETWORKS]
+        self.trusted_networks = _get_trusted_networks(config)
         self.secret_token = secret_token
         # Dumb Application that just gets our updates to our handler callback (self.handle_update)
         self.application = Application.builder().bot(bot).updater(None).build()
         self.application.add_handler(TypeHandler(Update, self.handle_update))
         super().__init__(hass, config)
 
-        self.base_url = config.get(CONF_URL) or get_url(
+        self.base_url = config.options.get(CONF_URL) or get_url(
             hass, require_ssl=True, allow_internal=False
         )
         self.webhook_url = f"{self.base_url}{TELEGRAM_WEBHOOK_URL}"

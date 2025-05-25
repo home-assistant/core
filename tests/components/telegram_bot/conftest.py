@@ -6,14 +6,20 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-from telegram import Bot, Chat, Message, User
-from telegram.constants import ChatType
+from telegram import Bot, Chat, ChatFullInfo, Message, User
+from telegram.constants import AccentColor, ChatType
 
 from homeassistant.components.telegram_bot import (
+    ATTR_PARSER,
     CONF_ALLOWED_CHAT_IDS,
+    CONF_CHAT_ID,
     CONF_TRUSTED_NETWORKS,
+    DEFAULT_TRUSTED_NETWORKS,
     DOMAIN,
+    PARSER_MD,
+    PLATFORM_WEBHOOKS,
 )
+from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_PLATFORM,
@@ -23,6 +29,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry
+
 
 @pytest.fixture
 def config_webhooks() -> dict[str, Any]:
@@ -30,7 +38,7 @@ def config_webhooks() -> dict[str, Any]:
     return {
         DOMAIN: [
             {
-                CONF_PLATFORM: "webhooks",
+                CONF_PLATFORM: PLATFORM_WEBHOOKS,
                 CONF_URL: "https://test",
                 CONF_TRUSTED_NETWORKS: ["127.0.0.1"],
                 CONF_API_KEY: "1234567890:ABC",
@@ -83,6 +91,14 @@ def mock_register_webhook() -> Generator[None]:
 @pytest.fixture
 def mock_external_calls() -> Generator[None]:
     """Mock calls that make calls to the live Telegram API."""
+    test_chat = ChatFullInfo(
+        id=123456,
+        title="mock title",
+        first_name="mock first_name",
+        type="PRIVATE",
+        max_reaction_count=100,
+        accent_color_id=AccentColor.COLOR_000,
+    )
     test_user = User(123456, "Testbot", True)
     message = Message(
         message_id=12345,
@@ -102,6 +118,7 @@ def mock_external_calls() -> Generator[None]:
 
     with (
         patch("homeassistant.components.telegram_bot.Bot", BotMock),
+        patch.object(BotMock, "get_chat", return_value=test_chat),
         patch.object(BotMock, "get_me", return_value=test_user),
         patch.object(BotMock, "bot", test_user),
         patch.object(BotMock, "send_message", return_value=message),
@@ -223,6 +240,28 @@ def update_callback_query():
             "inline_message_id": "1234csdbsk4839",
         },
     }
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_PLATFORM: "webhooks",
+            CONF_API_KEY: "mock api key",
+            ATTR_PARSER: PARSER_MD,
+            CONF_TRUSTED_NETWORKS: DEFAULT_TRUSTED_NETWORKS,
+        },
+        subentries_data=[
+            ConfigSubentryData(
+                data={CONF_CHAT_ID: 1234567890},
+                subentry_id="mock_id",
+                subentry_type=CONF_ALLOWED_CHAT_IDS,
+                title="mock chat",
+            )
+        ],
+    )
 
 
 @pytest.fixture

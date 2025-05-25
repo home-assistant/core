@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import io
-from ipaddress import ip_network
+from ipaddress import IPv4Network, ip_network
 import logging
+from types import MappingProxyType, ModuleType
 from typing import Any
 
 import httpx
@@ -26,12 +27,14 @@ from telegram.ext import CallbackContext, filters
 from telegram.request import HTTPXRequest
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_API_KEY,
     CONF_PLATFORM,
+    CONF_SOURCE,
     CONF_URL,
     HTTP_BEARER_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
@@ -43,9 +46,10 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_loaded_integration
+from homeassistant.loader import Integration, async_get_loaded_integration
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 _LOGGER = logging.getLogger(__name__)
@@ -99,11 +103,16 @@ ATTR_ALLOWS_MULTIPLE_ANSWERS = "allows_multiple_answers"
 ATTR_MESSAGE_THREAD_ID = "message_thread_id"
 
 CONF_ALLOWED_CHAT_IDS = "allowed_chat_ids"
+CONF_CHAT_ID = "chat_id"
 CONF_PROXY_URL = "proxy_url"
 CONF_PROXY_PARAMS = "proxy_params"
 CONF_TRUSTED_NETWORKS = "trusted_networks"
 
 DOMAIN = "telegram_bot"
+
+PLATFORM_BROADCAST = "broadcast"
+PLATFORM_POLLING = "polling"
+PLATFORM_WEBHOOKS = "webhooks"
 
 SERVICE_SEND_MESSAGE = "send_message"
 SERVICE_SEND_PHOTO = "send_photo"
@@ -293,6 +302,13 @@ SERVICE_MAP = {
 }
 
 
+type TelegramBotConfigEntry = ConfigEntry[TelegramNotificationService]
+
+# this will be loaded in async_setup once
+# thereafter, async_setup_entry will lookup the modules and perform the setup
+MODULES: dict[str, ModuleType] = {}
+
+
 def _read_file_as_bytesio(file_path: str) -> io.BytesIO:
     """Read a file and return it as a BytesIO object."""
     with open(file_path, "rb") as file:
@@ -302,7 +318,7 @@ def _read_file_as_bytesio(file_path: str) -> io.BytesIO:
 
 
 async def load_data(
-    hass,
+    hass: HomeAssistant,
     url=None,
     filepath=None,
     username=None,
@@ -315,7 +331,7 @@ async def load_data(
     try:
         if url is not None:
             # Load data from URL
-            params = {}
+            params: dict[str, Any] = {}
             headers = {}
             if authentication == HTTP_BEARER_AUTHENTICATION and password is not None:
                 headers = {"Authorization": f"Bearer {password}"}
@@ -377,33 +393,36 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telegram bot component."""
     domain_config: list[dict[str, Any]] = config[DOMAIN]
 
-    if not domain_config:
-        return False
-
-    platforms = await async_get_loaded_integration(hass, DOMAIN).async_get_platforms(
-        {p_config[CONF_PLATFORM] for p_config in domain_config}
+    integration: Integration = async_get_loaded_integration(hass, DOMAIN)
+    modules: dict[str, ModuleType] = await integration.async_get_platforms(
+        [PLATFORM_BROADCAST, PLATFORM_POLLING, PLATFORM_WEBHOOKS]
     )
+    MODULES.update(modules)
 
-    for p_config in domain_config:
-        # Each platform config gets its own bot
-        bot = await hass.async_add_executor_job(initialize_bot, hass, p_config)
-        p_type: str = p_config[CONF_PLATFORM]
-
-        platform = platforms[p_type]
-
-        _LOGGER.debug("Setting up %s.%s", DOMAIN, p_type)
-        try:
-            receiver_service = await platform.async_setup_platform(hass, bot, p_config)
-            if receiver_service is False:
-                _LOGGER.error("Failed to initialize Telegram bot %s", p_type)
-                return False
-
-        except Exception:
-            _LOGGER.exception("Error setting up platform %s", p_type)
-            return False
-
-        notify_service = TelegramNotificationService(
-            hass, bot, p_config.get(CONF_ALLOWED_CHAT_IDS), p_config.get(ATTR_PARSER)
+    # import the last YAML config since existing behavior only works with the last config
+    if domain_config:
+        trusted_networks: list[IPv4Network] = domain_config[-1].get(
+            CONF_TRUSTED_NETWORKS, []
+        )
+        trusted_networks_str: list[str] = (
+            [str(trusted_network) for trusted_network in trusted_networks]
+            if trusted_networks
+            else []
+        )
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={CONF_SOURCE: SOURCE_IMPORT},
+                data={
+                    CONF_PLATFORM: domain_config[-1].get(CONF_PLATFORM),
+                    CONF_API_KEY: domain_config[-1].get(CONF_API_KEY),
+                    CONF_ALLOWED_CHAT_IDS: domain_config[-1].get(CONF_ALLOWED_CHAT_IDS),
+                    ATTR_PARSER: domain_config[-1].get(ATTR_PARSER),
+                    CONF_PROXY_URL: domain_config[-1].get(CONF_PROXY_URL),
+                    CONF_URL: domain_config[-1].get(CONF_URL),
+                    CONF_TRUSTED_NETWORKS: trusted_networks_str,
+                },
+            )
         )
 
     async def async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
@@ -412,6 +431,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         msgtype = service.service
         kwargs = dict(service.data)
         _LOGGER.debug("New telegram message %s: %s", msgtype, kwargs)
+
+        # use the first config entry as default
+        config_entries: list[TelegramBotConfigEntry] = (
+            service.hass.config_entries.async_entries(DOMAIN)
+        )
+        if not config_entries or not hasattr(config_entries[0], "runtime_data"):
+            raise ServiceValidationError(
+                "No config entries found or setup failed. Please set up the Telegram Bot first.",
+                translation_domain=DOMAIN,
+                translation_key="missing_config_entry",
+            )
+        notify_service = config_entries[0].runtime_data
 
         messages = None
         if msgtype == SERVICE_SEND_MESSAGE:
@@ -485,7 +516,42 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def initialize_bot(hass: HomeAssistant, p_config: dict) -> Bot:
+async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> bool:
+    """Create the Telegram bot from config entry."""
+    bot: Bot = await hass.async_add_executor_job(initialize_bot, hass, entry.data)
+    p_type: str = entry.data[CONF_PLATFORM]
+    platform = MODULES[p_type]
+
+    _LOGGER.debug("Setting up %s.%s", DOMAIN, p_type)
+    try:
+        receiver_service = await platform.async_setup_platform(hass, bot, entry)
+    except Exception:
+        _LOGGER.exception("Error setting up Telegram bot %s", p_type)
+        return False
+
+    if receiver_service is False:
+        _LOGGER.error("Failed to initialize Telegram bot %s", p_type)
+        return False
+
+    notify_service = TelegramNotificationService(
+        hass, bot, entry, entry.options[ATTR_PARSER]
+    )
+    entry.runtime_data = notify_service
+
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
+    return True
+
+
+async def update_listener(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> None:
+    """Handle options update."""
+
+    # hass.config_entries.async_reload only reloads platforms not modules
+    # handle module reload ourselves
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) -> Bot:
     """Initialize telegram bot with proxy support."""
     api_key: str = p_config[CONF_API_KEY]
     proxy_url: str | None = p_config.get(CONF_PROXY_URL)
@@ -544,11 +610,11 @@ def initialize_bot(hass: HomeAssistant, p_config: dict) -> Bot:
 class TelegramNotificationService:
     """Implement the notification services for the Telegram Bot domain."""
 
-    def __init__(self, hass, bot, allowed_chat_ids, parser):
+    def __init__(
+        self, hass: HomeAssistant, bot: Bot, config: TelegramBotConfigEntry, parser: str
+    ) -> None:
         """Initialize the service."""
-        self.allowed_chat_ids = allowed_chat_ids
-        self._default_user = self.allowed_chat_ids[0]
-        self._last_message_id = dict.fromkeys(self.allowed_chat_ids)
+        self.config = config
         self._parsers = {
             PARSER_HTML: ParseMode.HTML,
             PARSER_MD: ParseMode.MARKDOWN,
@@ -558,6 +624,31 @@ class TelegramNotificationService:
         self._parse_mode = self._parsers.get(parser)
         self.bot = bot
         self.hass = hass
+
+    def get_bot(self) -> Bot:
+        """Return the Telegram bot instance."""
+        return self.bot
+
+    def _get_allowed_chat_ids(self) -> list[int]:
+        allowed_chat_ids: list[int] = [
+            subentry.data[CONF_CHAT_ID] for subentry in self.config.subentries.values()
+        ]
+
+        if not allowed_chat_ids:
+            bot_name: str = self.config.title
+            raise ServiceValidationError(
+                "No allowed chat IDs found for bot",
+                translation_domain=DOMAIN,
+                translation_key="missing_allowed_chat_ids",
+                translation_placeholders={
+                    "bot_name": bot_name,
+                },
+            )
+
+        return allowed_chat_ids
+
+    def _get_last_message_id(self):
+        return dict.fromkeys(self._get_allowed_chat_ids())
 
     def _get_msg_ids(self, msg_data, chat_id):
         """Get the message id to edit.
@@ -573,9 +664,9 @@ class TelegramNotificationService:
             if (
                 isinstance(message_id, str)
                 and (message_id == "last")
-                and (self._last_message_id[chat_id] is not None)
+                and (self._get_last_message_id()[chat_id] is not None)
             ):
-                message_id = self._last_message_id[chat_id]
+                message_id = self._get_last_message_id()[chat_id]
         else:
             inline_message_id = msg_data["inline_message_id"]
         return message_id, inline_message_id
@@ -586,16 +677,18 @@ class TelegramNotificationService:
         :param target: optional list of integers ([12234, -12345])
         :return list of chat_id targets (integers)
         """
+        allowed_chat_ids: list[int] = self._get_allowed_chat_ids()
+        default_user: int = allowed_chat_ids[0]
         if target is not None:
             if isinstance(target, int):
                 target = [target]
-            chat_ids = [t for t in target if t in self.allowed_chat_ids]
+            chat_ids = [t for t in target if t in allowed_chat_ids]
             if chat_ids:
                 return chat_ids
             _LOGGER.warning(
-                "Disallowed targets: %s, using default: %s", target, self._default_user
+                "Disallowed targets: %s, using default: %s", target, default_user
             )
-        return [self._default_user]
+        return [default_user]
 
     def _get_msg_kwargs(self, data):
         """Get parameters in message data kwargs."""
@@ -702,10 +795,10 @@ class TelegramNotificationService:
             if not isinstance(out, bool) and hasattr(out, ATTR_MESSAGEID):
                 chat_id = out.chat_id
                 message_id = out[ATTR_MESSAGEID]
-                self._last_message_id[chat_id] = message_id
+                self._get_last_message_id()[chat_id] = message_id
                 _LOGGER.debug(
                     "Last message ID: %s (from chat_id %s)",
-                    self._last_message_id,
+                    self._get_last_message_id(),
                     chat_id,
                 )
 
@@ -774,9 +867,9 @@ class TelegramNotificationService:
             context=context,
         )
         # reduce message_id anyway:
-        if self._last_message_id[chat_id] is not None:
+        if self._get_last_message_id()[chat_id] is not None:
             # change last msg_id for deque(n_msgs)?
-            self._last_message_id[chat_id] -= 1
+            self._get_last_message_id()[chat_id] -= 1
         return deleted
 
     async def edit_message(self, type_edit, chat_id=None, context=None, **kwargs):
@@ -1085,10 +1178,10 @@ class TelegramNotificationService:
 class BaseTelegramBotEntity:
     """The base class for the telegram bot."""
 
-    def __init__(self, hass, config):
+    def __init__(self, hass: HomeAssistant, config: TelegramBotConfigEntry) -> None:
         """Initialize the bot base class."""
-        self.allowed_chat_ids = config[CONF_ALLOWED_CHAT_IDS]
         self.hass = hass
+        self.config = config
 
     async def handle_update(self, update: Update, context: CallbackContext) -> bool:
         """Handle updates from bot application set up by the respective platform."""
@@ -1180,7 +1273,10 @@ class BaseTelegramBotEntity:
         """Make sure either user or chat is in allowed_chat_ids."""
         from_user = update.effective_user.id if update.effective_user else None
         from_chat = update.effective_chat.id if update.effective_chat else None
-        if from_user in self.allowed_chat_ids or from_chat in self.allowed_chat_ids:
+        allowed_chat_ids: list[int] = [
+            subentry.data[CONF_CHAT_ID] for subentry in self.config.subentries.values()
+        ]
+        if from_user in allowed_chat_ids or from_chat in allowed_chat_ids:
             return True
         _LOGGER.error(
             (
@@ -1189,6 +1285,6 @@ class BaseTelegramBotEntity:
             ),
             from_user,
             from_chat,
-            self.allowed_chat_ids,
+            allowed_chat_ids,
         )
         return False
