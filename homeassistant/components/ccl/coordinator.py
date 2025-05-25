@@ -14,7 +14,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class CCLCoordinator(DataUpdateCoordinator):
+class CCLCoordinator(DataUpdateCoordinator[..]):
     """Class to manage processing CCL data."""
 
     def __init__(
