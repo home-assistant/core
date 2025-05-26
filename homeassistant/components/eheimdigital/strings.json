@@ -104,7 +104,7 @@
   },
   "exceptions": {
     "communication_error": {
-      "message": "An error occurred while communicating with the Eheim Digital hub: {error}"
+      "message": "An error occurred while communicating with the EHEIM Digital hub: {error}"
     }
   }
 }
