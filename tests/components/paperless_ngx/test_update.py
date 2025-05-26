@@ -56,7 +56,7 @@ async def test_update_coordinator_error_dont_block_integration_init(
 
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("update.paperless_ngx_firmware")
+    state = hass.states.get("update.paperless_ngx_software")
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -69,7 +69,7 @@ async def test_update_sensor_downgrade_upgrade(
 ) -> None:
     """Ensure update entities are updating properly on downgrade and upgrade."""
 
-    state = hass.states.get("update.paperless_ngx_firmware")
+    state = hass.states.get("update.paperless_ngx_software")
     assert state.state == STATE_OFF
 
     # downgrade host version
@@ -79,7 +79,7 @@ async def test_update_sensor_downgrade_upgrade(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("update.paperless_ngx_firmware")
+    state = hass.states.get("update.paperless_ngx_software")
     assert state.state == STATE_ON
 
     # upgrade host version
@@ -89,7 +89,7 @@ async def test_update_sensor_downgrade_upgrade(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("update.paperless_ngx_firmware")
+    state = hass.states.get("update.paperless_ngx_software")
     assert state.state == STATE_OFF
 
 
@@ -119,7 +119,7 @@ async def test_update_sensor_state_on_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("update.paperless_ngx_firmware")
+    state = hass.states.get("update.paperless_ngx_software")
     assert state.state == STATE_UNAVAILABLE
 
     # recover from not auth errors
@@ -133,7 +133,7 @@ async def test_update_sensor_state_on_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("update.paperless_ngx_firmware")
+    state = hass.states.get("update.paperless_ngx_software")
     assert state.state == assert_state
 
 
@@ -146,7 +146,7 @@ async def test_update_sensor_version_unavailable(
 ) -> None:
     """Ensure update entities handle version unavailable properly."""
 
-    state = hass.states.get("update.paperless_ngx_firmware")
+    state = hass.states.get("update.paperless_ngx_software")
     assert state.state == STATE_OFF
 
     # set version unavailable
@@ -160,5 +160,5 @@ async def test_update_sensor_version_unavailable(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("update.paperless_ngx_firmware")
+    state = hass.states.get("update.paperless_ngx_software")
     assert state.state == STATE_UNAVAILABLE

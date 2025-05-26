@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_update_platfom[update.paperless_ngx_firmware-entry]
+# name: test_update_platfom[update.paperless_ngx_software-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.paperless_ngx_firmware',
+    'entity_id': 'update.paperless_ngx_software',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,23 +24,24 @@
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
     'original_icon': None,
-    'original_name': 'Firmware',
+    'original_name': 'Software',
     'platform': 'paperless_ngx',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'paperless_update',
     'unique_id': '0KLG00V55WEVTJ0CJHM0GADNGH_paperless_update',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_update_platfom[update.paperless_ngx_firmware-state]
+# name: test_update_platfom[update.paperless_ngx_software-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/paperless_ngx/icon.png',
-      'friendly_name': 'Paperless-ngx Firmware',
+      'friendly_name': 'Paperless-ngx Software',
       'in_progress': False,
       'installed_version': '2.3.0',
       'latest_version': '2.3.0',
@@ -52,7 +53,7 @@
       'update_percentage': None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.paperless_ngx_firmware',
+    'entity_id': 'update.paperless_ngx_software',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
