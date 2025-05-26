@@ -8,18 +8,28 @@ import logging
 from typing import Any
 
 from linkplay.bridge import LinkPlayPlayer
+from linkplay.consts import AudioOutputHwMode
 from linkplay.manufacturers import MANUFACTURER_WIIM
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import LinkPlayConfigEntry
-from .const import AUDIO_OUTPUT_HW_MODE_MAP, AUDIO_OUTPUT_HW_MODE_MAP_INV
 from .entity import LinkPlayBaseEntity, exception_wrap
 
 _LOGGER = logging.getLogger(__name__)
+
+AUDIO_OUTPUT_HW_MODE_MAP: dict[AudioOutputHwMode, str] = {
+    AudioOutputHwMode.OPTICAL: "Optical",
+    AudioOutputHwMode.LINE_OUT: "Line Out",
+    AudioOutputHwMode.COAXIAL: "Coaxial",
+    AudioOutputHwMode.HEADPHONES: "Headphones",
+}
+
+AUDIO_OUTPUT_HW_MODE_MAP_INV: dict[str, AudioOutputHwMode] = {
+    v: k for k, v in AUDIO_OUTPUT_HW_MODE_MAP.items()
+}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -52,15 +62,11 @@ async def async_setup_entry(
     """Set up the LinkPlay select from config entry."""
 
     # add entities
-    device_registry = dr.async_get(hass)
-    for dev_entry in dr.async_entries_for_config_entry(
-        device_registry, config_entry.entry_id
-    ):
-        if dev_entry.manufacturer == MANUFACTURER_WIIM:
-            async_add_entities(
-                LinkPlaySelect(config_entry.runtime_data.bridge, description)
-                for description in SELECT_TYPES_WIIM
-            )
+    if config_entry.runtime_data.bridge.device.manufacturer == MANUFACTURER_WIIM:
+        async_add_entities(
+            LinkPlaySelect(config_entry.runtime_data.bridge, description)
+            for description in SELECT_TYPES_WIIM
+        )
 
 
 class LinkPlaySelect(LinkPlayBaseEntity, SelectEntity):
