@@ -479,7 +479,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         """Select input source."""
         source_id = self._source_list_mapping.get(source)
         if source_id is None:
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 f"Source '{source}' not found for player {self.name}"
             )
         await self.mass.players.player_command_select_source(self.player_id, source_id)
