@@ -1,7 +1,6 @@
 """Common fixtures for the Paperless-ngx tests."""
 
 from collections.abc import Generator
-import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pypaperless.models import RemoteVersion, Statistic, Status
@@ -13,37 +12,37 @@ from homeassistant.core import HomeAssistant
 from . import setup_integration
 from .const import USER_INPUT_ONE
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
 def mock_status_data() -> Generator[MagicMock]:
     """Return test status data."""
-    return json.loads(load_fixture("test_data_status.json", DOMAIN))
+    return load_json_object_fixture("test_data_status.json", DOMAIN)
 
 
 @pytest.fixture
 def mock_remote_version_data() -> Generator[MagicMock]:
     """Return test remote version data."""
-    return json.loads(load_fixture("test_data_remote_version.json", DOMAIN))
+    return load_json_object_fixture("test_data_remote_version.json", DOMAIN)
 
 
 @pytest.fixture
 def mock_remote_version_data_unavailable() -> Generator[MagicMock]:
     """Return test remote version data."""
-    return json.loads(load_fixture("test_data_remote_version_unavailable.json", DOMAIN))
+    return load_json_object_fixture("test_data_remote_version_unavailable.json", DOMAIN)
 
 
 @pytest.fixture
 def mock_statistic_data() -> Generator[MagicMock]:
     """Return test statistic data."""
-    return json.loads(load_fixture("test_data_statistic.json", DOMAIN))
+    return load_json_object_fixture("test_data_statistic.json", DOMAIN)
 
 
 @pytest.fixture
 def mock_statistic_data_update() -> Generator[MagicMock]:
     """Return updated test statistic data."""
-    return json.loads(load_fixture("test_data_statistic_update.json", DOMAIN))
+    return load_json_object_fixture("test_data_statistic_update.json", DOMAIN)
 
 
 @pytest.fixture(autouse=True)
