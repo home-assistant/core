@@ -49,9 +49,6 @@
       },
       "announce": {
         "name": "Announce"
-      },
-      "sound": {
-        "name": "Sound"
       }
     }
   }
