@@ -17,7 +17,7 @@ async def async_setup_entry(
 ) -> bool:
     """Set up Playstation Network from a config entry."""
 
-    psn = PlaystationNetwork(entry.data[CONF_NPSSO])
+    psn = PlaystationNetwork(hass, entry.data[CONF_NPSSO])
 
     coordinator = PlaystationNetworkCoordinator(hass, psn, entry)
     await coordinator.async_config_entry_first_refresh()

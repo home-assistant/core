@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from functools import partial
 from typing import Any
 
 from psnawp_api import PSNAWP
 from psnawp_api.core.psnawp_exceptions import PSNAWPNotFoundError
+from psnawp_api.models.client import Client
 from psnawp_api.models.trophies import PlatformType
 from psnawp_api.models.user import User
 from pyrate_limiter import Duration, Rate
+
+from homeassistant.core import HomeAssistant
 
 from .const import SUPPORTED_PLATFORMS
 
@@ -43,33 +47,42 @@ class PlaystationNetworkData:
 class PlaystationNetwork:
     """Helper Class to return playstation network data in an easy to use structure."""
 
-    def __init__(self, npsso: str) -> None:
+    def __init__(self, hass: HomeAssistant, npsso: str) -> None:
         """Initialize the class with the npsso token."""
         rate = Rate(300, Duration.MINUTE * 15)
         self.psn = PSNAWP(npsso, rate_limit=rate)
-        self.client = self.psn.me()
+        self.client: Client | None = None
+        self.hass = hass
         self.user: User | None = None
         self.legacy_profile: dict[str, Any] | None = None
 
-    def get_user(self) -> User:
+    async def get_user(self) -> User:
         """Get the user object from the PlayStation Network."""
-        self.user = self.psn.user(online_id="me")
+        self.user = await self.hass.async_add_executor_job(
+            partial(self.psn.user, online_id="me")
+        )
         return self.user
 
-    def get_data(self) -> PlaystationNetworkData:
+    async def get_data(self) -> PlaystationNetworkData:
         """Get title data from the PlayStation Network."""
         data = PlaystationNetworkData()
 
         if not self.user:
-            self.user = self.get_user()
+            self.user = await self.get_user()
+
+        if not self.client:
+            self.client = await self.hass.async_add_executor_job(self.psn.me)
 
         data.registered_platforms = {
-            device["deviceType"] for device in self.client.get_account_devices()
+            device["deviceType"]
+            for device in await self.hass.async_add_executor_job(
+                self.client.get_account_devices
+            )
         } & SUPPORTED_PLATFORMS
 
         data.username = self.user.online_id
         data.account_id = self.user.account_id
-        data.presence = self.user.get_presence()
+        data.presence = await self.hass.async_add_executor_job(self.user.get_presence)
 
         data.available = (
             data.presence.get("basicPresence", {}).get("availability")
@@ -106,7 +119,9 @@ class PlaystationNetwork:
 
         # check legacy platforms if owned
         if set(LEGACY_PLATFORMS).issubset(data.registered_platforms):
-            self.legacy_profile = self.client.get_profile_legacy()
+            self.legacy_profile = await self.hass.async_add_executor_job(
+                self.client.get_profile_legacy
+            )
             presence = self.legacy_profile["profile"].get("presences", [])
             game_title_info = presence[0] if presence else {}
             session = SessionData()
