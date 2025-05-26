@@ -719,15 +719,20 @@ class MieleSensor(MieleEntity, SensorEntity):
 
     entity_description: MieleSensorDescription
 
+    def __init__(
+        self,
+        coordinator: MieleDataUpdateCoordinator,
+        device_id: str,
+        description: MieleSensorDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, device_id, description)
+        self._attr_unique_id = description.get_unique_id(self._device_id)
+
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.device)
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the entity."""
-        return self.entity_description.get_unique_id(self._device_id)
 
 
 class MielePlateSensor(MieleSensor):
