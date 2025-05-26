@@ -806,7 +806,8 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if precision is None:
             return None
 
-        # Since we are inferring the precision, cap it to avoid having too many decimals
+        # Since we are inferring the precision from the device class, cap it to avoid
+        # having too many decimals
         return min(precision, device_class_base_precision + DEFAULT_PRECISION_LIMIT)
 
     def _update_suggested_precision(self) -> None:
