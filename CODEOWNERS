@@ -1746,8 +1746,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/wirelesstag/ @sergeymaysak
 /homeassistant/components/withings/ @joostlek
 /tests/components/withings/ @joostlek
-/homeassistant/components/wiz/ @sbidy
-/tests/components/wiz/ @sbidy
+/homeassistant/components/wiz/ @sbidy @arturpragacz
+/tests/components/wiz/ @sbidy @arturpragacz
 /homeassistant/components/wled/ @frenck
 /tests/components/wled/ @frenck
 /homeassistant/components/wmspro/ @mback2k
