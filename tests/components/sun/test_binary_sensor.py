@@ -41,4 +41,4 @@ async def test_setting_rising(
     entity = entity_registry.async_get("binary_sensor.sun_solar_rising")
     assert entity
     assert entity.entity_category is EntityCategory.DIAGNOSTIC
-    assert entity.unique_id == f"{entry_ids[0].entry_id}-binary-solar_rising"
+    assert entity.unique_id == f"{entry_ids[0].entry_id}-solar_rising"
