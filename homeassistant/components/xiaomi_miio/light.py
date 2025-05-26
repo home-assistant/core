@@ -271,24 +271,12 @@ class XiaomiPhilipsAbstractLight(XiaomiMiioEntity, LightEntity):
         """Initialize the light device."""
         super().__init__(name, device, entry, unique_id)
 
-        self._brightness = None
-        self._state = None
         self._state_attrs: dict[str, Any] = {}
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return self._state_attrs
-
-    @property
-    def is_on(self):
-        """Return true if light is on."""
-        return self._state
-
-    @property
-    def brightness(self):
-        """Return the brightness of this light between 0..255."""
-        return self._brightness
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a light command handling error messages."""
@@ -321,7 +309,7 @@ class XiaomiPhilipsAbstractLight(XiaomiMiioEntity, LightEntity):
             )
 
             if result:
-                self._brightness = brightness
+                self._attr_brightness = brightness
         else:
             await self._try_command("Turning the light on failed.", self._device.on)
 
@@ -342,8 +330,8 @@ class XiaomiPhilipsAbstractLight(XiaomiMiioEntity, LightEntity):
 
         _LOGGER.debug("Got new state: %s", state)
         self._attr_available = True
-        self._state = state.is_on
-        self._brightness = ceil((255 / 100.0) * state.brightness)
+        self._attr_is_on = state.is_on
+        self._attr_brightness = ceil((255 / 100.0) * state.brightness)
 
 
 class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
@@ -376,8 +364,8 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
 
         _LOGGER.debug("Got new state: %s", state)
         self._attr_available = True
-        self._state = state.is_on
-        self._brightness = ceil((255 / 100.0) * state.brightness)
+        self._attr_is_on = state.is_on
+        self._attr_brightness = ceil((255 / 100.0) * state.brightness)
 
         delayed_turn_off = self.delayed_turn_off_timestamp(
             state.delay_off_countdown,
@@ -510,7 +498,7 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
 
             if result:
                 self._color_temp = color_temp
-                self._brightness = brightness
+                self._attr_brightness = brightness
 
         elif ATTR_COLOR_TEMP_KELVIN in kwargs:
             _LOGGER.debug(
@@ -541,7 +529,7 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
             )
 
             if result:
-                self._brightness = brightness
+                self._attr_brightness = brightness
 
         else:
             await self._try_command("Turning the light on failed.", self._device.on)
@@ -559,8 +547,8 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
 
         _LOGGER.debug("Got new state: %s", state)
         self._attr_available = True
-        self._state = state.is_on
-        self._brightness = ceil((255 / 100.0) * state.brightness)
+        self._attr_is_on = state.is_on
+        self._attr_brightness = ceil((255 / 100.0) * state.brightness)
         self._color_temp = self.translate(
             state.color_temperature,
             CCT_MIN,
@@ -630,8 +618,8 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
 
         _LOGGER.debug("Got new state: %s", state)
         self._attr_available = True
-        self._state = state.is_on
-        self._brightness = ceil((255 / 100.0) * state.brightness)
+        self._attr_is_on = state.is_on
+        self._attr_brightness = ceil((255 / 100.0) * state.brightness)
         self._color_temp = self.translate(
             state.color_temperature,
             CCT_MIN,
@@ -688,8 +676,8 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
 
         _LOGGER.debug("Got new state: %s", state)
         self._attr_available = True
-        self._state = state.is_on
-        self._brightness = ceil((255 / 100.0) * state.brightness)
+        self._attr_is_on = state.is_on
+        self._attr_brightness = ceil((255 / 100.0) * state.brightness)
 
         delayed_turn_off = self.delayed_turn_off_timestamp(
             state.delay_off_countdown,
@@ -814,7 +802,7 @@ class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
             )
 
             if result:
-                self._brightness = brightness
+                self._attr_brightness = brightness
         else:
             await self._try_command(
                 "Turning the ambient light on failed.", self._device.ambient_on
@@ -839,8 +827,8 @@ class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
 
         _LOGGER.debug("Got new state: %s", state)
         self._attr_available = True
-        self._state = state.ambient
-        self._brightness = ceil((255 / 100.0) * state.ambient_brightness)
+        self._attr_is_on = state.ambient
+        self._attr_brightness = ceil((255 / 100.0) * state.ambient_brightness)
 
 
 class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
@@ -928,7 +916,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
 
             if result:
                 self._hs_color = hs_color
-                self._brightness = brightness
+                self._attr_brightness = brightness
 
         elif ATTR_BRIGHTNESS in kwargs and ATTR_COLOR_TEMP_KELVIN in kwargs:
             _LOGGER.debug(
@@ -951,7 +939,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
 
             if result:
                 self._color_temp = color_temp
-                self._brightness = brightness
+                self._attr_brightness = brightness
 
         elif ATTR_HS_COLOR in kwargs:
             _LOGGER.debug("Setting color: %s", rgb)
@@ -992,7 +980,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
             )
 
             if result:
-                self._brightness = brightness
+                self._attr_brightness = brightness
 
         else:
             await self._try_command("Turning the light on failed.", self._device.on)
@@ -1010,8 +998,8 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
 
         _LOGGER.debug("Got new state: %s", state)
         self._attr_available = True
-        self._state = state.is_on
-        self._brightness = ceil((255 / 100.0) * state.brightness)
+        self._attr_is_on = state.is_on
+        self._attr_brightness = ceil((255 / 100.0) * state.brightness)
         self._color_temp = self.translate(
             state.color_temperature,
             CCT_MIN,
@@ -1050,7 +1038,6 @@ class XiaomiGatewayLight(LightEntity):
         self._gateway_device_id = gateway_device_id
         self._attr_unique_id = gateway_device_id
         self._attr_available = False
-        self._is_on = None
         self._brightness_pct = 100
         self._rgb = (255, 255, 255)
         self._hs = (0, 0)
@@ -1061,11 +1048,6 @@ class XiaomiGatewayLight(LightEntity):
         return DeviceInfo(
             identifiers={(DOMAIN, self._gateway_device_id)},
         )
-
-    @property
-    def is_on(self):
-        """Return true if it is on."""
-        return self._is_on
 
     @property
     def brightness(self):
@@ -1113,9 +1095,9 @@ class XiaomiGatewayLight(LightEntity):
             return
 
         self._attr_available = True
-        self._is_on = state_dict["is_on"]
+        self._attr_is_on = state_dict["is_on"]
 
-        if self._is_on:
+        if self._attr_is_on:
             self._brightness_pct = state_dict["brightness"]
             self._rgb = state_dict["rgb"]
             self._hs = color_util.color_RGB_to_hs(*self._rgb)
@@ -1139,7 +1121,7 @@ class XiaomiGatewayBulb(XiaomiGatewayDevice, LightEntity):
         return self._sub_device.status["color_temp"]
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if light is on."""
         return self._sub_device.status["status"] == "on"
 

@@ -313,7 +313,6 @@ class XiaomiGenericDevice(
         super().__init__(device, entry, unique_id, coordinator)
 
         self._available_attributes: dict[str, Any] = {}
-        self._state: bool | None = None
         self._mode: str | None = None
         self._fan_level: int | None = None
         self._state_attrs: dict[str, Any] = {}
@@ -340,11 +339,6 @@ class XiaomiGenericDevice(
         """Return the state attributes of the device."""
         return self._state_attrs
 
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if device is on."""
-        return self._state
-
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -364,7 +358,7 @@ class XiaomiGenericDevice(
             await self.async_set_preset_mode(preset_mode)
 
         if result:
-            self._state = True
+            self._attr_is_on = True
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -375,7 +369,7 @@ class XiaomiGenericDevice(
         )
 
         if result:
-            self._state = False
+            self._attr_is_on = False
             self.async_write_ha_state()
 
 
@@ -402,7 +396,7 @@ class XiaomiGenericAirPurifier(XiaomiGenericDevice):
     @property
     def preset_mode(self) -> str | None:
         """Get the active preset mode."""
-        if self._state:
+        if self._attr_is_on:
             preset_mode = self.operation_mode_class(self._mode).name
             return preset_mode if preset_mode in self._preset_modes else None
 
@@ -411,7 +405,7 @@ class XiaomiGenericAirPurifier(XiaomiGenericDevice):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._state_attrs.update(
             {
                 key: self._extract_value_from_attribute(self.coordinator.data, value)
@@ -510,7 +504,7 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
             FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
         )
 
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._state_attrs.update(
             {
                 key: self._extract_value_from_attribute(self.coordinator.data, value)
@@ -528,7 +522,7 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
     @property
     def percentage(self) -> int | None:
         """Return the current percentage based speed."""
-        if self._state:
+        if self._attr_is_on:
             mode = self.operation_mode_class(self._mode)
             if mode in self.REVERSE_SPEED_MODE_MAPPING:
                 return ranged_value_to_percentage(
@@ -604,7 +598,7 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
         """Return the current percentage based speed."""
         if self._fan_level is None:
             return None
-        if self._state:
+        if self._attr_is_on:
             return ranged_value_to_percentage((1, 3), self._fan_level)
 
         return None
@@ -652,7 +646,7 @@ class XiaomiAirPurifierMB4(XiaomiGenericAirPurifier):
             | FanEntityFeature.TURN_ON
         )
 
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._mode = self.coordinator.data.mode.value
         self._favorite_rpm: int | None = None
         self._speed_range = (300, 2200)
@@ -671,7 +665,7 @@ class XiaomiAirPurifierMB4(XiaomiGenericAirPurifier):
             return ranged_value_to_percentage(self._speed_range, self._motor_speed)
         if self._favorite_rpm is None:
             return None
-        if self._state:
+        if self._attr_is_on:
             return ranged_value_to_percentage(self._speed_range, self._favorite_rpm)
 
         return None
@@ -698,7 +692,7 @@ class XiaomiAirPurifierMB4(XiaomiGenericAirPurifier):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        if not self._state:
+        if not self._attr_is_on:
             await self.async_turn_on()
 
         if await self._try_command(
@@ -712,7 +706,7 @@ class XiaomiAirPurifierMB4(XiaomiGenericAirPurifier):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._mode = self.coordinator.data.mode.value
         self._favorite_rpm = getattr(self.coordinator.data, ATTR_FAVORITE_RPM, None)
         self._motor_speed = min(
@@ -763,7 +757,7 @@ class XiaomiAirFresh(XiaomiGenericAirPurifier):
             | FanEntityFeature.TURN_ON
         )
 
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._state_attrs.update(
             {
                 key: getattr(self.coordinator.data, value)
@@ -780,7 +774,7 @@ class XiaomiAirFresh(XiaomiGenericAirPurifier):
     @property
     def percentage(self) -> int | None:
         """Return the current percentage based speed."""
-        if self._state:
+        if self._attr_is_on:
             mode = AirfreshOperationMode(self._mode)
             if mode in self.REVERSE_SPEED_MODE_MAPPING:
                 return ranged_value_to_percentage(
@@ -865,7 +859,7 @@ class XiaomiAirFreshA1(XiaomiGenericAirPurifier):
             | FanEntityFeature.TURN_ON
         )
 
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._mode = self.coordinator.data.mode.value
         self._speed_range = (60, 150)
 
@@ -879,7 +873,7 @@ class XiaomiAirFreshA1(XiaomiGenericAirPurifier):
         """Return the current percentage based speed."""
         if self._favorite_speed is None:
             return None
-        if self._state:
+        if self._attr_is_on:
             return ranged_value_to_percentage(self._speed_range, self._favorite_speed)
 
         return None
@@ -918,7 +912,7 @@ class XiaomiAirFreshA1(XiaomiGenericAirPurifier):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._mode = self.coordinator.data.mode.value
         self._favorite_speed = getattr(self.coordinator.data, ATTR_FAVORITE_SPEED, None)
         self.async_write_ha_state()
@@ -993,7 +987,7 @@ class XiaomiGenericFan(XiaomiGenericDevice):
     @property
     def percentage(self) -> int | None:
         """Return the current speed as a percentage."""
-        if self._state:
+        if self._attr_is_on:
             return self._percentage
 
         return None
@@ -1038,7 +1032,7 @@ class XiaomiFan(XiaomiGenericFan):
         """Initialize the fan."""
         super().__init__(device, entry, unique_id, coordinator)
 
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._oscillating = self.coordinator.data.oscillate
         self._nature_mode = self.coordinator.data.natural_speed != 0
         if self._nature_mode:
@@ -1063,7 +1057,7 @@ class XiaomiFan(XiaomiGenericFan):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._oscillating = self.coordinator.data.oscillate
         self._nature_mode = self.coordinator.data.natural_speed != 0
         if self._nature_mode:
@@ -1131,7 +1125,7 @@ class XiaomiFanP5(XiaomiGenericFan):
         """Initialize the fan."""
         super().__init__(device, entry, unique_id, coordinator)
 
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._preset_mode = self.coordinator.data.mode.name
         self._oscillating = self.coordinator.data.oscillate
         self._percentage = self.coordinator.data.speed
@@ -1144,7 +1138,7 @@ class XiaomiFanP5(XiaomiGenericFan):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._preset_mode = self.coordinator.data.mode.name
         self._oscillating = self.coordinator.data.oscillate
         self._percentage = self.coordinator.data.speed
@@ -1197,7 +1191,7 @@ class XiaomiFanMiot(XiaomiGenericFan):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._preset_mode = self.coordinator.data.mode.name
         self._oscillating = self.coordinator.data.oscillate
         if self.coordinator.data.is_on:
@@ -1264,7 +1258,7 @@ class XiaomiFan1C(XiaomiFanMiot):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._preset_mode = self.coordinator.data.mode.name
         self._oscillating = self.coordinator.data.oscillate
         if self.coordinator.data.is_on:
