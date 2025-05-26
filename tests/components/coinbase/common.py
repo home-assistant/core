@@ -6,6 +6,7 @@ from homeassistant.components.coinbase.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, CONF_API_VERSION
+from homeassistant.core import HomeAssistant
 
 from .const import (
     GOOD_CURRENCY_2,
@@ -115,7 +116,11 @@ def mock_get_portfolios():
     }
 
 
-async def init_mock_coinbase(hass, currencies=None, rates=None):
+async def init_mock_coinbase(
+    hass: HomeAssistant,
+    currencies: list[str] | None = None,
+    rates: list[str] | None = None,
+) -> MockConfigEntry:
     """Init Coinbase integration for testing."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -136,7 +141,11 @@ async def init_mock_coinbase(hass, currencies=None, rates=None):
     return config_entry
 
 
-async def init_mock_coinbase_v3(hass, currencies=None, rates=None):
+async def init_mock_coinbase_v3(
+    hass: HomeAssistant,
+    currencies: list[str] | None = None,
+    rates: list[str] | None = None,
+) -> MockConfigEntry:
     """Init Coinbase integration for testing."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

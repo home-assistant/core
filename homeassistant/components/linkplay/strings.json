@@ -11,7 +11,7 @@
         }
       },
       "discovery_confirm": {
-        "description": "Do you want to setup {name}?"
+        "description": "Do you want to set up {name}?"
       }
     },
     "abort": {
@@ -21,6 +21,30 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "services": {
+    "play_preset": {
+      "name": "Play preset",
+      "description": "Plays a preset on the device.",
+      "fields": {
+        "preset_number": {
+          "name": "Preset number",
+          "description": "The number of the preset to play."
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "timesync": {
+        "name": "Sync time"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_grouping_entity": {
+      "message": "Entity with ID {entity_id} can't be added to the LinkPlay multiroom. Is the entity a LinkPlay media player?"
     }
   }
 }

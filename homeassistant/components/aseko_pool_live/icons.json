@@ -1,16 +1,28 @@
 {
   "entity": {
     "binary_sensor": {
-      "water_flow": {
+      "water_flow_to_probes": {
         "default": "mdi:waves-arrow-right"
       }
     },
     "sensor": {
+      "air_temperature": {
+        "default": "mdi:thermometer-lines"
+      },
+      "electrolyzer": {
+        "default": "mdi:lightning-bolt"
+      },
       "free_chlorine": {
-        "default": "mdi:flask"
+        "default": "mdi:pool"
+      },
+      "redox": {
+        "default": "mdi:pool"
+      },
+      "salinity": {
+        "default": "mdi:pool"
       },
       "water_temperature": {
-        "default": "mdi:coolant-temperature"
+        "default": "mdi:pool-thermometer"
       }
     }
   }

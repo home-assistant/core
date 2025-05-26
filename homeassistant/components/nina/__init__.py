@@ -11,7 +11,6 @@ from .const import (
     CONF_AREA_FILTER,
     CONF_FILTER_CORONA,
     CONF_HEADLINE_FILTER,
-    CONF_REGIONS,
     DOMAIN,
     NO_MATCH_REGEX,
 )
@@ -22,9 +21,6 @@ PLATFORMS: list[str] = [Platform.BINARY_SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up platform from a ConfigEntry."""
-
-    regions: dict[str, str] = entry.data[CONF_REGIONS]
-
     if CONF_HEADLINE_FILTER not in entry.data:
         filter_regex = NO_MATCH_REGEX
 
@@ -39,12 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         new_data = {**entry.data, CONF_AREA_FILTER: ALL_MATCH_REGEX}
         hass.config_entries.async_update_entry(entry, data=new_data)
 
-    coordinator = NINADataUpdateCoordinator(
-        hass,
-        regions,
-        entry.data[CONF_HEADLINE_FILTER],
-        entry.data[CONF_AREA_FILTER],
-    )
+    coordinator = NINADataUpdateCoordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()
 

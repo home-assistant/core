@@ -60,14 +60,11 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         errors = {}
-        if user_input is not None and (
-            entry := self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        ):
-            _input = {**entry.data, CONF_API_KEY: user_input[CONF_API_KEY]}
+        if user_input is not None:
+            reauth_entry = self._get_reauth_entry()
+            _input = {**reauth_entry.data, CONF_API_KEY: user_input[CONF_API_KEY]}
             if (error := await self.validate_input(_input)) is None:
-                self.hass.config_entries.async_update_entry(entry, data=_input)
-                await self.hass.config_entries.async_reload(entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+                return self.async_update_reload_and_abort(reauth_entry, data=_input)
             errors["base"] = error
         return self.async_show_form(
             step_id="reauth_confirm",

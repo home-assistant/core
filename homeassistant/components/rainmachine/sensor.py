@@ -17,12 +17,12 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 
-from . import RainMachineConfigEntry, RainMachineData, RainMachineEntity
+from . import RainMachineConfigEntry, RainMachineData
 from .const import DATA_PROGRAMS, DATA_PROVISION_SETTINGS, DATA_ZONES
-from .model import RainMachineEntityDescription
+from .entity import RainMachineEntity, RainMachineEntityDescription
 from .util import (
     RUN_STATE_MAP,
     EntityDomainReplacementStrategy,
@@ -153,7 +153,7 @@ SENSOR_DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: RainMachineConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up RainMachine sensors based on a config entry."""
     data = entry.runtime_data

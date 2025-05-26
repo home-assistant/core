@@ -42,6 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirthingsConfigEntry) ->
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=DOMAIN,
         update_method=_update_method,
         update_interval=SCAN_INTERVAL,

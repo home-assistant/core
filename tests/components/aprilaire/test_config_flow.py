@@ -95,7 +95,6 @@ async def test_config_flow_data(client: AprilaireClient, hass: HomeAssistant) ->
         )
 
     client.start_listen.assert_called_once()
-    client.wait_for_response.assert_any_call(FunctionalDomain.IDENTIFICATION, 4, 30)
     client.wait_for_response.assert_any_call(FunctionalDomain.CONTROL, 7, 30)
     client.wait_for_response.assert_any_call(FunctionalDomain.SENSORS, 2, 30)
     client.stop_listen.assert_called_once()

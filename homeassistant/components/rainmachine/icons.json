@@ -70,16 +70,38 @@
     }
   },
   "services": {
-    "pause_watering": "mdi:pause",
-    "restrict_watering": "mdi:cancel",
-    "start_program": "mdi:play",
-    "start_zone": "mdi:play",
-    "stop_all": "mdi:stop",
-    "stop_program": "mdi:stop",
-    "stop_zone": "mdi:stop",
-    "unpause_watering": "mdi:play-pause",
-    "push_flow_meter_data": "mdi:database-arrow-up",
-    "push_weather_data": "mdi:database-arrow-up",
-    "unrestrict_watering": "mdi:check"
+    "pause_watering": {
+      "service": "mdi:pause"
+    },
+    "restrict_watering": {
+      "service": "mdi:cancel"
+    },
+    "start_program": {
+      "service": "mdi:play"
+    },
+    "start_zone": {
+      "service": "mdi:play"
+    },
+    "stop_all": {
+      "service": "mdi:stop"
+    },
+    "stop_program": {
+      "service": "mdi:stop"
+    },
+    "stop_zone": {
+      "service": "mdi:stop"
+    },
+    "unpause_watering": {
+      "service": "mdi:play-pause"
+    },
+    "push_flow_meter_data": {
+      "service": "mdi:database-arrow-up"
+    },
+    "push_weather_data": {
+      "service": "mdi:database-arrow-up"
+    },
+    "unrestrict_watering": {
+      "service": "mdi:check"
+    }
   }
 }

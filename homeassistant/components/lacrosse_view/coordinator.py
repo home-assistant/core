@@ -10,10 +10,10 @@ from lacrosse_view import HTTPError, LaCrosse, Location, LoginError, Sensor
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import SCAN_INTERVAL
+from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,12 +26,14 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
     name: str
     id: str
     hass: HomeAssistant
+    devices: list[Sensor] | None = None
+    config_entry: ConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        api: LaCrosse,
         entry: ConfigEntry,
+        api: LaCrosse,
     ) -> None:
         """Initialize DataUpdateCoordinator for LaCrosse View."""
         self.api = api
@@ -44,6 +46,7 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name="LaCrosse View",
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
@@ -60,24 +63,46 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
             except LoginError as error:
                 raise ConfigEntryAuthFailed from error
 
+        if self.devices is None:
+            _LOGGER.debug("Getting devices")
+            try:
+                self.devices = await self.api.get_devices(
+                    location=Location(id=self.id, name=self.name),
+                )
+            except HTTPError as error:
+                raise UpdateFailed from error
+
         try:
             # Fetch last hour of data
-            sensors = await self.api.get_sensors(
-                location=Location(id=self.id, name=self.name),
-                tz=self.hass.config.time_zone,
-                start=str(now - 3600),
-                end=str(now),
-            )
-        except HTTPError as error:
-            raise ConfigEntryNotReady from error
+            for sensor in self.devices:
+                data = await self.api.get_sensor_status(
+                    sensor=sensor,
+                    tz=self.hass.config.time_zone,
+                )
+                _LOGGER.debug("Got data: %s", data)
 
-        _LOGGER.debug("Got data: %s", sensors)
+                if data_error := data.get("error"):
+                    if data_error == "no_readings":
+                        sensor.data = None
+                        _LOGGER.debug("No readings for %s", sensor.name)
+                        continue
+                    _LOGGER.debug("Error: %s", data_error)
+                    raise UpdateFailed(
+                        translation_domain=DOMAIN, translation_key="update_error"
+                    )
+
+                sensor.data = data["data"]["current"]
+
+        except HTTPError as error:
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="update_error"
+            ) from error
 
         # Verify that we have permission to read the sensors
-        for sensor in sensors:
+        for sensor in self.devices:
             if not sensor.permissions.get("read", False):
                 raise ConfigEntryAuthFailed(
                     f"This account does not have permission to read {sensor.name}"
                 )
 
-        return sensors
+        return self.devices

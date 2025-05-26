@@ -19,7 +19,7 @@ from homeassistant.const import (
     MATCH_ALL,
 )
 from homeassistant.core import EventOrigin, HomeAssistant, State, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import ConfigType
 

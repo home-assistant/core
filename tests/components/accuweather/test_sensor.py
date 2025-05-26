@@ -6,7 +6,7 @@ from accuweather import ApiError, InvalidApiKeyError, RequestsExceededError
 from aiohttp.client_exceptions import ClientConnectorError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.accuweather.const import (
     UPDATE_INTERVAL_DAILY_FORECAST,
@@ -148,6 +148,7 @@ async def test_manual_update_entity(
     assert mock_accuweather_client.async_get_current_conditions.call_count == 2
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_imperial_units(
     hass: HomeAssistant, mock_accuweather_client: AsyncMock
 ) -> None:

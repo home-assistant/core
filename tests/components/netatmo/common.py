@@ -6,12 +6,12 @@ import json
 from typing import Any
 from unittest.mock import patch
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.webhook import async_handle_webhook
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.aiohttp import MockRequest
 
 from tests.common import MockConfigEntry, load_fixture

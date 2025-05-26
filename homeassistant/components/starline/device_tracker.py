@@ -1,9 +1,11 @@
 """StarLine device tracker."""
 
-from homeassistant.components.device_tracker import SourceType, TrackerEntity
+from typing import Any
+
+from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .account import StarlineAccount, StarlineDevice
@@ -12,7 +14,9 @@ from .entity import StarlineEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up StarLine entry."""
     account: StarlineAccount = hass.data[DOMAIN][entry.entry_id]
@@ -33,31 +37,26 @@ class StarlineDeviceTracker(StarlineEntity, TrackerEntity, RestoreEntity):
         super().__init__(account, device, "location")
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific attributes."""
         return self._account.gps_attrs(self._device)
 
     @property
-    def battery_level(self):
+    def battery_level(self) -> int | None:
         """Return the battery level of the device."""
         return self._device.battery_level
 
     @property
-    def location_accuracy(self):
+    def location_accuracy(self) -> float:
         """Return the gps accuracy of the device."""
         return self._device.position.get("r", 0)
 
     @property
-    def latitude(self):
+    def latitude(self) -> float:
         """Return latitude value of the device."""
         return self._device.position["x"]
 
     @property
-    def longitude(self):
+    def longitude(self) -> float:
         """Return longitude value of the device."""
         return self._device.position["y"]
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type, eg gps or router, of the device."""
-        return SourceType.GPS

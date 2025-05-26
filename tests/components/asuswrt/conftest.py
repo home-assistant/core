@@ -16,12 +16,30 @@ ASUSWRT_LEGACY_LIB = f"{ASUSWRT_BASE}.bridge.AsusWrtLegacy"
 
 MOCK_BYTES_TOTAL = 60000000000, 50000000000
 MOCK_BYTES_TOTAL_HTTP = dict(enumerate(MOCK_BYTES_TOTAL))
+MOCK_CPU_USAGE = {
+    "cpu1_usage": 0.1,
+    "cpu2_usage": 0.2,
+    "cpu3_usage": 0.3,
+    "cpu4_usage": 0.4,
+    "cpu5_usage": 0.5,
+    "cpu6_usage": 0.6,
+    "cpu7_usage": 0.7,
+    "cpu8_usage": 0.8,
+    "cpu_total_usage": 0.9,
+}
 MOCK_CURRENT_TRANSFER_RATES = 20000000, 10000000
 MOCK_CURRENT_TRANSFER_RATES_HTTP = dict(enumerate(MOCK_CURRENT_TRANSFER_RATES))
 MOCK_LOAD_AVG_HTTP = {"load_avg_1": 1.1, "load_avg_5": 1.2, "load_avg_15": 1.3}
 MOCK_LOAD_AVG = list(MOCK_LOAD_AVG_HTTP.values())
+MOCK_MEMORY_USAGE = {
+    "mem_usage_perc": 52.4,
+    "mem_total": 1048576,
+    "mem_free": 393216,
+    "mem_used": 655360,
+}
 MOCK_TEMPERATURES = {"2.4GHz": 40.2, "5.0GHz": 0, "CPU": 71.2}
 MOCK_TEMPERATURES_HTTP = {**MOCK_TEMPERATURES, "5.0GHz_2": 40.3, "6.0GHz": 40.4}
+MOCK_UPTIME = {"last_boot": "2024-08-02T00:47:00+00:00", "uptime": 1625927}
 
 
 @pytest.fixture(name="patch_setup_entry")
@@ -121,6 +139,11 @@ def mock_controller_connect_http(mock_devices_http):
         service_mock.return_value.async_get_temperatures.return_value = {
             k: v for k, v in MOCK_TEMPERATURES_HTTP.items() if k != "5.0GHz"
         }
+        service_mock.return_value.async_get_cpu_usage.return_value = MOCK_CPU_USAGE
+        service_mock.return_value.async_get_memory_usage.return_value = (
+            MOCK_MEMORY_USAGE
+        )
+        service_mock.return_value.async_get_uptime.return_value = MOCK_UPTIME
         yield service_mock
 
 
@@ -133,13 +156,22 @@ def mock_controller_connect_http_sens_fail(connect_http):
     connect_http.return_value.async_get_traffic_rates.side_effect = AsusWrtError
     connect_http.return_value.async_get_loadavg.side_effect = AsusWrtError
     connect_http.return_value.async_get_temperatures.side_effect = AsusWrtError
+    connect_http.return_value.async_get_cpu_usage.side_effect = AsusWrtError
+    connect_http.return_value.async_get_memory_usage.side_effect = AsusWrtError
+    connect_http.return_value.async_get_uptime.side_effect = AsusWrtError
 
 
 @pytest.fixture(name="connect_http_sens_detect")
 def mock_controller_connect_http_sens_detect():
     """Mock a successful sensor detection using http library."""
-    with patch(
-        f"{ASUSWRT_BASE}.bridge.AsusWrtHttpBridge._get_available_temperature_sensors",
-        return_value=[*MOCK_TEMPERATURES_HTTP],
-    ) as mock_sens_detect:
-        yield mock_sens_detect
+    with (
+        patch(
+            f"{ASUSWRT_BASE}.bridge.AsusWrtHttpBridge._get_available_temperature_sensors",
+            return_value=[*MOCK_TEMPERATURES_HTTP],
+        ) as mock_sens_temp_detect,
+        patch(
+            f"{ASUSWRT_BASE}.bridge.AsusWrtHttpBridge._get_available_cpu_sensors",
+            return_value=[*MOCK_CPU_USAGE],
+        ) as mock_sens_cpu_detect,
+    ):
+        yield mock_sens_temp_detect, mock_sens_cpu_detect

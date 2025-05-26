@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from pyecoforest.models.device import Alarm, Device, OperationMode, State
 import pytest
 
-from homeassistant.components.ecoforest import DOMAIN
+from homeassistant.components.ecoforest.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 

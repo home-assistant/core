@@ -1,0 +1,169 @@
+# serializer version: 1
+# name: test_cloud_all_sensors[switch.bedroom_socket-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.bedroom_socket',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': 'Bedroom Socket',
+    'platform': 'geniushub',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_27',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cloud_all_sensors[switch.bedroom_socket-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
+      'friendly_name': 'Bedroom Socket',
+      'status': dict({
+        'mode': 'timer',
+        'override': dict({
+          'duration': 0,
+          'setpoint': 'True',
+        }),
+        'type': 'on / off',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bedroom_socket',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_cloud_all_sensors[switch.kitchen_socket-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.kitchen_socket',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': 'Kitchen Socket',
+    'platform': 'geniushub',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_28',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cloud_all_sensors[switch.kitchen_socket-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
+      'friendly_name': 'Kitchen Socket',
+      'status': dict({
+        'mode': 'timer',
+        'override': dict({
+          'duration': 0,
+          'setpoint': 'True',
+        }),
+        'type': 'on / off',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.kitchen_socket',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_cloud_all_sensors[switch.study_socket-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.study_socket',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': 'Study Socket',
+    'platform': 'geniushub',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_32',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cloud_all_sensors[switch.study_socket-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
+      'friendly_name': 'Study Socket',
+      'status': dict({
+        'mode': 'off',
+        'override': dict({
+          'duration': 0,
+          'setpoint': 'True',
+        }),
+        'type': 'on / off',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.study_socket',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

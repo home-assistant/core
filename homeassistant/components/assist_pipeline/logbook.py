@@ -7,7 +7,7 @@ from collections.abc import Callable
 from homeassistant.components.logbook import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import Event, HomeAssistant, callback
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, EVENT_RECORDING
 

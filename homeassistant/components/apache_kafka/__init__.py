@@ -18,7 +18,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA, EntityFilter
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import ssl as ssl_util
@@ -38,7 +38,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_TOPIC): cv.string,
                 vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
                 vol.Optional(CONF_SECURITY_PROTOCOL, default="PLAINTEXT"): vol.In(
-                    ["PLAINTEXT", "SASL_SSL"]
+                    ["PLAINTEXT", "SSL", "SASL_SSL"]
                 ),
                 vol.Optional(CONF_USERNAME): cv.string,
                 vol.Optional(CONF_PASSWORD): cv.string,
@@ -53,7 +53,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate the Apache Kafka integration."""
     conf = config[DOMAIN]
 
-    kafka = hass.data[DOMAIN] = KafkaManager(
+    kafka = KafkaManager(
         hass,
         conf[CONF_IP_ADDRESS],
         conf[CONF_PORT],
@@ -94,7 +94,7 @@ class KafkaManager:
         port: int,
         topic: str,
         entities_filter: EntityFilter,
-        security_protocol: Literal["PLAINTEXT", "SASL_SSL"],
+        security_protocol: Literal["PLAINTEXT", "SSL", "SASL_SSL"],
         username: str | None,
         password: str | None,
     ) -> None:

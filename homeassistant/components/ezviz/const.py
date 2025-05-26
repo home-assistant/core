@@ -32,7 +32,4 @@ EU_URL = "apiieu.ezvizlife.com"
 RUSSIA_URL = "apirus.ezvizru.com"
 DEFAULT_CAMERA_USERNAME = "admin"
 DEFAULT_TIMEOUT = 25
-DEFAULT_FFMPEG_ARGUMENTS = ""
-
-# Data
-DATA_COORDINATOR = "coordinator"
+DEFAULT_FFMPEG_ARGUMENTS = "/Streaming/Channels/102"

@@ -7,7 +7,6 @@ import logging
 
 from fyta_cli.fyta_connector import FytaConnector
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_PASSWORD,
@@ -15,17 +14,19 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.dt import async_get_time_zone
 
 from .const import CONF_EXPIRATION
-from .coordinator import FytaCoordinator
+from .coordinator import FytaConfigEntry, FytaCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.IMAGE,
     Platform.SENSOR,
 ]
-type FytaConfigEntry = ConfigEntry[FytaCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FytaConfigEntry) -> bool:
@@ -39,9 +40,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: FytaConfigEntry) -> bool
         entry.data[CONF_EXPIRATION]
     ).astimezone(await async_get_time_zone(tz))
 
-    fyta = FytaConnector(username, password, access_token, expiration, tz)
+    fyta = FytaConnector(
+        username, password, access_token, expiration, tz, async_get_clientsession(hass)
+    )
 
-    coordinator = FytaCoordinator(hass, fyta)
+    coordinator = FytaCoordinator(hass, entry, fyta)
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -52,13 +55,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: FytaConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FytaConfigEntry) -> bool:
     """Unload Fyta entity."""
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: FytaConfigEntry
+) -> bool:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
@@ -79,7 +84,10 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             new[CONF_EXPIRATION] = credentials.expiration.isoformat()
 
             hass.config_entries.async_update_entry(
-                config_entry, data=new, minor_version=2, version=1
+                config_entry,
+                data=new,
+                minor_version=2,
+                version=1,
             )
 
     _LOGGER.debug(

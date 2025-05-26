@@ -8,7 +8,7 @@ from typing import Any
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DLinkConfigEntry
 from .const import ATTR_TOTAL_CONSUMPTION
@@ -24,7 +24,7 @@ SWITCH_TYPE = SwitchEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: DLinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the D-Link Power Plug switch."""
     async_add_entities([SmartPlugSwitch(entry, SWITCH_TYPE)], True)

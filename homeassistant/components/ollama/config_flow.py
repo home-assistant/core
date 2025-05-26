@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 import logging
 import sys
-from types import MappingProxyType
 from typing import Any
 
 import httpx
@@ -33,17 +33,22 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.util.ssl import get_default_context
 
 from .const import (
     CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
     CONF_MODEL,
+    CONF_NUM_CTX,
     CONF_PROMPT,
     DEFAULT_KEEP_ALIVE,
     DEFAULT_MAX_HISTORY,
     DEFAULT_MODEL,
+    DEFAULT_NUM_CTX,
     DEFAULT_TIMEOUT,
     DOMAIN,
+    MAX_NUM_CTX,
+    MIN_NUM_CTX,
     MODEL_NAMES,
 )
 
@@ -87,7 +92,9 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            self.client = ollama.AsyncClient(host=self.url)
+            self.client = ollama.AsyncClient(
+                host=self.url, verify=get_default_context()
+            )
             async with asyncio.timeout(DEFAULT_TIMEOUT):
                 response = await self.client.list()
 
@@ -200,22 +207,19 @@ class OllamaOptionsFlow(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
-        self.url: str = self.config_entry.data[CONF_URL]
-        self.model: str = self.config_entry.data[CONF_MODEL]
+        self.url: str = config_entry.data[CONF_URL]
+        self.model: str = config_entry.data[CONF_MODEL]
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            if user_input[CONF_LLM_HASS_API] == "none":
-                user_input.pop(CONF_LLM_HASS_API)
             return self.async_create_entry(
                 title=_get_title(self.model), data=user_input
             )
 
-        options = self.config_entry.options or MappingProxyType({})
+        options: Mapping[str, Any] = self.config_entry.options or {}
         schema = ollama_config_option_schema(self.hass, options)
         return self.async_show_form(
             step_id="init",
@@ -224,22 +228,16 @@ class OllamaOptionsFlow(OptionsFlow):
 
 
 def ollama_config_option_schema(
-    hass: HomeAssistant, options: MappingProxyType[str, Any]
+    hass: HomeAssistant, options: Mapping[str, Any]
 ) -> dict:
     """Ollama options schema."""
     hass_apis: list[SelectOptionDict] = [
-        SelectOptionDict(
-            label="No control",
-            value="none",
-        )
-    ]
-    hass_apis.extend(
         SelectOptionDict(
             label=api.name,
             value=api.id,
         )
         for api in llm.async_get_apis(hass)
-    )
+    ]
 
     return {
         vol.Optional(
@@ -253,8 +251,15 @@ def ollama_config_option_schema(
         vol.Optional(
             CONF_LLM_HASS_API,
             description={"suggested_value": options.get(CONF_LLM_HASS_API)},
-            default="none",
-        ): SelectSelector(SelectSelectorConfig(options=hass_apis)),
+        ): SelectSelector(SelectSelectorConfig(options=hass_apis, multiple=True)),
+        vol.Optional(
+            CONF_NUM_CTX,
+            description={"suggested_value": options.get(CONF_NUM_CTX, DEFAULT_NUM_CTX)},
+        ): NumberSelector(
+            NumberSelectorConfig(
+                min=MIN_NUM_CTX, max=MAX_NUM_CTX, step=1, mode=NumberSelectorMode.BOX
+            )
+        ),
         vol.Optional(
             CONF_MAX_HISTORY,
             description={

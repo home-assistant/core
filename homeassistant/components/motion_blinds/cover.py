@@ -18,7 +18,7 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
@@ -51,6 +51,7 @@ POSITION_DEVICE_MAP = {
     BlindType.CurtainRight: CoverDeviceClass.CURTAIN,
     BlindType.SkylightBlind: CoverDeviceClass.SHADE,
     BlindType.InsectScreen: CoverDeviceClass.SHADE,
+    BlindType.RadioReceiver: CoverDeviceClass.SHADE,
 }
 
 TILT_DEVICE_MAP = {
@@ -83,7 +84,7 @@ SET_ABSOLUTE_POSITION_SCHEMA: VolDictType = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Motion Blind from a config entry."""
     entities: list[MotionBaseDevice] = []
@@ -331,22 +332,62 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
         return None
 
     @property
+    def current_cover_tilt_position(self) -> int | None:
+        """Return current angle of cover.
+
+        None is unknown, 0 is closed/minimum tilt, 100 is fully open/maximum tilt.
+        """
+        if self._blind.position is None:
+            if self._blind.angle is None:
+                return None
+            return self._blind.angle * 100 / 180
+
+        return self._blind.position
+
+    @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
-        if self._blind.angle is None:
-            return None
-        return self._blind.angle == 0
+        if self._blind.position is None:
+            if self._blind.angle is None:
+                return None
+            return self._blind.angle == 0
+
+        return self._blind.position == 0
+
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+        """Open the cover tilt."""
+        async with self._api_lock:
+            await self.hass.async_add_executor_job(self._blind.Open)
+
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+        """Close the cover tilt."""
+        async with self._api_lock:
+            await self.hass.async_add_executor_job(self._blind.Close)
+
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+        """Move the cover tilt to a specific position."""
+        angle = kwargs[ATTR_TILT_POSITION]
+        if self._blind.position is None:
+            angle = angle * 180 / 100
+            async with self._api_lock:
+                await self.hass.async_add_executor_job(self._blind.Set_angle, angle)
+        else:
+            async with self._api_lock:
+                await self.hass.async_add_executor_job(self._blind.Set_position, angle)
 
     async def async_set_absolute_position(self, **kwargs):
         """Move the cover to a specific absolute position (see TDBU)."""
         angle = kwargs.get(ATTR_TILT_POSITION)
-        if angle is not None:
+        if angle is None:
+            return
+
+        if self._blind.position is None:
             angle = angle * 180 / 100
             async with self._api_lock:
-                await self.hass.async_add_executor_job(
-                    self._blind.Set_angle,
-                    angle,
-                )
+                await self.hass.async_add_executor_job(self._blind.Set_angle, angle)
+        else:
+            async with self._api_lock:
+                await self.hass.async_add_executor_job(self._blind.Set_position, angle)
 
 
 class MotionTDBUDevice(MotionBaseDevice):
@@ -421,7 +462,7 @@ class MotionTDBUDevice(MotionBaseDevice):
     async def async_set_absolute_position(self, **kwargs):
         """Move the cover to a specific absolute position."""
         position = kwargs[ATTR_ABSOLUTE_POSITION]
-        target_width = kwargs.get(ATTR_WIDTH, None)
+        target_width = kwargs.get(ATTR_WIDTH)
 
         async with self._api_lock:
             await self.hass.async_add_executor_job(

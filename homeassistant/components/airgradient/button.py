@@ -13,11 +13,14 @@ from homeassistant.components.button import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, AirGradientConfigEntry
-from .coordinator import AirGradientConfigCoordinator
-from .entity import AirGradientEntity
+from . import AirGradientConfigEntry
+from .const import DOMAIN
+from .coordinator import AirGradientCoordinator
+from .entity import AirGradientEntity, exception_handler
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -44,11 +47,11 @@ LED_BAR_TEST = AirGradientButtonEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AirGradientConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AirGradient button entities based on a config entry."""
-    model = entry.runtime_data.measurement.data.model
-    coordinator = entry.runtime_data.config
+    coordinator = entry.runtime_data
+    model = coordinator.data.measures.model
 
     added_entities = False
 
@@ -57,7 +60,7 @@ async def async_setup_entry(
         nonlocal added_entities
 
         if (
-            coordinator.data.configuration_control is ConfigurationControl.LOCAL
+            coordinator.data.config.configuration_control is ConfigurationControl.LOCAL
             and not added_entities
         ):
             entities = [AirGradientButton(coordinator, CO2_CALIBRATION)]
@@ -67,7 +70,8 @@ async def async_setup_entry(
             async_add_entities(entities)
             added_entities = True
         elif (
-            coordinator.data.configuration_control is not ConfigurationControl.LOCAL
+            coordinator.data.config.configuration_control
+            is not ConfigurationControl.LOCAL
             and added_entities
         ):
             entity_registry = er.async_get(hass)
@@ -87,11 +91,10 @@ class AirGradientButton(AirGradientEntity, ButtonEntity):
     """Defines an AirGradient button."""
 
     entity_description: AirGradientButtonEntityDescription
-    coordinator: AirGradientConfigCoordinator
 
     def __init__(
         self,
-        coordinator: AirGradientConfigCoordinator,
+        coordinator: AirGradientCoordinator,
         description: AirGradientButtonEntityDescription,
     ) -> None:
         """Initialize airgradient button."""
@@ -99,6 +102,7 @@ class AirGradientButton(AirGradientEntity, ButtonEntity):
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.serial_number}-{description.key}"
 
+    @exception_handler
     async def async_press(self) -> None:
         """Press the button."""
         await self.entity_description.press_fn(self.coordinator.client)

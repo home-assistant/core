@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from asyncio import events
 import dataclasses
 import logging
-import os
 import subprocess
 import threading
 from time import monotonic
@@ -58,22 +56,6 @@ class RuntimeConfig:
     safe_mode: bool = False
 
 
-def can_use_pidfd() -> bool:
-    """Check if pidfd_open is available.
-
-    Back ported from cpython 3.12
-    """
-    if not hasattr(os, "pidfd_open"):
-        return False
-    try:
-        pid = os.getpid()
-        os.close(os.pidfd_open(pid, 0))
-    except OSError:
-        # blocked by security policy like SECCOMP
-        return False
-    return True
-
-
 class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
     """Event loop policy for Home Assistant."""
 
@@ -81,23 +63,6 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
         """Init the event loop policy."""
         super().__init__()
         self.debug = debug
-        self._watcher: asyncio.AbstractChildWatcher | None = None
-
-    def _init_watcher(self) -> None:
-        """Initialize the watcher for child processes.
-
-        Back ported from cpython 3.12
-        """
-        with events._lock:  # type: ignore[attr-defined] # noqa: SLF001
-            if self._watcher is None:  # pragma: no branch
-                if can_use_pidfd():
-                    self._watcher = asyncio.PidfdChildWatcher()
-                else:
-                    self._watcher = asyncio.ThreadedChildWatcher()
-                if threading.current_thread() is threading.main_thread():
-                    self._watcher.attach_loop(
-                        self._local._loop  # type: ignore[attr-defined] # noqa: SLF001
-                    )
 
     @property
     def loop_name(self) -> str:
@@ -107,7 +72,6 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
     def new_event_loop(self) -> asyncio.AbstractEventLoop:
         """Get the event loop."""
         loop: asyncio.AbstractEventLoop = super().new_event_loop()
-        setattr(loop, "_thread_ident", threading.get_ident())
         loop.set_exception_handler(_async_loop_exception_handler)
         if self.debug:
             loop.set_debug(True)
@@ -176,7 +140,7 @@ def _enable_posix_spawn() -> None:
     # less efficient. This is a workaround to force posix_spawn()
     # when using musl since cpython is not aware its supported.
     tag = next(packaging.tags.sys_tags())
-    subprocess._USE_POSIX_SPAWN = "musllinux" in tag.platform  # noqa: SLF001
+    subprocess._USE_POSIX_SPAWN = "musllinux" in tag.platform  # type: ignore[misc]  # noqa: SLF001
 
 
 def run(runtime_config: RuntimeConfig) -> int:

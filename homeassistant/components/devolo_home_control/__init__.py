@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from functools import partial
-from types import MappingProxyType
 from typing import Any
 
 from devolo_home_control_api.exceptions.gateway import GatewayOfflineError
@@ -18,7 +18,7 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import CONF_MYDEVOLO, DEFAULT_MYDEVOLO, GATEWAY_SERIAL_PATTERN, PLATFORMS
+from .const import GATEWAY_SERIAL_PATTERN, PLATFORMS
 
 type DevoloHomeControlConfigEntry = ConfigEntry[list[HomeControl]]
 
@@ -97,10 +97,9 @@ async def async_remove_config_entry_device(
     return True
 
 
-def configure_mydevolo(conf: dict[str, Any] | MappingProxyType[str, Any]) -> Mydevolo:
+def configure_mydevolo(conf: Mapping[str, Any]) -> Mydevolo:
     """Configure mydevolo."""
     mydevolo = Mydevolo()
     mydevolo.user = conf[CONF_USERNAME]
     mydevolo.password = conf[CONF_PASSWORD]
-    mydevolo.url = conf.get(CONF_MYDEVOLO, DEFAULT_MYDEVOLO)
     return mydevolo

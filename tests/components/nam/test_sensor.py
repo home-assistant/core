@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from freezegun.api import FrozenDateTimeFactory
 from nettigo_air_monitor import ApiError
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from tenacity import RetryError
 
 from homeassistant.components.nam.const import DEFAULT_UPDATE_INTERVAL, DOMAIN

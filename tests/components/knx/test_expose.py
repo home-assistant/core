@@ -108,6 +108,11 @@ async def test_expose_attribute(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await hass.async_block_till_done()
     await knx.assert_telegram_count(0)
 
+    # Ignore "unavailable" state
+    hass.states.async_set(entity_id, "unavailable", {attribute: None})
+    await hass.async_block_till_done()
+    await knx.assert_telegram_count(0)
+
 
 async def test_expose_attribute_with_default(
     hass: HomeAssistant, knx: KNXTestKit
@@ -131,7 +136,7 @@ async def test_expose_attribute_with_default(
     await knx.receive_read("1/1/8")
     await knx.assert_response("1/1/8", (0,))
 
-    # Change state to "on"; no attribute
+    # Change state to "on"; no attribute -> default
     hass.states.async_set(entity_id, "on", {})
     await hass.async_block_till_done()
     await knx.assert_write("1/1/8", (0,))
@@ -145,6 +150,11 @@ async def test_expose_attribute_with_default(
     hass.states.async_set(entity_id, "off", {attribute: 1})
     await hass.async_block_till_done()
     await knx.assert_no_telegram()
+
+    # Use default for "unavailable" state
+    hass.states.async_set(entity_id, "unavailable")
+    await hass.async_block_till_done()
+    await knx.assert_write("1/1/8", (0,))
 
     # Change state and attribute
     hass.states.async_set(entity_id, "on", {attribute: 3})
@@ -290,8 +300,18 @@ async def test_expose_value_template(
     assert "Error rendering value template for KNX expose" in caplog.text
 
 
+@pytest.mark.parametrize(
+    "invalid_attribute",
+    [
+        101.0,
+        "invalid",  # can't cast to float
+    ],
+)
 async def test_expose_conversion_exception(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, knx: KNXTestKit
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    knx: KNXTestKit,
+    invalid_attribute: str,
 ) -> None:
     """Test expose throws exception."""
 
@@ -313,33 +333,35 @@ async def test_expose_conversion_exception(
     await knx.receive_read("1/1/8")
     await knx.assert_response("1/1/8", (3,))
 
+    caplog.clear()
     # Change attribute: Expect no exception
     hass.states.async_set(
         entity_id,
         "on",
-        {attribute: 101},
+        {attribute: invalid_attribute},
     )
     await hass.async_block_till_done()
     await knx.assert_no_telegram()
     assert (
-        'Could not expose fake.entity fake_attribute value "101.0" to KNX:'
+        f'Could not expose fake.entity fake_attribute value "{invalid_attribute}" to KNX:'
         in caplog.text
     )
 
 
-@freeze_time("2022-1-7 9:13:14")
+@freeze_time("2022-1-7 9:13:14")  # UTC -> +1h = Vienna in winter (9 -> 0xA)
 @pytest.mark.parametrize(
     ("time_type", "raw"),
     [
-        ("time", (0xA9, 0x0D, 0x0E)),  # localtime includes day of week
+        ("time", (0xAA, 0x0D, 0x0E)),  # localtime includes day of week
         ("date", (0x07, 0x01, 0x16)),
-        ("datetime", (0x7A, 0x1, 0x7, 0xA9, 0xD, 0xE, 0x20, 0xC0)),
+        ("datetime", (0x7A, 0x1, 0x7, 0xAA, 0xD, 0xE, 0x20, 0xC0)),
     ],
 )
 async def test_expose_with_date(
     hass: HomeAssistant, knx: KNXTestKit, time_type: str, raw: tuple[int, ...]
 ) -> None:
     """Test an expose with a date."""
+    await hass.config.async_set_time_zone("Europe/Vienna")
     await knx.setup_integration(
         {
             CONF_KNX_EXPOSE: {

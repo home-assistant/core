@@ -1,10 +1,12 @@
 """Types for the ViCare integration."""
 
 from collections.abc import Callable
+from contextlib import suppress
 from dataclasses import dataclass
 import enum
 from typing import Any
 
+from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 
@@ -14,6 +16,7 @@ from homeassistant.components.climate import (
     PRESET_HOME,
     PRESET_SLEEP,
 )
+from homeassistant.config_entries import ConfigEntry
 
 
 class HeatingProgram(enum.StrEnum):
@@ -24,11 +27,14 @@ class HeatingProgram(enum.StrEnum):
 
     COMFORT = "comfort"
     COMFORT_HEATING = "comfortHeating"
+    COMFORT_COOLING = "comfortCooling"
     ECO = "eco"
     NORMAL = "normal"
     NORMAL_HEATING = "normalHeating"
+    NORMAL_COOLING = "normalCooling"
     REDUCED = "reduced"
     REDUCED_HEATING = "reducedHeating"
+    REDUCED_COOLING = "reducedCooling"
     STANDBY = "standby"
 
     @staticmethod
@@ -48,8 +54,12 @@ class HeatingProgram(enum.StrEnum):
     ) -> str | None:
         """Return the mapped ViCare heating program for the Home Assistant preset."""
         for program in supported_heating_programs:
-            if VICARE_TO_HA_PRESET_HEATING.get(HeatingProgram(program)) == ha_preset:
-                return program
+            with suppress(ValueError):
+                if (
+                    VICARE_TO_HA_PRESET_HEATING.get(HeatingProgram(program))
+                    == ha_preset
+                ):
+                    return program
         return None
 
 
@@ -64,61 +74,23 @@ VICARE_TO_HA_PRESET_HEATING = {
 }
 
 
-class VentilationMode(enum.StrEnum):
-    """ViCare ventilation modes."""
-
-    PERMANENT = "permanent"  # on, speed controlled by program (levelOne-levelFour)
-    VENTILATION = "ventilation"  # activated by schedule
-    SENSOR_DRIVEN = "sensor_driven"  # activated by schedule, override by sensor
-    SENSOR_OVERRIDE = "sensor_override"  # activated by sensor
-
-    @staticmethod
-    def to_vicare_mode(mode: str | None) -> str | None:
-        """Return the mapped ViCare ventilation mode for the Home Assistant mode."""
-        if mode:
-            try:
-                ventilation_mode = VentilationMode(mode)
-            except ValueError:
-                # ignore unsupported / unmapped modes
-                return None
-            return HA_TO_VICARE_MODE_VENTILATION.get(ventilation_mode) if mode else None
-        return None
-
-    @staticmethod
-    def from_vicare_mode(vicare_mode: str | None) -> str | None:
-        """Return the mapped Home Assistant mode for the ViCare ventilation mode."""
-        for mode in VentilationMode:
-            if HA_TO_VICARE_MODE_VENTILATION.get(VentilationMode(mode)) == vicare_mode:
-                return mode
-        return None
-
-
-HA_TO_VICARE_MODE_VENTILATION = {
-    VentilationMode.PERMANENT: "permanent",
-    VentilationMode.VENTILATION: "ventilation",
-    VentilationMode.SENSOR_DRIVEN: "sensorDriven",
-    VentilationMode.SENSOR_OVERRIDE: "sensorOverride",
-}
-
-
-class VentilationProgram(enum.StrEnum):
-    """ViCare preset ventilation programs.
-
-    As listed in https://github.com/somm15/PyViCare/blob/6c5b023ca6c8bb2d38141dd1746dc1705ec84ce8/PyViCare/PyViCareVentilationDevice.py#L37
-    """
-
-    LEVEL_ONE = "levelOne"
-    LEVEL_TWO = "levelTwo"
-    LEVEL_THREE = "levelThree"
-    LEVEL_FOUR = "levelFour"
-
-
 @dataclass(frozen=True)
 class ViCareDevice:
     """Dataclass holding the device api and config."""
 
     config: PyViCareDeviceConfig
     api: PyViCareDevice
+
+
+@dataclass(frozen=True)
+class ViCareData:
+    """ViCare data class."""
+
+    client: PyViCare
+    devices: list[ViCareDevice]
+
+
+type ViCareConfigEntry = ConfigEntry[ViCareData]
 
 
 @dataclass(frozen=True)

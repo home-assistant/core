@@ -1,5 +1,10 @@
 """Constants for Stream component."""
 
+from __future__ import annotations
+
+from enum import IntEnum
+from typing import Final
+
 DOMAIN = "stream"
 
 ATTR_ENDPOINTS = "endpoints"
@@ -11,8 +16,8 @@ RECORDER_PROVIDER = "recorder"
 
 OUTPUT_FORMATS = [HLS_PROVIDER]
 
-SEGMENT_CONTAINER_FORMAT = "mp4"  # format for segments
-RECORDER_CONTAINER_FORMAT = "mp4"  # format for recorder output
+SEGMENT_CONTAINER_FORMAT: Final = "mp4"  # format for segments
+RECORDER_CONTAINER_FORMAT: Final = "mp4"  # format for recorder output
 AUDIO_CODECS = {"aac", "mp3"}
 
 FORMAT_CONTENT_TYPE = {HLS_PROVIDER: "application/vnd.apple.mpegurl"}
@@ -44,7 +49,7 @@ CONF_LL_HLS = "ll_hls"
 CONF_PART_DURATION = "part_duration"
 CONF_SEGMENT_DURATION = "segment_duration"
 
-CONF_PREFER_TCP = "prefer_tcp"
+ATTR_PREFER_TCP = "prefer_tcp"
 CONF_RTSP_TRANSPORT = "rtsp_transport"
 # The first dict entry below may be used as the default when populating options
 RTSP_TRANSPORTS = {
@@ -55,3 +60,18 @@ RTSP_TRANSPORTS = {
 }
 CONF_USE_WALLCLOCK_AS_TIMESTAMPS = "use_wallclock_as_timestamps"
 CONF_EXTRA_PART_WAIT_TIME = "extra_part_wait_time"
+
+
+class StreamClientError(IntEnum):
+    """Enum for stream client errors.
+
+    These are errors that can be returned by the stream client when trying to
+    open a stream. The caller should not interpret the int values directly, but
+    should use the enum values instead.
+    """
+
+    BadRequest = 400
+    Unauthorized = 401
+    Forbidden = 403
+    NotFound = 404
+    Other = 4

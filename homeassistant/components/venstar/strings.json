@@ -25,8 +25,14 @@
   },
   "entity": {
     "sensor": {
+      "filter_install_time": {
+        "name": "Filter installation time"
+      },
+      "filter_usage": {
+        "name": "Filter usage"
+      },
       "schedule_part": {
-        "name": "Schedule Part",
+        "name": "Schedule part",
         "state": {
           "morning": "Morning",
           "day": "Day",
@@ -38,7 +44,7 @@
       "active_stage": {
         "name": "Active stage",
         "state": {
-          "idle": "Idle",
+          "idle": "[%key:common::state::idle%]",
           "first_stage": "First stage",
           "second_stage": "Second stage"
         }

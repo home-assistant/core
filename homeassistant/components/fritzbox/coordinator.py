@@ -27,6 +27,7 @@ class FritzboxCoordinatorData:
 
     devices: dict[str, FritzhomeDevice]
     templates: dict[str, FritzhomeTemplate]
+    supported_color_properties: dict[str, tuple[dict, list]]
 
 
 class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorData]):
@@ -37,19 +38,20 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
     fritz: Fritzhome
     has_templates: bool
 
-    def __init__(self, hass: HomeAssistant, name: str) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: FritzboxConfigEntry) -> None:
         """Initialize the Fritzbox Smarthome device coordinator."""
         super().__init__(
             hass,
             LOGGER,
-            name=name,
+            config_entry=config_entry,
+            name=config_entry.entry_id,
             update_interval=timedelta(seconds=30),
         )
 
         self.new_devices: set[str] = set()
         self.new_templates: set[str] = set()
 
-        self.data = FritzboxCoordinatorData({}, {})
+        self.data = FritzboxCoordinatorData({}, {}, {})
 
     async def async_setup(self) -> None:
         """Set up the coordinator."""
@@ -75,12 +77,11 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
         self.configuration_url = self.fritz.get_prefixed_host()
 
         await self.async_config_entry_first_refresh()
-        self.cleanup_removed_devices(
-            list(self.data.devices) + list(self.data.templates)
-        )
+        self.cleanup_removed_devices(self.data)
 
-    def cleanup_removed_devices(self, available_ains: list[str]) -> None:
+    def cleanup_removed_devices(self, data: FritzboxCoordinatorData) -> None:
         """Cleanup entity and device registry from removed devices."""
+        available_ains = list(data.devices) + list(data.templates)
         entity_reg = er.async_get(self.hass)
         for entity in er.async_entries_for_config_entry(
             entity_reg, self.config_entry.entry_id
@@ -89,8 +90,13 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
                 LOGGER.debug("Removing obsolete entity entry %s", entity.entity_id)
                 entity_reg.async_remove(entity.entity_id)
 
+        available_main_ains = [
+            ain
+            for ain, dev in data.devices.items() | data.templates.items()
+            if dev.device_and_unit_id[1] is None
+        ]
         device_reg = dr.async_get(self.hass)
-        identifiers = {(DOMAIN, ain) for ain in available_ains}
+        identifiers = {(DOMAIN, ain) for ain in available_main_ains}
         for device in dr.async_entries_for_config_entry(
             device_reg, self.config_entry.entry_id
         ):
@@ -120,6 +126,7 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
 
         devices = self.fritz.get_devices()
         device_data = {}
+        supported_color_properties = self.data.supported_color_properties
         for device in devices:
             # assume device as unavailable, see #55799
             if (
@@ -136,6 +143,13 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
 
             device_data[device.ain] = device
 
+            # pre-load supported colors and color temps for new devices
+            if device.has_color and device.ain not in supported_color_properties:
+                supported_color_properties[device.ain] = (
+                    device.get_colors(),
+                    device.get_color_temps(),
+                )
+
         template_data = {}
         if self.has_templates:
             templates = self.fritz.get_templates()
@@ -145,18 +159,36 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
         self.new_devices = device_data.keys() - self.data.devices.keys()
         self.new_templates = template_data.keys() - self.data.templates.keys()
 
-        return FritzboxCoordinatorData(devices=device_data, templates=template_data)
+        return FritzboxCoordinatorData(
+            devices=device_data,
+            templates=template_data,
+            supported_color_properties=supported_color_properties,
+        )
 
     async def _async_update_data(self) -> FritzboxCoordinatorData:
         """Fetch all device data."""
         new_data = await self.hass.async_add_executor_job(self._update_fritz_devices)
 
+        for device in new_data.devices.values():
+            # create device registry entry for new main devices
+            if (
+                device.ain not in self.data.devices
+                and device.device_and_unit_id[1] is None
+            ):
+                dr.async_get(self.hass).async_get_or_create(
+                    config_entry_id=self.config_entry.entry_id,
+                    name=device.name,
+                    identifiers={(DOMAIN, device.ain)},
+                    manufacturer=device.manufacturer,
+                    model=device.productname,
+                    sw_version=device.fw_version,
+                    configuration_url=self.configuration_url,
+                )
+
         if (
             self.data.devices.keys() - new_data.devices.keys()
             or self.data.templates.keys() - new_data.templates.keys()
         ):
-            self.cleanup_removed_devices(
-                list(new_data.devices) + list(new_data.templates)
-            )
+            self.cleanup_removed_devices(new_data)
 
         return new_data

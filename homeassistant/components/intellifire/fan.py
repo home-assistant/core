@@ -7,23 +7,23 @@ from dataclasses import dataclass
 import math
 from typing import Any
 
-from intellifire4py import IntellifireControlAsync, IntellifirePollData
+from intellifire4py.control import IntelliFireController
+from intellifire4py.model import IntelliFirePollData
 
 from homeassistant.components.fan import (
     FanEntity,
     FanEntityDescription,
     FanEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
 
-from .const import DOMAIN, LOGGER
-from .coordinator import IntellifireDataUpdateCoordinator
+from .const import LOGGER
+from .coordinator import IntellifireConfigEntry
 from .entity import IntellifireEntity
 
 
@@ -31,8 +31,8 @@ from .entity import IntellifireEntity
 class IntellifireFanRequiredKeysMixin:
     """Required keys for fan entity."""
 
-    set_fn: Callable[[IntellifireControlAsync, int], Awaitable]
-    value_fn: Callable[[IntellifirePollData], bool]
+    set_fn: Callable[[IntelliFireController, int], Awaitable]
+    value_fn: Callable[[IntelliFirePollData], int]
     speed_range: tuple[int, int]
 
 
@@ -56,11 +56,11 @@ INTELLIFIRE_FANS: tuple[IntellifireFanEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: IntellifireConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the fans."""
-    coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     if coordinator.data.has_fan:
         async_add_entities(
@@ -80,7 +80,6 @@ class IntellifireFan(IntellifireEntity, FanEntity):
         | FanEntityFeature.TURN_OFF
         | FanEntityFeature.TURN_ON
     )
-    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def is_on(self) -> bool:
@@ -91,7 +90,8 @@ class IntellifireFan(IntellifireEntity, FanEntity):
     def percentage(self) -> int | None:
         """Return fan percentage."""
         return ranged_value_to_percentage(
-            self.entity_description.speed_range, self.coordinator.read_api.data.fanspeed
+            self.entity_description.speed_range,
+            self.coordinator.read_api.data.fanspeed,
         )
 
     @property

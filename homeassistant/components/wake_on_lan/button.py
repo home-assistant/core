@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Wake on LAN button entry."""
     broadcast_address: str | None = entry.options.get(CONF_BROADCAST_ADDRESS)
@@ -60,7 +60,6 @@ class WolButton(ButtonEntity):
         self._attr_unique_id = dr.format_mac(mac_address)
         self._attr_device_info = dr.DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, self._attr_unique_id)},
-            default_manufacturer="Wake on LAN",
             default_name=name,
         )
 

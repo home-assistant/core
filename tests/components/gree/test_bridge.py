@@ -5,21 +5,17 @@ from datetime import timedelta
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.climate import DOMAIN, HVACMode
-from homeassistant.components.gree.const import (
-    COORDINATORS,
-    DOMAIN as GREE,
-    UPDATE_INTERVAL,
-)
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, HVACMode
+from homeassistant.components.gree.const import UPDATE_INTERVAL
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import async_setup_gree, build_device_mock
 
 from tests.common import async_fire_time_changed
 
-ENTITY_ID_1 = f"{DOMAIN}.fake_device_1"
-ENTITY_ID_2 = f"{DOMAIN}.fake_device_2"
+ENTITY_ID_1 = f"{CLIMATE_DOMAIN}.fake_device_1"
+ENTITY_ID_2 = f"{CLIMATE_DOMAIN}.fake_device_2"
 
 
 @pytest.fixture
@@ -42,13 +38,13 @@ async def test_discovery_after_setup(
     discovery.return_value.mock_devices = [mock_device_1, mock_device_2]
     device.side_effect = [mock_device_1, mock_device_2]
 
-    await async_setup_gree(hass)
+    entry = await async_setup_gree(hass)
     await hass.async_block_till_done()
 
     assert discovery.return_value.scan_count == 1
-    assert len(hass.states.async_all(DOMAIN)) == 2
+    assert len(hass.states.async_all(CLIMATE_DOMAIN)) == 2
 
-    device_infos = [x.device.device_info for x in hass.data[GREE][COORDINATORS]]
+    device_infos = [x.device.device_info for x in entry.runtime_data.coordinators]
     assert device_infos[0].ip == "1.1.1.1"
     assert device_infos[1].ip == "2.2.2.2"
 
@@ -68,9 +64,9 @@ async def test_discovery_after_setup(
     await hass.async_block_till_done()
 
     assert discovery.return_value.scan_count == 2
-    assert len(hass.states.async_all(DOMAIN)) == 2
+    assert len(hass.states.async_all(CLIMATE_DOMAIN)) == 2
 
-    device_infos = [x.device.device_info for x in hass.data[GREE][COORDINATORS]]
+    device_infos = [x.device.device_info for x in entry.runtime_data.coordinators]
     assert device_infos[0].ip == "1.1.1.2"
     assert device_infos[1].ip == "2.2.2.1"
 
@@ -82,7 +78,7 @@ async def test_coordinator_updates(
     await async_setup_gree(hass)
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all(DOMAIN)) == 1
+    assert len(hass.states.async_all(CLIMATE_DOMAIN)) == 1
 
     callback = device().add_handler.call_args_list[0][0][1]
 

@@ -3,7 +3,7 @@
   "name": "TP-Link Smart Home",
   "codeowners": ["@rytilahti", "@bdraco", "@sdb9696"],
   "config_flow": true,
-  "dependencies": ["network"],
+  "dependencies": ["network", "ffmpeg", "stream"],
   "dhcp": [
     {
       "registered_devices": true
@@ -301,5 +301,5 @@
   "iot_class": "local_polling",
   "loggers": ["kasa"],
   "quality_scale": "platinum",
-  "requirements": ["python-kasa[speedups]==0.7.1"]
+  "requirements": ["python-kasa[speedups]==0.10.2"]
 }

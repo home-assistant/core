@@ -14,7 +14,7 @@
         'latitude': '**REDACTED**',
         'longitude': '**REDACTED**',
         'lost': False,
-        'lost_timestamp': '1969-12-31T23:59:59.999000',
+        'lost_timestamp': '1969-12-31T19:00:00',
         'name': 'Wallet',
         'ring_state': 'STOPPED',
         'uuid': '**REDACTED**',

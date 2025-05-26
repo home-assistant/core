@@ -1,12 +1,13 @@
 """Test the config flow for the Insteon integration."""
 
-from unittest.mock import patch
+from collections.abc import Callable
+from typing import Any
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from voluptuous_serialize import convert
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp, usb
 from homeassistant.components.insteon.config_flow import (
     STEP_HUB_V1,
     STEP_HUB_V2,
@@ -14,10 +15,12 @@ from homeassistant.components.insteon.config_flow import (
     STEP_PLM_MANUALLY,
 )
 from homeassistant.components.insteon.const import CONF_HUB_VERSION, DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from .const import (
     MOCK_DEVICE,
@@ -60,7 +63,7 @@ async def mock_failed_connection(*args, **kwargs):
     raise ConnectionError("Connection failed")
 
 
-async def _init_form(hass, modem_type):
+async def _init_form(hass: HomeAssistant, modem_type: str) -> ConfigFlowResult:
     """Run the user form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -73,7 +76,12 @@ async def _init_form(hass, modem_type):
     )
 
 
-async def _device_form(hass, flow_id, connection, user_input):
+async def _device_form(
+    hass: HomeAssistant,
+    flow_id: str,
+    connection: Callable[..., Any],
+    user_input: dict[str, Any] | None,
+) -> tuple[ConfigFlowResult, AsyncMock]:
     """Test the PLM, Hub v1 or Hub v2 form."""
     with (
         patch(
@@ -202,7 +210,7 @@ async def test_form_select_hub_v2(hass: HomeAssistant) -> None:
 
 async def test_form_discovery_dhcp(hass: HomeAssistant) -> None:
     """Test the discovery of the Hub via DHCP."""
-    discovery_info = dhcp.DhcpServiceInfo("1.2.3.4", "", "aabbccddeeff")
+    discovery_info = DhcpServiceInfo("1.2.3.4", "", "aabbccddeeff")
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=discovery_info
     )
@@ -263,7 +271,7 @@ async def test_failed_connection_hub(hass: HomeAssistant) -> None:
 
 async def test_discovery_via_usb(hass: HomeAssistant) -> None:
     """Test usb flow."""
-    discovery_info = usb.UsbServiceInfo(
+    discovery_info = UsbServiceInfo(
         device="/dev/ttyINSTEON",
         pid="AAAA",
         vid="AAAA",
@@ -295,7 +303,7 @@ async def test_discovery_via_usb_already_setup(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_DEVICE: {CONF_DEVICE: "/dev/ttyUSB1"}}
     ).add_to_hass(hass)
 
-    discovery_info = usb.UsbServiceInfo(
+    discovery_info = UsbServiceInfo(
         device="/dev/ttyINSTEON",
         pid="AAAA",
         vid="AAAA",

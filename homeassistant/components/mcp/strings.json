@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "The remote MCP server URL for the SSE endpoint, for example http://example/sse"
+        }
+      },
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
+        "data": {
+          "implementation": "Credentials"
+        },
+        "data_description": {
+          "implementation": "The credentials to use for the OAuth2 flow"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "invalid_url": "Must be a valid MCP server URL e.g. https://example.com/sse"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "missing_capabilities": "The MCP server does not support a required capability (Tools)",
+      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
+      "reauth_account_mismatch": "The authenticated user does not match the MCP Server user that needed re-authentication.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  }
+}

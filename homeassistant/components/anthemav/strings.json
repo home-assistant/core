@@ -10,7 +10,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "cannot_receive_deviceinfo": "Failed to retreive MAC Address. Make sure the device is turned on"
+      "cannot_receive_deviceinfo": "Failed to retrieve MAC Address. Make sure the device is turned on"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"

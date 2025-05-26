@@ -14,11 +14,11 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CONF_HOSTNAME,
@@ -68,7 +68,7 @@ async def async_validate_hostname(
         result = False
         with contextlib.suppress(DNSError):
             result = bool(
-                await aiodns.DNSResolver(
+                await aiodns.DNSResolver(  # type: ignore[call-overload]
                     nameservers=[resolver], udp_port=port, tcp_port=port
                 ).query(hostname, qtype)
             )
@@ -101,7 +101,7 @@ class DnsIPConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> DnsIPOptionsFlowHandler:
         """Return Option handler."""
-        return DnsIPOptionsFlowHandler(config_entry)
+        return DnsIPOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -165,7 +165,7 @@ class DnsIPConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class DnsIPOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class DnsIPOptionsFlowHandler(OptionsFlow):
     """Handle a option config flow for dnsip integration."""
 
     async def async_step_init(

@@ -10,33 +10,25 @@ from elmax_api.model.panel import PanelStatus
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
     CodeFormat,
-)
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_DISARMING,
-    STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, InvalidStateError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import ElmaxEntity
 from .const import DOMAIN
-from .coordinator import ElmaxCoordinator
+from .coordinator import ElmaxConfigEntry
+from .entity import ElmaxEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ElmaxConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Elmax area platform."""
-    coordinator: ElmaxCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     known_devices = set()
 
     def _discover_new_devices():
@@ -74,16 +66,16 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
     _attr_code_arm_required = False
     _attr_has_entity_name = True
     _attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
-    _pending_state: str | None = None
+    _pending_state: AlarmControlPanelState | None = None
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        if self._attr_state == AlarmStatus.NOT_ARMED_NOT_ARMABLE:
+        if self._attr_alarm_state == AlarmStatus.NOT_ARMED_NOT_ARMABLE:
             raise InvalidStateError(
                 f"Cannot arm {self.name}: please check for open windows/doors first"
             )
 
-        self._pending_state = STATE_ALARM_ARMING
+        self._pending_state = AlarmControlPanelState.ARMING
         self.async_write_ha_state()
 
         try:
@@ -107,7 +99,7 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
         if code is None or code == "":
             raise ValueError("Please input the disarm code.")
 
-        self._pending_state = STATE_ALARM_DISARMING
+        self._pending_state = AlarmControlPanelState.DISARMING
         self.async_write_ha_state()
 
         try:
@@ -130,7 +122,7 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
             await self.coordinator.async_refresh()
 
     @property
-    def state(self) -> StateType:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the entity."""
         if self._pending_state is not None:
             return self._pending_state
@@ -151,10 +143,10 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
 
 
 ALARM_STATE_TO_HA = {
-    AlarmArmStatus.ARMED_TOTALLY: STATE_ALARM_ARMED_AWAY,
-    AlarmArmStatus.ARMED_P1_P2: STATE_ALARM_ARMED_AWAY,
-    AlarmArmStatus.ARMED_P2: STATE_ALARM_ARMED_AWAY,
-    AlarmArmStatus.ARMED_P1: STATE_ALARM_ARMED_AWAY,
-    AlarmArmStatus.NOT_ARMED: STATE_ALARM_DISARMED,
-    AlarmStatus.TRIGGERED: STATE_ALARM_TRIGGERED,
+    AlarmArmStatus.ARMED_TOTALLY: AlarmControlPanelState.ARMED_AWAY,
+    AlarmArmStatus.ARMED_P1_P2: AlarmControlPanelState.ARMED_AWAY,
+    AlarmArmStatus.ARMED_P2: AlarmControlPanelState.ARMED_AWAY,
+    AlarmArmStatus.ARMED_P1: AlarmControlPanelState.ARMED_AWAY,
+    AlarmArmStatus.NOT_ARMED: AlarmControlPanelState.DISARMED,
+    AlarmStatus.TRIGGERED: AlarmControlPanelState.TRIGGERED,
 }

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import date, datetime, timedelta
 import logging
 from typing import Any
@@ -25,7 +26,7 @@ from homeassistant.components.calendar import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_CALENDAR_NAME, DOMAIN
@@ -35,11 +36,16 @@ _LOGGER = logging.getLogger(__name__)
 
 PRODID = "-//homeassistant.io//local_calendar 1.0//EN"
 
+# The calendar on disk is only changed when this entity is updated, so there
+# is no need to poll for changes. The calendar enttiy base class will handle
+# refreshing the entity state based on the start or end time of the event.
+SCAN_INTERVAL = timedelta(days=1)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the local calendar platform."""
     store = hass.data[DOMAIN][config_entry.entry_id]
@@ -74,6 +80,7 @@ class LocalCalendarEntity(CalendarEntity):
         """Initialize LocalCalendarEntity."""
         self._store = store
         self._calendar = calendar
+        self._calendar_lock = asyncio.Lock()
         self._event: CalendarEvent | None = None
         self._attr_name = name
         self._attr_unique_id = unique_id
@@ -87,20 +94,27 @@ class LocalCalendarEntity(CalendarEntity):
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        events = self._calendar.timeline_tz(start_date.tzinfo).overlapping(
-            start_date,
-            end_date,
-        )
-        return [_get_calendar_event(event) for event in events]
+
+        def events_in_range() -> list[CalendarEvent]:
+            events = self._calendar.timeline_tz(start_date.tzinfo).overlapping(
+                start_date,
+                end_date,
+            )
+            return [_get_calendar_event(event) for event in events]
+
+        return await self.hass.async_add_executor_job(events_in_range)
 
     async def async_update(self) -> None:
         """Update entity state with the next upcoming event."""
-        now = dt_util.now()
-        events = self._calendar.timeline_tz(now.tzinfo).active_after(now)
-        if event := next(events, None):
-            self._event = _get_calendar_event(event)
-        else:
-            self._event = None
+
+        def next_event() -> CalendarEvent | None:
+            now = dt_util.now()
+            events = self._calendar.timeline_tz(now.tzinfo).active_after(now)
+            if event := next(events, None):
+                return _get_calendar_event(event)
+            return None
+
+        self._event = await self.hass.async_add_executor_job(next_event)
 
     async def _async_store(self) -> None:
         """Persist the calendar to disk."""
@@ -110,8 +124,10 @@ class LocalCalendarEntity(CalendarEntity):
     async def async_create_event(self, **kwargs: Any) -> None:
         """Add a new event to calendar."""
         event = _parse_event(kwargs)
-        EventStore(self._calendar).add(event)
-        await self._async_store()
+        async with self._calendar_lock:
+            event_store = EventStore(self._calendar)
+            await self.hass.async_add_executor_job(event_store.add, event)
+            await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
 
     async def async_delete_event(
@@ -124,15 +140,16 @@ class LocalCalendarEntity(CalendarEntity):
         range_value: Range = Range.NONE
         if recurrence_range == Range.THIS_AND_FUTURE:
             range_value = Range.THIS_AND_FUTURE
-        try:
-            EventStore(self._calendar).delete(
-                uid,
-                recurrence_id=recurrence_id,
-                recurrence_range=range_value,
-            )
-        except EventStoreError as err:
-            raise HomeAssistantError(f"Error while deleting event: {err}") from err
-        await self._async_store()
+        async with self._calendar_lock:
+            try:
+                EventStore(self._calendar).delete(
+                    uid,
+                    recurrence_id=recurrence_id,
+                    recurrence_range=range_value,
+                )
+            except EventStoreError as err:
+                raise HomeAssistantError(f"Error while deleting event: {err}") from err
+            await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
 
     async def async_update_event(
@@ -147,16 +164,23 @@ class LocalCalendarEntity(CalendarEntity):
         range_value: Range = Range.NONE
         if recurrence_range == Range.THIS_AND_FUTURE:
             range_value = Range.THIS_AND_FUTURE
-        try:
-            EventStore(self._calendar).edit(
-                uid,
-                new_event,
-                recurrence_id=recurrence_id,
-                recurrence_range=range_value,
-            )
-        except EventStoreError as err:
-            raise HomeAssistantError(f"Error while updating event: {err}") from err
-        await self._async_store()
+
+        async with self._calendar_lock:
+            event_store = EventStore(self._calendar)
+
+            def apply_edit() -> None:
+                event_store.edit(
+                    uid,
+                    new_event,
+                    recurrence_id=recurrence_id,
+                    recurrence_range=range_value,
+                )
+
+            try:
+                await self.hass.async_add_executor_job(apply_edit)
+            except EventStoreError as err:
+                raise HomeAssistantError(f"Error while updating event: {err}") from err
+            await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
 
 

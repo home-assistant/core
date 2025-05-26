@@ -153,13 +153,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     )
     first_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": first_entry.entry_id,
-        },
-    )
+    result = await first_entry.start_reauth_flow(hass)
 
     # the first form is just the confirmation prompt
     assert result["type"] is FlowResultType.FORM

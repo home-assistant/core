@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import Mock
 
-from homeassistant.components.climate import PRESET_COMFORT, PRESET_ECO
 from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -26,7 +25,7 @@ async def setup_config_entry(
     device: Mock | None = None,
     fritz: Mock | None = None,
     template: Mock | None = None,
-) -> bool:
+) -> MockConfigEntry:
     """Do setup of a MockConfigEntry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -40,10 +39,10 @@ async def setup_config_entry(
     if template is not None and fritz is not None:
         fritz().get_templates.return_value = [template]
 
-    result = await hass.config_entries.async_setup(entry.entry_id)
+    await hass.config_entries.async_setup(entry.entry_id)
     if device is not None:
         await hass.async_block_till_done()
-    return result
+    return entry
 
 
 def set_devices(
@@ -61,6 +60,7 @@ class FritzEntityBaseMock(Mock):
     """base mock of a AVM Fritz!Box binary sensor device."""
 
     ain = CONF_FAKE_AIN
+    device_and_unit_id = (CONF_FAKE_AIN, None)
     manufacturer = CONF_FAKE_MANUFACTURER
     name = CONF_FAKE_NAME
     productname = CONF_FAKE_PRODUCTNAME
@@ -110,9 +110,7 @@ class FritzDeviceClimateMock(FritzEntityBaseMock):
     target_temperature = 19.5
     window_open = "fake_window"
     nextchange_temperature = 22.0
-    nextchange_endperiod = 0
-    nextchange_preset = PRESET_COMFORT
-    scheduled_preset = PRESET_ECO
+    nextchange_endperiod = 1726855200
 
 
 class FritzDeviceClimateWithoutTempSensorMock(FritzDeviceClimateMock):

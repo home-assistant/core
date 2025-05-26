@@ -4,7 +4,7 @@ from collections.abc import Callable
 from unittest.mock import patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -19,8 +19,9 @@ from homeassistant.components.cover import (
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
     SERVICE_STOP_COVER_TILT,
+    CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OPEN, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -67,7 +68,7 @@ async def test_cover(
 
     await light_ws_data({"state": {"lift": 0, "open": True}})
     cover = hass.states.get("cover.window_covering_device")
-    assert cover.state == STATE_OPEN
+    assert cover.state == CoverState.OPEN
     assert cover.attributes[ATTR_CURRENT_POSITION] == 100
 
     # Verify service calls for cover

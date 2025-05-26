@@ -36,11 +36,17 @@ from homeassistant.const import (
     HTTP_BEARER_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
-from homeassistant.core import Context, HomeAssistant, ServiceCall
-from homeassistant.exceptions import TemplateError
+from homeassistant.core import (
+    Context,
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_loaded_integration
+from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -169,19 +175,20 @@ BASE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
         vol.Optional(ATTR_TIMEOUT): cv.positive_int,
         vol.Optional(ATTR_MESSAGE_TAG): cv.string,
+        vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
     },
     extra=vol.ALLOW_EXTRA,
 )
 
 SERVICE_SCHEMA_SEND_MESSAGE = BASE_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_MESSAGE): cv.template, vol.Optional(ATTR_TITLE): cv.template}
+    {vol.Required(ATTR_MESSAGE): cv.string, vol.Optional(ATTR_TITLE): cv.string}
 )
 
 SERVICE_SCHEMA_SEND_FILE = BASE_SERVICE_SCHEMA.extend(
     {
-        vol.Optional(ATTR_URL): cv.template,
-        vol.Optional(ATTR_FILE): cv.template,
-        vol.Optional(ATTR_CAPTION): cv.template,
+        vol.Optional(ATTR_URL): cv.string,
+        vol.Optional(ATTR_FILE): cv.string,
+        vol.Optional(ATTR_CAPTION): cv.string,
         vol.Optional(ATTR_USERNAME): cv.string,
         vol.Optional(ATTR_PASSWORD): cv.string,
         vol.Optional(ATTR_AUTHENTICATION): cv.string,
@@ -195,8 +202,8 @@ SERVICE_SCHEMA_SEND_STICKER = SERVICE_SCHEMA_SEND_FILE.extend(
 
 SERVICE_SCHEMA_SEND_LOCATION = BASE_SERVICE_SCHEMA.extend(
     {
-        vol.Required(ATTR_LONGITUDE): cv.template,
-        vol.Required(ATTR_LATITUDE): cv.template,
+        vol.Required(ATTR_LONGITUDE): cv.string,
+        vol.Required(ATTR_LATITUDE): cv.string,
     }
 )
 
@@ -210,6 +217,7 @@ SERVICE_SCHEMA_SEND_POLL = vol.Schema(
         vol.Optional(ATTR_ALLOWS_MULTIPLE_ANSWERS, default=False): cv.boolean,
         vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
         vol.Optional(ATTR_TIMEOUT): cv.positive_int,
+        vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
     }
 )
 
@@ -228,7 +236,7 @@ SERVICE_SCHEMA_EDIT_CAPTION = vol.Schema(
             cv.positive_int, vol.All(cv.string, "last")
         ),
         vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
-        vol.Required(ATTR_CAPTION): cv.template,
+        vol.Required(ATTR_CAPTION): cv.string,
         vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
     },
     extra=vol.ALLOW_EXTRA,
@@ -247,7 +255,7 @@ SERVICE_SCHEMA_EDIT_REPLYMARKUP = vol.Schema(
 
 SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY = vol.Schema(
     {
-        vol.Required(ATTR_MESSAGE): cv.template,
+        vol.Required(ATTR_MESSAGE): cv.string,
         vol.Required(ATTR_CALLBACK_QUERY_ID): vol.Coerce(int),
         vol.Optional(ATTR_SHOW_ALERT): cv.boolean,
     },
@@ -378,12 +386,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     for p_config in domain_config:
         # Each platform config gets its own bot
-        bot = initialize_bot(hass, p_config)
+        bot = await hass.async_add_executor_job(initialize_bot, hass, p_config)
         p_type: str = p_config[CONF_PLATFORM]
 
         platform = platforms[p_type]
 
-        _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
+        _LOGGER.debug("Setting up %s.%s", DOMAIN, p_type)
         try:
             receiver_service = await platform.async_setup_platform(hass, bot, p_config)
             if receiver_service is False:
@@ -398,45 +406,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass, bot, p_config.get(CONF_ALLOWED_CHAT_IDS), p_config.get(ATTR_PARSER)
         )
 
-    async def async_send_telegram_message(service: ServiceCall) -> None:
+    async def async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
         """Handle sending Telegram Bot message service calls."""
-
-        def _render_template_attr(data, attribute):
-            if attribute_templ := data.get(attribute):
-                if any(
-                    isinstance(attribute_templ, vtype) for vtype in (float, int, str)
-                ):
-                    data[attribute] = attribute_templ
-                else:
-                    try:
-                        data[attribute] = attribute_templ.async_render(
-                            parse_result=False
-                        )
-                    except TemplateError as exc:
-                        _LOGGER.error(
-                            "TemplateError in %s: %s -> %s",
-                            attribute,
-                            attribute_templ.template,
-                            exc,
-                        )
-                        data[attribute] = attribute_templ.template
 
         msgtype = service.service
         kwargs = dict(service.data)
-        for attribute in (
-            ATTR_MESSAGE,
-            ATTR_TITLE,
-            ATTR_URL,
-            ATTR_FILE,
-            ATTR_CAPTION,
-            ATTR_LONGITUDE,
-            ATTR_LATITUDE,
-        ):
-            _render_template_attr(kwargs, attribute)
         _LOGGER.debug("New telegram message %s: %s", msgtype, kwargs)
 
+        messages = None
         if msgtype == SERVICE_SEND_MESSAGE:
-            await notify_service.send_message(context=service.context, **kwargs)
+            messages = await notify_service.send_message(
+                context=service.context, **kwargs
+            )
         elif msgtype in [
             SERVICE_SEND_PHOTO,
             SERVICE_SEND_ANIMATION,
@@ -444,13 +425,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             SERVICE_SEND_VOICE,
             SERVICE_SEND_DOCUMENT,
         ]:
-            await notify_service.send_file(msgtype, context=service.context, **kwargs)
+            messages = await notify_service.send_file(
+                msgtype, context=service.context, **kwargs
+            )
         elif msgtype == SERVICE_SEND_STICKER:
-            await notify_service.send_sticker(context=service.context, **kwargs)
+            messages = await notify_service.send_sticker(
+                context=service.context, **kwargs
+            )
         elif msgtype == SERVICE_SEND_LOCATION:
-            await notify_service.send_location(context=service.context, **kwargs)
+            messages = await notify_service.send_location(
+                context=service.context, **kwargs
+            )
         elif msgtype == SERVICE_SEND_POLL:
-            await notify_service.send_poll(context=service.context, **kwargs)
+            messages = await notify_service.send_poll(context=service.context, **kwargs)
         elif msgtype == SERVICE_ANSWER_CALLBACK_QUERY:
             await notify_service.answer_callback_query(
                 context=service.context, **kwargs
@@ -462,10 +449,37 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 msgtype, context=service.context, **kwargs
             )
 
+        if service.return_response and messages:
+            return {
+                "chats": [
+                    {"chat_id": cid, "message_id": mid} for cid, mid in messages.items()
+                ]
+            }
+        return None
+
     # Register notification services
     for service_notif, schema in SERVICE_MAP.items():
+        supports_response = SupportsResponse.NONE
+
+        if service_notif in [
+            SERVICE_SEND_MESSAGE,
+            SERVICE_SEND_PHOTO,
+            SERVICE_SEND_ANIMATION,
+            SERVICE_SEND_VIDEO,
+            SERVICE_SEND_VOICE,
+            SERVICE_SEND_DOCUMENT,
+            SERVICE_SEND_STICKER,
+            SERVICE_SEND_LOCATION,
+            SERVICE_SEND_POLL,
+        ]:
+            supports_response = SupportsResponse.OPTIONAL
+
         hass.services.async_register(
-            DOMAIN, service_notif, async_send_telegram_message, schema=schema
+            DOMAIN,
+            service_notif,
+            async_send_telegram_message,
+            schema=schema,
+            supports_response=supports_response,
         )
 
     return True
@@ -486,7 +500,7 @@ def initialize_bot(hass: HomeAssistant, p_config: dict) -> Bot:
             # Auth can actually be stuffed into the URL, but the docs have previously
             # indicated to put them here.
             auth = proxy_params.pop("username"), proxy_params.pop("password")
-            ir.async_create_issue(
+            ir.create_issue(
                 hass,
                 DOMAIN,
                 "proxy_params_auth_deprecation",
@@ -503,7 +517,7 @@ def initialize_bot(hass: HomeAssistant, p_config: dict) -> Bot:
                 learn_more_url="https://github.com/home-assistant/core/pull/112778",
             )
         else:
-            ir.async_create_issue(
+            ir.create_issue(
                 hass,
                 DOMAIN,
                 "proxy_params_deprecation",
@@ -534,7 +548,7 @@ class TelegramNotificationService:
         """Initialize the service."""
         self.allowed_chat_ids = allowed_chat_ids
         self._default_user = self.allowed_chat_ids[0]
-        self._last_message_id = {user: None for user in self.allowed_chat_ids}
+        self._last_message_id = dict.fromkeys(self.allowed_chat_ids)
         self._parsers = {
             PARSER_HTML: ParseMode.HTML,
             PARSER_MD: ParseMode.MARKDOWN,
@@ -724,9 +738,10 @@ class TelegramNotificationService:
         title = kwargs.get(ATTR_TITLE)
         text = f"{title}\n{message}" if title else message
         params = self._get_msg_kwargs(kwargs)
+        msg_ids = {}
         for chat_id in self._get_target_chat_ids(target):
             _LOGGER.debug("Send message in chat ID %s with params: %s", chat_id, params)
-            await self._send_msg(
+            msg = await self._send_msg(
                 self.bot.send_message,
                 "Error sending message",
                 params[ATTR_MESSAGE_TAG],
@@ -741,6 +756,9 @@ class TelegramNotificationService:
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
+            if msg is not None:
+                msg_ids[chat_id] = msg.id
+        return msg_ids
 
     async def delete_message(self, chat_id=None, context=None, **kwargs):
         """Delete a previously sent message."""
@@ -852,15 +870,20 @@ class TelegramNotificationService:
             username=kwargs.get(ATTR_USERNAME),
             password=kwargs.get(ATTR_PASSWORD),
             authentication=kwargs.get(ATTR_AUTHENTICATION),
-            verify_ssl=kwargs.get(ATTR_VERIFY_SSL),
+            verify_ssl=(
+                get_default_context()
+                if kwargs.get(ATTR_VERIFY_SSL, False)
+                else get_default_no_verify_context()
+            ),
         )
 
+        msg_ids = {}
         if file_content:
             for chat_id in self._get_target_chat_ids(target):
                 _LOGGER.debug("Sending file to chat ID %s", chat_id)
 
                 if file_type == SERVICE_SEND_PHOTO:
-                    await self._send_msg(
+                    msg = await self._send_msg(
                         self.bot.send_photo,
                         "Error sending photo",
                         params[ATTR_MESSAGE_TAG],
@@ -877,7 +900,7 @@ class TelegramNotificationService:
                     )
 
                 elif file_type == SERVICE_SEND_STICKER:
-                    await self._send_msg(
+                    msg = await self._send_msg(
                         self.bot.send_sticker,
                         "Error sending sticker",
                         params[ATTR_MESSAGE_TAG],
@@ -892,7 +915,7 @@ class TelegramNotificationService:
                     )
 
                 elif file_type == SERVICE_SEND_VIDEO:
-                    await self._send_msg(
+                    msg = await self._send_msg(
                         self.bot.send_video,
                         "Error sending video",
                         params[ATTR_MESSAGE_TAG],
@@ -908,7 +931,7 @@ class TelegramNotificationService:
                         context=context,
                     )
                 elif file_type == SERVICE_SEND_DOCUMENT:
-                    await self._send_msg(
+                    msg = await self._send_msg(
                         self.bot.send_document,
                         "Error sending document",
                         params[ATTR_MESSAGE_TAG],
@@ -924,7 +947,7 @@ class TelegramNotificationService:
                         context=context,
                     )
                 elif file_type == SERVICE_SEND_VOICE:
-                    await self._send_msg(
+                    msg = await self._send_msg(
                         self.bot.send_voice,
                         "Error sending voice",
                         params[ATTR_MESSAGE_TAG],
@@ -939,7 +962,7 @@ class TelegramNotificationService:
                         context=context,
                     )
                 elif file_type == SERVICE_SEND_ANIMATION:
-                    await self._send_msg(
+                    msg = await self._send_msg(
                         self.bot.send_animation,
                         "Error sending animation",
                         params[ATTR_MESSAGE_TAG],
@@ -955,17 +978,22 @@ class TelegramNotificationService:
                         context=context,
                     )
 
+                msg_ids[chat_id] = msg.id
                 file_content.seek(0)
         else:
             _LOGGER.error("Can't send file with kwargs: %s", kwargs)
 
-    async def send_sticker(self, target=None, context=None, **kwargs):
+        return msg_ids
+
+    async def send_sticker(self, target=None, context=None, **kwargs) -> dict:
         """Send a sticker from a telegram sticker pack."""
         params = self._get_msg_kwargs(kwargs)
         stickerid = kwargs.get(ATTR_STICKER_ID)
+
+        msg_ids = {}
         if stickerid:
             for chat_id in self._get_target_chat_ids(target):
-                await self._send_msg(
+                msg = await self._send_msg(
                     self.bot.send_sticker,
                     "Error sending sticker",
                     params[ATTR_MESSAGE_TAG],
@@ -978,8 +1006,9 @@ class TelegramNotificationService:
                     message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                     context=context,
                 )
-        else:
-            await self.send_file(SERVICE_SEND_STICKER, target, **kwargs)
+                msg_ids[chat_id] = msg.id
+            return msg_ids
+        return await self.send_file(SERVICE_SEND_STICKER, target, **kwargs)
 
     async def send_location(
         self, latitude, longitude, target=None, context=None, **kwargs
@@ -988,11 +1017,12 @@ class TelegramNotificationService:
         latitude = float(latitude)
         longitude = float(longitude)
         params = self._get_msg_kwargs(kwargs)
+        msg_ids = {}
         for chat_id in self._get_target_chat_ids(target):
             _LOGGER.debug(
                 "Send location %s/%s to chat ID %s", latitude, longitude, chat_id
             )
-            await self._send_msg(
+            msg = await self._send_msg(
                 self.bot.send_location,
                 "Error sending location",
                 params[ATTR_MESSAGE_TAG],
@@ -1005,6 +1035,8 @@ class TelegramNotificationService:
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
+            msg_ids[chat_id] = msg.id
+        return msg_ids
 
     async def send_poll(
         self,
@@ -1019,9 +1051,10 @@ class TelegramNotificationService:
         """Send a poll."""
         params = self._get_msg_kwargs(kwargs)
         openperiod = kwargs.get(ATTR_OPEN_PERIOD)
+        msg_ids = {}
         for chat_id in self._get_target_chat_ids(target):
             _LOGGER.debug("Send poll '%s' to chat ID %s", question, chat_id)
-            await self._send_msg(
+            msg = await self._send_msg(
                 self.bot.send_poll,
                 "Error sending poll",
                 params[ATTR_MESSAGE_TAG],
@@ -1037,6 +1070,8 @@ class TelegramNotificationService:
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
+            msg_ids[chat_id] = msg.id
+        return msg_ids
 
     async def leave_chat(self, chat_id=None, context=None):
         """Remove bot from chat."""
@@ -1096,6 +1131,7 @@ class BaseTelegramBotEntity:
             ATTR_MSGID: message.message_id,
             ATTR_CHAT_ID: message.chat.id,
             ATTR_DATE: message.date,
+            ATTR_MESSAGE_THREAD_ID: message.message_thread_id,
         }
         if filters.COMMAND.filter(message):
             # This is a command message - set event type to command and split data into command and args

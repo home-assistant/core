@@ -24,7 +24,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ATTR_PIN_INDEX, DOMAIN, SERVICE_INVOKE_PIN
 
@@ -40,7 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Openhome config entry."""
 
@@ -67,11 +67,9 @@ type _ReturnFuncType[_T, **_P, _R] = Callable[
 ]
 
 
-def catch_request_errors[_OpenhomeDeviceT: OpenhomeDevice, **_P, _R]() -> (
-    Callable[
-        [_FuncType[_OpenhomeDeviceT, _P, _R]], _ReturnFuncType[_OpenhomeDeviceT, _P, _R]
-    ]
-):
+def catch_request_errors[_OpenhomeDeviceT: OpenhomeDevice, **_P, _R]() -> Callable[
+    [_FuncType[_OpenhomeDeviceT, _P, _R]], _ReturnFuncType[_OpenhomeDeviceT, _P, _R]
+]:
     """Catch TimeoutError, aiohttp.ClientError, UpnpError errors."""
 
     def call_wrapper(

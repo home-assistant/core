@@ -7,7 +7,6 @@ import aiounifi
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp
 from homeassistant.components.unifi.config_flow import _async_discover_unifi
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
@@ -24,7 +23,6 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_WIRED_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -34,6 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .conftest import ConfigEntryFactoryType
 
@@ -302,15 +301,7 @@ async def test_reauth_flow_update_configuration(
     """Verify reauth flow can update hub configuration."""
     config_entry = config_entry_setup
 
-    result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": config_entry.unique_id,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -344,15 +335,7 @@ async def test_reauth_flow_update_configuration_on_not_loaded_entry(
     with patch("aiounifi.Controller.login", side_effect=aiounifi.errors.RequestError):
         config_entry = await config_entry_factory()
 
-    result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": config_entry.unique_id,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -499,7 +482,7 @@ async def test_form_ssdp(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location="http://192.168.208.1:41417/rootDesc.xml",
@@ -539,7 +522,7 @@ async def test_form_ssdp_aborts_if_host_already_exists(hass: HomeAssistant) -> N
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location="http://1.2.3.4:1234/rootDesc.xml",
@@ -561,7 +544,7 @@ async def test_form_ssdp_aborts_if_serial_already_exists(hass: HomeAssistant) ->
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location="http://1.2.3.4:1234/rootDesc.xml",
@@ -587,7 +570,7 @@ async def test_form_ssdp_gets_form_with_ignored_entry(hass: HomeAssistant) -> No
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location="http://1.2.3.4:1234/rootDesc.xml",

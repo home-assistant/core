@@ -14,13 +14,12 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, UnitOfTemperature
+from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HomeAssistantOverkizData
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
+from . import OverkizDataConfigEntry
+from .const import IGNORED_OVERKIZ_DEVICES
 from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity
 
@@ -173,6 +172,8 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         native_max_value=7,
         set_native_value=_async_set_native_value_boost_mode_duration,
         entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.DAYS,
     ),
     # DomesticHotWaterProduction - away mode in days (0 - 6)
     OverkizNumberDescription(
@@ -183,6 +184,8 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         native_min_value=0,
         native_max_value=6,
         entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.DAYS,
     ),
 ]
 
@@ -191,11 +194,11 @@ SUPPORTED_STATES = {description.key: description for description in NUMBER_DESCR
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: OverkizDataConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Overkiz number from a config entry."""
-    data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     entities: list[OverkizNumber] = []
 
     for device in data.coordinator.data.values():

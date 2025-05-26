@@ -11,7 +11,7 @@ from aiomealie import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mealie.const import (
     ATTR_CONFIG_ENTRY_ID,
@@ -249,6 +249,12 @@ async def test_service_set_random_mealplan(
                 ATTR_NOTE_TEXT: "Note Text",
             },
             {"recipe_id": None, "note_title": "Note Title", "note_text": "Note Text"},
+        ),
+        (
+            {
+                ATTR_NOTE_TITLE: "Note Title",
+            },
+            {"recipe_id": None, "note_title": "Note Title", "note_text": None},
         ),
     ],
 )

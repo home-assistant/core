@@ -12,7 +12,6 @@ from typing import Any, cast
 
 import jwt
 
-from homeassistant import data_entry_flow
 from homeassistant.core import (
     CALLBACK_TYPE,
     HassJob,
@@ -20,13 +19,14 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
+from homeassistant.data_entry_flow import FlowHandler, FlowManager, FlowResultType
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
 from . import auth_store, jwt_wrapper, models
 from .const import ACCESS_TOKEN_EXPIRATION, GROUP_ID_ADMIN, REFRESH_TOKEN_EXPIRATION
 from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
-from .models import AuthFlowResult
+from .models import AuthFlowContext, AuthFlowResult
 from .providers import AuthProvider, LoginFlow, auth_provider_from_config
 from .providers.homeassistant import HassAuthProvider
 
@@ -98,7 +98,7 @@ async def auth_manager_from_config(
 
 
 class AuthManagerFlowManager(
-    data_entry_flow.FlowManager[AuthFlowResult, tuple[str, str]]
+    FlowManager[AuthFlowContext, AuthFlowResult, tuple[str, str]]
 ):
     """Manage authentication flows."""
 
@@ -113,9 +113,9 @@ class AuthManagerFlowManager(
         self,
         handler_key: tuple[str, str],
         *,
-        context: dict[str, Any] | None = None,
+        context: AuthFlowContext | None = None,
         data: dict[str, Any] | None = None,
-    ) -> LoginFlow:
+    ) -> LoginFlow[Any]:
         """Create a login flow."""
         auth_provider = self.auth_manager.get_auth_provider(*handler_key)
         if not auth_provider:
@@ -124,13 +124,17 @@ class AuthManagerFlowManager(
 
     async def async_finish_flow(
         self,
-        flow: data_entry_flow.FlowHandler[AuthFlowResult, tuple[str, str]],
+        flow: FlowHandler[AuthFlowContext, AuthFlowResult, tuple[str, str]],
         result: AuthFlowResult,
     ) -> AuthFlowResult:
-        """Return a user as result of login flow."""
+        """Return a user as result of login flow.
+
+        This method is called when a flow step returns FlowResultType.ABORT or
+        FlowResultType.CREATE_ENTRY.
+        """
         flow = cast(LoginFlow, flow)
 
-        if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
+        if result["type"] != FlowResultType.CREATE_ENTRY:
             return result
 
         # we got final result

@@ -24,8 +24,8 @@ from .common import (
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant) -> None:
-    """Test we get the form."""
+async def test_user(hass: HomeAssistant) -> None:
+    """Test user flow."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -56,8 +56,8 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_read_only(hass: HomeAssistant) -> None:
-    """Test we get the form."""
+async def test_user_key_read_only(hass: HomeAssistant) -> None:
+    """Test user flow with read only key."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -87,8 +87,8 @@ async def test_form_read_only(hass: HomeAssistant) -> None:
         (UptimeRobotAuthenticationException, "invalid_api_key"),
     ],
 )
-async def test_form_exception_thrown(hass: HomeAssistant, exception, error_key) -> None:
-    """Test that we handle exceptions."""
+async def test_exception_thrown(hass: HomeAssistant, exception, error_key) -> None:
+    """Test user flow throwing exceptions."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -106,10 +106,8 @@ async def test_form_exception_thrown(hass: HomeAssistant, exception, error_key) 
     assert result2["errors"]["base"] == error_key
 
 
-async def test_form_api_error(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test we handle unexpected error."""
+async def test_api_error(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    """Test expected API error is catch."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -168,15 +166,7 @@ async def test_reauthentication(
     old_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
     old_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": old_entry.unique_id,
-            "entry_id": old_entry.entry_id,
-        },
-        data=old_entry.data,
-    )
+    result = await old_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
@@ -209,15 +199,7 @@ async def test_reauthentication_failure(
     old_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
     old_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": old_entry.unique_id,
-            "entry_id": old_entry.entry_id,
-        },
-        data=old_entry.data,
-    )
+    result = await old_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
@@ -253,15 +235,7 @@ async def test_reauthentication_failure_no_existing_entry(
     )
     old_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": old_entry.unique_id,
-            "entry_id": old_entry.entry_id,
-        },
-        data=old_entry.data,
-    )
+    result = await old_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
@@ -294,15 +268,7 @@ async def test_reauthentication_failure_account_not_matching(
     old_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
     old_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": old_entry.unique_id,
-            "entry_id": old_entry.entry_id,
-        },
-        data=old_entry.data,
-    )
+    result = await old_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None

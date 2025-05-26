@@ -1,13 +1,14 @@
 """Config flow for Environment Canada integration."""
 
 import logging
+from typing import Any
 import xml.etree.ElementTree as ET
 
 import aiohttp
 from env_canada import ECWeather, ec_exc
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LANGUAGE, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers import config_validation as cv
 
@@ -34,7 +35,7 @@ async def validate_input(data):
         lon = weather_data.lon
 
     return {
-        CONF_TITLE: weather_data.metadata.get("location"),
+        CONF_TITLE: weather_data.metadata.location,
         CONF_STATION: weather_data.station_id,
         CONF_LATITUDE: lat,
         CONF_LONGITUDE: lon,
@@ -46,7 +47,9 @@ class EnvironmentCanadaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:

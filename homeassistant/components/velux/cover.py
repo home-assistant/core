@@ -16,15 +16,18 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, VeluxEntity
+from .const import DOMAIN
+from .entity import VeluxEntity
 
 PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    config: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up cover(s) for Velux platform."""
     module = hass.data[DOMAIN][config.entry_id]
@@ -93,6 +96,16 @@ class VeluxCover(VeluxEntity, CoverEntity):
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self.node.position.closed
+
+    @property
+    def is_opening(self) -> bool:
+        """Return if the cover is opening or not."""
+        return self.node.is_opening
+
+    @property
+    def is_closing(self) -> bool:
+        """Return if the cover is closing or not."""
+        return self.node.is_closing
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""

@@ -1,5 +1,7 @@
 {
   "services": {
-    "clean_room": "mdi:robot-vacuum"
+    "clean_room": {
+      "service": "mdi:robot-vacuum"
+    }
   }
 }

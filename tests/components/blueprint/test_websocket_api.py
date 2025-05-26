@@ -64,6 +64,17 @@ async def test_list_blueprints(
                 "name": "Call service based on event",
             },
         },
+        "test_event_service_legacy_schema.yaml": {
+            "metadata": {
+                "domain": "automation",
+                "input": {
+                    "service_to_call": None,
+                    "trigger_event": {"selector": {"text": {}}},
+                    "a_number": {"selector": {"number": {"mode": "box", "step": 1.0}}},
+                },
+                "name": "Call service based on event",
+            },
+        },
         "in_folder/in_folder_blueprint.yaml": {
             "metadata": {
                 "domain": "automation",
@@ -212,16 +223,16 @@ async def test_save_blueprint(
             " input:\n    trigger_event:\n      selector:\n        text: {}\n   "
             " service_to_call:\n    a_number:\n      selector:\n        number:\n      "
             "    mode: box\n          step: 1.0\n  source_url:"
-            " https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml\ntrigger:\n"
-            "  platform: event\n  event_type: !input 'trigger_event'\naction:\n "
+            " https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml\ntriggers:\n"
+            "  trigger: event\n  event_type: !input 'trigger_event'\nactions:\n "
             " service: !input 'service_to_call'\n  entity_id: light.kitchen\n"
             # c dumper will not quote the value after !input
             "blueprint:\n  name: Call service based on event\n  domain: automation\n "
             " input:\n    trigger_event:\n      selector:\n        text: {}\n   "
             " service_to_call:\n    a_number:\n      selector:\n        number:\n      "
             "    mode: box\n          step: 1.0\n  source_url:"
-            " https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml\ntrigger:\n"
-            "  platform: event\n  event_type: !input trigger_event\naction:\n  service:"
+            " https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml\ntriggers:\n"
+            "  trigger: event\n  event_type: !input trigger_event\nactions:\n  service:"
             " !input service_to_call\n  entity_id: light.kitchen\n"
         )
         # Make sure ita parsable and does not raise
@@ -483,13 +494,13 @@ async def test_substituting_blueprint_inputs(
 
     assert msg["success"]
     assert msg["result"]["substituted_config"] == {
-        "action": {
+        "actions": {
             "entity_id": "light.kitchen",
             "service": "test.automation",
         },
-        "trigger": {
+        "triggers": {
             "event_type": "test_event",
-            "platform": "event",
+            "trigger": "event",
         },
     }
 

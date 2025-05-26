@@ -7,6 +7,7 @@ import logging
 
 from mypermobil import MyPermobil, MyPermobilAPIException
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -25,11 +26,16 @@ class MyPermobilData:
 class MyPermobilCoordinator(DataUpdateCoordinator[MyPermobilData]):
     """MyPermobil coordinator."""
 
-    def __init__(self, hass: HomeAssistant, p_api: MyPermobil) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, p_api: MyPermobil
+    ) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="permobil",
             update_interval=timedelta(minutes=5),
         )

@@ -30,6 +30,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_RESPOND_TO_READ, KNX_ADDRESS
 from .schema import ExposeSchema
@@ -88,7 +89,7 @@ class KNXExposeSensor:
         self._remove_listener: Callable[[], None] | None = None
         self.device: ExposeSensor = ExposeSensor(
             xknx=self.xknx,
-            name=f"{self.entity_id}__{self.expose_attribute or "state"}",
+            name=f"{self.entity_id}__{self.expose_attribute or 'state'}",
             group_address=config[KNX_ADDRESS],
             respond_to_read=config[CONF_RESPOND_TO_READ],
             value_type=self.expose_type,
@@ -125,6 +126,8 @@ class KNXExposeSensor:
     def _get_expose_value(self, state: State | None) -> bool | int | float | str | None:
         """Extract value from state."""
         if state is None or state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+            if self.expose_default is None:
+                return None
             value = self.expose_default
         elif self.expose_attribute is not None:
             _attr = state.attributes.get(self.expose_attribute)
@@ -154,12 +157,22 @@ class KNXExposeSensor:
         if value is not None and (
             isinstance(self.device.sensor_value, RemoteValueSensor)
         ):
-            if issubclass(self.device.sensor_value.dpt_class, DPTNumeric):
-                return float(value)
-            if issubclass(self.device.sensor_value.dpt_class, DPTString):
-                # DPT 16.000 only allows up to 14 Bytes
-                return str(value)[:14]
-        return value
+            try:
+                if issubclass(self.device.sensor_value.dpt_class, DPTNumeric):
+                    return float(value)
+                if issubclass(self.device.sensor_value.dpt_class, DPTString):
+                    # DPT 16.000 only allows up to 14 Bytes
+                    return str(value)[:14]
+            except (ValueError, TypeError) as err:
+                _LOGGER.warning(
+                    'Could not expose %s %s value "%s" to KNX: Conversion failed: %s',
+                    self.entity_id,
+                    self.expose_attribute or "state",
+                    value,
+                    err,
+                )
+                return None
+        return value  # type: ignore[no-any-return]
 
     async def _async_entity_changed(self, event: Event[EventStateChangedData]) -> None:
         """Handle entity change."""
@@ -205,7 +218,7 @@ class KNXExposeTime:
         self.device = xknx_device_cls(
             self.xknx,
             name=expose_type.capitalize(),
-            localtime=True,
+            localtime=dt_util.get_default_time_zone(),
             group_address=config[KNX_ADDRESS],
         )
 

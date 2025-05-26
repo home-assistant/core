@@ -19,15 +19,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import collection
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -338,7 +337,9 @@ class Timer(collection.CollectionEntity, RestoreEntity):
             raise HomeAssistantError(
                 f"Timer {self.entity_id} is not running, only active timers can be changed"
             )
-        if self._remaining and (self._remaining + duration) > self._running_duration:
+        # Check against new remaining time before checking boundaries
+        new_remaining = (self._end + duration) - dt_util.utcnow().replace(microsecond=0)
+        if self._remaining and new_remaining > self._running_duration:
             raise HomeAssistantError(
                 f"Not possible to change timer {self.entity_id} beyond duration"
             )
@@ -349,7 +350,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
 
         self._listener()
         self._end += duration
-        self._remaining = self._end - dt_util.utcnow().replace(microsecond=0)
+        self._remaining = new_remaining
         self.async_write_ha_state()
         self.hass.bus.async_fire(EVENT_TIMER_CHANGED, {ATTR_ENTITY_ID: self.entity_id})
         self._listener = async_track_point_in_utc_time(
@@ -373,6 +374,9 @@ class Timer(collection.CollectionEntity, RestoreEntity):
     @callback
     def async_cancel(self) -> None:
         """Cancel a timer."""
+        if self._state == STATUS_IDLE:
+            return
+
         if self._listener:
             self._listener()
             self._listener = None
@@ -388,13 +392,15 @@ class Timer(collection.CollectionEntity, RestoreEntity):
     @callback
     def async_finish(self) -> None:
         """Reset and updates the states, fire finished event."""
-        if self._state != STATUS_ACTIVE or self._end is None:
+        if self._state == STATUS_IDLE:
             return
 
         if self._listener:
             self._listener()
             self._listener = None
         end = self._end
+        if end is None:
+            end = dt_util.utcnow().replace(microsecond=0)
         self._state = STATUS_IDLE
         self._end = None
         self._remaining = None

@@ -348,6 +348,8 @@
         'zip_code': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'iqvia',
       'entry_id': '690ac4b7e99855fc5ee7b987a758d5cb',
       'minor_version': 1,
@@ -356,6 +358,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': '**REDACTED**',
       'unique_id': '**REDACTED**',
       'version': 1,

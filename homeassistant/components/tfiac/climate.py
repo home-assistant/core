@@ -26,7 +26,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -35,9 +35,6 @@ SCAN_INTERVAL = timedelta(seconds=60)
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
 _LOGGER = logging.getLogger(__name__)
-
-MIN_TEMP = 61
-MAX_TEMP = 88
 
 HVAC_MAP = {
     HVACMode.HEAT: "heat",
@@ -49,9 +46,6 @@ HVAC_MAP = {
 }
 
 HVAC_MAP_REV = {v: k for k, v in HVAC_MAP.items()}
-
-SUPPORT_FAN = [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW]
-SUPPORT_SWING = [SWING_OFF, SWING_HORIZONTAL, SWING_VERTICAL, SWING_BOTH]
 
 CURR_TEMP = "current_temp"
 TARGET_TEMP = "target_temp"
@@ -74,7 +68,7 @@ async def async_setup_platform(
     except futures.TimeoutError:
         _LOGGER.error("Unable to connect to %s", config[CONF_HOST])
         return
-    async_add_entities([TfiacClimate(hass, tfiac_client)])
+    async_add_entities([TfiacClimate(tfiac_client)])
 
 
 class TfiacClimate(ClimateEntity):
@@ -88,35 +82,23 @@ class TfiacClimate(ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
-    _enable_turn_on_off_backwards_compatibility = False
+    _attr_min_temp = 61
+    _attr_max_temp = 88
+    _attr_fan_modes = [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW]
+    _attr_hvac_modes = list(HVAC_MAP)
+    _attr_swing_modes = [SWING_OFF, SWING_HORIZONTAL, SWING_VERTICAL, SWING_BOTH]
 
-    def __init__(self, hass, client):
+    def __init__(self, client: Tfiac) -> None:
         """Init class."""
         self._client = client
-        self._available = True
-
-    @property
-    def available(self):
-        """Return if the device is available."""
-        return self._available
 
     async def async_update(self) -> None:
         """Update status via socket polling."""
         try:
             await self._client.update()
-            self._available = True
+            self._attr_available = True
         except futures.TimeoutError:
-            self._available = False
-
-    @property
-    def min_temp(self):
-        """Return the minimum temperature."""
-        return MIN_TEMP
-
-    @property
-    def max_temp(self):
-        """Return the maximum temperature."""
-        return MAX_TEMP
+            self._attr_available = False
 
     @property
     def name(self):
@@ -146,32 +128,14 @@ class TfiacClimate(ClimateEntity):
         return HVAC_MAP_REV.get(state)
 
     @property
-    def hvac_modes(self) -> list[HVACMode]:
-        """Return the list of available hvac operation modes.
-
-        Need to be a subset of HVAC_MODES.
-        """
-        return list(HVAC_MAP)
-
-    @property
-    def fan_mode(self):
+    def fan_mode(self) -> str:
         """Return the fan setting."""
         return self._client.status["fan_mode"].lower()
 
     @property
-    def fan_modes(self):
-        """Return the list of available fan modes."""
-        return SUPPORT_FAN
-
-    @property
-    def swing_mode(self):
+    def swing_mode(self) -> str:
         """Return the swing setting."""
         return self._client.status["swing_mode"].lower()
-
-    @property
-    def swing_modes(self):
-        """List of available swing modes."""
-        return SUPPORT_SWING
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

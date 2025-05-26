@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode
 
 from aiohttp import web
@@ -30,8 +30,38 @@ def async_generate_thumbnail_url(
 ) -> str:
     """Generate URL for event thumbnail."""
 
-    url_format = ThumbnailProxyView.url or "{nvr_id}/{event_id}"
+    url_format = ThumbnailProxyView.url
+    if TYPE_CHECKING:
+        assert url_format is not None
     url = url_format.format(nvr_id=nvr_id, event_id=event_id)
+
+    params = {}
+    if width is not None:
+        params["width"] = str(width)
+    if height is not None:
+        params["height"] = str(height)
+
+    return f"{url}?{urlencode(params)}"
+
+
+@callback
+def async_generate_snapshot_url(
+    nvr_id: str,
+    camera_id: str,
+    timestamp: datetime,
+    width: int | None = None,
+    height: int | None = None,
+) -> str:
+    """Generate URL for event thumbnail."""
+
+    url_format = SnapshotProxyView.url
+    if TYPE_CHECKING:
+        assert url_format is not None
+    url = url_format.format(
+        nvr_id=nvr_id,
+        camera_id=camera_id,
+        timestamp=timestamp.replace(microsecond=0).isoformat(),
+    )
 
     params = {}
     if width is not None:
@@ -50,13 +80,28 @@ def async_generate_event_video_url(event: Event) -> str:
     if event.start is None or event.end is None:
         raise ValueError("Event is ongoing")
 
-    url_format = VideoProxyView.url or "{nvr_id}/{camera_id}/{start}/{end}"
+    url_format = VideoProxyView.url
+    if TYPE_CHECKING:
+        assert url_format is not None
     return url_format.format(
         nvr_id=event.api.bootstrap.nvr.id,
         camera_id=event.camera_id,
         start=event.start.replace(microsecond=0).isoformat(),
         end=event.end.replace(microsecond=0).isoformat(),
     )
+
+
+@callback
+def async_generate_proxy_event_video_url(
+    nvr_id: str,
+    event_id: str,
+) -> str:
+    """Generate proxy URL for event video."""
+
+    url_format = VideoEventProxyView.url
+    if TYPE_CHECKING:
+        assert url_format is not None
+    return url_format.format(nvr_id=nvr_id, event_id=event_id)
 
 
 @callback
@@ -107,6 +152,27 @@ class ProtectProxyView(HomeAssistantView):
             return data
         return _404("Invalid NVR ID")
 
+    @callback
+    def _async_get_camera(self, data: ProtectData, camera_id: str) -> Camera | None:
+        if (camera := data.api.bootstrap.cameras.get(camera_id)) is not None:
+            return camera
+
+        entity_registry = er.async_get(self.hass)
+        device_registry = dr.async_get(self.hass)
+
+        if (entity := entity_registry.async_get(camera_id)) is None or (
+            device := device_registry.async_get(entity.device_id or "")
+        ) is None:
+            return None
+
+        macs = [c[1] for c in device.connections if c[0] == dr.CONNECTION_NETWORK_MAC]
+        for mac in macs:
+            if (ufp_device := data.api.bootstrap.get_device_from_mac(mac)) is not None:
+                if isinstance(ufp_device, Camera):
+                    camera = ufp_device
+                    break
+        return camera
+
 
 class ThumbnailProxyView(ProtectProxyView):
     """View to proxy event thumbnails from UniFi Protect."""
@@ -150,32 +216,64 @@ class ThumbnailProxyView(ProtectProxyView):
         return web.Response(body=thumbnail, content_type="image/jpeg")
 
 
+class SnapshotProxyView(ProtectProxyView):
+    """View to proxy snapshots at specified time from UniFi Protect."""
+
+    url = "/api/unifiprotect/snapshot/{nvr_id}/{camera_id}/{timestamp}"
+    name = "api:unifiprotect_snapshot"
+
+    async def get(
+        self, request: web.Request, nvr_id: str, camera_id: str, timestamp: str
+    ) -> web.Response:
+        """Get snapshot."""
+
+        data = self._get_data_or_404(nvr_id)
+        if isinstance(data, web.Response):
+            return data
+
+        camera = self._async_get_camera(data, camera_id)
+        if camera is None:
+            return _404(f"Invalid camera ID: {camera_id}")
+        if not camera.can_read_media(data.api.bootstrap.auth_user):
+            return _403(f"User cannot read media from camera: {camera.id}")
+
+        width: int | str | None = request.query.get("width")
+        height: int | str | None = request.query.get("height")
+
+        if width is not None:
+            try:
+                width = int(width)
+            except ValueError:
+                return _400("Invalid width param")
+        if height is not None:
+            try:
+                height = int(height)
+            except ValueError:
+                return _400("Invalid height param")
+
+        try:
+            timestamp_dt = datetime.fromisoformat(timestamp)
+        except ValueError:
+            return _400("Invalid timestamp")
+
+        try:
+            snapshot = await camera.get_snapshot(
+                width=width, height=height, dt=timestamp_dt
+            )
+        except ClientError as err:
+            return _404(err)
+
+        if snapshot is None:
+            return _404("snapshot not found")
+
+        return web.Response(body=snapshot, content_type="image/jpeg")
+
+
 class VideoProxyView(ProtectProxyView):
     """View to proxy video clips from UniFi Protect."""
 
     url = "/api/unifiprotect/video/{nvr_id}/{camera_id}/{start}/{end}"
     name = "api:unifiprotect_thumbnail"
-
-    @callback
-    def _async_get_camera(self, data: ProtectData, camera_id: str) -> Camera | None:
-        if (camera := data.api.bootstrap.cameras.get(camera_id)) is not None:
-            return camera
-
-        entity_registry = er.async_get(self.hass)
-        device_registry = dr.async_get(self.hass)
-
-        if (entity := entity_registry.async_get(camera_id)) is None or (
-            device := device_registry.async_get(entity.device_id or "")
-        ) is None:
-            return None
-
-        macs = [c[1] for c in device.connections if c[0] == dr.CONNECTION_NETWORK_MAC]
-        for mac in macs:
-            if (ufp_device := data.api.bootstrap.get_device_from_mac(mac)) is not None:
-                if isinstance(ufp_device, Camera):
-                    camera = ufp_device
-                    break
-        return camera
 
     async def get(
         self, request: web.Request, nvr_id: str, camera_id: str, start: str, end: str
@@ -220,6 +318,59 @@ class VideoProxyView(ProtectProxyView):
 
         try:
             await camera.get_video(start_dt, end_dt, iterator_callback=iterator)
+        except ClientError as err:
+            return _404(err)
+
+        if response.prepared:
+            await response.write_eof()
+        return response
+
+
+class VideoEventProxyView(ProtectProxyView):
+    """View to proxy video clips for events from UniFi Protect."""
+
+    url = "/api/unifiprotect/video/{nvr_id}/{event_id}"
+    name = "api:unifiprotect_videoEventView"
+
+    async def get(
+        self, request: web.Request, nvr_id: str, event_id: str
+    ) -> web.StreamResponse:
+        """Get Camera Video clip for an event."""
+
+        data = self._get_data_or_404(nvr_id)
+        if isinstance(data, web.Response):
+            return data
+
+        try:
+            event = await data.api.get_event(event_id)
+        except ClientError:
+            return _404(f"Invalid event ID: {event_id}")
+        if event.start is None or event.end is None:
+            return _400("Event is still ongoing")
+        camera = self._async_get_camera(data, str(event.camera_id))
+        if camera is None:
+            return _404(f"Invalid camera ID: {event.camera_id}")
+        if not camera.can_read_media(data.api.bootstrap.auth_user):
+            return _403(f"User cannot read media from camera: {camera.id}")
+
+        response = web.StreamResponse(
+            status=200,
+            reason="OK",
+            headers={
+                "Content-Type": "video/mp4",
+            },
+        )
+
+        async def iterator(total: int, chunk: bytes | None) -> None:
+            if not response.prepared:
+                response.content_length = total
+                await response.prepare(request)
+
+            if chunk is not None:
+                await response.write(chunk)
+
+        try:
+            await camera.get_video(event.start, event.end, iterator_callback=iterator)
         except ClientError as err:
             return _404(err)
 

@@ -1,20 +1,26 @@
 """Tests for the Sonos Media Player platform."""
 
-import logging
 from typing import Any
 from unittest.mock import patch
 
 import pytest
+from soco.data_structures import SearchResult
+from sonos_websocket.exception import SonosWebsocketError
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
+    ATTR_INPUT_SOURCE_LIST,
+    ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_EXTRA,
     ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MP_DOMAIN,
+    SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     MediaPlayerEnqueue,
@@ -22,26 +28,33 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.sonos.const import (
     DOMAIN as SONOS_DOMAIN,
+    MEDIA_TYPE_DIRECTORY,
     SOURCE_LINEIN,
     SOURCE_TV,
 )
 from homeassistant.components.sonos.media_player import (
     LONG_SERVICE_TIMEOUT,
+    SERVICE_GET_QUEUE,
     SERVICE_RESTORE,
     SERVICE_SNAPSHOT,
     VOLUME_INCREMENT,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_MEDIA_STOP,
     SERVICE_REPEAT_SET,
     SERVICE_SHUFFLE_SET,
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
-    STATE_IDLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     CONNECTION_UPNP,
@@ -61,6 +74,7 @@ async def test_device_registry(
     )
     assert reg_device is not None
     assert reg_device.model == "Model Name"
+    assert reg_device.model_id == "S12"
     assert reg_device.sw_version == "13.1"
     assert reg_device.connections == {
         (CONNECTION_NETWORK_MAC, "00:11:22:33:44:55"),
@@ -87,15 +101,18 @@ async def test_device_registry_not_portable(
 
 
 async def test_entity_basic(
-    hass: HomeAssistant, async_autosetup_sonos, discover
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    discover,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test basic state and attributes."""
-    state = hass.states.get("media_player.zone_a")
-    assert state.state == STATE_IDLE
-    attributes = state.attributes
-    assert attributes["friendly_name"] == "Zone A"
-    assert attributes["is_volume_muted"] is False
-    assert attributes["volume_level"] == 0.19
+    entity_id = "media_player.zone_a"
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+    state = hass.states.get(entity_entry.entity_id)
+    assert state == snapshot(name=f"{entity_entry.entity_id}-state")
 
 
 @pytest.mark.parametrize(
@@ -166,6 +183,19 @@ async def test_entity_basic(
                 "play_pos": 0,
             },
         ),
+        (
+            MEDIA_TYPE_DIRECTORY,
+            "S://192.168.1.1/music/elton%20john",
+            MediaPlayerEnqueue.REPLACE,
+            {
+                "title": None,
+                "item_id": "S://192.168.1.1/music/elton%20john",
+                "clear_queue": 1,
+                "position": None,
+                "play": 1,
+                "play_pos": 0,
+            },
+        ),
     ],
 )
 async def test_play_media_library(
@@ -215,6 +245,50 @@ async def test_play_media_library(
         assert (
             sock_mock.play_from_queue.call_args_list[0].args[0]
             == test_result["play_pos"]
+        )
+
+
+@pytest.mark.parametrize(
+    ("media_content_type", "media_content_id", "message"),
+    [
+        (
+            "artist",
+            "A:ALBUM/UnknowAlbum",
+            "Could not find media in library: A:ALBUM/UnknowAlbum",
+        ),
+        (
+            "UnknownContent",
+            "A:ALBUM/UnknowAlbum",
+            "Sonos does not support media content type: UnknownContent",
+        ),
+        (
+            MEDIA_TYPE_DIRECTORY,
+            "S://192.168.1.1/music/error",
+            "Could not find media in library: S://192.168.1.1/music/error",
+        ),
+    ],
+)
+async def test_play_media_library_content_error(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    media_content_type,
+    media_content_id,
+    message,
+) -> None:
+    """Test playing local library errors on content and content type."""
+    with pytest.raises(
+        ServiceValidationError,
+        match=message,
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: media_content_type,
+                ATTR_MEDIA_CONTENT_ID: media_content_id,
+            },
+            blocking=True,
         )
 
 
@@ -525,8 +599,10 @@ async def test_play_media_music_library_playlist_dne(
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     soco_mock.music_library.get_playlists.return_value = _mock_playlists
 
-    with caplog.at_level(logging.ERROR):
-        caplog.clear()
+    with pytest.raises(
+        ServiceValidationError,
+        match=f"Could not find Sonos playlist: {media_content_id}",
+    ):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -538,8 +614,53 @@ async def test_play_media_music_library_playlist_dne(
             blocking=True,
         )
     assert soco_mock.play_uri.call_count == 0
-    assert media_content_id in caplog.text
-    assert "playlist" in caplog.text
+
+
+async def test_play_sonos_playlist(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    soco: MockSoCo,
+    sonos_playlists: SearchResult,
+) -> None:
+    """Test that sonos playlists can be played."""
+
+    # Test a successful call
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "playlist",
+            ATTR_MEDIA_CONTENT_ID: "sample playlist",
+        },
+        blocking=True,
+    )
+    assert soco.clear_queue.call_count == 1
+    assert soco.add_to_queue.call_count == 1
+    soco.add_to_queue.asset_called_with(
+        sonos_playlists[0], timeout=LONG_SERVICE_TIMEOUT
+    )
+
+    # Test playing a non-existent playlist
+    soco.clear_queue.reset_mock()
+    soco.add_to_queue.reset_mock()
+    media_content_id: str = "bad playlist"
+    with pytest.raises(
+        ServiceValidationError,
+        match=f"Could not find Sonos playlist: {media_content_id}",
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: "playlist",
+                ATTR_MEDIA_CONTENT_ID: media_content_id,
+            },
+            blocking=True,
+        )
+    assert soco.clear_queue.call_count == 0
+    assert soco.add_to_queue.call_count == 0
 
 
 @pytest.mark.parametrize(
@@ -590,6 +711,7 @@ async def test_select_source_line_in_tv(
                 "play_uri": 1,
                 "play_uri_uri": "x-sonosapi-radio:ST%3aetc",
                 "play_uri_title": "James Taylor Radio",
+                "play_uri_meta": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="100c2068ST%3a1683194971234567890" parentID="10fe2064myStations" restricted="true"><dc:title>James Taylor Radio</dc:title><upnp:class>object.item.audioItem.audioBroadcast.#station</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON60423_X_#Svc60423-99999999-Token</desc></item></DIDL-Lite>',
             },
         ),
         (
@@ -598,6 +720,16 @@ async def test_select_source_line_in_tv(
                 "play_uri": 1,
                 "play_uri_uri": "x-sonosapi-hls:Api%3atune%3aliveAudio%3ajazzcafe%3aetc",
                 "play_uri_title": "66 - Watercolors",
+                "play_uri_meta": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="10090120Api%3atune%3aliveAudio%3ajazzcafe%3ae4b5402c-9999-9999-9999-4bc8e2cdccce" parentID="10086064live%3f93b0b9cb-9999-9999-9999-bcf75971fcfe" restricted="false"><dc:title>66 - Watercolors</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON9479_X_#Svc9479-99999999-Token</desc></item></DIDL-Lite>',
+            },
+        ),
+        (
+            "American Tall Tales",
+            {
+                "play_uri": 1,
+                "play_uri_uri": "x-rincon-cpcontainer:101340c8reftitle%C9F27_com?sid=239&flags=16584&sn=5",
+                "play_uri_title": "American Tall Tales",
+                "play_uri_meta": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="101340c8reftitleC9F27_com" parentID="101340c8reftitleC9F27_com" restricted="true"><dc:title>American Tall Tales</dc:title><upnp:class>object.item.audioItem.audioBook</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON61191_X_#Svc6-0-Token</desc></item></DIDL-Lite>',
             },
         ),
     ],
@@ -624,6 +756,7 @@ async def test_select_source_play_uri(
     soco_mock.play_uri.assert_called_with(
         result.get("play_uri_uri"),
         title=result.get("play_uri_title"),
+        meta=result.get("play_uri_meta"),
         timeout=LONG_SERVICE_TIMEOUT,
     )
 
@@ -963,3 +1096,168 @@ async def test_volume(
     )
     # SoCo uses 0..100 for its range.
     assert soco.volume == 30
+
+
+@pytest.mark.parametrize(
+    ("service", "client_call"),
+    [
+        (SERVICE_MEDIA_PLAY, "play"),
+        (SERVICE_MEDIA_PAUSE, "pause"),
+        (SERVICE_MEDIA_STOP, "stop"),
+        (SERVICE_MEDIA_NEXT_TRACK, "next"),
+        (SERVICE_MEDIA_PREVIOUS_TRACK, "previous"),
+        (SERVICE_CLEAR_PLAYLIST, "clear_queue"),
+    ],
+)
+async def test_media_transport(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    service: str,
+    client_call: str,
+) -> None:
+    """Test the media player transport services."""
+    await hass.services.async_call(
+        MP_DOMAIN,
+        service,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+        },
+        blocking=True,
+    )
+    assert getattr(soco, client_call).call_count == 1
+
+
+async def test_play_media_announce(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    sonos_websocket,
+) -> None:
+    """Test playing media with the announce."""
+    content_id: str = "http://10.0.0.1:8123/local/sounds/doorbell.mp3"
+    volume: float = 0.30
+
+    # Test the success path
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "music",
+            ATTR_MEDIA_CONTENT_ID: content_id,
+            ATTR_MEDIA_ANNOUNCE: True,
+            ATTR_MEDIA_EXTRA: {"volume": volume},
+        },
+        blocking=True,
+    )
+    assert sonos_websocket.play_clip.call_count == 1
+    sonos_websocket.play_clip.assert_called_with(content_id, volume=volume)
+
+    # Test receiving a websocket exception
+    sonos_websocket.play_clip.reset_mock()
+    sonos_websocket.play_clip.side_effect = SonosWebsocketError("Error Message")
+    with pytest.raises(
+        HomeAssistantError, match="Error when calling Sonos websocket: Error Message"
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: "music",
+                ATTR_MEDIA_CONTENT_ID: content_id,
+                ATTR_MEDIA_ANNOUNCE: True,
+            },
+            blocking=True,
+        )
+    assert sonos_websocket.play_clip.call_count == 1
+    sonos_websocket.play_clip.assert_called_with(content_id, volume=None)
+
+    # Test receiving a non success result
+    sonos_websocket.play_clip.reset_mock()
+    sonos_websocket.play_clip.side_effect = None
+    retval = {"success": 0}
+    sonos_websocket.play_clip.return_value = [retval, {}]
+    with pytest.raises(
+        HomeAssistantError, match=f"Announcing clip {content_id} failed {retval}"
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: "music",
+                ATTR_MEDIA_CONTENT_ID: content_id,
+                ATTR_MEDIA_ANNOUNCE: True,
+            },
+            blocking=True,
+        )
+    assert sonos_websocket.play_clip.call_count == 1
+
+    # Test speakers that do not support announce. This
+    # will result in playing the clip directly via play_uri
+    sonos_websocket.play_clip.reset_mock()
+    sonos_websocket.play_clip.side_effect = None
+    retval = {"success": 0, "type": "globalError"}
+    sonos_websocket.play_clip.return_value = [retval, {}]
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "music",
+            ATTR_MEDIA_CONTENT_ID: content_id,
+            ATTR_MEDIA_ANNOUNCE: True,
+        },
+        blocking=True,
+    )
+    assert sonos_websocket.play_clip.call_count == 1
+    soco.play_uri.assert_called_with(content_id, force_radio=False)
+
+
+async def test_media_get_queue(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    soco_factory,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test getting the media queue."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+    result = await hass.services.async_call(
+        SONOS_DOMAIN,
+        SERVICE_GET_QUEUE,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    soco_mock.get_queue.assert_called_with(max_items=0)
+    assert result == snapshot
+
+
+@pytest.mark.parametrize(
+    ("speaker_model", "source_list"),
+    [
+        ("Sonos Arc Ultra", [SOURCE_TV]),
+        ("Sonos Arc", [SOURCE_TV]),
+        ("Sonos Playbar", [SOURCE_TV]),
+        ("Sonos Connect", [SOURCE_LINEIN]),
+        ("Sonos Play:5", [SOURCE_LINEIN]),
+        ("Sonos Amp", [SOURCE_LINEIN, SOURCE_TV]),
+        ("Sonos Era", None),
+    ],
+    indirect=["speaker_model"],
+)
+async def test_media_source_list(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    speaker_model: str,
+    source_list: list[str] | None,
+) -> None:
+    """Test the mapping between the speaker model name and source_list."""
+    state = hass.states.get("media_player.zone_a")
+    assert state.attributes.get(ATTR_INPUT_SOURCE_LIST) == source_list

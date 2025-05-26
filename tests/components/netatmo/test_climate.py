@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.climate import (
@@ -41,7 +41,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .common import selected_platforms, simulate_webhook, snapshot_platform_entities
@@ -64,6 +64,34 @@ async def test_entity(
         entity_registry,
         snapshot,
     )
+
+
+async def test_schedule_update_webhook_event(
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
+) -> None:
+    """Test schedule update webhook event without schedule_id."""
+
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    climate_entity_livingroom = "climate.livingroom"
+
+    # Save initial state
+    initial_state = hass.states.get(climate_entity_livingroom)
+
+    # Create a schedule update event without a schedule_id (the event is sent when temperature sets of a schedule are changed)
+    response = {
+        "home_id": "91763b24c43d3e344f424e8b",
+        "event_type": "schedule",
+        "push_type": "home_event_changed",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+
+    # State should be unchanged
+    assert hass.states.get(climate_entity_livingroom) == initial_state
 
 
 async def test_webhook_event_handling_thermostats(
@@ -282,7 +310,7 @@ async def test_service_preset_mode_frost_guard_thermostat(
     assert hass.states.get(climate_entity_livingroom).state == "auto"
     assert (
         hass.states.get(climate_entity_livingroom).attributes["preset_mode"]
-        == "Frost Guard"
+        == "frost_guard"
     )
 
     # Test service setting the preset mode to "frost guard"
@@ -779,7 +807,7 @@ async def test_service_preset_mode_already_boost_valves(
     assert hass.states.get(climate_entity_entrada).state == "auto"
     assert (
         hass.states.get(climate_entity_entrada).attributes["preset_mode"]
-        == "Frost Guard"
+        == "frost_guard"
     )
     assert hass.states.get(climate_entity_entrada).attributes["temperature"] == 7
 

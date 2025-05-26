@@ -11,7 +11,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
 )
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_sunrise, async_track_sunset
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType

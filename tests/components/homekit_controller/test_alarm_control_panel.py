@@ -2,16 +2,18 @@
 
 from collections.abc import Callable
 
+from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
+from homeassistant.components.alarm_control_panel import ATTR_CODE_ARM_REQUIRED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import setup_test_component
 
 
-def create_security_system_service(accessory):
+def create_security_system_service(accessory: Accessory) -> None:
     """Define a security-system characteristics as per page 219 of HAP spec."""
     service = accessory.add_service(ServicesTypes.SECURITY_SYSTEM)
 
@@ -105,6 +107,7 @@ async def test_switch_read_alarm_state(
     state = await helper.poll_and_get_state()
     assert state.state == "armed_home"
     assert state.attributes["battery_level"] == 50
+    assert state.attributes[ATTR_CODE_ARM_REQUIRED] is False
 
     await helper.async_update(
         ServicesTypes.SECURITY_SYSTEM,

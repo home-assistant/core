@@ -63,7 +63,7 @@ def mock_whois() -> Generator[MagicMock]:
         domain.registrant = "registrant@example.com"
         domain.registrar = "My Registrar"
         domain.reseller = "Top Domains, Low Prices"
-        domain.status = "OK"
+        domain.status = "ok"
         domain.statuses = ["OK"]
         yield whois_mock
 
@@ -86,7 +86,7 @@ def mock_whois_missing_some_attrs() -> Generator[Mock]:
             self.name = "home-assistant.io"
             self.name_servers = ["ns1.example.com", "ns2.example.com"]
             self.registrar = "My Registrar"
-            self.status = "OK"
+            self.status = "ok"
             self.statuses = ["OK"]
 
     with patch(

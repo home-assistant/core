@@ -1,0 +1,33 @@
+{
+  "locationId": "3164610",
+  "gateways": [
+    {
+      "gatewayId": "2938388",
+      "temperatureControlSystems": [
+        {
+          "systemId": "4187769",
+          "zones": [
+            {
+              "zoneId": "4187768",
+              "temperatureStatus": { "temperature": 19.5, "isAvailable": true },
+              "activeFaults": [],
+              "setpointStatus": {
+                "targetHeatTemperature": 15.0,
+                "setpointMode": "PermanentOverride"
+              },
+              "name": "Thermostat"
+            }
+          ],
+          "activeFaults": [],
+          "systemModeStatus": { "mode": "Auto", "isPermanent": true }
+        }
+      ],
+      "activeFaults": [
+        {
+          "faultType": "GatewayCommunicationLost",
+          "since": "2023-05-04T18:47:36.7727046"
+        }
+      ]
+    }
+  ]
+}

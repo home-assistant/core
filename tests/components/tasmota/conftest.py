@@ -37,7 +37,7 @@ def disable_status_sensor(status_sensor_disabled):
         yield
 
 
-async def setup_tasmota_helper(hass):
+async def setup_tasmota_helper(hass: HomeAssistant) -> None:
     """Set up Tasmota."""
     hass.config.components.add("tasmota")
 

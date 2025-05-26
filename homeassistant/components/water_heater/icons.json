@@ -22,10 +22,20 @@
     }
   },
   "services": {
-    "set_away_mode": "mdi:account-arrow-right",
-    "set_operation_mode": "mdi:water-boiler",
-    "set_temperature": "mdi:thermometer",
-    "turn_off": "mdi:water-boiler-off",
-    "turn_on": "mdi:water-boiler"
+    "set_away_mode": {
+      "service": "mdi:account-arrow-right"
+    },
+    "set_operation_mode": {
+      "service": "mdi:water-boiler"
+    },
+    "set_temperature": {
+      "service": "mdi:thermometer"
+    },
+    "turn_off": {
+      "service": "mdi:water-boiler-off"
+    },
+    "turn_on": {
+      "service": "mdi:water-boiler"
+    }
   }
 }
