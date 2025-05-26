@@ -4231,6 +4231,8 @@ async def test_reconfigure_migrate_restore_failure(
     description_placeholders = result["description_placeholders"]
     assert description_placeholders is not None
     assert description_placeholders["file_path"]
+    assert description_placeholders["file_url"]
+    assert description_placeholders["file_name"]
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
