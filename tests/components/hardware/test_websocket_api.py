@@ -50,7 +50,7 @@ async def test_system_status_subscription(
         return mock_psutil
 
     with patch(
-        "homeassistant.components.hardware.websocket_api.ha_psutil.PsutilWrapper",
+        "homeassistant.components.hardware.ha_psutil.PsutilWrapper",
         wraps=create_mock_psutil,
     ):
         assert await async_setup_component(hass, DOMAIN, {})

@@ -5,7 +5,7 @@ from typing import Any
 from unittest.mock import ANY, patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import backup, onboarding
 from homeassistant.core import HomeAssistant

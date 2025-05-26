@@ -23,7 +23,7 @@
         },
         "data_description": {
           "password": "The Smile ID printed on the label on the back of your Adam, Smile-T, or P1.",
-          "host": "The hostname or IP-address of your Smile. You can find it in your router or the Plugwise App.",
+          "host": "The hostname or IP address of your Smile. You can find it in your router or the Plugwise app.",
           "port": "By default your Smile uses port 80, normally you should not have to change this.",
           "username": "Default is `smile`, or `stretch` for the legacy Stretch."
         }
@@ -113,7 +113,7 @@
         "name": "DHW mode",
         "state": {
           "off": "[%key:common::state::off%]",
-          "auto": "Auto",
+          "auto": "[%key:common::state::auto%]",
           "boost": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::boost%]",
           "comfort": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]"
         }

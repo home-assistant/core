@@ -9,8 +9,58 @@ from typing import Final
 
 DHCP: Final[list[dict[str, str | bool]]] = [
     {
+        "domain": "airthings",
+        "hostname": "airthings-view",
+    },
+    {
+        "domain": "airthings",
+        "hostname": "airthings-hub",
+        "macaddress": "D0141190*",
+    },
+    {
+        "domain": "airthings",
+        "hostname": "airthings-hub",
+        "macaddress": "70B3D52A0*",
+    },
+    {
         "domain": "airzone",
         "macaddress": "E84F25*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "10BF67*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "48B423*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "4C1744*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "50DCE7*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "74D637*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "9CC8E9*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "C095CF*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "D8BE65*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "EC2BEB*",
     },
     {
         "domain": "august",
@@ -93,6 +143,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "bond",
         "hostname": "bond-*",
         "macaddress": "F44E38*",
+    },
+    {
+        "domain": "bosch_alarm",
+        "macaddress": "000463*",
     },
     {
         "domain": "broadlink",
@@ -259,6 +313,21 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "30AEA4*",
     },
     {
+        "domain": "home_connect",
+        "hostname": "balay-*",
+        "macaddress": "C8D778*",
+    },
+    {
+        "domain": "home_connect",
+        "hostname": "(bosch|siemens)-*",
+        "macaddress": "68A40E*",
+    },
+    {
+        "domain": "home_connect",
+        "hostname": "siemens-*",
+        "macaddress": "38B4D3*",
+    },
+    {
         "domain": "homewizard",
         "registered_devices": True,
     },
@@ -310,6 +379,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "isy994",
         "hostname": "polisy*",
         "macaddress": "000DB9*",
+    },
+    {
+        "domain": "knocki",
+        "hostname": "knc*",
     },
     {
         "domain": "lamarzocco",
@@ -405,11 +478,6 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "9CADEF*",
     },
     {
-        "domain": "oncue",
-        "hostname": "kohlergen*",
-        "macaddress": "00146F*",
-    },
-    {
         "domain": "onvif",
         "registered_devices": True,
     },
@@ -470,6 +538,11 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "rainforest_eagle",
         "macaddress": "D8D5B9*",
+    },
+    {
+        "domain": "rehlko",
+        "hostname": "kohlergen*",
+        "macaddress": "00146F*",
     },
     {
         "domain": "reolink",

@@ -3,18 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock
 
-from aioesphomeapi import (
-    APIClient,
-    BinarySensorInfo,
-    BinarySensorState,
-    DeviceInfo,
-    EntityInfo,
-    EntityState,
-    UserService,
-)
+from aioesphomeapi import APIClient, BinarySensorInfo, BinarySensorState, DeviceInfo
 import pytest
 
 from homeassistant.components.esphome import repairs
@@ -29,7 +20,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 
-from .conftest import MockESPHomeDevice
+from .conftest import MockESPHomeDeviceType
 
 from tests.common import MockConfigEntry
 from tests.components.repairs import (
@@ -135,10 +126,7 @@ async def test_device_conflict_migration(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test migrating existing configuration to new hardware."""
     entity_info = [
@@ -152,7 +140,7 @@ async def test_device_conflict_migration(
     ]
     states = [BinarySensorState(key=1, state=None)]
     user_service = []
-    device: MockESPHomeDevice = await mock_esphome_device(
+    device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
         user_service=user_service,
