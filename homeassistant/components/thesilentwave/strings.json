@@ -6,13 +6,11 @@
         "description": "Setup TheSilentWave integration",
         "data": {
           "name": "Name",
-          "host": "IP Address",
-          "scan_interval": "Update interval in seconds (5-300)"
+          "host": "IP Address"
         },
         "data_description": {
           "name": "A custom name for this device",
-          "host": "The IP address of your TheSilentWave device",
-          "scan_interval": "How often to update the data (in seconds)"
+          "host": "The IP address of your TheSilentWave device"
         }
       }
     },

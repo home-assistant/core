@@ -22,7 +22,7 @@ async def async_setup_entry(hass, entry):
     # Fetch the configuration data from the entry.
     name = entry.data.get("name", "TheSilentWave")
     host = entry.data.get("host", "")
-    scan_interval = entry.data.get("scan_interval", 10)
+    scan_interval = 10  # Fixed scan interval
 
     # Create the coordinator with scan_interval.
     coordinator = TheSilentWaveCoordinator(hass, name, host, scan_interval)
