@@ -42,6 +42,7 @@ from homeassistant.components.music_assistant.media_player import (
     ATTR_SOURCE_PLAYER,
     ATTR_URL,
     ATTR_USE_PRE_ANNOUNCE,
+    SERVICE_ADD_FAVORITE,
     SERVICE_GET_QUEUE,
     SERVICE_PLAY_ANNOUNCEMENT,
     SERVICE_PLAY_MEDIA_ADVANCED,
@@ -645,6 +646,45 @@ async def test_media_player_select_source_action(
     assert music_assistant_client.send_command.call_args == call(
         "players/cmd/select_source", player_id=mass_player_id, source="linein"
     )
+
+
+async def test_media_player_add_currently_playing_to_favorites_action(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test media_player add_currently_playing_to_favorites action."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    entity_id = "media_player.my_super_test_player_2"
+    state = hass.states.get(entity_id)
+    assert state
+    await hass.services.async_call(
+        MASS_DOMAIN,
+        SERVICE_ADD_FAVORITE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "music/favorites/add_item",
+        item="spotify://track/5d95dc5be77e4f7eb4939f62cfef527b",
+    )
+
+    # repeat test with a player that has no current item
+    entity_id = "media_player.test_player_1"
+    state = hass.states.get(entity_id)
+    assert state
+    with pytest.raises(HomeAssistantError, match="No current item to add to favorites"):
+        await hass.services.async_call(
+            MASS_DOMAIN,
+            SERVICE_ADD_FAVORITE,
+            {
+                ATTR_ENTITY_ID: entity_id,
+            },
+            blocking=True,
+        )
 
 
 async def test_media_player_supported_features(
