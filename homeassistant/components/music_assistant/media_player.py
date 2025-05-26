@@ -301,7 +301,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                 # ignore passive sources because HA does not differentiate between
                 # active and passive sources
                 continue
-            source_mappings[source.id] = source.name
+            source_mappings[source.name] = source.id
             if source.id == player.active_source:
                 active_source_name = source.name
         self._attr_source_list = list(source_mappings.keys())
