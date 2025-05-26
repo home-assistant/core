@@ -114,6 +114,7 @@
       'original_name': None,
       'platform': 'gree',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': <ClimateEntityFeature: 441>,
       'translation_key': None,
       'unique_id': 'aabbcc112233',

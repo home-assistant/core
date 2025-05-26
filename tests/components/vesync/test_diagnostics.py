@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 from pyvesync.helpers import Helpers
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.matchers import path_type
 
 from homeassistant.components.vesync.const import DOMAIN

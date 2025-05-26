@@ -147,6 +147,27 @@
         }
       }
     },
+    "event": {
+      "up_down_remote": {
+        "name": "Up/down remote",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "release": "Released",
+              "up": "Up",
+              "down": "Down",
+              "stop": "Stop",
+              "up_long": "Up (long press)",
+              "down_long": "Down (long press)",
+              "stop_long": "Stop (long press)",
+              "c_button": "C button",
+              "b_button": "B button",
+              "a_button": "A button"
+            }
+          }
+        }
+      }
+    },
     "fan": {
       "homee": {
         "state_attributes": {
