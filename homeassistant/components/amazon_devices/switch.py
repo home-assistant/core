@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from aioamazondevices.api import AmazonDevice
 
@@ -24,6 +24,7 @@ class AmazonSwitchEntityDescription(SwitchEntityDescription):
 
     is_on_fn: Callable[[AmazonDevice], bool]
     subkey: str
+    method: str
 
 
 SWITCHES: Final = (
@@ -32,6 +33,7 @@ SWITCHES: Final = (
         subkey="AUDIO_PLAYER",
         translation_key="do_not_disturb",
         is_on_fn=lambda _device: _device.do_not_disturb,
+        method="set_do_not_disturb",
     ),
 )
 
@@ -60,9 +62,13 @@ class AmazonSwitchEntity(AmazonEntity, SwitchEntity):
 
     async def _switch_set_state(self, state: bool) -> None:
         """Set desired switch state."""
-        await self.coordinator.api.set_do_not_disturb(self.device, state)
-        self.coordinator.data[self.device.serial_number].do_not_disturb = state
-        self.async_write_ha_state()
+        method = getattr(self.coordinator.api, self.entity_description.method)
+
+        if TYPE_CHECKING:
+            assert method is not None
+
+        await method(self.device, state)
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""

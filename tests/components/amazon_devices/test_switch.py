@@ -2,9 +2,12 @@
 
 from unittest.mock import AsyncMock, patch
 
+from aioamazondevices.api import AmazonDevice
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.amazon_devices.coordinator import SCAN_INTERVAL
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -15,8 +18,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
+from .conftest import TEST_SERIAL_NUMBER
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -36,6 +40,7 @@ async def test_all_entities(
 
 async def test_switch_dnd(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -55,6 +60,28 @@ async def test_switch_dnd(
     )
 
     assert mock_amazon_devices_client.set_do_not_disturb.call_count == 1
+
+    mock_amazon_devices_client.get_devices_data.return_value = {
+        TEST_SERIAL_NUMBER: AmazonDevice(
+            account_name="Echo Test",
+            capabilities=["AUDIO_PLAYER", "MICROPHONE"],
+            device_family="mine",
+            device_type="echo",
+            device_owner_customer_id="amazon_ower_id",
+            device_cluster_members=[TEST_SERIAL_NUMBER],
+            online=True,
+            serial_number=TEST_SERIAL_NUMBER,
+            software_version="echo_test_software_version",
+            do_not_disturb=True,
+            response_style=None,
+            bluetooth_state=True,
+        )
+    }
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
@@ -64,6 +91,27 @@ async def test_switch_dnd(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
+
+    mock_amazon_devices_client.get_devices_data.return_value = {
+        TEST_SERIAL_NUMBER: AmazonDevice(
+            account_name="Echo Test",
+            capabilities=["AUDIO_PLAYER", "MICROPHONE"],
+            device_family="mine",
+            device_type="echo",
+            device_owner_customer_id="amazon_ower_id",
+            device_cluster_members=[TEST_SERIAL_NUMBER],
+            online=True,
+            serial_number=TEST_SERIAL_NUMBER,
+            software_version="echo_test_software_version",
+            do_not_disturb=False,
+            response_style=None,
+            bluetooth_state=True,
+        )
+    }
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert mock_amazon_devices_client.set_do_not_disturb.call_count == 2
     assert (state := hass.states.get(entity_id))
