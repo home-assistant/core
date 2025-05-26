@@ -90,7 +90,7 @@ class PushBot(BaseTelegramBotEntity):
         )
         self.webhook_url = f"{self.base_url}{TELEGRAM_WEBHOOK_URL}"
 
-    async def shutdown(self):
+    async def shutdown(self) -> None:
         """Shutdown the app."""
         await self.stop_application()
 

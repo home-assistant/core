@@ -421,7 +421,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     CONF_PLATFORM: domain_config[-1][CONF_PLATFORM],
                     CONF_API_KEY: domain_config[-1][CONF_API_KEY],
                     CONF_ALLOWED_CHAT_IDS: domain_config[-1][CONF_ALLOWED_CHAT_IDS],
-                    ATTR_PARSER: domain_config[-1].get(ATTR_PARSER),
+                    ATTR_PARSER: domain_config[-1][ATTR_PARSER],
                     CONF_PROXY_URL: domain_config[-1].get(CONF_PROXY_URL),
                     CONF_URL: domain_config[-1].get(CONF_URL),
                     CONF_TRUSTED_NETWORKS: trusted_networks_str,
@@ -1202,7 +1202,7 @@ class BaseTelegramBotEntity:
         self.config = config
 
     @abstractmethod
-    def shutdown(self):
+    async def shutdown(self) -> None:
         """Shutdown the bot application."""
 
     async def handle_update(self, update: Update, context: CallbackContext) -> bool:

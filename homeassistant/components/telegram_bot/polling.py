@@ -60,7 +60,7 @@ class PollBot(BaseTelegramBotEntity):
         self.application.add_handler(TypeHandler(Update, self.handle_update))
         self.application.add_error_handler(process_error)
 
-    async def shutdown(self):
+    async def shutdown(self) -> None:
         """Shutdown the app."""
         await self.stop_polling()
 
