@@ -28,11 +28,11 @@ from types import FrameType, ModuleType
 from typing import Any, Literal, NoReturn
 from unittest.mock import AsyncMock, Mock, patch
 
-from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
+from aiohttp.test_utils import unused_port as get_test_instance_port
 from annotatedyaml import load_yaml_dict, loader as yaml_loader
 import attr
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant import auth, bootstrap, config_entries, loader
@@ -44,7 +44,7 @@ from homeassistant.auth import (
 )
 from homeassistant.auth.permissions import system_policies
 from homeassistant.components import device_automation, persistent_notification as pn
-from homeassistant.components.device_automation import (  # noqa: F401
+from homeassistant.components.device_automation import (
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
 from homeassistant.components.logger import (
@@ -120,6 +120,11 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 from .testing_config.custom_components.test_constant_deprecation import (
     import_deprecated_constant,
 )
+
+__all__ = [
+    "async_get_device_automation_capabilities",
+    "get_test_instance_port",
+]
 
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
