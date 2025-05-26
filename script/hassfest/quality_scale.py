@@ -1955,7 +1955,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "sfr_box",
     "sharkiq",
     "shell_command",
-    "shelly",
     "shodan",
     "shopping_list",
     "sia",

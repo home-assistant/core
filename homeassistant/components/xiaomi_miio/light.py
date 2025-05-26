@@ -18,6 +18,7 @@ from miio import (
     PhilipsEyecare,
     PhilipsMoonlight,
 )
+from miio.gateway.devices.light import LightBulb
 from miio.gateway.gateway import (
     GATEWAY_MODEL_AC_V1,
     GATEWAY_MODEL_AC_V2,
@@ -33,7 +34,6 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE,
@@ -51,7 +51,6 @@ from .const import (
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
     DOMAIN,
-    KEY_COORDINATOR,
     MODELS_LIGHT_BULB,
     MODELS_LIGHT_CEILING,
     MODELS_LIGHT_EYECARE,
@@ -67,7 +66,7 @@ from .const import (
     SERVICE_SET_SCENE,
 )
 from .entity import XiaomiGatewayDevice, XiaomiMiioEntity
-from .typing import ServiceMethodDetails
+from .typing import ServiceMethodDetails, XiaomiMiioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -131,7 +130,7 @@ SERVICE_TO_METHOD = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: XiaomiMiioConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Xiaomi light from a config entry."""
@@ -140,7 +139,7 @@ async def async_setup_entry(
     light: MiioDevice
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
-        gateway = hass.data[DOMAIN][config_entry.entry_id][CONF_GATEWAY]
+        gateway = config_entry.runtime_data.gateway
         # Gateway light
         if gateway.model not in [
             GATEWAY_MODEL_AC_V1,
@@ -154,7 +153,7 @@ async def async_setup_entry(
         sub_devices = gateway.devices
         for sub_device in sub_devices.values():
             if sub_device.device_type == "LightBulb":
-                coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR][
+                coordinator = config_entry.runtime_data.gateway_coordinators[
                     sub_device.sid
                 ]
                 entities.append(
@@ -841,7 +840,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
         return self._hs_color
 
     @property
-    def color_mode(self):
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self.hs_color:
             return ColorMode.HS
@@ -1095,6 +1094,7 @@ class XiaomiGatewayBulb(XiaomiGatewayDevice, LightEntity):
 
     _attr_color_mode = ColorMode.COLOR_TEMP
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+    _sub_device: LightBulb
 
     @property
     def brightness(self):

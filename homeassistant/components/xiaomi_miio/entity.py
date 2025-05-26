@@ -4,9 +4,10 @@ import datetime
 from enum import Enum
 from functools import partial
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from miio import DeviceException
+from miio.gateway.devices import SubDevice
 
 from homeassistant.const import ATTR_CONNECTIONS, CONF_MAC, CONF_MODEL
 from homeassistant.helpers import device_registry as dr
@@ -18,6 +19,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import ATTR_AVAILABLE, DOMAIN
+from .typing import XiaomiMiioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -150,10 +152,17 @@ class XiaomiCoordinatedMiioEntity[_T: DataUpdateCoordinator[Any]](
         return time.isoformat()
 
 
-class XiaomiGatewayDevice(CoordinatorEntity, Entity):
+class XiaomiGatewayDevice(
+    CoordinatorEntity[DataUpdateCoordinator[dict[str, bool]]], Entity
+):
     """Representation of a base Xiaomi Gateway Device."""
 
-    def __init__(self, coordinator, sub_device, entry):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[dict[str, bool]],
+        sub_device: SubDevice,
+        entry: XiaomiMiioConfigEntry,
+    ) -> None:
         """Initialize the Xiaomi Gateway Device."""
         super().__init__(coordinator)
         self._sub_device = sub_device
@@ -174,6 +183,8 @@ class XiaomiGatewayDevice(CoordinatorEntity, Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info of the gateway."""
+        if TYPE_CHECKING:
+            assert self._entry.unique_id is not None
         return DeviceInfo(
             identifiers={(DOMAIN, self._sub_device.sid)},
             via_device=(DOMAIN, self._entry.unique_id),

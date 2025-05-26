@@ -5,8 +5,10 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 import logging
+from typing import TYPE_CHECKING
 
-from miio import AirQualityMonitor, DeviceException
+from miio import AirQualityMonitor, Device as MiioDevice, DeviceException
+from miio.gateway.devices import SubDevice
 from miio.gateway.gateway import (
     GATEWAY_MODEL_AC_V1,
     GATEWAY_MODEL_AC_V2,
@@ -22,7 +24,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_TEMPERATURE,
@@ -46,6 +47,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from . import VacuumCoordinatorDataAttributes
@@ -53,8 +55,6 @@ from .const import (
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
     DOMAIN,
-    KEY_COORDINATOR,
-    KEY_DEVICE,
     MODEL_AIRFRESH_A1,
     MODEL_AIRFRESH_T2017,
     MODEL_AIRFRESH_VA2,
@@ -91,6 +91,7 @@ from .const import (
     ROCKROBO_GENERIC,
 )
 from .entity import XiaomiCoordinatedMiioEntity, XiaomiGatewayDevice, XiaomiMiioEntity
+from .typing import XiaomiMiioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -724,13 +725,19 @@ VACUUM_SENSORS = {
 }
 
 
-def _setup_vacuum_sensors(hass, config_entry, async_add_entities):
+def _setup_vacuum_sensors(
+    hass: HomeAssistant,
+    config_entry: XiaomiMiioConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up the Xiaomi vacuum sensors."""
-    device = hass.data[DOMAIN][config_entry.entry_id].get(KEY_DEVICE)
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
+    device = config_entry.runtime_data.device
+    coordinator = config_entry.runtime_data.device_coordinator
     entities = []
 
     for sensor, description in VACUUM_SENSORS.items():
+        if TYPE_CHECKING:
+            assert description.parent_key is not None
         parent_key_data = getattr(coordinator.data, description.parent_key)
         if getattr(parent_key_data, description.key, None) is None:
             _LOGGER.debug(
@@ -754,14 +761,14 @@ def _setup_vacuum_sensors(hass, config_entry, async_add_entities):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: XiaomiMiioConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Xiaomi sensor from a config entry."""
     entities: list[SensorEntity] = []
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
-        gateway = hass.data[DOMAIN][config_entry.entry_id][CONF_GATEWAY]
+        gateway = config_entry.runtime_data.gateway
         # Gateway illuminance sensor
         if gateway.model not in [
             GATEWAY_MODEL_AC_V1,
@@ -779,9 +786,7 @@ async def async_setup_entry(
         # Gateway sub devices
         sub_devices = gateway.devices
         for sub_device in sub_devices.values():
-            coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR][
-                sub_device.sid
-            ]
+            coordinator = config_entry.runtime_data.gateway_coordinators[sub_device.sid]
             for sensor, description in SENSOR_TYPES.items():
                 if sensor not in sub_device.status:
                     continue
@@ -791,6 +796,7 @@ async def async_setup_entry(
                     )
                 )
     elif config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
+        device: MiioDevice
         host = config_entry.data[CONF_HOST]
         token = config_entry.data[CONF_TOKEN]
         model: str = config_entry.data[CONF_MODEL]
@@ -811,7 +817,8 @@ async def async_setup_entry(
                 )
             )
         else:
-            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+            device = config_entry.runtime_data.device
+            coordinator = config_entry.runtime_data.device_coordinator
             sensors: Iterable[str] = []
             if model in MODEL_TO_SENSORS_MAP:
                 sensors = MODEL_TO_SENSORS_MAP[model]
@@ -839,7 +846,7 @@ async def async_setup_entry(
                         device,
                         config_entry,
                         f"{sensor}_{config_entry.unique_id}",
-                        hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+                        coordinator,
                         description,
                     )
                 )
@@ -972,7 +979,13 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
 class XiaomiGatewaySensor(XiaomiGatewayDevice, SensorEntity):
     """Representation of a XiaomiGatewaySensor."""
 
-    def __init__(self, coordinator, sub_device, entry, description):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[dict[str, bool]],
+        sub_device: SubDevice,
+        entry: XiaomiMiioConfigEntry,
+        description: XiaomiMiioSensorDescription,
+    ) -> None:
         """Initialize the XiaomiSensor."""
         super().__init__(coordinator, sub_device, entry)
         self._unique_id = f"{sub_device.sid}-{description.key}"
