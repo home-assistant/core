@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import ExtraStoredData
 
-from .entity import MatterEntity
+from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
@@ -65,6 +65,11 @@ async def async_setup_entry(
     """Set up Matter lock from Config Entry."""
     matter = get_matter(hass)
     matter.register_platform_handler(Platform.UPDATE, async_add_entities)
+
+
+@dataclass(frozen=True)
+class MatterUpdateEntityDescription(UpdateEntityDescription, MatterEntityDescription):
+    """Describe Matter Update entities."""
 
 
 class MatterUpdate(MatterEntity, UpdateEntity):
@@ -250,7 +255,7 @@ class MatterUpdate(MatterEntity, UpdateEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.UPDATE,
-        entity_description=UpdateEntityDescription(
+        entity_description=MatterUpdateEntityDescription(
             key="MatterUpdate", device_class=UpdateDeviceClass.FIRMWARE
         ),
         entity_class=MatterUpdate,

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from chip.clusters import Objects as clusters
@@ -18,7 +19,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import MatterEntity
+from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
@@ -34,6 +35,11 @@ EVENT_TYPES_MAP = {
     5: "multi_press_ongoing",  # clusters.Switch.Events.MultiPressOngoing
     6: "multi_press_complete",  # clusters.Switch.Events.MultiPressComplete
 }
+
+
+@dataclass(frozen=True)
+class MatterEventEntityDescription(EventEntityDescription, MatterEntityDescription):
+    """Describe Matter Event entities."""
 
 
 async def async_setup_entry(
@@ -132,10 +138,11 @@ class MatterEventEntity(MatterEntity, EventEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.EVENT,
-        entity_description=EventEntityDescription(
+        entity_description=MatterEventEntityDescription(
             key="GenericSwitch",
             device_class=EventDeviceClass.BUTTON,
             translation_key="button",
+            name_using_matter_labels=["label", "button"],
         ),
         entity_class=MatterEventEntity,
         required_attributes=(

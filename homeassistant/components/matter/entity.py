@@ -62,6 +62,8 @@ class MatterEntityDescription(EntityDescription):
     measurement_to_ha: Callable[[Any], Any] | None = None
     ha_to_native_value: Callable[[Any], Any] | None = None
     command_timeout: int | None = None
+    # List of Matter FixedLabel or UserLabels used for name
+    name_using_matter_labels: list | None = None
 
 
 class MatterEntity(Entity):
@@ -101,37 +103,45 @@ class MatterEntity(Entity):
             identifiers={(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
         )
         self._attr_available = self._endpoint.node.available
-        # mark endpoint postfix if the device has the primary attribute on multiple endpoints
+        # mark endpoint postfix if the device has the primary attribute's cluster on multiple endpoints
         if not self._endpoint.node.is_bridge_device and any(
             ep
             for ep in self._endpoint.node.endpoints.values()
             if ep != self._endpoint
-            and ep.has_attribute(None, entity_info.primary_attribute)
+            and ep.has_cluster(entity_info.primary_attribute.cluster_id)
         ):
             self._name_postfix = str(self._endpoint.endpoint_id)
             if self._platform_translation_key and not self.translation_key:
                 self._attr_translation_key = self._platform_translation_key
 
-        # prefer the label attribute for the entity name
         # Matter has a way for users and/or vendors to specify a name for an endpoint
-        # which is always preferred over a standard HA (generated) name
-        for attr in (
-            clusters.FixedLabel.Attributes.LabelList,
-            clusters.UserLabel.Attributes.LabelList,
-        ):
-            if not (labels := self.get_matter_attribute_value(attr)):
-                continue
-            for label in labels:
-                if label.label not in ["Label", "Button"]:
+        # which is preferred over a standard HA (generated) name when the
+        # entity request it by including a list of labels that may be used for naming
+        if entity_info.entity_description.name_using_matter_labels is not None:
+            for attr in (
+                clusters.FixedLabel.Attributes.LabelList,
+                clusters.UserLabel.Attributes.LabelList,
+            ):
+                if not (labels := self.get_matter_attribute_value(attr)):
                     continue
-                # fixed or user label found: use it
-                label_value: str = label.value
-                # in the case the label is only the label id, use it as postfix only
-                if label_value.isnumeric():
-                    self._name_postfix = label_value
-                else:
-                    self._attr_name = label_value
-                break
+                for label in labels:
+                    if label.label.lower() not in [
+                        x.lower()
+                        for x in entity_info.entity_description.name_using_matter_labels
+                    ]:
+                        continue
+                    # fixed or user label found: use it
+                    label_value: str = label.value
+                    # in the case the label is only the label id, use it as postfix only
+                    if label_value.isnumeric():
+                        self._name_postfix = label_value
+                    else:
+                        self._attr_name = (
+                            f"{label_value} ({self._name_postfix})"
+                            if self._name_postfix is not None
+                            else label_value
+                        )
+                    break
 
         # make sure to update the attributes once
         self._update_from_device()
