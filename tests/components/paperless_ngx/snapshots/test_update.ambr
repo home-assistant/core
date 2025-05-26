@@ -43,7 +43,7 @@
       'friendly_name': 'Paperless-ngx Firmware',
       'in_progress': False,
       'installed_version': '2.3.0',
-      'latest_version': '2.16.2',
+      'latest_version': '2.3.0',
       'release_summary': None,
       'release_url': 'https://docs.paperless-ngx.com/changelog/',
       'skipped_version': None,
@@ -56,6 +56,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
