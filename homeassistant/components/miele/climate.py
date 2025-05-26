@@ -208,7 +208,11 @@ class MieleClimate(MieleEntity, ClimateEntity):
             t_key = "zone_3"
 
         self._attr_translation_key = t_key
-        self._attr_unique_id = f"{device_id}-{description.key}-{description.zone}"
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID of the entity."""
+        return f"{self._device_id}-{self.entity_description.key}-{self.entity_description.zone}"
 
     @property
     def target_temperature(self) -> float | None:
