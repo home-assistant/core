@@ -816,14 +816,12 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
         """Initialize the plug switch."""
         super().__init__(name, device, entry, unique_id)
 
-        self._state_attrs = {ATTR_TEMPERATURE: None, ATTR_MODEL: self._model}
+        self._attr_extra_state_attributes = {
+            ATTR_TEMPERATURE: None,
+            ATTR_MODEL: self._model,
+        }
         self._device_features = FEATURE_FLAGS_GENERIC
         self._skip_update = False
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the device."""
-        return self._state_attrs
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a plug command handling error messages."""
@@ -877,7 +875,7 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
 
             self._attr_available = True
             self._attr_is_on = state.is_on
-            self._state_attrs[ATTR_TEMPERATURE] = state.temperature
+            self._attr_extra_state_attributes[ATTR_TEMPERATURE] = state.temperature
 
         except DeviceException as ex:
             if self._attr_available:
@@ -934,16 +932,16 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
         else:
             self._device_features = FEATURE_FLAGS_POWER_STRIP_V1
 
-        self._state_attrs[ATTR_LOAD_POWER] = None
+        self._attr_extra_state_attributes[ATTR_LOAD_POWER] = None
 
         if self._device_features & FEATURE_SET_POWER_MODE == 1:
-            self._state_attrs[ATTR_POWER_MODE] = None
+            self._attr_extra_state_attributes[ATTR_POWER_MODE] = None
 
         if self._device_features & FEATURE_SET_WIFI_LED == 1:
-            self._state_attrs[ATTR_WIFI_LED] = None
+            self._attr_extra_state_attributes[ATTR_WIFI_LED] = None
 
         if self._device_features & FEATURE_SET_POWER_PRICE == 1:
-            self._state_attrs[ATTR_POWER_PRICE] = None
+            self._attr_extra_state_attributes[ATTR_POWER_PRICE] = None
 
     async def async_update(self) -> None:
         """Fetch state from the device."""
@@ -958,21 +956,21 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
 
             self._attr_available = True
             self._attr_is_on = state.is_on
-            self._state_attrs.update(
+            self._attr_extra_state_attributes.update(
                 {ATTR_TEMPERATURE: state.temperature, ATTR_LOAD_POWER: state.load_power}
             )
 
             if self._device_features & FEATURE_SET_POWER_MODE == 1 and state.mode:
-                self._state_attrs[ATTR_POWER_MODE] = state.mode.value
+                self._attr_extra_state_attributes[ATTR_POWER_MODE] = state.mode.value
 
             if self._device_features & FEATURE_SET_WIFI_LED == 1 and state.wifi_led:
-                self._state_attrs[ATTR_WIFI_LED] = state.wifi_led
+                self._attr_extra_state_attributes[ATTR_WIFI_LED] = state.wifi_led
 
             if (
                 self._device_features & FEATURE_SET_POWER_PRICE == 1
                 and state.power_price
             ):
-                self._state_attrs[ATTR_POWER_PRICE] = state.power_price
+                self._attr_extra_state_attributes[ATTR_POWER_PRICE] = state.power_price
 
         except DeviceException as ex:
             if self._attr_available:
@@ -1015,9 +1013,9 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
 
         if self._model == MODEL_PLUG_V3:
             self._device_features = FEATURE_FLAGS_PLUG_V3
-            self._state_attrs[ATTR_WIFI_LED] = None
+            self._attr_extra_state_attributes[ATTR_WIFI_LED] = None
             if self._channel_usb is False:
-                self._state_attrs[ATTR_LOAD_POWER] = None
+                self._attr_extra_state_attributes[ATTR_LOAD_POWER] = None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn a channel on."""
@@ -1069,13 +1067,13 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
             else:
                 self._attr_is_on = state.is_on
 
-            self._state_attrs[ATTR_TEMPERATURE] = state.temperature
+            self._attr_extra_state_attributes[ATTR_TEMPERATURE] = state.temperature
 
             if state.wifi_led:
-                self._state_attrs[ATTR_WIFI_LED] = state.wifi_led
+                self._attr_extra_state_attributes[ATTR_WIFI_LED] = state.wifi_led
 
             if self._channel_usb is False and state.load_power:
-                self._state_attrs[ATTR_LOAD_POWER] = state.load_power
+                self._attr_extra_state_attributes[ATTR_LOAD_POWER] = state.load_power
 
         except DeviceException as ex:
             if self._attr_available:
@@ -1098,7 +1096,9 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
         """Initialize the acpartner switch."""
         super().__init__(name, plug, entry, unique_id)
 
-        self._state_attrs.update({ATTR_TEMPERATURE: None, ATTR_LOAD_POWER: None})
+        self._attr_extra_state_attributes.update(
+            {ATTR_TEMPERATURE: None, ATTR_LOAD_POWER: None}
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the socket on."""
@@ -1135,7 +1135,7 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
 
             self._attr_available = True
             self._attr_is_on = state.power_socket == "on"
-            self._state_attrs[ATTR_LOAD_POWER] = state.load_power
+            self._attr_extra_state_attributes[ATTR_LOAD_POWER] = state.load_power
 
         except DeviceException as ex:
             if self._attr_available:
