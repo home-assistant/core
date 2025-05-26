@@ -15,7 +15,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANURFACER_NAME
@@ -52,7 +52,7 @@ HVAC_MODE_TO_COMCOMPIT_MODE = {v: k for k, v in COMPIT_MODE_MAP.items()}
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: CompitConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_devices: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the CompitClimate platform from a config entry."""
 

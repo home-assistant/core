@@ -7,11 +7,18 @@
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       },
       "reauth_confirm": {
         "description": "Please update your password for {email}",
         "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
           "password": "[%key:common::config_flow::data::password%]"
         }
       }
