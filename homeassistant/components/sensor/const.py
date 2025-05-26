@@ -649,7 +649,7 @@ DEFAULT_PRECISION_LIMIT = 2
 # Map one unit for each device class to its default precision.
 # The biggest unit with the lowest precision should be used. For example, if W should
 # have 0 decimals, that one should be used and not mW, even though mW also should have
-# 0 decimals.
+# 0 decimals. Otherwise the smaller units will have more decimals than expected.
 UNITS_PRECISION = {
     SensorDeviceClass.APPARENT_POWER: (UnitOfApparentPower.VOLT_AMPERE, 0),
     SensorDeviceClass.AREA: (UnitOfArea.SQUARE_CENTIMETERS, 0),
