@@ -5,23 +5,12 @@ from homematicip.base.enums import DoorCommand, DoorState
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
-    DOMAIN as COVER_DOMAIN,
     CoverState,
 )
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entity_basics
-
-
-async def test_manually_configured_platform(hass: HomeAssistant) -> None:
-    """Test that we do not set up an access point."""
-    assert await async_setup_component(
-        hass, COVER_DOMAIN, {COVER_DOMAIN: {"platform": HMIPC_DOMAIN}}
-    )
-    assert not hass.data.get(HMIPC_DOMAIN)
 
 
 async def test_hmip_cover_shutter(

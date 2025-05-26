@@ -1,6 +1,8 @@
 """Base classes for SmartTub entities."""
 
-import smarttub
+from typing import Any
+
+from smarttub import Spa, SpaState
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -16,7 +18,10 @@ class SmartTubEntity(CoordinatorEntity):
     """Base class for SmartTub entities."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, spa: smarttub.Spa, entity_name
+        self,
+        coordinator: DataUpdateCoordinator[dict[str, Any]],
+        spa: Spa,
+        entity_name: str,
     ) -> None:
         """Initialize the entity.
 
@@ -36,7 +41,7 @@ class SmartTubEntity(CoordinatorEntity):
         self._attr_name = f"{spa_name} {entity_name}"
 
     @property
-    def spa_status(self) -> smarttub.SpaState:
+    def spa_status(self) -> SpaState:
         """Retrieve the result of Spa.get_status()."""
 
         return self.coordinator.data[self.spa.id].get("status")
@@ -45,7 +50,13 @@ class SmartTubEntity(CoordinatorEntity):
 class SmartTubSensorBase(SmartTubEntity):
     """Base class for SmartTub sensors."""
 
-    def __init__(self, coordinator, spa, sensor_name, state_key):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[dict[str, Any]],
+        spa: Spa,
+        sensor_name: str,
+        state_key: str,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, spa, sensor_name)
         self._state_key = state_key

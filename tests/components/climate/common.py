@@ -6,7 +6,6 @@ components. Instead call the service directly.
 
 from homeassistant.components.climate import (
     _LOGGER,
-    ATTR_AUX_HEAT,
     ATTR_FAN_MODE,
     ATTR_HUMIDITY,
     ATTR_HVAC_MODE,
@@ -16,7 +15,6 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN,
-    SERVICE_SET_AUX_HEAT,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE,
@@ -60,31 +58,6 @@ def set_preset_mode(
         data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(DOMAIN, SERVICE_SET_PRESET_MODE, data)
-
-
-async def async_set_aux_heat(
-    hass: HomeAssistant, aux_heat: bool, entity_id: str = ENTITY_MATCH_ALL
-) -> None:
-    """Turn all or specified climate devices auxiliary heater on."""
-    data = {ATTR_AUX_HEAT: aux_heat}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    await hass.services.async_call(DOMAIN, SERVICE_SET_AUX_HEAT, data, blocking=True)
-
-
-@bind_hass
-def set_aux_heat(
-    hass: HomeAssistant, aux_heat: bool, entity_id: str = ENTITY_MATCH_ALL
-) -> None:
-    """Turn all or specified climate devices auxiliary heater on."""
-    data = {ATTR_AUX_HEAT: aux_heat}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SET_AUX_HEAT, data)
 
 
 async def async_set_temperature(
