@@ -419,12 +419,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 )
             os_info = hassio.get_os_info(hass)
             assert os_info is not None
-            issue_id = "deprecated_os_armv7"
+            issue_id = "deprecated_os_"
             board = os_info.get("board")
             if board in {"rpi3", "rpi4"}:
-                issue_id += "_armv8"
+                issue_id += "aarch64"
             elif board in {"tinker", "odroid-xu4", "rpi2"}:
-                issue_id += "_no_armv8"
+                issue_id += "armv7"
             ir.async_create_issue(
                 hass,
                 DOMAIN,
