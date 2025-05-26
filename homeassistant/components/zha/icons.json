@@ -5,6 +5,17 @@
         "default": "mdi:hand-wave"
       }
     },
+    "light": {
+      "light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "colorloop": "mdi:looks"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "timer_duration": {
         "default": "mdi:timer"
