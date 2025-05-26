@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    DEGREE,
     PERCENTAGE,
     UV_INDEX,
     UnitOfLength,
@@ -102,7 +103,7 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
         key="wind_direction",
         native_attr_name="windDirectionFrom10m",
         name="Wind direction",
-        native_unit_of_measurement="°",
+        native_unit_of_measurement=DEGREE,
         device_class=SensorDeviceClass.WIND_DIRECTION,
         state_class=SensorStateClass.MEASUREMENT_ANGLE,
         icon="mdi:compass-outline",
