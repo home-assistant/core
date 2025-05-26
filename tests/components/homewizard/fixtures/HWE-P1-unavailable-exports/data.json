@@ -1,0 +1,14 @@
+{
+  "wifi_ssid": "My Wi-Fi",
+  "wifi_strength": 100,
+  "unique_id": "00112233445566778899AABBCCDDEEFF",
+  "total_power_import_kwh": 13779.338,
+  "total_power_import_t1_kwh": 10830.511,
+  "total_power_import_t2_kwh": 2948.827,
+  "total_power_import_t3_kwh": 2948.827,
+  "total_power_import_t4_kwh": 2948.827,
+  "active_power_w": -123,
+  "active_power_l1_w": -123,
+  "active_power_l2_w": 456,
+  "active_power_l3_w": 123.456
+}
