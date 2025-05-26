@@ -240,11 +240,10 @@ async def _async_get_stream_image(
     height: int | None = None,
     wait_for_next_keyframe: bool = False,
 ) -> bytes | None:
-    if provider := camera._webrtc_provider:  # noqa: SLF001
-        if (
-            image := await provider.async_get_image(camera, width=width, height=height)
-        ) is not None:
-            return image
+    if (provider := camera._webrtc_provider) and (  # noqa: SLF001
+        image := await provider.async_get_image(camera, width=width, height=height)
+    ) is not None:
+        return image
     if not camera.stream and CameraEntityFeature.STREAM in camera.supported_features:
         camera.stream = await camera.async_create_stream()
     if camera.stream:
