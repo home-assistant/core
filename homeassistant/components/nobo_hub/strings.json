@@ -36,12 +36,10 @@
       "init": {
         "title": "Configure Nobø Ecohub integration",
         "data": {
-          "override_type": "Override type",
-          "disable_comfort_control": "Disable comfort control"
+          "override_type": "Override type"
         },
         "data_description": {
-          "override_type": "Choose \"Now\" to end overrides on next week profile change.",
-          "disable_comfort_control": "On some models, COMFORT temperature is set on the receiver (heater) and only ECO temperature can be controlled from the hub."
+          "override_type": "Choose \"Now\" to end overrides on next week profile change."
         }
       }
     }

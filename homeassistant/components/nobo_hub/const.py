@@ -5,7 +5,6 @@ DOMAIN = "nobo_hub"
 CONF_AUTO_DISCOVERED = "auto_discovered"
 CONF_SERIAL = "serial"
 CONF_OVERRIDE_TYPE = "override_type"
-CONF_DISABLE_COMFORT_CONTROL = "disable_comfort_control"
 OVERRIDE_TYPE_CONSTANT = "Constant"
 OVERRIDE_TYPE_NOW = "Now"
 

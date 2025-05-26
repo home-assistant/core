@@ -3,11 +3,7 @@
 from unittest.mock import PropertyMock, patch
 
 from homeassistant import config_entries
-from homeassistant.components.nobo_hub.const import (
-    CONF_DISABLE_COMFORT_CONTROL,
-    CONF_OVERRIDE_TYPE,
-    DOMAIN,
-)
+from homeassistant.components.nobo_hub.const import CONF_OVERRIDE_TYPE, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -281,25 +277,19 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={
-            CONF_OVERRIDE_TYPE: "Constant",
-            CONF_DISABLE_COMFORT_CONTROL: False,
-        },
+        user_input={CONF_OVERRIDE_TYPE: "Constant"},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {CONF_OVERRIDE_TYPE: "Constant"}
-    assert config_entry.options[CONF_DISABLE_COMFORT_CONTROL] is False
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
             CONF_OVERRIDE_TYPE: "Now",
-            CONF_DISABLE_COMFORT_CONTROL: True,
         },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {CONF_OVERRIDE_TYPE: "Now"}
-    assert config_entry.options[CONF_DISABLE_COMFORT_CONTROL] is True
