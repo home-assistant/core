@@ -30,7 +30,6 @@ from homeassistant.components.telegram_bot import (
     SERVICE_SEND_VOICE,
 )
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
-from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -384,13 +383,6 @@ async def test_polling_platform_start_polling_error_callback(
     with patch(
         "homeassistant.components.telegram_bot.polling.ApplicationBuilder"
     ) as application_builder_class:
-        await async_setup_component(
-            hass,
-            DOMAIN,
-            config_polling,
-        )
-        await hass.async_block_till_done()
-
         application = (
             application_builder_class.return_value.bot.return_value.build.return_value
         )
@@ -401,7 +393,12 @@ async def test_polling_platform_start_polling_error_callback(
         application.stop = AsyncMock()
         application.shutdown = AsyncMock()
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await async_setup_component(
+            hass,
+            DOMAIN,
+            config_polling,
+        )
+
         await hass.async_block_till_done()
         error_callback = application.updater.start_polling.call_args.kwargs[
             "error_callback"

@@ -6,26 +6,22 @@ from telegram import Bot, Update
 from telegram.error import NetworkError, RetryAfter, TelegramError, TimedOut
 from telegram.ext import ApplicationBuilder, CallbackContext, TypeHandler
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 
 from . import BaseTelegramBotEntity, TelegramBotConfigEntry
-from .const import EVENT_TELEGRAMBOT_TERMINATE
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
     hass: HomeAssistant, bot: Bot, config: TelegramBotConfigEntry
-):
+) -> BaseTelegramBotEntity | None:
     """Set up the Telegram polling platform."""
     pollbot = PollBot(hass, bot, config)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, pollbot.start_polling)
-    hass.bus.async_listen_once(EVENT_TELEGRAMBOT_TERMINATE, pollbot.stop_polling)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, pollbot.stop_polling)
+    config.async_create_task(hass, pollbot.start_polling(), "polling telegram bot")
 
-    return True
+    return pollbot
 
 
 async def process_error(update: object, context: CallbackContext) -> None:
@@ -63,6 +59,10 @@ class PollBot(BaseTelegramBotEntity):
         self.application = ApplicationBuilder().bot(self.bot).build()
         self.application.add_handler(TypeHandler(Update, self.handle_update))
         self.application.add_error_handler(process_error)
+
+    async def shutdown(self):
+        """Shutdown the app."""
+        await self.stop_polling()
 
     async def start_polling(self, event=None):
         """Start the polling task."""

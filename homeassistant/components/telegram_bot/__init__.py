@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from abc import abstractmethod
 import asyncio
 import io
 from ipaddress import IPv4Network, ip_network
@@ -52,7 +53,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_loaded_integration
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
-from .const import CONF_BOT_COUNT, EVENT_TELEGRAMBOT_TERMINATE
+from .const import CONF_BOT_COUNT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -532,27 +533,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
         _LOGGER.exception("Error setting up Telegram bot %s", p_type)
         return False
 
-    if receiver_service is False:
-        _LOGGER.error("Failed to initialize Telegram bot %s", p_type)
-        return False
-
     notify_service = TelegramNotificationService(
-        hass, bot, entry, entry.options[ATTR_PARSER]
+        hass, receiver_service, bot, entry, entry.options[ATTR_PARSER]
     )
     entry.runtime_data = notify_service
 
-    if not entry.update_listeners:
-        entry.async_on_unload(entry.add_update_listener(update_listener))
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 
 
 async def update_listener(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> None:
     """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
-    hass.bus.async_fire(EVENT_TELEGRAMBOT_TERMINATE)
 
-    await async_setup_entry(hass, entry)
+async def async_unload_entry(
+    hass: HomeAssistant, entry: TelegramBotConfigEntry
+) -> bool:
+    """Unload Telegram app."""
+    app: BaseTelegramBotEntity | None = entry.runtime_data.get_app()
+    if app:
+        await app.shutdown()
+    return True
 
 
 def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) -> Bot:
@@ -615,9 +618,15 @@ class TelegramNotificationService:
     """Implement the notification services for the Telegram Bot domain."""
 
     def __init__(
-        self, hass: HomeAssistant, bot: Bot, config: TelegramBotConfigEntry, parser: str
+        self,
+        hass: HomeAssistant,
+        app: BaseTelegramBotEntity | None,
+        bot: Bot,
+        config: TelegramBotConfigEntry,
+        parser: str,
     ) -> None:
         """Initialize the service."""
+        self.app = app
         self.config = config
         self._parsers = {
             PARSER_HTML: ParseMode.HTML,
@@ -632,6 +641,10 @@ class TelegramNotificationService:
     def get_bot(self) -> Bot:
         """Return the Telegram bot instance."""
         return self.bot
+
+    def get_app(self) -> BaseTelegramBotEntity | None:
+        """Return the Telegram bot application instance."""
+        return self.app
 
     def _get_allowed_chat_ids(self) -> list[int]:
         allowed_chat_ids: list[int] = [
@@ -1186,6 +1199,10 @@ class BaseTelegramBotEntity:
         """Initialize the bot base class."""
         self.hass = hass
         self.config = config
+
+    @abstractmethod
+    def shutdown(self):
+        """Shutdown the bot application."""
 
     async def handle_update(self, update: Update, context: CallbackContext) -> bool:
         """Handle updates from bot application set up by the respective platform."""

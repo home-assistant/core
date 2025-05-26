@@ -12,7 +12,6 @@ from telegram.error import TimedOut
 from telegram.ext import Application, TypeHandler
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import get_url
 
@@ -22,7 +21,6 @@ from . import (
     BaseTelegramBotEntity,
     TelegramBotConfigEntry,
 )
-from .const import EVENT_TELEGRAMBOT_TERMINATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +31,7 @@ SECRET_TOKEN_LENGTH = 32
 
 async def async_setup_platform(
     hass: HomeAssistant, bot: Bot, config: TelegramBotConfigEntry
-):
+) -> BaseTelegramBotEntity | None:
     """Set up the Telegram webhooks platform."""
 
     # Generate an ephemeral secret token
@@ -44,15 +42,13 @@ async def async_setup_platform(
 
     if not pushbot.webhook_url.startswith("https"):
         _LOGGER.error("Invalid telegram webhook %s must be https", pushbot.webhook_url)
-        return False
+        return None
 
     await pushbot.start_application()
     webhook_registered = await pushbot.register_webhook()
     if not webhook_registered:
-        return False
+        return None
 
-    hass.bus.async_listen_once(EVENT_TELEGRAMBOT_TERMINATE, pushbot.stop_application)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, pushbot.stop_application)
     hass.http.register_view(
         PushBotView(
             hass,
@@ -62,7 +58,7 @@ async def async_setup_platform(
             secret_token,
         )
     )
-    return True
+    return pushbot
 
 
 def _get_trusted_networks(config: TelegramBotConfigEntry) -> list[IPv4Network]:
@@ -93,6 +89,10 @@ class PushBot(BaseTelegramBotEntity):
             hass, require_ssl=True, allow_internal=False
         )
         self.webhook_url = f"{self.base_url}{TELEGRAM_WEBHOOK_URL}"
+
+    async def shutdown(self):
+        """Shutdown the app."""
+        await self.stop_application()
 
     async def _try_to_set_webhook(self):
         _LOGGER.debug("Registering webhook URL: %s", self.webhook_url)
