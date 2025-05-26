@@ -237,7 +237,7 @@
       "display_temperature_selection": {
         "name": "Displayed temperature",
         "state": {
-          "selected": "Target",
+          "target": "Target",
           "current": "Measured"
         }
       },

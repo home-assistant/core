@@ -16,7 +16,7 @@ PARALLEL_UPDATES = 0
 SELECT_DESCRIPTIONS: dict[AttributeType, SelectEntityDescription] = {
     AttributeType.DISPLAY_TEMPERATURE_SELECTION: SelectEntityDescription(
         key="display_temperature_selection",
-        options=["selected", "current"],
+        options=["target", "current"],
         entity_category=EntityCategory.CONFIG,
     ),
     AttributeType.REPEATER_MODE: SelectEntityDescription(

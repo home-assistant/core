@@ -6,7 +6,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'selected',
+        'target',
         'current',
       ]),
     }),
@@ -43,7 +43,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Select Displayed temperature',
       'options': list([
-        'selected',
+        'target',
         'current',
       ]),
     }),
@@ -52,7 +52,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'selected',
+    'state': 'target',
   })
 # ---
 # name: test_select_snapshot[select.test_select_repeater_mode-entry]

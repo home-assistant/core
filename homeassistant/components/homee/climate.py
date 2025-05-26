@@ -83,7 +83,7 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
         if ClimateEntityFeature.TURN_OFF in self.supported_features and (
             self._heating_mode is not None
         ):
-            if self._heating_mode.current_value == 0 + self._heating_mode.minimum:
+            if self._heating_mode.current_value == self._heating_mode.minimum:
                 return HVACMode.OFF
 
         return HVACMode.HEAT
@@ -153,7 +153,7 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
         assert self._heating_mode is not None
         await self.async_set_homee_value(
             self._heating_mode,
-            float(hvac_mode == HVACMode.HEAT) + self._heating_mode.minimum,
+            (hvac_mode == HVACMode.HEAT) + self._heating_mode.minimum,
         )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
