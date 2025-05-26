@@ -49,8 +49,6 @@ class TheSilentWaveCoordinator(DataUpdateCoordinator):
                 self._has_connection = True
                 self._connection_error_logged = False
 
-            return status
-
         except SilentWaveError:
             # Mark that we have a connection issue.
             self._has_connection = False
@@ -61,3 +59,5 @@ class TheSilentWaveCoordinator(DataUpdateCoordinator):
                 self._connection_error_logged = True
 
             raise UpdateFailed("Failed to fetch device status")
+        else:
+            return status
