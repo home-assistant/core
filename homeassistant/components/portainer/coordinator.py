@@ -16,7 +16,7 @@ from pyportainer import (
 from pyportainer.models.docker import DockerContainer
 from pyportainer.models.portainer import Endpoint
 
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -89,7 +89,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
     async def _async_update_data(self) -> dict[int, PortainerCoordinatorData]:
         """Fetch data from Portainer API."""
         _LOGGER.debug(
-            "Fetching data from Portainer API: %s", self.config_entry.data[CONF_URL]
+            "Fetching data from Portainer API: %s", self.config_entry.data[CONF_HOST]
         )
 
         try:

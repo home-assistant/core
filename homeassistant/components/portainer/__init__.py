@@ -6,7 +6,7 @@ from aiohttp import CookieJar
 from pyportainer import Portainer
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_URL, CONF_VERIFY_SSL, Platform
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
@@ -26,8 +26,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
         cookie_jar=CookieJar(unsafe=True),
     )
     client = Portainer(
-        api_url=entry.data[CONF_URL],
-        api_key=entry.data[CONF_ACCESS_TOKEN],
+        api_url=entry.data[CONF_HOST],
+        api_key=entry.data[CONF_API_KEY],
         session=session,
     )
 
