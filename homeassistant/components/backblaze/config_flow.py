@@ -60,16 +60,17 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
                     "Connecting to Backblaze with application key id %s",
                     user_input[CONF_KEY_ID],
                 )
-                await self.hass.async_add_executor_job(
-                    b2_api.authorize_account,
-                    "production",
-                    user_input[CONF_KEY_ID],
-                    user_input[CONF_APPLICATION_KEY],
-                )
 
-                await self.hass.async_add_executor_job(
-                    b2_api.get_bucket_by_name, user_input[CONF_BUCKET]
-                )
+                def authorize_and_get_bucket() -> None:
+                    """Authorize account and get bucket by name."""
+                    b2_api.authorize_account(
+                        "production",
+                        user_input[CONF_KEY_ID],
+                        user_input[CONF_APPLICATION_KEY],
+                    )
+                    b2_api.get_bucket_by_name(user_input[CONF_BUCKET])
+
+                await self.hass.async_add_executor_job(authorize_and_get_bucket)
 
                 allowed = b2_api.account_info.get_allowed()
 
