@@ -1329,10 +1329,8 @@ async def test_get_automatic_entity_ids(
             ),
             "test_domain.test_5": RegistryEntryWithDefaults(
                 entity_id="test_domain.test_5",
-                name="Name by User 5",
                 unique_id="uniq5",
                 platform="test_domain",
-                suggested_object_id="suggested_5",
             ),
             "test_domain.test_6": RegistryEntryWithDefaults(
                 entity_id="test_domain.test_6",
@@ -1440,12 +1438,12 @@ async def test_get_automatic_entity_ids(
         "test_domain.test_1": None,
         # The suggested_object_id is taken, fall back to suggested_object_id + _2
         "test_domain.test_2": "test_domain.collision_2",
-        # suggested_object_id has higher priority than name set by user or entity
-        "test_domain.test_3": "test_domain.suggested_3",
+        # name set by user has higher priority than suggested_object_id or entity
+        "test_domain.test_3": "test_domain.name_by_user_3",
         # name set by user has higher priority than entity properties
         "test_domain.test_4": "test_domain.name_by_user_4",
         # No suggested_object_id or name, fall back to entity properties
-        "test_domain.test_5": "test_domain.suggested_5",
+        "test_domain.test_5": "test_domain.entity_name_5",
         # automatic entity id matches current entity id
         "test_domain.test_6": "test_domain.test_6",
         "test_domain.test_7": "test_domain.test_7",

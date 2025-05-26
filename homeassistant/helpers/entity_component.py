@@ -82,11 +82,11 @@ def async_get_entity_suggested_object_id(
 
     domain = entity_id.partition(".")[0]
 
-    if entity_entry.suggested_object_id:
-        return entity_entry.suggested_object_id
-
     if entity_entry.name:
         return entity_entry.name
+
+    if entity_entry.suggested_object_id:
+        return entity_entry.suggested_object_id
 
     entity_comp = hass.data.get(DATA_INSTANCES, {}).get(domain)
     if not (entity_obj := entity_comp.get_entity(entity_id) if entity_comp else None):
