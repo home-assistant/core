@@ -317,7 +317,14 @@ class AtaDeviceClimate(MelCloudClimate):
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         min_value = self._device.target_temperature_min
-        if min_value is not None:
+        max_value = self._device.target_temperature_max
+
+        if min_value is not None and max_value is not None and min_value <= max_value:
+            return min_value
+
+        if min_value is not None and min_value <= (
+            max_value if max_value is not None else DEFAULT_MAX_TEMP
+        ):
             return min_value
 
         return DEFAULT_MIN_TEMP
@@ -325,8 +332,15 @@ class AtaDeviceClimate(MelCloudClimate):
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
+        min_value = self._device.target_temperature_min
         max_value = self._device.target_temperature_max
-        if max_value is not None:
+
+        if min_value is not None and max_value is not None and max_value >= min_value:
+            return max_value
+
+        if max_value is not None and max_value >= (
+            min_value if min_value is not None else DEFAULT_MIN_TEMP
+        ):
             return max_value
 
         return DEFAULT_MAX_TEMP
