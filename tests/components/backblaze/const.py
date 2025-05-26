@@ -1,8 +1,8 @@
-"""Consts for Backblaze B2 tests."""
+"""Consts for Backblaze tests."""
 
 from json import dumps
 
-from homeassistant.components.backblaze_b2.const import CONF_BUCKET, CONF_PREFIX
+from homeassistant.components.backblaze.const import CONF_BUCKET, CONF_PREFIX
 from homeassistant.components.backup import AgentBackup
 
 USER_INPUT = {

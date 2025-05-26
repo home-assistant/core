@@ -1,4 +1,4 @@
-"""Test Backblaze B2 backup agent."""
+"""Test Backblaze backup agent."""
 
 from collections.abc import AsyncGenerator
 import io
@@ -6,13 +6,10 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from homeassistant.components.backblaze_b2.backup import (
+from homeassistant.components.backblaze.backup import (
     async_register_backup_agents_listener,
 )
-from homeassistant.components.backblaze_b2.const import (
-    DATA_BACKUP_AGENT_LISTENERS,
-    DOMAIN,
-)
+from homeassistant.components.backblaze.const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.backup import async_initialize_backup
@@ -30,7 +27,7 @@ async def setup_backup_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> AsyncGenerator[None]:
-    """Set up backblaze_b2 integration."""
+    """Set up backblaze integration."""
     with (
         patch("homeassistant.components.backup.is_hassio", return_value=False),
         patch("homeassistant.components.backup.store.STORE_DELAY_SAVE", 0),

@@ -1,4 +1,4 @@
-"""The Backblaze B2 integration."""
+"""The Backblaze integration."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) -> bool:
-    """Set up Backblaze B2 from a config entry."""
+    """Set up Backblaze from a config entry."""
 
     info = InMemoryAccountInfo()
     b2_api = B2Api(info)
@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
 
     try:
         _LOGGER.info(
-            "Connecting to Backblaze B2 with application key id %s",
+            "Connecting to Backblaze with application key id %s",
             data[CONF_KEY_ID],
         )
         await hass.async_add_executor_job(
