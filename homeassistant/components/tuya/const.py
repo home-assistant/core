@@ -102,6 +102,7 @@ class DPCode(StrEnum):
     ALARM_TIME = "alarm_time"  # Alarm time
     ALARM_VOLUME = "alarm_volume"  # Alarm volume
     ALARM_MESSAGE = "alarm_message"
+    ALARM_MSG = "alarm_msg"
     ANGLE_HORIZONTAL = "angle_horizontal"
     ANGLE_VERTICAL = "angle_vertical"
     ANION = "anion"  # Ionizer unit
@@ -199,7 +200,8 @@ class DPCode(StrEnum):
     FEED_REPORT = "feed_report"
     FEED_STATE = "feed_state"
     FILTER = "filter"
-    FILTER_LIFE = "filter"
+    FILTER_DURATION = "filter_life"  # Filter duration (hours)
+    FILTER_LIFE = "filter"  # Filter life (percentage)
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
     FLOODLIGHT_LIGHTNESS = "floodlight_lightness"
     FLOODLIGHT_SWITCH = "floodlight_switch"
@@ -218,11 +220,14 @@ class DPCode(StrEnum):
     LED_TYPE_2 = "led_type_2"
     LED_TYPE_3 = "led_type_3"
     LEVEL = "level"
+    LEVEL_1 = "level_1"
+    LEVEL_2 = "level_2"
     LEVEL_CURRENT = "level_current"
     LIGHT = "light"  # Light
     LIGHT_MODE = "light_mode"
     LOCK = "lock"  # Lock / Child lock
     MASTER_MODE = "master_mode"  # alarm mode
+    MASTER_STATE = "master_state"  # alarm state
     MACH_OPERATE = "mach_operate"
     MANUAL_FEED = "manual_feed"
     MATERIAL = "material"  # Material
@@ -256,12 +261,16 @@ class DPCode(StrEnum):
     POWDER_SET = "powder_set"  # Powder
     POWER = "power"
     POWER_GO = "power_go"
+    PREHEAT = "preheat"
+    PREHEAT_1 = "preheat_1"
+    PREHEAT_2 = "preheat_2"
     POWER_TOTAL = "power_total"
     PRESENCE_STATE = "presence_state"
     PRESSURE_STATE = "pressure_state"
     PRESSURE_VALUE = "pressure_value"
     PUMP = "pump"
     PUMP_RESET = "pump_reset"  # Water pump reset
+    PUMP_TIME = "pump_time"  # Water pump duration
     OXYGEN = "oxygen"  # Oxygen bar
     RECORD_MODE = "record_mode"
     RECORD_SWITCH = "record_switch"  # Recording switch
@@ -369,6 +378,7 @@ class DPCode(StrEnum):
     UPPER_TEMP = "upper_temp"
     UPPER_TEMP_F = "upper_temp_f"
     UV = "uv"  # UV sterilization
+    UV_RUNTIME = "uv_runtime"  # UV runtime
     VA_BATTERY = "va_battery"
     VA_HUMIDITY = "va_humidity"
     VA_TEMPERATURE = "va_temperature"
@@ -382,6 +392,7 @@ class DPCode(StrEnum):
     WATER = "water"
     WATER_RESET = "water_reset"  # Resetting of water usage days
     WATER_SET = "water_set"  # Water level
+    WATER_TIME = "water_time"  # Water usage duration
     WATERSENSOR_STATE = "watersensor_state"
     WEATHER_DELAY = "weather_delay"
     WET = "wet"  # Humidification

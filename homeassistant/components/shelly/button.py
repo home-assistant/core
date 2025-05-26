@@ -19,18 +19,20 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import (
-    CONNECTION_BLUETOOTH,
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from .const import DOMAIN, LOGGER, SHELLY_GAS_MODELS
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
-from .utils import get_device_entry_gen, get_rpc_key_ids
+from .utils import (
+    get_block_device_info,
+    get_blu_trv_device_info,
+    get_device_entry_gen,
+    get_rpc_device_info,
+    get_rpc_key_ids,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -168,6 +170,7 @@ class ShellyBaseButton(
 ):
     """Defines a Shelly base button."""
 
+    _attr_has_entity_name = True
     entity_description: ShellyButtonDescription[
         ShellyRpcCoordinator | ShellyBlockCoordinator
     ]
@@ -228,8 +231,15 @@ class ShellyButton(ShellyBaseButton):
         """Initialize Shelly button."""
         super().__init__(coordinator, description)
 
-        self._attr_name = f"{coordinator.device.name} {description.name}"
         self._attr_unique_id = f"{coordinator.mac}_{description.key}"
+        if isinstance(coordinator, ShellyBlockCoordinator):
+            self._attr_device_info = get_block_device_info(
+                coordinator.device, coordinator.mac
+            )
+        else:
+            self._attr_device_info = get_rpc_device_info(
+                coordinator.device, coordinator.mac
+            )
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
         )
@@ -256,15 +266,11 @@ class ShellyBluTrvButton(ShellyBaseButton):
         """Initialize."""
         super().__init__(coordinator, description)
 
-        ble_addr: str = coordinator.device.config[f"{BLU_TRV_IDENTIFIER}:{id_}"]["addr"]
-        device_name = (
-            coordinator.device.config[f"{BLU_TRV_IDENTIFIER}:{id_}"]["name"]
-            or f"shellyblutrv-{ble_addr.replace(':', '')}"
-        )
-        self._attr_name = f"{device_name} {description.name}"
+        config = coordinator.device.config[f"{BLU_TRV_IDENTIFIER}:{id_}"]
+        ble_addr: str = config["addr"]
         self._attr_unique_id = f"{ble_addr}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_BLUETOOTH, ble_addr)}
+        self._attr_device_info = get_blu_trv_device_info(
+            config, ble_addr, coordinator.mac
         )
         self._id = id_
 

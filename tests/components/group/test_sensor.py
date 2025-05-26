@@ -481,7 +481,11 @@ async def test_sensor_with_uoms_but_no_device_class(
     assert state.attributes.get("unit_of_measurement") == "W"
     assert state.state == str(float(sum(VALUES)))
 
-    assert not issue_registry.issues
+    assert not [
+        issue
+        for issue in issue_registry.issues.values()
+        if issue.domain == GROUP_DOMAIN
+    ]
 
     hass.states.async_set(
         entity_ids[0],

@@ -39,7 +39,6 @@ BINARY_SENSORS: Final = (
     AmazonBinarySensorEntityDescription(
         key="bluetooth",
         translation_key="bluetooth",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
         is_on_fn=lambda _device: _device.bluetooth_state,
     ),
 )
