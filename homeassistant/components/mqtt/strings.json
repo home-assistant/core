@@ -386,12 +386,12 @@
                 "tilt_optimistic": "Tilt optimistic"
               },
               "data_description": {
-                "tilt_closed_value": "The value that will be sent to the \"set tilt topic\" when the cover tilt is closed.",
-                "tilt_command_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to define the position to be sent to the set tilt topic. Within the template the following variables are available: `entity_id`, `tilt_position` (the target tilt position percentage), `position_open`, `position_closed`, `tilt_min` and `tilt_max`. [Learn more.]({url}#tilt_command_template)",
+                "tilt_closed_value": "The value that will be sent to the \"tilt command topic\" when the cover tilt is closed.",
+                "tilt_command_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to define the position to be sent to the tilt command topic. Within the template the following variables are available: `entity_id`, `tilt_position` (the target tilt position percentage), `position_open`, `position_closed`, `tilt_min` and `tilt_max`. [Learn more.]({url}#tilt_command_template)",
                 "tilt_command_topic": "The MQTT topic to publish commands to control the cover tilt. [Learn more.]({url}#tilt_command_topic)",
                 "tilt_max": "The maximum tilt value.",
                 "tilt_min": "The minimum tilt value.",
-                "tilt_opened_value": "The value that will be sent to the \"set tilt topic\" when the cover tilt is opened.",
+                "tilt_opened_value": "The value that will be sent to the \"tilt command topic\" when the cover tilt is opened.",
                 "tilt_status_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the payload for the tilt status topic. Within the template the following variables are available: `entity_id`, `position_open`, `position_closed`, `tilt_min` and `tilt_max`. [Learn more.]({url}#tilt_status_template)",
                 "tilt_status_topic": "The MQTT topic subscribed to receive tilt status update values. [Learn more.]({url}#tilt_status_topic)",
                 "tilt_optimistic": "Flag that defines if tilt works in optimistic mode. If tilt status topic is not defined, tilt works in optimisic mode by default. [Learn more.]({url}#tilt_optimistic)"
