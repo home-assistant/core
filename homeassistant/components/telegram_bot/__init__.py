@@ -553,9 +553,7 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: TelegramBotConfigEntry
 ) -> bool:
     """Unload Telegram app."""
-    app: BaseTelegramBotEntity | None = entry.runtime_data.get_app()
-    if app:
-        await app.shutdown()
+    await entry.runtime_data.app.shutdown()
     return True
 
 
@@ -621,7 +619,7 @@ class TelegramNotificationService:
     def __init__(
         self,
         hass: HomeAssistant,
-        app: BaseTelegramBotEntity | None,
+        app: BaseTelegramBotEntity,
         bot: Bot,
         config: TelegramBotConfigEntry,
         parser: str,
@@ -642,10 +640,6 @@ class TelegramNotificationService:
     def get_bot(self) -> Bot:
         """Return the Telegram bot instance."""
         return self.bot
-
-    def get_app(self) -> BaseTelegramBotEntity | None:
-        """Return the Telegram bot application instance."""
-        return self.app
 
     def _get_allowed_chat_ids(self) -> list[int]:
         allowed_chat_ids: list[int] = [

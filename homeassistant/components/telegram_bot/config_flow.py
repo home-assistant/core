@@ -196,23 +196,23 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             return config_flow_result
 
     def _create_issue(self, issue: str, telegram_bot: str, bot_count: int) -> None:
-        issue_id: str = (
+        translation_key: str = (
             ISSUE_DEPRECATED_YAML
             if bot_count == 1
             else ISSUE_DEPRECATED_YAML_HAS_MORE_PLATFORMS
         )
         if issue != ISSUE_DEPRECATED_YAML:
-            issue_id = f"deprecated_yaml_import_issue_{issue}"
+            translation_key = f"deprecated_yaml_import_issue_{issue}"
 
         async_create_issue(
             self.hass,
             DOMAIN,
-            issue_id,
+            ISSUE_DEPRECATED_YAML,
             breaks_in_ha_version="2025.12.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
-            translation_key=issue_id,
+            translation_key=translation_key,
             translation_placeholders={
                 "domain": DOMAIN,
                 "integration_title": "Telegram Bot",
