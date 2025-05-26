@@ -638,6 +638,7 @@ async def test_record_service(
     expected_filename: str,
     expected_issues: list,
     snapshot: SnapshotAssertion,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test record service."""
     with (
@@ -666,8 +667,7 @@ async def test_record_service(
             ANY, expected_filename, duration=30, lookback=0
         )
 
-    issue_registry = ir.async_get(hass)
-    assert len(issue_registry.issues) == 1 + len(expected_issues)
+    assert len(issue_registry.issues) == 2 + len(expected_issues)
     for expected_issue in expected_issues:
         issue = issue_registry.async_get_issue(DOMAIN, expected_issue)
         assert issue is not None
