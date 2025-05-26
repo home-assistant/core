@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 
 from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
@@ -21,11 +22,12 @@ from . import (
 )
 from .const import (  # noqa: F401  # noqa: F401
     DOMAIN,
-    PLATFORMS,
     STATE_ABOVE_HORIZON,
     STATE_BELOW_HORIZON,
 )
 from .entity import Sun, SunConfigEntry
+
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
