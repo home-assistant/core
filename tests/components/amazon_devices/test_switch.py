@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, patch
 
-from aioamazondevices.api import AmazonDevice
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -61,22 +60,9 @@ async def test_switch_dnd(
 
     assert mock_amazon_devices_client.set_do_not_disturb.call_count == 1
 
-    mock_amazon_devices_client.get_devices_data.return_value = {
-        TEST_SERIAL_NUMBER: AmazonDevice(
-            account_name="Echo Test",
-            capabilities=["AUDIO_PLAYER", "MICROPHONE"],
-            device_family="mine",
-            device_type="echo",
-            device_owner_customer_id="amazon_ower_id",
-            device_cluster_members=[TEST_SERIAL_NUMBER],
-            online=True,
-            serial_number=TEST_SERIAL_NUMBER,
-            software_version="echo_test_software_version",
-            do_not_disturb=True,
-            response_style=None,
-            bluetooth_state=True,
-        )
-    }
+    mock_amazon_devices_client.get_devices_data.return_value[
+        TEST_SERIAL_NUMBER
+    ].do_not_disturb = True
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -92,22 +78,9 @@ async def test_switch_dnd(
         blocking=True,
     )
 
-    mock_amazon_devices_client.get_devices_data.return_value = {
-        TEST_SERIAL_NUMBER: AmazonDevice(
-            account_name="Echo Test",
-            capabilities=["AUDIO_PLAYER", "MICROPHONE"],
-            device_family="mine",
-            device_type="echo",
-            device_owner_customer_id="amazon_ower_id",
-            device_cluster_members=[TEST_SERIAL_NUMBER],
-            online=True,
-            serial_number=TEST_SERIAL_NUMBER,
-            software_version="echo_test_software_version",
-            do_not_disturb=False,
-            response_style=None,
-            bluetooth_state=True,
-        )
-    }
+    mock_amazon_devices_client.get_devices_data.return_value[
+        TEST_SERIAL_NUMBER
+    ].do_not_disturb = False
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
