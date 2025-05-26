@@ -50,11 +50,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) ->
         statistics=statistics_coordinator,
     )
 
-    entry.runtime_data = PaperlessData(
-        status=status_coordinator,
-        statistics=statistics_coordinator,
-    )
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
