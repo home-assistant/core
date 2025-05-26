@@ -313,7 +313,6 @@ class XiaomiGenericDevice(
         super().__init__(device, entry, unique_id, coordinator)
 
         self._available_attributes: dict[str, Any] = {}
-        self._state: bool | None = None
         self._mode: str | None = None
         self._fan_level: int | None = None
         self._state_attrs: dict[str, Any] = {}
@@ -397,7 +396,7 @@ class XiaomiGenericAirPurifier(XiaomiGenericDevice):
     @property
     def preset_mode(self) -> str | None:
         """Get the active preset mode."""
-        if self._state:
+        if self._attr_is_on:
             preset_mode = self.operation_mode_class(self._mode).name
             return preset_mode if preset_mode in self._preset_modes else None
 
@@ -523,7 +522,7 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
     @property
     def percentage(self) -> int | None:
         """Return the current percentage based speed."""
-        if self._state:
+        if self._attr_is_on:
             mode = self.operation_mode_class(self._mode)
             if mode in self.REVERSE_SPEED_MODE_MAPPING:
                 return ranged_value_to_percentage(
@@ -599,7 +598,7 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
         """Return the current percentage based speed."""
         if self._fan_level is None:
             return None
-        if self._state:
+        if self._attr_is_on:
             return ranged_value_to_percentage((1, 3), self._fan_level)
 
         return None
@@ -666,7 +665,7 @@ class XiaomiAirPurifierMB4(XiaomiGenericAirPurifier):
             return ranged_value_to_percentage(self._speed_range, self._motor_speed)
         if self._favorite_rpm is None:
             return None
-        if self._state:
+        if self._attr_is_on:
             return ranged_value_to_percentage(self._speed_range, self._favorite_rpm)
 
         return None
@@ -693,7 +692,7 @@ class XiaomiAirPurifierMB4(XiaomiGenericAirPurifier):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        if not self._state:
+        if not self._attr_is_on:
             await self.async_turn_on()
 
         if await self._try_command(
@@ -775,7 +774,7 @@ class XiaomiAirFresh(XiaomiGenericAirPurifier):
     @property
     def percentage(self) -> int | None:
         """Return the current percentage based speed."""
-        if self._state:
+        if self._attr_is_on:
             mode = AirfreshOperationMode(self._mode)
             if mode in self.REVERSE_SPEED_MODE_MAPPING:
                 return ranged_value_to_percentage(
@@ -874,7 +873,7 @@ class XiaomiAirFreshA1(XiaomiGenericAirPurifier):
         """Return the current percentage based speed."""
         if self._favorite_speed is None:
             return None
-        if self._state:
+        if self._attr_is_on:
             return ranged_value_to_percentage(self._speed_range, self._favorite_speed)
 
         return None
@@ -988,7 +987,7 @@ class XiaomiGenericFan(XiaomiGenericDevice):
     @property
     def percentage(self) -> int | None:
         """Return the current speed as a percentage."""
-        if self._state:
+        if self._attr_is_on:
             return self._percentage
 
         return None
