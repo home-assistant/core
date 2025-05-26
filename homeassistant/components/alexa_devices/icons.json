@@ -43,7 +43,7 @@
     "send_sound": {
       "service": "mdi:cast-audio"
     },
-    "send_custom": {
+    "send_text_command": {
       "service": "mdi:microphone-message"
     }
   }

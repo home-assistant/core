@@ -85,22 +85,22 @@
   },
   "services": {
     "send_sound": {
-      "name": "Send sound notification",
-      "description": "Send a sound notification to a device",
+      "name": "Send sound",
+      "description": "Sends a sound to a device",
       "fields": {
         "sound": {
           "name": "Amazon Sound skill file",
-          "description": "The file to play."
+          "description": "The suond file to play."
         }
       }
     },
-    "send_custom": {
-      "name": "Send custom command",
-      "description": "Send a custom command to a device",
+    "send_text_command": {
+      "name": "Send text command",
+      "description": "Sends a text command to a device",
       "fields": {
-        "cmd": {
-          "name": "Amazon command",
-          "description": "The command to send."
+        "text_command": {
+          "name": "Amazon text command",
+          "description": "The text command to send."
         }
       }
     }
