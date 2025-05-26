@@ -12,6 +12,24 @@
             }
           }
         }
+      },
+      "air_purifier": {
+        "default": "mdi:air-purifier",
+        "state": {
+          "off": "mdi:air-purifier-off"
+        },
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "level_1": "mdi:fan-speed-1",
+              "level_2": "mdi:fan-speed-2",
+              "level_3": "mdi:fan-speed-3",
+              "auto": "mdi:auto-mode",
+              "pet": "mdi:paw",
+              "sleep": "mdi:power-sleep"
+            }
+          }
+        }
       }
     }
   }

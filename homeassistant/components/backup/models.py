@@ -13,9 +13,9 @@ from homeassistant.exceptions import HomeAssistantError
 class AddonInfo:
     """Addon information."""
 
-    name: str
+    name: str | None
     slug: str
-    version: str
+    version: str | None
 
 
 class Folder(StrEnum):

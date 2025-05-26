@@ -182,7 +182,7 @@ aioairzone-cloud==0.6.12
 aioairzone==1.0.0
 
 # homeassistant.components.amazon_devices
-aioamazondevices==2.0.1
+aioamazondevices==2.1.1
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -1397,7 +1397,7 @@ mbddns==0.1.2
 mcp==1.5.0
 
 # homeassistant.components.minecraft_server
-mcstatus==11.1.1
+mcstatus==12.0.1
 
 # homeassistant.components.meater
 meater-python==0.0.8
@@ -2337,6 +2337,9 @@ pysma==0.7.5
 # homeassistant.components.smappee
 pysmappee==0.2.29
 
+# homeassistant.components.smarla
+pysmarlaapi==0.8.2
+
 # homeassistant.components.smartthings
 pysmartthings==3.2.3
 
@@ -2827,7 +2830,7 @@ starline==0.1.5
 starlingbank==3.2
 
 # homeassistant.components.starlink
-starlink-grpc-core==1.2.2
+starlink-grpc-core==1.2.3
 
 # homeassistant.components.statsd
 statsd==3.2.1
