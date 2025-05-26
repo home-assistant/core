@@ -271,12 +271,7 @@ class XiaomiPhilipsAbstractLight(XiaomiMiioEntity, LightEntity):
         """Initialize the light device."""
         super().__init__(name, device, entry, unique_id)
 
-        self._state_attrs: dict[str, Any] = {}
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the device."""
-        return self._state_attrs
+        self._attr_extra_state_attributes = {}
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a light command handling error messages."""
@@ -349,7 +344,9 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
         """Initialize the light device."""
         super().__init__(name, device, entry, unique_id)
 
-        self._state_attrs.update({ATTR_SCENE: None, ATTR_DELAYED_TURN_OFF: None})
+        self._attr_extra_state_attributes.update(
+            {ATTR_SCENE: None, ATTR_DELAYED_TURN_OFF: None}
+        )
 
     async def async_update(self) -> None:
         """Fetch state from the device."""
@@ -370,10 +367,10 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
         delayed_turn_off = self.delayed_turn_off_timestamp(
             state.delay_off_countdown,
             dt_util.utcnow(),
-            self._state_attrs[ATTR_DELAYED_TURN_OFF],
+            self._attr_extra_state_attributes[ATTR_DELAYED_TURN_OFF],
         )
 
-        self._state_attrs.update(
+        self._attr_extra_state_attributes.update(
             {ATTR_SCENE: state.scene, ATTR_DELAYED_TURN_OFF: delayed_turn_off}
         )
 
@@ -560,10 +557,10 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
         delayed_turn_off = self.delayed_turn_off_timestamp(
             state.delay_off_countdown,
             dt_util.utcnow(),
-            self._state_attrs[ATTR_DELAYED_TURN_OFF],
+            self._attr_extra_state_attributes[ATTR_DELAYED_TURN_OFF],
         )
 
-        self._state_attrs.update(
+        self._attr_extra_state_attributes.update(
             {ATTR_SCENE: state.scene, ATTR_DELAYED_TURN_OFF: delayed_turn_off}
         )
 
@@ -591,7 +588,7 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
         """Initialize the light device."""
         super().__init__(name, device, entry, unique_id)
 
-        self._state_attrs.update(
+        self._attr_extra_state_attributes.update(
             {ATTR_NIGHT_LIGHT_MODE: None, ATTR_AUTOMATIC_COLOR_TEMPERATURE: None}
         )
 
@@ -631,10 +628,10 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
         delayed_turn_off = self.delayed_turn_off_timestamp(
             state.delay_off_countdown,
             dt_util.utcnow(),
-            self._state_attrs[ATTR_DELAYED_TURN_OFF],
+            self._attr_extra_state_attributes[ATTR_DELAYED_TURN_OFF],
         )
 
-        self._state_attrs.update(
+        self._attr_extra_state_attributes.update(
             {
                 ATTR_SCENE: state.scene,
                 ATTR_DELAYED_TURN_OFF: delayed_turn_off,
@@ -659,7 +656,7 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
         """Initialize the light device."""
         super().__init__(name, device, entry, unique_id)
 
-        self._state_attrs.update(
+        self._attr_extra_state_attributes.update(
             {ATTR_REMINDER: None, ATTR_NIGHT_LIGHT_MODE: None, ATTR_EYECARE_MODE: None}
         )
 
@@ -682,10 +679,10 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
         delayed_turn_off = self.delayed_turn_off_timestamp(
             state.delay_off_countdown,
             dt_util.utcnow(),
-            self._state_attrs[ATTR_DELAYED_TURN_OFF],
+            self._attr_extra_state_attributes[ATTR_DELAYED_TURN_OFF],
         )
 
-        self._state_attrs.update(
+        self._attr_extra_state_attributes.update(
             {
                 ATTR_SCENE: state.scene,
                 ATTR_DELAYED_TURN_OFF: delayed_turn_off,
@@ -847,9 +844,8 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
         """Initialize the light device."""
         super().__init__(name, device, entry, unique_id)
 
-        self._hs_color: tuple[float, float] | None = None
-        self._state_attrs.pop(ATTR_DELAYED_TURN_OFF)
-        self._state_attrs.update(
+        self._attr_extra_state_attributes.pop(ATTR_DELAYED_TURN_OFF)
+        self._attr_extra_state_attributes.update(
             {
                 ATTR_SLEEP_ASSISTANT: None,
                 ATTR_SLEEP_OFF_TIME: None,
@@ -868,11 +864,6 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
     def _max_mireds(self):
         """Return the warmest color_temp that this light supports."""
         return 588
-
-    @property
-    def hs_color(self) -> tuple[float, float] | None:
-        """Return the hs color value."""
-        return self._hs_color
 
     @property
     def color_mode(self) -> ColorMode:
@@ -915,7 +906,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
             )
 
             if result:
-                self._hs_color = hs_color
+                self._attr_hs_color = hs_color
                 self._attr_brightness = brightness
 
         elif ATTR_BRIGHTNESS in kwargs and ATTR_COLOR_TEMP_KELVIN in kwargs:
@@ -949,7 +940,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
             )
 
             if result:
-                self._hs_color = hs_color
+                self._attr_hs_color = hs_color
 
         elif ATTR_COLOR_TEMP_KELVIN in kwargs:
             _LOGGER.debug(
@@ -1007,9 +998,9 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
             self._max_mireds,
             self._min_mireds,
         )
-        self._hs_color = color_util.color_RGB_to_hs(*state.rgb)
+        self._attr_hs_color = color_util.color_RGB_to_hs(*state.rgb)
 
-        self._state_attrs.update(
+        self._attr_extra_state_attributes.update(
             {
                 ATTR_SCENE: state.scene,
                 ATTR_SLEEP_ASSISTANT: state.sleep_assistant,
