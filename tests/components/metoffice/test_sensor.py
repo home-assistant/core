@@ -32,7 +32,6 @@ from tests.common import MockConfigEntry, load_fixture
 async def test_one_sensor_site_running(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
     requests_mock: requests_mock.Mocker,
 ) -> None:
     """Test the Met Office sensor platform."""
