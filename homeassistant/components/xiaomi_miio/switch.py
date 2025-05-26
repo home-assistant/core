@@ -8,7 +8,13 @@ from functools import partial
 import logging
 from typing import Any
 
-from miio import AirConditioningCompanionV3, ChuangmiPlug, DeviceException, PowerStrip
+from miio import (
+    AirConditioningCompanionV3,
+    ChuangmiPlug,
+    Device as MiioDevice,
+    DeviceException,
+    PowerStrip,
+)
 from miio.gateway.devices import SubDevice
 from miio.gateway.devices.switch import Switch
 from miio.powerstrip import PowerMode
@@ -520,12 +526,21 @@ async def async_setup_other_entry(
     async_add_entities(entities)
 
 
-class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
+class XiaomiGenericCoordinatedSwitch(
+    XiaomiCoordinatedMiioEntity[DataUpdateCoordinator[Any]], SwitchEntity
+):
     """Representation of a Xiaomi Plug Generic."""
 
     entity_description: XiaomiMiioSwitchDescription
 
-    def __init__(self, device, entry, unique_id, coordinator, description):
+    def __init__(
+        self,
+        device: MiioDevice,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str,
+        coordinator: DataUpdateCoordinator[Any],
+        description: XiaomiMiioSwitchDescription,
+    ) -> None:
         """Initialize the plug switch."""
         super().__init__(device, entry, unique_id, coordinator)
 
@@ -574,7 +589,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         """Turn the buzzer on."""
         return await self._try_command(
             "Turning the buzzer of the miio device on failed.",
-            self._device.set_buzzer,
+            self._device.set_buzzer,  # type: ignore[attr-defined]
             True,
         )
 
@@ -582,7 +597,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         """Turn the buzzer off."""
         return await self._try_command(
             "Turning the buzzer of the miio device off failed.",
-            self._device.set_buzzer,
+            self._device.set_buzzer,  # type: ignore[attr-defined]
             False,
         )
 
@@ -590,7 +605,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         """Turn the child lock on."""
         return await self._try_command(
             "Turning the child lock of the miio device on failed.",
-            self._device.set_child_lock,
+            self._device.set_child_lock,  # type: ignore[attr-defined]
             True,
         )
 
@@ -598,7 +613,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         """Turn the child lock off."""
         return await self._try_command(
             "Turning the child lock of the miio device off failed.",
-            self._device.set_child_lock,
+            self._device.set_child_lock,  # type: ignore[attr-defined]
             False,
         )
 
@@ -606,7 +621,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         """Turn the display on."""
         return await self._try_command(
             "Turning the display of the miio device on failed.",
-            self._device.set_display,
+            self._device.set_display,  # type: ignore[attr-defined]
             True,
         )
 
@@ -614,7 +629,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         """Turn the display off."""
         return await self._try_command(
             "Turning the display of the miio device off failed.",
-            self._device.set_display,
+            self._device.set_display,  # type: ignore[attr-defined]
             False,
         )
 
@@ -622,7 +637,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         """Turn the dry mode on."""
         return await self._try_command(
             "Turning the dry mode of the miio device on failed.",
-            self._device.set_dry,
+            self._device.set_dry,  # type: ignore[attr-defined]
             True,
         )
 
@@ -630,7 +645,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         """Turn the dry mode off."""
         return await self._try_command(
             "Turning the dry mode of the miio device off failed.",
-            self._device.set_dry,
+            self._device.set_dry,  # type: ignore[attr-defined]
             False,
         )
 
@@ -638,7 +653,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         """Turn the dry mode on."""
         return await self._try_command(
             "Turning the clean mode of the miio device on failed.",
-            self._device.set_clean_mode,
+            self._device.set_clean_mode,  # type: ignore[attr-defined]
             True,
         )
 
@@ -646,7 +661,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         """Turn the dry mode off."""
         return await self._try_command(
             "Turning the clean mode of the miio device off failed.",
-            self._device.set_clean_mode,
+            self._device.set_clean_mode,  # type: ignore[attr-defined]
             False,
         )
 
@@ -654,7 +669,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         """Turn the led on."""
         return await self._try_command(
             "Turning the led of the miio device on failed.",
-            self._device.set_led,
+            self._device.set_led,  # type: ignore[attr-defined]
             True,
         )
 
@@ -662,7 +677,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         """Turn the led off."""
         return await self._try_command(
             "Turning the led of the miio device off failed.",
-            self._device.set_led,
+            self._device.set_led,  # type: ignore[attr-defined]
             False,
         )
 
@@ -670,7 +685,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         """Turn the learn mode on."""
         return await self._try_command(
             "Turning the learn mode of the miio device on failed.",
-            self._device.set_learn_mode,
+            self._device.set_learn_mode,  # type: ignore[attr-defined]
             True,
         )
 
@@ -678,7 +693,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         """Turn the learn mode off."""
         return await self._try_command(
             "Turning the learn mode of the miio device off failed.",
-            self._device.set_learn_mode,
+            self._device.set_learn_mode,  # type: ignore[attr-defined]
             False,
         )
 
@@ -686,7 +701,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         """Turn auto detect on."""
         return await self._try_command(
             "Turning auto detect of the miio device on failed.",
-            self._device.set_auto_detect,
+            self._device.set_auto_detect,  # type: ignore[attr-defined]
             True,
         )
 
@@ -694,7 +709,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         """Turn auto detect off."""
         return await self._try_command(
             "Turning auto detect of the miio device off failed.",
-            self._device.set_auto_detect,
+            self._device.set_auto_detect,  # type: ignore[attr-defined]
             False,
         )
 
@@ -702,7 +717,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         """Turn ionizer on."""
         return await self._try_command(
             "Turning ionizer of the miio device on failed.",
-            self._device.set_ionizer,
+            self._device.set_ionizer,  # type: ignore[attr-defined]
             True,
         )
 
@@ -710,7 +725,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         """Turn ionizer off."""
         return await self._try_command(
             "Turning ionizer of the miio device off failed.",
-            self._device.set_ionizer,
+            self._device.set_ionizer,  # type: ignore[attr-defined]
             False,
         )
 
@@ -718,7 +733,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         """Turn ionizer on."""
         return await self._try_command(
             "Turning ionizer of the miio device on failed.",
-            self._device.set_anion,
+            self._device.set_anion,  # type: ignore[attr-defined]
             True,
         )
 
@@ -726,7 +741,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         """Turn ionizer off."""
         return await self._try_command(
             "Turning ionizer of the miio device off failed.",
-            self._device.set_anion,
+            self._device.set_anion,  # type: ignore[attr-defined]
             False,
         )
 
@@ -734,7 +749,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         """Turn ionizer on."""
         return await self._try_command(
             "Turning ionizer of the miio device on failed.",
-            self._device.set_ptc,
+            self._device.set_ptc,  # type: ignore[attr-defined]
             True,
         )
 
@@ -742,7 +757,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         """Turn ionizer off."""
         return await self._try_command(
             "Turning ionizer of the miio device off failed.",
-            self._device.set_ptc,
+            self._device.set_ptc,  # type: ignore[attr-defined]
             False,
         )
 
