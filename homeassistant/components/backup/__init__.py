@@ -23,6 +23,7 @@ from .const import DATA_MANAGER, DOMAIN
 from .coordinator import BackupConfigEntry, BackupDataUpdateCoordinator
 from .http import async_register_http_views
 from .manager import (
+    AddonErrorData,
     BackupManager,
     BackupManagerError,
     BackupPlatformEvent,
@@ -48,6 +49,7 @@ from .util import suggested_filename, suggested_filename_from_name_date
 from .websocket import async_register_websocket_handlers
 
 __all__ = [
+    "AddonErrorData",
     "AddonInfo",
     "AgentBackup",
     "BackupAgent",
@@ -79,7 +81,7 @@ __all__ = [
     "suggested_filename_from_name_date",
 ]
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.EVENT, Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 

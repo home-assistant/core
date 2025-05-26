@@ -6,7 +6,7 @@ from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from nice_go import ApiError, AuthFailedError
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,

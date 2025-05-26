@@ -114,9 +114,14 @@ class DevoloSwitchEntity[_DataT: _DataType](
                 translation_key="password_protected",
                 translation_placeholders={"title": self.entry.title},
             ) from ex
-        except DeviceUnavailable:
-            pass  # The coordinator will handle this
-        await self.coordinator.async_request_refresh()
+        except DeviceUnavailable as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_response",
+                translation_placeholders={"title": self.entry.title},
+            ) from ex
+        finally:
+            await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
@@ -129,6 +134,11 @@ class DevoloSwitchEntity[_DataT: _DataType](
                 translation_key="password_protected",
                 translation_placeholders={"title": self.entry.title},
             ) from ex
-        except DeviceUnavailable:
-            pass  # The coordinator will handle this
-        await self.coordinator.async_request_refresh()
+        except DeviceUnavailable as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_response",
+                translation_placeholders={"title": self.entry.title},
+            ) from ex
+        finally:
+            await self.coordinator.async_request_refresh()

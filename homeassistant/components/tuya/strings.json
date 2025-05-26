@@ -101,6 +101,20 @@
         "name": "Door 3"
       }
     },
+    "event": {
+      "numbered_button": {
+        "name": "Button {button_number}",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "click": "Clicked",
+              "double_click": "Double-clicked",
+              "press": "Long-pressed"
+            }
+          }
+        }
+      }
+    },
     "light": {
       "backlight": {
         "name": "Backlight"
@@ -288,9 +302,9 @@
       "motion_sensitivity": {
         "name": "Motion detection sensitivity",
         "state": {
-          "0": "Low sensitivity",
-          "1": "Medium sensitivity",
-          "2": "High sensitivity"
+          "0": "[%key:common::state::low%]",
+          "1": "[%key:common::state::medium%]",
+          "2": "[%key:common::state::high%]"
         }
       },
       "record_mode": {
@@ -404,7 +418,7 @@
       "humidifier_spray_mode": {
         "name": "Spray mode",
         "state": {
-          "auto": "Auto",
+          "auto": "[%key:common::state::auto%]",
           "health": "Health",
           "sleep": "Sleep",
           "humidity": "Humidity",

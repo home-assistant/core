@@ -28,7 +28,12 @@ from homeassistant.helpers.typing import ConfigType, VolSchemaType
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import CONF_JSON_ATTRS_TOPIC, CONF_PAYLOAD_RESET, CONF_STATE_TOPIC
+from .const import (
+    CONF_JSON_ATTRS_TEMPLATE,
+    CONF_JSON_ATTRS_TOPIC,
+    CONF_PAYLOAD_RESET,
+    CONF_STATE_TOPIC,
+)
 from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttValueTemplate, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
@@ -151,16 +156,54 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
         self, extra_state_attributes: dict[str, Any]
     ) -> None:
         """Extract the location from the extra state attributes."""
-        self._attr_latitude = extra_state_attributes.get(ATTR_LATITUDE)
-        self._attr_longitude = extra_state_attributes.get(ATTR_LONGITUDE)
         if (
             ATTR_LATITUDE in extra_state_attributes
             or ATTR_LONGITUDE in extra_state_attributes
         ):
-            # Reset manual set location
+            latitude: float | None
+            longitude: float | None
+            gps_accuracy: float
+            # Reset manually set location to allow automatic zone detection
             self._attr_location_name = None
+            if isinstance(
+                latitude := extra_state_attributes.get(ATTR_LATITUDE), (int, float)
+            ) and isinstance(
+                longitude := extra_state_attributes.get(ATTR_LONGITUDE), (int, float)
+            ):
+                self._attr_latitude = latitude
+                self._attr_longitude = longitude
+            else:
+                # Invalid or incomplete coordinates, reset location
+                self._attr_latitude = None
+                self._attr_longitude = None
+                _LOGGER.warning(
+                    "Extra state attributes received at % and template %s "
+                    "contain invalid or incomplete location info. Got %s",
+                    self._config.get(CONF_JSON_ATTRS_TEMPLATE),
+                    self._config.get(CONF_JSON_ATTRS_TOPIC),
+                    extra_state_attributes,
+                )
 
-        self._attr_location_accuracy = extra_state_attributes.get(ATTR_GPS_ACCURACY, 0)
+            if ATTR_GPS_ACCURACY in extra_state_attributes:
+                if isinstance(
+                    gps_accuracy := extra_state_attributes[ATTR_GPS_ACCURACY],
+                    (int, float),
+                ):
+                    self._attr_location_accuracy = gps_accuracy
+                else:
+                    _LOGGER.warning(
+                        "Extra state attributes received at % and template %s "
+                        "contain invalid GPS accuracy setting, "
+                        "gps_accuracy was set to 0 as the default. Got %s",
+                        self._config.get(CONF_JSON_ATTRS_TEMPLATE),
+                        self._config.get(CONF_JSON_ATTRS_TOPIC),
+                        extra_state_attributes,
+                    )
+                    self._attr_location_accuracy = 0
+
+            else:
+                self._attr_location_accuracy = 0
+
         self._attr_extra_state_attributes = {
             attribute: value
             for attribute, value in extra_state_attributes.items()
