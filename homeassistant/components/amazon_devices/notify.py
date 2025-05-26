@@ -42,12 +42,6 @@ NOTIFY: Final = (
         subkey="AUDIO_PLAYER",
         method="call_alexa_sound",
     ),
-    AmazonNotifyEntityDescription(
-        key="custom",
-        translation_key="custom",
-        subkey="MICROPHONE",
-        method="call_alexa_text_command",
-    ),
 )
 
 
