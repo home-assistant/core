@@ -43,16 +43,16 @@ PIP_VERSION_RANGE_SEPARATOR = re.compile(r"^(==|>=|<=|~=|!=|<|>|===)?(.*)$")
 
 FORBIDDEN_PACKAGES = {
     # Only needed for tests
-    "codecov": "only be needed for tests",
+    "codecov": "not be a runtime dependency",
     # Does blocking I/O and should be replaced by pyserial-asyncio-fast
     # See https://github.com/home-assistant/core/pull/116635
     "pyserial-asyncio": "be replaced by pyserial-asyncio-fast",
     # Only needed for tests
-    "pytest": "only be needed for tests",
+    "pytest": "not be a runtime dependency",
     # Only needed for build
-    "setuptools": "only be needed during build",
+    "setuptools": "not be a runtime dependency",
     # Only needed for build
-    "wheel": "only be needed during build",
+    "wheel": "not be a runtime dependency",
 }
 FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # In the form dict("domain": {"package": {"reason1", "reason2"}})
@@ -373,7 +373,7 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
         package_exceptions = forbidden_package_exceptions.get(package, set())
         for pkg, version in dependencies.items():
             if pkg.startswith("types-") or pkg in FORBIDDEN_PACKAGES:
-                reason = FORBIDDEN_PACKAGES.get(pkg, "only be needed during build")
+                reason = FORBIDDEN_PACKAGES.get(pkg, "not be a runtime dependency")
                 needs_forbidden_package_exceptions = True
                 if pkg in package_exceptions:
                     integration.add_warning(
