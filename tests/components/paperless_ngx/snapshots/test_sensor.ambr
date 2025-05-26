@@ -242,7 +242,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Status celery',
+    'original_name': 'Status Celery',
     'platform': 'paperless_ngx',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -256,7 +256,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Paperless-ngx Status celery',
+      'friendly_name': 'Paperless-ngx Status Celery',
       'options': list([
         'ok',
         'error',
@@ -482,7 +482,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Status redis',
+    'original_name': 'Status Redis',
     'platform': 'paperless_ngx',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -496,7 +496,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Paperless-ngx Status redis',
+      'friendly_name': 'Paperless-ngx Status Redis',
       'options': list([
         'ok',
         'error',
