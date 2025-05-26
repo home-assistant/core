@@ -23,7 +23,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import ATTR_BATTERY_STATUS, ATTR_INVERTER_STATE
+from .const import (
+    ATTR_BATTERY_STATUS,
+    ATTR_INVERTER_STATE,
+    ATTR_TIMELINE_STATUS,
+    TIMELINE_ICONS,
+)
 from .coordinator import InverterCoordinator
 from .entity import InverterEntity
 
@@ -368,6 +373,13 @@ SENSOR_DESCRIPTIONS = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
     ),
+    # Timeline
+    SensorEntityDescription(
+        key="timeline_type_msg",
+        translation_key="timeline_type_msg",
+        device_class=SensorDeviceClass.ENUM,
+        options=ATTR_TIMELINE_STATUS,
+    ),
     # Daily energy counters
     SensorEntityDescription(
         key="energy_pv",
@@ -442,4 +454,16 @@ class InverterSensor(InverterEntity, SensorEntity):
     @property
     def native_value(self) -> StateType | None:
         """Return the state of the entity."""
-        return self.coordinator.data.get(self.data_key)
+        raw_value = self.coordinator.data.get(self.data_key)
+        if not isinstance(raw_value, str):
+            return raw_value
+        return {"???": "unknown"}.get(raw_value, raw_value)
+
+    @property
+    def icon(self) -> str | None:
+        """Update the sensor timeline icon."""
+        if self.data_key == "timeline_type_msg":
+            raw_status = self.coordinator.data.get(self.data_key)
+            status = raw_status if isinstance(raw_status, str) else "unknown"
+            return TIMELINE_ICONS[status]
+        return super().icon

@@ -197,6 +197,75 @@
       "monitoring_minute_solar_production": {
         "name": "Solar production"
       },
+      "timeline_type_msg": {
+        "name": "Timeline status",
+        "state": {
+          "com_lost": "Communication lost",
+          "com_ok": "Communiation Ok",
+          "warning_grid": "Warning grid",
+          "warning_ond": "Warning inverter",
+          "warning_soft": "Warning software",
+          "warning_pv": "Warning PV",
+          "warning_bat": "Warning battery",
+          "warning_cpu": "Warning CPU",
+          "warning_spe": "Warning special",
+          "error_grid": "Error grid",
+          "error_ond": "Error inverter",
+          "error_soft": "Error software",
+          "error_pv": "Error PV",
+          "error_bat": "Error battery",
+          "error_spe": "Error special",
+          "info_grid": "Info grid",
+          "info_ond": "Info inverter",
+          "info_soft": "Info software",
+          "info_pv": "Info PV",
+          "info_bat": "Info battery",
+          "info_cpu": "Info CPU",
+          "info_spe": "Info special",
+          "warning_unknown": "Unknown warning",
+          "warnings": "Warning",
+          "error_unknown": "Unknown error",
+          "errors": "Error",
+          "good_1": "Ok",
+          "good_2": "Ok",
+          "good_3": "Ok"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "com_lost": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::com_lost%]",
+              "com_ok": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::com_ok%]",
+              "warning_grid": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::warning_grid%]",
+              "warning_ond": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::warning_ond%]",
+              "warning_soft": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::warning_soft%]",
+              "warning_pv": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::warning_pv%]",
+              "warning_bat": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::warning_bat%]",
+              "warning_cpu": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::warning_cpu%]",
+              "warning_spe": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::warning_spe%]",
+              "error_grid": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::error_grid%]",
+              "error_ond": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::error_ond%]",
+              "error_soft": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::error_soft%]",
+              "error_pv": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::error_pv%]",
+              "error_bat": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::error_bat%]",
+              "error_spe": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::error_spe%]",
+              "info_grid": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::info_grid%]",
+              "info_ond": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::info_ond%]",
+              "info_soft": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::info_soft%]",
+              "info_pv": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::info_pv%]",
+              "info_bat": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::info_bat%]",
+              "info_cpu": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::info_cpu%]",
+              "info_spe": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::info_spe%]",
+              "warning_unknown": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::warning_unknown%]",
+              "warnings": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::warnings%]",
+              "error_unknown": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::error_unknown%]",
+              "errors": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::errors%]",
+              "good_1": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::good_1%]",
+              "good_2": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::good_2%]",
+              "good_3": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::good_3%]"
+            }
+          }
+        }
+      },
       "energy_pv": {
         "name": "Today PV energy"
       },
