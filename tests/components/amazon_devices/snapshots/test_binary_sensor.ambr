@@ -22,7 +22,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Bluetooth',
     'platform': 'amazon_devices',
@@ -36,7 +36,6 @@
 # name: test_all_entities[binary_sensor.echo_test_bluetooth-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
       'friendly_name': 'Echo Test Bluetooth',
     }),
     'context': <ANY>,
