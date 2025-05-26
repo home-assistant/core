@@ -94,7 +94,10 @@ class PlaystationNetwork:
                 session.title_id = game_title_info[0]["npTitleId"]
                 session.title_name = game_title_info[0]["titleName"]
                 session.format = game_title_info[0]["format"]
-                if PlatformType(session.format) is PlatformType.PS5:
+                if PlatformType(session.format) in [
+                    PlatformType.PS5,
+                    PlatformType.PSPC,
+                ]:
                     session.media_image_url = game_title_info[0]["conceptIconUrl"]
                 else:
                     session.media_image_url = game_title_info[0]["npTitleIconUrl"]
