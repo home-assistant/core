@@ -50,7 +50,7 @@ class PlaystationNetworkCoordinator(DataUpdateCoordinator[PlaystationNetworkData
     async def _async_update_data(self) -> PlaystationNetworkData:
         """Get the latest data from the PSN."""
         try:
-            return await self.hass.async_add_executor_job(self.psn.get_data)
+            return await self.psn.get_data()
         except (PSNAWPAuthenticationError, PSNAWPServerError) as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -61,7 +61,7 @@ class PlaystationNetworkCoordinator(DataUpdateCoordinator[PlaystationNetworkData
         """Set up the coordinator."""
 
         try:
-            self.user = await self.hass.async_add_executor_job(self.psn.get_user)
+            self.user = await self.psn.get_user()
         except PSNAWPAuthenticationError as error:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
