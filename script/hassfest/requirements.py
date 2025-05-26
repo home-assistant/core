@@ -41,22 +41,132 @@ PACKAGE_REGEX = re.compile(
 PIP_REGEX = re.compile(r"^(--.+\s)?([-_\.\w\d]+.*(?:==|>=|<=|~=|!=|<|>|===)?.*$)")
 PIP_VERSION_RANGE_SEPARATOR = re.compile(r"^(==|>=|<=|~=|!=|<|>|===)?(.*)$")
 
-FORBIDDEN_PACKAGES = {"setuptools", "wheel"}
-FORBIDDEN_PACKAGE_EXCEPTIONS = {
-    # Direct dependencies
-    "fitbit",  # setuptools (fitbit)
-    "influxdb-client",  # setuptools (influxdb)
-    "microbeespy",  # setuptools (microbees)
-    "pyefergy",  # types-pytz (efergy)
-    "python-mystrom",  # setuptools (mystrom)
-    # Transitive dependencies
-    "arrow",  # types-python-dateutil (opower)
-    "asyncio-dgram",  # setuptools (guardian / keba / minecraft_server)
-    "colorzero",  # setuptools (remote_rpi_gpio / zha)
-    "incremental",  # setuptools (azure_devops / lyric / ovo_energy / system_bridge)
-    "pbr",  # setuptools (cmus / concord232 / mochad / nx584 / opnsense)
-    "pycountry-convert",  # wheel (ecovacs)
-    "unasync",  # setuptools (hive / osoenergy)
+FORBIDDEN_PACKAGES = {"codecov", "pytest", "setuptools", "wheel"}
+FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
+    # In the form dict("domain": {"package": {"reason1", "reason2"}})
+    # - domain is the integration domain
+    # - package is the package (can be transitive) referencing the dependency
+    # - reasonX should be the name of the invalid dependency
+    "azure_devops": {
+        # https://github.com/timmo001/aioazuredevops/issues/67
+        # aioazuredevops > incremental > setuptools
+        "incremental": {"setuptools"}
+    },
+    "cmus": {
+        # https://github.com/mtreinish/pycmus/issues/4
+        # pycmus > pbr > setuptools
+        "pbr": {"setuptools"}
+    },
+    "concord232": {
+        # https://bugs.launchpad.net/python-stevedore/+bug/2111694
+        # concord232 > stevedore > pbr > setuptools
+        "pbr": {"setuptools"}
+    },
+    "efergy": {
+        # https://github.com/tkdrob/pyefergy/issues/46
+        # pyefergy > codecov
+        # pyefergy > types-pytz
+        "pyefergy": {"codecov", "types-pytz"}
+    },
+    "fitbit": {
+        # https://github.com/orcasgit/python-fitbit/pull/178
+        # but project seems unmaintained
+        # fitbit > setuptools
+        "fitbit": {"setuptools"}
+    },
+    "guardian": {
+        # https://github.com/jsbronder/asyncio-dgram/issues/20
+        # aioguardian > asyncio-dgram > setuptools
+        "asyncio-dgram": {"setuptools"}
+    },
+    "hive": {
+        # https://github.com/Pyhass/Pyhiveapi/pull/88
+        # pyhive-integration > unasync > setuptools
+        "unasync": {"setuptools"}
+    },
+    "influxdb": {
+        # https://github.com/influxdata/influxdb-client-python/issues/695
+        # influxdb-client > setuptools
+        "influxdb-client": {"setuptools"}
+    },
+    "keba": {
+        # https://github.com/jsbronder/asyncio-dgram/issues/20
+        # keba-kecontact > asyncio-dgram > setuptools
+        "asyncio-dgram": {"setuptools"}
+    },
+    "lyric": {
+        # https://github.com/timmo001/aiolyric/issues/115
+        # aiolyric > incremental > setuptools
+        "incremental": {"setuptools"}
+    },
+    "microbees": {
+        # https://github.com/microBeesTech/pythonSDK/issues/6
+        # microbeespy > setuptools
+        "microbeespy": {"setuptools"}
+    },
+    "minecraft_server": {
+        # https://github.com/jsbronder/asyncio-dgram/issues/20
+        # mcstatus > asyncio-dgram > setuptools
+        "asyncio-dgram": {"setuptools"}
+    },
+    "mochad": {
+        # https://github.com/mtreinish/pymochad/issues/8
+        # pymochad > pbr > setuptools
+        "pbr": {"setuptools"}
+    },
+    "mystrom": {
+        # https://github.com/home-assistant-ecosystem/python-mystrom/issues/55
+        # python-mystrom > setuptools
+        "python-mystrom": {"setuptools"}
+    },
+    "nx584": {
+        # https://bugs.launchpad.net/python-stevedore/+bug/2111694
+        # pynx584 > stevedore > pbr > setuptools
+        "pbr": {"setuptools"}
+    },
+    "opnsense": {
+        # https://github.com/mtreinish/pyopnsense/issues/27
+        # pyopnsense > pbr > setuptools
+        "pbr": {"setuptools"}
+    },
+    "opower": {
+        # https://github.com/arrow-py/arrow/issues/1169 (fixed not yet released)
+        # opower > arrow > types-python-dateutil
+        "arrow": {"types-python-dateutil"}
+    },
+    "osoenergy": {
+        # https://github.com/osohotwateriot/apyosohotwaterapi/pull/4
+        # pyosoenergyapi > unasync > setuptools
+        "unasync": {"setuptools"}
+    },
+    "ovo_energy": {
+        # https://github.com/timmo001/ovoenergy/issues/132
+        # ovoenergy > incremental > setuptools
+        "incremental": {"setuptools"}
+    },
+    "remote_rpi_gpio": {
+        # https://github.com/waveform80/colorzero/issues/9
+        # gpiozero > colorzero > setuptools
+        "colorzero": {"setuptools"}
+    },
+    "system_bridge": {
+        # https://github.com/timmo001/system-bridge-connector/pull/78
+        # systembridgeconnector > incremental > setuptools
+        "incremental": {"setuptools"}
+    },
+    "travisci": {
+        # https://github.com/menegazzo/travispy seems to be unmaintained
+        # and unused https://www.home-assistant.io/integrations/travisci
+        # travispy > pytest-rerunfailures > pytest
+        "pytest-rerunfailures": {"pytest"},
+        # travispy > pytest
+        "travispy": {"pytest"},
+    },
+    "zha": {
+        # https://github.com/waveform80/colorzero/issues/9
+        # zha > zigpy-zigate > gpiozero > colorzero > setuptools
+        "colorzero": {"setuptools"}
+    },
 }
 
 
@@ -219,6 +329,11 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
 
     to_check = deque(packages)
 
+    forbidden_package_exceptions = FORBIDDEN_PACKAGE_EXCEPTIONS.get(
+        integration.domain, {}
+    )
+    needs_forbidden_package_exceptions = False
+
     while to_check:
         package = to_check.popleft()
 
@@ -228,6 +343,8 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
         all_requirements.add(package)
 
         item = deptree.get(package)
+        if forbidden_package_exceptions:
+            print(f"Integration {integration.domain}: {item}")
 
         if item is None:
             # Only warn if direct dependencies could not be resolved
@@ -238,9 +355,11 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
             continue
 
         dependencies: dict[str, str] = item["dependencies"]
+        package_exceptions = forbidden_package_exceptions.get(package, set())
         for pkg, version in dependencies.items():
             if pkg.startswith("types-") or pkg in FORBIDDEN_PACKAGES:
-                if package in FORBIDDEN_PACKAGE_EXCEPTIONS:
+                needs_forbidden_package_exceptions = True
+                if pkg in package_exceptions:
                     integration.add_warning(
                         "requirements",
                         f"Package {pkg} should not be a runtime dependency in {package}",
@@ -254,6 +373,12 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
 
         to_check.extend(dependencies)
 
+    if forbidden_package_exceptions and not needs_forbidden_package_exceptions:
+        integration.add_error(
+            "requirements",
+            f"Integration {integration.domain} runtime dependency exceptions "
+            "have been resolved, please remove from `FORBIDDEN_PACKAGE_EXCEPTIONS`",
+        )
     return all_requirements
 
 

@@ -2019,6 +2019,11 @@ def add(value, amount, default=_SENTINEL):
         return default
 
 
+def apply(value, fn, *args, **kwargs):
+    """Call the given callable with the provided arguments and keyword arguments."""
+    return fn(value, *args, **kwargs)
+
+
 def logarithm(value, base=math.e, default=_SENTINEL):
     """Filter and function to get logarithm of the value with a specific base."""
     try:
@@ -2572,9 +2577,16 @@ def struct_unpack(value: bytes, format_string: str, offset: int = 0) -> Any | No
         return None
 
 
-def base64_encode(value: str) -> str:
+def from_hex(value: str) -> bytes:
+    """Perform hex string decode."""
+    return bytes.fromhex(value)
+
+
+def base64_encode(value: str | bytes) -> str:
     """Perform base64 encode."""
-    return base64.b64encode(value.encode("utf-8")).decode("utf-8")
+    if isinstance(value, str):
+        value = value.encode("utf-8")
+    return base64.b64encode(value).decode("utf-8")
 
 
 def base64_decode(value: str, encoding: str | None = "utf-8") -> str | bytes:
@@ -3110,6 +3122,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.filters["acos"] = arc_cosine
         self.filters["add"] = add
+        self.filters["apply"] = apply
         self.filters["as_datetime"] = as_datetime
         self.filters["as_local"] = dt_util.as_local
         self.filters["as_timedelta"] = as_timedelta
@@ -3131,6 +3144,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["flatten"] = flatten
         self.filters["float"] = forgiving_float_filter
         self.filters["from_json"] = from_json
+        self.filters["from_hex"] = from_hex
         self.filters["iif"] = iif
         self.filters["int"] = forgiving_int_filter
         self.filters["intersect"] = intersect
@@ -3169,6 +3183,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["unpack"] = struct_unpack
         self.filters["version"] = version
 
+        self.tests["apply"] = apply
         self.tests["contains"] = contains
         self.tests["datetime"] = _is_datetime
         self.tests["is_number"] = is_number
