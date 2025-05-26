@@ -446,4 +446,5 @@ class NestFlowHandler(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
+        await self._async_handle_discovery_without_unique_id()
         return await self.async_step_user()
