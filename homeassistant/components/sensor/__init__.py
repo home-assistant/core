@@ -753,7 +753,9 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         When the integration does not specify a suggested display precision, a default
         device class precision will be used from UNITS_PRECISION, and the final precision
-        will be adjusted based on the ratio from the default unit to the current one.
+        will be adjusted based on the ratio from the default unit to the current one. It
+        will also be capped so that the extra precision (from the base unit) does not
+        exceed DEFAULT_PRECISION_LIMIT.
         """
         display_precision = self.suggested_display_precision
         device_class = self.device_class
