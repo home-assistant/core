@@ -14,10 +14,23 @@
           "api_key": "The API token of your bot.",
           "proxy_url": "Proxy URL if working behind one, optionally including username and password.\n(socks5://username:password@proxy_ip:proxy_port)"
         }
+      },
+      "network": {
+        "title": "Webhooks network configuration",
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "trusted_networks": "Trusted networks"
+        },
+        "data_description": {
+          "url": "Allow to overwrite the external URL from the Home Assistant configuration for different setups.",
+          "trusted_networks": "Telegram server access ACL as list.\nDefault: 149.154.160.0/20, 91.108.4.0/22"
+        }
       }
     },
     "error": {
-      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "invalid_proxy_url": "{proxy_url_error}",
+      "invalid_trusted_networks": "Invalid trusted network: {trusted_network_error}"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
@@ -28,19 +41,12 @@
       "init": {
         "title": "Configure Telegram bot",
         "data": {
-          "parse_mode": "Parse mode",
-          "url": "[%key:common::config_flow::data::url%]",
-          "trusted_networks": "Trusted networks"
+          "parse_mode": "Parse mode"
         },
         "data_description": {
-          "parse_mode": "Default parse mode for messages if not explicit in message data.",
-          "url": "Allow to overwrite the external URL from the Home Assistant configuration for different setups.",
-          "trusted_networks": "Telegram server access ACL as list.\nDefault: 149.154.160.0/20, 91.108.4.0/22"
+          "parse_mode": "Default parse mode for messages if not explicit in message data."
         }
       }
-    },
-    "error": {
-      "invalid_trusted_networks": "Invalid trusted network: {trusted_network_error}"
     }
   },
   "config_subentries": {

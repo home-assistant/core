@@ -17,8 +17,8 @@ from homeassistant.components.telegram_bot import (
     DEFAULT_TRUSTED_NETWORKS,
     DOMAIN,
     PARSER_MD,
-    PLATFORM_WEBHOOKS,
 )
+from homeassistant.components.telegram_bot.const import PLATFORM_WEBHOOKS
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import (
     CONF_API_KEY,

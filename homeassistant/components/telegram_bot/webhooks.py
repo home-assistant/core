@@ -62,7 +62,7 @@ async def async_setup_platform(
 
 
 def _get_trusted_networks(config: TelegramBotConfigEntry) -> list[IPv4Network]:
-    trusted_networks_str: list[str] = config.options[CONF_TRUSTED_NETWORKS]
+    trusted_networks_str: list[str] = config.data[CONF_TRUSTED_NETWORKS]
     return [IPv4Network(trusted_network) for trusted_network in trusted_networks_str]
 
 
@@ -85,7 +85,7 @@ class PushBot(BaseTelegramBotEntity):
         self.application.add_handler(TypeHandler(Update, self.handle_update))
         super().__init__(hass, config)
 
-        self.base_url = config.options.get(CONF_URL) or get_url(
+        self.base_url = config.data.get(CONF_URL) or get_url(
             hass, require_ssl=True, allow_internal=False
         )
         self.webhook_url = f"{self.base_url}{TELEGRAM_WEBHOOK_URL}"

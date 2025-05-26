@@ -53,7 +53,12 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_loaded_integration
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
-from .const import CONF_BOT_COUNT
+from .const import (
+    CONF_BOT_COUNT,
+    PLATFORM_BROADCAST,
+    PLATFORM_POLLING,
+    PLATFORM_WEBHOOKS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,10 +117,6 @@ CONF_PROXY_PARAMS = "proxy_params"
 CONF_TRUSTED_NETWORKS = "trusted_networks"
 
 DOMAIN = "telegram_bot"
-
-PLATFORM_BROADCAST = "broadcast"
-PLATFORM_POLLING = "polling"
-PLATFORM_WEBHOOKS = "webhooks"
 
 SERVICE_SEND_MESSAGE = "send_message"
 SERVICE_SEND_PHOTO = "send_photo"

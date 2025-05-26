@@ -1,5 +1,9 @@
 """Constants for the Telegram Bot integration."""
 
+PLATFORM_BROADCAST = "broadcast"
+PLATFORM_POLLING = "polling"
+PLATFORM_WEBHOOKS = "webhooks"
+
 CONF_BOT_COUNT = "bot_count"
 
 ISSUE_DEPRECATED_YAML = "deprecated_yaml"
