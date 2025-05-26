@@ -816,6 +816,7 @@ class EntityRegistry(BaseRegistry):
         suggested_object_id: str,
         *,
         current_entity_id: str | None = None,
+        reserved_entity_ids: set[str] | None = None,
     ) -> str:
         """Generate an entity ID that does not conflict.
 
@@ -832,7 +833,7 @@ class EntityRegistry(BaseRegistry):
         while (
             not self._entity_id_available(test_string)
             and test_string != current_entity_id
-        ):
+        ) or (reserved_entity_ids and test_string in reserved_entity_ids):
             tries += 1
             len_suffix = len(str(tries)) + 1
             test_string = (

@@ -344,6 +344,7 @@ def websocket_get_automatic_entity_ids(
 
     entity_ids = msg["entity_ids"]
     automatic_entity_ids: dict[str, str | None] = {}
+    reserved_entity_ids: set[str] = set()
     for entity_id in entity_ids:
         if not (entry := registry.entities.get(entity_id)):
             automatic_entity_ids[entity_id] = None
@@ -360,11 +361,14 @@ def websocket_get_automatic_entity_ids(
             )
             automatic_entity_ids[entity_id] = None
             continue
-        automatic_entity_ids[entity_id] = registry.async_generate_entity_id(
+        suggested_entity_id = registry.async_generate_entity_id(
             entry.domain,
             suggested or f"{entry.platform}_{entry.unique_id}",
             current_entity_id=entity_id,
+            reserved_entity_ids=reserved_entity_ids,
         )
+        automatic_entity_ids[entity_id] = suggested_entity_id
+        reserved_entity_ids.add(suggested_entity_id)
 
     connection.send_message(
         websocket_api.result_message(msg["id"], automatic_entity_ids)

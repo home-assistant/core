@@ -1364,6 +1364,16 @@ async def test_get_automatic_entity_ids(
                 platform="test_domain",
                 suggested_object_id="not_unique",
             ),
+            "test_domain.also_not_unique_changed_1": RegistryEntryWithDefaults(
+                entity_id="test_domain.also_not_unique_changed_1",
+                unique_id="also_not_unique_1",
+                platform="test_domain",
+            ),
+            "test_domain.also_not_unique_changed_2": RegistryEntryWithDefaults(
+                entity_id="test_domain.also_not_unique_changed_2",
+                unique_id="also_not_unique_2",
+                platform="test_domain",
+            ),
             "test_domain.collision": RegistryEntryWithDefaults(
                 entity_id="test_domain.collision",
                 unique_id="uniq_collision",
@@ -1383,6 +1393,8 @@ async def test_get_automatic_entity_ids(
     entity8 = MockEntity(unique_id="not_unique_1", name="Entity Name 8")
     entity9 = MockEntity(unique_id="not_unique_2", name="Entity Name 9")
     entity10 = MockEntity(unique_id="not_unique_3", name="Not unique")
+    entity11 = MockEntity(unique_id="also_not_unique_1", name="Also not unique")
+    entity12 = MockEntity(unique_id="also_not_unique_2", name="Also not unique")
     await component.async_add_entities(
         [
             entity2,
@@ -1394,6 +1406,8 @@ async def test_get_automatic_entity_ids(
             entity8,
             entity9,
             entity10,
+            entity11,
+            entity12,
         ]
     )
 
@@ -1411,6 +1425,8 @@ async def test_get_automatic_entity_ids(
                 "test_domain.not_unique",
                 "test_domain.not_unique_2",
                 "test_domain.not_unique_3",
+                "test_domain.also_not_unique_changed_1",
+                "test_domain.also_not_unique_changed_2",
                 "test_domain.unknown",
             ],
         }
@@ -1437,6 +1453,9 @@ async def test_get_automatic_entity_ids(
         "test_domain.not_unique": "test_domain.not_unique",
         "test_domain.not_unique_2": "test_domain.not_unique_2",
         "test_domain.not_unique_3": "test_domain.not_unique_3",
+        # Don't reuse entity id
+        "test_domain.also_not_unique_changed_1": "test_domain.also_not_unique",
+        "test_domain.also_not_unique_changed_2": "test_domain.also_not_unique_2",
         # no test_domain.unknown in registry
         "test_domain.unknown": None,
     }
