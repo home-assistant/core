@@ -41,7 +41,19 @@ PACKAGE_REGEX = re.compile(
 PIP_REGEX = re.compile(r"^(--.+\s)?([-_\.\w\d]+.*(?:==|>=|<=|~=|!=|<|>|===)?.*$)")
 PIP_VERSION_RANGE_SEPARATOR = re.compile(r"^(==|>=|<=|~=|!=|<|>|===)?(.*)$")
 
-FORBIDDEN_PACKAGES = {"codecov", "pytest", "setuptools", "wheel"}
+FORBIDDEN_PACKAGES = {
+    # Only needed for tests
+    "codecov": "only be needed for tests",
+    # Does blocking I/O and should be replaced by pyserial-asyncio-fast
+    # See https://github.com/home-assistant/core/pull/116635
+    "pyserial-asyncio": "be replaced by pyserial-asyncio-fast",
+    # Only needed for tests
+    "pytest": "only be needed for tests",
+    # Only needed for build
+    "setuptools": "only be needed during build",
+    # Only needed for build
+    "wheel": "only be needed during build",
+}
 FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # In the form dict("domain": {"package": {"reason1", "reason2"}})
     # - domain is the integration domain
@@ -67,6 +79,11 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pyefergy > codecov
         # pyefergy > types-pytz
         "pyefergy": {"codecov", "types-pytz"}
+    },
+    "epson": {
+        # https://github.com/pszafer/epson_projector/pull/22
+        # epson-projector > pyserial-asyncio
+        "epson-projector": {"pyserial-asyncio"}
     },
     "fitbit": {
         # https://github.com/orcasgit/python-fitbit/pull/178
@@ -343,8 +360,6 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
         all_requirements.add(package)
 
         item = deptree.get(package)
-        if forbidden_package_exceptions:
-            print(f"Integration {integration.domain}: {item}")
 
         if item is None:
             # Only warn if direct dependencies could not be resolved
@@ -358,16 +373,17 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
         package_exceptions = forbidden_package_exceptions.get(package, set())
         for pkg, version in dependencies.items():
             if pkg.startswith("types-") or pkg in FORBIDDEN_PACKAGES:
+                reason = FORBIDDEN_PACKAGES.get(pkg, "only be needed during build")
                 needs_forbidden_package_exceptions = True
                 if pkg in package_exceptions:
                     integration.add_warning(
                         "requirements",
-                        f"Package {pkg} should not be a runtime dependency in {package}",
+                        f"Package {pkg} should {reason} in {package}",
                     )
                 else:
                     integration.add_error(
                         "requirements",
-                        f"Package {pkg} should not be a runtime dependency in {package}",
+                        f"Package {pkg} should {reason} in {package}",
                     )
             check_dependency_version_range(integration, package, pkg, version)
 
