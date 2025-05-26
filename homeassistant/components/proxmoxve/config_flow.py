@@ -54,36 +54,29 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> list[dict[str, Any]]:
-    """Validate the user input and fetch data."""
+def _validate_input_sync(data: dict[str, Any]) -> list[dict[str, Any]]:
+    """Validate the user input and fetch data (sync, for executor)."""
+    user_id = (
+        data[CONF_USERNAME]
+        if "@" in data[CONF_USERNAME]
+        else f"{data[CONF_USERNAME]}@{data[CONF_REALM]}"
+    )
 
-    def create_proxmox_client() -> ProxmoxAPI:
-        """Create a ProxmoxAPI client."""
-        user_id = (
-            data[CONF_USERNAME]
-            if "@" in data[CONF_USERNAME]
-            else f"{data[CONF_USERNAME]}@{data[CONF_REALM]}"
-        )
-
-        return ProxmoxAPI(
+    try:
+        client = ProxmoxAPI(
             data[CONF_HOST],
             port=data[CONF_PORT],
             user=user_id,
             password=data[CONF_PASSWORD],
             verify_ssl=data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
         )
-
-    try:
-        client = hass.async_add_executor_job(create_proxmox_client)
+        nodes = client.nodes.get()
     except AuthenticationError as err:
         raise ProxmoxAuthenticationError from err
     except SSLError as err:
         raise ProxmoxSSLError from err
     except ConnectTimeout as err:
         raise ProxmoxConnectTimeout from err
-
-    try:
-        nodes = hass.async_add_executor_job(client.nodes.get)
     except (ResourceException, requests.exceptions.ConnectionError) as err:
         raise ProxmoxNoNodesFound from err
 
@@ -92,8 +85,8 @@ def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> list[dict[str,
     nodes_data: list[dict[str, Any]] = []
     for node in nodes:
         try:
-            vms = hass.async_add_executor_job(client.nodes(node["node"]).qemu.get)
-            containers = hass.async_add_executor_job(client.nodes(node["node"]).lxc.get)
+            vms = client.nodes(node["node"]).qemu.get()
+            containers = client.nodes(node["node"]).lxc.get()
         except (ResourceException, requests.exceptions.ConnectionError) as err:
             raise ProxmoxNoNodesFound from err
 
@@ -107,6 +100,13 @@ def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> list[dict[str,
 
     _LOGGER.debug("Nodes with data: %s", nodes_data)
     return nodes_data
+
+
+async def _validate_input(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> list[dict[str, Any]]:
+    """Return a simple wrapper to validate the user input."""
+    return await hass.async_add_executor_job(_validate_input_sync, data)
 
 
 class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -123,7 +123,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                self._proxmox_setup = await _validate_input(self.hass, user_input)
+                self._proxmox_nodes = await _validate_input(self.hass, user_input)
             except ProxmoxConnectTimeout:
                 errors["base"] = "connect_timeout"
             except ProxmoxAuthenticationError:
