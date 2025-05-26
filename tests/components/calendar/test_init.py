@@ -604,3 +604,26 @@ async def test_list_events_service_same_dates(
             blocking=True,
             return_response=True,
         )
+
+
+async def test_calendar_color_attribute(
+    hass: HomeAssistant, test_entities: list[MockCalendarEntity]
+) -> None:
+    """Test that the color attribute is present and propagated if set."""
+    entity = test_entities[0]
+    # By default, no color
+    assert entity.color is None
+    # Add color and check state attributes
+    entity._color = "#123456"
+    entity.async_write_ha_state()
+    await hass.async_block_till_done()
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.attributes["color"] == "#123456"
+    # Remove color and check state attributes
+    entity._color = None
+    entity.async_write_ha_state()
+    await hass.async_block_till_done()
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert "color" not in state.attributes or state.attributes["color"] is None
