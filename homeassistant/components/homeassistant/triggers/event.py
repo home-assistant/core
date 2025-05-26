@@ -88,8 +88,6 @@ async def async_attach_trigger(
                 extra=vol.ALLOW_EXTRA,
                 required=True
             )
-         else:
-             # Use a simple items comparison if possible
         else:
             # Use a simple items comparison if possible
             event_data_items = event_data.items()
