@@ -33,7 +33,7 @@
         "name": "Solar rising",
         "state": {
           "on": "Rising",
-          "off": "Falling"
+          "off": "Setting"
         }
       }
     }
