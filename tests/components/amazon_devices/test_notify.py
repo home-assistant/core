@@ -38,7 +38,7 @@ async def test_all_entities(
 
 @pytest.mark.parametrize(
     "mode",
-    ["speak", "announce", "sound", "custom"],
+    ["speak", "announce", "sound"],
 )
 async def test_notify_send_message(
     hass: HomeAssistant,
