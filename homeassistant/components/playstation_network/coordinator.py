@@ -30,12 +30,18 @@ class PlaystationNetworkCoordinator(DataUpdateCoordinator[PlaystationNetworkData
     config_entry: PlaystationNetworkConfigEntry
     user: User
 
-    def __init__(self, hass: HomeAssistant, psn: PlaystationNetwork) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        psn: PlaystationNetwork,
+        config_entry: PlaystationNetworkConfigEntry,
+    ) -> None:
         """Initialize the Coordinator."""
         super().__init__(
             hass,
             name=DOMAIN,
             logger=_LOGGER,
+            config_entry=config_entry,
             update_interval=timedelta(seconds=30),
         )
 

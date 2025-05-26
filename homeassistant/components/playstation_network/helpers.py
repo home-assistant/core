@@ -20,7 +20,7 @@ LEGACY_PLATFORMS = {PlatformType.PS3, PlatformType.PS4}
 class SessionData:
     """Dataclass representing console session data."""
 
-    platform: str | None = None
+    platform: str = ""
     title_id: str | None = None
     title_name: str | None = None
     format: PlatformType | None = None
@@ -36,7 +36,7 @@ class PlaystationNetworkData:
     username: str = ""
     account_id: str = ""
     available: bool = False
-    active_sessions: list[SessionData] = field(default_factory=list)
+    active_sessions: dict[str, SessionData] = field(default_factory=dict)
     registered_platforms: set[str] = field(default_factory=set)
 
 
@@ -102,7 +102,7 @@ class PlaystationNetwork:
                 else:
                     session.media_image_url = game_title_info[0]["npTitleIconUrl"]
 
-            data.active_sessions.append(session)
+            data.active_sessions[session.platform] = session
 
         # check legacy platforms if owned
         if set(LEGACY_PLATFORMS).issubset(data.registered_platforms):
@@ -133,5 +133,5 @@ class PlaystationNetwork:
                         session.media_image_url = None
 
             if game_title_info["onlineStatus"] == "online":
-                data.active_sessions.append(session)
+                data.active_sessions[session.platform] = session
         return data
