@@ -103,6 +103,8 @@ class SonosMockEvent:
         self.timestamp = 1621000000.0
         self.service = service
         self.variables = variables
+        # In Soco events of the same type may or may not have this attribute present.
+        # Only create the attribute if it should be present.
         if uui_ds:
             self.zone_player_uui_ds_in_group = uui_ds
 
