@@ -276,11 +276,6 @@ class XiaomiPhilipsAbstractLight(XiaomiMiioEntity, LightEntity):
         self._state_attrs: dict[str, Any] = {}
 
     @property
-    def available(self) -> bool:
-        """Return true when state is known."""
-        return self._available
-
-    @property
     def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return self._state_attrs
@@ -302,9 +297,9 @@ class XiaomiPhilipsAbstractLight(XiaomiMiioEntity, LightEntity):
                 partial(func, *args, **kwargs)
             )
         except DeviceException as exc:
-            if self._available:
+            if self._attr_available:
                 _LOGGER.error(mask_error, exc)
-                self._available = False
+                self._attr_available = False
 
             return False
 
@@ -339,14 +334,14 @@ class XiaomiPhilipsAbstractLight(XiaomiMiioEntity, LightEntity):
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
-            if self._available:
-                self._available = False
+            if self._attr_available:
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
             return
 
         _LOGGER.debug("Got new state: %s", state)
-        self._available = True
+        self._attr_available = True
         self._state = state.is_on
         self._brightness = ceil((255 / 100.0) * state.brightness)
 
@@ -373,14 +368,14 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
-            if self._available:
-                self._available = False
+            if self._attr_available:
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
             return
 
         _LOGGER.debug("Got new state: %s", state)
-        self._available = True
+        self._attr_available = True
         self._state = state.is_on
         self._brightness = ceil((255 / 100.0) * state.brightness)
 
@@ -556,14 +551,14 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
-            if self._available:
-                self._available = False
+            if self._attr_available:
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
             return
 
         _LOGGER.debug("Got new state: %s", state)
-        self._available = True
+        self._attr_available = True
         self._state = state.is_on
         self._brightness = ceil((255 / 100.0) * state.brightness)
         self._color_temp = self.translate(
@@ -627,14 +622,14 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
-            if self._available:
-                self._available = False
+            if self._attr_available:
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
             return
 
         _LOGGER.debug("Got new state: %s", state)
-        self._available = True
+        self._attr_available = True
         self._state = state.is_on
         self._brightness = ceil((255 / 100.0) * state.brightness)
         self._color_temp = self.translate(
@@ -685,14 +680,14 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
-            if self._available:
-                self._available = False
+            if self._attr_available:
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
             return
 
         _LOGGER.debug("Got new state: %s", state)
-        self._available = True
+        self._attr_available = True
         self._state = state.is_on
         self._brightness = ceil((255 / 100.0) * state.brightness)
 
@@ -836,14 +831,14 @@ class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
-            if self._available:
-                self._available = False
+            if self._attr_available:
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
             return
 
         _LOGGER.debug("Got new state: %s", state)
-        self._available = True
+        self._attr_available = True
         self._state = state.ambient
         self._brightness = ceil((255 / 100.0) * state.ambient_brightness)
 
@@ -1007,14 +1002,14 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
-            if self._available:
-                self._available = False
+            if self._attr_available:
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
             return
 
         _LOGGER.debug("Got new state: %s", state)
-        self._available = True
+        self._attr_available = True
         self._state = state.is_on
         self._brightness = ceil((255 / 100.0) * state.brightness)
         self._color_temp = self.translate(
@@ -1051,19 +1046,14 @@ class XiaomiGatewayLight(LightEntity):
     def __init__(self, gateway_device, gateway_name, gateway_device_id):
         """Initialize the XiaomiGatewayLight."""
         self._gateway = gateway_device
-        self._name = f"{gateway_name} Light"
+        self._attr_name = f"{gateway_name} Light"
         self._gateway_device_id = gateway_device_id
-        self._unique_id = gateway_device_id
-        self._available = False
+        self._attr_unique_id = gateway_device_id
+        self._attr_available = False
         self._is_on = None
         self._brightness_pct = 100
         self._rgb = (255, 255, 255)
         self._hs = (0, 0)
-
-    @property
-    def unique_id(self):
-        """Return an unique ID."""
-        return self._unique_id
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -1071,16 +1061,6 @@ class XiaomiGatewayLight(LightEntity):
         return DeviceInfo(
             identifiers={(DOMAIN, self._gateway_device_id)},
         )
-
-    @property
-    def name(self):
-        """Return the name of this entity, if any."""
-        return self._name
-
-    @property
-    def available(self) -> bool:
-        """Return true when state is known."""
-        return self._available
 
     @property
     def is_on(self):
@@ -1125,14 +1105,14 @@ class XiaomiGatewayLight(LightEntity):
                 self._gateway.light.rgb_status
             )
         except GatewayException as ex:
-            if self._available:
-                self._available = False
+            if self._attr_available:
+                self._attr_available = False
                 _LOGGER.error(
                     "Got exception while fetching the gateway light state: %s", ex
                 )
             return
 
-        self._available = True
+        self._attr_available = True
         self._is_on = state_dict["is_on"]
 
         if self._is_on:
