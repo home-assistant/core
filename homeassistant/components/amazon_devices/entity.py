@@ -25,7 +25,7 @@ class AmazonEntity(CoordinatorEntity[AmazonDevicesCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._serial_num = serial_num
-        model_details = self.coordinator.api.get_model_details(self.device)
+        model_details = coordinator.api.get_model_details(self.device)
         model = model_details["model"] if model_details else None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial_num)},
