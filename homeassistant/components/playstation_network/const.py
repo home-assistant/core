@@ -11,4 +11,5 @@ SUPPORTED_PLATFORMS = {
     PlatformType.PS5,
     PlatformType.PS4,
     PlatformType.PS3,
+    PlatformType.PSPC,
 }

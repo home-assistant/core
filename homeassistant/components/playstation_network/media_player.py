@@ -27,6 +27,7 @@ PLATFORM_MAP = {
     PlatformType.PS5: "PlayStation 5",
     PlatformType.PS4: "PlayStation 4",
     PlatformType.PS3: "PlayStation 3",
+    PlatformType.PSPC: "PlayStation PC",
 }
 PARALLEL_UPDATES = 0
 
