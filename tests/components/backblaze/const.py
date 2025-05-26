@@ -22,7 +22,7 @@ TEST_BACKUP = AgentBackup(
     homeassistant_version="2024.12.0.dev0",
     name="Core 2024.12.0.dev0",
     protected=False,
-    size=34519040,
+    size=11,
 )
 
 BACKUP_METADATA = {
