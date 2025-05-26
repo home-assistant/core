@@ -14,7 +14,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import DATA_NSW_FUEL_STATION, StationPriceData
+from . import StationPriceData
 from .const import (
     ATTR_FUEL_TYPE,
     ATTR_STATION_ADDRESS,
@@ -22,6 +22,7 @@ from .const import (
     ATTR_STATION_NAME,
     CONF_FUEL_TYPES,
     CONF_STATION_ID,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ async def async_setup_entry(
     station_id = entry.data[CONF_STATION_ID]
     fuel_types = entry.data[CONF_FUEL_TYPES]
 
-    coordinator = hass.data[DATA_NSW_FUEL_STATION]
+    coordinator = hass.data[DOMAIN]["coordinator"]
 
     if coordinator.data is None:
         _LOGGER.error("Initial fuel station price data not available")

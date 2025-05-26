@@ -1,6 +1,6 @@
 """Constants for the NSW Fuel Station integration."""
 
-DATA_NSW_FUEL_STATION = "nsw_fuel_station"
+DOMAIN = "nsw_fuel_station"
 
 INPUT_FUEL_TYPES = "fuel_types"
 INPUT_STATION_ID = "station_id"

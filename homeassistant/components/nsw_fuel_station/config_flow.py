@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
-from nsw_fuel import FuelCheckClient, Station
+from nsw_fuel import Station
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -19,22 +18,20 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
 )
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from . import StationPriceData, fetch_station_price_data
+from . import StationPriceData
 from .const import (
     CONF_FUEL_TYPES,
     CONF_STATION_ID,
-    DATA_NSW_FUEL_STATION,
+    DOMAIN,
     INPUT_FUEL_TYPES,
     INPUT_SEARCH_TERM,
     INPUT_STATION_ID,
 )
+from .coordinator import NswFuelStationDataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
 
-
-class FuelCheckConfigFlow(ConfigFlow, domain=DATA_NSW_FUEL_STATION):
+class FuelCheckConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fuel Check integration."""
 
     VERSION = 1
@@ -46,18 +43,21 @@ class FuelCheckConfigFlow(ConfigFlow, domain=DATA_NSW_FUEL_STATION):
     selected_station: Station
     data: StationPriceData
 
+    async def _setup_coordinator(self):
+        coordinator = self.hass.data.get(DOMAIN, {}).get("coordinator")
+        if coordinator is None:
+            coordinator = NswFuelStationDataUpdateCoordinator(self.hass)
+            await coordinator.async_config_entry_first_refresh()
+        self.data = coordinator.data
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Display the initial UI form."""
         errors: dict[str, str] = {}
 
-        try:
-            self.data = await self.hass.async_add_executor_job(
-                fetch_station_price_data, self.hass, FuelCheckClient()
-            )
-        except UpdateFailed as e:
-            _LOGGER.error("Failed to fetch fuel price data: %s", e)
+        await self._setup_coordinator()
+        if self.data is None:
             return self.async_abort(reason="fetch_failed")
 
         if user_input is not None:
@@ -185,6 +185,11 @@ class FuelCheckConfigFlow(ConfigFlow, domain=DATA_NSW_FUEL_STATION):
             CONF_FUEL_TYPES: user_input[INPUT_FUEL_TYPES],
         }
         self._async_abort_entries_match({CONF_STATION_ID: station_id})
+
+        await self._setup_coordinator()
+        if self.data is None:
+            return self.async_abort(reason="fetch_failed")
+
         station = self.data.stations.get(station_id)
         name = "Unknown"
         if station is not None:
