@@ -5,20 +5,16 @@ from enum import StrEnum
 import logging
 
 from pydactyl import PterodactylClient
-from pydactyl.exceptions import (
-    BadRequestError,
-    ClientConfigError,
-    PterodactylApiError,
-    PydactylError,
-)
+from pydactyl.exceptions import BadRequestError, PterodactylApiError
+from requests.exceptions import ConnectionError, HTTPError
 
 from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class PterodactylConfigurationError(Exception):
-    """Raised when the configuration is invalid."""
+class PterodactylAuthorizationError(Exception):
+    """Raised when access to server is unauthorized."""
 
 
 class PterodactylConnectionError(Exception):
@@ -67,24 +63,31 @@ class PterodactylAPI:
         self.pterodactyl = None
         self.identifiers = []
 
+    def get_game_servers(self) -> list[str]:
+        """Get all game servers."""
+        paginated_response = self.pterodactyl.client.servers.list_servers()  # type: ignore[union-attr]
+
+        return paginated_response.collect()
+
     async def async_init(self):
         """Initialize the Pterodactyl API."""
         self.pterodactyl = PterodactylClient(self.host, self.api_key)
 
         try:
-            paginated_response = await self.hass.async_add_executor_job(
-                self.pterodactyl.client.servers.list_servers
-            )
-        except ClientConfigError as error:
-            raise PterodactylConfigurationError(error) from error
+            game_servers = await self.hass.async_add_executor_job(self.get_game_servers)
         except (
-            PydactylError,
             BadRequestError,
             PterodactylApiError,
+            ConnectionError,
+            StopIteration,
         ) as error:
             raise PterodactylConnectionError(error) from error
+        except HTTPError as error:
+            if error.response.status_code == 401:
+                raise PterodactylAuthorizationError(error) from error
+
+            raise PterodactylConnectionError(error) from error
         else:
-            game_servers = paginated_response.collect()
             for game_server in game_servers:
                 self.identifiers.append(game_server["attributes"]["identifier"])
 
@@ -108,11 +111,12 @@ class PterodactylAPI:
                 server, utilization = await self.hass.async_add_executor_job(
                     self.get_server_data, identifier
                 )
-            except (
-                PydactylError,
-                BadRequestError,
-                PterodactylApiError,
-            ) as error:
+            except (BadRequestError, PterodactylApiError, ConnectionError) as error:
+                raise PterodactylConnectionError(error) from error
+            except HTTPError as error:
+                if error.response.status_code == 401:
+                    raise PterodactylAuthorizationError(error) from error
+
                 raise PterodactylConnectionError(error) from error
             else:
                 data[identifier] = PterodactylData(
@@ -145,9 +149,10 @@ class PterodactylAPI:
                 identifier,
                 command,
             )
-        except (
-            PydactylError,
-            BadRequestError,
-            PterodactylApiError,
-        ) as error:
+        except (BadRequestError, PterodactylApiError, ConnectionError) as error:
+            raise PterodactylConnectionError(error) from error
+        except HTTPError as error:
+            if error.response.status_code == 401:
+                raise PterodactylAuthorizationError(error) from error
+
             raise PterodactylConnectionError(error) from error

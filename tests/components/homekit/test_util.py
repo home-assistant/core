@@ -128,6 +128,7 @@ def test_validate_entity_config() -> None:
             }
         },
         {"switch.test": {CONF_TYPE: "invalid_type"}},
+        {"fan.test": {CONF_TYPE: "invalid_type"}},
     ]
 
     for conf in configs:

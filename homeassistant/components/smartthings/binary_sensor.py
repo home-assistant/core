@@ -19,7 +19,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
-from .const import MAIN
+from .const import INVALID_SWITCH_CATEGORIES, MAIN
 from .entity import SmartThingsEntity
 from .util import deprecate_entity
 
@@ -59,10 +59,11 @@ CAPABILITY_TO_SENSORS: dict[
                 Category.DOOR: BinarySensorDeviceClass.DOOR,
                 Category.WINDOW: BinarySensorDeviceClass.WINDOW,
             },
-            exists_fn=lambda key: key in {"freezer", "cooler"},
+            exists_fn=lambda key: key in {"freezer", "cooler", "cvroom"},
             component_translation_key={
                 "freezer": "freezer_door",
                 "cooler": "cooler_door",
+                "cvroom": "cool_select_plus_door",
             },
             deprecated_fn=(
                 lambda status: "fridge_door"
@@ -75,6 +76,14 @@ CAPABILITY_TO_SENSORS: dict[
         Attribute.OPERATING_STATE: SmartThingsBinarySensorEntityDescription(
             key=Attribute.OPERATING_STATE,
             translation_key="dryer_wrinkle_prevent_active",
+            is_on_key="running",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        )
+    },
+    Capability.SAMSUNG_CE_STEAM_CLOSET_KEEP_FRESH_MODE: {
+        Attribute.OPERATING_STATE: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.OPERATING_STATE,
+            translation_key="keep_fresh_mode_active",
             is_on_key="running",
             entity_category=EntityCategory.DIAGNOSTIC,
         )
@@ -127,14 +136,7 @@ CAPABILITY_TO_SENSORS: dict[
             key=Attribute.SWITCH,
             device_class=BinarySensorDeviceClass.POWER,
             is_on_key="on",
-            category={
-                Category.CLOTHING_CARE_MACHINE,
-                Category.COOKTOP,
-                Category.DISHWASHER,
-                Category.DRYER,
-                Category.MICROWAVE,
-                Category.WASHER,
-            },
+            category=INVALID_SWITCH_CATEGORIES,
         )
     },
     Capability.TAMPER_ALERT: {

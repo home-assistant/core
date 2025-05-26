@@ -7,5 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/google",
   "iot_class": "cloud_polling",
   "loggers": ["googleapiclient"],
-  "requirements": ["gcal-sync==7.0.0", "oauth2client==4.1.3", "ical==9.0.3"]
+  "requirements": ["gcal-sync==7.0.1", "oauth2client==4.1.3", "ical==9.2.4"]
 }

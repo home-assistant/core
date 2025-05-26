@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
-    STATE_UNKNOWN,
     EntityCategory,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
@@ -40,12 +39,30 @@ AMBIENT_SENSORS = {
     "ambient.temperature",
     "ambient.temperature.status",
 }
-AMBIENT_THRESHOLD_STATUS_OPTIONS = [
+BATTERY_CHARGER_STATUS_OPTIONS = [
+    "charging",
+    "discharging",
+    "floating",
+    "resting",
+    "unknown",
+    "disabled",
+    "off",
+]
+FREQUENCY_STATUS_OPTIONS = [
+    "good",
+    "out-of-range",
+]
+THRESHOLD_STATUS_OPTIONS = [
     "good",
     "warning-low",
     "critical-low",
     "warning-high",
     "critical-high",
+]
+UPS_BEEPER_STATUS_OPTIONS = [
+    "enabled",
+    "disabled",
+    "muted",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,7 +81,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         key="ambient.humidity.status",
         translation_key="ambient_humidity_status",
         device_class=SensorDeviceClass.ENUM,
-        options=AMBIENT_THRESHOLD_STATUS_OPTIONS,
+        options=THRESHOLD_STATUS_OPTIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "ambient.temperature": SensorEntityDescription(
@@ -79,7 +96,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         key="ambient.temperature.status",
         translation_key="ambient_temperature_status",
         device_class=SensorDeviceClass.ENUM,
-        options=AMBIENT_THRESHOLD_STATUS_OPTIONS,
+        options=THRESHOLD_STATUS_OPTIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "battery.alarm.threshold": SensorEntityDescription(
@@ -126,6 +143,8 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     "battery.charger.status": SensorEntityDescription(
         key="battery.charger.status",
         translation_key="battery_charger_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=BATTERY_CHARGER_STATUS_OPTIONS,
     ),
     "battery.current": SensorEntityDescription(
         key="battery.current",
@@ -374,6 +393,8 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     "input.current.status": SensorEntityDescription(
         key="input.current.status",
         translation_key="input_current_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=THRESHOLD_STATUS_OPTIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -397,6 +418,8 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     "input.frequency.status": SensorEntityDescription(
         key="input.frequency.status",
         translation_key="input_frequency_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=FREQUENCY_STATUS_OPTIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -792,6 +815,8 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     "ups.beeper.status": SensorEntityDescription(
         key="ups.beeper.status",
         translation_key="ups_beeper_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=UPS_BEEPER_STATUS_OPTIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -1094,9 +1119,9 @@ class NUTSensor(NUTBaseEntity, SensorEntity):
         return status.get(self.entity_description.key)
 
 
-def _format_display_state(status: dict[str, str]) -> str:
+def _format_display_state(status: dict[str, str]) -> str | None:
     """Return UPS display state."""
     try:
         return ", ".join(STATE_TYPES[state] for state in status[KEY_STATUS].split())
     except KeyError:
-        return STATE_UNKNOWN
+        return None

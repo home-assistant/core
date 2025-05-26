@@ -231,7 +231,7 @@ class WebDavBackupAgent(BackupAgent):
             return {
                 metadata_content.backup_id: metadata_content
                 for file_name in files
-                if file_name.endswith(".json")
+                if file_name.endswith(".metadata.json")
                 if (metadata_content := await _download_metadata(file_name))
             }
 
