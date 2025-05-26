@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pyopenweathermap import (
-    AirPollutionReport,
     CurrentAirPollution,
     CurrentWeather,
     DailyWeatherForecast,
@@ -272,7 +271,7 @@ class WeatherUpdateCoordinator(OWMUpdateCoordinator):
 class AirPollutionUpdateCoordinator(OWMUpdateCoordinator):
     """Air Pollution data update coordinator."""
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update the data."""
         try:
             air_pollution_report = await self._owm_client.get_air_pollution(
@@ -280,12 +279,6 @@ class AirPollutionUpdateCoordinator(OWMUpdateCoordinator):
             )
         except RequestError as error:
             raise UpdateFailed(error) from error
-        return self._convert_air_pollution_response(air_pollution_report)
-
-    def _convert_air_pollution_response(self, air_pollution_report: AirPollutionReport):
-        """Format the air pollution response correctly."""
-        _LOGGER.debug("OWM air pollution response: %s", air_pollution_report)
-
         current_air_pollution = (
             self._get_current_air_pollution_data(air_pollution_report.current)
             if air_pollution_report.current is not None
@@ -298,7 +291,7 @@ class AirPollutionUpdateCoordinator(OWMUpdateCoordinator):
 
     def _get_current_air_pollution_data(
         self, current_air_pollution: CurrentAirPollution
-    ):
+    ) -> dict[str, Any]:
         return {
             ATTR_API_AIRPOLLUTION_AQI: current_air_pollution.aqi,
             ATTR_API_AIRPOLLUTION_CO: current_air_pollution.co,
