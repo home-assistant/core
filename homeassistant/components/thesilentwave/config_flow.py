@@ -19,8 +19,6 @@ _LOGGER = logging.getLogger(__name__)
 class TheSilentWaveConfigFlow(config_entries.ConfigFlow, domain="thesilentwave"):
     """Handle a config flow for TheSilentWave integration."""
 
-    VERSION = 1
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
