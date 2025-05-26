@@ -4508,23 +4508,19 @@ async def test_compile_statistics_hourly_daily_monthly_summary(
             duration += dur
         return total / duration
 
-    def _time_weighted_circular_mean(values: list[tuple[float, int]]):
+    def _weighted_circular_mean(
+        values: Iterable[tuple[float, float]],
+    ) -> tuple[float, float]:
         sin_sum = 0
         cos_sum = 0
-        for x, dur in values:
-            sin_sum += math.sin(x * DEG_TO_RAD) * dur
-            cos_sum += math.cos(x * DEG_TO_RAD) * dur
+        for x, weight in values:
+            sin_sum += math.sin(x * DEG_TO_RAD) * weight
+            cos_sum += math.cos(x * DEG_TO_RAD) * weight
 
-        return (RAD_TO_DEG * math.atan2(sin_sum, cos_sum)) % 360
-
-    def _circular_mean(values: list[float]) -> float:
-        sin_sum = 0
-        cos_sum = 0
-        for x in values:
-            sin_sum += math.sin(x * DEG_TO_RAD)
-            cos_sum += math.cos(x * DEG_TO_RAD)
-
-        return (RAD_TO_DEG * math.atan2(sin_sum, cos_sum)) % 360
+        return (
+            (RAD_TO_DEG * math.atan2(sin_sum, cos_sum)) % 360,
+            math.sqrt(sin_sum**2 + cos_sum**2),
+        )
 
     def _min(seq, last_state):
         if last_state is None:
@@ -4631,7 +4627,7 @@ async def test_compile_statistics_hourly_daily_monthly_summary(
         values = [(seq, durations[j]) for j, seq in enumerate(seq)]
         if (state := last_states["sensor.test5"]) is not None:
             values.append((state, 5))
-        expected_means["sensor.test5"].append(_time_weighted_circular_mean(values))
+        expected_means["sensor.test5"].append(_weighted_circular_mean(values))
         last_states["sensor.test5"] = seq[-1]
 
         start += timedelta(minutes=5)
@@ -4733,15 +4729,17 @@ async def test_compile_statistics_hourly_daily_monthly_summary(
     start = zero
     end = zero + timedelta(minutes=5)
     for i in range(24):
-        for entity_id in (
-            "sensor.test1",
-            "sensor.test2",
-            "sensor.test3",
-            "sensor.test4",
-            "sensor.test5",
+        for entity_id, mean_extractor in (
+            ("sensor.test1", lambda x: x),
+            ("sensor.test2", lambda x: x),
+            ("sensor.test3", lambda x: x),
+            ("sensor.test4", lambda x: x),
+            ("sensor.test5", lambda x: x[0]),
         ):
             expected_average = (
-                expected_means[entity_id][i] if entity_id in expected_means else None
+                mean_extractor(expected_means[entity_id][i])
+                if entity_id in expected_means
+                else None
             )
             expected_minimum = (
                 expected_minima[entity_id][i] if entity_id in expected_minima else None
@@ -4772,7 +4770,7 @@ async def test_compile_statistics_hourly_daily_monthly_summary(
     assert stats == expected_stats
 
     def verify_stats(
-        period: Literal["5minute", "day", "hour", "week", "month"],
+        period: Literal["hour", "day", "week", "month"],
         start: datetime,
         next_datetime: Callable[[datetime], datetime],
     ) -> None:
@@ -4791,7 +4789,7 @@ async def test_compile_statistics_hourly_daily_monthly_summary(
                 ("sensor.test2", mean),
                 ("sensor.test3", mean),
                 ("sensor.test4", mean),
-                ("sensor.test5", _circular_mean),
+                ("sensor.test5", lambda x: _weighted_circular_mean(x)[0]),
             ):
                 expected_average = (
                     mean_fn(expected_means[entity_id][i * 12 : (i + 1) * 12])

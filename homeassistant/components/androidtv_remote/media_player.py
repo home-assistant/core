@@ -21,7 +21,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AndroidTVRemoteConfigEntry
-from .const import CONF_APP_ICON, CONF_APP_NAME
+from .const import CONF_APP_ICON, CONF_APP_NAME, DOMAIN
 from .entity import AndroidTVRemoteBaseEntity
 
 PARALLEL_UPDATES = 0
@@ -233,5 +233,5 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
                 await asyncio.sleep(delay_secs)
         except ConnectionClosed as exc:
             raise HomeAssistantError(
-                "Connection to Android TV device is closed"
+                translation_domain=DOMAIN, translation_key="connection_closed"
             ) from exc

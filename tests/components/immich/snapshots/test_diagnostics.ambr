@@ -1,0 +1,66 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'data': dict({
+      'server_about': dict({
+        'build': None,
+        'build_image': None,
+        'build_image_url': None,
+        'build_url': None,
+        'exiftool': None,
+        'ffmpeg': None,
+        'imagemagick': None,
+        'libvips': None,
+        'licensed': False,
+        'nodejs': None,
+        'repository': None,
+        'repository_url': None,
+        'source_commit': None,
+        'source_ref': None,
+        'source_url': None,
+        'version': 'v1.132.3',
+        'version_url': 'some_url',
+      }),
+      'server_storage': dict({
+        'disk_available': '136.3 GiB',
+        'disk_available_raw': 146402975744,
+        'disk_size': '294.2 GiB',
+        'disk_size_raw': 315926315008,
+        'disk_usage_percentage': 48.56,
+        'disk_use': '142.9 GiB',
+        'disk_use_raw': 153400434688,
+      }),
+      'server_usage': dict({
+        'photos': 27038,
+        'usage': 119525451912,
+        'usage_photos': 54291170551,
+        'usage_videos': 65234281361,
+        'videos': 1836,
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'api_key': '**REDACTED**',
+        'host': '**REDACTED**',
+        'port': 80,
+        'ssl': False,
+        'verify_ssl': True,
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'immich',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Someone',
+      'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e',
+      'version': 1,
+    }),
+  })
+# ---

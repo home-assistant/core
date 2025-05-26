@@ -16,7 +16,7 @@ from freezegun import freeze_time
 import orjson
 import pytest
 from pytest_unordered import unordered
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -770,6 +770,62 @@ def test_add(hass: HomeAssistant) -> None:
     # Test handling of default return value
     assert render(hass, "{{ 'no_number' | add(10, 1) }}") == 1
     assert render(hass, "{{ 'no_number' | add(10, default=1) }}") == 1
+
+
+def test_apply(hass: HomeAssistant) -> None:
+    """Test apply."""
+    assert template.Template(
+        """
+        {%- macro add_foo(arg) -%}
+        {{arg}}foo
+        {%- endmacro -%}
+        {{ ["a", "b", "c"] | map('apply', add_foo) | list }}
+        """,
+        hass,
+    ).async_render() == ["afoo", "bfoo", "cfoo"]
+
+    assert template.Template(
+        """
+        {{ ['1', '2', '3', '4', '5'] | map('apply', int) | list }}
+        """,
+        hass,
+    ).async_render() == [1, 2, 3, 4, 5]
+
+
+def test_apply_macro_with_arguments(hass: HomeAssistant) -> None:
+    """Test apply macro with positional, named, and mixed arguments."""
+    # Test macro with positional arguments
+    assert template.Template(
+        """
+        {%- macro greet(name, greeting) -%}
+        {{ greeting }}, {{ name }}!
+        {%- endmacro %}
+        {{ ["Alice", "Bob"] | map('apply', greet, "Hello") | list }}
+        """,
+        hass,
+    ).async_render() == ["Hello, Alice!", "Hello, Bob!"]
+
+    # Test macro with named arguments
+    assert template.Template(
+        """
+        {%- macro greet(name, greeting="Hi") -%}
+        {{ greeting }}, {{ name }}!
+        {%- endmacro %}
+        {{ ["Alice", "Bob"] | map('apply', greet, greeting="Hello") | list }}
+        """,
+        hass,
+    ).async_render() == ["Hello, Alice!", "Hello, Bob!"]
+
+    # Test macro with mixed positional and named arguments
+    assert template.Template(
+        """
+        {%- macro greet(name, separator, greeting="Hi") -%}
+        {{ greeting }}{{separator}} {{ name }}!
+        {%- endmacro %}
+        {{ ["Alice", "Bob"] | map('apply', greet, "," , greeting="Hey") | list }}
+        """,
+        hass,
+    ).async_render() == ["Hey, Alice!", "Hey, Bob!"]
 
 
 def test_logarithm(hass: HomeAssistant) -> None:
@@ -1632,12 +1688,25 @@ def test_ord(hass: HomeAssistant) -> None:
     assert template.Template('{{ "d" | ord }}', hass).async_render() == 100
 
 
-def test_base64_encode(hass: HomeAssistant) -> None:
-    """Test the base64_encode filter."""
+def test_from_hex(hass: HomeAssistant) -> None:
+    """Test the fromhex filter."""
     assert (
-        template.Template('{{ "homeassistant" | base64_encode }}', hass).async_render()
-        == "aG9tZWFzc2lzdGFudA=="
+        template.Template("{{ '0F010003' | from_hex }}", hass).async_render()
+        == b"\x0f\x01\x00\x03"
     )
+
+
+@pytest.mark.parametrize(
+    ("value_template", "expected"),
+    [
+        ('{{ "homeassistant" | base64_encode }}', "aG9tZWFzc2lzdGFudA=="),
+        ("{{ int('0F010003', base=16) | pack('>I') | base64_encode }}", "DwEAAw=="),
+        ("{{ 'AA01000200150020' | from_hex | base64_encode }}", "qgEAAgAVACA="),
+    ],
+)
+def test_base64_encode(hass: HomeAssistant, value_template: str, expected: str) -> None:
+    """Test the base64_encode filter."""
+    assert template.Template(value_template, hass).async_render() == expected
 
 
 def test_base64_decode(hass: HomeAssistant) -> None:
@@ -3884,6 +3953,66 @@ async def test_device_id(
 
     info = render_to_info(hass, "{{ device_id('test') }}")
     assert_result_info(info, device_entry.id)
+    assert info.rate_limit is None
+
+
+async def test_device_name(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test device_name function."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+
+    # Test non existing entity id
+    info = render_to_info(hass, "{{ device_name('sensor.fake') }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test non existing device id
+    info = render_to_info(hass, "{{ device_name('1234567890') }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test wrong value type
+    info = render_to_info(hass, "{{ device_name(56) }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test device with single entity
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        name="A light",
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+    info = render_to_info(hass, f"{{{{ device_name('{device_entry.id}') }}}}")
+    assert_result_info(info, device_entry.name)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ device_name('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, device_entry.name)
+    assert info.rate_limit is None
+
+    # Test device after renaming
+    device_entry = device_registry.async_update_device(
+        device_entry.id,
+        name_by_user="My light",
+    )
+
+    info = render_to_info(hass, f"{{{{ device_name('{device_entry.id}') }}}}")
+    assert_result_info(info, device_entry.name_by_user)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ device_name('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, device_entry.name_by_user)
     assert info.rate_limit is None
 
 

@@ -20,7 +20,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "forbidden": "The server understood the request but refuses to authorize it.",
-      "invalid_ics_file": "[%key:component::local_calendar::config::error::invalid_ics_file%]"
+      "invalid_ics_file": "There was a problem reading the calendar information. See the error log for additional details."
     }
   },
   "exceptions": {
