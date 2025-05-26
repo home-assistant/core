@@ -23,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util.aiohttp import MockStreamReaderChunked
 
 from .const import MOCK_ALBUM_WITH_ASSETS, MOCK_ALBUM_WITHOUT_ASSETS
 
@@ -69,6 +70,7 @@ def mock_immich_assets() -> AsyncMock:
     """Mock the Immich server."""
     mock = AsyncMock(spec=ImmichAssests)
     mock.async_view_asset.return_value = b"xxxx"
+    mock.async_play_video_stream.return_value = MockStreamReaderChunked(b"xxxx")
     return mock
 
 

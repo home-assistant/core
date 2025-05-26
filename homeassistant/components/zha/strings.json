@@ -1137,6 +1137,9 @@
       },
       "external_temperature_sensor_value": {
         "name": "External temperature sensor value"
+      },
+      "update_frequency": {
+        "name": "Update frequency"
       }
     },
     "select": {
@@ -1367,6 +1370,9 @@
       },
       "alarm_sound_mode": {
         "name": "Alarm sound mode"
+      },
+      "external_switch_type": {
+        "name": "External switch type"
       }
     },
     "sensor": {

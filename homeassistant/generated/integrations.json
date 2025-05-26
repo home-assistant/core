@@ -207,6 +207,12 @@
     "amazon": {
       "name": "Amazon",
       "integrations": {
+        "amazon_devices": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Amazon Devices"
+        },
         "amazon_polly": {
           "integration_type": "hub",
           "config_flow": false,
@@ -4846,6 +4852,12 @@
       "name": "Pandora",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "paperless_ngx": {
+      "name": "Paperless-ngx",
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "pcs_lighting": {
