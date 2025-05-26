@@ -19,5 +19,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["aioamazondevices"],
   "quality_scale": "bronze",
-  "requirements": ["aioamazondevices==2.0.1"]
+  "requirements": ["aioamazondevices==2.1.1"]
 }
