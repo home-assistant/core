@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
 import logging
 from typing import Any
 
@@ -13,32 +12,41 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     BinarySensorDeviceClass,
 )
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    ConfigSubentryData,
+    ConfigSubentryFlow,
+    OptionsFlow,
+    SubentryFlowResult,
+)
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CONF_ARM_HOME_MODE,
     CONF_DEVICE_PARTITIONS,
+    CONF_OUTPUT_NUMBER,
     CONF_OUTPUTS,
+    CONF_PARTITION_NUMBER,
+    CONF_SWITCHABLE_OUTPUT_NUMBER,
     CONF_SWITCHABLE_OUTPUTS,
+    CONF_ZONE_NUMBER,
     CONF_ZONE_TYPE,
     CONF_ZONES,
     DEFAULT_CONF_ARM_HOME_MODE,
     DEFAULT_PORT,
     DOMAIN,
+    SUBENTRY_TYPE_OUTPUT,
+    SUBENTRY_TYPE_PARTITION,
+    SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
+    SUBENTRY_TYPE_ZONE,
     SatelConfigEntry,
 )
 
 _LOGGER = logging.getLogger(__package__)
-
-CONF_ACTION_NUMBER = "number"
-CONF_ACTION = "action"
-
-ACTION_EDIT = "edit"
-ACTION_ADD = "add"
-ACTION_DELETE = "delete"
 
 CONNECTION_SCHEMA = vol.Schema(
     {
@@ -54,26 +62,6 @@ CODE_SCHEMA = vol.Schema(
     }
 )
 
-OPTIONS_ACTION_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ACTION_NUMBER): vol.All(
-            int,
-            vol.Range(min=1),
-        ),
-        vol.Required(CONF_ACTION): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                translation_key="action_selector",
-                mode=selector.SelectSelectorMode.DROPDOWN,
-                options=[
-                    ACTION_ADD,
-                    ACTION_EDIT,
-                    ACTION_DELETE,
-                ],
-            )
-        ),
-    }
-)
-
 PARTITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
@@ -83,7 +71,7 @@ PARTITION_SCHEMA = vol.Schema(
     }
 )
 
-ZONE_SCHEMA = vol.Schema(
+ZONE_AND_OUTPUT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(
@@ -92,7 +80,7 @@ ZONE_SCHEMA = vol.Schema(
     }
 )
 
-SWITCHABLE_OUTPUT_SCHEM = vol.Schema({vol.Required(CONF_NAME): cv.string})
+SWITCHABLE_OUTPUT_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 
 
 class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -106,7 +94,20 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: SatelConfigEntry,
     ) -> SatelOptionsFlow:
         """Create the options flow."""
-        return SatelOptionsFlow(config_entry)
+        return SatelOptionsFlow()
+
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this integration."""
+        return {
+            SUBENTRY_TYPE_PARTITION: PartitionSubentryFlowHandler,
+            SUBENTRY_TYPE_ZONE: ZoneSubentryFlowHandler,
+            SUBENTRY_TYPE_OUTPUT: OutputSubentryFlowHandler,
+            SUBENTRY_TYPE_SWITCHABLE_OUTPUT: SwitchableOutputSubentryFlowHandler,
+        }
 
     async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
@@ -142,27 +143,80 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
             import_config[CONF_HOST], import_config.get(CONF_PORT, DEFAULT_PORT)
         )
 
-        _LOGGER.info(import_config)
-        _LOGGER.info(valid)
-
         if valid:
+            subentries: list[ConfigSubentryData] = []
+
+            for partition_number, partition_data in import_config.get(
+                CONF_DEVICE_PARTITIONS, {}
+            ).items():
+                subentries.append(
+                    {
+                        "subentry_type": SUBENTRY_TYPE_PARTITION,
+                        "title": partition_data[CONF_NAME],
+                        "unique_id": f"{SUBENTRY_TYPE_PARTITION}_{partition_number}",
+                        "data": {
+                            CONF_NAME: partition_data[CONF_NAME],
+                            CONF_ARM_HOME_MODE: partition_data.get(
+                                CONF_ARM_HOME_MODE, DEFAULT_CONF_ARM_HOME_MODE
+                            ),
+                            CONF_PARTITION_NUMBER: partition_number,
+                        },
+                    }
+                )
+
+            for zone_number, zone_data in import_config.get(CONF_ZONES, {}).items():
+                subentries.append(
+                    {
+                        "subentry_type": SUBENTRY_TYPE_ZONE,
+                        "title": zone_data[CONF_NAME],
+                        "unique_id": f"{SUBENTRY_TYPE_ZONE}_{zone_number}",
+                        "data": {
+                            CONF_NAME: zone_data[CONF_NAME],
+                            CONF_ZONE_NUMBER: zone_number,
+                            CONF_ZONE_TYPE: zone_data.get(CONF_ZONE_TYPE, "motion"),
+                        },
+                    }
+                )
+
+            for output_number, output_data in import_config.get(
+                CONF_OUTPUTS, {}
+            ).items():
+                subentries.append(
+                    {
+                        "subentry_type": SUBENTRY_TYPE_OUTPUT,
+                        "title": output_data[CONF_NAME],
+                        "unique_id": f"{SUBENTRY_TYPE_OUTPUT}_{output_number}",
+                        "data": {
+                            CONF_NAME: output_data[CONF_NAME],
+                            CONF_OUTPUT_NUMBER: output_number,
+                            CONF_ZONE_TYPE: output_data.get(CONF_ZONE_TYPE, "motion"),
+                        },
+                    }
+                )
+
+            for switchable_output_number, switchable_output_data in import_config.get(
+                CONF_SWITCHABLE_OUTPUTS, {}
+            ).items():
+                subentries.append(
+                    {
+                        "subentry_type": SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
+                        "title": switchable_output_data[CONF_NAME],
+                        "unique_id": f"{SUBENTRY_TYPE_SWITCHABLE_OUTPUT}_{switchable_output_number}",
+                        "data": {
+                            CONF_NAME: switchable_output_data[CONF_NAME],
+                            CONF_SWITCHABLE_OUTPUT_NUMBER: switchable_output_number,
+                        },
+                    }
+                )
+
             return self.async_create_entry(
                 title=import_config[CONF_HOST],
                 data={
                     CONF_HOST: import_config[CONF_HOST],
                     CONF_PORT: import_config.get(CONF_PORT, DEFAULT_PORT),
                 },
-                options={
-                    CONF_CODE: import_config.get(CONF_CODE),
-                    CONF_DEVICE_PARTITIONS: import_config.get(
-                        CONF_DEVICE_PARTITIONS, {}
-                    ),
-                    CONF_ZONES: import_config.get(CONF_ZONES, {}),
-                    CONF_OUTPUTS: import_config.get(CONF_OUTPUTS, {}),
-                    CONF_SWITCHABLE_OUTPUTS: import_config.get(
-                        CONF_SWITCHABLE_OUTPUTS, {}
-                    ),
-                },
+                options={CONF_CODE: import_config.get(CONF_CODE)},
+                subentries=subentries,
             )
 
         return self.async_abort(reason="Failed to connect")
@@ -182,256 +236,197 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
 class SatelOptionsFlow(OptionsFlow):
     """Handle Satel options flow."""
 
-    editing_entry: str
-
-    def __init__(self, config_entry: SatelConfigEntry) -> None:
-        """Initialize Satel options flow."""
-        self._initialize_options(config_entry)
-
-        self.partition_options = self.options[CONF_DEVICE_PARTITIONS]
-        self.zone_options = self.options[CONF_ZONES]
-        self.output_options = self.options[CONF_OUTPUTS]
-        self.switchable_output_options = self.options[CONF_SWITCHABLE_OUTPUTS]
-
-    def _initialize_options(self, config_entry: SatelConfigEntry):
-        """Initialize default options."""
-        self.options = deepcopy(dict(config_entry.options))
-
-        if CONF_DEVICE_PARTITIONS not in self.options:
-            self.options[CONF_DEVICE_PARTITIONS] = {}
-
-        if CONF_ZONES not in self.options:
-            self.options[CONF_ZONES] = {}
-
-        if CONF_OUTPUTS not in self.options:
-            self.options[CONF_OUTPUTS] = {}
-
-        if CONF_SWITCHABLE_OUTPUTS not in self.options:
-            self.options[CONF_SWITCHABLE_OUTPUTS] = {}
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Init step."""
-        return self.async_show_menu(
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
             step_id="init",
-            menu_options=[
-                "general",
-                "partitions",
-                "zones",
-                "outputs",
-                "switchable_outputs",
-            ],
-        )
-
-    async def async_step_general(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """General step."""
-        if user_input is not None:
-            self.options[CONF_CODE] = user_input.get(CONF_CODE)
-            return self.async_create_entry(data=self.options)
-
-        return self.async_show_form(
-            step_id="general",
-            data_schema=self.add_suggested_values_to_schema(CODE_SCHEMA, self.options),
-        )
-
-    async def async_step_partitions(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Partition configuration step."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            selected_partition = str(user_input[CONF_ACTION_NUMBER])
-            selected_action = user_input[CONF_ACTION]
-
-            if (
-                selected_action in (ACTION_EDIT, ACTION_DELETE)
-                and selected_partition not in self.partition_options
-            ):
-                errors["base"] = "unknown_partition"
-            elif (
-                selected_action == ACTION_ADD
-                and selected_partition in self.partition_options
-            ):
-                errors["base"] = "partition_exists"
-            elif selected_action == ACTION_DELETE:
-                self.partition_options.pop(selected_partition)
-                return self.async_create_entry(data=self.options)
-            else:
-                self.editing_entry = selected_partition
-                return await self.async_step_partition_details()
-
-        return self.async_show_form(
-            step_id="partitions",
-            data_schema=OPTIONS_ACTION_SCHEMA,
-            errors=errors,
-        )
-
-    async def async_step_partition_details(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Partition details step."""
-        if user_input is not None:
-            self.partition_options[self.editing_entry] = user_input
-            return self.async_create_entry(data=self.options)
-
-        existing_partition_config = self.partition_options.get(self.editing_entry)
-
-        return self.async_show_form(
-            step_id="partition_details",
             data_schema=self.add_suggested_values_to_schema(
-                PARTITION_SCHEMA, existing_partition_config
+                CODE_SCHEMA, self.config_entry.options
             ),
-            description_placeholders={"partition_number": self.editing_entry},
         )
 
-    async def async_step_zones(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Zone configuration step."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            selected_zone = str(user_input[CONF_ACTION_NUMBER])
-            selected_action = user_input[CONF_ACTION]
 
-            if (
-                selected_action in [ACTION_DELETE, ACTION_EDIT]
-                and selected_zone not in self.zone_options
-            ):
-                errors["base"] = "unknown_zone"
-            elif selected_action == ACTION_ADD and selected_zone in self.zone_options:
-                errors["base"] = "zone_exists"
-            elif selected_action == ACTION_DELETE:
-                self.zone_options.pop(selected_zone)
-                return self.async_create_entry(data=self.options)
-            else:
-                self.editing_entry = selected_zone
-                return await self.async_step_zone_details()
+class PartitionSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for adding and modifying a partition."""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """User flow to add new partition."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=user_input[CONF_NAME],
+                data=user_input,
+                unique_id=f"{SUBENTRY_TYPE_PARTITION}_{user_input[CONF_PARTITION_NUMBER]}",
+            )
 
         return self.async_show_form(
-            step_id="zones",
-            data_schema=OPTIONS_ACTION_SCHEMA,
-            errors=errors,
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_PARTITION_NUMBER): cv.positive_int,
+                }
+            ).extend(PARTITION_SCHEMA.schema),
         )
 
-    async def async_step_zone_details(
+    async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Zone details step."""
-        if user_input is not None:
-            self.zone_options[self.editing_entry] = user_input
-            return self.async_create_entry(data=self.options)
+    ) -> SubentryFlowResult:
+        """Reconfigure existing partition."""
+        subconfig_entry = self._get_reconfigure_subentry()
 
-        existing_zone_config = self.zone_options.get(self.editing_entry)
+        if user_input is not None:
+            return self.async_update_and_abort(
+                self._get_entry(),
+                subconfig_entry,
+                title=user_input[CONF_NAME],
+                data_updates=user_input,
+            )
 
         return self.async_show_form(
-            step_id="zone_details",
+            step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                ZONE_SCHEMA, existing_zone_config
+                PARTITION_SCHEMA,
+                subconfig_entry.data,
             ),
-            description_placeholders={"zone_number": self.editing_entry},
         )
 
-    async def async_step_outputs(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Output configuration step."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            selected_output = str(user_input[CONF_ACTION_NUMBER])
-            selected_action = user_input[CONF_ACTION]
 
-            if (
-                selected_action in [ACTION_DELETE, ACTION_EDIT]
-                and selected_output not in self.output_options
-            ):
-                errors["base"] = "unknown_output"
-            elif (
-                selected_action == ACTION_ADD and selected_output in self.output_options
-            ):
-                errors["base"] = "output_exists"
-            elif selected_action == ACTION_DELETE:
-                self.output_options.pop(selected_output)
-                return self.async_create_entry(data=self.options)
-            else:
-                self.editing_entry = selected_output
-                return await self.async_step_output_details()
+class ZoneSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for adding and modifying a zone."""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """User flow to add new zone."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=user_input[CONF_NAME],
+                data=user_input,
+                unique_id=f"{SUBENTRY_TYPE_ZONE}_{user_input[CONF_ZONE_NUMBER]}",
+            )
 
         return self.async_show_form(
-            step_id="outputs",
-            data_schema=OPTIONS_ACTION_SCHEMA,
-            errors=errors,
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_ZONE_NUMBER): cv.positive_int,
+                }
+            ).extend(ZONE_AND_OUTPUT_SCHEMA.schema),
         )
 
-    async def async_step_output_details(
+    async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Output details step."""
-        if user_input is not None:
-            self.output_options[self.editing_entry] = user_input
-            return self.async_create_entry(data=self.options)
+    ) -> SubentryFlowResult:
+        """Reconfigure existing zone."""
+        subconfig_entry = self._get_reconfigure_subentry()
 
-        existing_output_config = self.output_options.get(self.editing_entry)
+        if user_input is not None:
+            return self.async_update_and_abort(
+                self._get_entry(),
+                subconfig_entry,
+                title=user_input[CONF_NAME],
+                data_updates=user_input,
+            )
 
         return self.async_show_form(
-            step_id="output_details",
+            step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                ZONE_SCHEMA, existing_output_config
+                ZONE_AND_OUTPUT_SCHEMA, subconfig_entry.data
             ),
-            description_placeholders={"output_number": self.editing_entry},
         )
 
-    async def async_step_switchable_outputs(
+
+class OutputSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for adding and modifying a output."""
+
+    async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Switchable output configuration step."""
-        errors: dict[str, str] = {}
+    ) -> SubentryFlowResult:
+        """User flow to add new output."""
         if user_input is not None:
-            selected_switchable_output = str(user_input[CONF_ACTION_NUMBER])
-            selected_action = user_input[CONF_ACTION]
-
-            if (
-                selected_action in [ACTION_DELETE, ACTION_EDIT]
-                and selected_switchable_output not in self.switchable_output_options
-            ):
-                errors["base"] = "unknown_switchable_output"
-            elif (
-                selected_action == ACTION_ADD
-                and selected_switchable_output in self.switchable_output_options
-            ):
-                errors["base"] = "switchable_output_exists"
-            elif selected_action == ACTION_DELETE:
-                self.switchable_output_options.pop(selected_switchable_output)
-                return self.async_create_entry(data=self.options)
-
-            else:
-                self.editing_entry = selected_switchable_output
-                return await self.async_step_switchable_output_details()
+            return self.async_create_entry(
+                title=user_input[CONF_NAME],
+                data=user_input,
+                unique_id=f"{SUBENTRY_TYPE_OUTPUT}_{user_input[CONF_OUTPUT_NUMBER]}",
+            )
 
         return self.async_show_form(
-            step_id="switchable_outputs",
-            data_schema=OPTIONS_ACTION_SCHEMA,
-            errors=errors,
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_OUTPUT_NUMBER): cv.positive_int,
+                }
+            ).extend(ZONE_AND_OUTPUT_SCHEMA.schema),
         )
 
-    async def async_step_switchable_output_details(
+    async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Switchable output details step."""
-        if user_input is not None:
-            self.switchable_output_options[self.editing_entry] = user_input
-            return self.async_create_entry(data=self.options)
+    ) -> SubentryFlowResult:
+        """Reconfigure existing output."""
+        subconfig_entry = self._get_reconfigure_subentry()
 
-        existing_switchable_output_config = self.switchable_output_options.get(
-            self.editing_entry
-        )
+        if user_input is not None:
+            return self.async_update_and_abort(
+                self._get_entry(),
+                subconfig_entry,
+                title=user_input[CONF_NAME],
+                data_updates=user_input,
+            )
 
         return self.async_show_form(
-            step_id="switchable_output_details",
+            step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                SWITCHABLE_OUTPUT_SCHEM, existing_switchable_output_config
+                ZONE_AND_OUTPUT_SCHEMA, subconfig_entry.data
             ),
-            description_placeholders={"switchable_output_number": self.editing_entry},
+        )
+
+
+class SwitchableOutputSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for adding and modifying a switchable output."""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """User flow to add new switchable output."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=user_input[CONF_NAME],
+                data=user_input,
+                unique_id=f"{SUBENTRY_TYPE_SWITCHABLE_OUTPUT}_{user_input[CONF_SWITCHABLE_OUTPUT_NUMBER]}",
+            )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_SWITCHABLE_OUTPUT_NUMBER): cv.positive_int,
+                }
+            ).extend(SWITCHABLE_OUTPUT_SCHEMA.schema),
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Reconfigure existing switchable output."""
+        subconfig_entry = self._get_reconfigure_subentry()
+
+        if user_input is not None:
+            return self.async_update_and_abort(
+                self._get_entry(),
+                subconfig_entry,
+                title=user_input[CONF_NAME],
+                data_updates=user_input,
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                SWITCHABLE_OUTPUT_SCHEMA, subconfig_entry.data
+            ),
         )

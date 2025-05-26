@@ -11,7 +11,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_SWITCHABLE_OUTPUTS, SIGNAL_OUTPUTS_UPDATED, SatelConfigEntry
+from .const import (
+    CONF_SWITCHABLE_OUTPUT_NUMBER,
+    SIGNAL_OUTPUTS_UPDATED,
+    SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
+    SatelConfigEntry,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,20 +28,28 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Satel Integra switch devices."""
 
-    configured_zones = config_entry.options.get(CONF_SWITCHABLE_OUTPUTS, {})
     controller = config_entry.runtime_data.controller
 
-    devices = []
+    switchable_output_subentries = filter(
+        lambda entry: entry[1].subentry_type == SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
+        config_entry.subentries.items(),
+    )
 
-    for zone_num, device_config_data in configured_zones.items():
-        zone_name = device_config_data[CONF_NAME]
+    for subentry_id, subentry in switchable_output_subentries:
+        switchable_output_num = subentry.data[CONF_SWITCHABLE_OUTPUT_NUMBER]
+        switchable_output_name = subentry.data[CONF_NAME]
 
-        device = SatelIntegraSwitch(
-            controller, int(zone_num), zone_name, config_entry.data.get(CONF_CODE)
+        async_add_entities(
+            [
+                SatelIntegraSwitch(
+                    controller,
+                    switchable_output_num,
+                    switchable_output_name,
+                    config_entry.options.get(CONF_CODE),
+                ),
+            ],
+            config_subentry_id=subentry_id,
         )
-        devices.append(device)
-
-    async_add_entities(devices)
 
 
 class SatelIntegraSwitch(SwitchEntity):

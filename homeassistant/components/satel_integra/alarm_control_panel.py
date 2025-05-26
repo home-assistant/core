@@ -21,8 +21,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_ARM_HOME_MODE,
-    CONF_DEVICE_PARTITIONS,
+    CONF_PARTITION_NUMBER,
     SIGNAL_PANEL_MESSAGE,
+    SUBENTRY_TYPE_PARTITION,
     SatelConfigEntry,
 )
 
@@ -36,20 +37,26 @@ async def async_setup_entry(
 ) -> None:
     """Set up for Satel Integra alarm panels."""
 
-    configured_partitions = config_entry.options.get(CONF_DEVICE_PARTITIONS, {})
     controller = config_entry.runtime_data.controller
 
-    devices = []
+    partition_subentries = filter(
+        lambda entry: entry[1].subentry_type == SUBENTRY_TYPE_PARTITION,
+        config_entry.subentries.items(),
+    )
 
-    for partition_num, device_config_data in configured_partitions.items():
-        zone_name = device_config_data[CONF_NAME]
-        arm_home_mode = device_config_data.get(CONF_ARM_HOME_MODE)
-        device = SatelIntegraAlarmPanel(
-            controller, zone_name, arm_home_mode, int(partition_num)
+    for subentry_id, subentry in partition_subentries:
+        partition_num = subentry.data[CONF_PARTITION_NUMBER]
+        zone_name = subentry.data[CONF_NAME]
+        arm_home_mode = subentry.data[CONF_ARM_HOME_MODE]
+
+        async_add_entities(
+            [
+                SatelIntegraAlarmPanel(
+                    controller, zone_name, arm_home_mode, partition_num
+                )
+            ],
+            config_subentry_id=subentry_id,
         )
-        devices.append(device)
-
-    async_add_entities(devices)
 
 
 class SatelIntegraAlarmPanel(AlarmControlPanelEntity):

@@ -12,11 +12,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    CONF_OUTPUTS,
+    CONF_OUTPUT_NUMBER,
+    CONF_ZONE_NUMBER,
     CONF_ZONE_TYPE,
-    CONF_ZONES,
     SIGNAL_OUTPUTS_UPDATED,
     SIGNAL_ZONES_UPDATED,
+    SUBENTRY_TYPE_OUTPUT,
+    SUBENTRY_TYPE_ZONE,
     SatelConfigEntry,
 )
 
@@ -28,40 +30,55 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Satel Integra binary sensor devices."""
 
-    configured_zones = config_entry.options.get(CONF_ZONES, {})
     controller = config_entry.runtime_data.controller
 
-    devices = []
+    zone_subentries = filter(
+        lambda entry: entry[1].subentry_type == SUBENTRY_TYPE_ZONE,
+        config_entry.subentries.items(),
+    )
 
-    for zone_num, device_config_data in configured_zones.items():
-        zone_type = device_config_data[CONF_ZONE_TYPE]
-        zone_name = device_config_data[CONF_NAME]
-        device = SatelIntegraBinarySensor(
-            controller,
-            int(zone_num),
-            zone_name,
-            zone_type,
-            CONF_ZONES,
-            SIGNAL_ZONES_UPDATED,
+    for subentry_id, subentry in zone_subentries:
+        zone_num = subentry.data[CONF_ZONE_NUMBER]
+        zone_type = subentry.data[CONF_ZONE_TYPE]
+        zone_name = subentry.data[CONF_NAME]
+
+        async_add_entities(
+            [
+                SatelIntegraBinarySensor(
+                    controller,
+                    zone_num,
+                    zone_name,
+                    zone_type,
+                    SUBENTRY_TYPE_ZONE,
+                    SIGNAL_ZONES_UPDATED,
+                )
+            ],
+            config_subentry_id=subentry_id,
         )
-        devices.append(device)
 
-    configured_outputs = config_entry.options.get(CONF_OUTPUTS, {})
+    output_subentries = filter(
+        lambda entry: entry[1].subentry_type == SUBENTRY_TYPE_OUTPUT,
+        config_entry.subentries.items(),
+    )
 
-    for zone_num, device_config_data in configured_outputs.items():
-        zone_type = device_config_data[CONF_ZONE_TYPE]
-        zone_name = device_config_data[CONF_NAME]
-        device = SatelIntegraBinarySensor(
-            controller,
-            int(zone_num),
-            zone_name,
-            zone_type,
-            CONF_OUTPUTS,
-            SIGNAL_OUTPUTS_UPDATED,
+    for subentry_id, subentry in output_subentries:
+        output_num = subentry.data[CONF_OUTPUT_NUMBER]
+        ouput_type = subentry.data[CONF_ZONE_TYPE]
+        output_name = subentry.data[CONF_NAME]
+
+        async_add_entities(
+            [
+                SatelIntegraBinarySensor(
+                    controller,
+                    output_num,
+                    output_name,
+                    ouput_type,
+                    SUBENTRY_TYPE_OUTPUT,
+                    SIGNAL_OUTPUTS_UPDATED,
+                )
+            ],
+            config_subentry_id=subentry_id,
         )
-        devices.append(device)
-
-    async_add_entities(devices)
 
 
 class SatelIntegraBinarySensor(BinarySensorEntity):
