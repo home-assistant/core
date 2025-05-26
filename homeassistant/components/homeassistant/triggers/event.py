@@ -76,22 +76,20 @@ async def async_attach_trigger(
             template.render_complex(config[CONF_EVENT_DATA], variables, limited=True)
         )
 
-        def build_schema(data: dict[str, Any]) -> vol.Schema:
-            schema = {}
-            for key, value in data.items():
-                if isinstance(value, dict):
-                    schema[vol.Required(key)] = build_schema(value)
-                else:
-                    schema[vol.Required(key)] = value
-            return vol.Schema(schema, extra=vol.ALLOW_EXTRA)
-
-        # For performance reasons, we want to avoid using a voluptuous schema here unless required
-        # Thus, if possible, we try to use a simple items comparison
-        # For that, we explicitly do not check for list like the context data below since lists are
-        # a special case only used for context data. (see test test_event_data_with_list)
-        # Otherwise, we recursively build the schema (see test test_event_data_with_list_nested)
+        # For performance reasons, we want to avoid using a voluptuous schema here
+        # unless required. Thus, if possible, we try to use a simple items comparison
+        # For that, we explicitly do not check for list like the context data below
+        # since lists are a special case only used for context data, see test
+        # test_event_data_with_list. Otherwise, we build a volutupus schema, see test
+        # test_event_data_with_list_nested
         if any(isinstance(value, dict) for value in event_data.values()):
-            event_data_schema = build_schema(event_data)
+            event_data_schema = vol.Schema(
+                event_data,
+                extra=vol.ALLOW_EXTRA,
+                required=True
+            )
+         else:
+             # Use a simple items comparison if possible
         else:
             # Use a simple items comparison if possible
             event_data_items = event_data.items()
