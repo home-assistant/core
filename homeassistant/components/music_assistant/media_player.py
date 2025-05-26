@@ -292,6 +292,10 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             self._attr_state = MediaPlayerState(player.state.value)
         else:
             self._attr_state = MediaPlayerState(STATE_OFF)
+        self._attr_source = player.active_source
+        self._attr_source_list = [
+            source.name for source in player.source_list if not source.passive
+        ]
 
         group_members: list[str] = []
         if player.group_childs:
@@ -458,6 +462,11 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
         await self.mass.players.player_command_ungroup(self.player_id)
+
+    @catch_musicassistant_error
+    async def async_select_source(self, source: str) -> None:
+        """Select input source."""
+        await self.mass.players.player_command_select_source(self.player_id, source)
 
     @catch_musicassistant_error
     async def _async_handle_play_media(
@@ -735,4 +744,6 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         if self.player.power_control != PLAYER_CONTROL_NONE:
             supported_features |= MediaPlayerEntityFeature.TURN_ON
             supported_features |= MediaPlayerEntityFeature.TURN_OFF
+        if PlayerFeature.SELECT_SOURCE in self.player.supported_features:
+            supported_features |= MediaPlayerEntityFeature.SELECT_SOURCE
         self._attr_supported_features = supported_features
