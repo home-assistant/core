@@ -2572,6 +2572,11 @@ def struct_unpack(value: bytes, format_string: str, offset: int = 0) -> Any | No
         return None
 
 
+def from_hex(value: str) -> bytes:
+    """Perform hex string decode."""
+    return bytes.fromhex(value)
+
+
 def base64_encode(value: str) -> str:
     """Perform base64 encode."""
     return base64.b64encode(value.encode("utf-8")).decode("utf-8")
@@ -3131,6 +3136,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["flatten"] = flatten
         self.filters["float"] = forgiving_float_filter
         self.filters["from_json"] = from_json
+        self.filters["from_hex"] = from_hex
         self.filters["iif"] = iif
         self.filters["int"] = forgiving_int_filter
         self.filters["intersect"] = intersect
