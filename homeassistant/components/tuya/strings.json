@@ -668,6 +668,18 @@
           "level_5": "Level 5",
           "level_6": "Level 6"
         }
+      },
+      "uv_runtime": {
+        "name": "UV runtime"
+      },
+      "pump_time": {
+        "name": "Water pump duration"
+      },
+      "filter_duration": {
+        "name": "Filter duration"
+      },
+      "water_time": {
+        "name": "Water usage duration"
       }
     },
     "switch": {

@@ -199,7 +199,8 @@ class DPCode(StrEnum):
     FEED_REPORT = "feed_report"
     FEED_STATE = "feed_state"
     FILTER = "filter"
-    FILTER_LIFE = "filter"
+    FILTER_DURATION = "filter_life"  # Filter duration (hours)
+    FILTER_LIFE = "filter"  # Filter life (percentage)
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
     FLOODLIGHT_LIGHTNESS = "floodlight_lightness"
     FLOODLIGHT_SWITCH = "floodlight_switch"
@@ -267,6 +268,7 @@ class DPCode(StrEnum):
     PRESSURE_VALUE = "pressure_value"
     PUMP = "pump"
     PUMP_RESET = "pump_reset"  # Water pump reset
+    PUMP_TIME = "pump_time"  # Water pump duration
     OXYGEN = "oxygen"  # Oxygen bar
     RECORD_MODE = "record_mode"
     RECORD_SWITCH = "record_switch"  # Recording switch
@@ -374,6 +376,7 @@ class DPCode(StrEnum):
     UPPER_TEMP = "upper_temp"
     UPPER_TEMP_F = "upper_temp_f"
     UV = "uv"  # UV sterilization
+    UV_RUNTIME = "uv_runtime"  # UV runtime
     VA_BATTERY = "va_battery"
     VA_HUMIDITY = "va_humidity"
     VA_TEMPERATURE = "va_temperature"
@@ -387,6 +390,7 @@ class DPCode(StrEnum):
     WATER = "water"
     WATER_RESET = "water_reset"  # Resetting of water usage days
     WATER_SET = "water_set"  # Water level
+    WATER_TIME = "water_time"  # Water usage duration
     WATERSENSOR_STATE = "watersensor_state"
     WEATHER_DELAY = "weather_delay"
     WET = "wet"  # Humidification
