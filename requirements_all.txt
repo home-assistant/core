@@ -989,7 +989,7 @@ gardena-bluetooth==1.6.0
 gassist-text==0.0.12
 
 # homeassistant.components.google
-gcal-sync==7.0.1
+gcal-sync==7.1.0
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
@@ -1203,7 +1203,7 @@ ibmiotf==0.3.4
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==9.2.4
+ical==9.2.5
 
 # homeassistant.components.caldav
 icalendar==6.1.0
