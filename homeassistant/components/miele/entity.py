@@ -47,7 +47,7 @@ class MieleEntity(CoordinatorEntity[MieleDataUpdateCoordinator]):
         return self.coordinator.data.devices[self._device_id]
 
     @property
-    def actions(self) -> MieleAction:
+    def action(self) -> MieleAction:
         """Return the actions object."""
         return self.coordinator.data.actions[self._device_id]
 

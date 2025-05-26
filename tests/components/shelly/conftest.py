@@ -189,7 +189,7 @@ MOCK_BLOCKS = [
 ]
 
 MOCK_CONFIG = {
-    "input:0": {"id": 0, "name": "Test name input 0", "type": "button"},
+    "input:0": {"id": 0, "name": "Test input 0", "type": "button"},
     "input:1": {
         "id": 1,
         "type": "analog",
@@ -204,7 +204,7 @@ MOCK_CONFIG = {
         "xcounts": {"expr": None, "unit": None},
         "xfreq": {"expr": None, "unit": None},
     },
-    "flood:0": {"id": 0, "name": "Test name"},
+    "flood:0": {"id": 0, "name": "Kitchen"},
     "light:0": {"name": "test light_0"},
     "light:1": {"name": "test light_1"},
     "light:2": {"name": "test light_2"},
@@ -498,6 +498,8 @@ def _mock_rpc_device(version: str | None = None):
             }
         ),
         xmod_info={},
+        zigbee_enabled=False,
+        ip_address="10.10.10.10",
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device

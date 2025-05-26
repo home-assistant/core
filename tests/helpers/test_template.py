@@ -16,7 +16,7 @@ from freezegun import freeze_time
 import orjson
 import pytest
 from pytest_unordered import unordered
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -1632,12 +1632,25 @@ def test_ord(hass: HomeAssistant) -> None:
     assert template.Template('{{ "d" | ord }}', hass).async_render() == 100
 
 
-def test_base64_encode(hass: HomeAssistant) -> None:
-    """Test the base64_encode filter."""
+def test_from_hex(hass: HomeAssistant) -> None:
+    """Test the fromhex filter."""
     assert (
-        template.Template('{{ "homeassistant" | base64_encode }}', hass).async_render()
-        == "aG9tZWFzc2lzdGFudA=="
+        template.Template("{{ '0F010003' | from_hex }}", hass).async_render()
+        == b"\x0f\x01\x00\x03"
     )
+
+
+@pytest.mark.parametrize(
+    ("value_template", "expected"),
+    [
+        ('{{ "homeassistant" | base64_encode }}', "aG9tZWFzc2lzdGFudA=="),
+        ("{{ int('0F010003', base=16) | pack('>I') | base64_encode }}", "DwEAAw=="),
+        ("{{ 'AA01000200150020' | from_hex | base64_encode }}", "qgEAAgAVACA="),
+    ],
+)
+def test_base64_encode(hass: HomeAssistant, value_template: str, expected: str) -> None:
+    """Test the base64_encode filter."""
+    assert template.Template(value_template, hass).async_render() == expected
 
 
 def test_base64_decode(hass: HomeAssistant) -> None:

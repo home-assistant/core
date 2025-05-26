@@ -128,6 +128,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX Luna": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Mini": {
         "always_discover": True,
         "domain": "lifx",
@@ -523,6 +527,11 @@ ZEROCONF = {
     "_hap._udp.local.": [
         {
             "domain": "homekit_controller",
+        },
+    ],
+    "_homeconnect._tcp.local.": [
+        {
+            "domain": "home_connect",
         },
     ],
     "_homekit._tcp.local.": [
