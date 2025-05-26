@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ERR_NOT_FOUND, require_admin
-from homeassistant.core import HomeAssistant, callback, split_entity_id
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -360,15 +360,10 @@ def websocket_get_automatic_entity_ids(
             )
             automatic_entity_ids[entity_id] = None
             continue
-        if (
-            suggested := async_get_entity_suggested_object_id(hass, entity_id)
-        ) == split_entity_id(entry.entity_id)[1]:
-            # No need to generate a new entity ID
-            automatic_entity_ids[entity_id] = None
-            continue
         automatic_entity_ids[entity_id] = registry.async_generate_entity_id(
             entry.domain,
             suggested or f"{entry.platform}_{entry.unique_id}",
+            current_entity_id=entity_id,
         )
 
     connection.send_message(
