@@ -167,7 +167,7 @@ def _register_domain_services(hass: HomeAssistant) -> None:
         schema = vol.Schema({vol.Required(ATTR_MODE): vol.In(perm_modes)})
         system_mode_schemas.append(schema)
 
-    modes = [m for m in modes if m[SZ_CAN_BE_TEMPORARY]]
+    modes = [m for m in modes if m[SZ_CAN_BE_TEMPORARY]]  # these have a timing mode
 
     # These modes are set for a number of hours (or indefinitely): use this schema
     temp_modes = [m[SZ_SYSTEM_MODE] for m in modes if m[SZ_TIMING_MODE] == SZ_DURATION]
