@@ -18,3 +18,8 @@ def normalize_descriptor(descriptor: PriceDescriptor | None) -> str | None:
     if descriptor in descriptor_map:
         return descriptor_map[descriptor]
     return None
+
+
+def format_cents_to_dollars(cents: float) -> float:
+    """Return a formatted conversion from cents to dollars."""
+    return round(cents / 100, 2)

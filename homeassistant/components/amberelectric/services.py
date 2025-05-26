@@ -16,7 +16,7 @@ from homeassistant.exceptions import ServiceValidationError
 
 from .const import ATTR_CHANNEL_TYPE, ATTR_SITE_ID, DOMAIN, GET_FORECASTS_SERVICE
 from .coordinator import AmberConfigEntry
-from .helpers import normalize_descriptor
+from .helpers import format_cents_to_dollars, normalize_descriptor
 
 GET_FORECASTS_SCHEMA = vol.Schema(
     {
@@ -24,11 +24,6 @@ GET_FORECASTS_SCHEMA = vol.Schema(
         "channel_type": vol.In(["general", "controlled_load", "feed_in"]),
     }
 )
-
-
-def format_cents_to_dollars(cents: float) -> float:
-    """Return a formatted conversion from cents to dollars."""
-    return round(cents / 100, 2)
 
 
 def async_get_entry(hass: HomeAssistant, site_id: str) -> AmberConfigEntry:
