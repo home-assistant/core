@@ -6034,6 +6034,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "smarla": {
+      "name": "Swing2Sleep Smarla",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "smart_blinds": {
       "name": "Smartblinds",
       "integration_type": "virtual",
