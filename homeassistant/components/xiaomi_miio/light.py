@@ -1097,7 +1097,7 @@ class XiaomiGatewayBulb(XiaomiGatewayDevice, LightEntity):
     _sub_device: LightBulb
 
     @property
-    def brightness(self) -> int:
+    def brightness(self):
         """Return the brightness of the light."""
         return round((self._sub_device.status["brightness"] * 255) / 100)
 
@@ -1107,7 +1107,7 @@ class XiaomiGatewayBulb(XiaomiGatewayDevice, LightEntity):
         return self._sub_device.status["color_temp"]
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self):
         """Return true if light is on."""
         return self._sub_device.status["status"] == "on"
 

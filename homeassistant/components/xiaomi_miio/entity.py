@@ -170,10 +170,22 @@ class XiaomiGatewayDevice(
         self._attr_unique_id = sub_device.sid
         self._attr_name = f"{sub_device.name} ({sub_device.sid})"
 
+    @property
+    def unique_id(self):
+        """Return an unique ID."""
+        return self._unique_id
+
+    @property
+    def name(self):
+        """Return the name of this entity, if any."""
+        return self._name
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device info of the gateway."""
         if TYPE_CHECKING:
             assert self._entry.unique_id is not None
-
-        self._attr_device_info = DeviceInfo(
+        return DeviceInfo(
             identifiers={(DOMAIN, self._sub_device.sid)},
             via_device=(DOMAIN, self._entry.unique_id),
             manufacturer="Xiaomi",
