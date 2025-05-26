@@ -7,6 +7,12 @@ from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.squeezebox.const import PLAYER_UPDATE_INTERVAL
+from homeassistant.const import (
+    CONF_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -62,9 +68,9 @@ async def test_turn_on(
 ) -> None:
     """Test turning on the switch."""
     await hass.services.async_call(
-        "switch",
-        "turn_on",
-        {"entity_id": f"switch.test_player_alarm_{TEST_ALARM_ID}"},
+        Platform.SWITCH,
+        SERVICE_TURN_ON,
+        {CONF_ENTITY_ID: f"switch.test_player_alarm_{TEST_ALARM_ID}"},
         blocking=True,
     )
     mock_alarms_player.async_update_alarm.assert_called_once_with(
@@ -78,9 +84,9 @@ async def test_turn_off(
 ) -> None:
     """Test turning on the switch."""
     await hass.services.async_call(
-        "switch",
-        "turn_off",
-        {"entity_id": f"switch.test_player_alarm_{TEST_ALARM_ID}"},
+        Platform.SWITCH,
+        SERVICE_TURN_OFF,
+        {CONF_ENTITY_ID: f"switch.test_player_alarm_{TEST_ALARM_ID}"},
         blocking=True,
     )
     mock_alarms_player.async_update_alarm.assert_called_once_with(
@@ -111,9 +117,9 @@ async def test_alarms_enabled_turn_on(
 ) -> None:
     """Test turning on the alarms enabled switch."""
     await hass.services.async_call(
-        "switch",
-        "turn_on",
-        {"entity_id": "switch.test_player_alarms_enabled"},
+        Platform.SWITCH,
+        SERVICE_TURN_ON,
+        {CONF_ENTITY_ID: "switch.test_player_alarms_enabled"},
         blocking=True,
     )
     mock_alarms_player.async_set_alarms_enabled.assert_called_once_with(True)
@@ -125,9 +131,9 @@ async def test_alarms_enabled_turn_off(
 ) -> None:
     """Test turning off the alarms enabled switch."""
     await hass.services.async_call(
-        "switch",
-        "turn_off",
-        {"entity_id": "switch.test_player_alarms_enabled"},
+        Platform.SWITCH,
+        SERVICE_TURN_OFF,
+        {CONF_ENTITY_ID: "switch.test_player_alarms_enabled"},
         blocking=True,
     )
     mock_alarms_player.async_set_alarms_enabled.assert_called_once_with(False)

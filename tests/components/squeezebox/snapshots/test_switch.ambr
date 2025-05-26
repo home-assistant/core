@@ -29,7 +29,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'alarm',
-    'unique_id': 'aa:bb:cc:dd:ee:ff-alarm-1',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_alarm_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -77,7 +77,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'alarms_enabled',
-    'unique_id': 'aa:bb:cc:dd:ee:ff-alarms-enabled',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_alarms_enabled',
     'unit_of_measurement': None,
   })
 # ---

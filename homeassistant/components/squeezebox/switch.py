@@ -9,7 +9,7 @@ from pysqueezebox.player import Alarm
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -55,7 +55,7 @@ async def async_setup_entry(
 
             if removed_alarms and coordinator.available:
                 for removed_alarm in removed_alarms:
-                    _uid = f"{coordinator.player_uuid}-alarm-{removed_alarm}"
+                    _uid = f"{coordinator.player_uuid}_alarm_{removed_alarm}"
                     _LOGGER.debug(
                         "Alarm %s with unique_id %s needs to be deleted",
                         removed_alarm,
@@ -105,16 +105,10 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
         """Initialize the Squeezebox alarm switch."""
         super().__init__(coordinator)
         self._alarm_id = alarm_id
-        self._attr_available = True
         self._attr_translation_placeholders = {"alarm_id": self._alarm_id}
         self._attr_unique_id: str = (
-            f"{format_mac(self._player.player_id)}-alarm-{self._alarm_id}"
+            f"{format_mac(self._player.player_id)}_alarm_{self._alarm_id}"
         )
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Set up alarm switch when added to hass."""
@@ -171,9 +165,8 @@ class SqueezeBoxAlarmsEnabledEntity(SqueezeboxEntity, SwitchEntity):
     def __init__(self, coordinator: SqueezeBoxPlayerUpdateCoordinator) -> None:
         """Initialize the Squeezebox alarm switch."""
         super().__init__(coordinator)
-        self._attr_available = True
         self._attr_unique_id: str = (
-            f"{format_mac(self._player.player_id)}-alarms-enabled"
+            f"{format_mac(self._player.player_id)}_alarms_enabled"
         )
 
     @property
