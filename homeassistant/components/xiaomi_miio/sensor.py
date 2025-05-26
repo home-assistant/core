@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from miio import AirQualityMonitor, Device as MiioDevice, DeviceException
 from miio.gateway.devices import SubDevice
@@ -854,12 +854,21 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
+class XiaomiGenericSensor(
+    XiaomiCoordinatedMiioEntity[DataUpdateCoordinator[Any]], SensorEntity
+):
     """Representation of a Xiaomi generic sensor."""
 
     entity_description: XiaomiMiioSensorDescription
 
-    def __init__(self, device, entry, unique_id, coordinator, description):
+    def __init__(
+        self,
+        device: MiioDevice,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str,
+        coordinator: DataUpdateCoordinator[Any],
+        description: XiaomiMiioSensorDescription,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(device, entry, unique_id, coordinator)
         self.entity_description = description

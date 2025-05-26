@@ -6,7 +6,7 @@ from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any
 
-from miio import DeviceException
+from miio import Device as MiioDevice, DeviceException
 from miio.gateway.devices import SubDevice
 
 from homeassistant.const import ATTR_CONNECTIONS, CONF_MAC, CONF_MODEL
@@ -70,7 +70,13 @@ class XiaomiCoordinatedMiioEntity[_T: DataUpdateCoordinator[Any]](
 
     _attr_has_entity_name = True
 
-    def __init__(self, device, entry, unique_id, coordinator):
+    def __init__(
+        self,
+        device: MiioDevice,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+        coordinator: _T,
+    ) -> None:
         """Initialize the coordinated Xiaomi Miio Device."""
         super().__init__(coordinator)
         self._device = device
@@ -88,6 +94,8 @@ class XiaomiCoordinatedMiioEntity[_T: DataUpdateCoordinator[Any]](
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
+        if TYPE_CHECKING:
+            assert self._device_id is not None
         device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
             manufacturer="Xiaomi",
