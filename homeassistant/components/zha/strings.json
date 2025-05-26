@@ -675,7 +675,14 @@
     },
     "light": {
       "light": {
-        "name": "[%key:component::light::title%]"
+        "name": "[%key:component::light::title%]",
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "colorloop": "Color Loop"
+            }
+          }
+        }
       },
       "light_group": {
         "name": "Light group"
