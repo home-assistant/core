@@ -9,6 +9,7 @@ from iometer import IOmeterClient, IOmeterConnectionError, Reading, Status
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -48,6 +49,9 @@ class IOMeterCoordinator(DataUpdateCoordinator[IOmeterData]):
             config_entry=config_entry,
             name=DOMAIN,
             update_interval=DEFAULT_SCAN_INTERVAL,
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=1.0, immediate=False
+            ),
         )
         self.client = client
         self.identifier = config_entry.entry_id
