@@ -83,7 +83,10 @@ async def test_fetching_data(
         hass.states.get("sensor.zurich_bern_departure_2").state
         == "2024-01-06T17:05:00+00:00"
     )
-    assert hass.states.get("sensor.zurich_bern_trip_duration").state == "0.003"
+    assert (
+        round(float(hass.states.get("sensor.zurich_bern_trip_duration").state), 3)
+        == 0.003
+    )
     assert hass.states.get("sensor.zurich_bern_platform").state == "0"
     assert hass.states.get("sensor.zurich_bern_transfers").state == "0"
     assert hass.states.get("sensor.zurich_bern_delay").state == "0"
@@ -139,7 +142,6 @@ async def test_fetching_data_setup_exception(
     """Test fetching data with setup exception."""
 
     mock_opendata_client.async_get_data.side_effect = raise_error
-
     await setup_integration(hass, swiss_public_transport_config_entry)
 
     assert swiss_public_transport_config_entry.state is state

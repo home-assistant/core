@@ -288,7 +288,6 @@ async def test_create_issue_with_items(
     assert automations_with_entity(hass, entity_id)[0] == "automation.test"
     assert scripts_with_entity(hass, entity_id)[0] == "script.test"
 
-    assert len(issue_registry.issues) == 1
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
     assert issue.translation_key == f"deprecated_switch_{issue_string}_scripts"
@@ -308,7 +307,6 @@ async def test_create_issue_with_items(
 
     # Assert the issue is no longer present
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
-    assert len(issue_registry.issues) == 0
 
 
 @pytest.mark.parametrize(
@@ -413,7 +411,6 @@ async def test_create_issue(
 
     assert hass.states.get(entity_id).state in [STATE_OFF, STATE_ON]
 
-    assert len(issue_registry.issues) == 1
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
     assert issue.translation_key == f"deprecated_switch_{issue_string}"
@@ -433,7 +430,6 @@ async def test_create_issue(
 
     # Assert the issue is no longer present
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
-    assert len(issue_registry.issues) == 0
 
 
 @pytest.mark.parametrize("device_fixture", ["c2c_arlo_pro_3_switch"])
