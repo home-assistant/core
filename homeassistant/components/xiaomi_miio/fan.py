@@ -340,11 +340,6 @@ class XiaomiGenericDevice(
         """Return the state attributes of the device."""
         return self._state_attrs
 
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if device is on."""
-        return self._state
-
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -364,7 +359,7 @@ class XiaomiGenericDevice(
             await self.async_set_preset_mode(preset_mode)
 
         if result:
-            self._state = True
+            self._attr_is_on = True
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -375,7 +370,7 @@ class XiaomiGenericDevice(
         )
 
         if result:
-            self._state = False
+            self._attr_is_on = False
             self.async_write_ha_state()
 
 
@@ -411,7 +406,7 @@ class XiaomiGenericAirPurifier(XiaomiGenericDevice):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._state_attrs.update(
             {
                 key: self._extract_value_from_attribute(self.coordinator.data, value)
@@ -510,7 +505,7 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
             FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
         )
 
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._state_attrs.update(
             {
                 key: self._extract_value_from_attribute(self.coordinator.data, value)
@@ -652,7 +647,7 @@ class XiaomiAirPurifierMB4(XiaomiGenericAirPurifier):
             | FanEntityFeature.TURN_ON
         )
 
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._mode = self.coordinator.data.mode.value
         self._favorite_rpm: int | None = None
         self._speed_range = (300, 2200)
@@ -712,7 +707,7 @@ class XiaomiAirPurifierMB4(XiaomiGenericAirPurifier):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._mode = self.coordinator.data.mode.value
         self._favorite_rpm = getattr(self.coordinator.data, ATTR_FAVORITE_RPM, None)
         self._motor_speed = min(
@@ -763,7 +758,7 @@ class XiaomiAirFresh(XiaomiGenericAirPurifier):
             | FanEntityFeature.TURN_ON
         )
 
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._state_attrs.update(
             {
                 key: getattr(self.coordinator.data, value)
@@ -865,7 +860,7 @@ class XiaomiAirFreshA1(XiaomiGenericAirPurifier):
             | FanEntityFeature.TURN_ON
         )
 
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._mode = self.coordinator.data.mode.value
         self._speed_range = (60, 150)
 
@@ -918,7 +913,7 @@ class XiaomiAirFreshA1(XiaomiGenericAirPurifier):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._mode = self.coordinator.data.mode.value
         self._favorite_speed = getattr(self.coordinator.data, ATTR_FAVORITE_SPEED, None)
         self.async_write_ha_state()
@@ -1038,7 +1033,7 @@ class XiaomiFan(XiaomiGenericFan):
         """Initialize the fan."""
         super().__init__(device, entry, unique_id, coordinator)
 
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._oscillating = self.coordinator.data.oscillate
         self._nature_mode = self.coordinator.data.natural_speed != 0
         if self._nature_mode:
@@ -1063,7 +1058,7 @@ class XiaomiFan(XiaomiGenericFan):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._oscillating = self.coordinator.data.oscillate
         self._nature_mode = self.coordinator.data.natural_speed != 0
         if self._nature_mode:
@@ -1131,7 +1126,7 @@ class XiaomiFanP5(XiaomiGenericFan):
         """Initialize the fan."""
         super().__init__(device, entry, unique_id, coordinator)
 
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._preset_mode = self.coordinator.data.mode.name
         self._oscillating = self.coordinator.data.oscillate
         self._percentage = self.coordinator.data.speed
@@ -1144,7 +1139,7 @@ class XiaomiFanP5(XiaomiGenericFan):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._preset_mode = self.coordinator.data.mode.name
         self._oscillating = self.coordinator.data.oscillate
         self._percentage = self.coordinator.data.speed
@@ -1197,7 +1192,7 @@ class XiaomiFanMiot(XiaomiGenericFan):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._preset_mode = self.coordinator.data.mode.name
         self._oscillating = self.coordinator.data.oscillate
         if self.coordinator.data.is_on:
@@ -1264,7 +1259,7 @@ class XiaomiFan1C(XiaomiFanMiot):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._preset_mode = self.coordinator.data.mode.name
         self._oscillating = self.coordinator.data.oscillate
         if self.coordinator.data.is_on:

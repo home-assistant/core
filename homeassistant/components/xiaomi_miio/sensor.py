@@ -938,7 +938,6 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id)
 
-        self._state = None
         self._state_attrs = {
             ATTR_POWER: None,
             ATTR_BATTERY_LEVEL: None,
@@ -952,11 +951,6 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def native_value(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
     def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return self._state_attrs
@@ -968,7 +962,7 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
             _LOGGER.debug("Got new state: %s", state)
 
             self._attr_available = True
-            self._state = state.aqi
+            self._attr_native_value = state.aqi
             self._state_attrs.update(
                 {
                     ATTR_POWER: state.power,
@@ -1023,17 +1017,11 @@ class XiaomiGatewayIlluminanceSensor(SensorEntity):
         self._gateway = gateway_device
         self.entity_description = description
         self._attr_available = False
-        self._state = None
-
-    @property
-    def native_value(self):
-        """Return the state of the device."""
-        return self._state
 
     async def async_update(self) -> None:
         """Fetch state from the device."""
         try:
-            self._state = await self.hass.async_add_executor_job(
+            self._attr_native_value = await self.hass.async_add_executor_job(
                 self._gateway.get_illumination
             )
             self._attr_available = True
