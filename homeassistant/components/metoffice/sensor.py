@@ -12,9 +12,11 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    DEGREE,
     PERCENTAGE,
     UV_INDEX,
     UnitOfLength,
@@ -71,8 +73,8 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
         native_attr_name="screenTemperature",
         name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        icon=None,
         entity_registry_enabled_default=True,
     ),
     MetOfficeSensorEntityDescription(
@@ -80,6 +82,7 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
         native_attr_name="feelsLikeTemperature",
         name="Feels like temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon=None,
         entity_registry_enabled_default=False,
@@ -93,12 +96,16 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
         # This can be removed if we add a mixed metric/imperial unit system for UK users
         suggested_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=True,
     ),
     MetOfficeSensorEntityDescription(
         key="wind_direction",
         native_attr_name="windDirectionFrom10m",
         name="Wind direction",
+        native_unit_of_measurement=DEGREE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
         icon="mdi:compass-outline",
         entity_registry_enabled_default=False,
     ),
@@ -111,12 +118,15 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
         # This can be removed if we add a mixed metric/imperial unit system for UK users
         suggested_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
     MetOfficeSensorEntityDescription(
         key="visibility",
         native_attr_name="visibility",
         name="Visibility distance",
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfLength.METERS,
         icon="mdi:eye",
         entity_registry_enabled_default=False,
@@ -132,6 +142,7 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
     MetOfficeSensorEntityDescription(
         key="precipitation",
         native_attr_name="probOfPrecipitation",
+        state_class=SensorStateClass.MEASUREMENT,
         name="Probability of precipitation",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:weather-rainy",
@@ -142,6 +153,7 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
         native_attr_name="screenRelativeHumidity",
         name="Humidity",
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         icon=None,
         entity_registry_enabled_default=False,
