@@ -51,7 +51,7 @@ async def async_setup_entry(
             remove_listener()
 
         for console in coordinator.data.active_sessions:
-            if (platform := console.platform) and (
+            if (platform := console) and (
                 platform_type := PlatformType(platform)
             ) not in devices_added:
                 async_add_entities([PsnMediaPlayerEntity(coordinator, platform_type)])
@@ -91,7 +91,7 @@ class PsnMediaPlayerEntity(
         super().__init__(coordinator)
 
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{platform.value}"
-        self.key = platform
+        self.key = platform.value
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=PLATFORM_MAP[platform],
@@ -102,14 +102,7 @@ class PsnMediaPlayerEntity(
     @property
     def state(self) -> MediaPlayerState:
         """Media Player state getter."""
-        session = next(
-            (
-                session
-                for session in self.coordinator.data.active_sessions
-                if PlatformType(session.platform) is self.key
-            ),
-            SessionData(),
-        )
+        session = self.coordinator.data.active_sessions.get(self.key, SessionData())
         if session.status == "online":
             if self.coordinator.data.available and session.title_id is not None:
                 return MediaPlayerState.PLAYING
@@ -119,38 +112,17 @@ class PsnMediaPlayerEntity(
     @property
     def media_title(self) -> str | None:
         """Media title getter."""
-        session = next(
-            (
-                session
-                for session in self.coordinator.data.active_sessions
-                if PlatformType(session.platform) is self.key
-            ),
-            SessionData(),
-        )
+        session = self.coordinator.data.active_sessions.get(self.key, SessionData())
         return session.title_name
 
     @property
     def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
-        session = next(
-            (
-                session
-                for session in self.coordinator.data.active_sessions
-                if PlatformType(session.platform) is self.key
-            ),
-            SessionData(),
-        )
+        session = self.coordinator.data.active_sessions.get(self.key, SessionData())
         return session.title_id
 
     @property
     def media_image_url(self) -> str | None:
         """Media image url getter."""
-        session = next(
-            (
-                session
-                for session in self.coordinator.data.active_sessions
-                if PlatformType(session.platform) == self.key
-            ),
-            SessionData(),
-        )
+        session = self.coordinator.data.active_sessions.get(self.key, SessionData())
         return session.media_image_url

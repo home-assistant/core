@@ -19,7 +19,7 @@ async def async_setup_entry(
 
     psn = PlaystationNetwork(entry.data[CONF_NPSSO])
 
-    coordinator = PlaystationNetworkCoordinator(hass, psn)
+    coordinator = PlaystationNetworkCoordinator(hass, psn, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
