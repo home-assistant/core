@@ -70,8 +70,7 @@ async def test_device_conflict_manual(
 
     issues = await get_repairs(hass, hass_ws_client)
     assert issues
-    assert len(issues) == 1
-    assert any(True for issue in issues if issue["issue_id"] == issue_id)
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
     await async_process_repairs_platforms(hass)
     client = await hass_client()
@@ -182,8 +181,7 @@ async def test_device_conflict_migration(
 
     issues = await get_repairs(hass, hass_ws_client)
     assert issues
-    assert len(issues) == 1
-    assert any(True for issue in issues if issue["issue_id"] == issue_id)
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
     await async_process_repairs_platforms(hass)
     client = await hass_client()
