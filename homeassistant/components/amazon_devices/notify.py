@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Final
+from typing import Any, Final
+
+from aioamazondevices.api import AmazonDevice, AmazonEchoApi
 
 from homeassistant.components.notify import NotifyEntity, NotifyEntityDescription
 from homeassistant.core import HomeAssistant
@@ -19,7 +22,7 @@ PARALLEL_UPDATES = 1
 class AmazonNotifyEntityDescription(NotifyEntityDescription):
     """Amazon Devices notify entity description."""
 
-    method: str
+    method: Callable[[AmazonEchoApi, AmazonDevice, str], Awaitable[None]]
     subkey: str
 
 
@@ -28,13 +31,15 @@ NOTIFY: Final = (
         key="speak",
         translation_key="speak",
         subkey="AUDIO_PLAYER",
-        method="call_alexa_speak",
+        method=lambda api, device, message: api.call_alexa_speak(device, message),
     ),
     AmazonNotifyEntityDescription(
         key="announce",
         translation_key="announce",
         subkey="AUDIO_PLAYER",
-        method="call_alexa_announcement",
+        method=lambda api, device, message: api.call_alexa_announcement(
+            device, message
+        ),
     ),
 )
 
@@ -66,9 +71,4 @@ class AmazonNotifyEntity(AmazonEntity, NotifyEntity):
     ) -> None:
         """Send a message."""
 
-        method = getattr(self.coordinator.api, self.entity_description.method)
-
-        if TYPE_CHECKING:
-            assert method is not None
-
-        await method(self.device, message)
+        self.entity_description.method(self.coordinator.api, self.device, message)
