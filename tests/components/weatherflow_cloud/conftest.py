@@ -113,39 +113,3 @@ def mock_api():
         mock_api_class.return_value = mock_api
 
         yield mock_api
-
-
-#
-# @pytest.fixture
-# def mock_api_with_lightning_error():
-#     """Fixture for Mock WeatherFlowRestAPI."""
-#     get_stations_response_data = StationsResponseREST.from_json(
-#         load_fixture("stations.json", DOMAIN)
-#     )
-#     get_forecast_response_data = WeatherDataForecastREST.from_json(
-#         load_fixture("forecast.json", DOMAIN)
-#     )
-#     get_observation_response_data = ObservationStationREST.from_json(
-#         load_fixture("station_observation_error.json", DOMAIN)
-#     )
-#
-#     data = {
-#         24432: WeatherFlowDataREST(
-#             weather=get_forecast_response_data,
-#             observation=get_observation_response_data,
-#             station=get_stations_response_data.stations[0],
-#             device_observations=None,
-#         )
-#     }
-#
-#     with patch(
-#         "homeassistant.components.weatherflow_cloud.coordinator.WeatherFlowRestAPI",
-#         autospec=True,
-#     ) as mock_api_class:
-#         # Create an instance of AsyncMock for the API
-#         mock_api = AsyncMock()
-#         mock_api.get_all_data.return_value = data
-#         # Patch the class to return our mock_api instance
-#         mock_api_class.return_value = mock_api
-#
-#         yield mock_api

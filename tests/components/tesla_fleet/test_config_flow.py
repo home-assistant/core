@@ -11,7 +11,6 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.tesla_fleet.const import (
     AUTHORIZE_URL,
-    CLIENT_ID,
     DOMAIN,
     SCOPES,
     TOKEN_URL,
@@ -52,68 +51,17 @@ async def access_token(hass: HomeAssistant) -> str:
     )
 
 
-@pytest.mark.usefixtures("current_request_with_host")
-async def test_full_flow(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    access_token: str,
-) -> None:
-    """Check full flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    state = config_entry_oauth2_flow._encode_jwt(
+@pytest.fixture(autouse=True)
+async def create_credential(hass: HomeAssistant) -> None:
+    """Create a user credential."""
+    # Create user application credential
+    assert await async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
         hass,
-        {
-            "flow_id": result["flow_id"],
-            "redirect_uri": REDIRECT,
-        },
+        DOMAIN,
+        ClientCredential("user_client_id", "user_client_secret"),
+        "user_cred",
     )
-
-    assert result["type"] is FlowResultType.EXTERNAL_STEP
-
-    assert result["url"].startswith(AUTHORIZE_URL)
-    parsed_url = urlparse(result["url"])
-    parsed_query = parse_qs(parsed_url.query)
-    assert parsed_query["response_type"][0] == "code"
-    assert parsed_query["client_id"][0] == CLIENT_ID
-    assert parsed_query["redirect_uri"][0] == REDIRECT
-    assert parsed_query["state"][0] == state
-    assert parsed_query["scope"][0] == " ".join(SCOPES)
-    assert parsed_query["code_challenge"][0] is not None
-
-    client = await hass_client_no_auth()
-    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == 200
-    assert resp.headers["content-type"] == "text/html; charset=utf-8"
-
-    aioclient_mock.clear_requests()
-    aioclient_mock.post(
-        TOKEN_URL,
-        json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": access_token,
-            "type": "Bearer",
-            "expires_in": 60,
-        },
-    )
-    with patch(
-        "homeassistant.components.tesla_fleet.async_setup_entry", return_value=True
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(mock_setup.mock_calls) == 1
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == UNIQUE_ID
-    assert "result" in result
-    assert result["result"].unique_id == UNIQUE_ID
-    assert "token" in result["result"].data
-    assert result["result"].data["token"]["access_token"] == access_token
-    assert result["result"].data["token"]["refresh_token"] == "mock-refresh-token"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -125,24 +73,10 @@ async def test_full_flow_user_cred(
 ) -> None:
     """Check full flow."""
 
-    # Create user application credential
-    assert await async_setup_component(hass, "application_credentials", {})
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential("user_client_id", "user_client_secret"),
-        "user_cred",
-    )
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] is FlowResultType.FORM
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"implementation": "user_cred"}
-    )
     assert result["type"] is FlowResultType.EXTERNAL_STEP
 
     state = config_entry_oauth2_flow._encode_jwt(

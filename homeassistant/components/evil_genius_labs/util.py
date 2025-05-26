@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from typing import Any, Concatenate
 
-from . import EvilGeniusEntity
+from .entity import EvilGeniusEntity
 
 
 def update_when_done[_EvilGeniusEntityT: EvilGeniusEntity, **_P, _R](

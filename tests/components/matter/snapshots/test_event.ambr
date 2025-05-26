@@ -1,0 +1,395 @@
+# serializer version: 1
+# name: test_events[generic_switch][event.mock_generic_switch_button-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'initial_press',
+        'short_release',
+        'long_press',
+        'long_release',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.mock_generic_switch_button',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-GenericSwitch-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[generic_switch][event.mock_generic_switch_button-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'initial_press',
+        'short_release',
+        'long_press',
+        'long_release',
+      ]),
+      'friendly_name': 'Mock Generic Switch Button',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.mock_generic_switch_button',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[generic_switch_multi][event.mock_generic_switch_button_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'multi_press_1',
+        'multi_press_2',
+        'long_press',
+        'long_release',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.mock_generic_switch_button_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-GenericSwitch-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[generic_switch_multi][event.mock_generic_switch_button_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'multi_press_1',
+        'multi_press_2',
+        'long_press',
+        'long_release',
+      ]),
+      'friendly_name': 'Mock Generic Switch Button (1)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.mock_generic_switch_button_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[generic_switch_multi][event.mock_generic_switch_fancy_button-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'multi_press_1',
+        'multi_press_2',
+        'multi_press_3',
+        'multi_press_4',
+        'long_press',
+        'long_release',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.mock_generic_switch_fancy_button',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Fancy Button',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-2-GenericSwitch-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[generic_switch_multi][event.mock_generic_switch_fancy_button-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'multi_press_1',
+        'multi_press_2',
+        'multi_press_3',
+        'multi_press_4',
+        'long_press',
+        'long_release',
+      ]),
+      'friendly_name': 'Mock Generic Switch Fancy Button',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.mock_generic_switch_fancy_button',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[multi_endpoint_light][event.inovelli_config-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'multi_press_1',
+        'multi_press_2',
+        'multi_press_3',
+        'multi_press_4',
+        'multi_press_5',
+        'long_press',
+        'long_release',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.inovelli_config',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Config',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-5-GenericSwitch-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[multi_endpoint_light][event.inovelli_config-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'multi_press_1',
+        'multi_press_2',
+        'multi_press_3',
+        'multi_press_4',
+        'multi_press_5',
+        'long_press',
+        'long_release',
+      ]),
+      'friendly_name': 'Inovelli Config',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.inovelli_config',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[multi_endpoint_light][event.inovelli_down-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'multi_press_1',
+        'multi_press_2',
+        'multi_press_3',
+        'multi_press_4',
+        'multi_press_5',
+        'long_press',
+        'long_release',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.inovelli_down',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Down',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-4-GenericSwitch-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[multi_endpoint_light][event.inovelli_down-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'multi_press_1',
+        'multi_press_2',
+        'multi_press_3',
+        'multi_press_4',
+        'multi_press_5',
+        'long_press',
+        'long_release',
+      ]),
+      'friendly_name': 'Inovelli Down',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.inovelli_down',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[multi_endpoint_light][event.inovelli_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'multi_press_1',
+        'multi_press_2',
+        'multi_press_3',
+        'multi_press_4',
+        'multi_press_5',
+        'long_press',
+        'long_release',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.inovelli_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Up',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-3-GenericSwitch-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[multi_endpoint_light][event.inovelli_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'multi_press_1',
+        'multi_press_2',
+        'multi_press_3',
+        'multi_press_4',
+        'multi_press_5',
+        'long_press',
+        'long_release',
+      ]),
+      'friendly_name': 'Inovelli Up',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.inovelli_up',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

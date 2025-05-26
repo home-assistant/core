@@ -18,6 +18,25 @@
     'type': <FlowResultType.FORM: 'form'>,
   })
 # ---
+# name: test_config_flow_preset_accepts_float[create_entry]
+  FlowResultSnapshot({
+    'result': ConfigEntrySnapshot({
+      'title': 'My thermostat',
+    }),
+    'title': 'My thermostat',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+  })
+# ---
+# name: test_config_flow_preset_accepts_float[init]
+  FlowResultSnapshot({
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_config_flow_preset_accepts_float[presets]
+  FlowResultSnapshot({
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
 # name: test_options[create_entry]
   FlowResultSnapshot({
     'result': True,

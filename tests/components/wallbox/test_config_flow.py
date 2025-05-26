@@ -186,7 +186,15 @@ async def test_form_reauth_invalid(hass: HomeAssistant, entry: MockConfigEntry) 
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
             "https://user-api.wall-box.com/users/signin",
-            text='{"jwt":"fakekeyhere","refresh_token": "refresh_fakekeyhere","user_id":12345,"ttl":145656758,"refresh_token_ttl":145756758,"error":false,"status":200}',
+            json={
+                "jwt": "fakekeyhere",
+                "refresh_token": "refresh_fakekeyhere",
+                "user_id": 12345,
+                "ttl": 145656758,
+                "refresh_token_ttl": 145756758,
+                "error": False,
+                "status": 200,
+            },
             status_code=200,
         )
         mock_request.get(

@@ -36,11 +36,11 @@
   "issues": {
     "import_failed_not_allowed_path": {
       "title": "The Folder Watcher YAML configuration could not be imported",
-      "description": "Configuring Folder Watcher using YAML is being removed but your configuration could not be imported as the folder {path} is not in the configured allowlist.\n\nPlease add it to `{config_variable}` in config.yaml and restart Home Assistant to import it and fix this issue."
+      "description": "Configuring Folder Watcher using YAML is being removed but your configuration could not be imported as the folder {path} is not in the configured allowlist.\n\nPlease add it to `{config_variable}` in configuration.yaml and restart Home Assistant to import it and fix this issue."
     },
     "setup_not_allowed_path": {
       "title": "The Folder Watcher configuration for {path} could not start",
-      "description": "The path {path} is not accessible or not allowed to be accessed.\n\nPlease check the path is accessible and add it to `{config_variable}` in config.yaml and restart Home Assistant to fix this issue."
+      "description": "The path {path} is not accessible or not allowed to be accessed.\n\nPlease check the path is accessible and add it to `{config_variable}` in configuration.yaml and restart Home Assistant to fix this issue."
     }
   },
   "entity": {

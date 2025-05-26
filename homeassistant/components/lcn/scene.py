@@ -8,12 +8,11 @@ import pypck
 
 from homeassistant.components.scene import DOMAIN as DOMAIN_SCENE, Scene
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_DOMAIN, CONF_ENTITIES, CONF_SCENE
+from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES, CONF_SCENE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from . import LcnEntity
 from .const import (
     ADD_ENTITIES_CALLBACKS,
     CONF_DOMAIN_DATA,
@@ -23,27 +22,20 @@ from .const import (
     DOMAIN,
     OUTPUT_PORTS,
 )
-from .helpers import DeviceConnectionType, get_device_connection
+from .entity import LcnEntity
 
 PARALLEL_UPDATES = 0
 
 
 def add_lcn_entities(
-    hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     entity_configs: Iterable[ConfigType],
 ) -> None:
     """Add entities for this domain."""
-    entities: list[LcnScene] = []
-    for entity_config in entity_configs:
-        device_connection = get_device_connection(
-            hass, entity_config[CONF_ADDRESS], config_entry
-        )
-
-        entities.append(
-            LcnScene(entity_config, config_entry.entry_id, device_connection)
-        )
+    entities = [
+        LcnScene(entity_config, config_entry) for entity_config in entity_configs
+    ]
 
     async_add_entities(entities)
 
@@ -51,12 +43,11 @@ def add_lcn_entities(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LCN switch entities from a config entry."""
     add_entities = partial(
         add_lcn_entities,
-        hass,
         config_entry,
         async_add_entities,
     )
@@ -77,11 +68,9 @@ async def async_setup_entry(
 class LcnScene(LcnEntity, Scene):
     """Representation of a LCN scene."""
 
-    def __init__(
-        self, config: ConfigType, entry_id: str, device_connection: DeviceConnectionType
-    ) -> None:
+    def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
         """Initialize the LCN scene."""
-        super().__init__(config, entry_id, device_connection)
+        super().__init__(config, config_entry)
 
         self.register_id = config[CONF_DOMAIN_DATA][CONF_REGISTER]
         self.scene_id = config[CONF_DOMAIN_DATA][CONF_SCENE]
@@ -98,7 +87,7 @@ class LcnScene(LcnEntity, Scene):
             self.transition = None
         else:
             self.transition = pypck.lcn_defs.time_to_ramp_value(
-                config[CONF_DOMAIN_DATA][CONF_TRANSITION]
+                config[CONF_DOMAIN_DATA][CONF_TRANSITION] * 1000.0
             )
 
     async def async_activate(self, **kwargs: Any) -> None:

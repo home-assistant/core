@@ -6,7 +6,7 @@ from typing import Any
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
@@ -17,9 +17,13 @@ from homeassistant.components.light import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import color as color_util
 
 from .const import ATTR_DISCOVER_DEVICES
 from .entity import HMDevice
+
+MAX_MIREDS = 500  # 2000 K
+MIN_MIREDS = 153  # 6500 K
 
 
 def setup_platform(
@@ -42,6 +46,9 @@ def setup_platform(
 
 class HMLight(HMDevice, LightEntity):
     """Representation of a Homematic light."""
+
+    _attr_min_color_temp_kelvin = 2000  # 500 Mireds
+    _attr_max_color_temp_kelvin = 6500  # 153 Mireds
 
     @property
     def brightness(self):
@@ -99,12 +106,14 @@ class HMLight(HMDevice, LightEntity):
         return hue * 360.0, sat * 100.0
 
     @property
-    def color_temp(self):
-        """Return the color temp in mireds [int]."""
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature value in Kelvin."""
         if ColorMode.COLOR_TEMP not in self.supported_color_modes:
             return None
         hm_color_temp = self._hmdevice.get_color_temp(self._channel)
-        return self.max_mireds - (self.max_mireds - self.min_mireds) * hm_color_temp
+        return color_util.color_temperature_mired_to_kelvin(
+            MAX_MIREDS - (MAX_MIREDS - MIN_MIREDS) * hm_color_temp
+        )
 
     @property
     def effect_list(self):
@@ -130,7 +139,7 @@ class HMLight(HMDevice, LightEntity):
             self._hmdevice.set_level(percent_bright, self._channel)
         elif (
             ATTR_HS_COLOR not in kwargs
-            and ATTR_COLOR_TEMP not in kwargs
+            and ATTR_COLOR_TEMP_KELVIN not in kwargs
             and ATTR_EFFECT not in kwargs
         ):
             self._hmdevice.on(self._channel)
@@ -141,10 +150,11 @@ class HMLight(HMDevice, LightEntity):
                 saturation=kwargs[ATTR_HS_COLOR][1] / 100.0,
                 channel=self._channel,
             )
-        if ATTR_COLOR_TEMP in kwargs:
-            hm_temp = (self.max_mireds - kwargs[ATTR_COLOR_TEMP]) / (
-                self.max_mireds - self.min_mireds
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            mireds = color_util.color_temperature_kelvin_to_mired(
+                kwargs[ATTR_COLOR_TEMP_KELVIN]
             )
+            hm_temp = (MAX_MIREDS - mireds) / (MAX_MIREDS - MIN_MIREDS)
             self._hmdevice.set_color_temp(hm_temp)
         if ATTR_EFFECT in kwargs:
             self._hmdevice.set_effect(kwargs[ATTR_EFFECT])

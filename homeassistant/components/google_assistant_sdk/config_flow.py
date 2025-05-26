@@ -8,12 +8,12 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult, OptionsFlow
 from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import CONF_LANGUAGE_CODE, DEFAULT_NAME, DOMAIN, SUPPORTED_LANGUAGE_CODES
-from .helpers import default_language_code
+from .helpers import GoogleAssistantSDKConfigEntry, default_language_code
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,8 +24,6 @@ class OAuth2FlowHandler(
     """Config flow to handle Google Assistant SDK OAuth2 authentication."""
 
     DOMAIN = DOMAIN
-
-    reauth_entry: ConfigEntry | None = None
 
     @property
     def logger(self) -> logging.Logger:
@@ -46,9 +44,6 @@ class OAuth2FlowHandler(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -61,14 +56,10 @@ class OAuth2FlowHandler(
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow, or update existing entry."""
-        if self.reauth_entry:
-            self.hass.config_entries.async_update_entry(self.reauth_entry, data=data)
-            await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
-
-        if self._async_current_entries():
-            # Config entry already exists, only one allowed.
-            return self.async_abort(reason="single_instance_allowed")
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=data
+            )
 
         return self.async_create_entry(
             title=DEFAULT_NAME,
@@ -81,18 +72,14 @@ class OAuth2FlowHandler(
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: GoogleAssistantSDKConfigEntry,
     ) -> OptionsFlow:
         """Create the options flow."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
 class OptionsFlowHandler(OptionsFlow):
     """Google Assistant SDK options flow."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

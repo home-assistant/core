@@ -1,0 +1,164 @@
+{
+  "components": {
+    "main": {
+      "mediaPlayback": {
+        "supportedPlaybackCommands": {
+          "value": ["play", "pause", "stop"],
+          "timestamp": "2025-02-09T15:42:12.923Z"
+        },
+        "playbackStatus": {
+          "value": "stopped",
+          "timestamp": "2025-02-09T15:42:12.923Z"
+        }
+      },
+      "samsungvd.soundFrom": {
+        "mode": {
+          "value": 3,
+          "timestamp": "2025-02-09T15:42:13.215Z"
+        },
+        "detailName": {
+          "value": "External Device",
+          "timestamp": "2025-02-09T15:42:13.215Z"
+        }
+      },
+      "audioVolume": {
+        "volume": {
+          "value": 17,
+          "unit": "%",
+          "timestamp": "2025-02-09T17:25:51.839Z"
+        }
+      },
+      "samsungvd.audioGroupInfo": {
+        "role": {
+          "value": null
+        },
+        "status": {
+          "value": null
+        }
+      },
+      "refresh": {},
+      "audioNotification": {},
+      "execute": {
+        "data": {
+          "value": null
+        }
+      },
+      "samsungvd.audioInputSource": {
+        "supportedInputSources": {
+          "value": ["digital", "HDMI1", "bluetooth", "wifi", "HDMI2"],
+          "timestamp": "2025-02-09T17:18:44.680Z"
+        },
+        "inputSource": {
+          "value": "HDMI1",
+          "timestamp": "2025-02-09T17:18:44.680Z"
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "on",
+          "timestamp": "2025-02-09T17:25:51.536Z"
+        }
+      },
+      "ocf": {
+        "st": {
+          "value": "2024-12-10T02:12:44Z",
+          "timestamp": "2024-12-31T01:03:42.587Z"
+        },
+        "mndt": {
+          "value": "2023-01-01",
+          "timestamp": "2024-12-31T01:03:42.587Z"
+        },
+        "mnfv": {
+          "value": "SAT-iMX8M23WWC-1010.5",
+          "timestamp": "2024-12-31T01:03:42.587Z"
+        },
+        "mnhw": {
+          "value": "",
+          "timestamp": "2024-12-31T01:03:42.587Z"
+        },
+        "di": {
+          "value": "0d94e5db-8501-2355-eb4f-214163702cac",
+          "timestamp": "2024-12-31T01:03:42.587Z"
+        },
+        "mnsl": {
+          "value": "",
+          "timestamp": "2024-12-31T01:03:42.587Z"
+        },
+        "dmv": {
+          "value": "res.1.1.0,sh.1.1.0",
+          "timestamp": "2024-12-31T01:03:42.587Z"
+        },
+        "n": {
+          "value": "Soundbar Living",
+          "timestamp": "2024-12-31T01:03:42.587Z"
+        },
+        "mnmo": {
+          "value": "HW-Q990C",
+          "timestamp": "2024-12-31T01:03:42.587Z"
+        },
+        "vid": {
+          "value": "VD-NetworkAudio-002S",
+          "timestamp": "2024-12-31T01:03:42.587Z"
+        },
+        "mnmn": {
+          "value": "Samsung Electronics",
+          "timestamp": "2024-12-31T01:03:42.587Z"
+        },
+        "mnml": {
+          "value": "",
+          "timestamp": "2024-12-31T01:03:42.587Z"
+        },
+        "mnpv": {
+          "value": "7.0",
+          "timestamp": "2024-12-31T01:03:42.587Z"
+        },
+        "mnos": {
+          "value": "Tizen",
+          "timestamp": "2024-12-31T01:03:42.587Z"
+        },
+        "pi": {
+          "value": "0d94e5db-8501-2355-eb4f-214163702cac",
+          "timestamp": "2024-12-31T01:03:42.587Z"
+        },
+        "icv": {
+          "value": "core.1.1.0",
+          "timestamp": "2024-12-31T01:03:42.587Z"
+        }
+      },
+      "audioMute": {
+        "mute": {
+          "value": "unmuted",
+          "timestamp": "2025-02-09T17:18:44.787Z"
+        }
+      },
+      "samsungvd.thingStatus": {
+        "updatedTime": {
+          "value": 1739115734,
+          "timestamp": "2025-02-09T15:42:13.949Z"
+        },
+        "status": {
+          "value": "Idle",
+          "timestamp": "2025-02-09T15:42:13.949Z"
+        }
+      },
+      "audioTrackData": {
+        "totalTime": {
+          "value": 0,
+          "timestamp": "2024-12-31T00:29:29.953Z"
+        },
+        "audioTrackData": {
+          "value": {
+            "title": "",
+            "artist": "",
+            "album": ""
+          },
+          "timestamp": "2024-12-31T00:29:29.953Z"
+        },
+        "elapsedTime": {
+          "value": 0,
+          "timestamp": "2024-12-31T00:29:29.828Z"
+        }
+      }
+    }
+  }
+}

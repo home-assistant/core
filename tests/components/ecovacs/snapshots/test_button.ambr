@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -52,6 +53,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -91,6 +93,335 @@
     'state': '2024-01-01T00:00:00+00:00',
   })
 # ---
+# name: test_buttons[qhe2o2][button.dusty_empty_dustbin:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.dusty_empty_dustbin',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Empty dustbin',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'station_action_empty_dustbin',
+    'unique_id': '8516fbb1-17f1-4194-0000001_station_action_empty_dustbin',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[qhe2o2][button.dusty_empty_dustbin:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dusty Empty dustbin',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.dusty_empty_dustbin',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_buttons[qhe2o2][button.dusty_relocate:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.dusty_relocate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Relocate',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'relocate',
+    'unique_id': '8516fbb1-17f1-4194-0000001_relocate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[qhe2o2][button.dusty_relocate:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dusty Relocate',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.dusty_relocate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_buttons[qhe2o2][button.dusty_reset_filter_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.dusty_reset_filter_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset filter lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_lifespan_filter',
+    'unique_id': '8516fbb1-17f1-4194-0000001_reset_lifespan_filter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[qhe2o2][button.dusty_reset_filter_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dusty Reset filter lifespan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.dusty_reset_filter_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_buttons[qhe2o2][button.dusty_reset_main_brush_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.dusty_reset_main_brush_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset main brush lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_lifespan_brush',
+    'unique_id': '8516fbb1-17f1-4194-0000001_reset_lifespan_brush',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[qhe2o2][button.dusty_reset_main_brush_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dusty Reset main brush lifespan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.dusty_reset_main_brush_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_buttons[qhe2o2][button.dusty_reset_round_mop_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.dusty_reset_round_mop_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset round mop lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_lifespan_round_mop',
+    'unique_id': '8516fbb1-17f1-4194-0000001_reset_lifespan_round_mop',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[qhe2o2][button.dusty_reset_round_mop_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dusty Reset round mop lifespan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.dusty_reset_round_mop_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_buttons[qhe2o2][button.dusty_reset_side_brush_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.dusty_reset_side_brush_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset side brush lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_lifespan_side_brush',
+    'unique_id': '8516fbb1-17f1-4194-0000001_reset_lifespan_side_brush',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[qhe2o2][button.dusty_reset_side_brush_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dusty Reset side brush lifespan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.dusty_reset_side_brush_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_buttons[qhe2o2][button.dusty_reset_unit_care_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.dusty_reset_unit_care_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset unit care lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_lifespan_unit_care',
+    'unique_id': '8516fbb1-17f1-4194-0000001_reset_lifespan_unit_care',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[qhe2o2][button.dusty_reset_unit_care_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dusty Reset unit care lifespan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.dusty_reset_unit_care_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
 # name: test_buttons[yna5x1][button.ozmo_950_relocate:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -98,6 +429,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -144,6 +476,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -190,6 +523,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -236,6 +570,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,

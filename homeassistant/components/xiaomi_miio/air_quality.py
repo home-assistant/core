@@ -3,13 +3,17 @@
 from collections.abc import Callable
 import logging
 
-from miio import AirQualityMonitor, AirQualityMonitorCGDN1, DeviceException
+from miio import (
+    AirQualityMonitor,
+    AirQualityMonitorCGDN1,
+    Device as MiioDevice,
+    DeviceException,
+)
 
 from homeassistant.components.air_quality import AirQualityEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_FLOW_TYPE,
@@ -18,7 +22,8 @@ from .const import (
     MODEL_AIRQUALITYMONITOR_S1,
     MODEL_AIRQUALITYMONITOR_V1,
 )
-from .device import XiaomiMiioEntity
+from .entity import XiaomiMiioEntity
+from .typing import XiaomiMiioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,12 +45,17 @@ PROP_TO_ATTR = {
 class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
     """Air Quality class for Xiaomi cgllc.airmonitor.b1 device."""
 
-    def __init__(self, name, device, entry, unique_id):
+    def __init__(
+        self,
+        name: str,
+        device: MiioDevice,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id)
 
         self._icon = "mdi:cloud"
-        self._available = None
         self._air_quality_index = None
         self._carbon_dioxide = None
         self._carbon_dioxide_equivalent = None
@@ -170,12 +180,17 @@ class AirMonitorV1(AirMonitorB1):
 class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):
     """Air Quality class for cgllc.airm.cgdn1 device."""
 
-    def __init__(self, name, device, entry, unique_id):
+    def __init__(
+        self,
+        name: str,
+        device: MiioDevice,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id)
 
         self._icon = "mdi:cloud"
-        self._available = None
         self._carbon_dioxide = None
         self._particulate_matter_2_5 = None
         self._particulate_matter_10 = None
@@ -241,8 +256,8 @@ DEVICE_MAP: dict[str, dict[str, Callable]] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: XiaomiMiioConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Xiaomi Air Quality from a config entry."""
     entities = []

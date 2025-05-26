@@ -13,8 +13,38 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 from tests.typing import WebSocketGenerator
+
+SWITCH_BEFORE_OPTIONS = {
+    "name": "test_template_switch",
+    "template_type": "switch",
+    "turn_off": [{"event": "test_template_switch", "event_data": {"event": "off"}}],
+    "turn_on": [{"event": "test_template_switch", "event_data": {"event": "on"}}],
+    "value_template": "{{ now().minute % 2 == 0 }}",
+}
+
+
+SWITCH_AFTER_OPTIONS = {
+    "name": "test_template_switch",
+    "template_type": "switch",
+    "turn_off": [{"event": "test_template_switch", "event_data": {"event": "off"}}],
+    "turn_on": [{"event": "test_template_switch", "event_data": {"event": "on"}}],
+    "state": "{{ now().minute % 2 == 0 }}",
+    "value_template": "{{ now().minute % 2 == 0 }}",
+}
+
+SENSOR_OPTIONS = {
+    "name": "test_template_sensor",
+    "template_type": "sensor",
+    "state": "{{ 'a' if now().minute % 2 == 0 else 'b' }}",
+}
+
+BINARY_SENSOR_OPTIONS = {
+    "name": "test_template_sensor",
+    "template_type": "binary_sensor",
+    "state": "{{ now().minute % 2 == 0 else }}",
+}
 
 
 @pytest.mark.parametrize(
@@ -29,6 +59,16 @@ from tests.typing import WebSocketGenerator
         "extra_attrs",
     ),
     [
+        (
+            "alarm_control_panel",
+            {"value_template": "{{ states('alarm_control_panel.one') }}"},
+            "armed_away",
+            {"one": "armed_away", "two": "disarmed"},
+            {},
+            {},
+            {"code_arm_required": True, "code_format": "number"},
+            {},
+        ),
         (
             "binary_sensor",
             {
@@ -63,7 +103,7 @@ from tests.typing import WebSocketGenerator
                 "device_class": "restart",
                 "press": [
                     {
-                        "service": "input_boolean.toggle",
+                        "action": "input_boolean.toggle",
                         "target": {"entity_id": "input_boolean.test"},
                         "data": {},
                     }
@@ -73,7 +113,7 @@ from tests.typing import WebSocketGenerator
                 "device_class": "restart",
                 "press": [
                     {
-                        "service": "input_boolean.toggle",
+                        "action": "input_boolean.toggle",
                         "target": {"entity_id": "input_boolean.test"},
                         "data": {},
                     }
@@ -98,9 +138,10 @@ from tests.typing import WebSocketGenerator
             {"one": "30.0", "two": "20.0"},
             {},
             {
-                "min": "{{ 0 }}",
-                "max": "{{ 100 }}",
-                "step": "{{ 0.1 }}",
+                "min": "0",
+                "max": "100",
+                "step": "0.1",
+                "unit_of_measurement": "cm",
                 "set_value": {
                     "action": "input_number.set_value",
                     "target": {"entity_id": "input_number.test"},
@@ -108,9 +149,10 @@ from tests.typing import WebSocketGenerator
                 },
             },
             {
-                "min": "{{ 0 }}",
-                "max": "{{ 100 }}",
-                "step": "{{ 0.1 }}",
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+                "unit_of_measurement": "cm",
                 "set_value": {
                     "action": "input_number.set_value",
                     "target": {"entity_id": "input_number.test"},
@@ -144,14 +186,14 @@ from tests.typing import WebSocketGenerator
 @pytest.mark.freeze_time("2024-07-09 00:00:00+00:00")
 async def test_config_flow(
     hass: HomeAssistant,
-    template_type,
-    state_template,
-    template_state,
-    input_states,
-    input_attributes,
-    extra_input,
-    extra_options,
-    extra_attrs,
+    template_type: str,
+    state_template: dict[str, Any],
+    template_state: str,
+    input_states: dict[str, Any],
+    input_attributes: dict[str, Any],
+    extra_input: dict[str, Any],
+    extra_options: dict[str, Any],
+    extra_attrs: dict[str, Any],
 ) -> None:
     """Test the config flow."""
     input_entities = ["one", "two"]
@@ -210,8 +252,8 @@ async def test_config_flow(
 
     state = hass.states.get(f"{template_type}.my_template")
     assert state.state == template_state
-    for key in extra_attrs:
-        assert state.attributes[key] == extra_attrs[key]
+    for key, value in extra_attrs.items():
+        assert state.attributes[key] == value
 
 
 @pytest.mark.parametrize(
@@ -258,15 +300,31 @@ async def test_config_flow(
             "number",
             {"state": "{{ states('number.one') }}"},
             {
-                "min": "{{ 0 }}",
-                "max": "{{ 100 }}",
-                "step": "{{ 0.1 }}",
+                "min": "0",
+                "max": "100",
+                "step": "0.1",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
             {
-                "min": "{{ 0 }}",
-                "max": "{{ 100 }}",
-                "step": "{{ 0.1 }}",
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
+        ),
+        (
+            "alarm_control_panel",
+            {"value_template": "{{ states('alarm_control_panel.one') }}"},
+            {"code_arm_required": True, "code_format": "number"},
+            {"code_arm_required": True, "code_format": "number"},
         ),
         (
             "select",
@@ -349,17 +407,6 @@ async def test_config_flow_device(
     }
 
 
-def get_suggested(schema, key):
-    """Get suggested value for key in voluptuous schema."""
-    for k in schema:
-        if k == key:
-            if k.description is None or "suggested_value" not in k.description:
-                return None
-            return k.description["suggested_value"]
-    # If the desired key is missing from the schema, return None
-    return None
-
-
 @pytest.mark.parametrize(
     (
         "template_type",
@@ -410,7 +457,7 @@ def get_suggested(schema, key):
                 "device_class": "restart",
                 "press": [
                     {
-                        "service": "input_boolean.toggle",
+                        "action": "input_boolean.toggle",
                         "target": {"entity_id": "input_boolean.test"},
                         "data": {},
                     }
@@ -419,7 +466,7 @@ def get_suggested(schema, key):
             {
                 "press": [
                     {
-                        "service": "input_boolean.toggle",
+                        "action": "input_boolean.toggle",
                         "target": {"entity_id": "input_boolean.test"},
                         "data": {},
                     }
@@ -451,9 +498,10 @@ def get_suggested(schema, key):
             ["30.0", "20.0"],
             {"one": "30.0", "two": "20.0"},
             {
-                "min": "{{ 0 }}",
-                "max": "{{ 100 }}",
-                "step": "{{ 0.1 }}",
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+                "unit_of_measurement": "cm",
                 "set_value": {
                     "action": "input_number.set_value",
                     "target": {"entity_id": "input_number.test"},
@@ -461,9 +509,10 @@ def get_suggested(schema, key):
                 },
             },
             {
-                "min": "{{ 0 }}",
-                "max": "{{ 100 }}",
-                "step": "{{ 0.1 }}",
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+                "unit_of_measurement": "cm",
                 "set_value": {
                     "action": "input_number.set_value",
                     "target": {"entity_id": "input_number.test"},
@@ -471,6 +520,16 @@ def get_suggested(schema, key):
                 },
             },
             "state",
+        ),
+        (
+            "alarm_control_panel",
+            {"value_template": "{{ states('alarm_control_panel.one') }}"},
+            {"value_template": "{{ states('alarm_control_panel.two') }}"},
+            ["armed_away", "disarmed"],
+            {"one": "armed_away", "two": "disarmed"},
+            {"code_arm_required": True, "code_format": "number"},
+            {"code_arm_required": True, "code_format": "number"},
+            "value_template",
         ),
         (
             "select",
@@ -497,14 +556,14 @@ def get_suggested(schema, key):
 @pytest.mark.freeze_time("2024-07-09 00:00:00+00:00")
 async def test_options(
     hass: HomeAssistant,
-    template_type,
-    old_state_template,
-    new_state_template,
-    template_state,
-    input_states,
-    extra_options,
-    options_options,
-    key_template,
+    template_type: str,
+    old_state_template: dict[str, Any],
+    new_state_template: dict[str, Any],
+    template_state: list[str],
+    input_states: dict[str, Any],
+    extra_options: dict[str, Any],
+    options_options: dict[str, Any],
+    key_template: str,
 ) -> None:
     """Test reconfiguring."""
     input_entities = ["one", "two"]
@@ -538,7 +597,7 @@ async def test_options(
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == template_type
-    assert get_suggested(
+    assert get_schema_suggested_value(
         result["data_schema"].schema, key_template
     ) == old_state_template.get(key_template)
     assert "name" not in result["data_schema"].schema
@@ -585,8 +644,10 @@ async def test_options(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == template_type
 
-    assert get_suggested(result["data_schema"].schema, "name") is None
-    assert get_suggested(result["data_schema"].schema, key_template) is None
+    assert get_schema_suggested_value(result["data_schema"].schema, "name") is None
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, key_template) is None
+    )
 
 
 @pytest.mark.parametrize(
@@ -626,7 +687,7 @@ async def test_config_flow_preview(
     template_type: str,
     state_template: str,
     extra_user_input: dict[str, Any],
-    input_states: list[str],
+    input_states: dict[str, Any],
     template_states: str,
     extra_attributes: list[dict[str, Any]],
     listeners: list[list[str]],
@@ -764,7 +825,7 @@ EARLY_END_ERROR = "invalid template (TemplateSyntaxError: unexpected 'end of tem
                 ),
                 "unit_of_measurement": (
                     "'None' is not a valid unit for device class 'energy'; "
-                    "expected one of 'GJ', 'kWh', 'MJ', 'MWh', 'Wh'"
+                    "expected one of 'cal', 'Gcal', 'GJ', 'GWh', 'J', 'kcal', 'kJ', 'kWh', 'Mcal', 'MJ', 'MWh', 'mWh', 'TWh', 'Wh'"
                 ),
             },
         ),
@@ -776,7 +837,7 @@ async def test_config_flow_preview_bad_input(
     template_type: str,
     state_template: str,
     extra_user_input: dict[str, str],
-    error: str,
+    error: dict[str, str],
 ) -> None:
     """Test the config flow preview."""
     client = await hass_ws_client(hass)
@@ -1088,7 +1149,7 @@ async def test_option_flow_preview(
     new_state_template: str,
     extra_config_flow_data: dict[str, Any],
     extra_user_input: dict[str, Any],
-    input_states: list[str],
+    input_states: dict[str, Any],
     template_state: str,
     extra_attributes: dict[str, Any],
     listeners: list[str],
@@ -1230,15 +1291,31 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             "number",
             {"state": "{{ states('number.one') }}"},
             {
-                "min": "{{ 0 }}",
-                "max": "{{ 100 }}",
-                "step": "{{ 0.1 }}",
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
             {
-                "min": "{{ 0 }}",
-                "max": "{{ 100 }}",
-                "step": "{{ 0.1 }}",
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
+        ),
+        (
+            "alarm_control_panel",
+            {"value_template": "{{ states('alarm_control_panel.one') }}"},
+            {"code_arm_required": True, "code_format": "number"},
+            {"code_arm_required": True, "code_format": "number"},
         ),
         (
             "select",

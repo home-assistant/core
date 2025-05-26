@@ -7,14 +7,15 @@ from dataclasses import dataclass
 from typing import Any
 
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.teslemetry import Vehicle
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TeslemetryConfigEntry
-from .entity import TeslemetryVehicleEntity
-from .helpers import handle_vehicle_command
+from .entity import TeslemetryVehiclePollingEntity
+from .helpers import handle_command, handle_vehicle_command
 from .models import TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
@@ -24,28 +25,35 @@ PARALLEL_UPDATES = 0
 class TeslemetryButtonEntityDescription(ButtonEntityDescription):
     """Describes a Teslemetry Button entity."""
 
-    func: Callable[[TeslemetryButtonEntity], Awaitable[Any]] | None = None
+    func: Callable[[TeslemetryButtonEntity], Awaitable[Any]]
 
 
 DESCRIPTIONS: tuple[TeslemetryButtonEntityDescription, ...] = (
-    TeslemetryButtonEntityDescription(key="wake"),  # Every button runs wakeup
     TeslemetryButtonEntityDescription(
-        key="flash_lights", func=lambda self: self.api.flash_lights()
+        key="wake", func=lambda self: handle_command(self.api.wake_up())
     ),
     TeslemetryButtonEntityDescription(
-        key="honk", func=lambda self: self.api.honk_horn()
+        key="flash_lights",
+        func=lambda self: handle_vehicle_command(self.api.flash_lights()),
     ),
     TeslemetryButtonEntityDescription(
-        key="enable_keyless_driving", func=lambda self: self.api.remote_start_drive()
+        key="honk", func=lambda self: handle_vehicle_command(self.api.honk_horn())
     ),
     TeslemetryButtonEntityDescription(
-        key="boombox", func=lambda self: self.api.remote_boombox(0)
+        key="enable_keyless_driving",
+        func=lambda self: handle_vehicle_command(self.api.remote_start_drive()),
+    ),
+    TeslemetryButtonEntityDescription(
+        key="boombox",
+        func=lambda self: handle_vehicle_command(self.api.remote_boombox(0)),
     ),
     TeslemetryButtonEntityDescription(
         key="homelink",
-        func=lambda self: self.api.trigger_homelink(
-            lat=self.coordinator.data["drive_state_latitude"],
-            lon=self.coordinator.data["drive_state_longitude"],
+        func=lambda self: handle_vehicle_command(
+            self.api.trigger_homelink(
+                lat=self.hass.config.latitude,
+                lon=self.hass.config.longitude,
+            )
         ),
     ),
 )
@@ -54,7 +62,7 @@ DESCRIPTIONS: tuple[TeslemetryButtonEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslemetryConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Teslemetry Button platform from a config entry."""
 
@@ -66,9 +74,10 @@ async def async_setup_entry(
     )
 
 
-class TeslemetryButtonEntity(TeslemetryVehicleEntity, ButtonEntity):
+class TeslemetryButtonEntity(TeslemetryVehiclePollingEntity, ButtonEntity):
     """Base class for Teslemetry buttons."""
 
+    api: Vehicle
     entity_description: TeslemetryButtonEntityDescription
 
     def __init__(
@@ -85,6 +94,4 @@ class TeslemetryButtonEntity(TeslemetryVehicleEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self.wake_up_if_asleep()
-        if self.entity_description.func:
-            await handle_vehicle_command(self.entity_description.func(self))
+        await self.entity_description.func(self)

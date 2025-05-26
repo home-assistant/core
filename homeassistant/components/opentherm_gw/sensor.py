@@ -22,7 +22,7 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     BOILER_DEVICE_DESCRIPTION,
@@ -32,7 +32,7 @@ from .const import (
     THERMOSTAT_DEVICE_DESCRIPTION,
     OpenThermDataSource,
 )
-from .entity import OpenThermEntity, OpenThermEntityDescription
+from .entity import OpenThermEntityDescription, OpenThermStatusEntity
 
 SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION = 1
 
@@ -875,7 +875,7 @@ SENSOR_DESCRIPTIONS: tuple[OpenThermSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the OpenTherm Gateway sensors."""
     gw_hub = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]]
@@ -889,7 +889,7 @@ async def async_setup_entry(
     )
 
 
-class OpenThermSensor(OpenThermEntity, SensorEntity):
+class OpenThermSensor(OpenThermStatusEntity, SensorEntity):
     """Representation of an OpenTherm sensor."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC

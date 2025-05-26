@@ -22,16 +22,151 @@ from script.gen_requirements_all import (
 
 from .model import Config, Integration
 
+PACKAGE_CHECK_VERSION_RANGE = {
+    "aiohttp": "SemVer",
+    # https://github.com/iMicknl/python-overkiz-api/issues/1644
+    # "attrs": "CalVer"
+    "grpcio": "SemVer",
+    "mashumaro": "SemVer",
+    "pydantic": "SemVer",
+    "pyjwt": "SemVer",
+    "pytz": "CalVer",
+    "typing_extensions": "SemVer",
+    "yarl": "SemVer",
+}
+
 PACKAGE_REGEX = re.compile(
     r"^(?:--.+\s)?([-_,\.\w\d\[\]]+)(==|>=|<=|~=|!=|<|>|===)*(.*)$"
 )
 PIP_REGEX = re.compile(r"^(--.+\s)?([-_\.\w\d]+.*(?:==|>=|<=|~=|!=|<|>|===)?.*$)")
 PIP_VERSION_RANGE_SEPARATOR = re.compile(r"^(==|>=|<=|~=|!=|<|>|===)?(.*)$")
 
-IGNORE_STANDARD_LIBRARY_VIOLATIONS = {
-    # Integrations which have standard library requirements.
-    "slide",
-    "suez_water",
+FORBIDDEN_PACKAGES = {"codecov", "pytest", "setuptools", "wheel"}
+FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
+    # In the form dict("domain": {"package": {"reason1", "reason2"}})
+    # - domain is the integration domain
+    # - package is the package (can be transitive) referencing the dependency
+    # - reasonX should be the name of the invalid dependency
+    "azure_devops": {
+        # https://github.com/timmo001/aioazuredevops/issues/67
+        # aioazuredevops > incremental > setuptools
+        "incremental": {"setuptools"}
+    },
+    "cmus": {
+        # https://github.com/mtreinish/pycmus/issues/4
+        # pycmus > pbr > setuptools
+        "pbr": {"setuptools"}
+    },
+    "concord232": {
+        # https://bugs.launchpad.net/python-stevedore/+bug/2111694
+        # concord232 > stevedore > pbr > setuptools
+        "pbr": {"setuptools"}
+    },
+    "efergy": {
+        # https://github.com/tkdrob/pyefergy/issues/46
+        # pyefergy > codecov
+        # pyefergy > types-pytz
+        "pyefergy": {"codecov", "types-pytz"}
+    },
+    "fitbit": {
+        # https://github.com/orcasgit/python-fitbit/pull/178
+        # but project seems unmaintained
+        # fitbit > setuptools
+        "fitbit": {"setuptools"}
+    },
+    "guardian": {
+        # https://github.com/jsbronder/asyncio-dgram/issues/20
+        # aioguardian > asyncio-dgram > setuptools
+        "asyncio-dgram": {"setuptools"}
+    },
+    "hive": {
+        # https://github.com/Pyhass/Pyhiveapi/pull/88
+        # pyhive-integration > unasync > setuptools
+        "unasync": {"setuptools"}
+    },
+    "influxdb": {
+        # https://github.com/influxdata/influxdb-client-python/issues/695
+        # influxdb-client > setuptools
+        "influxdb-client": {"setuptools"}
+    },
+    "keba": {
+        # https://github.com/jsbronder/asyncio-dgram/issues/20
+        # keba-kecontact > asyncio-dgram > setuptools
+        "asyncio-dgram": {"setuptools"}
+    },
+    "lyric": {
+        # https://github.com/timmo001/aiolyric/issues/115
+        # aiolyric > incremental > setuptools
+        "incremental": {"setuptools"}
+    },
+    "microbees": {
+        # https://github.com/microBeesTech/pythonSDK/issues/6
+        # microbeespy > setuptools
+        "microbeespy": {"setuptools"}
+    },
+    "minecraft_server": {
+        # https://github.com/jsbronder/asyncio-dgram/issues/20
+        # mcstatus > asyncio-dgram > setuptools
+        "asyncio-dgram": {"setuptools"}
+    },
+    "mochad": {
+        # https://github.com/mtreinish/pymochad/issues/8
+        # pymochad > pbr > setuptools
+        "pbr": {"setuptools"}
+    },
+    "mystrom": {
+        # https://github.com/home-assistant-ecosystem/python-mystrom/issues/55
+        # python-mystrom > setuptools
+        "python-mystrom": {"setuptools"}
+    },
+    "nx584": {
+        # https://bugs.launchpad.net/python-stevedore/+bug/2111694
+        # pynx584 > stevedore > pbr > setuptools
+        "pbr": {"setuptools"}
+    },
+    "opnsense": {
+        # https://github.com/mtreinish/pyopnsense/issues/27
+        # pyopnsense > pbr > setuptools
+        "pbr": {"setuptools"}
+    },
+    "opower": {
+        # https://github.com/arrow-py/arrow/issues/1169 (fixed not yet released)
+        # opower > arrow > types-python-dateutil
+        "arrow": {"types-python-dateutil"}
+    },
+    "osoenergy": {
+        # https://github.com/osohotwateriot/apyosohotwaterapi/pull/4
+        # pyosoenergyapi > unasync > setuptools
+        "unasync": {"setuptools"}
+    },
+    "ovo_energy": {
+        # https://github.com/timmo001/ovoenergy/issues/132
+        # ovoenergy > incremental > setuptools
+        "incremental": {"setuptools"}
+    },
+    "remote_rpi_gpio": {
+        # https://github.com/waveform80/colorzero/issues/9
+        # gpiozero > colorzero > setuptools
+        "colorzero": {"setuptools"}
+    },
+    "system_bridge": {
+        # https://github.com/timmo001/system-bridge-connector/pull/78
+        # systembridgeconnector > incremental > setuptools
+        "incremental": {"setuptools"}
+    },
+    "travisci": {
+        # https://github.com/menegazzo/travispy seems to be unmaintained
+        # and unused https://www.home-assistant.io/integrations/travisci
+        # travispy > pytest-rerunfailures > pytest
+        "pytest-rerunfailures": {"pytest"},
+        # travispy > pytest
+        "travispy": {"pytest"},
+    },
+    "zha": {
+        # https://github.com/waveform80/colorzero/issues/9
+        # zha > zigpy-zigate > gpiozero > colorzero > setuptools
+        "colorzero": {"setuptools"}
+    },
 }
 
 
@@ -84,18 +219,19 @@ def validate_requirements_format(integration: Integration) -> bool:
         if not version:
             continue
 
-        for part in version.split(";", 1)[0].split(","):
-            version_part = PIP_VERSION_RANGE_SEPARATOR.match(part)
-            if (
-                version_part
-                and AwesomeVersion(version_part.group(2)).strategy
-                == AwesomeVersionStrategy.UNKNOWN
-            ):
-                integration.add_error(
-                    "requirements",
-                    f"Unable to parse package version ({version}) for {pkg}.",
-                )
-                continue
+        if integration.core:
+            for part in version.split(";", 1)[0].split(","):
+                version_part = PIP_VERSION_RANGE_SEPARATOR.match(part)
+                if (
+                    version_part
+                    and AwesomeVersion(version_part.group(2)).strategy
+                    == AwesomeVersionStrategy.UNKNOWN
+                ):
+                    integration.add_error(
+                        "requirements",
+                        f"Unable to parse package version ({version}) for {pkg}.",
+                    )
+                    continue
 
     return len(integration.errors) == start_errors
 
@@ -143,27 +279,12 @@ def validate_requirements(integration: Integration) -> None:
         if req in sys.stdlib_module_names:
             standard_library_violations.add(req)
 
-    if (
-        standard_library_violations
-        and integration.domain not in IGNORE_STANDARD_LIBRARY_VIOLATIONS
-    ):
+    if standard_library_violations:
         integration.add_error(
             "requirements",
             (
                 f"Package {req} has dependencies {standard_library_violations} which "
                 "are not compatible with the Python standard library"
-            ),
-        )
-    elif (
-        not standard_library_violations
-        and integration.domain in IGNORE_STANDARD_LIBRARY_VIOLATIONS
-    ):
-        integration.add_error(
-            "requirements",
-            (
-                f"Integration {integration.domain} no longer has requirements which are"
-                " incompatible with the Python standard library, remove it from "
-                "IGNORE_STANDARD_LIBRARY_VIOLATIONS"
             ),
         )
 
@@ -177,7 +298,7 @@ def get_pipdeptree() -> dict[str, dict[str, Any]]:
             "key": "flake8-docstrings",
             "package_name": "flake8-docstrings",
             "installed_version": "1.5.0"
-            "dependencies": {"flake8"}
+            "dependencies": {"flake8": ">=1.2.3, <4.5.0"}
         }
     }
     """
@@ -193,7 +314,9 @@ def get_pipdeptree() -> dict[str, dict[str, Any]]:
     ):
         deptree[item["package"]["key"]] = {
             **item["package"],
-            "dependencies": {dep["key"] for dep in item["dependencies"]},
+            "dependencies": {
+                dep["key"]: dep["required_version"] for dep in item["dependencies"]
+            },
         }
     return deptree
 
@@ -206,6 +329,11 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
 
     to_check = deque(packages)
 
+    forbidden_package_exceptions = FORBIDDEN_PACKAGE_EXCEPTIONS.get(
+        integration.domain, {}
+    )
+    needs_forbidden_package_exceptions = False
+
     while to_check:
         package = to_check.popleft()
 
@@ -215,6 +343,8 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
         all_requirements.add(package)
 
         item = deptree.get(package)
+        if forbidden_package_exceptions:
+            print(f"Integration {integration.domain}: {item}")
 
         if item is None:
             # Only warn if direct dependencies could not be resolved
@@ -224,9 +354,81 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
                 )
             continue
 
-        to_check.extend(item["dependencies"])
+        dependencies: dict[str, str] = item["dependencies"]
+        package_exceptions = forbidden_package_exceptions.get(package, set())
+        for pkg, version in dependencies.items():
+            if pkg.startswith("types-") or pkg in FORBIDDEN_PACKAGES:
+                needs_forbidden_package_exceptions = True
+                if pkg in package_exceptions:
+                    integration.add_warning(
+                        "requirements",
+                        f"Package {pkg} should not be a runtime dependency in {package}",
+                    )
+                else:
+                    integration.add_error(
+                        "requirements",
+                        f"Package {pkg} should not be a runtime dependency in {package}",
+                    )
+            check_dependency_version_range(integration, package, pkg, version)
 
+        to_check.extend(dependencies)
+
+    if forbidden_package_exceptions and not needs_forbidden_package_exceptions:
+        integration.add_error(
+            "requirements",
+            f"Integration {integration.domain} runtime dependency exceptions "
+            "have been resolved, please remove from `FORBIDDEN_PACKAGE_EXCEPTIONS`",
+        )
     return all_requirements
+
+
+def check_dependency_version_range(
+    integration: Integration, source: str, pkg: str, version: str
+) -> None:
+    """Check requirement version range.
+
+    We want to avoid upper version bounds that are too strict for common packages.
+    """
+    if version == "Any" or (convention := PACKAGE_CHECK_VERSION_RANGE.get(pkg)) is None:
+        return
+
+    if not all(
+        _is_dependency_version_range_valid(version_part, convention)
+        for version_part in version.split(";", 1)[0].split(",")
+    ):
+        integration.add_error(
+            "requirements",
+            f"Version restrictions for {pkg} are too strict ({version}) in {source}",
+        )
+
+
+def _is_dependency_version_range_valid(version_part: str, convention: str) -> bool:
+    version_match = PIP_VERSION_RANGE_SEPARATOR.match(version_part)
+    operator = version_match.group(1)
+    version = version_match.group(2)
+
+    if operator in (">", ">=", "!="):
+        # Lower version binding and version exclusion are fine
+        return True
+
+    if convention == "SemVer":
+        if operator == "==":
+            # Explicit version with wildcard is allowed only on major version
+            # e.g. ==1.* is allowed, but ==1.2.* is not
+            return version.endswith(".*") and version.count(".") == 1
+
+        awesome = AwesomeVersion(version)
+        if operator in ("<", "<="):
+            # Upper version binding only allowed on major version
+            # e.g. <=3 is allowed, but <=3.1 is not
+            return awesome.section(1) == 0 and awesome.section(2) == 0
+
+        if operator == "~=":
+            # Compatible release operator is only allowed on major or minor version
+            # e.g. ~=1.2 is allowed, but ~=1.2.3 is not
+            return awesome.section(2) == 0
+
+    return False
 
 
 def install_requirements(integration: Integration, requirements: set[str]) -> bool:

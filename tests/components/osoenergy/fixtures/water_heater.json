@@ -1,0 +1,20 @@
+{
+  "device_id": "osoenergy_water_heater",
+  "device_type": "SAGA S200",
+  "device_name": "TEST DEVICE",
+  "current_temperature": 60,
+  "min_temperature": 10,
+  "max_temperature": 75,
+  "target_temperature": 60,
+  "target_temperature_low": 57,
+  "target_temperature_high": 63,
+  "available": true,
+  "online": true,
+  "current_operation": "on",
+  "optimization_mode": "oso",
+  "heater_mode": "auto",
+  "profile": [
+    10, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60,
+    60, 60, 60, 60, 60
+  ]
+}

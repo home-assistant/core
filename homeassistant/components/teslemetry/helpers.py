@@ -1,34 +1,25 @@
 """Teslemetry helper functions."""
 
-import asyncio
 from typing import Any
 
 from tesla_fleet_api.exceptions import TeslaFleetError
 
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import LOGGER, TeslemetryState
+from .const import DOMAIN, LOGGER
 
 
-async def wake_up_vehicle(vehicle) -> None:
-    """Wake up a vehicle."""
-    async with vehicle.wakelock:
-        times = 0
-        while vehicle.coordinator.data["state"] != TeslemetryState.ONLINE:
-            try:
-                if times == 0:
-                    cmd = await vehicle.api.wake_up()
-                else:
-                    cmd = await vehicle.api.vehicle()
-                state = cmd["response"]["state"]
-            except TeslaFleetError as e:
-                raise HomeAssistantError(str(e)) from e
-            vehicle.coordinator.data["state"] = state
-            if state != TeslemetryState.ONLINE:
-                times += 1
-                if times >= 4:  # Give up after 30 seconds total
-                    raise HomeAssistantError("Could not wake up vehicle")
-                await asyncio.sleep(times * 5)
+def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
+    """Flatten the data structure."""
+    result = {}
+    for key, value in data.items():
+        if parent:
+            key = f"{parent}_{key}"
+        if isinstance(value, dict):
+            result.update(flatten(value, key))
+        else:
+            result[key] = value
+    return result
 
 
 async def handle_command(command) -> dict[str, Any]:
@@ -36,18 +27,26 @@ async def handle_command(command) -> dict[str, Any]:
     try:
         result = await command
     except TeslaFleetError as e:
-        raise HomeAssistantError(f"Teslemetry command failed, {e.message}") from e
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_exception",
+            translation_placeholders={"message": e.message},
+        ) from e
     LOGGER.debug("Command result: %s", result)
     return result
 
 
-async def handle_vehicle_command(command) -> dict[str, Any]:
+async def handle_vehicle_command(command) -> Any:
     """Handle a vehicle command."""
     result = await handle_command(command)
     if (response := result.get("response")) is None:
         if error := result.get("error"):
             # No response with error
-            raise HomeAssistantError(error)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_error",
+                translation_placeholders={"error": error},
+            )
         # No response without error (unexpected)
         raise HomeAssistantError(f"Unknown response: {response}")
     if (result := response.get("result")) is not True:
@@ -56,8 +55,14 @@ async def handle_vehicle_command(command) -> dict[str, Any]:
                 # Reason is acceptable
                 return result
             # Result of false with reason
-            raise HomeAssistantError(reason)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_reason",
+                translation_placeholders={"reason": reason},
+            )
         # Result of false without reason (unexpected)
-        raise HomeAssistantError("Command failed with no reason")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="command_no_result"
+        )
     # Response with result of true
     return result

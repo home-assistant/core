@@ -11,7 +11,6 @@ from aiohttp import ClientResponseError
 from doorbirdpy import DoorBird
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -22,6 +21,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNA
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
@@ -97,17 +97,17 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    reauth_entry: ConfigEntry
+
     def __init__(self) -> None:
         """Initialize the DoorBird config flow."""
         self.discovery_schema: vol.Schema | None = None
-        self.reauth_entry: ConfigEntry | None = None
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth."""
-        entry_id = self.context["entry_id"]
-        self.reauth_entry = self.hass.config_entries.async_get_entry(entry_id)
+        self.reauth_entry = self._get_reauth_entry()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -115,9 +115,7 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reauth input."""
         errors: dict[str, str] = {}
-        existing_entry = self.reauth_entry
-        assert existing_entry
-        existing_data = existing_entry.data
+        existing_data = self.reauth_entry.data
         placeholders: dict[str, str] = {
             CONF_NAME: existing_data[CONF_NAME],
             CONF_HOST: existing_data[CONF_HOST],
@@ -132,7 +130,7 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
             _, errors = await self._async_validate_or_error(new_config)
             if not errors:
                 return self.async_update_reload_and_abort(
-                    existing_entry, data=new_config
+                    self.reauth_entry, data=new_config
                 )
 
         return self.async_show_form(
@@ -160,7 +158,7 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=data, errors=errors)
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Prepare configuration for a discovered doorbird device."""
         macaddress = discovery_info.properties["macaddress"]
@@ -215,15 +213,11 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
 class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for doorbird."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

@@ -1,0 +1,117 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling:
+    status: exempt
+    comment: |
+      This integration is push-based.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: todo
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name:
+    status: exempt
+    comment: |
+      YAML entities don't support devices. UI entities do and use `has_entity_name`.
+  runtime-data:
+    status: exempt
+    comment: |
+      KNXModule is needed in places where no config_entry handle is available:
+      device_trigger, services, websocket
+  test-before-configure:
+    status: exempt
+    comment: |
+      For automatic connection modes, there has already been successful communication
+        with the KNX interface at the discovery process.
+      For manual tunneling, we avoid making short-lived connections since there seem to be
+        interfaces having troubles with that.
+      For routing, the protocol doesn't provide any means to test since it is connectionless multicast.
+  test-before-setup: done
+  unique-config-entry:
+    status: done
+    comment: Single config entry.
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable:
+    status: done
+    comment: |
+      The library logs when the connection is lost / reconnected. Individual entities don't.
+  parallel-updates:
+    status: exempt
+    comment: |
+      Integration is push based.
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      Integration has no authentication.
+  test-coverage: done
+  # Gold
+  devices:
+    status: exempt
+    comment: |
+      YAML entities don't support devices. UI entities support user-defined devices.
+  diagnostics: done
+  discovery-update-info: todo
+  discovery:
+    status: exempt
+    comment: |
+      KNX doesn't support any provided discovery method.
+  docs-data-update: todo
+  docs-examples: done
+  docs-known-limitations: todo
+  docs-supported-devices:
+    status: exempt
+    comment: |
+      Devices aren't supported directly since communication is on group address level.
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: |
+      Devices aren't discoverable in KNX.
+  entity-category:
+    status: exempt
+    comment: |
+      Entity category can be configured by the user.
+  entity-device-class:
+    status: exempt
+    comment: |
+      Entity category can be configured by the user. Proper defaults are determined by configured DPT.
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      Since all entities are configured manually, they are enabled by default.
+  entity-translations:
+    status: exempt
+    comment: |
+      Since all entities are configured manually, names are user-defined.
+  exception-translations: todo
+  icon-translations: done
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices:
+    status: exempt
+    comment: |
+      Devices aren't discoverable in KNX. Manual device removal is implemented.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: |
+      No HTTP is used.
+  strict-typing: done

@@ -12,7 +12,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_system import TEMPERATURE_UNITS
 
 from .const import DOMAIN, IHC_CONTROLLER
-from .ihcdevice import IHCDevice
+from .entity import IHCEntity
 
 
 def setup_platform(
@@ -38,7 +38,7 @@ def setup_platform(
     add_entities(devices)
 
 
-class IHCSensor(IHCDevice, SensorEntity):
+class IHCSensor(IHCEntity, SensorEntity):
     """Implementation of the IHC sensor."""
 
     def __init__(

@@ -1,0 +1,51 @@
+# serializer version: 1
+# name: test_cloud_all_sensors[binary_sensor.single_channel_receiver_22-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.single_channel_receiver_22',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Single Channel Receiver 22',
+    'platform': 'geniushub',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01J71MQF0EC62D620DGYNG2R8H_device_22',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cloud_all_sensors[binary_sensor.single_channel_receiver_22-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'assigned_zone': 'East Berlin',
+      'friendly_name': 'Single Channel Receiver 22',
+      'state': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.single_channel_receiver_22',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

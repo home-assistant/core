@@ -10,6 +10,10 @@
       "title": "The country has not been configured",
       "description": "No country has been configured, please update the configuration by clicking on the \"learn more\" button below."
     },
+    "imperial_unit_system": {
+      "title": "The imperial unit system is deprecated",
+      "description": "The imperial unit system is deprecated and your system is currently using US customary. Please update your configuration to use the US customary unit system and reload the Core configuration to fix this issue."
+    },
     "deprecated_yaml": {
       "title": "The {integration_title} YAML configuration is being removed",
       "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
@@ -19,7 +23,7 @@
       "description": "The currency {currency} is no longer in use, please reconfigure the currency configuration."
     },
     "legacy_templates_false": {
-      "title": "`legacy_templates` config key is being removed",
+      "title": "legacy_templates config key is being removed",
       "description": "Nothing will change with your templates.\n\nRemove the `legacy_templates` key from the `homeassistant` configuration in your configuration.yaml file and restart Home Assistant to fix this issue."
     },
     "legacy_templates_true": {
@@ -40,15 +44,15 @@
     },
     "no_platform_setup": {
       "title": "Unused YAML configuration for the {platform} integration",
-      "description": "It's not possible to configure {platform} {domain} by adding `{platform_key}` to the {domain} configuration. Please check the documentation for more information on how to set up this integration.\n\nTo resolve this:\n1. Remove `{platform_key}` occurences from the `{domain}:` configuration in your YAML configuration file.\n2. Restart Home Assistant.\n\nExample that should be removed:\n{yaml_example}\n"
+      "description": "It's not possible to configure {platform} {domain} by adding `{platform_key}` to the {domain} configuration. Please check the documentation for more information on how to set up this integration.\n\nTo resolve this:\n1. Remove `{platform_key}` occurrences from the `{domain}:` configuration in your YAML configuration file.\n2. Restart Home Assistant.\n\nExample that should be removed:\n{yaml_example}"
     },
     "storage_corruption": {
-      "title": "Storage corruption detected for `{storage_key}`",
+      "title": "Storage corruption detected for {storage_key}",
       "fix_flow": {
         "step": {
           "confirm": {
             "title": "[%key:component::homeassistant::issues::storage_corruption::title%]",
-            "description": "The `{storage_key}` storage could not be parsed and has been renamed to `{corrupt_path}` to allow Home Assistant to continue.\n\nA default `{storage_key}` may have been created automatically.\n\nIf you made manual edits to the storage file, fix any syntax errors in `{corrupt_path}`, restore the file to the original path `{original_path}`, and restart Home Assistant. Otherwise, restore the system from a backup.\n\nClick SUBMIT below to confirm you have repaired the file or restored from a backup.\n\nThe exact error was: {error}"
+            "description": "The `{storage_key}` storage could not be parsed and has been renamed to `{corrupt_path}` to allow Home Assistant to continue.\n\nA default `{storage_key}` may have been created automatically.\n\nIf you made manual edits to the storage file, fix any syntax errors in `{corrupt_path}`, restore the file to the original path `{original_path}`, and restart Home Assistant. Otherwise, restore the system from a backup.\n\nSelect **Submit** below to confirm you have repaired the file or restored from a backup.\n\nThe exact error was: {error}"
           }
         }
       }
@@ -56,6 +60,14 @@
     "config_entry_reauth": {
       "title": "[%key:common::config_flow::title::reauth%]",
       "description": "Reauthentication is needed"
+    },
+    "config_entry_unique_id_collision": {
+      "title": "Multiple {domain} config entries with same unique ID",
+      "description": "There are multiple {domain} config entries with the same unique ID.\nThe config entries are named {titles}.\n\nTo fix this error, [configure the integration]({configure_url}) and remove all except one of the duplicates.\n\nNote: Another group of duplicates may be revealed after removing these duplicates."
+    },
+    "config_entry_unique_id_collision_many": {
+      "title": "[%key:component::homeassistant::issues::config_entry_unique_id_collision::title%]",
+      "description": "There are multiple ({number_of_entries}) {domain} config entries with the same unique ID.\nThe first {title_limit} config entries are named {titles}.\n\nTo fix this error, [configure the integration]({configure_url}) and remove all except one of the duplicates.\n\nNote: Another group of duplicates may be revealed after removing these duplicates."
     },
     "integration_not_found": {
       "title": "Integration {domain} not found",
@@ -99,8 +111,8 @@
       "description": "Checks the Home Assistant YAML-configuration files for errors. Errors will be shown in the Home Assistant logs."
     },
     "reload_core_config": {
-      "name": "Reload core configuration",
-      "description": "Reloads the core configuration from the YAML-configuration."
+      "name": "Reload Core configuration",
+      "description": "Reloads the Core configuration from the YAML-configuration."
     },
     "restart": {
       "name": "[%key:common::action::restart%]",
@@ -126,7 +138,7 @@
         },
         "elevation": {
           "name": "[%key:common::config_flow::data::elevation%]",
-          "description": "Elevation of your location."
+          "description": "Elevation of your location above sea level."
         }
       }
     },
@@ -148,7 +160,7 @@
     },
     "update_entity": {
       "name": "Update entity",
-      "description": "Forces one or more entities to update its data.",
+      "description": "Forces one or more entities to update their data.",
       "fields": {
         "entity_id": {
           "name": "Entities to update",
@@ -176,7 +188,7 @@
     },
     "reload_all": {
       "name": "Reload all",
-      "description": "Reload all YAML configuration that can be reloaded without restarting Home Assistant."
+      "description": "Reloads all YAML configuration that can be reloaded without restarting Home Assistant."
     }
   },
   "exceptions": {
@@ -215,6 +227,9 @@
     },
     "service_not_found": {
       "message": "Action {domain}.{service} not found."
+    },
+    "service_not_supported": {
+      "message": "Entity {entity_id} does not support action {domain}.{service}."
     },
     "service_does_not_support_response": {
       "message": "An action which does not return responses can't be called with {return_response}."

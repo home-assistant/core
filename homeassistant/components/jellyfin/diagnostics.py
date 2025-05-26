@@ -8,7 +8,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
-from . import JellyfinConfigEntry
+from .coordinator import JellyfinConfigEntry
 
 TO_REDACT = {CONF_PASSWORD}
 
@@ -17,8 +17,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: JellyfinConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    data = entry.runtime_data
-    sessions = data.coordinators["sessions"]
+    coordinator = entry.runtime_data
 
     return {
         "entry": {
@@ -26,9 +25,9 @@ async def async_get_config_entry_diagnostics(
             "data": async_redact_data(entry.data, TO_REDACT),
         },
         "server": {
-            "id": sessions.server_id,
-            "name": sessions.server_name,
-            "version": sessions.server_version,
+            "id": coordinator.server_id,
+            "name": coordinator.server_name,
+            "version": coordinator.server_version,
         },
         "sessions": [
             {
@@ -42,6 +41,6 @@ async def async_get_config_entry_diagnostics(
                 "now_playing": session_data.get("NowPlayingItem"),
                 "play_state": session_data.get("PlayState"),
             }
-            for session_id, session_data in sessions.data.items()
+            for session_id, session_data in coordinator.data.items()
         ],
     }

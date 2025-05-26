@@ -22,9 +22,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -113,7 +116,9 @@ SCAN_INTERVAL = timedelta(minutes=1)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Todoist calendar platform config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -142,7 +147,7 @@ async def async_setup_platform(
     project_id_lookup = {}
 
     api = TodoistAPIAsync(token)
-    coordinator = TodoistCoordinator(hass, _LOGGER, SCAN_INTERVAL, api, token)
+    coordinator = TodoistCoordinator(hass, _LOGGER, None, SCAN_INTERVAL, api, token)
     await coordinator.async_refresh()
 
     async def _shutdown_coordinator(_: Event) -> None:
@@ -331,7 +336,11 @@ def async_register_services(  # noqa: C901
                         "type": "reminder_add",
                         "temp_id": str(uuid.uuid1()),
                         "uuid": str(uuid.uuid1()),
-                        "args": {"item_id": api_task.id, "due": reminder_due},
+                        "args": {
+                            "item_id": api_task.id,
+                            "type": "absolute",
+                            "due": reminder_due,
+                        },
                     }
                 ]
             }
@@ -537,9 +546,8 @@ class TodoistProjectData:
             return None
 
         # All task Labels (optional parameter).
-        task[LABELS] = [
-            label.name for label in self._labels if label.name in data.labels
-        ]
+        labels = data.labels or []
+        task[LABELS] = [label.name for label in self._labels if label.name in labels]
         if self._label_whitelist and (
             not any(label in task[LABELS] for label in self._label_whitelist)
         ):

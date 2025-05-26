@@ -11,20 +11,24 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import API_ATTR_OK, DOMAIN, LOGGER
-from .coordinator import UptimeRobotDataUpdateCoordinator
+from .const import API_ATTR_OK, LOGGER
+from .coordinator import UptimeRobotConfigEntry
 from .entity import UptimeRobotEntity
+
+# Limit the number of parallel updates to 1
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: UptimeRobotConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the UptimeRobot switches."""
-    coordinator: UptimeRobotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         UptimeRobotSwitch(
             coordinator,

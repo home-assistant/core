@@ -8,7 +8,7 @@ from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, KEY_COORDINATOR, KEY_GATEWAY
 from .coordinator import DataUpdateCoordinatorMotionBlinds
@@ -18,7 +18,7 @@ from .entity import MotionCoordinatorEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Perform the setup for Motionblinds."""
     entities: list[ButtonEntity] = []
@@ -26,7 +26,13 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
 
     for blind in motion_gateway.device_list.values():
-        if blind.limit_status == LimitStatus.Limit3Detected.name:
+        if blind.limit_status in (
+            LimitStatus.Limit3Detected.name,
+            {
+                "T": LimitStatus.Limit3Detected.name,
+                "B": LimitStatus.Limit3Detected.name,
+            },
+        ):
             entities.append(MotionGoFavoriteButton(coordinator, blind))
             entities.append(MotionSetFavoriteButton(coordinator, blind))
 

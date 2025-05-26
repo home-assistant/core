@@ -1,17 +1,24 @@
 """Service calls related dependencies for LCN component."""
 
+from enum import StrEnum, auto
+
 import pypck
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_ADDRESS,
     CONF_BRIGHTNESS,
-    CONF_HOST,
+    CONF_DEVICE_ID,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import (
     CONF_KEYS,
@@ -28,6 +35,7 @@ from .const import (
     CONF_TRANSITION,
     CONF_VALUE,
     CONF_VARIABLE,
+    DEVICE_CONNECTIONS,
     DOMAIN,
     LED_PORTS,
     LED_STATUS,
@@ -40,18 +48,18 @@ from .const import (
     VAR_UNITS,
     VARIABLES,
 )
-from .helpers import (
-    DeviceConnectionType,
-    get_device_connection,
-    is_address,
-    is_states_string,
-)
+from .helpers import DeviceConnectionType, is_states_string
 
 
 class LcnServiceCall:
     """Parent class for all LCN service calls."""
 
-    schema = vol.Schema({vol.Required(CONF_ADDRESS): is_address})
+    schema = vol.Schema(
+        {
+            vol.Required(CONF_DEVICE_ID): cv.string,
+        }
+    )
+    supports_response = SupportsResponse.NONE
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize service call."""
@@ -59,19 +67,20 @@ class LcnServiceCall:
 
     def get_device_connection(self, service: ServiceCall) -> DeviceConnectionType:
         """Get address connection object."""
-        address, host_name = service.data[CONF_ADDRESS]
+        device_id = service.data[CONF_DEVICE_ID]
+        device_registry = dr.async_get(self.hass)
+        if not (device := device_registry.async_get(device_id)):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_device_id",
+                translation_placeholders={"device_id": device_id},
+            )
 
-        for config_entry in self.hass.config_entries.async_entries(DOMAIN):
-            if config_entry.data[CONF_HOST] == host_name:
-                device_connection = get_device_connection(
-                    self.hass, address, config_entry
-                )
-                if device_connection is None:
-                    raise ValueError("Wrong address.")
-                return device_connection
-        raise ValueError("Invalid host name.")
+        return self.hass.data[DOMAIN][device.primary_config_entry][DEVICE_CONNECTIONS][
+            device_id
+        ]
 
-    async def async_call_service(self, service: ServiceCall) -> None:
+    async def async_call_service(self, service: ServiceCall) -> ServiceResponse:
         """Execute service call."""
         raise NotImplementedError
 
@@ -394,18 +403,44 @@ class Pck(LcnServiceCall):
         await device_connection.pck(pck)
 
 
+class LcnService(StrEnum):
+    """LCN service names."""
+
+    OUTPUT_ABS = auto()
+    OUTPUT_REL = auto()
+    OUTPUT_TOGGLE = auto()
+    RELAYS = auto()
+    VAR_ABS = auto()
+    VAR_RESET = auto()
+    VAR_REL = auto()
+    LOCK_REGULATOR = auto()
+    LED = auto()
+    SEND_KEYS = auto()
+    LOCK_KEYS = auto()
+    DYN_TEXT = auto()
+    PCK = auto()
+
+
 SERVICES = (
-    ("output_abs", OutputAbs),
-    ("output_rel", OutputRel),
-    ("output_toggle", OutputToggle),
-    ("relays", Relays),
-    ("var_abs", VarAbs),
-    ("var_reset", VarReset),
-    ("var_rel", VarRel),
-    ("lock_regulator", LockRegulator),
-    ("led", Led),
-    ("send_keys", SendKeys),
-    ("lock_keys", LockKeys),
-    ("dyn_text", DynText),
-    ("pck", Pck),
+    (LcnService.OUTPUT_ABS, OutputAbs),
+    (LcnService.OUTPUT_REL, OutputRel),
+    (LcnService.OUTPUT_TOGGLE, OutputToggle),
+    (LcnService.RELAYS, Relays),
+    (LcnService.VAR_ABS, VarAbs),
+    (LcnService.VAR_RESET, VarReset),
+    (LcnService.VAR_REL, VarRel),
+    (LcnService.LOCK_REGULATOR, LockRegulator),
+    (LcnService.LED, Led),
+    (LcnService.SEND_KEYS, SendKeys),
+    (LcnService.LOCK_KEYS, LockKeys),
+    (LcnService.DYN_TEXT, DynText),
+    (LcnService.PCK, Pck),
 )
+
+
+async def register_services(hass: HomeAssistant) -> None:
+    """Register services for LCN."""
+    for service_name, service in SERVICES:
+        hass.services.async_register(
+            DOMAIN, service_name, service(hass).async_call_service, service.schema
+        )

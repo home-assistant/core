@@ -18,11 +18,14 @@
         },
         "data_description": {
           "host": "The IP address or hostname of your LaMetric TIME on your network.",
-          "api_key": "You can find this API key in [devices page in your LaMetric developer account](https://developer.lametric.com/user/devices)."
+          "api_key": "You can find this API key in the [devices page in your LaMetric developer account](https://developer.lametric.com/user/devices)."
         }
       },
-      "user_cloud_select_device": {
+      "cloud_select_device": {
         "data": {
+          "device": "Device"
+        },
+        "data_description": {
           "device": "Select the LaMetric device to add"
         }
       }
@@ -63,6 +66,14 @@
         "name": "Dismiss all notifications"
       }
     },
+    "number": {
+      "brightness": {
+        "name": "Brightness"
+      },
+      "volume": {
+        "name": "Volume"
+      }
+    },
     "sensor": {
       "rssi": {
         "name": "Wi-Fi signal"
@@ -72,8 +83,8 @@
       "brightness_mode": {
         "name": "Brightness mode",
         "state": {
-          "auto": "Automatic",
-          "manual": "Manual"
+          "auto": "[%key:common::state::auto%]",
+          "manual": "[%key:common::state::manual%]"
         }
       }
     },
@@ -127,7 +138,7 @@
           "description": "The message to display."
         },
         "icon": {
-          "name": "Icon",
+          "name": "Icon ID",
           "description": "The ID number of the icon or animation to display. List of all icons and their IDs can be found at: https://developer.lametric.com/icons."
         },
         "sound": {

@@ -14,7 +14,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.components.twilio import DATA_TWILIO
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ class TwilioSMSNotificationService(BaseNotificationService):
             twilio_args[ATTR_MEDIAURL] = data[ATTR_MEDIAURL]
 
         if not targets:
-            _LOGGER.info("At least 1 target is required")
+            _LOGGER.warning("At least 1 target is required")
             return
 
         for target in targets:

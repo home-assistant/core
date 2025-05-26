@@ -54,9 +54,11 @@ def mock_process_uploaded_file(
     create_google_credentials_json: str,
 ) -> Generator[MagicMock]:
     """Mock upload certificate files."""
+    ctx_mock = MagicMock()
+    ctx_mock.__enter__.return_value = Path(create_google_credentials_json)
     with patch(
         "homeassistant.components.google_cloud.config_flow.process_uploaded_file",
-        return_value=Path(create_google_credentials_json),
+        return_value=ctx_mock,
     ) as mock_upload:
         yield mock_upload
 

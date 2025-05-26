@@ -125,20 +125,17 @@ def mock_client_api(
     fixture_name: str,
     user_identifier: str,
     api_error: Exception,
-) -> Generator[Mock, None, None]:
+) -> Generator[Mock]:
     """Set up fake Google Photos API responses from fixtures."""
     mock_api = AsyncMock(GooglePhotosLibraryApi, autospec=True)
     mock_api.get_user_info.return_value = UserInfoResult(
         id=user_identifier,
         name="Test Name",
-        email="test.name@gmail.com",
     )
 
     responses = load_json_array_fixture(fixture_name, DOMAIN) if fixture_name else []
 
-    async def list_media_items(
-        *args: Any,
-    ) -> AsyncGenerator[ListMediaItemResult, None, None]:
+    async def list_media_items(*args: Any) -> AsyncGenerator[ListMediaItemResult]:
         for response in responses:
             mock_list_media_items = Mock(ListMediaItemResult)
             mock_list_media_items.media_items = [
@@ -163,9 +160,7 @@ def mock_client_api(
     # Emulate an async iterator for returning pages of response objects. We just
     # return a single page.
 
-    async def list_albums(
-        *args: Any, **kwargs: Any
-    ) -> AsyncGenerator[ListAlbumResult, None, None]:
+    async def list_albums(*args: Any, **kwargs: Any) -> AsyncGenerator[ListAlbumResult]:
         mock_list_album_result = Mock(ListAlbumResult)
         mock_list_album_result.albums = [
             Album.from_dict(album)
@@ -176,6 +171,17 @@ def mock_client_api(
     mock_api.list_albums.return_value.__aiter__ = list_albums
     mock_api.list_albums.return_value.__anext__ = list_albums
     mock_api.list_albums.side_effect = api_error
+
+    # Mock a point lookup by reading contents of the album fixture above
+    async def get_album(album_id: str, **kwargs: Any) -> Mock:
+        for album in load_json_object_fixture("list_albums.json", DOMAIN)["albums"]:
+            if album["id"] == album_id:
+                return Album.from_dict(album)
+        return None
+
+    mock_api.get_album = get_album
+    mock_api.get_album.side_effect = api_error
+
     return mock_api
 
 

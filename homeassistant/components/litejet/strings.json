@@ -9,9 +9,6 @@
         }
       }
     },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
-    },
     "error": {
       "open_failed": "Cannot open the specified serial port."
     }

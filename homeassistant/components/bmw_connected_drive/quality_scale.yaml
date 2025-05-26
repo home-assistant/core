@@ -1,0 +1,107 @@
+# + in comment indicates requirement for quality scale
+# - in comment indicates issue to be fixed, not impacting quality scale
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      Does not have custom services
+  appropriate-polling: done
+  brands: done
+  common-modules:
+    status: done
+    comment: |
+      - 2 states writes in async_added_to_hass() required for platforms that redefine _handle_coordinator_update()
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      - test_show_form doesn't really add anything
+      - Patch bimmer_connected imports with homeassistant.components.bmw_connected_drive.bimmer_connected imports
+      + Ensure that configs flows end in CREATE_ENTRY or ABORT
+      - Parameterize test_authentication_error, test_api_error and test_connection_error
+      + test_full_user_flow_implementation doesn't assert unique id of created entry
+      + test that aborts when a mocked config entry already exists
+      + don't test on internals (e.g. `coordinator.last_update_success`) but rather on the resulting state (change)
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      Does not have custom services
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      This integration doesn't have any events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: |
+      Does not have custom services
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage:
+    status: done
+    comment: |
+      - Use constants in tests where possible
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: This integration doesn't use discovery.
+  discovery:
+    status: exempt
+    comment: This integration doesn't use discovery.
+  docs-data-update: done
+  docs-examples: todo
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: todo
+  dynamic-devices:
+    status: todo
+    comment: >
+      To be discussed.
+      We cannot regularly get new devices/vehicles due to API quota limitations.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: |
+      Other than reauthentication, this integration doesn't have any cases where raising an issue is needed.
+  stale-devices:
+    status: todo
+    comment: >
+      To be discussed.
+      We cannot regularly check for stale devices/vehicles due to API quota limitations.
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: todo
+    comment: >
+      To be discussed.
+      The library requires a custom client for API authentication, with custom auth lifecycle and user agents.
+  strict-typing: done

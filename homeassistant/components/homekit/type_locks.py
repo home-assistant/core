@@ -5,57 +5,56 @@ from typing import Any
 
 from pyhap.const import CATEGORY_DOOR_LOCK
 
-from homeassistant.components.lock import (
-    DOMAIN,
-    STATE_JAMMED,
-    STATE_LOCKED,
-    STATE_LOCKING,
-    STATE_UNLOCKED,
-    STATE_UNLOCKING,
-)
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
 from homeassistant.const import ATTR_CODE, ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import State, callback
 
-from .accessories import TYPES, HomeAccessory
+from .accessories import TYPES
 from .const import CHAR_LOCK_CURRENT_STATE, CHAR_LOCK_TARGET_STATE, SERV_LOCK
+from .doorbell import HomeDoorbellAccessory
 
 _LOGGER = logging.getLogger(__name__)
 
 HASS_TO_HOMEKIT_CURRENT = {
-    STATE_UNLOCKED: 0,
-    STATE_UNLOCKING: 1,
-    STATE_LOCKING: 0,
-    STATE_LOCKED: 1,
-    STATE_JAMMED: 2,
+    LockState.UNLOCKED.value: 0,
+    LockState.UNLOCKING.value: 1,
+    LockState.LOCKING.value: 0,
+    LockState.LOCKED.value: 1,
+    LockState.JAMMED.value: 2,
     STATE_UNKNOWN: 3,
 }
 
 HASS_TO_HOMEKIT_TARGET = {
-    STATE_UNLOCKED: 0,
-    STATE_UNLOCKING: 0,
-    STATE_LOCKING: 1,
-    STATE_LOCKED: 1,
+    LockState.UNLOCKED.value: 0,
+    LockState.UNLOCKING.value: 0,
+    LockState.LOCKING.value: 1,
+    LockState.LOCKED.value: 1,
 }
 
-VALID_TARGET_STATES = {STATE_LOCKING, STATE_UNLOCKING, STATE_LOCKED, STATE_UNLOCKED}
+VALID_TARGET_STATES = {
+    LockState.LOCKING.value,
+    LockState.UNLOCKING.value,
+    LockState.LOCKED.value,
+    LockState.UNLOCKED.value,
+}
 
 HOMEKIT_TO_HASS = {
-    0: STATE_UNLOCKED,
-    1: STATE_LOCKED,
-    2: STATE_JAMMED,
+    0: LockState.UNLOCKED.value,
+    1: LockState.LOCKED.value,
+    2: LockState.JAMMED.value,
     3: STATE_UNKNOWN,
 }
 
 STATE_TO_SERVICE = {
-    STATE_LOCKING: "unlock",
-    STATE_LOCKED: "lock",
-    STATE_UNLOCKING: "lock",
-    STATE_UNLOCKED: "unlock",
+    LockState.LOCKING.value: "unlock",
+    LockState.LOCKED.value: "lock",
+    LockState.UNLOCKING.value: "lock",
+    LockState.UNLOCKED.value: "unlock",
 }
 
 
 @TYPES.register("Lock")
-class Lock(HomeAccessory):
+class Lock(HomeDoorbellAccessory):
     """Generate a Lock accessory for a lock entity.
 
     The lock entity must support: unlock and lock.
@@ -74,7 +73,7 @@ class Lock(HomeAccessory):
         )
         self.char_target_state = serv_lock_mechanism.configure_char(
             CHAR_LOCK_TARGET_STATE,
-            value=HASS_TO_HOMEKIT_CURRENT[STATE_LOCKED],
+            value=HASS_TO_HOMEKIT_CURRENT[LockState.LOCKED.value],
             setter_callback=self.set_state,
         )
         self.async_update_state(state)
@@ -89,7 +88,7 @@ class Lock(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id}
         if self._code:
             params[ATTR_CODE] = self._code
-        self.async_call_service(DOMAIN, service, params)
+        self.async_call_service(LOCK_DOMAIN, service, params)
 
     @callback
     def async_update_state(self, new_state: State) -> None:

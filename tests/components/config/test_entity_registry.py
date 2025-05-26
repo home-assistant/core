@@ -12,7 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import (
-    RegistryEntry,
     RegistryEntryDisabler,
     RegistryEntryHider,
 )
@@ -23,6 +22,7 @@ from tests.common import (
     MockConfigEntry,
     MockEntity,
     MockEntityPlatform,
+    RegistryEntryWithDefaults,
     mock_registry,
 )
 from tests.typing import MockHAClientWebSocket, WebSocketGenerator
@@ -45,13 +45,13 @@ async def test_list_entities(
     mock_registry(
         hass,
         {
-            "test_domain.name": RegistryEntry(
+            "test_domain.name": RegistryEntryWithDefaults(
                 entity_id="test_domain.name",
                 unique_id="1234",
                 platform="test_platform",
                 name="Hello World",
             ),
-            "test_domain.no_name": RegistryEntry(
+            "test_domain.no_name": RegistryEntryWithDefaults(
                 entity_id="test_domain.no_name",
                 unique_id="6789",
                 platform="test_platform",
@@ -67,6 +67,7 @@ async def test_list_entities(
             "area_id": None,
             "categories": {},
             "config_entry_id": None,
+            "config_subentry_id": None,
             "created_at": utcnow().timestamp(),
             "device_id": None,
             "disabled_by": None,
@@ -89,6 +90,7 @@ async def test_list_entities(
             "area_id": None,
             "categories": {},
             "config_entry_id": None,
+            "config_subentry_id": None,
             "created_at": utcnow().timestamp(),
             "device_id": None,
             "disabled_by": None,
@@ -115,13 +117,13 @@ async def test_list_entities(
     mock_registry(
         hass,
         {
-            "test_domain.name": RegistryEntry(
+            "test_domain.name": RegistryEntryWithDefaults(
                 entity_id="test_domain.name",
                 unique_id="1234",
                 platform="test_platform",
                 name="Hello World",
             ),
-            "test_domain.name_2": RegistryEntry(
+            "test_domain.name_2": RegistryEntryWithDefaults(
                 entity_id="test_domain.name_2",
                 unique_id="6789",
                 platform="test_platform",
@@ -138,6 +140,7 @@ async def test_list_entities(
             "area_id": None,
             "categories": {},
             "config_entry_id": None,
+            "config_subentry_id": None,
             "created_at": utcnow().timestamp(),
             "device_id": None,
             "disabled_by": None,
@@ -166,7 +169,7 @@ async def test_list_entities_for_display(
     mock_registry(
         hass,
         {
-            "test_domain.test": RegistryEntry(
+            "test_domain.test": RegistryEntryWithDefaults(
                 area_id="area52",
                 device_id="device123",
                 entity_category=EntityCategory.DIAGNOSTIC,
@@ -178,7 +181,7 @@ async def test_list_entities_for_display(
                 translation_key="translations_galore",
                 unique_id="1234",
             ),
-            "test_domain.nameless": RegistryEntry(
+            "test_domain.nameless": RegistryEntryWithDefaults(
                 area_id="area52",
                 device_id="device123",
                 entity_id="test_domain.nameless",
@@ -188,7 +191,7 @@ async def test_list_entities_for_display(
                 platform="test_platform",
                 unique_id="2345",
             ),
-            "test_domain.renamed": RegistryEntry(
+            "test_domain.renamed": RegistryEntryWithDefaults(
                 area_id="area52",
                 device_id="device123",
                 entity_id="test_domain.renamed",
@@ -198,31 +201,31 @@ async def test_list_entities_for_display(
                 platform="test_platform",
                 unique_id="3456",
             ),
-            "test_domain.boring": RegistryEntry(
+            "test_domain.boring": RegistryEntryWithDefaults(
                 entity_id="test_domain.boring",
                 platform="test_platform",
                 unique_id="4567",
             ),
-            "test_domain.disabled": RegistryEntry(
+            "test_domain.disabled": RegistryEntryWithDefaults(
                 disabled_by=RegistryEntryDisabler.USER,
                 entity_id="test_domain.disabled",
                 hidden_by=RegistryEntryHider.USER,
                 platform="test_platform",
                 unique_id="789A",
             ),
-            "test_domain.hidden": RegistryEntry(
+            "test_domain.hidden": RegistryEntryWithDefaults(
                 entity_id="test_domain.hidden",
                 hidden_by=RegistryEntryHider.USER,
                 platform="test_platform",
                 unique_id="89AB",
             ),
-            "sensor.default_precision": RegistryEntry(
+            "sensor.default_precision": RegistryEntryWithDefaults(
                 entity_id="sensor.default_precision",
                 options={"sensor": {"suggested_display_precision": 0}},
                 platform="test_platform",
                 unique_id="9ABC",
             ),
-            "sensor.user_precision": RegistryEntry(
+            "sensor.user_precision": RegistryEntryWithDefaults(
                 entity_id="sensor.user_precision",
                 options={
                     "sensor": {"display_precision": 0, "suggested_display_precision": 1}
@@ -245,6 +248,7 @@ async def test_list_entities_for_display(
                 "ec": 1,
                 "ei": "test_domain.test",
                 "en": "Hello World",
+                "hn": True,
                 "ic": "mdi:icon",
                 "lb": [],
                 "pl": "test_platform",
@@ -254,7 +258,7 @@ async def test_list_entities_for_display(
                 "ai": "area52",
                 "di": "device123",
                 "ei": "test_domain.nameless",
-                "en": None,
+                "hn": True,
                 "lb": [],
                 "pl": "test_platform",
             },
@@ -262,6 +266,8 @@ async def test_list_entities_for_display(
                 "ai": "area52",
                 "di": "device123",
                 "ei": "test_domain.renamed",
+                "en": "User name",
+                "hn": True,
                 "lb": [],
                 "pl": "test_platform",
             },
@@ -297,7 +303,7 @@ async def test_list_entities_for_display(
     mock_registry(
         hass,
         {
-            "test_domain.test": RegistryEntry(
+            "test_domain.test": RegistryEntryWithDefaults(
                 area_id="area52",
                 device_id="device123",
                 entity_id="test_domain.test",
@@ -306,7 +312,7 @@ async def test_list_entities_for_display(
                 platform="test_platform",
                 unique_id="1234",
             ),
-            "test_domain.name_2": RegistryEntry(
+            "test_domain.name_2": RegistryEntryWithDefaults(
                 entity_id="test_domain.name_2",
                 has_entity_name=True,
                 original_name=Unserializable(),
@@ -326,6 +332,7 @@ async def test_list_entities_for_display(
                 "ai": "area52",
                 "di": "device123",
                 "ei": "test_domain.test",
+                "hn": True,
                 "lb": [],
                 "en": "Hello World",
                 "pl": "test_platform",
@@ -341,7 +348,7 @@ async def test_get_entity(hass: HomeAssistant, client: MockHAClientWebSocket) ->
     mock_registry(
         hass,
         {
-            "test_domain.name": RegistryEntry(
+            "test_domain.name": RegistryEntryWithDefaults(
                 entity_id="test_domain.name",
                 unique_id="1234",
                 platform="test_platform",
@@ -349,7 +356,7 @@ async def test_get_entity(hass: HomeAssistant, client: MockHAClientWebSocket) ->
                 created_at=name_created_at,
                 modified_at=name_created_at,
             ),
-            "test_domain.no_name": RegistryEntry(
+            "test_domain.no_name": RegistryEntryWithDefaults(
                 entity_id="test_domain.no_name",
                 unique_id="6789",
                 platform="test_platform",
@@ -370,6 +377,7 @@ async def test_get_entity(hass: HomeAssistant, client: MockHAClientWebSocket) ->
         "capabilities": None,
         "categories": {},
         "config_entry_id": None,
+        "config_subentry_id": None,
         "created_at": name_created_at.timestamp(),
         "device_class": None,
         "device_id": None,
@@ -406,6 +414,7 @@ async def test_get_entity(hass: HomeAssistant, client: MockHAClientWebSocket) ->
         "capabilities": None,
         "categories": {},
         "config_entry_id": None,
+        "config_subentry_id": None,
         "created_at": no_name_created_at.timestamp(),
         "device_class": None,
         "device_id": None,
@@ -436,7 +445,7 @@ async def test_get_entities(hass: HomeAssistant, client: MockHAClientWebSocket) 
     mock_registry(
         hass,
         {
-            "test_domain.name": RegistryEntry(
+            "test_domain.name": RegistryEntryWithDefaults(
                 entity_id="test_domain.name",
                 unique_id="1234",
                 platform="test_platform",
@@ -444,7 +453,7 @@ async def test_get_entities(hass: HomeAssistant, client: MockHAClientWebSocket) 
                 created_at=name_created_at,
                 modified_at=name_created_at,
             ),
-            "test_domain.no_name": RegistryEntry(
+            "test_domain.no_name": RegistryEntryWithDefaults(
                 entity_id="test_domain.no_name",
                 unique_id="6789",
                 platform="test_platform",
@@ -473,6 +482,7 @@ async def test_get_entities(hass: HomeAssistant, client: MockHAClientWebSocket) 
             "capabilities": None,
             "categories": {},
             "config_entry_id": None,
+            "config_subentry_id": None,
             "created_at": name_created_at.timestamp(),
             "device_class": None,
             "device_id": None,
@@ -500,6 +510,7 @@ async def test_get_entities(hass: HomeAssistant, client: MockHAClientWebSocket) 
             "capabilities": None,
             "categories": {},
             "config_entry_id": None,
+            "config_subentry_id": None,
             "created_at": no_name_created_at.timestamp(),
             "device_class": None,
             "device_id": None,
@@ -534,7 +545,7 @@ async def test_update_entity(
     registry = mock_registry(
         hass,
         {
-            "test_domain.world": RegistryEntry(
+            "test_domain.world": RegistryEntryWithDefaults(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
@@ -582,6 +593,7 @@ async def test_update_entity(
             "categories": {"scope1": "id", "scope2": "id"},
             "created_at": created.timestamp(),
             "config_entry_id": None,
+            "config_subentry_id": None,
             "device_class": "custom_device_class",
             "device_id": None,
             "disabled_by": None,
@@ -664,6 +676,7 @@ async def test_update_entity(
             "capabilities": None,
             "categories": {"scope1": "id", "scope2": "id"},
             "config_entry_id": None,
+            "config_subentry_id": None,
             "created_at": created.timestamp(),
             "device_class": "custom_device_class",
             "device_id": None,
@@ -710,6 +723,7 @@ async def test_update_entity(
             "capabilities": None,
             "categories": {"scope1": "id", "scope2": "id"},
             "config_entry_id": None,
+            "config_subentry_id": None,
             "created_at": created.timestamp(),
             "device_class": "custom_device_class",
             "device_id": None,
@@ -755,6 +769,7 @@ async def test_update_entity(
             "capabilities": None,
             "categories": {"scope1": "id", "scope2": "id", "scope3": "id"},
             "config_entry_id": None,
+            "config_subentry_id": None,
             "created_at": created.timestamp(),
             "device_class": "custom_device_class",
             "device_id": None,
@@ -800,6 +815,7 @@ async def test_update_entity(
             "capabilities": None,
             "categories": {"scope1": "id", "scope2": "id", "scope3": "other_id"},
             "config_entry_id": None,
+            "config_subentry_id": None,
             "created_at": created.timestamp(),
             "device_class": "custom_device_class",
             "device_id": None,
@@ -845,6 +861,7 @@ async def test_update_entity(
             "capabilities": None,
             "categories": {"scope1": "id", "scope3": "other_id"},
             "config_entry_id": None,
+            "config_subentry_id": None,
             "created_at": created.timestamp(),
             "device_class": "custom_device_class",
             "device_id": None,
@@ -907,6 +924,7 @@ async def test_update_entity_require_restart(
             "capabilities": None,
             "categories": {},
             "config_entry_id": config_entry.entry_id,
+            "config_subentry_id": None,
             "created_at": created.timestamp(),
             "device_class": None,
             "device_id": None,
@@ -991,7 +1009,7 @@ async def test_update_entity_no_changes(
     mock_registry(
         hass,
         {
-            "test_domain.world": RegistryEntry(
+            "test_domain.world": RegistryEntryWithDefaults(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
@@ -1028,6 +1046,7 @@ async def test_update_entity_no_changes(
             "capabilities": None,
             "categories": {},
             "config_entry_id": None,
+            "config_subentry_id": None,
             "created_at": created.timestamp(),
             "device_class": None,
             "device_id": None,
@@ -1091,7 +1110,7 @@ async def test_update_entity_id(
     mock_registry(
         hass,
         {
-            "test_domain.world": RegistryEntry(
+            "test_domain.world": RegistryEntryWithDefaults(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
@@ -1125,6 +1144,7 @@ async def test_update_entity_id(
             "capabilities": None,
             "categories": {},
             "config_entry_id": None,
+            "config_subentry_id": None,
             "created_at": created.timestamp(),
             "device_class": None,
             "device_id": None,
@@ -1159,13 +1179,13 @@ async def test_update_existing_entity_id(
     mock_registry(
         hass,
         {
-            "test_domain.world": RegistryEntry(
+            "test_domain.world": RegistryEntryWithDefaults(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
                 platform="test_platform",
             ),
-            "test_domain.planet": RegistryEntry(
+            "test_domain.planet": RegistryEntryWithDefaults(
                 entity_id="test_domain.planet",
                 unique_id="2345",
                 # Using component.async_add_entities is equal to platform "domain"
@@ -1197,7 +1217,7 @@ async def test_update_invalid_entity_id(
     mock_registry(
         hass,
         {
-            "test_domain.world": RegistryEntry(
+            "test_domain.world": RegistryEntryWithDefaults(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
@@ -1229,7 +1249,7 @@ async def test_remove_entity(
     registry = mock_registry(
         hass,
         {
-            "test_domain.world": RegistryEntry(
+            "test_domain.world": RegistryEntryWithDefaults(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"

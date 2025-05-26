@@ -19,7 +19,7 @@
       "delivered": {
         "default": "mdi:package"
       },
-      "returned": {
+      "alert": {
         "default": "mdi:package"
       },
       "package": {
@@ -30,6 +30,9 @@
   "services": {
     "get_packages": {
       "service": "mdi:package"
+    },
+    "archive_package": {
+      "service": "mdi:archive"
     }
   }
 }

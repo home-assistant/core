@@ -32,6 +32,10 @@
     }
   },
   "options": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
     "step": {
       "init": {
         "title": "Options",

@@ -12,7 +12,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import ACCOUNT_HASH, DOMAIN
+from .const import ACCOUNT_HASH, DOMAIN, UPDATE_INTERVAL
 from .coordinator import RitualsDataUpdateCoordinator
 
 PLATFORMS = [
@@ -37,9 +37,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Migrate old unique_ids to the new format
     async_migrate_entities_unique_ids(hass, entry, account_devices)
 
+    # The API provided by Rituals is currently rate limited to 30 requests
+    # per hour per IP address. To avoid hitting this limit, we will adjust
+    # the polling interval based on the number of diffusers one has.
+    update_interval = UPDATE_INTERVAL * len(account_devices)
+
     # Create a coordinator for each diffuser
     coordinators = {
-        diffuser.hublot: RitualsDataUpdateCoordinator(hass, diffuser)
+        diffuser.hublot: RitualsDataUpdateCoordinator(
+            hass, entry, diffuser, update_interval
+        )
         for diffuser in account_devices
     }
 

@@ -7,12 +7,21 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from arcam.fmj.client import ConnectionFailed
 import pytest
 
-from homeassistant.components import ssdp
 from homeassistant.components.arcam_fmj.const import DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_DEVICE_TYPE,
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_MODEL_NUMBER,
+    ATTR_UPNP_SERIAL,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
 from .conftest import (
     MOCK_CONFIG_ENTRY,
@@ -36,18 +45,18 @@ MOCK_UPNP_DEVICE = f"""
 
 MOCK_UPNP_LOCATION = f"http://{MOCK_HOST}:8080/dd.xml"
 
-MOCK_DISCOVER = ssdp.SsdpServiceInfo(
+MOCK_DISCOVER = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="mock_st",
     ssdp_location=f"http://{MOCK_HOST}:8080/dd.xml",
     upnp={
-        ssdp.ATTR_UPNP_MANUFACTURER: "ARCAM",
-        ssdp.ATTR_UPNP_MODEL_NAME: " ",
-        ssdp.ATTR_UPNP_MODEL_NUMBER: "AVR450, AVR750",
-        ssdp.ATTR_UPNP_FRIENDLY_NAME: f"Arcam media client {MOCK_UUID}",
-        ssdp.ATTR_UPNP_SERIAL: "12343",
-        ssdp.ATTR_UPNP_UDN: MOCK_UDN,
-        ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:MediaRenderer:1",
+        ATTR_UPNP_MANUFACTURER: "ARCAM",
+        ATTR_UPNP_MODEL_NAME: " ",
+        ATTR_UPNP_MODEL_NUMBER: "AVR450, AVR750",
+        ATTR_UPNP_FRIENDLY_NAME: f"Arcam media client {MOCK_UUID}",
+        ATTR_UPNP_SERIAL: "12343",
+        ATTR_UPNP_UDN: MOCK_UDN,
+        ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:MediaRenderer:1",
     },
 )
 
@@ -115,7 +124,7 @@ async def test_ssdp_unable_to_connect(
 async def test_ssdp_invalid_id(hass: HomeAssistant) -> None:
     """Test a ssdp with invalid  UDN."""
     discover = replace(
-        MOCK_DISCOVER, upnp=MOCK_DISCOVER.upnp | {ssdp.ATTR_UPNP_UDN: "invalid"}
+        MOCK_DISCOVER, upnp=MOCK_DISCOVER.upnp | {ATTR_UPNP_UDN: "invalid"}
     )
 
     result = await hass.config_entries.flow.async_init(

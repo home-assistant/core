@@ -25,7 +25,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -109,7 +109,7 @@ class NetioApiView(HomeAssistantView):
         states, consumptions, cumulated_consumptions, start_dates = [], [], [], []
 
         for i in range(1, 5):
-            out = "output%d" % i
+            out = f"output{i}"
             states.append(data.get(f"{out}_state") == STATE_ON)
             consumptions.append(float(data.get(f"{out}_consumption", 0)))
             cumulated_consumptions.append(
@@ -168,7 +168,8 @@ class NetioSwitch(SwitchEntity):
     def _set(self, value):
         val = list("uuuu")
         val[int(self.outlet) - 1] = "1" if value else "0"
-        self.netio.get("port list {}".format("".join(val)))
+        val = "".join(val)
+        self.netio.get(f"port list {val}")
         self.netio.states[int(self.outlet) - 1] = value
         self.schedule_update_ha_state()
 

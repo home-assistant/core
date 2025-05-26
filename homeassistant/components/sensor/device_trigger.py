@@ -4,10 +4,8 @@ import voluptuous as vol
 
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
-    async_get_entity_registry_entry_or_raise,
-)
-from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
+    async_get_entity_registry_entry_or_raise,
 )
 from homeassistant.components.homeassistant.triggers import (
     numeric_state as numeric_state_trigger,
@@ -36,8 +34,10 @@ DEVICE_CLASS_NONE = "none"
 
 CONF_APPARENT_POWER = "apparent_power"
 CONF_AQI = "aqi"
+CONF_AREA = "area"
 CONF_ATMOSPHERIC_PRESSURE = "atmospheric_pressure"
 CONF_BATTERY_LEVEL = "battery_level"
+CONF_BLOOD_GLUCOSE_CONCENTRATION = "blood_glucose_concentration"
 CONF_CO = "carbon_monoxide"
 CONF_CO2 = "carbon_dioxide"
 CONF_CONDUCTIVITY = "conductivity"
@@ -47,6 +47,7 @@ CONF_DATA_SIZE = "data_size"
 CONF_DISTANCE = "distance"
 CONF_DURATION = "duration"
 CONF_ENERGY = "energy"
+CONF_ENERGY_DISTANCE = "energy_distance"
 CONF_FREQUENCY = "frequency"
 CONF_GAS = "gas"
 CONF_HUMIDITY = "humidity"
@@ -67,6 +68,7 @@ CONF_POWER_FACTOR = "power_factor"
 CONF_PRECIPITATION = "precipitation"
 CONF_PRECIPITATION_INTENSITY = "precipitation_intensity"
 CONF_PRESSURE = "pressure"
+CONF_REACTIVE_ENERGY = "reactive_energy"
 CONF_REACTIVE_POWER = "reactive_power"
 CONF_SIGNAL_STRENGTH = "signal_strength"
 CONF_SOUND_PRESSURE = "sound_pressure"
@@ -81,13 +83,18 @@ CONF_VOLUME = "volume"
 CONF_VOLUME_FLOW_RATE = "volume_flow_rate"
 CONF_WATER = "water"
 CONF_WEIGHT = "weight"
+CONF_WIND_DIRECTION = "wind_direction"
 CONF_WIND_SPEED = "wind_speed"
 
 ENTITY_TRIGGERS = {
     SensorDeviceClass.APPARENT_POWER: [{CONF_TYPE: CONF_APPARENT_POWER}],
     SensorDeviceClass.AQI: [{CONF_TYPE: CONF_AQI}],
+    SensorDeviceClass.AREA: [{CONF_TYPE: CONF_AREA}],
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: [{CONF_TYPE: CONF_ATMOSPHERIC_PRESSURE}],
     SensorDeviceClass.BATTERY: [{CONF_TYPE: CONF_BATTERY_LEVEL}],
+    SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: [
+        {CONF_TYPE: CONF_BLOOD_GLUCOSE_CONCENTRATION}
+    ],
     SensorDeviceClass.CO: [{CONF_TYPE: CONF_CO}],
     SensorDeviceClass.CO2: [{CONF_TYPE: CONF_CO2}],
     SensorDeviceClass.CONDUCTIVITY: [{CONF_TYPE: CONF_CONDUCTIVITY}],
@@ -97,6 +104,7 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.DISTANCE: [{CONF_TYPE: CONF_DISTANCE}],
     SensorDeviceClass.DURATION: [{CONF_TYPE: CONF_DURATION}],
     SensorDeviceClass.ENERGY: [{CONF_TYPE: CONF_ENERGY}],
+    SensorDeviceClass.ENERGY_DISTANCE: [{CONF_TYPE: CONF_ENERGY_DISTANCE}],
     SensorDeviceClass.ENERGY_STORAGE: [{CONF_TYPE: CONF_ENERGY}],
     SensorDeviceClass.FREQUENCY: [{CONF_TYPE: CONF_FREQUENCY}],
     SensorDeviceClass.GAS: [{CONF_TYPE: CONF_GAS}],
@@ -120,6 +128,7 @@ ENTITY_TRIGGERS = {
         {CONF_TYPE: CONF_PRECIPITATION_INTENSITY}
     ],
     SensorDeviceClass.PRESSURE: [{CONF_TYPE: CONF_PRESSURE}],
+    SensorDeviceClass.REACTIVE_ENERGY: [{CONF_TYPE: CONF_REACTIVE_ENERGY}],
     SensorDeviceClass.REACTIVE_POWER: [{CONF_TYPE: CONF_REACTIVE_POWER}],
     SensorDeviceClass.SIGNAL_STRENGTH: [{CONF_TYPE: CONF_SIGNAL_STRENGTH}],
     SensorDeviceClass.SOUND_PRESSURE: [{CONF_TYPE: CONF_SOUND_PRESSURE}],
@@ -138,6 +147,7 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.VOLUME_FLOW_RATE: [{CONF_TYPE: CONF_VOLUME_FLOW_RATE}],
     SensorDeviceClass.WATER: [{CONF_TYPE: CONF_WATER}],
     SensorDeviceClass.WEIGHT: [{CONF_TYPE: CONF_WEIGHT}],
+    SensorDeviceClass.WIND_DIRECTION: [{CONF_TYPE: CONF_WIND_DIRECTION}],
     SensorDeviceClass.WIND_SPEED: [{CONF_TYPE: CONF_WIND_SPEED}],
     DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_VALUE}],
 }
@@ -151,8 +161,10 @@ TRIGGER_SCHEMA = vol.All(
                 [
                     CONF_APPARENT_POWER,
                     CONF_AQI,
+                    CONF_AREA,
                     CONF_ATMOSPHERIC_PRESSURE,
                     CONF_BATTERY_LEVEL,
+                    CONF_BLOOD_GLUCOSE_CONCENTRATION,
                     CONF_CO,
                     CONF_CO2,
                     CONF_CONDUCTIVITY,
@@ -162,6 +174,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_DISTANCE,
                     CONF_DURATION,
                     CONF_ENERGY,
+                    CONF_ENERGY_DISTANCE,
                     CONF_FREQUENCY,
                     CONF_GAS,
                     CONF_HUMIDITY,
@@ -182,6 +195,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_PRECIPITATION,
                     CONF_PRECIPITATION_INTENSITY,
                     CONF_PRESSURE,
+                    CONF_REACTIVE_ENERGY,
                     CONF_REACTIVE_POWER,
                     CONF_SIGNAL_STRENGTH,
                     CONF_SOUND_PRESSURE,
@@ -195,6 +209,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_VOLUME_FLOW_RATE,
                     CONF_WATER,
                     CONF_WEIGHT,
+                    CONF_WIND_DIRECTION,
                     CONF_WIND_SPEED,
                     CONF_VALUE,
                 ]

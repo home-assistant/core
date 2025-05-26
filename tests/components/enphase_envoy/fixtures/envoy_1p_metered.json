@@ -22,6 +22,12 @@
       "watt_hours_today": 1234,
       "watts_now": 1234
     },
+    "system_net_consumption": {
+      "watt_hours_lifetime": 4321,
+      "watt_hours_last_7_days": -1,
+      "watt_hours_today": -1,
+      "watts_now": 2341
+    },
     "system_production": {
       "watt_hours_lifetime": 1234,
       "watt_hours_last_7_days": 1234,
@@ -29,6 +35,7 @@
       "watts_now": 1234
     },
     "system_consumption_phases": null,
+    "system_net_consumption_phases": null,
     "system_production_phases": null,
     "ctmeter_production": {
       "eid": "100000010",
@@ -86,7 +93,8 @@
         "reserved_soc": 15.0,
         "very_low_soc": 5,
         "charge_from_grid": true,
-        "date": "1695598084"
+        "date": "1695598084",
+        "opt_schedules": true
       },
       "single_rate": {
         "rate": 0.0,

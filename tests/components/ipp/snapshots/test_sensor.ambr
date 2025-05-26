@@ -1,0 +1,385 @@
+# serializer version: 1
+# name: test_sensors[sensor.test_ha_1000_series-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'idle',
+        'printing',
+        'stopped',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_ha_1000_series',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'ipp',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'printer',
+    'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_printer',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_ha_1000_series-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'command_set': 'ESCPL2,BDC,D4,D4PX,ESCPR7,END4,GENEP,URF',
+      'device_class': 'enum',
+      'friendly_name': 'Test HA-1000 Series',
+      'info': 'Test HA-1000 Series',
+      'location': None,
+      'options': list([
+        'idle',
+        'printing',
+        'stopped',
+      ]),
+      'serial': '555534593035345555',
+      'state_message': None,
+      'state_reason': None,
+      'uri_supported': 'ipps://192.168.1.31:631/ipp/print,ipp://192.168.1.31:631/ipp/print',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_ha_1000_series',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_sensors[sensor.test_ha_1000_series_black_ink-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_ha_1000_series_black_ink',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Black ink',
+    'platform': 'ipp',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'marker',
+    'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_marker_0',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.test_ha_1000_series_black_ink-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test HA-1000 Series Black ink',
+      'marker_high_level': 100,
+      'marker_low_level': 10,
+      'marker_type': 'ink-cartridge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_ha_1000_series_black_ink',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '58',
+  })
+# ---
+# name: test_sensors[sensor.test_ha_1000_series_cyan_ink-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_ha_1000_series_cyan_ink',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cyan ink',
+    'platform': 'ipp',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'marker',
+    'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_marker_1',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.test_ha_1000_series_cyan_ink-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test HA-1000 Series Cyan ink',
+      'marker_high_level': 100,
+      'marker_low_level': 10,
+      'marker_type': 'ink-cartridge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_ha_1000_series_cyan_ink',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '91',
+  })
+# ---
+# name: test_sensors[sensor.test_ha_1000_series_magenta_ink-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_ha_1000_series_magenta_ink',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Magenta ink',
+    'platform': 'ipp',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'marker',
+    'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_marker_2',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.test_ha_1000_series_magenta_ink-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test HA-1000 Series Magenta ink',
+      'marker_high_level': 100,
+      'marker_low_level': 10,
+      'marker_type': 'ink-cartridge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_ha_1000_series_magenta_ink',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '73',
+  })
+# ---
+# name: test_sensors[sensor.test_ha_1000_series_photo_black_ink-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_ha_1000_series_photo_black_ink',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Photo black ink',
+    'platform': 'ipp',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'marker',
+    'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_marker_3',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.test_ha_1000_series_photo_black_ink-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test HA-1000 Series Photo black ink',
+      'marker_high_level': 100,
+      'marker_low_level': 10,
+      'marker_type': 'ink-cartridge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_ha_1000_series_photo_black_ink',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '98',
+  })
+# ---
+# name: test_sensors[sensor.test_ha_1000_series_uptime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_ha_1000_series_uptime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Uptime',
+    'platform': 'ipp',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'uptime',
+    'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_uptime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_ha_1000_series_uptime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Test HA-1000 Series Uptime',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_ha_1000_series_uptime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2019-11-11T09:10:02+00:00',
+  })
+# ---
+# name: test_sensors[sensor.test_ha_1000_series_yellow_ink-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_ha_1000_series_yellow_ink',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Yellow ink',
+    'platform': 'ipp',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'marker',
+    'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_marker_4',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.test_ha_1000_series_yellow_ink-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test HA-1000 Series Yellow ink',
+      'marker_high_level': 100,
+      'marker_low_level': 10,
+      'marker_type': 'ink-cartridge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_ha_1000_series_yellow_ink',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '95',
+  })
+# ---

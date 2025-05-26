@@ -6,11 +6,12 @@ import ast
 
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 
+from . import ast_parse_module
 from .model import Config, Integration
 
 CONFIG_SCHEMA_IGNORE = {
     # Configuration under the homeassistant key is a special case, it's handled by
-    # conf_util.async_process_ha_core_config already during bootstrapping, not by
+    # core_config.async_process_ha_core_config already during bootstrapping, not by
     # a schema in the homeassistant integration.
     HOMEASSISTANT_DOMAIN,
 }
@@ -60,7 +61,7 @@ def _validate_integration(config: Config, integration: Integration) -> None:
         # Virtual integrations don't have any implementation
         return
 
-    init = ast.parse(init_file.read_text())
+    init = ast_parse_module(init_file)
 
     # No YAML Support
     if not _has_function(
@@ -81,7 +82,7 @@ def _validate_integration(config: Config, integration: Integration) -> None:
 
     config_file = integration.path / "config.py"
     if config_file.is_file():
-        config_module = ast.parse(config_file.read_text())
+        config_module = ast_parse_module(config_file)
         if _has_function(config_module, ast.AsyncFunctionDef, "async_validate_config"):
             return
 

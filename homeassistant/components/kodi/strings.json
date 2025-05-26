@@ -41,7 +41,7 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "no_uuid": "Kodi instance does not have a unique id. This is most likely due to an old Kodi version (17.x or below). You can configure the integration manually or upgrade to a more recent Kodi version."
+      "no_uuid": "Kodi instance does not have a unique ID. This is most likely due to an old Kodi version (17.x or below). You can configure the integration manually or upgrade to a more recent Kodi version."
     }
   },
   "device_automation": {
@@ -57,15 +57,15 @@
       "fields": {
         "media_type": {
           "name": "Media type",
-          "description": "Media type identifier. It must be one of SONG or ALBUM."
+          "description": "Media type identifier. It must be one of 'SONG' or 'ALBUM'."
         },
         "media_id": {
           "name": "Media ID",
-          "description": "Unique Id of the media entry to add (`songid` or albumid`). If not defined, `media_name` and `artist_name` are needed to search the Kodi music library."
+          "description": "Unique ID of the media entry to add (`songid` or albumid`). If not defined, Media name and Artist name are needed to search the Kodi music library."
         },
         "media_name": {
           "name": "Media name",
-          "description": "Optional media name for filtering media. Can be 'ALL' when `media_type` is 'ALBUM' and `artist_name` is specified, to add all songs from one artist."
+          "description": "Optional media name for filtering media. Can be 'ALL' when Media type is 'ALBUM' and Artist name is specified, to add all songs from one artist."
         },
         "artist_name": {
           "name": "Artist name",

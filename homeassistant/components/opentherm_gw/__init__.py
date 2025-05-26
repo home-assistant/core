@@ -9,8 +9,7 @@ import pyotgw.vars as gw_vars
 from serial import SerialException
 import voluptuous as vol
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DATE,
     ATTR_ID,
@@ -21,20 +20,12 @@ from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
-    PRECISION_HALVES,
-    PRECISION_TENTHS,
-    PRECISION_WHOLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_CH_OVRD,
@@ -43,9 +34,7 @@ from .const import (
     ATTR_LEVEL,
     ATTR_TRANSP_ARG,
     ATTR_TRANSP_CMD,
-    CONF_CLIMATE,
-    CONF_FLOOR_TEMP,
-    CONF_PRECISION,
+    CONF_TEMPORARY_OVRD_MODE,
     CONNECTION_TIMEOUT,
     DATA_GATEWAYS,
     DATA_OPENTHERM_GW,
@@ -68,34 +57,20 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CLIMATE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_PRECISION): vol.In(
-            [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
-        ),
-        vol.Optional(CONF_FLOOR_TEMP, default=False): cv.boolean,
-    }
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: cv.schema_with_slug_keys(
-            {
-                vol.Required(CONF_DEVICE): cv.string,
-                vol.Optional(CONF_CLIMATE, default={}): CLIMATE_SCHEMA,
-                vol.Optional(CONF_NAME): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     gateway = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][entry.data[CONF_ID]]
+    gateway.options = entry.options
     async_dispatcher_send(hass, gateway.options_update_signal, entry)
 
 
@@ -106,35 +81,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     gateway = OpenThermGatewayHub(hass, config_entry)
     hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]] = gateway
-
-    # Migration can be removed in 2025.4.0
-    dev_reg = dr.async_get(hass)
-    if (
-        migrate_device := dev_reg.async_get_device(
-            {(DOMAIN, config_entry.data[CONF_ID])}
-        )
-    ) is not None:
-        dev_reg.async_update_device(
-            migrate_device.id,
-            new_identifiers={
-                (
-                    DOMAIN,
-                    f"{config_entry.data[CONF_ID]}-{OpenThermDeviceIdentifier.GATEWAY}",
-                )
-            },
-        )
-
-    # Migration can be removed in 2025.4.0
-    ent_reg = er.async_get(hass)
-    if (
-        entity_id := ent_reg.async_get_entity_id(
-            CLIMATE_DOMAIN, DOMAIN, config_entry.data[CONF_ID]
-        )
-    ) is not None:
-        ent_reg.async_update_entity(
-            entity_id,
-            new_unique_id=f"{config_entry.data[CONF_ID]}-{OpenThermDeviceIdentifier.THERMOSTAT}-thermostat_entity",
-        )
 
     config_entry.add_update_listener(options_updated)
 
@@ -150,21 +96,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     register_services(hass)
-    return True
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the OpenTherm Gateway component."""
-    if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
-        conf = config[DOMAIN]
-        for device_id, device_config in conf.items():
-            device_config[CONF_ID] = device_id
-
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=device_config
-                )
-            )
     return True
 
 
@@ -448,7 +379,7 @@ class OpenThermGatewayHub:
         self.device_path = config_entry.data[CONF_DEVICE]
         self.hub_id = config_entry.data[CONF_ID]
         self.name = config_entry.data[CONF_NAME]
-        self.climate_config = config_entry.options
+        self.options = config_entry.options
         self.config_entry_id = config_entry.entry_id
         self.update_signal = f"{DATA_OPENTHERM_GW}_{self.hub_id}_update"
         self.options_update_signal = f"{DATA_OPENTHERM_GW}_{self.hub_id}_options_update"
@@ -544,3 +475,9 @@ class OpenThermGatewayHub:
     def connected(self):
         """Report whether or not we are connected to the gateway."""
         return self.gateway.connection.connected
+
+    async def set_room_setpoint(self, temp) -> float:
+        """Set the room temperature setpoint on the gateway. Return the new temperature."""
+        return await self.gateway.set_target_temp(
+            temp, self.options.get(CONF_TEMPORARY_OVRD_MODE, True)
+        )

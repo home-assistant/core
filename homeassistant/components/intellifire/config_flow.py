@@ -13,8 +13,7 @@ from intellifire4py.local_api import IntelliFireAPILocal
 from intellifire4py.model import IntelliFireCommonFireplaceData
 import voluptuous as vol
 
-from homeassistant.components.dhcp import DhcpServiceInfo
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -22,6 +21,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
     API_MODE_LOCAL,
@@ -79,7 +79,6 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
         self._dhcp_discovered_serial: str = ""  # used only in discovery mode
         self._discovered_host: DiscoveredHostInfo
         self._dhcp_mode = False
-        self._is_reauth = False
 
         self._not_configured_hosts: list[DiscoveredHostInfo] = []
         self._reauth_needed: DiscoveredHostInfo
@@ -146,13 +145,13 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         errors: dict[str, str] = {}
         LOGGER.debug(
-            f"STEP: pick_cloud_device: {user_input} - DHCP_MODE[{self._dhcp_mode}"
+            "STEP: pick_cloud_device: %s - DHCP_MODE[%s]", user_input, self._dhcp_mode
         )
 
         if self._dhcp_mode or user_input is not None:
             if self._dhcp_mode:
                 serial = self._dhcp_discovered_serial
-                LOGGER.debug(f"DHCP Mode detected for serial [{serial}]")
+                LOGGER.debug("DHCP Mode detected for serial [%s]", serial)
             if user_input is not None:
                 serial = user_input[CONF_SERIAL]
 
@@ -182,14 +181,6 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # If there is a single fireplace configure it
         if len(available_fireplaces) == 1:
-            if self._is_reauth:
-                reauth_entry = self.hass.config_entries.async_get_entry(
-                    self.context["entry_id"]
-                )
-                return await self._async_create_config_entry_from_common_data(
-                    fireplace=available_fireplaces[0], existing_entry=reauth_entry
-                )
-
             return await self._async_create_config_entry_from_common_data(
                 fireplace=available_fireplaces[0]
             )
@@ -207,9 +198,7 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_create_config_entry_from_common_data(
-        self,
-        fireplace: IntelliFireCommonFireplaceData,
-        existing_entry: ConfigEntry | None = None,
+        self, fireplace: IntelliFireCommonFireplaceData
     ) -> ConfigFlowResult:
         """Construct a config entry based on an object of IntelliFireCommonFireplaceData."""
 
@@ -226,9 +215,9 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
 
         options = {CONF_READ_MODE: API_MODE_LOCAL, CONF_CONTROL_MODE: API_MODE_LOCAL}
 
-        if existing_entry:
+        if self.source == SOURCE_REAUTH:
             return self.async_update_reload_and_abort(
-                existing_entry, data=data, options=options
+                self._get_reauth_entry(), data=data, options=options
             )
         return self.async_create_entry(
             title=f"Fireplace {fireplace.serial}", data=data, options=options
@@ -239,11 +228,9 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         LOGGER.debug("STEP: reauth")
-        self._is_reauth = True
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
 
         # populate the expected vars
-        self._dhcp_discovered_serial = entry.data[CONF_SERIAL]  # type: ignore[union-attr]
+        self._dhcp_discovered_serial = self._get_reauth_entry().data[CONF_SERIAL]
 
         placeholders = {"serial": self._dhcp_discovered_serial}
         self.context["title_placeholders"] = placeholders

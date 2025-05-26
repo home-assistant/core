@@ -10,10 +10,11 @@ from mozart_api.exceptions import ApiException
 from mozart_api.mozart_client import MozartClient
 import voluptuous as vol
 
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.util.ssl import get_default_context
 
 from .const import (
     ATTR_FRIENDLY_NAME,
@@ -25,6 +26,7 @@ from .const import (
     DEFAULT_MODEL,
     DOMAIN,
 )
+from .util import get_serial_number_from_jid
 
 
 class EntryData(TypedDict, total=False):
@@ -87,7 +89,9 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     errors={"base": _exception_map[type(error)]},
                 )
 
-            self._client = MozartClient(self._host)
+            self._client = MozartClient(
+                host=self._host, ssl_context=get_default_context()
+            )
 
             # Try to get information from Beolink self method.
             async with self._client:
@@ -107,7 +111,7 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     )
 
             self._beolink_jid = beolink_self.jid
-            self._serial_number = beolink_self.jid.split(".")[2].split("@")[0]
+            self._serial_number = get_serial_number_from_jid(beolink_self.jid)
 
             await self.async_set_unique_id(self._serial_number)
             self._abort_if_unique_id_configured()
@@ -136,7 +140,7 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="ipv6_address")
 
         # Check connection to ensure valid address is received
-        self._client = MozartClient(self._host)
+        self._client = MozartClient(self._host, ssl_context=get_default_context())
 
         async with self._client:
             try:

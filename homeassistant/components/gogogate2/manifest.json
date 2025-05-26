@@ -14,5 +14,5 @@
   },
   "iot_class": "local_polling",
   "loggers": ["ismartgate"],
-  "requirements": ["ismartgate==5.0.1"]
+  "requirements": ["ismartgate==5.0.2"]
 }

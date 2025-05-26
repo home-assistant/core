@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfEnergy,
@@ -22,10 +21,8 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN as DAIKIN_DOMAIN, DaikinApi
 from .const import (
     ATTR_COMPRESSOR_FREQUENCY,
     ATTR_COOL_ENERGY,
@@ -38,6 +35,8 @@ from .const import (
     ATTR_TOTAL_ENERGY_TODAY,
     ATTR_TOTAL_POWER,
 )
+from .coordinator import DaikinConfigEntry, DaikinCoordinator
+from .entity import DaikinEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -132,24 +131,13 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Old way of setting up the Daikin sensors.
-
-    Can only be called when a user accidentally mentions the platform in their
-    config. But even in that case it would have been ignored.
-    """
-
-
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DaikinConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Daikin climate based on config_entry."""
-    daikin_api = hass.data[DAIKIN_DOMAIN].get(entry.entry_id)
+    daikin_api = entry.runtime_data
     sensors = [ATTR_INSIDE_TEMPERATURE]
     if daikin_api.device.support_outside_temperature:
         sensors.append(ATTR_OUTSIDE_TEMPERATURE)
@@ -173,26 +161,20 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class DaikinSensor(SensorEntity):
+class DaikinSensor(DaikinEntity, SensorEntity):
     """Representation of a Sensor."""
 
-    _attr_has_entity_name = True
     entity_description: DaikinSensorEntityDescription
 
     def __init__(
-        self, api: DaikinApi, description: DaikinSensorEntityDescription
+        self, coordinator: DaikinCoordinator, description: DaikinSensorEntityDescription
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(coordinator)
         self.entity_description = description
-        self._attr_device_info = api.device_info
-        self._attr_unique_id = f"{api.device.mac}-{description.key}"
-        self._api = api
+        self._attr_unique_id = f"{self.device.mac}-{description.key}"
 
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        return self.entity_description.value_func(self._api.device)
-
-    async def async_update(self) -> None:
-        """Retrieve latest state."""
-        await self._api.async_update()
+        return self.entity_description.value_func(self.device)

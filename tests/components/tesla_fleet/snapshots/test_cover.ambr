@@ -1,0 +1,736 @@
+# serializer version: 1
+# name: test_cover[cover.test_charge_port_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.test_charge_port_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Charge port door',
+    'platform': 'tesla_fleet',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 3>,
+    'translation_key': 'charge_state_charge_port_door_open',
+    'unique_id': 'LRWXF7EK4KC700000-charge_state_charge_port_door_open',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover[cover.test_charge_port_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Test Charge port door',
+      'supported_features': <CoverEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_charge_port_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover[cover.test_frunk-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.test_frunk',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Frunk',
+    'platform': 'tesla_fleet',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 1>,
+    'translation_key': 'vehicle_state_ft',
+    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_ft',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover[cover.test_frunk-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Test Frunk',
+      'supported_features': <CoverEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_frunk',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover[cover.test_sunroof-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.test_sunroof',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': 'Sunroof',
+    'platform': 'tesla_fleet',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 11>,
+    'translation_key': 'vehicle_state_sun_roof_state',
+    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_sun_roof_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover[cover.test_sunroof-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'window',
+      'friendly_name': 'Test Sunroof',
+      'supported_features': <CoverEntityFeature: 11>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_sunroof',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover[cover.test_trunk-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.test_trunk',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Trunk',
+    'platform': 'tesla_fleet',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 3>,
+    'translation_key': 'vehicle_state_rt',
+    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_rt',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover[cover.test_trunk-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Test Trunk',
+      'supported_features': <CoverEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_trunk',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover[cover.test_windows-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.test_windows',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': 'Windows',
+    'platform': 'tesla_fleet',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 3>,
+    'translation_key': 'windows',
+    'unique_id': 'LRWXF7EK4KC700000-windows',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover[cover.test_windows-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'window',
+      'friendly_name': 'Test Windows',
+      'supported_features': <CoverEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_windows',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_alt[cover.test_charge_port_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.test_charge_port_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Charge port door',
+    'platform': 'tesla_fleet',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 3>,
+    'translation_key': 'charge_state_charge_port_door_open',
+    'unique_id': 'LRWXF7EK4KC700000-charge_state_charge_port_door_open',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_alt[cover.test_charge_port_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Test Charge port door',
+      'supported_features': <CoverEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_charge_port_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_alt[cover.test_frunk-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.test_frunk',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Frunk',
+    'platform': 'tesla_fleet',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 1>,
+    'translation_key': 'vehicle_state_ft',
+    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_ft',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_alt[cover.test_frunk-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Test Frunk',
+      'supported_features': <CoverEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_frunk',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_alt[cover.test_sunroof-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.test_sunroof',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': 'Sunroof',
+    'platform': 'tesla_fleet',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 11>,
+    'translation_key': 'vehicle_state_sun_roof_state',
+    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_sun_roof_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_alt[cover.test_sunroof-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'window',
+      'friendly_name': 'Test Sunroof',
+      'supported_features': <CoverEntityFeature: 11>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_sunroof',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_cover_alt[cover.test_trunk-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.test_trunk',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Trunk',
+    'platform': 'tesla_fleet',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 3>,
+    'translation_key': 'vehicle_state_rt',
+    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_rt',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_alt[cover.test_trunk-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Test Trunk',
+      'supported_features': <CoverEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_trunk',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_alt[cover.test_windows-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.test_windows',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': 'Windows',
+    'platform': 'tesla_fleet',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 3>,
+    'translation_key': 'windows',
+    'unique_id': 'LRWXF7EK4KC700000-windows',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_alt[cover.test_windows-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'window',
+      'friendly_name': 'Test Windows',
+      'supported_features': <CoverEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_windows',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_readonly[cover.test_charge_port_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.test_charge_port_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Charge port door',
+    'platform': 'tesla_fleet',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_charge_port_door_open',
+    'unique_id': 'LRWXF7EK4KC700000-charge_state_charge_port_door_open',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_readonly[cover.test_charge_port_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Test Charge port door',
+      'supported_features': <CoverEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_charge_port_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_readonly[cover.test_frunk-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.test_frunk',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Frunk',
+    'platform': 'tesla_fleet',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle_state_ft',
+    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_ft',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_readonly[cover.test_frunk-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Test Frunk',
+      'supported_features': <CoverEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_frunk',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_readonly[cover.test_sunroof-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.test_sunroof',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': 'Sunroof',
+    'platform': 'tesla_fleet',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle_state_sun_roof_state',
+    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_sun_roof_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_readonly[cover.test_sunroof-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'window',
+      'friendly_name': 'Test Sunroof',
+      'supported_features': <CoverEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_sunroof',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_readonly[cover.test_trunk-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.test_trunk',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Trunk',
+    'platform': 'tesla_fleet',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle_state_rt',
+    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_rt',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_readonly[cover.test_trunk-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Test Trunk',
+      'supported_features': <CoverEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_trunk',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_readonly[cover.test_windows-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.test_windows',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': 'Windows',
+    'platform': 'tesla_fleet',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'windows',
+    'unique_id': 'LRWXF7EK4KC700000-windows',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_readonly[cover.test_windows-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'window',
+      'friendly_name': 'Test Windows',
+      'supported_features': <CoverEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_windows',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---

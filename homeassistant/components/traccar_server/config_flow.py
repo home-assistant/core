@@ -160,39 +160,6 @@ class TraccarServerConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import an entry."""
-        configured_port = str(import_data[CONF_PORT])
-        self._async_abort_entries_match(
-            {
-                CONF_HOST: import_data[CONF_HOST],
-                CONF_PORT: configured_port,
-            }
-        )
-        if "all_events" in (imported_events := import_data.get("event", [])):
-            events = list(EVENTS.values())
-        else:
-            events = imported_events
-        return self.async_create_entry(
-            title=f"{import_data[CONF_HOST]}:{configured_port}",
-            data={
-                CONF_HOST: import_data[CONF_HOST],
-                CONF_PORT: configured_port,
-                CONF_SSL: import_data.get(CONF_SSL, False),
-                CONF_VERIFY_SSL: import_data.get(CONF_VERIFY_SSL, True),
-                CONF_USERNAME: import_data[CONF_USERNAME],
-                CONF_PASSWORD: import_data[CONF_PASSWORD],
-            },
-            options={
-                CONF_MAX_ACCURACY: import_data[CONF_MAX_ACCURACY],
-                CONF_EVENTS: events,
-                CONF_CUSTOM_ATTRIBUTES: import_data.get("monitored_conditions", []),
-                CONF_SKIP_ACCURACY_FILTER_FOR: import_data.get(
-                    "skip_accuracy_filter_on", []
-                ),
-            },
-        )
-
     @staticmethod
     @callback
     def async_get_options_flow(

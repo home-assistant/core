@@ -15,17 +15,22 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import LOGGER
 
+type SimpleFinConfigEntry = ConfigEntry[SimpleFinDataUpdateCoordinator]
+
 
 class SimpleFinDataUpdateCoordinator(DataUpdateCoordinator[FinancialData]):
     """Data update coordinator for the SimpleFIN integration."""
 
-    config_entry: ConfigEntry
+    config_entry: SimpleFinConfigEntry
 
-    def __init__(self, hass: HomeAssistant, client: SimpleFin) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: SimpleFinConfigEntry, client: SimpleFin
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name="simplefin",
             update_interval=timedelta(hours=4),
         )

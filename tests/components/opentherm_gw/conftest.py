@@ -6,8 +6,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from pyotgw.vars import OTGW, OTGW_ABOUT
 import pytest
 
+from homeassistant.components.opentherm_gw import DOMAIN
+from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_NAME
+
+from tests.common import MockConfigEntry
+
 VERSION_TEST = "4.2.5"
 MINIMAL_STATUS = {OTGW: {OTGW_ABOUT: f"OpenTherm Gateway {VERSION_TEST}"}}
+MOCK_GATEWAY_ID = "mock_gateway"
 
 
 @pytest.fixture
@@ -39,3 +45,18 @@ def mock_pyotgw() -> Generator[MagicMock]:
         ),
     ):
         yield mock_gateway
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Mock an OpenTherm Gateway config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Mock Gateway",
+        data={
+            CONF_NAME: "Mock Gateway",
+            CONF_DEVICE: "/dev/null",
+            CONF_ID: MOCK_GATEWAY_ID,
+        },
+        options={},
+    )

@@ -6,6 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/smarttub",
   "iot_class": "cloud_polling",
   "loggers": ["smarttub"],
-  "quality_scale": "platinum",
-  "requirements": ["python-smarttub==0.0.36"]
+  "requirements": ["python-smarttub==0.0.39"]
 }

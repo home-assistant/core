@@ -24,8 +24,15 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerData, Trigge
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.util.json import json_loads
 
-from .. import mqtt
-from .const import CONF_ENCODING, CONF_QOS, CONF_TOPIC, DEFAULT_ENCODING, DEFAULT_QOS
+from .client import async_subscribe_internal
+from .const import (
+    CONF_ENCODING,
+    CONF_QOS,
+    CONF_TOPIC,
+    DEFAULT_ENCODING,
+    DEFAULT_QOS,
+    DOMAIN,
+)
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
@@ -33,11 +40,12 @@ from .models import (
     PublishPayloadType,
     ReceiveMessage,
 )
+from .util import valid_subscribe_topic, valid_subscribe_topic_template
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): mqtt.DOMAIN,
-        vol.Required(CONF_TOPIC): mqtt.util.valid_subscribe_topic_template,
+        vol.Required(CONF_PLATFORM): DOMAIN,
+        vol.Required(CONF_TOPIC): valid_subscribe_topic_template,
         vol.Optional(CONF_PAYLOAD): cv.template,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
@@ -76,7 +84,7 @@ async def async_attach_trigger(
 
     topic_template: Template = config[CONF_TOPIC]
     topic = topic_template.async_render(variables, limited=True, parse_result=False)
-    mqtt.util.valid_subscribe_topic(topic)
+    valid_subscribe_topic(topic)
 
     @callback
     def mqtt_automation_listener(mqttmsg: ReceiveMessage) -> None:
@@ -104,7 +112,7 @@ async def async_attach_trigger(
         "Attaching MQTT trigger for topic: '%s', payload: '%s'", topic, wanted_payload
     )
 
-    return mqtt.async_subscribe_internal(
+    return async_subscribe_internal(
         hass,
         topic,
         mqtt_automation_listener,

@@ -5,15 +5,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from aranet4.client import Aranet4Advertisement
+from aranet4.client import Aranet4Advertisement, Color
 from bleak.backends.device import BLEDevice
 
-from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
     PassiveBluetoothEntityKey,
-    PassiveBluetoothProcessorCoordinator,
     PassiveBluetoothProcessorEntity,
 )
 from homeassistant.components.sensor import (
@@ -24,6 +22,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_NAME,
     ATTR_SW_VERSION,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -36,9 +35,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ARANET_MANUFACTURER_NAME, DOMAIN
+from . import AranetConfigEntry
+from .const import ARANET_MANUFACTURER_NAME
 
 
 @dataclass(frozen=True)
@@ -73,6 +73,13 @@ SENSOR_DESCRIPTIONS = {
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "status": AranetSensorEntityDescription(
+        key="threshold",
+        translation_key="threshold",
+        name="Threshold",
+        device_class=SensorDeviceClass.ENUM,
+        options=[status.name.lower() for status in Color],
     ),
     "co2": AranetSensorEntityDescription(
         key="co2",
@@ -143,6 +150,7 @@ def _sensor_device_info_to_hass(
     if adv.readings and adv.readings.name:
         hass_device_info[ATTR_NAME] = adv.readings.name
         hass_device_info[ATTR_MANUFACTURER] = ARANET_MANUFACTURER_NAME
+        hass_device_info[ATTR_MODEL] = adv.readings.type.model
     if adv.manufacturer_data:
         hass_device_info[ATTR_SW_VERSION] = str(adv.manufacturer_data.version)
     return hass_device_info
@@ -160,7 +168,10 @@ def sensor_update_to_bluetooth_data_update(
         val = getattr(adv.readings, key)
         if val == -1:
             continue
-        val *= desc.scale
+        if key == "status":
+            val = val.name.lower()
+        else:
+            val *= desc.scale
         data[tag] = val
         names[tag] = desc.name
         descs[tag] = desc
@@ -174,20 +185,17 @@ def sensor_update_to_bluetooth_data_update(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: AranetConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Aranet sensors."""
-    coordinator: PassiveBluetoothProcessorCoordinator[Aranet4Advertisement] = hass.data[
-        DOMAIN
-    ][entry.entry_id]
     processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
     entry.async_on_unload(
         processor.async_add_entities_listener(
             Aranet4BluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
+    entry.async_on_unload(entry.runtime_data.async_register_processor(processor))
 
 
 class Aranet4BluetoothSensorEntity(

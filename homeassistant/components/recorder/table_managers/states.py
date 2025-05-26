@@ -2,7 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+from typing import Any, cast
+
+from sqlalchemy.engine.row import Row
+from sqlalchemy.orm.session import Session
+
 from ..db_schema import States
+from ..queries import find_oldest_state
+from ..util import execute_stmt_lambda_element
 
 
 class StatesManager:
@@ -13,6 +21,12 @@ class StatesManager:
         self._pending: dict[str, States] = {}
         self._last_committed_id: dict[str, int] = {}
         self._last_reported: dict[int, float] = {}
+        self._oldest_ts: float | None = None
+
+    @property
+    def oldest_ts(self) -> float | None:
+        """Return the oldest timestamp."""
+        return self._oldest_ts
 
     def pop_pending(self, entity_id: str) -> States | None:
         """Pop a pending state.
@@ -44,6 +58,8 @@ class StatesManager:
         recorder thread.
         """
         self._pending[entity_id] = state
+        if self._oldest_ts is None:
+            self._oldest_ts = state.last_updated_ts
 
     def update_pending_last_reported(
         self, state_id: int, last_reported_timestamp: float
@@ -74,6 +90,22 @@ class StatesManager:
         """
         self._last_committed_id.clear()
         self._pending.clear()
+        self._oldest_ts = None
+
+    def load_from_db(self, session: Session) -> None:
+        """Update the cache.
+
+        Must run in the recorder thread.
+        """
+        result = cast(
+            Sequence[Row[Any]],
+            execute_stmt_lambda_element(session, find_oldest_state()),
+        )
+        if not result:
+            ts = None
+        else:
+            ts = result[0].last_updated_ts
+        self._oldest_ts = ts
 
     def evict_purged_state_ids(self, purged_state_ids: set[int]) -> None:
         """Evict purged states from the committed states.

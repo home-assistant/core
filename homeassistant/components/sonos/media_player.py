@@ -46,13 +46,14 @@ from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, cal
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from . import UnjoinData, media_browser
 from .const import (
     DATA_SONOS,
-    DOMAIN as SONOS_DOMAIN,
+    DOMAIN,
+    MEDIA_TYPE_DIRECTORY,
     MEDIA_TYPES_TO_SONOS,
     MODELS_LINEIN_AND_TV,
     MODELS_LINEIN_ONLY,
@@ -84,6 +85,7 @@ REPEAT_TO_SONOS = {
 SONOS_TO_REPEAT = {meaning: mode for mode, meaning in REPEAT_TO_SONOS.items()}
 
 UPNP_ERRORS_TO_IGNORE = ["701", "711", "712"]
+ANNOUNCE_NOT_SUPPORTED_ERRORS: list[str] = ["globalError"]
 
 SERVICE_SNAPSHOT = "snapshot"
 SERVICE_RESTORE = "restore"
@@ -107,7 +109,7 @@ ATTR_QUEUE_POSITION = "queue_position"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sonos from a config entry."""
     platform = entity_platform.async_get_current_platform()
@@ -118,7 +120,7 @@ async def async_setup_entry(
         _LOGGER.debug("Creating media_player on %s", speaker.zone_name)
         async_add_entities([SonosMediaPlayerEntity(speaker)])
 
-    @service.verify_domain_control(hass, SONOS_DOMAIN)
+    @service.verify_domain_control(hass, DOMAIN)
     async def async_service_handle(service_call: ServiceCall) -> None:
         """Handle dispatched services."""
         assert platform is not None
@@ -150,11 +152,11 @@ async def async_setup_entry(
     )
 
     hass.services.async_register(
-        SONOS_DOMAIN, SERVICE_SNAPSHOT, async_service_handle, join_unjoin_schema
+        DOMAIN, SERVICE_SNAPSHOT, async_service_handle, join_unjoin_schema
     )
 
     hass.services.async_register(
-        SONOS_DOMAIN, SERVICE_RESTORE, async_service_handle, join_unjoin_schema
+        DOMAIN, SERVICE_RESTORE, async_service_handle, join_unjoin_schema
     )
 
     platform.async_register_entity_service(
@@ -447,7 +449,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         if len(fav) != 1:
             raise ServiceValidationError(
-                translation_domain=SONOS_DOMAIN,
+                translation_domain=DOMAIN,
                 translation_key="invalid_favorite",
                 translation_placeholders={
                     "name": name,
@@ -461,11 +463,20 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Play a favorite."""
         uri = favorite.reference.get_uri()
         soco = self.coordinator.soco
-        if soco.music_source_from_uri(uri) in [
-            MUSIC_SRC_RADIO,
-            MUSIC_SRC_LINE_IN,
-        ]:
-            soco.play_uri(uri, title=favorite.title, timeout=LONG_SERVICE_TIMEOUT)
+        if (
+            soco.music_source_from_uri(uri)
+            in [
+                MUSIC_SRC_RADIO,
+                MUSIC_SRC_LINE_IN,
+            ]
+            or favorite.reference.item_class == "object.item.audioItem.audioBook"
+        ):
+            soco.play_uri(
+                uri,
+                title=favorite.title,
+                meta=favorite.resource_meta_data,
+                timeout=LONG_SERVICE_TIMEOUT,
+            )
         else:
             soco.clear_queue()
             soco.add_to_queue(favorite.reference, timeout=LONG_SERVICE_TIMEOUT)
@@ -556,11 +567,24 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 ) from exc
             if response.get("success"):
                 return
-            raise HomeAssistantError(
-                translation_domain=SONOS_DOMAIN,
-                translation_key="announce_media_error",
-                translation_placeholders={"media_id": media_id, "response": response},
-            )
+            if response.get("type") in ANNOUNCE_NOT_SUPPORTED_ERRORS:
+                # If the speaker does not support announce do not raise and
+                # fall through to_play_media to play the clip directly.
+                _LOGGER.debug(
+                    "Speaker %s does not support announce, media_id %s response %s",
+                    self.speaker.zone_name,
+                    media_id,
+                    response,
+                )
+            else:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="announce_media_error",
+                    translation_placeholders={
+                        "media_id": media_id,
+                        "response": response,
+                    },
+                )
 
         if spotify.is_spotify_media_type(media_type):
             media_type = spotify.resolve_spotify_media_type(media_type)
@@ -633,6 +657,10 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                     media_id, timeout=LONG_SERVICE_TIMEOUT
                 )
                 soco.play_from_queue(0)
+        elif media_type == MEDIA_TYPE_DIRECTORY:
+            self._play_media_directory(
+                soco=soco, media_type=media_type, media_id=media_id, enqueue=enqueue
+            )
         elif media_type in {MediaType.MUSIC, MediaType.TRACK}:
             # If media ID is a relative URL, we serve it from HA.
             media_id = async_process_play_media_url(self.hass, media_id)
@@ -661,7 +689,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 playlist = next((p for p in playlists if p.title == media_id), None)
             if not playlist:
                 raise ServiceValidationError(
-                    translation_domain=SONOS_DOMAIN,
+                    translation_domain=DOMAIN,
                     translation_key="invalid_sonos_playlist",
                     translation_placeholders={
                         "name": media_id,
@@ -672,14 +700,23 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             soco.play_from_queue(0)
         elif media_type in PLAYABLE_MEDIA_TYPES:
             item = media_browser.get_media(self.media.library, media_id, media_type)
-
             if not item:
-                _LOGGER.error('Could not find "%s" in the library', media_id)
-                return
-
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_media",
+                    translation_placeholders={
+                        "media_id": media_id,
+                    },
+                )
             self._play_media_queue(soco, item, enqueue)
         else:
-            _LOGGER.error('Sonos does not support a media type of "%s"', media_type)
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_content_type",
+                translation_placeholders={
+                    "media_type": media_type,
+                },
+            )
 
     def _play_media_queue(
         self, soco: SoCo, item: MusicServiceItem, enqueue: MediaPlayerEnqueue
@@ -705,6 +742,25 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             )
             if enqueue == MediaPlayerEnqueue.PLAY:
                 soco.play_from_queue(new_pos - 1)
+
+    def _play_media_directory(
+        self,
+        soco: SoCo,
+        media_type: MediaType | str,
+        media_id: str,
+        enqueue: MediaPlayerEnqueue,
+    ):
+        """Play a directory from a music library share."""
+        item = media_browser.get_media(self.media.library, media_id, media_type)
+        if not item:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_media",
+                translation_placeholders={
+                    "media_id": media_id,
+                },
+            )
+        self._play_media_queue(soco, item, enqueue)
 
     @soco_error()
     def set_sleep_timer(self, sleep_time: int) -> None:
@@ -759,9 +815,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         queue: list[DidlMusicTrack] = self.coordinator.soco.get_queue(max_items=0)
         return [
             {
-                ATTR_MEDIA_TITLE: track.title,
-                ATTR_MEDIA_ALBUM_NAME: track.album,
-                ATTR_MEDIA_ARTIST: track.creator,
+                ATTR_MEDIA_TITLE: getattr(track, "title", None),
+                ATTR_MEDIA_ALBUM_NAME: getattr(track, "album", None),
+                ATTR_MEDIA_ARTIST: getattr(track, "creator", None),
                 ATTR_MEDIA_CONTENT_ID: track.get_uri(),
             }
             for track in queue

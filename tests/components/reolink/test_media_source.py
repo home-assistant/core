@@ -10,13 +10,12 @@ from reolink_aio.exceptions import ReolinkError
 from homeassistant.components.media_source import (
     DOMAIN as MEDIA_SOURCE_DOMAIN,
     URI_SCHEME,
+    Unresolvable,
     async_browse_media,
     async_resolve_media,
 )
-from homeassistant.components.media_source.error import Unresolvable
-from homeassistant.components.reolink import const
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
-from homeassistant.components.reolink.const import DOMAIN
+from homeassistant.components.reolink.const import CONF_BC_PORT, CONF_USE_HTTPS, DOMAIN
 from homeassistant.components.stream import DOMAIN as MEDIA_STREAM_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -32,7 +31,9 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
+    TEST_BC_PORT,
     TEST_HOST2,
+    TEST_HOST_MODEL,
     TEST_MAC2,
     TEST_NVR_NAME,
     TEST_NVR_NAME2,
@@ -109,11 +110,17 @@ async def test_resolve(
     )
     assert play_media.mime_type == TEST_MIME_TYPE_MP4
 
+    reolink_connect.is_nvr = False
+
+    play_media = await async_resolve_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
+    )
+    assert play_media.mime_type == TEST_MIME_TYPE_MP4
+
     file_id = (
         f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}"
     )
     reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE, TEST_URL)
-    reolink_connect.is_nvr = False
 
     play_media = await async_resolve_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
@@ -226,13 +233,15 @@ async def test_browsing(
     assert browse.identifier == browse_files_id
     assert browse.children[0].identifier == browse_file_id
 
+    reolink_connect.model = TEST_HOST_MODEL
 
-async def test_browsing_unsupported_encoding(
+
+async def test_browsing_h265_encoding(
     hass: HomeAssistant,
     reolink_connect: MagicMock,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test browsing a Reolink camera with unsupported stream encoding."""
+    """Test browsing a Reolink camera with h265 stream encoding."""
     entry_id = config_entry.entry_id
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
@@ -241,7 +250,6 @@ async def test_browsing_unsupported_encoding(
 
     browse_root_id = f"CAM|{entry_id}|{TEST_CHANNEL}"
 
-    # browse resolution select/camera recording days when main encoding unsupported
     mock_status = MagicMock()
     mock_status.year = TEST_YEAR
     mock_status.month = TEST_MONTH
@@ -252,6 +260,18 @@ async def test_browsing_unsupported_encoding(
     reolink_connect.supported.return_value = False
 
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_root_id}")
+
+    browse_resolution_id = f"RESs|{entry_id}|{TEST_CHANNEL}"
+    browse_res_sub_id = f"RES|{entry_id}|{TEST_CHANNEL}|sub"
+    browse_res_main_id = f"RES|{entry_id}|{TEST_CHANNEL}|main"
+
+    assert browse.domain == DOMAIN
+    assert browse.title == f"{TEST_NVR_NAME}"
+    assert browse.identifier == browse_resolution_id
+    assert browse.children[0].identifier == browse_res_sub_id
+    assert browse.children[1].identifier == browse_res_main_id
+
+    browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_sub_id}")
 
     browse_days_id = f"DAYS|{entry_id}|{TEST_CHANNEL}|sub"
     browse_day_0_id = (
@@ -321,14 +341,15 @@ async def test_browsing_not_loaded(
 
     reolink_connect.get_host_data.side_effect = ReolinkError("Test error")
     config_entry2 = MockConfigEntry(
-        domain=const.DOMAIN,
+        domain=DOMAIN,
         unique_id=format_mac(TEST_MAC2),
         data={
             CONF_HOST: TEST_HOST2,
             CONF_USERNAME: TEST_USERNAME2,
             CONF_PASSWORD: TEST_PASSWORD2,
             CONF_PORT: TEST_PORT,
-            const.CONF_USE_HTTPS: TEST_USE_HTTPS,
+            CONF_USE_HTTPS: TEST_USE_HTTPS,
+            CONF_BC_PORT: TEST_BC_PORT,
         },
         options={
             CONF_PROTOCOL: DEFAULT_PROTOCOL,
@@ -346,3 +367,5 @@ async def test_browsing_not_loaded(
     assert browse.title == "Reolink"
     assert browse.identifier is None
     assert len(browse.children) == 1
+
+    reolink_connect.get_host_data.side_effect = None

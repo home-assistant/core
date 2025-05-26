@@ -102,8 +102,8 @@ class AccessoryIIDStorage:
         char_hap_type: str | None = uuid_to_hap_type(char_uuid) if char_uuid else None
         # Allocation key must be a string since we are saving it to JSON
         allocation_key = (
-            f'{service_hap_type}_{service_unique_id or ""}_'
-            f'{char_hap_type or ""}_{char_unique_id or ""}'
+            f"{service_hap_type}_{service_unique_id or ''}_"
+            f"{char_hap_type or ''}_{char_unique_id or ''}"
         )
         # AID must be a string since JSON keys cannot be int
         aid_str = str(aid)

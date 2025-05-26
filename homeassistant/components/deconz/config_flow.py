@@ -19,8 +19,6 @@ from pydeconz.utils import (
 )
 import voluptuous as vol
 
-from homeassistant.components import ssdp
-from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import (
     SOURCE_HASSIO,
     ConfigEntry,
@@ -29,8 +27,10 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
+from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_SERIAL, SsdpServiceInfo
 
 from .const import (
     CONF_ALLOW_CLIP_SENSOR,
@@ -51,15 +51,6 @@ CONF_SERIAL = "serial"
 CONF_MANUAL_INPUT = "Manually define gateway"
 
 
-@callback
-def get_master_hub(hass: HomeAssistant) -> DeconzHub:
-    """Return the gateway which is marked as master."""
-    for hub in hass.data[DOMAIN].values():
-        if hub.master:
-            return cast(DeconzHub, hub)
-    raise ValueError
-
-
 class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a deCONZ config flow."""
 
@@ -74,9 +65,11 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> DeconzOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return DeconzOptionsFlowHandler(config_entry)
+        return DeconzOptionsFlowHandler()
 
     def __init__(self) -> None:
         """Initialize the deCONZ config flow."""
@@ -218,13 +211,13 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_link()
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered deCONZ bridge."""
         if LOGGER.isEnabledFor(logging.DEBUG):
             LOGGER.debug("deCONZ SSDP discovery %s", pformat(discovery_info))
 
-        self.bridge_id = normalize_bridge_id(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL])
+        self.bridge_id = normalize_bridge_id(discovery_info.upnp[ATTR_UPNP_SERIAL])
         parsed_url = urlparse(discovery_info.ssdp_location)
 
         entry = await self.async_set_unique_id(self.bridge_id)
@@ -299,11 +292,6 @@ class DeconzOptionsFlowHandler(OptionsFlow):
 
     gateway: DeconzHub
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize deCONZ options flow."""
-        self.config_entry = config_entry
-        self.options = dict(config_entry.options)
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -315,8 +303,7 @@ class DeconzOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the deconz devices options."""
         if user_input is not None:
-            self.options.update(user_input)
-            return self.async_create_entry(title="", data=self.options)
+            return self.async_create_entry(data=self.config_entry.options | user_input)
 
         schema_options = {}
         for option, default in (

@@ -10,7 +10,6 @@ from screenlogicpy.const.common import SL_GATEWAY_IP, SL_GATEWAY_NAME, SL_GATEWA
 from screenlogicpy.requests import login
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -19,8 +18,9 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_SCAN_INTERVAL
 
@@ -32,9 +32,9 @@ GATEWAY_MANUAL_ENTRY = "manual"
 PENTAIR_OUI = "00-C0-33"
 
 
-async def async_discover_gateways_by_unique_id(hass):
+async def async_discover_gateways_by_unique_id() -> dict[str, dict[str, Any]]:
     """Discover gateways and return a dict of them by unique id."""
-    discovered_gateways = {}
+    discovered_gateways: dict[str, dict[str, Any]] = {}
     try:
         hosts = await discovery.async_discover()
         _LOGGER.debug("Discovered hosts: %s", hosts)
@@ -51,16 +51,16 @@ async def async_discover_gateways_by_unique_id(hass):
     return discovered_gateways
 
 
-def _extract_mac_from_name(name):
+def _extract_mac_from_name(name: str) -> str:
     return format_mac(f"{PENTAIR_OUI}-{name.split(':')[1].strip()}")
 
 
-def short_mac(mac):
+def short_mac(mac: str) -> str:
     """Short version of the mac as seen in the app."""
     return "-".join(mac.split(":")[3:]).upper()
 
 
-def name_for_mac(mac):
+def name_for_mac(mac: str) -> str:
     """Derive the gateway name from the mac."""
     return f"Pentair: {short_mac(mac)}"
 
@@ -81,15 +81,17 @@ class ScreenlogicConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> ScreenLogicOptionsFlowHandler:
         """Get the options flow for ScreenLogic."""
-        return ScreenLogicOptionsFlowHandler(config_entry)
+        return ScreenLogicOptionsFlowHandler()
 
-    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
-        self.discovered_gateways = await async_discover_gateways_by_unique_id(self.hass)
+        self.discovered_gateways = await async_discover_gateways_by_unique_id()
         return await self.async_step_gateway_select()
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle dhcp discovery."""
         mac = format_mac(discovery_info.macaddress)
@@ -103,7 +105,7 @@ class ScreenlogicConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_gateway_select(self, user_input=None) -> ConfigFlowResult:
         """Handle the selection of a discovered ScreenLogic gateway."""
-        existing = self._async_current_ids()
+        existing = self._async_current_ids(include_ignore=False)
         unconfigured_gateways = {
             mac: gateway[SL_GATEWAY_NAME]
             for mac, gateway in self.discovered_gateways.items()
@@ -189,10 +191,6 @@ class ScreenlogicConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class ScreenLogicOptionsFlowHandler(OptionsFlow):
     """Handles the options for the ScreenLogic integration."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Init the screen logic options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Manage the options."""

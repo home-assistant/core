@@ -2,11 +2,11 @@
   "services": {
     "virtualkey": {
       "name": "Virtual key",
-      "description": "Presses a virtual key from CCU/Homegear or simulate keypress.",
+      "description": "Simulates a keypress (or other valid action) on CCU/Homegear with virtual or device keys.",
       "fields": {
         "address": {
           "name": "Address",
-          "description": "Address of homematic device or BidCoS-RF for virtual remote."
+          "description": "Address of Homematic device or BidCoS-RF for virtual remote."
         },
         "channel": {
           "name": "Channel",
@@ -24,11 +24,11 @@
     },
     "set_variable_value": {
       "name": "Set variable value",
-      "description": "Sets the name of a node.",
+      "description": "Sets the value of a system variable.",
       "fields": {
         "entity_id": {
           "name": "Entity",
-          "description": "Name(s) of homematic central to set value."
+          "description": "Name(s) of Homematic central to set value."
         },
         "name": {
           "name": "[%key:common::config_flow::data::name%]",
@@ -72,11 +72,11 @@
     },
     "reconnect": {
       "name": "Reconnect",
-      "description": "Reconnects to all Homematic Hubs."
+      "description": "Reconnects to all Homematic hubs."
     },
     "set_install_mode": {
       "name": "Set install mode",
-      "description": "Set a RPC XML interface into installation mode.",
+      "description": "Sets a RPC XML interface into installation mode.",
       "fields": {
         "interface": {
           "name": "Interface",
@@ -92,7 +92,7 @@
         },
         "address": {
           "name": "Address",
-          "description": "Address of homematic device or BidCoS-RF to learn."
+          "description": "Address of Homematic device or BidCoS-RF to learn."
         }
       }
     },

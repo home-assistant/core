@@ -6,8 +6,8 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from python_picnic_api import PicnicAPI
-from python_picnic_api.session import PicnicAuthError
+from python_picnic_api2 import PicnicAPI
+from python_picnic_api2.session import PicnicAuthError
 import requests
 import voluptuous as vol
 
@@ -67,8 +67,8 @@ async def validate_input(hass: HomeAssistant, data):
 
     # Return the validation result
     address = (
-        f'{user_data["address"]["street"]} {user_data["address"]["house_number"]}'
-        f'{user_data["address"]["house_number_ext"]}'
+        f"{user_data['address']['street']} {user_data['address']['house_number']}"
+        f"{user_data['address']['house_number_ext']}"
     )
     return auth_token, {
         "title": address,

@@ -6,6 +6,8 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import jwt
 from pyenphase import (
+    EnvoyACBPower,
+    EnvoyBatteryAggregate,
     EnvoyData,
     EnvoyEncharge,
     EnvoyEnchargeAggregate,
@@ -18,6 +20,7 @@ from pyenphase import (
 )
 from pyenphase.const import SupportedFeatures
 from pyenphase.models.dry_contacts import EnvoyDryContactSettings, EnvoyDryContactStatus
+from pyenphase.models.home import EnvoyInterfaceInformation
 from pyenphase.models.meters import EnvoyMeterData
 from pyenphase.models.tariff import EnvoyStorageSettings, EnvoyTariff
 import pytest
@@ -69,6 +72,11 @@ async def mock_envoy(
     request: pytest.FixtureRequest,
 ) -> AsyncGenerator[AsyncMock]:
     """Define a mocked Envoy fixture."""
+    new_token = jwt.encode(
+        payload={"name": "envoy", "exp": 2007837780},
+        key="secret",
+        algorithm="HS256",
+    )
     with (
         patch(
             "homeassistant.components.enphase_envoy.config_flow.Envoy",
@@ -77,6 +85,10 @@ async def mock_envoy(
         patch(
             "homeassistant.components.enphase_envoy.Envoy",
             new=mock_client,
+        ),
+        patch(
+            "pyenphase.auth.EnvoyTokenAuth._obtain_token",
+            return_value=new_token,
         ),
     ):
         mock_envoy = mock_client.return_value
@@ -134,6 +146,11 @@ def load_envoy_fixture(mock_envoy: AsyncMock, fixture_name: str) -> None:
     _load_json_2_encharge_enpower_data(mock_envoy.data, json_fixture)
     _load_json_2_raw_data(mock_envoy.data, json_fixture)
 
+    if item := json_fixture.get("interface_information"):
+        mock_envoy.interface_settings.return_value = EnvoyInterfaceInformation(**item)
+    else:
+        mock_envoy.interface_settings.return_value = None
+
 
 def _load_json_2_production_data(
     mocked_data: EnvoyData, json_fixture: dict[str, Any]
@@ -141,6 +158,8 @@ def _load_json_2_production_data(
     """Fill envoy production data from fixture."""
     if item := json_fixture["data"].get("system_consumption"):
         mocked_data.system_consumption = EnvoySystemConsumption(**item)
+    if item := json_fixture["data"].get("system_net_consumption"):
+        mocked_data.system_net_consumption = EnvoySystemConsumption(**item)
     if item := json_fixture["data"].get("system_production"):
         mocked_data.system_production = EnvoySystemProduction(**item)
     if item := json_fixture["data"].get("system_consumption_phases"):
@@ -149,12 +168,20 @@ def _load_json_2_production_data(
             mocked_data.system_consumption_phases[sub_item] = EnvoySystemConsumption(
                 **item_data
             )
+    if item := json_fixture["data"].get("system_net_consumption_phases"):
+        mocked_data.system_net_consumption_phases = {}
+        for sub_item, item_data in item.items():
+            mocked_data.system_net_consumption_phases[sub_item] = (
+                EnvoySystemConsumption(**item_data)
+            )
     if item := json_fixture["data"].get("system_production_phases"):
         mocked_data.system_production_phases = {}
         for sub_item, item_data in item.items():
             mocked_data.system_production_phases[sub_item] = EnvoySystemProduction(
                 **item_data
             )
+    if item := json_fixture["data"].get("acb_power"):
+        mocked_data.acb_power = EnvoyACBPower(**item)
 
 
 def _load_json_2_meter_data(
@@ -228,6 +255,8 @@ def _load_json_2_encharge_enpower_data(
             mocked_data.dry_contact_settings[sub_item] = EnvoyDryContactSettings(
                 **item_data
             )
+    if item := json_fixture["data"].get("battery_aggregate"):
+        mocked_data.battery_aggregate = EnvoyBatteryAggregate(**item)
 
 
 def _load_json_2_raw_data(mocked_data: EnvoyData, json_fixture: dict[str, Any]) -> None:

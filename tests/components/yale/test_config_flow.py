@@ -25,7 +25,7 @@ CLIENT_ID = "1"
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[Mock, None, None]:
+def mock_setup_entry() -> Generator[Mock]:
     """Patch setup entry."""
     with patch(
         "homeassistant.components.yale.async_setup_entry", return_value=True

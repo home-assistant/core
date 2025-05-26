@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/tellstick",
   "iot_class": "assumed_state",
   "loggers": ["tellcore"],
+  "quality_scale": "legacy",
   "requirements": ["tellcore-net==0.4", "tellcore-py==1.1.2"]
 }

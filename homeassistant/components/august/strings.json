@@ -18,9 +18,9 @@
     },
     "step": {
       "validation": {
-        "title": "Two factor authentication",
+        "title": "Two-factor authentication",
         "data": {
-          "code": "Verification code"
+          "verification_code": "Verification code"
         },
         "description": "Please check your {login_method} ({username}) and enter the verification code below. Codes may take a few minutes to arrive."
       },

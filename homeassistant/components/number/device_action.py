@@ -13,8 +13,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import entity_registry as er
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .const import ATTR_VALUE, DOMAIN, SERVICE_SET_VALUE

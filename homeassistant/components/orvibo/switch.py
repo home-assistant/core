@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_SWITCHES,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -59,7 +59,7 @@ def setup_platform(
     switch_conf = config.get(CONF_SWITCHES, [config])
 
     if config.get(CONF_DISCOVERY):
-        _LOGGER.info("Discovering S20 switches")
+        _LOGGER.debug("Discovering S20 switches")
         switch_data.update(discover())
 
     for switch in switch_conf:
@@ -70,7 +70,7 @@ def setup_platform(
             switches.append(
                 S20Switch(data.get(CONF_NAME), S20(host, mac=data.get(CONF_MAC)))
             )
-            _LOGGER.info("Initialized S20 at %s", host)
+            _LOGGER.debug("Initialized S20 at %s", host)
         except S20Exception:
             _LOGGER.error("S20 at %s couldn't be initialized", host)
 

@@ -18,11 +18,14 @@ class Dremel3DPrinterDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     config_entry: DremelConfigEntry
 
-    def __init__(self, hass: HomeAssistant, api: Dremel3DPrinter) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: DremelConfigEntry, api: Dremel3DPrinter
+    ) -> None:
         """Initialize Dremel 3D Printer data update coordinator."""
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=10),
         )

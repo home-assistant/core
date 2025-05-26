@@ -21,7 +21,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .data import ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity
@@ -29,14 +29,16 @@ from .entity import ProtectDeviceEntity
 _LOGGER = logging.getLogger(__name__)
 
 _SPEAKER_DESCRIPTION = MediaPlayerEntityDescription(
-    key="speaker", name="Speaker", device_class=MediaPlayerDeviceClass.SPEAKER
+    key="speaker",
+    translation_key="speaker",
+    device_class=MediaPlayerDeviceClass.SPEAKER,
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Discover cameras with speakers on a UniFi Protect NVR."""
     data = entry.runtime_data

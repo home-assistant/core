@@ -9,13 +9,20 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MyUplinkConfigEntry, MyUplinkDataCoordinator
+from .const import F_SERIES
+from .coordinator import MyUplinkConfigEntry, MyUplinkDataCoordinator
 from .entity import MyUplinkEntity, MyUplinkSystemEntity
-from .helpers import find_matching_platform
+from .helpers import find_matching_platform, transform_model_series
 
 CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, BinarySensorEntityDescription]] = {
+    F_SERIES: {
+        "43161": BinarySensorEntityDescription(
+            key="elect_add",
+            translation_key="elect_add",
+        ),
+    },
     "NIBEF": {
         "43161": BinarySensorEntityDescription(
             key="elect_add",
@@ -44,13 +51,14 @@ def get_description(device_point: DevicePoint) -> BinarySensorEntityDescription 
     2. Default to None
     """
     prefix, _, _ = device_point.category.partition(" ")
+    prefix = transform_model_series(prefix)
     return CATEGORY_BASED_DESCRIPTIONS.get(prefix, {}).get(device_point.parameter_id)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: MyUplinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up myUplink binary_sensor."""
     entities: list[BinarySensorEntity] = []
@@ -147,7 +155,7 @@ class MyUplinkDeviceBinarySensor(MyUplinkEntity, BinarySensorEntity):
         self,
         coordinator: MyUplinkDataCoordinator,
         device_id: str,
-        entity_description: BinarySensorEntityDescription | None,
+        entity_description: BinarySensorEntityDescription,
         unique_id_suffix: str,
     ) -> None:
         """Initialize the binary_sensor."""
@@ -157,8 +165,7 @@ class MyUplinkDeviceBinarySensor(MyUplinkEntity, BinarySensorEntity):
             unique_id_suffix=unique_id_suffix,
         )
 
-        if entity_description is not None:
-            self.entity_description = entity_description
+        self.entity_description = entity_description
 
     @property
     def is_on(self) -> bool:
@@ -177,7 +184,7 @@ class MyUplinkSystemBinarySensor(MyUplinkSystemEntity, BinarySensorEntity):
         coordinator: MyUplinkDataCoordinator,
         system_id: str,
         device_id: str,
-        entity_description: BinarySensorEntityDescription | None,
+        entity_description: BinarySensorEntityDescription,
         unique_id_suffix: str,
     ) -> None:
         """Initialize the binary_sensor."""
@@ -188,8 +195,7 @@ class MyUplinkSystemBinarySensor(MyUplinkSystemEntity, BinarySensorEntity):
             unique_id_suffix=unique_id_suffix,
         )
 
-        if entity_description is not None:
-            self.entity_description = entity_description
+        self.entity_description = entity_description
 
     @property
     def is_on(self) -> bool | None:

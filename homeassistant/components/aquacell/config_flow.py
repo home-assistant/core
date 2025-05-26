@@ -56,11 +56,11 @@ class AquaCellConfigFlow(ConfigFlow, domain=DOMAIN):
                 refresh_token = await api.authenticate(
                     user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
                 )
-            except ApiException:
+            except (ApiException, TimeoutError):
                 errors["base"] = "cannot_connect"
             except AuthenticationFailed:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

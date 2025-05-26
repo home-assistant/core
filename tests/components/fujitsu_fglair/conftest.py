@@ -1,14 +1,19 @@
 """Common fixtures for the Fujitsu HVAC (based on Ayla IOT) tests."""
 
-from collections.abc import Generator
+from collections.abc import Awaitable, Callable, Generator
 from unittest.mock import AsyncMock, create_autospec, patch
 
 from ayla_iot_unofficial import AylaApi
 from ayla_iot_unofficial.fujitsu_hvac import FanSpeed, FujitsuHVAC, OpMode, SwingMode
 import pytest
 
-from homeassistant.components.fujitsu_fglair.const import CONF_EUROPE, DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.fujitsu_fglair.const import (
+    CONF_REGION,
+    DOMAIN,
+    REGION_DEFAULT,
+)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -30,7 +35,13 @@ TEST_PROPERTY_VALUES = {
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def platforms() -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    return []
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.fujitsu_fglair.async_setup_entry", return_value=True
@@ -57,17 +68,39 @@ def mock_ayla_api(mock_devices: list[AsyncMock]) -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_entry(request: pytest.FixtureRequest) -> MockConfigEntry:
     """Return a regular config entry."""
+    region = REGION_DEFAULT
+    if hasattr(request, "param"):
+        region = request.param
+
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_USERNAME,
         data={
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
-            CONF_EUROPE: False,
+            CONF_REGION: region,
         },
     )
+
+
+@pytest.fixture(name="integration_setup")
+async def mock_integration_setup(
+    hass: HomeAssistant,
+    platforms: list[Platform],
+    mock_config_entry: MockConfigEntry,
+) -> Callable[[], Awaitable[bool]]:
+    """Fixture to set up the integration."""
+    mock_config_entry.add_to_hass(hass)
+
+    async def run() -> bool:
+        with patch("homeassistant.components.fujitsu_fglair.PLATFORMS", platforms):
+            result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+            await hass.async_block_till_done()
+        return result
+
+    return run
 
 
 def _create_device(serial_number: str) -> AsyncMock:
@@ -101,6 +134,7 @@ def _create_device(serial_number: str) -> AsyncMock:
     dev.temperature_range = [18.0, 26.0]
     dev.sensed_temp = 22.0
     dev.set_temp = 21.0
+    dev.outdoor_temperature = 5.0
 
     return dev
 

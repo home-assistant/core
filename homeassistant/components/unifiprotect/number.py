@@ -17,11 +17,17 @@ from uiprotect.data import (
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
-from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
+from .entity import (
+    PermRequired,
+    ProtectDeviceEntity,
+    ProtectEntityDescription,
+    ProtectSetableKeysMixin,
+    T,
+    async_all_device_entities,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -58,7 +64,7 @@ def _get_chime_duration(obj: Camera) -> int:
 CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ProtectNumberEntityDescription(
         key="wdr_value",
-        name="Wide dynamic range",
+        translation_key="wide_dynamic_range",
         icon="mdi:state-machine",
         entity_category=EntityCategory.CONFIG,
         ufp_min=0,
@@ -71,7 +77,7 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ),
     ProtectNumberEntityDescription(
         key="mic_level",
-        name="Microphone level",
+        translation_key="microphone_level",
         icon="mdi:microphone",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
@@ -86,7 +92,7 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ),
     ProtectNumberEntityDescription(
         key="zoom_position",
-        name="Zoom level",
+        translation_key="zoom_level",
         icon="mdi:magnify-plus-outline",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
@@ -100,7 +106,7 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ),
     ProtectNumberEntityDescription(
         key="chime_duration",
-        name="Chime duration",
+        translation_key="chime_duration",
         icon="mdi:bell",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -115,10 +121,10 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ),
     ProtectNumberEntityDescription(
         key="icr_lux",
-        name="Infrared custom lux trigger",
+        translation_key="infrared_custom_lux_trigger",
         icon="mdi:white-balance-sunny",
         entity_category=EntityCategory.CONFIG,
-        ufp_min=1,
+        ufp_min=0,
         ufp_max=30,
         ufp_step=1,
         ufp_required_field="feature_flags.has_led_ir",
@@ -132,7 +138,7 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
 LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ProtectNumberEntityDescription(
         key="sensitivity",
-        name="Motion sensitivity",
+        translation_key="motion_sensitivity",
         icon="mdi:walk",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
@@ -146,7 +152,7 @@ LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ),
     ProtectNumberEntityDescription[Light](
         key="duration",
-        name="Auto-shutoff duration",
+        translation_key="auto_shutoff_duration",
         icon="mdi:camera-timer",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -163,7 +169,7 @@ LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
 SENSE_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ProtectNumberEntityDescription(
         key="sensitivity",
-        name="Motion sensitivity",
+        translation_key="motion_sensitivity",
         icon="mdi:walk",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
@@ -180,7 +186,7 @@ SENSE_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
 DOORLOCK_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ProtectNumberEntityDescription[Doorlock](
         key="auto_lock_time",
-        name="Auto-lock timeout",
+        translation_key="auto_lock_timeout",
         icon="mdi:walk",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -197,7 +203,7 @@ DOORLOCK_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
 CHIME_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ProtectNumberEntityDescription(
         key="volume",
-        name="Volume",
+        translation_key="volume",
         icon="mdi:speaker",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
@@ -221,7 +227,7 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up number entities for UniFi Protect integration."""
     data = entry.runtime_data

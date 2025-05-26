@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     external_api = AuthenticatedMonzoAPI(async_get_clientsession(hass), session)
 
-    coordinator = MonzoCoordinator(hass, external_api)
+    coordinator = MonzoCoordinator(hass, entry, external_api)
 
     await coordinator.async_config_entry_first_refresh()
 

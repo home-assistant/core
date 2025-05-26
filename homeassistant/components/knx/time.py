@@ -18,7 +18,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
@@ -27,21 +27,20 @@ from .const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
-    DATA_KNX_CONFIG,
-    DOMAIN,
     KNX_ADDRESS,
+    KNX_MODULE_KEY,
 )
-from .knx_entity import KnxYamlEntity
+from .entity import KnxYamlEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entities for KNX platform."""
-    knx_module: KNXModule = hass.data[DOMAIN]
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.TIME]
+    knx_module = hass.data[KNX_MODULE_KEY]
+    config: list[ConfigType] = knx_module.config_yaml[Platform.TIME]
 
     async_add_entities(
         KNXTimeEntity(knx_module, entity_config) for entity_config in config
