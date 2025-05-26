@@ -8,7 +8,7 @@ DOMAIN = "alexa_devices"
 CONF_LOGIN_DATA = "login_data"
 
 # Services variables
-ATTR_CMD = "cmd"
+ATTR_TEXT_COMMAND = "text_command"
 ATTR_SOUND = "sound"
-SERVICE_CUSTOM_COMMAND = "send_custom"
+SERVICE_TEXT_COMMAND = "send_text_command"
 SERVICE_SOUND_NOTIFICATION = "send_sound"

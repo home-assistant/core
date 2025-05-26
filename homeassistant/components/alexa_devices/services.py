@@ -1,5 +1,6 @@
 """Support for services."""
 
+from aioamazondevices.sounds import SOUNDS_LIST
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
@@ -9,11 +10,11 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import (
-    ATTR_CMD,
     ATTR_SOUND,
+    ATTR_TEXT_COMMAND,
     DOMAIN,
-    SERVICE_CUSTOM_COMMAND,
     SERVICE_SOUND_NOTIFICATION,
+    SERVICE_TEXT_COMMAND,
 )
 from .coordinator import AmazonConfigEntry
 
@@ -25,7 +26,7 @@ SCHEMA_SOUND_SERVICE = vol.Schema(
 )
 SCHEMA_CUSTOM_COMMAND = vol.Schema(
     {
-        vol.Required(ATTR_CMD): cv.string,
+        vol.Required(ATTR_TEXT_COMMAND): cv.string,
         vol.Required(ATTR_DEVICE_ID): cv.ensure_list,
     }
 )
@@ -66,7 +67,7 @@ def async_get_entry_id_for_service_call(
 
 
 async def _async_execute_action(
-    call: ServiceCall, attribute: str, translation_key: str, method: str
+    call: ServiceCall, attribute: str, translation_key: str
 ) -> None:
     """Execute action on the device."""
     device, config_entry = async_get_entry_id_for_service_call(call)
@@ -78,37 +79,37 @@ async def _async_execute_action(
             translation_key=translation_key,
         )
 
+    if attribute == ATTR_SOUND and value not in SOUNDS_LIST.values():
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_sound_value",
+            translation_placeholders={"sound": value},
+        )
+
     coordinator = config_entry.runtime_data
     assert device.serial_number
-    callable_method = getattr(coordinator.api, method)
-    await callable_method(coordinator.data[device.serial_number], value)
+    if attribute == ATTR_SOUND:
+        await coordinator.api.call_alexa_sound(
+            coordinator.data[device.serial_number], value
+        )
+    if attribute == ATTR_TEXT_COMMAND:
+        await coordinator.api.call_alexa_text_command(
+            coordinator.data[device.serial_number], value
+        )
 
 
 async def async_send_sound_notification(call: ServiceCall) -> None:
     """Send a sound notification to a AmazonDevice."""
-
-    await _async_execute_action(
-        call,
-        ATTR_SOUND,
-        "missing_sound_value",
-        "call_alexa_sound",
-    )
+    await _async_execute_action(call, ATTR_SOUND, "missing_sound_value")
 
 
-async def async_send_custom_command(call: ServiceCall) -> None:
+async def async_send_text_command(call: ServiceCall) -> None:
     """Send a custom command to a AmazonDevice."""
-
-    await _async_execute_action(
-        call,
-        ATTR_CMD,
-        "missing_cmd_value",
-        "call_alexa_text_command",
-    )
+    await _async_execute_action(call, ATTR_TEXT_COMMAND, "missing_text_command_value")
 
 
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Amazon Devices integration."""
-
     for service_name, method, schema in (
         (
             SERVICE_SOUND_NOTIFICATION,
@@ -116,8 +117,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             SCHEMA_SOUND_SERVICE,
         ),
         (
-            SERVICE_CUSTOM_COMMAND,
-            async_send_custom_command,
+            SERVICE_TEXT_COMMAND,
+            async_send_text_command,
             SCHEMA_CUSTOM_COMMAND,
         ),
     ):
