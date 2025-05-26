@@ -952,11 +952,6 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def available(self) -> bool:
-        """Return true when state is known."""
-        return self._available
-
-    @property
     def native_value(self):
         """Return the state of the device."""
         return self._state
@@ -972,7 +967,7 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
             state = await self.hass.async_add_executor_job(self._device.status)
             _LOGGER.debug("Got new state: %s", state)
 
-            self._available = True
+            self._attr_available = True
             self._state = state.aqi
             self._state_attrs.update(
                 {
@@ -988,8 +983,8 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
             )
 
         except DeviceException as ex:
-            if self._available:
-                self._available = False
+            if self._attr_available:
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
 
@@ -1005,8 +1000,8 @@ class XiaomiGatewaySensor(XiaomiGatewayDevice, SensorEntity):
     ) -> None:
         """Initialize the XiaomiSensor."""
         super().__init__(coordinator, sub_device, entry)
-        self._unique_id = f"{sub_device.sid}-{description.key}"
-        self._name = f"{description.key} ({sub_device.sid})".capitalize()
+        self._attr_unique_id = f"{sub_device.sid}-{description.key}"
+        self._attr_name = f"{description.key} ({sub_device.sid})".capitalize()
         self.entity_description = description
 
     @property
@@ -1027,13 +1022,8 @@ class XiaomiGatewayIlluminanceSensor(SensorEntity):
         )
         self._gateway = gateway_device
         self.entity_description = description
-        self._available = False
+        self._attr_available = False
         self._state = None
-
-    @property
-    def available(self) -> bool:
-        """Return true when state is known."""
-        return self._available
 
     @property
     def native_value(self):
@@ -1046,10 +1036,10 @@ class XiaomiGatewayIlluminanceSensor(SensorEntity):
             self._state = await self.hass.async_add_executor_job(
                 self._gateway.get_illumination
             )
-            self._available = True
+            self._attr_available = True
         except GatewayException as ex:
-            if self._available:
-                self._available = False
+            if self._attr_available:
+                self._attr_available = False
                 _LOGGER.error(
                     "Got exception while fetching the gateway illuminance state: %s", ex
                 )
