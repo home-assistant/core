@@ -2,7 +2,11 @@
 
 from typing import Final
 
+from homeassistant.const import Platform
+
 DOMAIN: Final = "sun"
+
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 DEFAULT_NAME: Final = "Sun"
 

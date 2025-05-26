@@ -1,4 +1,4 @@
-"""Sensor platform for Sun integration."""
+"""Binary Sensor platform for Sun integration."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ ENTITY_ID_BINARY_SENSOR_FORMAT = BINARY_SENSOR_DOMAIN + ".sun_{}"
 
 @dataclass(kw_only=True, frozen=True)
 class SunBinarySensorEntityDescription(BinarySensorEntityDescription):
-    """Describes a Sun sensor entity."""
+    """Describes a Sun binary sensor entity."""
 
     value_fn: Callable[[Sun], bool | None]
     signal: str
@@ -59,7 +59,7 @@ async def async_setup_entry(
 
 
 class SunBinarySensor(BinarySensorEntity):
-    """Representation of a Sun Sensor."""
+    """Representation of a Sun binary sensor."""
 
     _attr_has_entity_name = True
     _attr_should_poll = False
@@ -75,7 +75,7 @@ class SunBinarySensor(BinarySensorEntity):
         """Initiate Sun Binary Sensor."""
         self.entity_description = entity_description
         self.entity_id = ENTITY_ID_BINARY_SENSOR_FORMAT.format(entity_description.key)
-        self._attr_unique_id = f"{entry_id}-binary-{entity_description.key}"
+        self._attr_unique_id = f"{entry_id}-{entity_description.key}"
         self.sun = sun
         self._attr_device_info = DeviceInfo(
             name="Sun",
