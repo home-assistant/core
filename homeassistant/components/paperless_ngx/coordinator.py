@@ -162,7 +162,7 @@ class PaperlessVersionCoordinator(PaperlessCoordinator[RemoteVersion]):
     async def _async_update_data_internal(self) -> RemoteVersion:
         """Fetch remote version data from API endpoint."""
         remote_version = await self.api.remote_version()
-        if not remote_version.version or remote_version.version == "v0.0.0":
+        if not remote_version.version or remote_version.version == "0.0.0":
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="remote_version_not_available",
