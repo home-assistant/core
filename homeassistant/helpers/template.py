@@ -10,7 +10,7 @@ from collections.abc import Callable, Generator, Iterable, MutableSequence
 from contextlib import AbstractContextManager
 from contextvars import ContextVar
 from copy import deepcopy
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, time, timedelta, tzinfo
 from functools import cache, lru_cache, partial, wraps
 import hashlib
 import json
@@ -1949,13 +1949,22 @@ def has_value(hass: HomeAssistant, entity_id: str) -> bool:
         state_obj.state not in [STATE_UNAVAILABLE, STATE_UNKNOWN]
     )
 
-
-def now(hass: HomeAssistant) -> datetime:
-    """Record fetching now."""
+def now(hass: HomeAssistant, tz: Optional[str | tzinfo] = None) -> datetime:
+    """Return the current datetime, optionally in a specified timezone."""
     if (render_info := _render_info.get()) is not None:
         render_info.has_time = True
 
-    return dt_util.now()
+    current = dt_util.now()
+
+    if tz is not None:
+        if isinstance(tz, str):
+            try:
+                tz = zoneinfo.ZoneInfo(tz)
+            except Exception as e:
+                raise ValueError(f"Invalid timezone string '{tz}': {e}")
+        current = current.astimezone(tz)
+
+    return current
 
 
 def utcnow(hass: HomeAssistant) -> datetime:
@@ -2216,8 +2225,7 @@ def as_datetime(value: Any, default: Any = _SENTINEL) -> Any:
 def as_timedelta(value: str) -> timedelta | None:
     """Parse a ISO8601 duration like 'PT10M' to a timedelta."""
     return dt_util.parse_duration(value)
-
-
+    
 def merge_response(value: ServiceResponse) -> list[Any]:
     """Merge action responses into single list.
 
