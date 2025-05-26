@@ -3,7 +3,7 @@
 from collections.abc import Callable
 import logging
 from typing import NamedTuple
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
 from awesomeversion import AwesomeVersion
@@ -87,14 +87,18 @@ async def _test_setup_and_signaling(
     assert issue_registry.async_get_issue(DOMAIN, "recommended_version") is None
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
-    assert config_entries[0].state == ConfigEntryState.LOADED
+    config_entry = config_entries[0]
+    assert config_entry.state == ConfigEntryState.LOADED
     after_setup_fn()
 
     receive_message_callback = Mock(spec_set=WebRTCSendMessage)
 
-    async def test() -> None:
+    sessions = []
+
+    async def test(session: str) -> None:
+        sessions.append(session)
         await camera.async_handle_async_webrtc_offer(
-            OFFER_SDP, "session_id", receive_message_callback
+            OFFER_SDP, session, receive_message_callback
         )
         ws_client.send.assert_called_once_with(
             WebRTCOffer(
@@ -109,7 +113,7 @@ async def _test_setup_and_signaling(
         callback(WebRTCAnswer(ANSWER_SDP))
         receive_message_callback.assert_called_once_with(HAWebRTCAnswer(ANSWER_SDP))
 
-    await test()
+    await test("sesion_1")
 
     rest_client.streams.add.assert_called_once_with(
         entity_id,
@@ -128,7 +132,7 @@ async def _test_setup_and_signaling(
 
     receive_message_callback.reset_mock()
     ws_client.reset_mock()
-    await test()
+    await test("session_2")
 
     rest_client.streams.add.assert_called_once_with(
         entity_id,
@@ -147,21 +151,34 @@ async def _test_setup_and_signaling(
 
     receive_message_callback.reset_mock()
     ws_client.reset_mock()
-    await test()
+    await test("session_3")
 
     rest_client.streams.add.assert_not_called()
     assert isinstance(camera._webrtc_provider, WebRTCProvider)
 
-    # Set stream source to None and provider should be skipped
-    rest_client.streams.list.return_value = {}
-    receive_message_callback.reset_mock()
-    camera.set_stream_source(None)
-    await camera.async_handle_async_webrtc_offer(
-        OFFER_SDP, "session_id", receive_message_callback
-    )
-    receive_message_callback.assert_called_once_with(
-        WebRTCError("go2rtc_webrtc_offer_failed", "Camera has no stream source")
-    )
+    provider = camera._webrtc_provider
+    for session in sessions:
+        assert session in provider._sessions
+
+    with patch.object(provider, "teardown", wraps=provider.teardown) as teardown:
+        # Set stream source to None and provider should be skipped
+        rest_client.streams.list.return_value = {}
+        receive_message_callback.reset_mock()
+        camera.set_stream_source(None)
+        await camera.async_handle_async_webrtc_offer(
+            OFFER_SDP, "session_id", receive_message_callback
+        )
+        receive_message_callback.assert_called_once_with(
+            WebRTCError("go2rtc_webrtc_offer_failed", "Camera has no stream source")
+        )
+        teardown.assert_called_once()
+        # We use one ws_client mock for all sessions
+        assert ws_client.close.call_count == len(sessions)
+
+        await hass.config_entries.async_unload(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.state == ConfigEntryState.NOT_LOADED
+        assert teardown.call_count == 2
 
 
 @pytest.mark.usefixtures(

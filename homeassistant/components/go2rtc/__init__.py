@@ -193,8 +193,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bo
         _LOGGER.warning("Could not connect to go2rtc instance on %s (%s)", url, err)
         return False
 
-    provider = WebRTCProvider(hass, url, session, client)
-    async_register_webrtc_provider(hass, provider)
+    provider = entry.runtime_data = WebRTCProvider(hass, url, session, client)
+    entry.async_on_unload(async_register_webrtc_provider(hass, provider))
     return True
 
 
@@ -303,6 +303,7 @@ class WebRTCProvider(CameraWebRTCProvider):
     async def _update_stream_source(self, camera: Camera) -> None:
         """Update the stream source in go2rtc config if needed."""
         if not (stream_source := await camera.stream_source()):
+            await self.teardown()
             raise HomeAssistantError("Camera has no stream source")
 
         if not self.async_is_supported(stream_source):
