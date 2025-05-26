@@ -142,6 +142,12 @@ def _numeric_state_expected(
 def _calculate_precision_from_ratio(
     device_class: SensorDeviceClass, from_unit: str, to_unit: str, base_precision: int
 ) -> int | None:
+    """Calculate the precision for a unit conversion.
+
+    Adjusts the base precision based on the ratio between the source and target units
+    for the given sensor device class. Returns the new precision or None if conversion
+    is not possible.
+    """
     if device_class not in UNIT_CONVERTERS:
         return None
     converter = UNIT_CONVERTERS[device_class]
