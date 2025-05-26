@@ -52,7 +52,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_loaded_integration
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
-from .const import EVENT_TELEGRAMBOT_TERMINATE
+from .const import CONF_BOT_COUNT, EVENT_TELEGRAMBOT_TERMINATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -416,13 +416,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 DOMAIN,
                 context={CONF_SOURCE: SOURCE_IMPORT},
                 data={
-                    CONF_PLATFORM: domain_config[-1].get(CONF_PLATFORM),
-                    CONF_API_KEY: domain_config[-1].get(CONF_API_KEY),
-                    CONF_ALLOWED_CHAT_IDS: domain_config[-1].get(CONF_ALLOWED_CHAT_IDS),
+                    CONF_PLATFORM: domain_config[-1][CONF_PLATFORM],
+                    CONF_API_KEY: domain_config[-1][CONF_API_KEY],
+                    CONF_ALLOWED_CHAT_IDS: domain_config[-1][CONF_ALLOWED_CHAT_IDS],
                     ATTR_PARSER: domain_config[-1].get(ATTR_PARSER),
                     CONF_PROXY_URL: domain_config[-1].get(CONF_PROXY_URL),
                     CONF_URL: domain_config[-1].get(CONF_URL),
                     CONF_TRUSTED_NETWORKS: trusted_networks_str,
+                    CONF_BOT_COUNT: len(domain_config),
                 },
             )
         )

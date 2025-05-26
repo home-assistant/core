@@ -20,7 +20,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.selector import (
@@ -49,6 +49,11 @@ from . import (
     PLATFORM_WEBHOOKS,
     TelegramBotConfigEntry,
     initialize_bot,
+)
+from .const import (
+    CONF_BOT_COUNT,
+    ISSUE_DEPRECATED_YAML,
+    ISSUE_DEPRECATED_YAML_HAS_MORE_PLATFORMS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -178,46 +183,52 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         return {CONF_ALLOWED_CHAT_IDS: AllowedChatIdsSubEntryFlowHandler}
 
     # triggered by async_setup() from __init__.py
-    async def async_step_import(self, import_data: dict[str, str]) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import of config entry from configuration.yaml."""
-        config_flow_result: ConfigFlowResult = await self.async_step_user(import_data)
 
-        if config_flow_result["type"] == FlowResultType.FORM:
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                "deprecated_yaml_import_issue_unknown",
-                breaks_in_ha_version="2025.12.0",
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_yaml_import_issue_unknown",
-                translation_placeholders={
-                    "domain": DOMAIN,
-                    "integration_title": "Telegram Bot",
-                },
-                learn_more_url="https://github.com/home-assistant/core/pull/144617",
+        bot_count: int = import_data[CONF_BOT_COUNT]
+
+        try:
+            config_flow_result: ConfigFlowResult = await self.async_step_user(
+                import_data
             )
+        except AbortFlow:
+            # this happens if the config entry is already imported
+            self._create_issue(ISSUE_DEPRECATED_YAML, bot_count)
+            raise
+        else:
+            errors: dict[str, str] | None = config_flow_result["errors"]
+            if errors:
+                self._create_issue(errors["base"], bot_count)
+                return self.async_abort(reason="import_failed")
 
-            return self.async_abort(reason="import_failed")
+            self._create_issue(ISSUE_DEPRECATED_YAML, bot_count)
+            return config_flow_result
+
+    def _create_issue(self, issue: str, bot_count: int) -> None:
+        issue_id: str = (
+            ISSUE_DEPRECATED_YAML
+            if bot_count == 1
+            else ISSUE_DEPRECATED_YAML_HAS_MORE_PLATFORMS
+        )
+        if issue != ISSUE_DEPRECATED_YAML:
+            issue_id = f"deprecated_yaml_import_issue_{issue}"
 
         async_create_issue(
             self.hass,
             DOMAIN,
-            "deprecated_yaml",
+            issue_id,
             breaks_in_ha_version="2025.12.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
+            translation_key=issue_id,
             translation_placeholders={
                 "domain": DOMAIN,
                 "integration_title": "Telegram Bot",
             },
             learn_more_url="https://github.com/home-assistant/core/pull/144617",
         )
-
-        return config_flow_result
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -241,7 +252,6 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_api_key"
 
             if not errors:
-                # create subentries for allowed chat IDs
                 subentries: list[ConfigSubentryData] = []
                 allowed_chat_ids: list[int] = user_input.get(CONF_ALLOWED_CHAT_IDS, [])
                 for chat_id in allowed_chat_ids:
