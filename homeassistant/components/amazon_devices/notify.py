@@ -71,4 +71,4 @@ class AmazonNotifyEntity(AmazonEntity, NotifyEntity):
     ) -> None:
         """Send a message."""
 
-        self.entity_description.method(self.coordinator.api, self.device, message)
+        await self.entity_description.method(self.coordinator.api, self.device, message)
