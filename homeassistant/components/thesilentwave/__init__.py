@@ -9,7 +9,6 @@ from pysilentwave.exceptions import SilentWaveError
 
 from .coordinator import TheSilentWaveCoordinator
 
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(domain="thesilentwave")
 
 _LOGGER = logging.getLogger(__name__)
 
