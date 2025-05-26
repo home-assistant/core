@@ -6,7 +6,7 @@ from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any
 
-from miio import DeviceException
+from miio import Device as MiioDevice, DeviceException
 from miio.gateway.devices import SubDevice
 
 from homeassistant.const import ATTR_CONNECTIONS, CONF_MAC, CONF_MODEL
@@ -27,7 +27,13 @@ _LOGGER = logging.getLogger(__name__)
 class XiaomiMiioEntity(Entity):
     """Representation of a base Xiaomi Miio Entity."""
 
-    def __init__(self, name, device, entry, unique_id):
+    def __init__(
+        self,
+        name: str,
+        device: MiioDevice,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the Xiaomi Miio Device."""
         self._device = device
         self._model = entry.data[CONF_MODEL]
@@ -35,7 +41,7 @@ class XiaomiMiioEntity(Entity):
         self._device_id = entry.unique_id
         self._unique_id = unique_id
         self._name = name
-        self._available = None
+        self._available = False
 
     @property
     def unique_id(self):
@@ -50,6 +56,8 @@ class XiaomiMiioEntity(Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
+        if TYPE_CHECKING:
+            assert self._device_id is not None
         device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
             manufacturer="Xiaomi",

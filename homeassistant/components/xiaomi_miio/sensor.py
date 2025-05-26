@@ -916,11 +916,19 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
 class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
     """Representation of a Xiaomi Air Quality Monitor."""
 
-    def __init__(self, name, device, entry, unique_id, description):
+    _device: AirQualityMonitor
+
+    def __init__(
+        self,
+        name: str,
+        device: AirQualityMonitor,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+        description: XiaomiMiioSensorDescription,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id)
 
-        self._available = None
         self._state = None
         self._state_attrs = {
             ATTR_POWER: None,
