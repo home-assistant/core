@@ -241,7 +241,7 @@ class MetOfficeCurrentSensor(
 
         if (
             self.entity_description.native_attr_name == "significantWeatherCode"
-            and value
+            and value is not None
         ):
             value = CONDITION_MAP.get(value)
 
