@@ -186,6 +186,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import of config entry from configuration.yaml."""
 
+        telegram_bot: str = f"{import_data[CONF_PLATFORM]} Telegram bot"
         bot_count: int = import_data[CONF_BOT_COUNT]
 
         try:
@@ -194,18 +195,19 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except AbortFlow:
             # this happens if the config entry is already imported
-            self._create_issue(ISSUE_DEPRECATED_YAML, bot_count)
+            self._create_issue(ISSUE_DEPRECATED_YAML, telegram_bot, bot_count)
             raise
         else:
-            errors: dict[str, str] | None = config_flow_result["errors"]
+            errors: dict[str, str] | None = config_flow_result.get("errors")
             if errors:
-                self._create_issue(errors["base"], bot_count)
+                error: str = errors.get("base", "unknown")
+                self._create_issue(error, telegram_bot, bot_count)
                 return self.async_abort(reason="import_failed")
 
-            self._create_issue(ISSUE_DEPRECATED_YAML, bot_count)
+            self._create_issue(ISSUE_DEPRECATED_YAML, telegram_bot, bot_count)
             return config_flow_result
 
-    def _create_issue(self, issue: str, bot_count: int) -> None:
+    def _create_issue(self, issue: str, telegram_bot: str, bot_count: int) -> None:
         issue_id: str = (
             ISSUE_DEPRECATED_YAML
             if bot_count == 1
@@ -226,6 +228,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             translation_placeholders={
                 "domain": DOMAIN,
                 "integration_title": "Telegram Bot",
+                "telegram_bot": telegram_bot,
             },
             learn_more_url="https://github.com/home-assistant/core/pull/144617",
         )
