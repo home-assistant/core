@@ -76,6 +76,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -105,7 +108,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.034',
+    'state': '0.0341666666666667',
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_downtime-entry]
@@ -996,6 +999,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -1025,7 +1031,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1204.000',
+    'state': '1204.0',
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_total_cutting_time-entry]
@@ -1052,6 +1058,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -1081,7 +1090,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1165.000',
+    'state': '1165.0',
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_total_drive_distance-entry]
@@ -1108,6 +1117,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
@@ -1164,6 +1176,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -1193,7 +1208,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1268.000',
+    'state': '1268.0',
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_total_searching_time-entry]
@@ -1220,6 +1235,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -1249,7 +1267,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '103.000',
+    'state': '103.0',
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_uptime-entry]

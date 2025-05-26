@@ -12,7 +12,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import init_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, get_sensor_display_state, snapshot_platform
 
 
 @pytest.mark.usefixtures("classic_vario_mock")
@@ -69,7 +69,7 @@ async def test_setup_classic_vario(
                     "classic_vario_data",
                     "serviceHour",
                     100,
-                    str(round(100 / 24, 1)),
+                    str(round(100 / 24, 2)),
                 ),
             ],
         ),
@@ -77,6 +77,7 @@ async def test_setup_classic_vario(
 )
 async def test_state_update(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     eheimdigital_hub_mock: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_name: str,
@@ -96,5 +97,4 @@ async def test_state_update(
     for item in entity_list:
         getattr(device, item[1])[item[2]] = item[3]
         await eheimdigital_hub_mock.call_args.kwargs["receive_callback"]()
-        assert (state := hass.states.get(item[0]))
-        assert state.state == str(item[4])
+        assert get_sensor_display_state(hass, entity_registry, item[0]) == str(item[4])
