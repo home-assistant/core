@@ -86,7 +86,7 @@ async def async_attach_trigger(
             event_data_schema = vol.Schema(
                 event_data,
                 extra=vol.ALLOW_EXTRA,
-                required=True
+                required=True,
             )
         else:
             # Use a simple items comparison if possible
