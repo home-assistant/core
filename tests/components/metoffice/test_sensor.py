@@ -24,7 +24,7 @@ from .const import (
     WAVERTREE_SENSOR_RESULTS,
 )
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, get_sensor_display_state, load_fixture
 
 
 @pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
@@ -32,6 +32,7 @@ from tests.common import MockConfigEntry, load_fixture
 async def test_one_sensor_site_running(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     requests_mock: requests_mock.Mocker,
 ) -> None:
     """Test the Met Office sensor platform."""
@@ -70,7 +71,9 @@ async def test_one_sensor_site_running(
         sensor_id = re.search("met_office_wavertree_(.+?)$", running_id).group(1)
         sensor_value = WAVERTREE_SENSOR_RESULTS[sensor_id]
 
-        assert sensor.state == sensor_value
+        assert (
+            get_sensor_display_state(hass, entity_registry, running_id) == sensor_value
+        )
         assert sensor.attributes.get("last_update").isoformat() == TEST_DATETIME_STRING
         assert sensor.attributes.get("attribution") == ATTRIBUTION
 
@@ -80,6 +83,7 @@ async def test_one_sensor_site_running(
 async def test_two_sensor_sites_running(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     requests_mock: requests_mock.Mocker,
 ) -> None:
     """Test we handle two sets of sensors running for two different sites."""
@@ -141,7 +145,10 @@ async def test_two_sensor_sites_running(
         if "wavertree" in running_id:
             sensor_id = re.search("met_office_wavertree_(.+?)$", running_id).group(1)
             sensor_value = WAVERTREE_SENSOR_RESULTS[sensor_id]
-            assert sensor.state == sensor_value
+            assert (
+                get_sensor_display_state(hass, entity_registry, running_id)
+                == sensor_value
+            )
             assert (
                 sensor.attributes.get("last_update").isoformat() == TEST_DATETIME_STRING
             )
@@ -150,7 +157,10 @@ async def test_two_sensor_sites_running(
         else:
             sensor_id = re.search("met_office_king_s_lynn_(.+?)$", running_id).group(1)
             sensor_value = KINGSLYNN_SENSOR_RESULTS[sensor_id]
-            assert sensor.state == sensor_value
+            assert (
+                get_sensor_display_state(hass, entity_registry, running_id)
+                == sensor_value
+            )
             assert (
                 sensor.attributes.get("last_update").isoformat() == TEST_DATETIME_STRING
             )

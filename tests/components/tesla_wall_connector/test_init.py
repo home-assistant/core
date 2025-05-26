@@ -5,13 +5,15 @@ from tesla_wall_connector.exceptions import WallConnectorConnectionError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import create_wall_connector_entry, get_vitals_mock
+from .conftest import create_wall_connector_entry, get_lifetime_mock, get_vitals_mock
 
 
 async def test_init_success(hass: HomeAssistant) -> None:
     """Test setup and that we get the device info, including firmware version."""
 
-    entry = await create_wall_connector_entry(hass, vitals_data=get_vitals_mock())
+    entry = await create_wall_connector_entry(
+        hass, vitals_data=get_vitals_mock(), lifetime_data=get_lifetime_mock()
+    )
 
     assert entry.state is ConfigEntryState.LOADED
 
@@ -28,8 +30,9 @@ async def test_init_while_offline(hass: HomeAssistant) -> None:
 async def test_load_unload(hass: HomeAssistant) -> None:
     """Config entry can be unloaded."""
 
-    entry = await create_wall_connector_entry(hass, vitals_data=get_vitals_mock())
-
+    entry = await create_wall_connector_entry(
+        hass, vitals_data=get_vitals_mock(), lifetime_data=get_lifetime_mock()
+    )
     assert entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(entry.entry_id)

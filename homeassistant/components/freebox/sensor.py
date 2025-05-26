@@ -9,6 +9,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, UnitOfDataRate, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
@@ -28,6 +29,7 @@ CONNECTION_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="rate_down",
         name="Freebox download speed",
         device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         icon="mdi:download-network",
     ),
@@ -35,6 +37,7 @@ CONNECTION_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="rate_up",
         name="Freebox upload speed",
         device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         icon="mdi:upload-network",
     ),
