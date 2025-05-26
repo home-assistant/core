@@ -56,6 +56,8 @@ async def test_block_reload_on_cfg_change(
 ) -> None:
     """Test block reload on config change."""
     await init_integration(hass, 1)
+    # num_outputs is 2, devicename and channel name is used
+    entity_id = "switch.test_name_channel_1"
 
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "cfgChanged", 1)
     mock_block_device.mock_update()
@@ -71,7 +73,7 @@ async def test_block_reload_on_cfg_change(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_channel_1")
+    assert hass.states.get(entity_id)
 
     # Generate config change from switch to light
     monkeypatch.setitem(
@@ -81,14 +83,14 @@ async def test_block_reload_on_cfg_change(
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_channel_1")
+    assert hass.states.get(entity_id)
 
     # Wait for debouncer
     freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_channel_1") is None
+    assert hass.states.get(entity_id) is None
 
 
 async def test_block_no_reload_on_bulb_changes(
@@ -98,6 +100,9 @@ async def test_block_no_reload_on_bulb_changes(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block no reload on bulb mode/effect change."""
+    monkeypatch.setitem(mock_block_device.shelly, "num_outputs", 1)
+    # num_outputs is 1, device name is used
+    entity_id = "switch.test_name"
     await init_integration(hass, 1, model=MODEL_BULB)
 
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "cfgChanged", 1)
@@ -113,14 +118,14 @@ async def test_block_no_reload_on_bulb_changes(
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_channel_1")
+    assert hass.states.get(entity_id)
 
     # Wait for debouncer
     freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_channel_1")
+    assert hass.states.get(entity_id)
 
     # Test no reload  on effect change
     monkeypatch.setattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "effect", 1)
@@ -128,14 +133,14 @@ async def test_block_no_reload_on_bulb_changes(
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_channel_1")
+    assert hass.states.get(entity_id)
 
     # Wait for debouncer
     freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_channel_1")
+    assert hass.states.get(entity_id)
 
 
 async def test_block_polling_auth_error(
@@ -242,9 +247,11 @@ async def test_block_polling_connection_error(
         "update",
         AsyncMock(side_effect=DeviceConnectionError),
     )
+    # num_outputs is 2, device name and channel name is used
+    entity_id = "switch.test_name_channel_1"
     await init_integration(hass, 1)
 
-    assert (state := hass.states.get("switch.test_name_channel_1"))
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
     # Move time to generate polling
@@ -252,7 +259,7 @@ async def test_block_polling_connection_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get("switch.test_name_channel_1"))
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -391,6 +398,7 @@ async def test_rpc_reload_on_cfg_change(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC reload on config change."""
+    entity_id = "switch.test_name_test_switch_0"
     monkeypatch.delitem(mock_rpc_device.status, "cover:0")
     monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     await init_integration(hass, 2)
@@ -421,14 +429,14 @@ async def test_rpc_reload_on_cfg_change(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_switch_0")
+    assert hass.states.get(entity_id)
 
     # Wait for debouncer
     freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_switch_0") is None
+    assert hass.states.get(entity_id) is None
 
 
 async def test_rpc_reload_with_invalid_auth(
@@ -719,11 +727,12 @@ async def test_rpc_reconnect_error(
     exc: Exception,
 ) -> None:
     """Test RPC reconnect error."""
+    entity_id = "switch.test_name_test_switch_0"
     monkeypatch.delitem(mock_rpc_device.status, "cover:0")
     monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     await init_integration(hass, 2)
 
-    assert (state := hass.states.get("switch.test_switch_0"))
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)
@@ -734,7 +743,7 @@ async def test_rpc_reconnect_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get("switch.test_switch_0"))
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -746,6 +755,7 @@ async def test_rpc_error_running_connected_events(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test RPC error while running connected events."""
+    entity_id = "switch.test_name_test_switch_0"
     monkeypatch.delitem(mock_rpc_device.status, "cover:0")
     monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     with patch(
@@ -758,7 +768,7 @@ async def test_rpc_error_running_connected_events(
 
     assert "Error running connected events for device" in caplog.text
 
-    assert (state := hass.states.get("switch.test_switch_0"))
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 
     # Move time to generate reconnect without error
@@ -766,7 +776,7 @@ async def test_rpc_error_running_connected_events(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert (state := hass.states.get("switch.test_switch_0"))
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
 
