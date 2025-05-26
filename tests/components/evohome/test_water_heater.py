@@ -10,7 +10,7 @@ from unittest.mock import patch
 import evohomeasync2 as ec2
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.water_heater import (
     ATTR_AWAY_MODE,

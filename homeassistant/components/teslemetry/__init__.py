@@ -4,7 +4,6 @@ import asyncio
 from collections.abc import Callable
 from typing import Final
 
-from tesla_fleet_api import EnergySpecific, Teslemetry, VehicleSpecific
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
     Forbidden,
@@ -12,6 +11,7 @@ from tesla_fleet_api.exceptions import (
     SubscriptionRequired,
     TeslaFleetError,
 )
+from tesla_fleet_api.teslemetry import Teslemetry
 from teslemetry_stream import TeslemetryStream
 
 from homeassistant.config_entries import ConfigEntry
@@ -23,7 +23,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, LOGGER, MODELS
+from .const import DOMAIN, LOGGER
 from .coordinator import (
     TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
@@ -95,12 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     energysites: list[TeslemetryEnergyData] = []
 
     # Create the stream
-    stream = TeslemetryStream(
-        session,
-        access_token,
-        server=f"{region.lower()}.teslemetry.com",
-        parse_timestamp=True,
-    )
+    stream: TeslemetryStream | None = None
 
     for product in products:
         if (
@@ -111,16 +106,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             # Remove the protobuff 'cached_data' that we do not use to save memory
             product.pop("cached_data", None)
             vin = product["vin"]
-            api = VehicleSpecific(teslemetry.vehicle, vin)
+            api = teslemetry.vehicles.create(vin)
             coordinator = TeslemetryVehicleDataCoordinator(hass, entry, api, product)
             device = DeviceInfo(
                 identifiers={(DOMAIN, vin)},
                 manufacturer="Tesla",
                 configuration_url="https://teslemetry.com/console",
                 name=product["display_name"],
-                model=MODELS.get(vin[3]),
+                model=api.model,
                 serial_number=vin,
             )
+
+            # Create stream if required
+            if not stream:
+                stream = TeslemetryStream(
+                    session,
+                    access_token,
+                    server=f"{region.lower()}.teslemetry.com",
+                    parse_timestamp=True,
+                    manual=True,
+                )
 
             remove_listener = stream.async_add_listener(
                 create_handle_vehicle_stream(vin, coordinator),
@@ -128,12 +133,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             )
             firmware = vehicle_metadata[vin].get("firmware", "Unknown")
             stream_vehicle = stream.get_vehicle(vin)
+            poll = product["command_signing"] == "off"
 
             vehicles.append(
                 TeslemetryVehicleData(
                     api=api,
                     config_entry=entry,
                     coordinator=coordinator,
+                    poll=poll,
                     stream=stream,
                     stream_vehicle=stream_vehicle,
                     vin=vin,
@@ -156,7 +163,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 )
                 continue
 
-            api = EnergySpecific(teslemetry.energy, site_id)
+            api = teslemetry.energySites.create(site_id)
             device = DeviceInfo(
                 identifiers={(DOMAIN, str(site_id))},
                 manufacturer="Tesla",
@@ -202,6 +209,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         *(
             vehicle.coordinator.async_config_entry_first_refresh()
             for vehicle in vehicles
+            if vehicle.poll
         ),
         *(
             energysite.info_coordinator.async_config_entry_first_refresh()
@@ -233,8 +241,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         )
 
     # Setup Platforms
-    entry.runtime_data = TeslemetryData(vehicles, energysites, scopes)
+    entry.runtime_data = TeslemetryData(vehicles, energysites, scopes, stream)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    if stream:
+        entry.async_create_background_task(hass, stream.listen(), "Teslemetry Stream")
 
     return True
 

@@ -38,8 +38,8 @@
       "protect_mode": {
         "name": "Protect mode",
         "state": {
-          "away": "Away",
-          "home": "Home",
+          "away": "[%key:common::state::not_home%]",
+          "home": "[%key:common::state::home%]",
           "schedule": "Schedule"
         }
       }

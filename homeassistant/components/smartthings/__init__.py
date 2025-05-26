@@ -13,6 +13,7 @@ from aiohttp import ClientResponseError
 from pysmartthings import (
     Attribute,
     Capability,
+    Category,
     ComponentStatus,
     Device,
     DeviceEvent,
@@ -24,6 +25,7 @@ from pysmartthings import (
     SmartThingsSinkError,
     Status,
 )
+from pysmartthings.models import HealthStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -31,6 +33,7 @@ from homeassistant.const import (
     ATTR_HW_VERSION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_SUGGESTED_AREA,
     ATTR_SW_VERSION,
     ATTR_VIA_DEVICE,
     CONF_ACCESS_TOKEN,
@@ -40,14 +43,16 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
+from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 
 from .const import (
+    BINARY_SENSOR_ATTRIBUTES_TO_CAPABILITIES,
     CONF_INSTALLED_APP_ID,
     CONF_LOCATION_ID,
     CONF_SUBSCRIPTION_ID,
@@ -55,6 +60,7 @@ from .const import (
     EVENT_BUTTON,
     MAIN,
     OLD_DATA,
+    SENSOR_ATTRIBUTES_TO_CAPABILITIES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,6 +82,7 @@ class FullDevice:
 
     device: Device
     status: dict[str, ComponentStatus]
+    online: bool
 
 
 type SmartThingsConfigEntry = ConfigEntry[SmartThingsData]
@@ -97,6 +104,7 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.UPDATE,
     Platform.VALVE,
+    Platform.WATER_HEATER,
 ]
 
 
@@ -188,8 +196,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         }
         devices = await client.get_devices()
         for device in devices:
+            if (
+                (main_component := device.components.get(MAIN)) is not None
+                and main_component.manufacturer_category is Category.BLUETOOTH_TRACKER
+            ):
+                device_status[device.device_id] = FullDevice(
+                    device=device,
+                    status={},
+                    online=True,
+                )
+                continue
             status = process_status(await client.get_device_status(device.device_id))
-            device_status[device.device_id] = FullDevice(device=device, status=status)
+            online = await client.get_device_health(device.device_id)
+            device_status[device.device_id] = FullDevice(
+                device=device, status=status, online=online.state == HealthStatus.ONLINE
+            )
     except SmartThingsAuthenticationFailedError as err:
         raise ConfigEntryAuthFailed from err
 
@@ -268,7 +289,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             for identifier in device_entry.identifiers
             if identifier[0] == DOMAIN
         )
-        if device_id in device_status:
+        if any(
+            device_id.startswith(device_identifier)
+            for device_identifier in device_status
+        ):
             continue
         device_registry.async_update_device(
             device_entry.id, remove_config_entry_id=entry.entry_id
@@ -297,7 +321,110 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, version=3, data={OLD_DATA: dict(entry.data)}
         )
 
+    if entry.minor_version < 2:
+
+        def migrate_entities(entity_entry: RegistryEntry) -> dict[str, Any] | None:
+            if entity_entry.domain == "binary_sensor":
+                device_id, attribute = entity_entry.unique_id.split(".")
+                if (
+                    capability := BINARY_SENSOR_ATTRIBUTES_TO_CAPABILITIES.get(
+                        attribute
+                    )
+                ) is None:
+                    return None
+                new_unique_id = (
+                    f"{device_id}_{MAIN}_{capability}_{attribute}_{attribute}"
+                )
+                return {
+                    "new_unique_id": new_unique_id,
+                }
+            if entity_entry.domain in {"cover", "climate", "fan", "light", "lock"}:
+                return {"new_unique_id": f"{entity_entry.unique_id}_{MAIN}"}
+            if entity_entry.domain == "sensor":
+                delimiter = "." if " " not in entity_entry.unique_id else " "
+                if delimiter not in entity_entry.unique_id:
+                    return None
+                device_id, attribute = entity_entry.unique_id.split(
+                    delimiter, maxsplit=1
+                )
+                if (
+                    capability := SENSOR_ATTRIBUTES_TO_CAPABILITIES.get(attribute)
+                ) is None:
+                    if attribute in {
+                        "energy_meter",
+                        "power_meter",
+                        "deltaEnergy_meter",
+                        "powerEnergy_meter",
+                        "energySaved_meter",
+                    }:
+                        return {
+                            "new_unique_id": f"{device_id}_{MAIN}_{Capability.POWER_CONSUMPTION_REPORT}_{Attribute.POWER_CONSUMPTION}_{attribute}",
+                        }
+                    if attribute in {
+                        "X Coordinate",
+                        "Y Coordinate",
+                        "Z Coordinate",
+                    }:
+                        new_attribute = {
+                            "X Coordinate": "x_coordinate",
+                            "Y Coordinate": "y_coordinate",
+                            "Z Coordinate": "z_coordinate",
+                        }[attribute]
+                        return {
+                            "new_unique_id": f"{device_id}_{MAIN}_{Capability.THREE_AXIS}_{Attribute.THREE_AXIS}_{new_attribute}",
+                        }
+                    if attribute in {
+                        Attribute.MACHINE_STATE,
+                        Attribute.COMPLETION_TIME,
+                    }:
+                        capability = determine_machine_type(
+                            hass, entry.entry_id, device_id
+                        )
+                        if capability is None:
+                            return None
+                        return {
+                            "new_unique_id": f"{device_id}_{MAIN}_{capability}_{attribute}_{attribute}",
+                        }
+                    return None
+                return {
+                    "new_unique_id": f"{device_id}_{MAIN}_{capability}_{attribute}_{attribute}",
+                }
+
+            if entity_entry.domain == "switch":
+                return {
+                    "new_unique_id": f"{entity_entry.unique_id}_{MAIN}_{Capability.SWITCH}_{Attribute.SWITCH}_{Attribute.SWITCH}",
+                }
+
+            return None
+
+        await async_migrate_entries(hass, entry.entry_id, migrate_entities)
+        hass.config_entries.async_update_entry(
+            entry,
+            minor_version=2,
+        )
+
     return True
+
+
+def determine_machine_type(
+    hass: HomeAssistant,
+    entry_id: str,
+    device_id: str,
+) -> Capability | None:
+    """Determine the machine type for a device."""
+    entity_registry = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(entity_registry, entry_id)
+    device_entries = [entry for entry in entries if device_id in entry.unique_id]
+    for entry in device_entries:
+        if Attribute.DISHWASHER_JOB_STATE in entry.unique_id:
+            return Capability.DISHWASHER_OPERATING_STATE
+        if Attribute.WASHER_JOB_STATE in entry.unique_id:
+            return Capability.WASHER_OPERATING_STATE
+        if Attribute.DRYER_JOB_STATE in entry.unique_id:
+            return Capability.DRYER_OPERATING_STATE
+        if Attribute.OVEN_JOB_STATE in entry.unique_id:
+            return Capability.OVEN_OPERATING_STATE
+    return None
 
 
 def create_devices(
@@ -307,7 +434,9 @@ def create_devices(
     rooms: dict[str, str],
 ) -> None:
     """Create devices in the device registry."""
-    for device in devices.values():
+    for device in sorted(
+        devices.values(), key=lambda d: d.device.parent_device_id or ""
+    ):
         kwargs: dict[str, Any] = {}
         if device.device.hub is not None:
             kwargs = {
@@ -318,7 +447,7 @@ def create_devices(
                 kwargs[ATTR_CONNECTIONS] = {
                     (dr.CONNECTION_NETWORK_MAC, device.device.hub.mac_address)
                 }
-        if device.device.parent_device_id:
+        if device.device.parent_device_id and device.device.parent_device_id in devices:
             kwargs[ATTR_VIA_DEVICE] = (DOMAIN, device.device.parent_device_id)
         if (ocf := device.device.ocf) is not None:
             kwargs.update(
@@ -340,14 +469,24 @@ def create_devices(
                     ATTR_SW_VERSION: viper.software_version,
                 }
             )
+        if (
+            device_registry.async_get_device({(DOMAIN, device.device.device_id)})
+            is None
+        ):
+            kwargs.update(
+                {
+                    ATTR_SUGGESTED_AREA: (
+                        rooms.get(device.device.room_id)
+                        if device.device.room_id
+                        else None
+                    )
+                }
+            )
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, device.device.device_id)},
             configuration_url="https://account.smartthings.com",
             name=device.device.label,
-            suggested_area=(
-                rooms.get(device.device.room_id) if device.device.room_id else None
-            ),
             **kwargs,
         )
 
@@ -370,7 +509,32 @@ def process_status(status: dict[str, ComponentStatus]) -> dict[str, ComponentSta
     if (main_component := status.get(MAIN)) is None:
         return status
     if (
-        disabled_capabilities_capability := main_component.get(
+        disabled_components_capability := main_component.get(
+            Capability.CUSTOM_DISABLED_COMPONENTS
+        )
+    ) is not None:
+        disabled_components = cast(
+            list[str],
+            disabled_components_capability[Attribute.DISABLED_COMPONENTS].value,
+        )
+        if disabled_components is not None:
+            for component in disabled_components:
+                # Burner components are named burner-06
+                # but disabledComponents contain burner-6
+                if "burner" in component:
+                    burner_id = int(component.split("-")[-1])
+                    component = f"burner-0{burner_id}"
+                if component in status:
+                    del status[component]
+    for component_status in status.values():
+        process_component_status(component_status)
+    return status
+
+
+def process_component_status(status: ComponentStatus) -> None:
+    """Remove disabled capabilities from component status."""
+    if (
+        disabled_capabilities_capability := status.get(
             Capability.CUSTOM_DISABLED_CAPABILITIES
         )
     ) is not None:
@@ -380,9 +544,8 @@ def process_status(status: dict[str, ComponentStatus]) -> dict[str, ComponentSta
         )
         if disabled_capabilities is not None:
             for capability in disabled_capabilities:
-                if capability in main_component and (
+                if capability in status and (
                     capability not in KEEP_CAPABILITY_QUIRK
-                    or not KEEP_CAPABILITY_QUIRK[capability](main_component[capability])
+                    or not KEEP_CAPABILITY_QUIRK[capability](status[capability])
                 ):
-                    del main_component[capability]
-    return status
+                    del status[capability]

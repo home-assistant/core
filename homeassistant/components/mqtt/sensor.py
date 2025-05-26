@@ -41,7 +41,15 @@ from homeassistant.util import dt as dt_util
 
 from . import subscription
 from .config import MQTT_RO_SCHEMA
-from .const import CONF_OPTIONS, CONF_STATE_TOPIC, DOMAIN, PAYLOAD_NONE
+from .const import (
+    CONF_EXPIRE_AFTER,
+    CONF_LAST_RESET_VALUE_TEMPLATE,
+    CONF_OPTIONS,
+    CONF_STATE_TOPIC,
+    CONF_SUGGESTED_DISPLAY_PRECISION,
+    DOMAIN,
+    PAYLOAD_NONE,
+)
 from .entity import MqttAvailabilityMixin, MqttEntity, async_setup_entity_entry_helper
 from .models import MqttValueTemplate, PayloadSentinel, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
@@ -50,10 +58,6 @@ from .util import check_state_too_long
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
-
-CONF_EXPIRE_AFTER = "expire_after"
-CONF_LAST_RESET_VALUE_TEMPLATE = "last_reset_value_template"
-CONF_SUGGESTED_DISPLAY_PRECISION = "suggested_display_precision"
 
 MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
     {
