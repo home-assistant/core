@@ -24,15 +24,29 @@ from .model import Config, Integration
 
 PACKAGE_CHECK_VERSION_RANGE = {
     "aiohttp": "SemVer",
-    # https://github.com/iMicknl/python-overkiz-api/issues/1644
-    # "attrs": "CalVer"
+    "attrs": "CalVer",
     "grpcio": "SemVer",
+    "httpx": "SemVer",
     "mashumaro": "SemVer",
     "pydantic": "SemVer",
     "pyjwt": "SemVer",
     "pytz": "CalVer",
     "typing_extensions": "SemVer",
     "yarl": "SemVer",
+}
+PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
+    # In the form dict("domain": {"package": {"dependency1", "dependency2"}})
+    # - domain is the integration domain
+    # - package is the package (can be transitive) referencing the dependency
+    # - dependencyX should be the name of the referenced dependency
+    "ollama": {
+        # https://github.com/ollama/ollama-python/pull/445 (not yet released)
+        "ollama": {"httpx"}
+    },
+    "overkiz": {
+        # https://github.com/iMicknl/python-overkiz-api/issues/1644 (not yet released)
+        "pyoverkiz": {"attrs"},
+    },
 }
 
 PACKAGE_REGEX = re.compile(
@@ -399,6 +413,11 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
     )
     needs_forbidden_package_exceptions = False
 
+    package_version_check_exceptions = PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS.get(
+        integration.domain, {}
+    )
+    needs_package_version_check_exception = False
+
     while to_check:
         package = to_check.popleft()
 
@@ -433,7 +452,14 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
                         "requirements",
                         f"Package {pkg} should {reason} in {package}",
                     )
-            check_dependency_version_range(integration, package, pkg, version)
+            if not check_dependency_version_range(
+                integration,
+                package,
+                pkg,
+                version,
+                package_version_check_exceptions.get(package, set()),
+            ):
+                needs_package_version_check_exception = True
 
         to_check.extend(dependencies)
 
@@ -443,27 +469,48 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
             f"Integration {integration.domain} runtime dependency exceptions "
             "have been resolved, please remove from `FORBIDDEN_PACKAGE_EXCEPTIONS`",
         )
+    if package_version_check_exceptions and not needs_package_version_check_exception:
+        integration.add_error(
+            "requirements",
+            f"Integration {integration.domain} version restrictions checks have been "
+            "resolved, please remove from `PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS`",
+        )
+
     return all_requirements
 
 
 def check_dependency_version_range(
-    integration: Integration, source: str, pkg: str, version: str
-) -> None:
+    integration: Integration,
+    source: str,
+    pkg: str,
+    version: str,
+    package_exceptions: set[str],
+) -> bool:
     """Check requirement version range.
 
     We want to avoid upper version bounds that are too strict for common packages.
     """
-    if version == "Any" or (convention := PACKAGE_CHECK_VERSION_RANGE.get(pkg)) is None:
-        return
-
-    if not all(
-        _is_dependency_version_range_valid(version_part, convention)
-        for version_part in version.split(";", 1)[0].split(",")
+    if (
+        version == "Any"
+        or (convention := PACKAGE_CHECK_VERSION_RANGE.get(pkg)) is None
+        or all(
+            _is_dependency_version_range_valid(version_part, convention)
+            for version_part in version.split(";", 1)[0].split(",")
+        )
     ):
+        return True
+
+    if pkg in package_exceptions:
+        integration.add_warning(
+            "requirements",
+            f"Version restrictions for {pkg} are too strict ({version}) in {source}",
+        )
+    else:
         integration.add_error(
             "requirements",
             f"Version restrictions for {pkg} are too strict ({version}) in {source}",
         )
+    return False
 
 
 def _is_dependency_version_range_valid(version_part: str, convention: str) -> bool:
