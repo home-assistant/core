@@ -2024,6 +2024,29 @@ def apply(value, fn, *args, **kwargs):
     return fn(value, *args, **kwargs)
 
 
+def as_function(macro: jinja2.runtime.Macro) -> Callable[..., Any]:
+    """Turn a macro with a 'returns' keyword argument into a function that returns what that argument is called with."""
+
+    def wrapper(value, *args, **kwargs):
+        return_value = None
+
+        def returns(value):
+            nonlocal return_value
+            return_value = value
+            return value
+
+        # Call the callable with the value and other args
+        macro(value, *args, **kwargs, returns=returns)
+        return return_value
+
+    # Remove "macro_" from the macro's name to avoid confusion in the wrapper's name
+    trimmed_name = macro.name.removeprefix("macro_")
+
+    wrapper.__name__ = trimmed_name
+    wrapper.__qualname__ = trimmed_name
+    return wrapper
+
+
 def logarithm(value, base=math.e, default=_SENTINEL):
     """Filter and function to get logarithm of the value with a specific base."""
     try:
@@ -3069,9 +3092,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             str | jinja2.nodes.Template, CodeType | None
         ] = weakref.WeakValueDictionary()
         self.add_extension("jinja2.ext.loopcontrols")
+        self.add_extension("jinja2.ext.do")
 
         self.globals["acos"] = arc_cosine
         self.globals["as_datetime"] = as_datetime
+        self.globals["as_function"] = as_function
         self.globals["as_local"] = dt_util.as_local
         self.globals["as_timedelta"] = as_timedelta
         self.globals["as_timestamp"] = forgiving_as_timestamp
@@ -3124,6 +3149,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["add"] = add
         self.filters["apply"] = apply
         self.filters["as_datetime"] = as_datetime
+        self.filters["as_function"] = as_function
         self.filters["as_local"] = dt_util.as_local
         self.filters["as_timedelta"] = as_timedelta
         self.filters["as_timestamp"] = forgiving_as_timestamp
