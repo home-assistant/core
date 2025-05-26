@@ -18,6 +18,7 @@ from miio import (
     PhilipsEyecare,
     PhilipsMoonlight,
 )
+from miio.gateway.devices.light import LightBulb
 from miio.gateway.gateway import (
     GATEWAY_MODEL_AC_V1,
     GATEWAY_MODEL_AC_V2,
@@ -1093,6 +1094,7 @@ class XiaomiGatewayBulb(XiaomiGatewayDevice, LightEntity):
 
     _attr_color_mode = ColorMode.COLOR_TEMP
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+    _sub_device: LightBulb
 
     @property
     def brightness(self):
