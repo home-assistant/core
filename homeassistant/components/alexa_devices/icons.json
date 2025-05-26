@@ -38,5 +38,13 @@
         }
       }
     }
+  },
+  "services": {
+    "send_sound": {
+      "service": "mdi:cast-audio"
+    },
+    "send_custom": {
+      "service": "mdi:microphone-message"
+    }
   }
 }
