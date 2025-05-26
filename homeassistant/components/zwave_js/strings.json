@@ -123,7 +123,7 @@
       },
       "restore_failed": {
         "title": "Restoring unsuccessful",
-        "description": "Your Z-Wave network could not be restored to the new controller. This means that your Z-Wave devices are not connected to Home Assistant.\n\nThe backup is saved to ”{file_path}”",
+        "description": "Your Z-Wave network could not be restored to the new controller. This means that your Z-Wave devices are not connected to Home Assistant.\n\nThe backup is saved to ”{file_path}”\n\n'<'a href=\"{file_url}\" download=\"{file_name}\"'>'Download backup file'<'/a'>'",
         "submit": "Try again"
       },
       "choose_serial_port": {
