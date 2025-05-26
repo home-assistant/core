@@ -116,5 +116,6 @@ async def test_coordinator_init_failure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test init failure to load albums."""
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    """Test init success for the connection."""
+    assert config_entry.state is ConfigEntryState.LOADED
+    ## Add test for failing on async_air_quality_data

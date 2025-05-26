@@ -22,7 +22,9 @@ UPDATE_INTERVAL: Final = datetime.timedelta(hours=1)
 type GoogleAirQualityConfigEntry = ConfigEntry[GoogleAirQualityUpdateCoordinator]
 
 
-class GoogleAirQualityUpdateCoordinator(DataUpdateCoordinator[AirQualityData]):
+class GoogleAirQualityUpdateCoordinator(
+    DataUpdateCoordinator[dict[str, AirQualityData]]
+):
     """Coordinator for fetching Google AirQuality data."""
 
     config_entry: GoogleAirQualityConfigEntry
@@ -42,17 +44,21 @@ class GoogleAirQualityUpdateCoordinator(DataUpdateCoordinator[AirQualityData]):
             update_interval=UPDATE_INTERVAL,
         )
         self.client = client
+        self.config_entry = config_entry
 
-    async def _async_update_data(self) -> AirQualityData:
+    async def _async_update_data(self) -> dict[str, AirQualityData]:
         """Fetch albums from API endpoint."""
-        try:
-            return await self.client.async_air_quality(
-                self.config_entry.data[CONF_LATITUDE],
-                self.config_entry.data[CONF_LONGITUDE],
-            )
-        except GoogleAirQualityApiError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="unable_to_fetch",
-                translation_placeholders={"err": str(err)},
-            ) from err
+        data = {}
+        for subentry_id, subentry in self.config_entry.subentries.items():
+            try:
+                data[subentry_id] = await self.client.async_air_quality(
+                    subentry.data[CONF_LATITUDE],
+                    subentry.data[CONF_LONGITUDE],
+                )
+            except GoogleAirQualityApiError as err:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="unable_to_fetch",
+                    translation_placeholders={"err": str(err)},
+                ) from err
+        return data

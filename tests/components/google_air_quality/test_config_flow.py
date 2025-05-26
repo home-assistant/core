@@ -16,13 +16,13 @@ from homeassistant.components.google_air_quality.const import (
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
 )
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .conftest import EXPIRES_IN, FAKE_ACCESS_TOKEN, FAKE_REFRESH_TOKEN
-
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -38,16 +38,6 @@ def mock_setup_entry() -> Generator[Mock]:
         return_value=True,
     ) as mock_setup:
         yield mock_setup
-
-
-@pytest.fixture(autouse=True)
-def mock_patch_api(mock_api: Mock) -> Generator[None]:
-    """Fixture to patch the config flow api."""
-    with patch(
-        "homeassistant.components.google_air_quality.config_flow.GoogleAirQualityApi",
-        return_value=mock_api,
-    ):
-        yield
 
 
 @pytest.fixture(name="updated_token_entry", autouse=True)
@@ -97,6 +87,7 @@ async def test_full_flow(
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
         "&scope=https://www.googleapis.com/auth/cloud-platform"
+        "+https://www.googleapis.com/auth/userinfo.profile"
         "&access_type=offline&prompt=consent"
     )
 
@@ -106,41 +97,46 @@ async def test_full_flow(
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_add_location_flow(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test add location subentry flow."""
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "location"),
+        context={"source": SOURCE_USER},
+    )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "coordinates"
-    result = await hass.config_entries.flow.async_configure(
+    assert result["step_id"] == SOURCE_USER
+
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {
+        user_input={
             CONF_LOCATION: {
                 CONF_LATITUDE: 50,
                 CONF_LONGITUDE: 10,
             }
         },
     )
-    config_entry = result["result"]
-    assert config_entry.unique_id == "50.0_10.0"
-    assert config_entry.title == "Coordinates 50.0, 10.0"
-    config_entry_data = dict(config_entry.data)
-    assert "token" in config_entry_data
-    assert "expires_at" in config_entry_data["token"]
-    del config_entry_data["token"]["expires_at"]
-    assert config_entry_data == {
-        "auth_implementation": DOMAIN,
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    subentry_id = list(config_entry.subentries)[0]
+    subentry = config_entry.subentries[subentry_id]
+    assert dict(subentry.data) == {
         "latitude": 50.0,
         "longitude": 10.0,
         "region_code": "de",
-        "token": {
-            "access_token": FAKE_ACCESS_TOKEN,
-            "expires_in": EXPIRES_IN,
-            "refresh_token": FAKE_REFRESH_TOKEN,
-            "type": "Bearer",
-            "scope": ("https://www.googleapis.com/auth/cloud-platform"),
-        },
     }
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(mock_setup.mock_calls) == 1
+    assert subentry.title == "Coordinates 50.0, 10.0"
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.usefixtures(
     "current_request_with_host",
     "setup_credentials",
@@ -155,46 +151,30 @@ async def test_full_flow(
 )
 async def test_api_not_enabled(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     reason: str,
 ) -> None:
     """Check flow aborts if api is not enabled."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "location"),
+        context={"source": SOURCE_USER},
     )
-    state = config_entry_oauth2_flow._encode_jwt(
-        hass,
-        {
-            "flow_id": result["flow_id"],
-            "redirect_uri": "https://example.com/auth/external/callback",
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == SOURCE_USER
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_LOCATION: {
+                CONF_LATITUDE: 0,
+                CONF_LONGITUDE: 0,
+            }
         },
     )
-
-    assert result["url"] == (
-        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
-        "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}"
-        "&scope=https://www.googleapis.com/auth/cloud-platform"
-        "&access_type=offline&prompt=consent"
-    )
-
-    client = await hass_client_no_auth()
-    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == 200
-    assert resp.headers["content-type"] == "text/html; charset=utf-8"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "coordinates"
-
-    coords = {
-        CONF_LOCATION: {
-            CONF_LATITUDE: hass.config.latitude,
-            CONF_LONGITUDE: hass.config.longitude,
-        }
-    }
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], coords)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
 
@@ -228,6 +208,7 @@ async def test_missing_scope(
     assert step1["type"] is FlowResultType.ABORT
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.usefixtures("current_request_with_host", "mock_api")
 @pytest.mark.parametrize(
     ("fixture_name", "api_error"),
@@ -235,37 +216,31 @@ async def test_missing_scope(
 )
 async def test_no_data_for_location_shows_form(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     mock_setup: Mock,
 ) -> None:
     """Show form with base error if no data is available for the location."""
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "location"),
+        context={"source": SOURCE_USER},
     )
-    state = config_entry_oauth2_flow._encode_jwt(
-        hass,
-        {
-            "flow_id": result["flow_id"],
-            "redirect_uri": "https://example.com/auth/external/callback",
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == SOURCE_USER
+
+    step2 = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_LOCATION: {
+                CONF_LATITUDE: 0,
+                CONF_LONGITUDE: 0,
+            }
         },
     )
-
-    client = await hass_client_no_auth()
-    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == 200
-
-    step1 = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert step1["type"] is FlowResultType.FORM
-    assert step1["step_id"] == "coordinates"
-
-    coords = {
-        CONF_LOCATION: {
-            CONF_LATITUDE: 0,
-            CONF_LONGITUDE: 0,
-        }
-    }
-    step2 = await hass.config_entries.flow.async_configure(result["flow_id"], coords)
     assert step2["type"] is FlowResultType.FORM
-    assert step2["step_id"] == "coordinates"
+    assert step2["step_id"] == SOURCE_USER
     assert step2["errors"] == {"base": "no_data_for_location"}

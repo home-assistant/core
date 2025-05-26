@@ -141,14 +141,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensor platform."""
     coordinator = entry.runtime_data
-    entities: list[SensorEntity] = []
 
-    entities.extend(
-        AirQualitySensorEntity(coordinator, description)
-        for description in AIR_QUALITY_SENSOR_TYPES
-        if description.exists_fn(coordinator.data)
-    )
-    async_add_entities(entities)
+    for subentry_id, subenrty in entry.subentries.items():
+        async_add_entities(
+            [
+                AirQualitySensorEntity(coordinator, description, subentry_id, subenrty)
+                for description in AIR_QUALITY_SENSOR_TYPES
+                if description.exists_fn(coordinator.data[subentry_id])
+            ],
+            config_subentry_id=subentry_id,
+        )
 
 
 class AirQualitySensorEntity(
@@ -163,22 +165,27 @@ class AirQualitySensorEntity(
         self,
         coordinator: GoogleAirQualityUpdateCoordinator,
         description: AirQualitySensorEntityDescription,
+        subentry_id: str,
+        subentry,
     ) -> None:
         """Set up Air Quality Sensors."""
         super().__init__(coordinator)
         self.entity_description = description
-        name = f"{self.coordinator.config_entry.data[CONF_LATITUDE]}_{self.coordinator.config_entry.data[CONF_LONGITUDE]}"
+        name = f"{subentry.data[CONF_LATITUDE]}_{subentry.data[CONF_LONGITUDE]}"
         self._attr_unique_id = f"{description.key}_{name}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, name)},
+            identifiers={
+                (DOMAIN, f"{self.coordinator.config_entry.entry_id}_{subentry_id}")
+            },
             name=name,
             entry_type=DeviceEntryType.SERVICE,
         )
         self._attr_translation_placeholders = {
-            "local_aqi": coordinator.data.indexes[1].display_name
+            "local_aqi": coordinator.data[subentry_id].indexes[1].display_name
         }
+        self.subentry_id = subentry_id
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        return self.entity_description.value_fn(self.coordinator.data[self.subentry_id])

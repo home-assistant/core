@@ -9,19 +9,7 @@
       },
       "auth": {
         "title": "Link Google Account"
-      },
-      "coordinates": {
-        "description": "Air quality data location",
-        "data": {
-          "location": "Select the cooordinates, for which you want to create an entry."
-        },
-        "data_description": {
-          "location": "[%key:common::config_flow::data::location%]"
-        }
       }
-    },
-    "error": {
-      "no_data_for_location": "Information is unavailable for this location. Please try a different location."
     },
     "abort": {
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
@@ -37,12 +25,36 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "access_not_configured": "Unable to access the Google API:\n\n{message}",
-      "no_data_for_location": "Information is unavailable for this location. Please try a different location.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "wrong_account": "Wrong account: Please authenticate with the right account."
+      "wrong_account": "Wrong account: Please authenticate with the right account.",
+      "missing_scope": "The integration requires the following scope: {scope}. Please change your account settings"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  },
+  "config_subentries": {
+    "location": {
+      "step": {
+        "user": {
+          "title": "Air quality data location",
+          "description": "Select the cooordinates, for which you want to create an entry.",
+          "data": {
+            "location": "[%key:common::config_flow::data::location%]"
+          }
+        }
+      },
+      "initiate_flow": {
+        "user": "Add location"
+      },
+      "entry_type": "Location",
+      "error": {
+        "unknown": "[%key:common::config_flow::error::unknown%]",
+        "no_data_for_location": "Information is unavailable for this location. Please try a different location."
+      },
+      "abort": {
+        "already_configured": "Location is already configured"
+      }
     }
   },
   "exceptions": {
