@@ -10,7 +10,6 @@ from homeassistant.components.update import (
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityDescription,
-    UpdateEntityFeature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -25,14 +24,6 @@ PAPERLESS_CHANGELOGS = "https://docs.paperless-ngx.com/changelog/"
 PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(hours=24)
 
-UPDATE_ENTITY_DESCRIPTIONS: tuple[UpdateEntityDescription, ...] = (
-    UpdateEntityDescription(
-        key="paperless_update",
-        translation_key="paperless_update",
-        device_class=UpdateDeviceClass.FIRMWARE,
-    ),
-)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -41,22 +32,26 @@ async def async_setup_entry(
 ) -> None:
     """Set up Paperless-ngx update entities."""
 
+    description = UpdateEntityDescription(
+        key="paperless_update",
+        translation_key="paperless_update",
+        device_class=UpdateDeviceClass.FIRMWARE,
+    )
+
     async_add_entities(
-        (
+        [
             PaperlessUpdate(
                 coordinator=entry.runtime_data.status,
                 description=description,
             )
-            for description in UPDATE_ENTITY_DESCRIPTIONS
-        ),
-        True,
+        ],
+        update_before_add=True,
     )
 
 
 class PaperlessUpdate(PaperlessEntity[PaperlessStatusCoordinator], UpdateEntity):
     """Defines a Paperless-ngx update entity."""
 
-    _attr_supported_features = UpdateEntityFeature(0)
     release_url = PAPERLESS_CHANGELOGS
 
     @property
