@@ -13,8 +13,6 @@ from .coordinator import TheSilentWaveCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-
-
 async def async_setup_entry(hass, entry):
     """Fetch the configuration data from the entry."""
     # Prevent duplicate setups.
