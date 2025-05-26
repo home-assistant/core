@@ -643,6 +643,9 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.WIND_SPEED: set(UnitOfSpeed),
 }
 
+# Maximum precision (decimals) deviation from default device class precision.
+DEFAULT_PRECISION_LIMIT = 2
+
 # Map one unit for each device class to its default precision.
 # The biggest unit with the lowest precision should be used. For example, if W should
 # have 0 decimals, that one should be used and not mW, even though mW also should have
