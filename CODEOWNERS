@@ -89,6 +89,8 @@ build.json @home-assistant/supervisor
 /tests/components/alert/ @home-assistant/core @frenck
 /homeassistant/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
 /tests/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
+/homeassistant/components/amazon_devices/ @chemelli74
+/tests/components/amazon_devices/ @chemelli74
 /homeassistant/components/amazon_polly/ @jschlyter
 /homeassistant/components/amberelectric/ @madpilot
 /tests/components/amberelectric/ @madpilot
@@ -305,6 +307,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/crownstone/ @Crownstone @RicArch97
 /tests/components/crownstone/ @Crownstone @RicArch97
 /homeassistant/components/cups/ @fabaff
+/tests/components/cups/ @fabaff
 /homeassistant/components/daikin/ @fredrike
 /tests/components/daikin/ @fredrike
 /homeassistant/components/date/ @home-assistant/core
@@ -1142,6 +1145,8 @@ build.json @home-assistant/supervisor
 /tests/components/palazzetti/ @dotvav
 /homeassistant/components/panel_custom/ @home-assistant/frontend
 /tests/components/panel_custom/ @home-assistant/frontend
+/homeassistant/components/paperless_ngx/ @fvgarrel
+/tests/components/paperless_ngx/ @fvgarrel
 /homeassistant/components/peblar/ @frenck
 /tests/components/peblar/ @frenck
 /homeassistant/components/peco/ @IceBotYT
@@ -1180,6 +1185,8 @@ build.json @home-assistant/supervisor
 /tests/components/powerwall/ @bdraco @jrester @daniel-simpson
 /homeassistant/components/private_ble_device/ @Jc2k
 /tests/components/private_ble_device/ @Jc2k
+/homeassistant/components/probe_plus/ @pantherale0
+/tests/components/probe_plus/ @pantherale0
 /homeassistant/components/profiler/ @bdraco
 /tests/components/profiler/ @bdraco
 /homeassistant/components/progettihwsw/ @ardaseremet
@@ -1226,6 +1233,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/qnap_qsw/ @Noltari
 /tests/components/qnap_qsw/ @Noltari
 /homeassistant/components/quantum_gateway/ @cisasteelersfan
+/tests/components/quantum_gateway/ @cisasteelersfan
 /homeassistant/components/qvr_pro/ @oblogic7
 /homeassistant/components/qwikswitch/ @kellerza
 /tests/components/qwikswitch/ @kellerza
@@ -1414,6 +1422,8 @@ build.json @home-assistant/supervisor
 /tests/components/sma/ @kellerza @rklomp @erwindouna
 /homeassistant/components/smappee/ @bsmappee
 /tests/components/smappee/ @bsmappee
+/homeassistant/components/smarla/ @explicatis @rlint-explicatis
+/tests/components/smarla/ @explicatis @rlint-explicatis
 /homeassistant/components/smart_meter_texas/ @grahamwetzler
 /tests/components/smart_meter_texas/ @grahamwetzler
 /homeassistant/components/smartthings/ @joostlek
@@ -1543,8 +1553,8 @@ build.json @home-assistant/supervisor
 /tests/components/tedee/ @patrickhilker @zweckj
 /homeassistant/components/tellduslive/ @fredrike
 /tests/components/tellduslive/ @fredrike
-/homeassistant/components/template/ @Petro31 @PhracturedBlue @home-assistant/core
-/tests/components/template/ @Petro31 @PhracturedBlue @home-assistant/core
+/homeassistant/components/template/ @Petro31 @home-assistant/core
+/tests/components/template/ @Petro31 @home-assistant/core
 /homeassistant/components/tesla_fleet/ @Bre77
 /tests/components/tesla_fleet/ @Bre77
 /homeassistant/components/tesla_wall_connector/ @einarhauks

@@ -28,7 +28,7 @@ from types import FrameType, ModuleType
 from typing import Any, Literal, NoReturn
 from unittest.mock import AsyncMock, Mock, patch
 
-from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
+from aiohttp.test_utils import unused_port as get_test_instance_port
 from annotatedyaml import load_yaml_dict, loader as yaml_loader
 import attr
 import pytest
@@ -44,7 +44,7 @@ from homeassistant.auth import (
 )
 from homeassistant.auth.permissions import system_policies
 from homeassistant.components import device_automation, persistent_notification as pn
-from homeassistant.components.device_automation import (  # noqa: F401
+from homeassistant.components.device_automation import (
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
 from homeassistant.components.logger import (
@@ -120,6 +120,11 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 from .testing_config.custom_components.test_constant_deprecation import (
     import_deprecated_constant,
 )
+
+__all__ = [
+    "async_get_device_automation_capabilities",
+    "get_test_instance_port",
+]
 
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
@@ -669,6 +674,7 @@ class RegistryEntryWithDefaults(er.RegistryEntry):
     original_device_class: str | None = attr.ib(default=None)
     original_icon: str | None = attr.ib(default=None)
     original_name: str | None = attr.ib(default=None)
+    suggested_object_id: str | None = attr.ib(default=None)
     supported_features: int = attr.ib(default=0)
     translation_key: str | None = attr.ib(default=None)
     unit_of_measurement: str | None = attr.ib(default=None)
@@ -1953,3 +1959,28 @@ def get_schema_suggested_value(schema: vol.Schema, key: str) -> Any | None:
                 return None
             return schema_key.description["suggested_value"]
     return None
+
+
+def get_sensor_display_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, entity_id: str
+) -> str:
+    """Return the state rounded for presentation."""
+    state = hass.states.get(entity_id)
+    assert state
+    value = state.state
+
+    entity_entry = entity_registry.async_get(entity_id)
+    if entity_entry is None:
+        return value
+
+    if (
+        precision := entity_entry.options.get("sensor", {}).get(
+            "suggested_display_precision"
+        )
+    ) is None:
+        return value
+
+    with suppress(TypeError, ValueError):
+        numerical_value = float(value)
+        value = f"{numerical_value:z.{precision}f}"
+    return value

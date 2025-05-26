@@ -291,7 +291,6 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
     """Entity that controls a switch on RPC based Shelly devices."""
 
     entity_description: RpcSwitchDescription
-    _attr_has_entity_name = True
 
     @property
     def is_on(self) -> bool:
@@ -315,9 +314,6 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
 
 class RpcRelaySwitch(RpcSwitch):
     """Entity that controls a switch on RPC based Shelly devices."""
-
-    # False to avoid double naming as True is inerithed from base class
-    _attr_has_entity_name = False
 
     def __init__(
         self,
