@@ -1,11 +1,11 @@
-"""Constants for the Backblaze B2 integration."""
+"""Constants for the Backblaze integration."""
 
 from collections.abc import Callable
 from typing import Final
 
 from homeassistant.util.hass_dict import HassKey
 
-DOMAIN: Final = "backblaze_b2"
+DOMAIN: Final = "backblaze"
 
 CONF_KEY_ID = "key_id"
 CONF_APPLICATION_KEY = "application_key"

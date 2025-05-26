@@ -1,4 +1,4 @@
-"""Config flow for the Backblaze B2 integration."""
+"""Config flow for the Backblaze integration."""
 
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Backblaze B2."""
+    """Handle a config flow for Backblaze."""
 
     VERSION = 1
 
@@ -57,7 +57,7 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 _LOGGER.info(
-                    "Connecting to Backblaze B2 with application key id %s",
+                    "Connecting to Backblaze with application key id %s",
                     user_input[CONF_KEY_ID],
                 )
                 await self.hass.async_add_executor_job(

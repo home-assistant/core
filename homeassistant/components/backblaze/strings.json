@@ -14,16 +14,16 @@
           "bucket": "Bucket must already exist and be writable by the provided credentials.",
           "prefix": "Prefix folder to store back files in (no trailing slash). Leave empty to store in the root."
         },
-        "title": "Add Backblaze B2 backup"
+        "title": "Add Backblaze backup"
       }
     },
     "error": {
-      "restricted_bucket": "[%key:component::backblaze_b2::exceptions::restricted_bucket::message%]",
+      "restricted_bucket": "[%key:component::backblaze::exceptions::restricted_bucket::message%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_bucket_name": "[%key:component::backblaze_b2::exceptions::invalid_bucket_name::message%]",
-      "invalid_credentials": "[%key:component::backblaze_b2::exceptions::invalid_credentials::message%]",
-      "invalid_capability": "[%key:component::backblaze_b2::exceptions::invalid_capability::message%]",
-      "invalid_prefix": "[%key:component::backblaze_b2::exceptions::invalid_prefix::message%]",
+      "invalid_bucket_name": "[%key:component::backblaze::exceptions::invalid_bucket_name::message%]",
+      "invalid_credentials": "[%key:component::backblaze::exceptions::invalid_credentials::message%]",
+      "invalid_capability": "[%key:component::backblaze::exceptions::invalid_capability::message%]",
+      "invalid_prefix": "[%key:component::backblaze::exceptions::invalid_prefix::message%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {

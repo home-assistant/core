@@ -635,8 +635,8 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "backblaze_b2": {
-      "name": "Backblaze B2",
+    "backblaze": {
+      "name": "Backblaze",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_push"

@@ -107,7 +107,7 @@ homeassistant.components.automation.*
 homeassistant.components.awair.*
 homeassistant.components.axis.*
 homeassistant.components.azure_storage.*
-homeassistant.components.backblaze_b2.*
+homeassistant.components.backblaze.*
 homeassistant.components.backup.*
 homeassistant.components.baf.*
 homeassistant.components.bang_olufsen.*

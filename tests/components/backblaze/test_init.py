@@ -1,11 +1,11 @@
-"""Test the Backblaze B2 storage integration."""
+"""Test the Backblaze storage integration."""
 
 from unittest.mock import patch
 
 from b2sdk.v2 import exception
 import pytest
 
-from homeassistant.components.backblaze_b2.const import CONF_APPLICATION_KEY
+from homeassistant.components.backblaze.const import CONF_APPLICATION_KEY
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 

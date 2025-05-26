@@ -1,11 +1,11 @@
-"""Test the Backblaze B2 config flow."""
+"""Test the Backblaze config flow."""
 
 from unittest.mock import patch
 
 from b2sdk.v2 import exception
 
 from homeassistant import config_entries
-from homeassistant.components.backblaze_b2.const import (
+from homeassistant.components.backblaze.const import (
     CONF_APPLICATION_KEY,
     CONF_KEY_ID,
     DOMAIN,

@@ -1,4 +1,4 @@
-"""Backup platform for the Backblaze B2 integration."""
+"""Backup platform for the Backblaze integration."""
 
 from collections.abc import AsyncIterator, Callable, Coroutine
 import functools
@@ -77,7 +77,7 @@ def async_register_backup_agents_listener(
 
 
 class BackblazeBackupAgent(BackupAgent):
-    """Backup agent for Backblaze B2."""
+    """Backup agent for Backblaze."""
 
     domain = DOMAIN
 
