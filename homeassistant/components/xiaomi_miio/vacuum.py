@@ -6,7 +6,7 @@ from functools import partial
 import logging
 from typing import Any
 
-from miio import Device as MiioDevice, DeviceException
+from miio import DeviceException
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
@@ -194,17 +194,6 @@ class MiroboVacuum(
         | VacuumEntityFeature.START
     )
 
-    def __init__(
-        self,
-        device: MiioDevice,
-        entry: XiaomiMiioConfigEntry,
-        unique_id: str | None,
-        coordinator: DataUpdateCoordinator[VacuumCoordinatorData],
-    ) -> None:
-        """Initialize the Xiaomi vacuum cleaner robot handler."""
-        super().__init__(device, entry, unique_id, coordinator)
-        self._state: VacuumActivity | None = None
-
     async def async_added_to_hass(self) -> None:
         """Run when entity is about to be added to hass."""
         await super().async_added_to_hass()
@@ -218,7 +207,7 @@ class MiroboVacuum(
         if self.coordinator.data.status.got_error:
             return VacuumActivity.ERROR
 
-        return self._state
+        return super().activity
 
     @property
     def battery_level(self) -> int:
@@ -435,8 +424,8 @@ class MiroboVacuum(
                 self.coordinator.data.status.state,
                 self.coordinator.data.status.state_code,
             )
-            self._state = None
+            self._attr_activity = None
         else:
-            self._state = STATE_CODE_TO_STATE[state_code]
+            self._attr_activity = STATE_CODE_TO_STATE[state_code]
 
         super()._handle_coordinator_update()
