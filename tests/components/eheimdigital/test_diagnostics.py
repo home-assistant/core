@@ -30,6 +30,8 @@ async def test_entry_diagnostics(
             device.mac_address, device.device_type
         )
 
+    mock_config_entry.runtime_data.data = eheimdigital_hub_mock.return_value.devices
+
     result = await get_diagnostics_for_config_entry(
         hass, hass_client, mock_config_entry
     )
