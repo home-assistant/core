@@ -33,7 +33,7 @@ async def test_media_player_join(
     # triggered by the firing of the join_complete_event in the join mock.
     join_complete_event = asyncio.Event()
 
-    def mock_join(*args, **kwargs):
+    def mock_join(*args, **kwargs) -> None:
         hass.loop.call_soon_threadsafe(join_complete_event.set)
 
     soco_bedroom.join = Mock(side_effect=mock_join)
@@ -85,7 +85,7 @@ async def test_media_player_join_bad_entity(
 
 
 @asynccontextmanager
-async def instant_timeout(*args, **kwargs):
+async def instant_timeout(*args, **kwargs) -> None:
     """Mock a timeout error."""
     raise TimeoutError
     # This is never reached, but is needed to satisfy the asynccontextmanager
