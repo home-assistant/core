@@ -56,5 +56,27 @@
         "name": "Do not disturb"
       }
     }
+  },
+  "services": {
+    "send_sound": {
+      "name": "Send sound notification",
+      "description": "Send a sound notification to a device",
+      "fields": {
+        "sound": {
+          "name": "Amazon Sound skill file",
+          "description": "The file to play."
+        }
+      }
+    },
+    "send_custom": {
+      "name": "Send custom command",
+      "description": "Send a custom command to a device",
+      "fields": {
+        "cmd": {
+          "name": "Amazon command",
+          "description": "The command to send."
+        }
+      }
+    }
   }
 }
