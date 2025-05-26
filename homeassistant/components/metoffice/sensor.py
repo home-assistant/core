@@ -237,13 +237,13 @@ class MetOfficeCurrentSensor(
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        attr_name = self.entity_description.native_attr_name
+        native_attr = self.entity_description.native_attr_name
 
-        if attr_name == "name":
+        if native_attr == "name":
             return str(self.coordinator.data.name)
 
-        value = get_attribute(self.coordinator.data.now(), attr_name)
-        if attr_name == "significantWeatherCode" and value is not None:
+        value = get_attribute(self.coordinator.data.now(), native_attr)
+        if native_attr == "significantWeatherCode" and value is not None:
             value = CONDITION_MAP.get(value)
 
         return value
