@@ -346,7 +346,7 @@ async def test_sleeping_rpc_device_offline_during_setup(
     ("gen", "entity_id"),
     [
         (1, "switch.test_name_channel_1"),
-        (2, "switch.test_switch_0"),
+        (2, "switch.test_name_test_switch_0"),
     ],
 )
 async def test_entry_unload(
@@ -378,7 +378,7 @@ async def test_entry_unload(
     ("gen", "entity_id"),
     [
         (1, "switch.test_name_channel_1"),
-        (2, "switch.test_switch_0"),
+        (2, "switch.test_name_test_switch_0"),
     ],
 )
 async def test_entry_unload_device_not_ready(
@@ -417,7 +417,7 @@ async def test_entry_unload_not_connected(
         )
         assert entry.state is ConfigEntryState.LOADED
 
-        assert (state := hass.states.get("switch.test_switch_0"))
+        assert (state := hass.states.get("switch.test_name_test_switch_0"))
         assert state.state == STATE_ON
         assert not mock_stop_scanner.call_count
 
@@ -448,7 +448,7 @@ async def test_entry_unload_not_connected_but_we_think_we_are(
         )
         assert entry.state is ConfigEntryState.LOADED
 
-        assert (state := hass.states.get("switch.test_switch_0"))
+        assert (state := hass.states.get("switch.test_name_test_switch_0"))
         assert state.state == STATE_ON
         assert not mock_stop_scanner.call_count
 
@@ -483,6 +483,7 @@ async def test_entry_missing_gen(hass: HomeAssistant, mock_block_device: Mock) -
 
     assert entry.state is ConfigEntryState.LOADED
 
+    # num_outputs is 2, channel name is used
     assert (state := hass.states.get("switch.test_name_channel_1"))
     assert state.state == STATE_ON
 
