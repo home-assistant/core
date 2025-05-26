@@ -113,7 +113,7 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
         if (
             ClimateEntityFeature.PRESET_MODE in self.supported_features
             and self._heating_mode is not None
-            and self._heating_mode.current_value > 0 + self._heating_mode.minimum
+            and self._heating_mode.current_value > self._heating_mode.minimum
         ):
             assert self._attr_preset_modes is not None
             return self._attr_preset_modes[
