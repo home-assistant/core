@@ -16,8 +16,8 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     return {
+        "pngx_version": entry.runtime_data.status.api.host_version,
         "data": {
-            "pngx_version": entry.runtime_data.status.api.host_version,
             "statistics": asdict(entry.runtime_data.statistics.data),
             "status": asdict(entry.runtime_data.status.data),
         },
