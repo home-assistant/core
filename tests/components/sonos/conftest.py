@@ -95,7 +95,7 @@ class SonosMockEvent:
         soco: MockSoCo,
         service: SonosMockService,
         variables: dict[str, str],
-        uui_ds=None,
+        uui_ds: bool | None = None,
     ) -> None:
         """Initialize the instance."""
         self.sid = f"{soco.uid}_sub0000000001"
