@@ -374,7 +374,7 @@ SENSOR_DESCRIPTIONS = (
         translation_key="energy_pv",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
     ),
     SensorEntityDescription(
@@ -382,7 +382,7 @@ SENSOR_DESCRIPTIONS = (
         translation_key="energy_grid_injected",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
     ),
     SensorEntityDescription(
@@ -390,7 +390,7 @@ SENSOR_DESCRIPTIONS = (
         translation_key="energy_grid_consumed",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
     ),
     SensorEntityDescription(
@@ -398,7 +398,7 @@ SENSOR_DESCRIPTIONS = (
         translation_key="energy_building_consumption",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
     ),
     SensorEntityDescription(
@@ -406,7 +406,7 @@ SENSOR_DESCRIPTIONS = (
         translation_key="energy_battery_stored",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
     ),
     SensorEntityDescription(
@@ -414,7 +414,7 @@ SENSOR_DESCRIPTIONS = (
         translation_key="energy_battery_consumed",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
     ),
 )
