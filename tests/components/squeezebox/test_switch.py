@@ -7,12 +7,8 @@ from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.squeezebox.const import PLAYER_UPDATE_INTERVAL
-from homeassistant.const import (
-    CONF_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.const import CONF_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -68,7 +64,7 @@ async def test_turn_on(
 ) -> None:
     """Test turning on the switch."""
     await hass.services.async_call(
-        Platform.SWITCH,
+        SWITCH_DOMAIN,
         SERVICE_TURN_ON,
         {CONF_ENTITY_ID: f"switch.test_player_alarm_{TEST_ALARM_ID}"},
         blocking=True,
@@ -84,7 +80,7 @@ async def test_turn_off(
 ) -> None:
     """Test turning on the switch."""
     await hass.services.async_call(
-        Platform.SWITCH,
+        SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
         {CONF_ENTITY_ID: f"switch.test_player_alarm_{TEST_ALARM_ID}"},
         blocking=True,
@@ -117,7 +113,7 @@ async def test_alarms_enabled_turn_on(
 ) -> None:
     """Test turning on the alarms enabled switch."""
     await hass.services.async_call(
-        Platform.SWITCH,
+        SWITCH_DOMAIN,
         SERVICE_TURN_ON,
         {CONF_ENTITY_ID: "switch.test_player_alarms_enabled"},
         blocking=True,
@@ -131,7 +127,7 @@ async def test_alarms_enabled_turn_off(
 ) -> None:
     """Test turning off the alarms enabled switch."""
     await hass.services.async_call(
-        Platform.SWITCH,
+        SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
         {CONF_ENTITY_ID: "switch.test_player_alarms_enabled"},
         blocking=True,
