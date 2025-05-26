@@ -23,7 +23,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:heart',
+    'original_icon': None,
     'original_name': 'Favorite current song',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -37,7 +37,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'My Super Test Player 2 Favorite current song',
-      'icon': 'mdi:heart',
     }),
     'context': <ANY>,
     'entity_id': 'button.my_super_test_player_2_favorite_current_song',
@@ -71,7 +70,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:heart',
+    'original_icon': None,
     'original_name': 'Favorite current song',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -85,7 +84,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Group Player 1 Favorite current song',
-      'icon': 'mdi:heart',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_group_player_1_favorite_current_song',
@@ -119,7 +117,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:heart',
+    'original_icon': None,
     'original_name': 'Favorite current song',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -133,7 +131,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Player 1 Favorite current song',
-      'icon': 'mdi:heart',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_player_1_favorite_current_song',
