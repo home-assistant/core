@@ -803,13 +803,20 @@ class XiaomiGatewaySwitch(XiaomiGatewayDevice, SwitchEntity):
 class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
     """Representation of a Xiaomi Plug Generic."""
 
-    def __init__(self, name, device, entry, unique_id):
+    _device: AirConditioningCompanionV3 | ChuangmiPlug | PowerStrip
+
+    def __init__(
+        self,
+        name: str,
+        device: AirConditioningCompanionV3 | ChuangmiPlug | PowerStrip,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the plug switch."""
         super().__init__(name, device, entry, unique_id)
 
         self._icon = "mdi:power-socket"
-        self._available = False
-        self._state = None
+        self._state: bool | None = None
         self._state_attrs = {ATTR_TEMPERATURE: None, ATTR_MODEL: self._model}
         self._device_features = FEATURE_FLAGS_GENERIC
         self._skip_update = False
@@ -918,7 +925,7 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
 
         await self._try_command(
             "Setting the power price of the power strip failed",
-            self._device.set_power_price,
+            self._device.set_power_price,  # type: ignore[union-attr]
             price,
         )
 
@@ -926,9 +933,17 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
 class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
     """Representation of a Xiaomi Power Strip."""
 
-    def __init__(self, name, plug, model, unique_id):
+    _device: PowerStrip
+
+    def __init__(
+        self,
+        name: str,
+        plug: PowerStrip,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the plug switch."""
-        super().__init__(name, plug, model, unique_id)
+        super().__init__(name, plug, entry, unique_id)
 
         if self._model == MODEL_POWER_STRIP_V2:
             self._device_features = FEATURE_FLAGS_POWER_STRIP_V2
@@ -995,7 +1010,16 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
 class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
     """Representation of a Chuang Mi Plug V1 and V3."""
 
-    def __init__(self, name, plug, entry, unique_id, channel_usb):
+    _device: ChuangmiPlug
+
+    def __init__(
+        self,
+        name: str,
+        plug: ChuangmiPlug,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+        channel_usb: bool,
+    ) -> None:
         """Initialize the plug switch."""
         name = f"{name} USB" if channel_usb else name
 
@@ -1015,11 +1039,13 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
         """Turn a channel on."""
         if self._channel_usb:
             result = await self._try_command(
-                "Turning the plug on failed", self._device.usb_on
+                "Turning the plug on failed",
+                self._device.usb_on,
             )
         else:
             result = await self._try_command(
-                "Turning the plug on failed", self._device.on
+                "Turning the plug on failed",
+                self._device.on,
             )
 
         if result:
@@ -1030,7 +1056,8 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
         """Turn a channel off."""
         if self._channel_usb:
             result = await self._try_command(
-                "Turning the plug off failed", self._device.usb_off
+                "Turning the plug off failed",
+                self._device.usb_off,
             )
         else:
             result = await self._try_command(
@@ -1075,16 +1102,25 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
 class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
     """Representation of a Xiaomi AirConditioning Companion."""
 
-    def __init__(self, name, plug, model, unique_id):
+    _device: AirConditioningCompanionV3
+
+    def __init__(
+        self,
+        name: str,
+        plug: AirConditioningCompanionV3,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the acpartner switch."""
-        super().__init__(name, plug, model, unique_id)
+        super().__init__(name, plug, entry, unique_id)
 
         self._state_attrs.update({ATTR_TEMPERATURE: None, ATTR_LOAD_POWER: None})
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the socket on."""
         result = await self._try_command(
-            "Turning the socket on failed", self._device.socket_on
+            "Turning the socket on failed",
+            self._device.socket_on,
         )
 
         if result:
@@ -1094,7 +1130,8 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the socket off."""
         result = await self._try_command(
-            "Turning the socket off failed", self._device.socket_off
+            "Turning the socket off failed",
+            self._device.socket_off,
         )
 
         if result:

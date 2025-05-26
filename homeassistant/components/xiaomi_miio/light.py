@@ -259,15 +259,21 @@ class XiaomiPhilipsAbstractLight(XiaomiMiioEntity, LightEntity):
 
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _device: Ceil | PhilipsBulb | PhilipsEyecare | PhilipsMoonlight
 
-    def __init__(self, name, device, entry, unique_id):
+    def __init__(
+        self,
+        name: str,
+        device: Ceil | PhilipsBulb | PhilipsEyecare | PhilipsMoonlight,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the light device."""
         super().__init__(name, device, entry, unique_id)
 
         self._brightness = None
-        self._available = False
         self._state = None
-        self._state_attrs = {}
+        self._state_attrs: dict[str, Any] = {}
 
     @property
     def available(self) -> bool:
@@ -348,7 +354,15 @@ class XiaomiPhilipsAbstractLight(XiaomiMiioEntity, LightEntity):
 class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
     """Representation of a Generic Xiaomi Philips Light."""
 
-    def __init__(self, name, device, entry, unique_id):
+    _device: Ceil | PhilipsBulb | PhilipsEyecare | PhilipsMoonlight
+
+    def __init__(
+        self,
+        name: str,
+        device: Ceil | PhilipsBulb | PhilipsEyecare | PhilipsMoonlight,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the light device."""
         super().__init__(name, device, entry, unique_id)
 
@@ -390,7 +404,7 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
         """Set delayed turn off."""
         await self._try_command(
             "Setting the turn off delay failed.",
-            self._device.delay_off,
+            self._device.delay_off,  # type: ignore[union-attr]
             time_period.total_seconds(),
         )
 
@@ -421,12 +435,19 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
 
     _attr_color_mode = ColorMode.COLOR_TEMP
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+    _device: Ceil | PhilipsBulb | PhilipsMoonlight
 
-    def __init__(self, name, device, entry, unique_id):
+    def __init__(
+        self,
+        name: str,
+        device: Ceil | PhilipsBulb | PhilipsMoonlight,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the light device."""
         super().__init__(name, device, entry, unique_id)
 
-        self._color_temp = None
+        self._color_temp: int | None = None
 
     @property
     def _current_mireds(self):
@@ -575,7 +596,15 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
 class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
     """Representation of a Xiaomi Philips Ceiling Lamp."""
 
-    def __init__(self, name, device, entry, unique_id):
+    _device: Ceil
+
+    def __init__(
+        self,
+        name: str,
+        device: Ceil,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the light device."""
         super().__init__(name, device, entry, unique_id)
 
@@ -635,7 +664,15 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
 class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
     """Representation of a Xiaomi Philips Eyecare Lamp 2."""
 
-    def __init__(self, name, device, entry, unique_id):
+    _device: PhilipsEyecare
+
+    def __init__(
+        self,
+        name: str,
+        device: PhilipsEyecare,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the light device."""
         super().__init__(name, device, entry, unique_id)
 
@@ -748,7 +785,15 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
 class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
     """Representation of a Xiaomi Philips Eyecare Lamp Ambient Light."""
 
-    def __init__(self, name, device, entry, unique_id):
+    _device: PhilipsEyecare
+
+    def __init__(
+        self,
+        name: str,
+        device: PhilipsEyecare,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the light device."""
         name = f"{name} Ambient Light"
         if unique_id is not None:
@@ -807,12 +852,19 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
     """Representation of a Xiaomi Philips Zhirui Bedside Lamp."""
 
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
+    _device: PhilipsMoonlight
 
-    def __init__(self, name, device, entry, unique_id):
+    def __init__(
+        self,
+        name: str,
+        device: PhilipsMoonlight,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the light device."""
         super().__init__(name, device, entry, unique_id)
 
-        self._hs_color = None
+        self._hs_color: tuple[float, float] | None = None
         self._state_attrs.pop(ATTR_DELAYED_TURN_OFF)
         self._state_attrs.update(
             {
