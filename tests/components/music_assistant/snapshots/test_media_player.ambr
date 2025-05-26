@@ -143,8 +143,8 @@
     'area_id': None,
     'capabilities': dict({
       'source_list': list([
-        '00:00:00:00:00:01',
-        'linein',
+        'Music Assistant Queue',
+        'Line-In',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -186,8 +186,8 @@
       'icon': 'mdi:speaker',
       'mass_player_type': 'player',
       'source_list': list([
-        '00:00:00:00:00:01',
-        'linein',
+        'Music Assistant Queue',
+        'Line-In',
       ]),
       'supported_features': <MediaPlayerEntityFeature: 8323007>,
     }),
