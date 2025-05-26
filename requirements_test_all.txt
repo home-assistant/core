@@ -78,7 +78,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.62.0
+PySwitchbot==0.62.2
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -229,7 +229,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==31.0.0
+aioesphomeapi==31.0.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -260,6 +260,9 @@ aiohue==4.7.4
 
 # homeassistant.components.imap
 aioimaplib==2.0.1
+
+# homeassistant.components.immich
+aioimmich==0.5.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -298,7 +301,7 @@ aionanoleaf==0.2.1
 aionotion==2024.03.0
 
 # homeassistant.components.ntfy
-aiontfy==0.5.1
+aiontfy==0.5.2
 
 # homeassistant.components.nut
 aionut==4.3.4
@@ -650,7 +653,7 @@ dbus-fast==2.43.0
 debugpy==1.8.14
 
 # homeassistant.components.ecovacs
-deebot-client==13.1.0
+deebot-client==13.2.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -664,7 +667,7 @@ deluge-client==1.10.2
 demetriek==1.2.0
 
 # homeassistant.components.denonavr
-denonavr==1.1.0
+denonavr==1.1.1
 
 # homeassistant.components.devialet
 devialet==1.5.7
@@ -896,7 +899,7 @@ google-cloud-texttospeech==2.25.1
 google-genai==1.7.0
 
 # homeassistant.components.google_travel_time
-google-maps-routing==0.6.14
+google-maps-routing==0.6.15
 
 # homeassistant.components.nest
 google-nest-sdm==7.1.4
@@ -988,7 +991,7 @@ hole==0.8.0
 holidays==0.72
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250509.0
+home-assistant-frontend==20250516.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.5.7
@@ -1215,7 +1218,7 @@ monzopy==1.4.2
 mopeka-iot-ble==0.8.0
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.26
+motionblinds==0.6.27
 
 # homeassistant.components.motionblinds_ble
 motionblindsble==0.1.3
@@ -1393,7 +1396,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.7.3
+plugwise==1.7.4
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1875,7 +1878,7 @@ pysabnzbd==1.1.1
 pyschlage==2025.4.0
 
 # homeassistant.components.sensibo
-pysensibo==1.1.0
+pysensibo==1.2.1
 
 # homeassistant.components.acer_projector
 # homeassistant.components.crownstone
@@ -1899,7 +1902,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==3.2.1
+pysmartthings==3.2.2
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -1935,7 +1938,7 @@ pysqueezebox==0.12.0
 pystiebeleltron==0.1.0
 
 # homeassistant.components.suez_water
-pysuezV2==2.0.4
+pysuezV2==2.0.5
 
 # homeassistant.components.switchbee
 pyswitchbee==1.8.3
@@ -2193,7 +2196,7 @@ securetar==2025.2.1
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense-energy==0.13.7
+sense-energy==0.13.8
 
 # homeassistant.components.sensirion_ble
 sensirion-ble==0.1.1
@@ -2552,7 +2555,7 @@ yt-dlp[default]==2025.03.31
 zamg==0.3.6
 
 # homeassistant.components.zimi
-zcc-helper==3.5
+zcc-helper==3.5.2
 
 # homeassistant.components.zeroconf
 zeroconf==0.147.0
