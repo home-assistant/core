@@ -18,7 +18,7 @@
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'number.trv_name_external_temperature',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -29,7 +29,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TRV-Name external temperature',
+    'original_name': 'External temperature',
     'platform': 'shelly',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -41,7 +41,7 @@
 # name: test_blu_trv_number_entity[number.trv_name_external_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TRV-Name external temperature',
+      'friendly_name': 'TRV-Name External temperature',
       'max': 50,
       'min': -50,
       'mode': <NumberMode.BOX: 'box'>,
@@ -75,7 +75,7 @@
     'domain': 'number',
     'entity_category': None,
     'entity_id': 'number.trv_name_valve_position',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -86,7 +86,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TRV-Name valve position',
+    'original_name': 'Valve position',
     'platform': 'shelly',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -98,7 +98,7 @@
 # name: test_blu_trv_number_entity[number.trv_name_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TRV-Name valve position',
+      'friendly_name': 'TRV-Name Valve position',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.SLIDER: 'slider'>,
