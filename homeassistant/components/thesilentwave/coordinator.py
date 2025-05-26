@@ -49,7 +49,7 @@ class TheSilentWaveCoordinator(DataUpdateCoordinator):
                 self._has_connection = True
                 self._connection_error_logged = False
 
-        except SilentWaveError:
+        except SilentWaveError as exc:
             # Mark that we have a connection issue.
             self._has_connection = False
 
@@ -58,6 +58,6 @@ class TheSilentWaveCoordinator(DataUpdateCoordinator):
                 _LOGGER.error("Failed to connect to device at %s", self._host)
                 self._connection_error_logged = True
 
-            raise UpdateFailed("Failed to fetch device status")
+            raise UpdateFailed("Failed to fetch device status") from exc
         else:
             return status
