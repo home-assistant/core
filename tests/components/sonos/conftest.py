@@ -1,5 +1,7 @@
 """Configuration for Sonos tests."""
 
+from __future__ import annotations
+
 import asyncio
 from collections.abc import Callable, Coroutine, Generator
 from copy import copy
@@ -88,7 +90,13 @@ class SonosMockService:
 class SonosMockEvent:
     """Mock a sonos Event used in callbacks."""
 
-    def __init__(self, soco, service, variables, uui_ds=None) -> None:
+    def __init__(
+        self,
+        soco: MockSoCo,
+        service: SonosMockService,
+        variables: dict[str, str],
+        uui_ds=None,
+    ) -> None:
         """Initialize the instance."""
         self.sid = f"{soco.uid}_sub0000000001"
         self.seq = "0"
