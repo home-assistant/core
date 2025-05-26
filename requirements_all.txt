@@ -298,7 +298,7 @@ aiolifx-effects==0.3.2
 aiolifx-themes==0.6.4
 
 # homeassistant.components.lifx
-aiolifx==1.1.4
+aiolifx==1.1.5
 
 # homeassistant.components.lookin
 aiolookin==1.0.0
@@ -2337,6 +2337,9 @@ pysma==0.7.5
 # homeassistant.components.smappee
 pysmappee==0.2.29
 
+# homeassistant.components.smarla
+pysmarlaapi==0.8.2
+
 # homeassistant.components.smartthings
 pysmartthings==3.2.3
 
@@ -2827,7 +2830,7 @@ starline==0.1.5
 starlingbank==3.2
 
 # homeassistant.components.starlink
-starlink-grpc-core==1.2.2
+starlink-grpc-core==1.2.3
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -3177,7 +3180,7 @@ zeroconf==0.147.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.57
+zha==0.0.59
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
