@@ -104,6 +104,10 @@
       "name": "Get playerQueue details (advanced)",
       "description": "Retrieves the details of the currently active queue of a Music Assistant player."
     },
+    "add_currently_playing_to_favorites": {
+      "name": "Add currently playing to favorites",
+      "description": "Adds the currently playing item on a Music Assistant player to the favorites."
+    },
     "search": {
       "name": "Search Music Assistant",
       "description": "Performs a global search on the Music Assistant library and all providers.",

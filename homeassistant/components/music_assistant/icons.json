@@ -5,6 +5,7 @@
     "transfer_queue": { "service": "mdi:transfer" },
     "search": { "service": "mdi:magnify" },
     "get_queue": { "service": "mdi:playlist-music" },
-    "get_library": { "service": "mdi:music-box-multiple" }
+    "get_library": { "service": "mdi:music-box-multiple" },
+    "add_currently_playing_to_favorites": { "service": "mdi:heart-plus" }
   }
 }

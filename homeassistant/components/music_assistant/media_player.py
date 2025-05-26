@@ -118,6 +118,7 @@ SERVICE_PLAY_MEDIA_ADVANCED = "play_media"
 SERVICE_PLAY_ANNOUNCEMENT = "play_announcement"
 SERVICE_TRANSFER_QUEUE = "transfer_queue"
 SERVICE_GET_QUEUE = "get_queue"
+SERVICE_ADD_FAVORITE = "add_currently_playing_to_favorites"
 
 
 def catch_musicassistant_error[_R, **P](
@@ -210,6 +211,11 @@ async def async_setup_entry(
         schema=None,
         func="_async_handle_get_queue",
         supports_response=SupportsResponse.ONLY,
+    )
+    platform.async_register_entity_service(
+        SERVICE_ADD_FAVORITE,
+        schema=None,
+        func="_async_handle_add_currently_playing_to_favorites",
     )
 
 
@@ -610,6 +616,13 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             }
         )
         return response
+
+    @catch_musicassistant_error
+    async def _async_handle_add_currently_playing_to_favorites(self) -> None:
+        """Handle action to add currently playing item to favorites."""
+        await self.mass.players.add_currently_playing_to_favorites(
+            self.player_id,
+        )
 
     async def async_browse_media(
         self,
