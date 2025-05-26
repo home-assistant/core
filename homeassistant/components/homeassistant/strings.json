@@ -18,7 +18,7 @@
       "title": "The {integration_title} YAML configuration is being removed",
       "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
     },
-    "deprecated_core_yaml_integration": {
+    "deprecated_system_packages_yaml_integration": {
       "title": "The {integration_title} integration is being removed",
       "description": "The {integration_title} integration is being removed as it requires additional system packages, which can't be installed on supported Home Assistant installations. Remove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
     },

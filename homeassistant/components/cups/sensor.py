@@ -77,12 +77,12 @@ def setup_platform(
     create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,
-        f"deprecated_core_yaml_integration_{DOMAIN}",
+        f"deprecated_system_packages_yaml_integration_{DOMAIN}",
         breaks_in_ha_version="2025.12.0",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=IssueSeverity.WARNING,
-        translation_key="deprecated_core_yaml_integration",
+        translation_key="deprecated_system_packages_yaml_integration",
         translation_placeholders={
             "domain": DOMAIN,
             "integration_title": "CUPS",

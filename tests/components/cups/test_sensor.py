@@ -36,5 +36,5 @@ async def test_repair_issue_is_created(
         await hass.async_block_till_done()
         assert (
             HOMEASSISTANT_DOMAIN,
-            f"deprecated_core_yaml_integration_{CUPS_DOMAIN}",
+            f"deprecated_system_packages_yaml_integration_{CUPS_DOMAIN}",
         ) in issue_registry.issues
