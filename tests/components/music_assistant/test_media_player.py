@@ -637,7 +637,7 @@ async def test_media_player_select_source_action(
         SERVICE_SELECT_SOURCE,
         {
             ATTR_ENTITY_ID: entity_id,
-            ATTR_INPUT_SOURCE: "linein",
+            ATTR_INPUT_SOURCE: "Line-In",
         },
         blocking=True,
     )
