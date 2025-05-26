@@ -11,6 +11,9 @@
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Home Connect integration needs to re-authenticate your account"
+      },
+      "oauth_discovery": {
+        "description": "Home Assistant has found a Home Connect device on your network. Press **Submit** to continue setting up Home Connect."
       }
     },
     "abort": {
