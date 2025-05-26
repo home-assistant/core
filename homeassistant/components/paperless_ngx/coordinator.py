@@ -14,7 +14,7 @@ from pypaperless.exceptions import (
     PaperlessInactiveOrDeletedError,
     PaperlessInvalidTokenError,
 )
-from pypaperless.models import Statistic, Status
+from pypaperless.models import RemoteVersion, Statistic, Status
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -29,6 +29,7 @@ TData = TypeVar("TData")
 
 UPDATE_INTERVAL_STATISTICS = timedelta(seconds=120)
 UPDATE_INTERVAL_STATUS = timedelta(seconds=300)
+UPDATE_INTERVAL_REMOTE_VERSION = timedelta(hours=24)
 
 
 @dataclass
@@ -37,6 +38,7 @@ class PaperlessData:
 
     statistics: PaperlessStatisticCoordinator
     status: PaperlessStatusCoordinator
+    version: PaperlessVersionCoordinator
 
 
 class PaperlessCoordinator(DataUpdateCoordinator[TData]):
@@ -137,3 +139,32 @@ class PaperlessStatusCoordinator(PaperlessCoordinator[Status]):
     async def _async_update_data_internal(self) -> Status:
         """Fetch status data from API endpoint."""
         return await self.api.status()
+
+
+class PaperlessVersionCoordinator(PaperlessCoordinator[RemoteVersion]):
+    """Coordinator to manage Paperless-ngx remote version updates."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: PaperlessConfigEntry,
+        api: Paperless,
+    ) -> None:
+        """Initialize Paperless-ngx remote version coordinator."""
+        super().__init__(
+            hass,
+            entry,
+            api,
+            name="Remote Version Coordinator",
+            update_interval=UPDATE_INTERVAL_REMOTE_VERSION,
+        )
+
+    async def _async_update_data_internal(self) -> RemoteVersion:
+        """Fetch remote version data from API endpoint."""
+        remote_version = await self.api.remote_version()
+        if not remote_version.version or remote_version.version == "v0.0.0":
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="remote_version_not_available",
+            )
+        return remote_version

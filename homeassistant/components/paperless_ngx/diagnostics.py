@@ -19,5 +19,6 @@ async def async_get_config_entry_diagnostics(
         "data": {
             "statistics": asdict(entry.runtime_data.statistics.data),
             "status": asdict(entry.runtime_data.status.data),
+            "remote_version": asdict(entry.runtime_data.version.data),
         },
     }

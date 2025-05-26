@@ -138,6 +138,9 @@
     "user_inactive_or_deleted": {
       "message": "[%key:component::paperless_ngx::config::error::user_inactive_or_deleted%]"
     },
+    "remote_version_not_available": {
+      "message": "Remote version not available."
+    },
     "forbidden": {
       "message": "[%key:component::paperless_ngx::config::error::forbidden%]"
     },
