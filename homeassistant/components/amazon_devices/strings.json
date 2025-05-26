@@ -52,9 +52,6 @@
       },
       "sound": {
         "name": "Sound"
-      },
-      "custom": {
-        "name": "Custom"
       }
     }
   }
