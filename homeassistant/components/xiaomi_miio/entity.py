@@ -39,19 +39,9 @@ class XiaomiMiioEntity(Entity):
         self._model = entry.data[CONF_MODEL]
         self._mac = entry.data[CONF_MAC]
         self._device_id = entry.unique_id
-        self._unique_id = unique_id
-        self._name = name
-        self._available = False
-
-    @property
-    def unique_id(self):
-        """Return an unique ID."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of this entity, if any."""
-        return self._name
+        self._attr_unique_id = unique_id
+        self._attr_name = name
+        self._attr_available = False
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -62,7 +52,7 @@ class XiaomiMiioEntity(Entity):
             identifiers={(DOMAIN, self._device_id)},
             manufacturer="Xiaomi",
             model=self._model,
-            name=self._name,
+            name=self._attr_name,
         )
 
         if self._mac is not None:
@@ -92,12 +82,7 @@ class XiaomiCoordinatedMiioEntity[_T: DataUpdateCoordinator[Any]](
         self._mac = entry.data[CONF_MAC]
         self._device_id = entry.unique_id
         self._device_name = entry.title
-        self._unique_id = unique_id
-
-    @property
-    def unique_id(self):
-        """Return an unique ID."""
-        return self._unique_id
+        self._attr_unique_id = unique_id
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -183,18 +168,8 @@ class XiaomiGatewayDevice(
         super().__init__(coordinator)
         self._sub_device = sub_device
         self._entry = entry
-        self._unique_id = sub_device.sid
-        self._name = f"{sub_device.name} ({sub_device.sid})"
-
-    @property
-    def unique_id(self):
-        """Return an unique ID."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of this entity, if any."""
-        return self._name
+        self._attr_unique_id = sub_device.sid
+        self._attr_name = f"{sub_device.name} ({sub_device.sid})"
 
     @property
     def device_info(self) -> DeviceInfo:
