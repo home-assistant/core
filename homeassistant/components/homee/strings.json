@@ -149,7 +149,7 @@
     },
     "event": {
       "up_down_remote": {
-        "name": "Up Down Remote",
+        "name": "Up/down remote",
         "state_attributes": {
           "event_type": {
             "state": {

@@ -24,14 +24,13 @@ async def async_setup_entry(
         HomeeEvent(attribute, config_entry)
         for node in config_entry.runtime_data.nodes
         for attribute in node.attributes
-        if (attribute.type == AttributeType.UP_DOWN_REMOTE)
+        if attribute.type == AttributeType.UP_DOWN_REMOTE
     )
 
 
 class HomeeEvent(HomeeEntity, EventEntity):
     """Representation of a homee event."""
 
-    _attr_has_entity_name = True
     _attr_translation_key = "up_down_remote"
     _attr_event_types = [
         "released",
