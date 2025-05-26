@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 import logging
 import sys
-from types import MappingProxyType
 from typing import Any
 
 import httpx
@@ -219,7 +219,7 @@ class OllamaOptionsFlow(OptionsFlow):
                 title=_get_title(self.model), data=user_input
             )
 
-        options = self.config_entry.options or MappingProxyType({})
+        options: Mapping[str, Any] = self.config_entry.options or {}
         schema = ollama_config_option_schema(self.hass, options)
         return self.async_show_form(
             step_id="init",
@@ -228,7 +228,7 @@ class OllamaOptionsFlow(OptionsFlow):
 
 
 def ollama_config_option_schema(
-    hass: HomeAssistant, options: MappingProxyType[str, Any]
+    hass: HomeAssistant, options: Mapping[str, Any]
 ) -> dict:
     """Ollama options schema."""
     hass_apis: list[SelectOptionDict] = [

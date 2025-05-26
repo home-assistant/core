@@ -15,6 +15,7 @@ from homeassistant.components.miele.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from . import get_actions_callback, get_data_callback
 from .const import CLIENT_ID, CLIENT_SECRET
 
 from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
@@ -70,7 +71,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 @pytest.fixture(scope="package")
 def load_device_file() -> str:
     """Fixture for loading device file."""
-    return "3_devices.json"
+    return "4_devices.json"
 
 
 @pytest.fixture
@@ -141,7 +142,7 @@ async def setup_platform(
     with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        yield
+        yield mock_config_entry
 
 
 @pytest.fixture
@@ -157,3 +158,21 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         "homeassistant.components.miele.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture
+async def push_data_and_actions(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    device_fixture: MieleDevices,
+) -> None:
+    """Fixture to push data and actions through mock."""
+
+    data_callback = get_data_callback(mock_miele_client)
+    await data_callback(device_fixture)
+    await hass.async_block_till_done()
+
+    act_file = load_json_object_fixture("4_actions.json", DOMAIN)
+    action_callback = get_actions_callback(mock_miele_client)
+    await action_callback(act_file)
+    await hass.async_block_till_done()

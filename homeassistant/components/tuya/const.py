@@ -56,6 +56,7 @@ PLATFORMS = [
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.EVENT,
     Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.LIGHT,
@@ -218,6 +219,8 @@ class DPCode(StrEnum):
     LED_TYPE_2 = "led_type_2"
     LED_TYPE_3 = "led_type_3"
     LEVEL = "level"
+    LEVEL_1 = "level_1"
+    LEVEL_2 = "level_2"
     LEVEL_CURRENT = "level_current"
     LIGHT = "light"  # Light
     LIGHT_MODE = "light_mode"
@@ -257,6 +260,9 @@ class DPCode(StrEnum):
     POWDER_SET = "powder_set"  # Powder
     POWER = "power"
     POWER_GO = "power_go"
+    PREHEAT = "preheat"
+    PREHEAT_1 = "preheat_1"
+    PREHEAT_2 = "preheat_2"
     POWER_TOTAL = "power_total"
     PRESENCE_STATE = "presence_state"
     PRESSURE_STATE = "pressure_state"
@@ -316,6 +322,15 @@ class DPCode(StrEnum):
     SWITCH_LED_1 = "switch_led_1"
     SWITCH_LED_2 = "switch_led_2"
     SWITCH_LED_3 = "switch_led_3"
+    SWITCH_MODE1 = "switch_mode1"
+    SWITCH_MODE2 = "switch_mode2"
+    SWITCH_MODE3 = "switch_mode3"
+    SWITCH_MODE4 = "switch_mode4"
+    SWITCH_MODE5 = "switch_mode5"
+    SWITCH_MODE6 = "switch_mode6"
+    SWITCH_MODE7 = "switch_mode7"
+    SWITCH_MODE8 = "switch_mode8"
+    SWITCH_MODE9 = "switch_mode9"
     SWITCH_NIGHT_LIGHT = "switch_night_light"
     SWITCH_SAVE_ENERGY = "switch_save_energy"
     SWITCH_SOUND = "switch_sound"  # Voice switch
