@@ -273,6 +273,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
       }),
@@ -302,7 +305,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.2',
+    'state': '0.18580608',
   })
 # ---
 # name: test_states[sensor.my_device_cleaning_progress-entry]
@@ -364,6 +367,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
@@ -392,7 +398,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '12.00',
+    'state': '12.0',
   })
 # ---
 # name: test_states[sensor.my_device_current-entry]
