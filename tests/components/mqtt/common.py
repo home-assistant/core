@@ -234,6 +234,8 @@ MOCK_SUBENTRY_SWITCH_COMPONENT = {
         "state_topic": "test-topic",
         "command_template": "{{ value }}",
         "value_template": "{{ value_json.value }}",
+        "payload_off": "OFF",
+        "payload_on": "ON",
         "entity_picture": "https://example.com/3faf1318016c46c5aea26707eeb6f12e",
         "optimistic": True,
     },

@@ -169,6 +169,9 @@ aioairzone-cloud==0.6.12
 # homeassistant.components.airzone
 aioairzone==1.0.0
 
+# homeassistant.components.amazon_devices
+aioamazondevices==2.0.1
+
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
 aioambient==2024.08.0
@@ -277,7 +280,7 @@ aiolifx-effects==0.3.2
 aiolifx-themes==0.6.4
 
 # homeassistant.components.lifx
-aiolifx==1.1.4
+aiolifx==1.1.5
 
 # homeassistant.components.lookin
 aiolookin==1.0.0
@@ -1557,6 +1560,9 @@ pycountry==24.6.1
 # homeassistant.components.microsoft
 pycsspeechtts==1.0.8
 
+# homeassistant.components.cups
+# pycups==2.0.4
+
 # homeassistant.components.daikin
 pydaikin==2.15.0
 
@@ -1708,7 +1714,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.8
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.5
+pylamarzocco==2.0.6
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -1906,6 +1912,9 @@ pysma==0.7.5
 
 # homeassistant.components.smappee
 pysmappee==0.2.29
+
+# homeassistant.components.smarla
+pysmarlaapi==0.8.2
 
 # homeassistant.components.smartthings
 pysmartthings==3.2.3
@@ -2292,7 +2301,7 @@ srpenergy==1.3.6
 starline==0.1.5
 
 # homeassistant.components.starlink
-starlink-grpc-core==1.2.2
+starlink-grpc-core==1.2.3
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -2413,7 +2422,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.6.0
+uiprotect==7.10.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2576,7 +2585,7 @@ zeroconf==0.147.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.57
+zha==0.0.59
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.63.0

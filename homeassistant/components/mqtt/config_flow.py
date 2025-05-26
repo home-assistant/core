@@ -221,6 +221,8 @@ from .const import (
     CONF_SPEED_RANGE_MIN,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
+    CONF_STATE_OFF,
+    CONF_STATE_ON,
     CONF_STATE_OPEN,
     CONF_STATE_OPENING,
     CONF_STATE_STOPPED,
@@ -1329,6 +1331,24 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             required=False,
             validator=validate(cv.template),
             error="invalid_template",
+        ),
+        CONF_PAYLOAD_OFF: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            default=DEFAULT_PAYLOAD_OFF,
+        ),
+        CONF_PAYLOAD_ON: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            default=DEFAULT_PAYLOAD_ON,
+        ),
+        CONF_STATE_OFF: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+        ),
+        CONF_STATE_ON: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
         ),
         CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
         CONF_OPTIMISTIC: PlatformField(selector=BOOLEAN_SELECTOR, required=False),

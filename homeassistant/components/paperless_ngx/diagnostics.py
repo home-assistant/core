@@ -15,4 +15,9 @@ async def async_get_config_entry_diagnostics(
     entry: PaperlessConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    return {"data": asdict(entry.runtime_data.data)}
+    return {
+        "data": {
+            "statistics": asdict(entry.runtime_data.statistics.data),
+            "status": asdict(entry.runtime_data.status.data),
+        },
+    }
