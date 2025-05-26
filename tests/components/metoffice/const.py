@@ -41,9 +41,9 @@ KINGSLYNN_SENSOR_RESULTS = {
     "pressure": "998.20",
     "wind_speed": "22.21",
     "wind_direction": "180",
-    "wind_gust": "40",
-    "feels_like_temperature": "3.39",
-    "visibility_distance": "7478",
+    "wind_gust": "40.26",
+    "feels_like_temperature": "3.4",
+    "visibility_distance": "7478.00",
     "humidity": "97.5",
     "station_name": "King's Lynn",
 }
@@ -57,8 +57,8 @@ WAVERTREE_SENSOR_RESULTS = {
     "wind_speed": "17.60",
     "wind_direction": "176",
     "wind_gust": "34.52",
-    "feels_like_temperature": "5.75",
-    "visibility_distance": "5106",
+    "feels_like_temperature": "5.8",
+    "visibility_distance": "5106.00",
     "humidity": "95.13",
     "station_name": "Wavertree",
 }
