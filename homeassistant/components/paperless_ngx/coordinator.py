@@ -17,7 +17,11 @@ from pypaperless.models import Statistic
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -63,12 +67,12 @@ class PaperlessCoordinator(DataUpdateCoordinator[Statistic]):
                 translation_key="cannot_connect",
             ) from err
         except PaperlessInvalidTokenError as err:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_api_key",
             ) from err
         except PaperlessInactiveOrDeletedError as err:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="user_inactive_or_deleted",
             ) from err
@@ -98,12 +102,12 @@ class PaperlessCoordinator(DataUpdateCoordinator[Statistic]):
                 translation_key="forbidden",
             ) from err
         except PaperlessInvalidTokenError as err:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_api_key",
             ) from err
         except PaperlessInactiveOrDeletedError as err:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="user_inactive_or_deleted",
             ) from err

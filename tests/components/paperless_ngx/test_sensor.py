@@ -12,6 +12,7 @@ from pypaperless.exceptions import (
 from pypaperless.models import Statistic
 import pytest
 
+from homeassistant.components.paperless_ngx.coordinator import UPDATE_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -60,7 +61,7 @@ async def test_statistic_sensor_state(
         )
     )
 
-    freezer.tick(timedelta(seconds=120))
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -70,12 +71,12 @@ async def test_statistic_sensor_state(
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    "error_cls",
+    ("error_cls", "assert_state"),
     [
-        PaperlessForbiddenError,
-        PaperlessConnectionError,
-        PaperlessInactiveOrDeletedError,
-        PaperlessInvalidTokenError,
+        (PaperlessForbiddenError, "420"),
+        (PaperlessConnectionError, "420"),
+        (PaperlessInactiveOrDeletedError, STATE_UNAVAILABLE),
+        (PaperlessInvalidTokenError, STATE_UNAVAILABLE),
     ],
 )
 async def test__statistic_sensor_state_on_error(
@@ -84,28 +85,29 @@ async def test__statistic_sensor_state_on_error(
     freezer: FrozenDateTimeFactory,
     mock_statistic_data_update,
     error_cls,
+    assert_state,
 ) -> None:
     """Ensure sensor entities are added automatically."""
     # simulate error
     mock_paperless.statistics.side_effect = error_cls
 
-    freezer.tick(timedelta(seconds=120))
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.paperless_ngx_total_documents")
     assert state.state == STATE_UNAVAILABLE
 
-    # recover from error
+    # recover from not auth errors
     mock_paperless.statistics = AsyncMock(
         return_value=Statistic.create_with_data(
             mock_paperless, data=mock_statistic_data_update, fetched=True
         )
     )
 
-    freezer.tick(timedelta(seconds=120))
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.paperless_ngx_total_documents")
-    assert state.state == "420"
+    assert state.state == assert_state

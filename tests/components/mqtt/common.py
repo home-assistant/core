@@ -127,6 +127,44 @@ MOCK_SUBENTRY_COVER_COMPONENT = {
         "entity_picture": "https://example.com/b37acf667fa04c688ad7dfb27de2178b",
     },
 }
+MOCK_SUBENTRY_FAN_COMPONENT = {
+    "717f924ae9ca4fe9864d845d75d23c9f": {
+        "platform": "fan",
+        "name": "Breezer",
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "value_template": "{{ value_json.value }}",
+        "percentage_command_topic": "test-topic/pct",
+        "percentage_state_topic": "test-topic/pct",
+        "percentage_command_template": "{{ value }}",
+        "percentage_value_template": "{{ value_json.percentage }}",
+        "payload_reset_percentage": "None",
+        "preset_modes": ["eco", "auto"],
+        "preset_mode_command_topic": "test-topic/prm",
+        "preset_mode_state_topic": "test-topic/prm",
+        "preset_mode_command_template": "{{ value }}",
+        "preset_mode_value_template": "{{ value_json.preset_mode }}",
+        "payload_reset_preset_mode": "None",
+        "oscillation_command_topic": "test-topic/osc",
+        "oscillation_state_topic": "test-topic/osc",
+        "oscillation_command_template": "{{ value }}",
+        "oscillation_value_template": "{{ value_json.oscillation }}",
+        "payload_oscillation_off": "oscillate_off",
+        "payload_oscillation_on": "oscillate_on",
+        "direction_command_topic": "test-topic/dir",
+        "direction_state_topic": "test-topic/dir",
+        "direction_command_template": "{{ value }}",
+        "direction_value_template": "{{ value_json.direction }}",
+        "payload_off": "OFF",
+        "payload_on": "ON",
+        "entity_picture": "https://example.com/717f924ae9ca4fe9864d845d75d23c9f",
+        "optimistic": False,
+        "retain": False,
+        "speed_range_max": 100,
+        "speed_range_min": 1,
+    },
+}
 MOCK_SUBENTRY_NOTIFY_COMPONENT1 = {
     "363a7ecad6be4a19b939a016ea93e994": {
         "platform": "notify",
@@ -196,6 +234,8 @@ MOCK_SUBENTRY_SWITCH_COMPONENT = {
         "state_topic": "test-topic",
         "command_template": "{{ value }}",
         "value_template": "{{ value_json.value }}",
+        "payload_off": "OFF",
+        "payload_on": "ON",
         "entity_picture": "https://example.com/3faf1318016c46c5aea26707eeb6f12e",
         "optimistic": True,
     },
@@ -263,6 +303,10 @@ MOCK_BUTTON_SUBENTRY_DATA_SINGLE = {
 MOCK_COVER_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_COVER_COMPONENT,
+}
+MOCK_FAN_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_FAN_COMPONENT,
 }
 MOCK_NOTIFY_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},

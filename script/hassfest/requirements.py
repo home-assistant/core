@@ -48,106 +48,122 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # - package is the package (can be transitive) referencing the dependency
     # - reasonX should be the name of the invalid dependency
     "azure_devops": {
+        # https://github.com/timmo001/aioazuredevops/issues/67
         # aioazuredevops > incremental > setuptools
         "incremental": {"setuptools"}
     },
     "cmus": {
+        # https://github.com/mtreinish/pycmus/issues/4
         # pycmus > pbr > setuptools
         "pbr": {"setuptools"}
     },
     "concord232": {
+        # https://bugs.launchpad.net/python-stevedore/+bug/2111694
         # concord232 > stevedore > pbr > setuptools
         "pbr": {"setuptools"}
     },
-    "ecovacs": {
-        # py-sucks > pycountry-convert > pytest-cov > pytest
-        "pytest-cov": {"pytest", "wheel"},
-        # py-sucks > pycountry-convert > pytest-mock > pytest
-        "pytest-mock": {"pytest", "wheel"},
-        # py-sucks > pycountry-convert > pytest
-        # py-sucks > pycountry-convert > wheel
-        "pycountry-convert": {"pytest", "wheel"},
-    },
     "efergy": {
+        # https://github.com/tkdrob/pyefergy/issues/46
         # pyefergy > codecov
         # pyefergy > types-pytz
         "pyefergy": {"codecov", "types-pytz"}
     },
     "fitbit": {
+        # https://github.com/orcasgit/python-fitbit/pull/178
+        # but project seems unmaintained
         # fitbit > setuptools
         "fitbit": {"setuptools"}
     },
     "guardian": {
+        # https://github.com/jsbronder/asyncio-dgram/issues/20
         # aioguardian > asyncio-dgram > setuptools
         "asyncio-dgram": {"setuptools"}
     },
     "hive": {
+        # https://github.com/Pyhass/Pyhiveapi/pull/88
         # pyhive-integration > unasync > setuptools
         "unasync": {"setuptools"}
     },
     "influxdb": {
+        # https://github.com/influxdata/influxdb-client-python/issues/695
         # influxdb-client > setuptools
         "influxdb-client": {"setuptools"}
     },
     "keba": {
+        # https://github.com/jsbronder/asyncio-dgram/issues/20
         # keba-kecontact > asyncio-dgram > setuptools
         "asyncio-dgram": {"setuptools"}
     },
     "lyric": {
+        # https://github.com/timmo001/aiolyric/issues/115
         # aiolyric > incremental > setuptools
         "incremental": {"setuptools"}
     },
     "microbees": {
+        # https://github.com/microBeesTech/pythonSDK/issues/6
         # microbeespy > setuptools
         "microbeespy": {"setuptools"}
     },
     "minecraft_server": {
+        # https://github.com/jsbronder/asyncio-dgram/issues/20
         # mcstatus > asyncio-dgram > setuptools
         "asyncio-dgram": {"setuptools"}
     },
     "mochad": {
+        # https://github.com/mtreinish/pymochad/issues/8
         # pymochad > pbr > setuptools
         "pbr": {"setuptools"}
     },
     "mystrom": {
+        # https://github.com/home-assistant-ecosystem/python-mystrom/issues/55
         # python-mystrom > setuptools
         "python-mystrom": {"setuptools"}
     },
     "nx584": {
+        # https://bugs.launchpad.net/python-stevedore/+bug/2111694
         # pynx584 > stevedore > pbr > setuptools
         "pbr": {"setuptools"}
     },
     "opnsense": {
+        # https://github.com/mtreinish/pyopnsense/issues/27
         # pyopnsense > pbr > setuptools
         "pbr": {"setuptools"}
     },
     "opower": {
+        # https://github.com/arrow-py/arrow/issues/1169 (fixed not yet released)
         # opower > arrow > types-python-dateutil
         "arrow": {"types-python-dateutil"}
     },
     "osoenergy": {
+        # https://github.com/osohotwateriot/apyosohotwaterapi/pull/4
         # pyosoenergyapi > unasync > setuptools
         "unasync": {"setuptools"}
     },
     "ovo_energy": {
+        # https://github.com/timmo001/ovoenergy/issues/132
         # ovoenergy > incremental > setuptools
         "incremental": {"setuptools"}
     },
     "remote_rpi_gpio": {
+        # https://github.com/waveform80/colorzero/issues/9
         # gpiozero > colorzero > setuptools
         "colorzero": {"setuptools"}
     },
     "system_bridge": {
+        # https://github.com/timmo001/system-bridge-connector/pull/78
         # systembridgeconnector > incremental > setuptools
         "incremental": {"setuptools"}
     },
     "travisci": {
-        # travisci > pytest-rerunfailures > pytest
+        # https://github.com/menegazzo/travispy seems to be unmaintained
+        # and unused https://www.home-assistant.io/integrations/travisci
+        # travispy > pytest-rerunfailures > pytest
         "pytest-rerunfailures": {"pytest"},
-        # travisci > pytest
+        # travispy > pytest
         "travispy": {"pytest"},
     },
     "zha": {
+        # https://github.com/waveform80/colorzero/issues/9
         # zha > zigpy-zigate > gpiozero > colorzero > setuptools
         "colorzero": {"setuptools"}
     },
