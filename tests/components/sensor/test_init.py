@@ -24,7 +24,7 @@ from homeassistant.components.sensor import (
     async_rounded_state,
     async_update_suggested_units,
 )
-from homeassistant.components.sensor.const import STATE_CLASS_UNITS
+from homeassistant.components.sensor.const import STATE_CLASS_UNITS, UNIT_CONVERTERS
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -2938,3 +2938,54 @@ async def test_suggested_unit_guard_valid_unit(
     assert entry.options["sensor.private"] == {
         "suggested_unit_of_measurement": suggested_unit
     }
+
+
+def test_device_class_units_are_complete() -> None:
+    """Test that the device class units enum is complete."""
+    no_unit_device_classes = {
+        SensorDeviceClass.DATE,
+        SensorDeviceClass.ENUM,
+        SensorDeviceClass.MONETARY,
+        SensorDeviceClass.TIMESTAMP,
+    }
+    unit_device_classes = {
+        device_class.value for device_class in SensorDeviceClass
+    } - no_unit_device_classes
+    assert set(DEVICE_CLASS_UNITS.keys()) == unit_device_classes
+
+
+def test_device_class_converters_are_complete() -> None:
+    """Test that the device class converters enum is complete."""
+    no_converter_device_classes = {
+        SensorDeviceClass.APPARENT_POWER,
+        SensorDeviceClass.AQI,
+        SensorDeviceClass.BATTERY,
+        SensorDeviceClass.CO,
+        SensorDeviceClass.CO2,
+        SensorDeviceClass.DATE,
+        SensorDeviceClass.ENUM,
+        SensorDeviceClass.FREQUENCY,
+        SensorDeviceClass.HUMIDITY,
+        SensorDeviceClass.ILLUMINANCE,
+        SensorDeviceClass.IRRADIANCE,
+        SensorDeviceClass.MOISTURE,
+        SensorDeviceClass.MONETARY,
+        SensorDeviceClass.NITROGEN_DIOXIDE,
+        SensorDeviceClass.NITROGEN_MONOXIDE,
+        SensorDeviceClass.NITROUS_OXIDE,
+        SensorDeviceClass.OZONE,
+        SensorDeviceClass.PH,
+        SensorDeviceClass.PM1,
+        SensorDeviceClass.PM10,
+        SensorDeviceClass.PM25,
+        SensorDeviceClass.REACTIVE_POWER,
+        SensorDeviceClass.SIGNAL_STRENGTH,
+        SensorDeviceClass.SOUND_PRESSURE,
+        SensorDeviceClass.SULPHUR_DIOXIDE,
+        SensorDeviceClass.TIMESTAMP,
+        SensorDeviceClass.WIND_DIRECTION,
+    }
+    converter_device_classes = {
+        device_class.value for device_class in SensorDeviceClass
+    } - no_converter_device_classes
+    assert set(UNIT_CONVERTERS.keys()) == converter_device_classes

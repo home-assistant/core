@@ -4,7 +4,7 @@ from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pypaperless.models import Statistic
+from pypaperless.models import Statistic, Status
 import pytest
 
 from homeassistant.components.paperless_ngx.const import DOMAIN
@@ -14,6 +14,12 @@ from . import setup_integration
 from .const import USER_INPUT_ONE
 
 from tests.common import MockConfigEntry, load_fixture
+
+
+@pytest.fixture
+def mock_status_data() -> Generator[MagicMock]:
+    """Return test status data."""
+    return json.loads(load_fixture("test_data_status.json", DOMAIN))
 
 
 @pytest.fixture
@@ -29,7 +35,9 @@ def mock_statistic_data_update() -> Generator[MagicMock]:
 
 
 @pytest.fixture(autouse=True)
-def mock_paperless(mock_statistic_data: MagicMock) -> Generator[AsyncMock]:
+def mock_paperless(
+    mock_statistic_data: MagicMock, mock_status_data: MagicMock
+) -> Generator[AsyncMock]:
     """Mock the pypaperless.Paperless client."""
     with (
         patch(
@@ -38,6 +46,10 @@ def mock_paperless(mock_statistic_data: MagicMock) -> Generator[AsyncMock]:
         ) as paperless_mock,
         patch(
             "homeassistant.components.paperless_ngx.config_flow.Paperless",
+            new=paperless_mock,
+        ),
+        patch(
+            "homeassistant.components.paperless_ngx.Paperless",
             new=paperless_mock,
         ),
     ):
@@ -49,6 +61,11 @@ def mock_paperless(mock_statistic_data: MagicMock) -> Generator[AsyncMock]:
         paperless.statistics = AsyncMock(
             return_value=Statistic.create_with_data(
                 paperless, data=mock_statistic_data, fetched=True
+            )
+        )
+        paperless.status = AsyncMock(
+            return_value=Status.create_with_data(
+                paperless, data=mock_status_data, fetched=True
             )
         )
 
