@@ -54,6 +54,7 @@
       'media_duration': 300,
       'media_position': 0,
       'media_title': 'Test Track',
+      'source': 'Spotify Connect',
       'supported_features': <MediaPlayerEntityFeature: 8320959>,
       'volume_level': 0.2,
     }),

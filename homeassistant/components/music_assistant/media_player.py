@@ -297,13 +297,13 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         source_mappings: dict[str, str] = {}
         active_source_name: str | None = None
         for source in player.source_list:
+            if source.id == player.active_source:
+                active_source_name = source.name
             if source.passive:
                 # ignore passive sources because HA does not differentiate between
                 # active and passive sources
                 continue
             source_mappings[source.name] = source.id
-            if source.id == player.active_source:
-                active_source_name = source.name
         self._attr_source_list = list(source_mappings.keys())
         self._source_list_mapping = source_mappings
         self._attr_source = active_source_name
