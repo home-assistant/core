@@ -1177,7 +1177,7 @@ RPC_SENSORS: Final = {
     "temperature": RpcSensorDescription(
         key="switch",
         sub_key="temperature",
-        name="Relay temperature",
+        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value=lambda status, _: status["tC"],
         suggested_display_precision=1,
@@ -1190,7 +1190,7 @@ RPC_SENSORS: Final = {
     "temperature_light": RpcSensorDescription(
         key="light",
         sub_key="temperature",
-        name="Relay temperature",
+        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value=lambda status, _: status["tC"],
         suggested_display_precision=1,
@@ -1203,7 +1203,7 @@ RPC_SENSORS: Final = {
     "temperature_cct": RpcSensorDescription(
         key="cct",
         sub_key="temperature",
-        name="Relay temperature",
+        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value=lambda status, _: status["tC"],
         suggested_display_precision=1,
@@ -1216,7 +1216,7 @@ RPC_SENSORS: Final = {
     "temperature_rgb": RpcSensorDescription(
         key="rgb",
         sub_key="temperature",
-        name="Relay temperature",
+        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value=lambda status, _: status["tC"],
         suggested_display_precision=1,
@@ -1229,7 +1229,7 @@ RPC_SENSORS: Final = {
     "temperature_rgbw": RpcSensorDescription(
         key="rgbw",
         sub_key="temperature",
-        name="Relay temperature",
+        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value=lambda status, _: status["tC"],
         suggested_display_precision=1,
