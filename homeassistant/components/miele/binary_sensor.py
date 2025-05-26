@@ -23,6 +23,8 @@ from .const import MieleAppliance
 from .coordinator import MieleConfigEntry
 from .entity import MieleEntity
 
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 
 

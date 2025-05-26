@@ -5,5 +5,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/local_todo",
   "iot_class": "local_polling",
-  "requirements": ["ical==9.2.1"]
+  "requirements": ["ical==9.2.4"]
 }

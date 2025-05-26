@@ -653,7 +653,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
       - name: Dependency review
-        uses: actions/dependency-review-action@v4.7.0
+        uses: actions/dependency-review-action@v4.7.1
         with:
           license-check: false # We use our own license audit checks
 
@@ -944,7 +944,8 @@ jobs:
             bluez \
             ffmpeg \
             libturbojpeg \
-            libgammu-dev
+            libgammu-dev \
+            libxml2-utils
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ matrix.python-version }}
@@ -1020,6 +1021,12 @@ jobs:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
           overwrite: true
+      - name: Beautify test results
+        # For easier identification of parsing errors
+        if: needs.info.outputs.skip_coverage != 'true'
+        run: |
+          xmllint --format "junit.xml" > "junit.xml-tmp"
+          mv "junit.xml-tmp" "junit.xml"
       - name: Upload test results artifact
         if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
         uses: actions/upload-artifact@v4.6.2
@@ -1070,7 +1077,8 @@ jobs:
             bluez \
             ffmpeg \
             libturbojpeg \
-            libmariadb-dev-compat
+            libmariadb-dev-compat \
+            libxml2-utils
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ matrix.python-version }}
@@ -1154,6 +1162,12 @@ jobs:
             steps.pytest-partial.outputs.mariadb }}
           path: coverage.xml
           overwrite: true
+      - name: Beautify test results
+        # For easier identification of parsing errors
+        if: needs.info.outputs.skip_coverage != 'true'
+        run: |
+          xmllint --format "junit.xml" > "junit.xml-tmp"
+          mv "junit.xml-tmp" "junit.xml"
       - name: Upload test results artifact
         if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
         uses: actions/upload-artifact@v4.6.2
@@ -1202,7 +1216,8 @@ jobs:
           sudo apt-get -y install \
             bluez \
             ffmpeg \
-            libturbojpeg
+            libturbojpeg \
+            libxml2-utils
           sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
           sudo apt-get -y install \
             postgresql-server-dev-14
@@ -1290,6 +1305,12 @@ jobs:
             steps.pytest-partial.outputs.postgresql }}
           path: coverage.xml
           overwrite: true
+      - name: Beautify test results
+        # For easier identification of parsing errors
+        if: needs.info.outputs.skip_coverage != 'true'
+        run: |
+          xmllint --format "junit.xml" > "junit.xml-tmp"
+          mv "junit.xml-tmp" "junit.xml"
       - name: Upload test results artifact
         if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
         uses: actions/upload-artifact@v4.6.2
@@ -1320,7 +1341,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@v5.4.2
+        uses: codecov/codecov-action@v5.4.3
         with:
           fail_ci_if_error: true
           flags: full-suite
@@ -1357,7 +1378,8 @@ jobs:
             bluez \
             ffmpeg \
             libturbojpeg \
-            libgammu-dev
+            libgammu-dev \
+            libxml2-utils
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ matrix.python-version }}
@@ -1436,6 +1458,12 @@ jobs:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
           overwrite: true
+      - name: Beautify test results
+        # For easier identification of parsing errors
+        if: needs.info.outputs.skip_coverage != 'true'
+        run: |
+          xmllint --format "junit.xml" > "junit.xml-tmp"
+          mv "junit.xml-tmp" "junit.xml"
       - name: Upload test results artifact
         if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
         uses: actions/upload-artifact@v4.6.2
@@ -1463,7 +1491,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v5.4.2
+        uses: codecov/codecov-action@v5.4.3
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}

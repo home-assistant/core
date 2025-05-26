@@ -18,6 +18,7 @@ from miio import (
     PhilipsEyecare,
     PhilipsMoonlight,
 )
+from miio.gateway.devices.light import LightBulb
 from miio.gateway.gateway import (
     GATEWAY_MODEL_AC_V1,
     GATEWAY_MODEL_AC_V2,
@@ -33,7 +34,6 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE,
@@ -51,7 +51,6 @@ from .const import (
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
     DOMAIN,
-    KEY_COORDINATOR,
     MODELS_LIGHT_BULB,
     MODELS_LIGHT_CEILING,
     MODELS_LIGHT_EYECARE,
@@ -67,7 +66,7 @@ from .const import (
     SERVICE_SET_SCENE,
 )
 from .entity import XiaomiGatewayDevice, XiaomiMiioEntity
-from .typing import ServiceMethodDetails
+from .typing import ServiceMethodDetails, XiaomiMiioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -131,7 +130,7 @@ SERVICE_TO_METHOD = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: XiaomiMiioConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Xiaomi light from a config entry."""
@@ -140,7 +139,7 @@ async def async_setup_entry(
     light: MiioDevice
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
-        gateway = hass.data[DOMAIN][config_entry.entry_id][CONF_GATEWAY]
+        gateway = config_entry.runtime_data.gateway
         # Gateway light
         if gateway.model not in [
             GATEWAY_MODEL_AC_V1,
@@ -154,7 +153,7 @@ async def async_setup_entry(
         sub_devices = gateway.devices
         for sub_device in sub_devices.values():
             if sub_device.device_type == "LightBulb":
-                coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR][
+                coordinator = config_entry.runtime_data.gateway_coordinators[
                     sub_device.sid
                 ]
                 entities.append(
@@ -260,20 +259,21 @@ class XiaomiPhilipsAbstractLight(XiaomiMiioEntity, LightEntity):
 
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _device: Ceil | PhilipsBulb | PhilipsEyecare | PhilipsMoonlight
 
-    def __init__(self, name, device, entry, unique_id):
+    def __init__(
+        self,
+        name: str,
+        device: Ceil | PhilipsBulb | PhilipsEyecare | PhilipsMoonlight,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the light device."""
         super().__init__(name, device, entry, unique_id)
 
         self._brightness = None
-        self._available = False
         self._state = None
-        self._state_attrs = {}
-
-    @property
-    def available(self):
-        """Return true when state is known."""
-        return self._available
+        self._state_attrs: dict[str, Any] = {}
 
     @property
     def extra_state_attributes(self):
@@ -297,9 +297,9 @@ class XiaomiPhilipsAbstractLight(XiaomiMiioEntity, LightEntity):
                 partial(func, *args, **kwargs)
             )
         except DeviceException as exc:
-            if self._available:
+            if self._attr_available:
                 _LOGGER.error(mask_error, exc)
-                self._available = False
+                self._attr_available = False
 
             return False
 
@@ -334,14 +334,14 @@ class XiaomiPhilipsAbstractLight(XiaomiMiioEntity, LightEntity):
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
-            if self._available:
-                self._available = False
+            if self._attr_available:
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
             return
 
         _LOGGER.debug("Got new state: %s", state)
-        self._available = True
+        self._attr_available = True
         self._state = state.is_on
         self._brightness = ceil((255 / 100.0) * state.brightness)
 
@@ -349,7 +349,15 @@ class XiaomiPhilipsAbstractLight(XiaomiMiioEntity, LightEntity):
 class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
     """Representation of a Generic Xiaomi Philips Light."""
 
-    def __init__(self, name, device, entry, unique_id):
+    _device: Ceil | PhilipsBulb | PhilipsEyecare | PhilipsMoonlight
+
+    def __init__(
+        self,
+        name: str,
+        device: Ceil | PhilipsBulb | PhilipsEyecare | PhilipsMoonlight,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the light device."""
         super().__init__(name, device, entry, unique_id)
 
@@ -360,14 +368,14 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
-            if self._available:
-                self._available = False
+            if self._attr_available:
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
             return
 
         _LOGGER.debug("Got new state: %s", state)
-        self._available = True
+        self._attr_available = True
         self._state = state.is_on
         self._brightness = ceil((255 / 100.0) * state.brightness)
 
@@ -391,7 +399,7 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
         """Set delayed turn off."""
         await self._try_command(
             "Setting the turn off delay failed.",
-            self._device.delay_off,
+            self._device.delay_off,  # type: ignore[union-attr]
             time_period.total_seconds(),
         )
 
@@ -422,12 +430,19 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
 
     _attr_color_mode = ColorMode.COLOR_TEMP
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+    _device: Ceil | PhilipsBulb | PhilipsMoonlight
 
-    def __init__(self, name, device, entry, unique_id):
+    def __init__(
+        self,
+        name: str,
+        device: Ceil | PhilipsBulb | PhilipsMoonlight,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the light device."""
         super().__init__(name, device, entry, unique_id)
 
-        self._color_temp = None
+        self._color_temp: int | None = None
 
     @property
     def _current_mireds(self):
@@ -536,14 +551,14 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
-            if self._available:
-                self._available = False
+            if self._attr_available:
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
             return
 
         _LOGGER.debug("Got new state: %s", state)
-        self._available = True
+        self._attr_available = True
         self._state = state.is_on
         self._brightness = ceil((255 / 100.0) * state.brightness)
         self._color_temp = self.translate(
@@ -576,7 +591,15 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
 class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
     """Representation of a Xiaomi Philips Ceiling Lamp."""
 
-    def __init__(self, name, device, entry, unique_id):
+    _device: Ceil
+
+    def __init__(
+        self,
+        name: str,
+        device: Ceil,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the light device."""
         super().__init__(name, device, entry, unique_id)
 
@@ -599,14 +622,14 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
-            if self._available:
-                self._available = False
+            if self._attr_available:
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
             return
 
         _LOGGER.debug("Got new state: %s", state)
-        self._available = True
+        self._attr_available = True
         self._state = state.is_on
         self._brightness = ceil((255 / 100.0) * state.brightness)
         self._color_temp = self.translate(
@@ -636,7 +659,15 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
 class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
     """Representation of a Xiaomi Philips Eyecare Lamp 2."""
 
-    def __init__(self, name, device, entry, unique_id):
+    _device: PhilipsEyecare
+
+    def __init__(
+        self,
+        name: str,
+        device: PhilipsEyecare,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the light device."""
         super().__init__(name, device, entry, unique_id)
 
@@ -649,14 +680,14 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
-            if self._available:
-                self._available = False
+            if self._attr_available:
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
             return
 
         _LOGGER.debug("Got new state: %s", state)
-        self._available = True
+        self._attr_available = True
         self._state = state.is_on
         self._brightness = ceil((255 / 100.0) * state.brightness)
 
@@ -749,7 +780,15 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
 class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
     """Representation of a Xiaomi Philips Eyecare Lamp Ambient Light."""
 
-    def __init__(self, name, device, entry, unique_id):
+    _device: PhilipsEyecare
+
+    def __init__(
+        self,
+        name: str,
+        device: PhilipsEyecare,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the light device."""
         name = f"{name} Ambient Light"
         if unique_id is not None:
@@ -792,14 +831,14 @@ class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
-            if self._available:
-                self._available = False
+            if self._attr_available:
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
             return
 
         _LOGGER.debug("Got new state: %s", state)
-        self._available = True
+        self._attr_available = True
         self._state = state.ambient
         self._brightness = ceil((255 / 100.0) * state.ambient_brightness)
 
@@ -808,12 +847,19 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
     """Representation of a Xiaomi Philips Zhirui Bedside Lamp."""
 
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
+    _device: PhilipsMoonlight
 
-    def __init__(self, name, device, entry, unique_id):
+    def __init__(
+        self,
+        name: str,
+        device: PhilipsMoonlight,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the light device."""
         super().__init__(name, device, entry, unique_id)
 
-        self._hs_color = None
+        self._hs_color: tuple[float, float] | None = None
         self._state_attrs.pop(ATTR_DELAYED_TURN_OFF)
         self._state_attrs.update(
             {
@@ -841,7 +887,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
         return self._hs_color
 
     @property
-    def color_mode(self):
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self.hs_color:
             return ColorMode.HS
@@ -956,14 +1002,14 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
-            if self._available:
-                self._available = False
+            if self._attr_available:
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
             return
 
         _LOGGER.debug("Got new state: %s", state)
-        self._available = True
+        self._attr_available = True
         self._state = state.is_on
         self._brightness = ceil((255 / 100.0) * state.brightness)
         self._color_temp = self.translate(
@@ -1000,19 +1046,14 @@ class XiaomiGatewayLight(LightEntity):
     def __init__(self, gateway_device, gateway_name, gateway_device_id):
         """Initialize the XiaomiGatewayLight."""
         self._gateway = gateway_device
-        self._name = f"{gateway_name} Light"
+        self._attr_name = f"{gateway_name} Light"
         self._gateway_device_id = gateway_device_id
-        self._unique_id = gateway_device_id
-        self._available = False
+        self._attr_unique_id = gateway_device_id
+        self._attr_available = False
         self._is_on = None
         self._brightness_pct = 100
         self._rgb = (255, 255, 255)
         self._hs = (0, 0)
-
-    @property
-    def unique_id(self):
-        """Return an unique ID."""
-        return self._unique_id
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -1020,16 +1061,6 @@ class XiaomiGatewayLight(LightEntity):
         return DeviceInfo(
             identifiers={(DOMAIN, self._gateway_device_id)},
         )
-
-    @property
-    def name(self):
-        """Return the name of this entity, if any."""
-        return self._name
-
-    @property
-    def available(self):
-        """Return true when state is known."""
-        return self._available
 
     @property
     def is_on(self):
@@ -1074,14 +1105,14 @@ class XiaomiGatewayLight(LightEntity):
                 self._gateway.light.rgb_status
             )
         except GatewayException as ex:
-            if self._available:
-                self._available = False
+            if self._attr_available:
+                self._attr_available = False
                 _LOGGER.error(
                     "Got exception while fetching the gateway light state: %s", ex
                 )
             return
 
-        self._available = True
+        self._attr_available = True
         self._is_on = state_dict["is_on"]
 
         if self._is_on:
@@ -1095,6 +1126,7 @@ class XiaomiGatewayBulb(XiaomiGatewayDevice, LightEntity):
 
     _attr_color_mode = ColorMode.COLOR_TEMP
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+    _sub_device: LightBulb
 
     @property
     def brightness(self):
