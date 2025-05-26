@@ -48,6 +48,12 @@ class MockCalendarEntity(CalendarEntity):
         """Initialize entity."""
         self._attr_name = name.capitalize()
         self._events = events or []
+        self._color: str | None = None
+
+    @property
+    def color(self) -> str | None:
+        """Return the color of the calendar entity."""
+        return self._color
 
     @property
     def event(self) -> CalendarEvent | None:
