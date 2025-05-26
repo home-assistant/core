@@ -1,4 +1,4 @@
-send_custom:
+send_text_command:
   target:
     entity:
       integration: amazon_devices
@@ -6,7 +6,7 @@ send_custom:
     device:
       integration: amazon_devices
   fields:
-    cmd:
+    text_command:
       required: true
       example: "Play B.B.C. on TuneIn"
       selector:
