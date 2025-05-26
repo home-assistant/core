@@ -88,10 +88,7 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
 
         # Store data
         for key, val in self._api.storage.items():
-            if key == "timeline":
-                data[key] = val
-            else:
-                for sub_key, sub_val in val.items():
-                    data[f"{key}_{sub_key}"] = sub_val
+            for sub_key, sub_val in val.items():
+                data[f"{key}_{sub_key}"] = sub_val
 
         return data
