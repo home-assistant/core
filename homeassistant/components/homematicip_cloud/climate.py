@@ -4,16 +4,15 @@ from __future__ import annotations
 
 from typing import Any
 
-from homematicip.aio.device import (
-    AsyncHeatingThermostat,
-    AsyncHeatingThermostatCompact,
-    AsyncHeatingThermostatEvo,
-)
-from homematicip.aio.group import AsyncHeatingGroup
 from homematicip.base.enums import AbsenceType
-from homematicip.device import Switch
+from homematicip.device import (
+    HeatingThermostat,
+    HeatingThermostatCompact,
+    HeatingThermostatEvo,
+    Switch,
+)
 from homematicip.functionalHomes import IndoorClimateHome
-from homematicip.group import HeatingCoolingProfile
+from homematicip.group import HeatingCoolingProfile, HeatingGroup
 
 from homeassistant.components.climate import (
     PRESET_AWAY,
@@ -25,7 +24,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -33,7 +31,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .entity import HomematicipGenericEntity
-from .hap import HomematicipHAP
+from .hap import HomematicIPConfigEntry, HomematicipHAP
 
 HEATING_PROFILES = {"PROFILE_1": 0, "PROFILE_2": 1, "PROFILE_3": 2}
 COOLING_PROFILES = {"PROFILE_4": 3, "PROFILE_5": 4, "PROFILE_6": 5}
@@ -56,16 +54,16 @@ HMIP_ECO_CM = "ECO"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HomematicIPConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP climate from a config entry."""
-    hap = hass.data[DOMAIN][config_entry.unique_id]
+    hap = config_entry.runtime_data
 
     async_add_entities(
         HomematicipHeatingGroup(hap, device)
         for device in hap.home.groups
-        if isinstance(device, AsyncHeatingGroup)
+        if isinstance(device, HeatingGroup)
     )
 
 
@@ -82,7 +80,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, hap: HomematicipHAP, device: AsyncHeatingGroup) -> None:
+    def __init__(self, hap: HomematicipHAP, device: HeatingGroup) -> None:
         """Initialize heating group."""
         device.modelType = "HmIP-Heating-Group"
         super().__init__(hap, device)
@@ -214,7 +212,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
             return
 
         if self.min_temp <= temperature <= self.max_temp:
-            await self._device.set_point_temperature(temperature)
+            await self._device.set_point_temperature_async(temperature)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
@@ -222,23 +220,23 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
             return
 
         if hvac_mode == HVACMode.AUTO:
-            await self._device.set_control_mode(HMIP_AUTOMATIC_CM)
+            await self._device.set_control_mode_async(HMIP_AUTOMATIC_CM)
         else:
-            await self._device.set_control_mode(HMIP_MANUAL_CM)
+            await self._device.set_control_mode_async(HMIP_MANUAL_CM)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if self._device.boostMode and preset_mode != PRESET_BOOST:
-            await self._device.set_boost(False)
+            await self._device.set_boost_async(False)
         if preset_mode == PRESET_BOOST:
-            await self._device.set_boost()
+            await self._device.set_boost_async()
         if preset_mode == PRESET_ECO:
-            await self._device.set_control_mode(HMIP_ECO_CM)
+            await self._device.set_control_mode_async(HMIP_ECO_CM)
         if preset_mode in self._device_profile_names:
             profile_idx = self._get_profile_idx_by_name(preset_mode)
             if self._device.controlMode != HMIP_AUTOMATIC_CM:
                 await self.async_set_hvac_mode(HVACMode.AUTO)
-            await self._device.set_active_profile(profile_idx)
+            await self._device.set_active_profile_async(profile_idx)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -332,20 +330,15 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     @property
     def _first_radiator_thermostat(
         self,
-    ) -> (
-        AsyncHeatingThermostat
-        | AsyncHeatingThermostatCompact
-        | AsyncHeatingThermostatEvo
-        | None
-    ):
+    ) -> HeatingThermostat | HeatingThermostatCompact | HeatingThermostatEvo | None:
         """Return the first radiator thermostat from the hmip heating group."""
         for device in self._device.devices:
             if isinstance(
                 device,
                 (
-                    AsyncHeatingThermostat,
-                    AsyncHeatingThermostatCompact,
-                    AsyncHeatingThermostatEvo,
+                    HeatingThermostat,
+                    HeatingThermostatCompact,
+                    HeatingThermostatEvo,
                 ),
             ):
                 return device

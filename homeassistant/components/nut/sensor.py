@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
-    STATE_UNKNOWN,
     EntityCategory,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
@@ -1120,9 +1119,9 @@ class NUTSensor(NUTBaseEntity, SensorEntity):
         return status.get(self.entity_description.key)
 
 
-def _format_display_state(status: dict[str, str]) -> str:
+def _format_display_state(status: dict[str, str]) -> str | None:
     """Return UPS display state."""
     try:
         return ", ".join(STATE_TYPES[state] for state in status[KEY_STATUS].split())
     except KeyError:
-        return STATE_UNKNOWN
+        return None

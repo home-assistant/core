@@ -464,6 +464,9 @@ async def test_show_progress(hass: HomeAssistant, manager: MockFlowManager) -> N
     """Test show progress logic."""
     manager.hass = hass
     events = []
+    progress_update_events = async_capture_events(
+        hass, data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE
+    )
     task_one_evt = asyncio.Event()
     task_two_evt = asyncio.Event()
     event_received_evt = asyncio.Event()
@@ -486,7 +489,9 @@ async def test_show_progress(hass: HomeAssistant, manager: MockFlowManager) -> N
                 await task_one_evt.wait()
 
             async def long_running_job_two() -> None:
+                self.async_update_progress(0.25)
                 await task_two_evt.wait()
+                self.async_update_progress(0.75)
                 self.data = {"title": "Hello"}
 
             uncompleted_task: asyncio.Task[None] | None = None
@@ -545,6 +550,12 @@ async def test_show_progress(hass: HomeAssistant, manager: MockFlowManager) -> N
     result = await manager.async_configure(result["flow_id"])
     assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS
     assert result["progress_action"] == "task_two"
+    assert len(progress_update_events) == 1
+    assert progress_update_events[0].data == {
+        "handler": "test",
+        "flow_id": result["flow_id"],
+        "progress": 0.25,
+    }
 
     # Set task two done and wait for event
     task_two_evt.set()
@@ -555,6 +566,12 @@ async def test_show_progress(hass: HomeAssistant, manager: MockFlowManager) -> N
         "handler": "test",
         "flow_id": result["flow_id"],
         "refresh": True,
+    }
+    assert len(progress_update_events) == 2
+    assert progress_update_events[1].data == {
+        "handler": "test",
+        "flow_id": result["flow_id"],
+        "progress": 0.75,
     }
 
     # Frontend refreshes the flow

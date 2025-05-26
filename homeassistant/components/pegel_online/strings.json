@@ -2,10 +2,10 @@
   "config": {
     "step": {
       "user": {
-        "description": "Select the area, where you want to search for water measuring stations",
+        "description": "Select the area in which you want to search for water measuring stations",
         "data": {
           "location": "[%key:common::config_flow::data::location%]",
-          "radius": "Search radius (in km)"
+          "radius": "Search radius"
         }
       },
       "select_station": {
