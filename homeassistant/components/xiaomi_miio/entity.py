@@ -4,9 +4,10 @@ import datetime
 from enum import Enum
 from functools import partial
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from miio import DeviceException
+from miio.gateway.devices import SubDevice
 
 from homeassistant.const import ATTR_CONNECTIONS, CONF_MAC, CONF_MODEL
 from homeassistant.helpers import device_registry as dr
@@ -18,6 +19,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import ATTR_AVAILABLE, DOMAIN
+from .typing import XiaomiMiioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -150,31 +152,28 @@ class XiaomiCoordinatedMiioEntity[_T: DataUpdateCoordinator[Any]](
         return time.isoformat()
 
 
-class XiaomiGatewayDevice(CoordinatorEntity, Entity):
+class XiaomiGatewayDevice(
+    CoordinatorEntity[DataUpdateCoordinator[dict[str, bool]]], Entity
+):
     """Representation of a base Xiaomi Gateway Device."""
 
-    def __init__(self, coordinator, sub_device, entry):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[dict[str, bool]],
+        sub_device: SubDevice,
+        entry: XiaomiMiioConfigEntry,
+    ) -> None:
         """Initialize the Xiaomi Gateway Device."""
         super().__init__(coordinator)
         self._sub_device = sub_device
         self._entry = entry
-        self._unique_id = sub_device.sid
-        self._name = f"{sub_device.name} ({sub_device.sid})"
+        self._attr_unique_id = sub_device.sid
+        self._attr_name = f"{sub_device.name} ({sub_device.sid})"
 
-    @property
-    def unique_id(self):
-        """Return an unique ID."""
-        return self._unique_id
+        if TYPE_CHECKING:
+            assert self._entry.unique_id is not None
 
-    @property
-    def name(self):
-        """Return the name of this entity, if any."""
-        return self._name
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info of the gateway."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._sub_device.sid)},
             via_device=(DOMAIN, self._entry.unique_id),
             manufacturer="Xiaomi",

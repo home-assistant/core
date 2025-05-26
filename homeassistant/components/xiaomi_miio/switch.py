@@ -9,6 +9,8 @@ import logging
 from typing import Any
 
 from miio import AirConditioningCompanionV3, ChuangmiPlug, DeviceException, PowerStrip
+from miio.gateway.devices import SubDevice
+from miio.gateway.devices.switch import Switch
 from miio.powerstrip import PowerMode
 import voluptuous as vol
 
@@ -30,6 +32,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     CONF_FLOW_TYPE,
@@ -748,17 +751,24 @@ class XiaomiGatewaySwitch(XiaomiGatewayDevice, SwitchEntity):
     """Representation of a XiaomiGatewaySwitch."""
 
     _attr_device_class = SwitchDeviceClass.SWITCH
+    _sub_device: Switch
 
-    def __init__(self, coordinator, sub_device, entry, variable):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[dict[str, bool]],
+        sub_device: SubDevice,
+        entry: XiaomiMiioConfigEntry,
+        variable: str,
+    ) -> None:
         """Initialize the XiaomiSensor."""
         super().__init__(coordinator, sub_device, entry)
         self._channel = GATEWAY_SWITCH_VARS[variable][KEY_CHANNEL]
         self._data_key = f"status_ch{self._channel}"
-        self._unique_id = f"{sub_device.sid}-ch{self._channel}"
-        self._name = f"{sub_device.name} ch{self._channel} ({sub_device.sid})"
+        self._attr_unique_id = f"{sub_device.sid}-ch{self._channel}"
+        self._attr_name = f"{sub_device.name} ch{self._channel} ({sub_device.sid})"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         return self._sub_device.status[self._data_key] == "on"
 

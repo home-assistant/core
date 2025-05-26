@@ -8,6 +8,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from miio import AirQualityMonitor, Device as MiioDevice, DeviceException
+from miio.gateway.devices import SubDevice
 from miio.gateway.gateway import (
     GATEWAY_MODEL_AC_V1,
     GATEWAY_MODEL_AC_V2,
@@ -46,6 +47,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from . import VacuumCoordinatorDataAttributes
@@ -977,11 +979,17 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
 class XiaomiGatewaySensor(XiaomiGatewayDevice, SensorEntity):
     """Representation of a XiaomiGatewaySensor."""
 
-    def __init__(self, coordinator, sub_device, entry, description):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[dict[str, bool]],
+        sub_device: SubDevice,
+        entry: XiaomiMiioConfigEntry,
+        description: XiaomiMiioSensorDescription,
+    ) -> None:
         """Initialize the XiaomiSensor."""
         super().__init__(coordinator, sub_device, entry)
-        self._unique_id = f"{sub_device.sid}-{description.key}"
-        self._name = f"{description.key} ({sub_device.sid})".capitalize()
+        self._attr_unique_id = f"{sub_device.sid}-{description.key}"
+        self._attr_name = f"{description.key} ({sub_device.sid})".capitalize()
         self.entity_description = description
 
     @property
