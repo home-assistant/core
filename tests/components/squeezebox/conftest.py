@@ -131,11 +131,15 @@ async def mock_async_play_announcement(media_id: str) -> bool:
 
 
 async def mock_async_browse(
-    media_type: MediaType, limit: int, browse_id: tuple | None = None
+    media_type: MediaType,
+    limit: int,
+    browse_id: tuple | None = None,
+    search_query: str | None = None,
 ) -> dict | None:
     """Mock the async_browse method of pysqueezebox.Player."""
     child_types = {
         "favorites": "favorites",
+        "favorite": "favorite",
         "new music": "album",
         "album artists": "artists",
         "albums": "album",
@@ -224,6 +228,21 @@ async def mock_async_browse(
                 "items": fake_items,
             }
         return None
+
+    if search_query:
+        if search_query not in [x["title"] for x in fake_items]:
+            return None
+
+        for item in fake_items:
+            if (
+                item["title"] == search_query
+                and item["item_type"] == child_types[media_type]
+            ):
+                return {
+                    "title": media_type,
+                    "items": [item],
+                }
+
     if (
         media_type in MEDIA_TYPE_TO_SQUEEZEBOX.values()
         or media_type == "app-fakecommand"
