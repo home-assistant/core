@@ -74,7 +74,7 @@ def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> list[dict[str,
         )
 
     try:
-        client = await hass.async_add_executor_job(create_proxmox_client)
+        client = hass.async_add_executor_job(create_proxmox_client)
     except AuthenticationError as err:
         raise ProxmoxAuthenticationError from err
     except SSLError as err:
@@ -83,7 +83,7 @@ def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> list[dict[str,
         raise ProxmoxConnectTimeout from err
 
     try:
-        nodes = await hass.async_add_executor_job(client.nodes.get)
+        nodes = hass.async_add_executor_job(client.nodes.get)
     except (ResourceException, requests.exceptions.ConnectionError) as err:
         raise ProxmoxNoNodesFound from err
 
@@ -92,10 +92,8 @@ def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> list[dict[str,
     nodes_data: list[dict[str, Any]] = []
     for node in nodes:
         try:
-            vms = await hass.async_add_executor_job(client.nodes(node["node"]).qemu.get)
-            containers = await hass.async_add_executor_job(
-                client.nodes(node["node"]).lxc.get
-            )
+            vms = hass.async_add_executor_job(client.nodes(node["node"]).qemu.get)
+            containers = hass.async_add_executor_job(client.nodes(node["node"]).lxc.get)
         except (ResourceException, requests.exceptions.ConnectionError) as err:
             raise ProxmoxNoNodesFound from err
 
@@ -156,10 +154,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
                     {
                         vol.Required(CONF_NODES): SelectSelector(
                             SelectSelectorConfig(
-                                options=[
-                                    node["node"]
-                                    for node in self._proxmox_nodes
-                                ],
+                                options=[node["node"] for node in self._proxmox_nodes],
                                 mode=SelectSelectorMode.LIST,
                                 multiple=True,
                             )
