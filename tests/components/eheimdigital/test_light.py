@@ -139,7 +139,7 @@ async def test_turn_off(
             blocking=True,
         )
 
-    assert isinstance(exc_info.value.__cause__, EheimDigitalClientError)
+    assert exc_info.value.translation_key == "communication_error"
 
     classic_led_ctrl_mock.turn_off.side_effect = None
 
@@ -197,7 +197,7 @@ async def test_turn_on_brightness(
             blocking=True,
         )
 
-    assert isinstance(exc_info.value.__cause__, EheimDigitalClientError)
+    assert exc_info.value.translation_key == "communication_error"
 
     classic_led_ctrl_mock.turn_on.side_effect = None
 
