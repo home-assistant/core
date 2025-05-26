@@ -184,12 +184,9 @@ class BackblazeBackupAgent(BackupAgent):
                 if (
                     file.file_info is not None
                     and file.file_info.get("metadata_version") == METADATA_VERSION
+                    and file.file_info.get("backup_metadata") is not None
                 ):
-                    backups.append(
-                        AgentBackup.from_dict(
-                            json.loads(file.file_info["backup_metadata"])
-                        )
-                    )
+                    backups.append(self._backup_from_b2_file(file))
 
         await self._hass.async_add_executor_job(get_files)
         _LOGGER.debug("Found %d backups", len(backups))
@@ -209,6 +206,7 @@ class BackblazeBackupAgent(BackupAgent):
                     file.file_info is not None
                     and file.file_info.get("metadata_version") == METADATA_VERSION
                     and file.file_info.get("backup_id") == backup_id
+                    and file.file_info.get("backup_metadata") is not None
                 ):
                     _LOGGER.debug("Found file %s from id %s", file.file_name, backup_id)
                     return file
@@ -222,7 +220,12 @@ class BackblazeBackupAgent(BackupAgent):
         file = await self._find_file_by_id(backup_id)
         if file is None:
             raise BackupNotFound(f"Backup {backup_id} not found")
-        metadata = file.file_info.get("backup_metadata")
-        if metadata is None:
-            raise BackupNotFound(f"Backup {backup_id} not found")
-        return AgentBackup.from_dict(json.loads(metadata))
+        return self._backup_from_b2_file(file)
+
+    def _backup_from_b2_file(self, file: FileVersion) -> AgentBackup:
+        metadata_str: str = file.file_info["backup_metadata"]
+        metadata = json.loads(metadata_str)
+
+        metadata["size"] = file.size
+        metadata["name"] = file.file_name
+        return AgentBackup.from_dict(metadata)
