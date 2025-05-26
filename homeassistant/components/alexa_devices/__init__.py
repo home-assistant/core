@@ -4,6 +4,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
+from .services import async_setup_services
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -23,6 +24,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    await async_setup_services(hass)
 
     return True
 

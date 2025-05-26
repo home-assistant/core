@@ -1,0 +1,27 @@
+send_custom:
+  target:
+    entity:
+      integration: amazon_devices
+      domain: notify
+    device:
+      integration: amazon_devices
+  fields:
+    cmd:
+      required: true
+      example: "Play B.B.C. on TuneIn"
+      selector:
+        text:
+
+send_sound:
+  target:
+    entity:
+      integration: amazon_devices
+      domain: notify
+    device:
+      integration: amazon_devices
+  fields:
+    sound:
+      required: true
+      example: "amzn_sfx_doorbell_chime_01"
+      selector:
+        text:
