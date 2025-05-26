@@ -2,10 +2,7 @@
 # name: test_config_entry_diagnostics
   dict({
     'data': dict({
-      'remote_version': dict({
-        'update_available': True,
-        'version': 'v2.3.0',
-      }),
+      'pngx_version': '2.3.0',
       'statistics': dict({
         'character_count': 99999,
         'correspondent_count': 99,

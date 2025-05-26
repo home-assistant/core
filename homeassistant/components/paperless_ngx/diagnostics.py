@@ -17,10 +17,8 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     return {
         "data": {
+            "pngx_version": entry.runtime_data.status.api.host_version,
             "statistics": asdict(entry.runtime_data.statistics.data),
             "status": asdict(entry.runtime_data.status.data),
-            "remote_version": asdict(
-                await entry.runtime_data.status.api.remote_version()
-            ),
         },
     }
