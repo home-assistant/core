@@ -1,6 +1,6 @@
 """Amber Electric Service class."""
 
-from typing import Any, cast
+from typing import cast
 
 from amberelectric.models.channel import ChannelType
 import voluptuous as vol
@@ -13,6 +13,7 @@ from homeassistant.core import (
     SupportsResponse,
 )
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.util.json import JsonValueType
 
 from .const import ATTR_CHANNEL_TYPE, ATTR_SITE_ID, DOMAIN, GET_FORECASTS_SERVICE
 from .coordinator import AmberConfigEntry
@@ -43,9 +44,9 @@ def async_get_entry(hass: HomeAssistant, site_id: str) -> AmberConfigEntry:
     return cast(AmberConfigEntry, entry)
 
 
-def get_forecasts(channel_type: str, data: dict) -> list[Any]:
+def get_forecasts(channel_type: str, data: dict) -> list[JsonValueType]:
     """Return an array of forecasts."""
-    results = []
+    results: list[JsonValueType] = []
     if channel_type not in data["forecasts"]:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
