@@ -1632,10 +1632,10 @@ def test_ord(hass: HomeAssistant) -> None:
     assert template.Template('{{ "d" | ord }}', hass).async_render() == 100
 
 
-def test_fromhex(hass: HomeAssistant) -> None:
+def test_from_hex(hass: HomeAssistant) -> None:
     """Test the fromhex filter."""
     assert (
-        template.Template("{{ '0F010003' | fromhex }}", hass).async_render()
+        template.Template("{{ '0F010003' | from_hex }}", hass).async_render()
         == b"\x0f\x01\x00\x03"
     )
 
