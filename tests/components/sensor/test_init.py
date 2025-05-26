@@ -24,6 +24,7 @@ from homeassistant.components.sensor import (
     async_rounded_state,
     async_update_suggested_units,
 )
+from homeassistant.components.sensor.const import STATE_CLASS_UNITS, UNIT_CONVERTERS
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -1993,6 +1994,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
         SensorDeviceClass.PRECIPITATION_INTENSITY,
         SensorDeviceClass.PRECIPITATION,
         SensorDeviceClass.PRESSURE,
+        SensorDeviceClass.REACTIVE_ENERGY,
         SensorDeviceClass.REACTIVE_POWER,
         SensorDeviceClass.SIGNAL_STRENGTH,
         SensorDeviceClass.SOUND_PRESSURE,
@@ -2005,6 +2007,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
         SensorDeviceClass.VOLUME,
         SensorDeviceClass.WATER,
         SensorDeviceClass.WEIGHT,
+        SensorDeviceClass.WIND_DIRECTION,
         SensorDeviceClass.WIND_SPEED,
     ],
 )
@@ -2032,6 +2035,37 @@ async def test_device_classes_with_invalid_unit_of_measurement(
         "is using native unit of measurement 'INVALID!' which is not a valid "
         f"unit for the device class ('{device_class}') it is using; "
         f"expected one of {units}"
+    ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    "state_class",
+    [SensorStateClass.MEASUREMENT_ANGLE],
+)
+async def test_state_classes_with_invalid_unit_of_measurement(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    state_class: SensorStateClass,
+) -> None:
+    """Test error when unit of measurement is not valid for used state class."""
+    entity0 = MockSensor(
+        name="Test",
+        native_value="1.0",
+        state_class=state_class,
+        native_unit_of_measurement="INVALID!",
+    )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
+    units = {
+        str(unit) if unit else "no unit of measurement"
+        for unit in STATE_CLASS_UNITS.get(state_class, set())
+    }
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert (
+        f"Sensor sensor.test ({entity0.__class__}) is using native unit of "
+        "measurement 'INVALID!' which is not a valid unit "
+        f"for the state class ('{state_class}') it is using; expected one of {units};"
     ) in caplog.text
 
 
@@ -2778,3 +2812,54 @@ async def test_suggested_unit_guard_valid_unit(
     assert entry.options == {
         "sensor.private": {"suggested_unit_of_measurement": suggested_unit},
     }
+
+
+def test_device_class_units_are_complete() -> None:
+    """Test that the device class units enum is complete."""
+    no_unit_device_classes = {
+        SensorDeviceClass.DATE,
+        SensorDeviceClass.ENUM,
+        SensorDeviceClass.MONETARY,
+        SensorDeviceClass.TIMESTAMP,
+    }
+    unit_device_classes = {
+        device_class.value for device_class in SensorDeviceClass
+    } - no_unit_device_classes
+    assert set(DEVICE_CLASS_UNITS.keys()) == unit_device_classes
+
+
+def test_device_class_converters_are_complete() -> None:
+    """Test that the device class converters enum is complete."""
+    no_converter_device_classes = {
+        SensorDeviceClass.APPARENT_POWER,
+        SensorDeviceClass.AQI,
+        SensorDeviceClass.BATTERY,
+        SensorDeviceClass.CO,
+        SensorDeviceClass.CO2,
+        SensorDeviceClass.DATE,
+        SensorDeviceClass.ENUM,
+        SensorDeviceClass.FREQUENCY,
+        SensorDeviceClass.HUMIDITY,
+        SensorDeviceClass.ILLUMINANCE,
+        SensorDeviceClass.IRRADIANCE,
+        SensorDeviceClass.MOISTURE,
+        SensorDeviceClass.MONETARY,
+        SensorDeviceClass.NITROGEN_DIOXIDE,
+        SensorDeviceClass.NITROGEN_MONOXIDE,
+        SensorDeviceClass.NITROUS_OXIDE,
+        SensorDeviceClass.OZONE,
+        SensorDeviceClass.PH,
+        SensorDeviceClass.PM1,
+        SensorDeviceClass.PM10,
+        SensorDeviceClass.PM25,
+        SensorDeviceClass.REACTIVE_POWER,
+        SensorDeviceClass.SIGNAL_STRENGTH,
+        SensorDeviceClass.SOUND_PRESSURE,
+        SensorDeviceClass.SULPHUR_DIOXIDE,
+        SensorDeviceClass.TIMESTAMP,
+        SensorDeviceClass.WIND_DIRECTION,
+    }
+    converter_device_classes = {
+        device_class.value for device_class in SensorDeviceClass
+    } - no_converter_device_classes
+    assert set(UNIT_CONVERTERS.keys()) == converter_device_classes

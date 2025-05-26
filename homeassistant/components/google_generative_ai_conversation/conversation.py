@@ -3,15 +3,18 @@
 from __future__ import annotations
 
 import codecs
-from collections.abc import Callable
+from collections.abc import AsyncGenerator, Callable
+from dataclasses import replace
 from typing import Any, Literal, cast
 
-from google.genai.errors import APIError
+from google.genai.errors import APIError, ClientError
 from google.genai.types import (
     AutomaticFunctionCallingConfig,
     Content,
     FunctionDeclaration,
     GenerateContentConfig,
+    GenerateContentResponse,
+    GoogleSearch,
     HarmCategory,
     Part,
     SafetySetting,
@@ -39,6 +42,7 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
+    CONF_USE_GOOGLE_SEARCH_TOOL,
     DOMAIN,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
@@ -51,6 +55,10 @@ from .const import (
 
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
+
+ERROR_GETTING_RESPONSE = (
+    "Sorry, I had a problem getting a response from Google Generative AI."
+)
 
 
 async def async_setup_entry(
@@ -168,17 +176,25 @@ def _escape_decode(value: Any) -> Any:
     return value
 
 
+def _create_google_tool_response_parts(
+    parts: list[conversation.ToolResultContent],
+) -> list[Part]:
+    """Create Google tool response parts."""
+    return [
+        Part.from_function_response(
+            name=tool_result.tool_name, response=tool_result.tool_result
+        )
+        for tool_result in parts
+    ]
+
+
 def _create_google_tool_response_content(
     content: list[conversation.ToolResultContent],
 ) -> Content:
     """Create a Google tool response content."""
     return Content(
-        parts=[
-            Part.from_function_response(
-                name=tool_result.tool_name, response=tool_result.tool_result
-            )
-            for tool_result in content
-        ]
+        role="user",
+        parts=_create_google_tool_response_parts(content),
     )
 
 
@@ -218,6 +234,81 @@ def _convert_content(
     return Content(role="model", parts=parts)
 
 
+async def _transform_stream(
+    result: AsyncGenerator[GenerateContentResponse],
+) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
+    new_message = True
+    try:
+        async for response in result:
+            LOGGER.debug("Received response chunk: %s", response)
+            chunk: conversation.AssistantContentDeltaDict = {}
+
+            if new_message:
+                chunk["role"] = "assistant"
+                new_message = False
+
+            # According to the API docs, this would mean no candidate is returned, so we can safely throw an error here.
+            if response.prompt_feedback or not response.candidates:
+                reason = (
+                    response.prompt_feedback.block_reason_message
+                    if response.prompt_feedback
+                    else "unknown"
+                )
+                raise HomeAssistantError(
+                    f"The message got blocked due to content violations, reason: {reason}"
+                )
+
+            candidate = response.candidates[0]
+
+            if (
+                candidate.finish_reason is not None
+                and candidate.finish_reason != "STOP"
+            ):
+                # The message ended due to a content error as explained in: https://ai.google.dev/api/generate-content#FinishReason
+                LOGGER.error(
+                    "Error in Google Generative AI response: %s, see: https://ai.google.dev/api/generate-content#FinishReason",
+                    candidate.finish_reason,
+                )
+                raise HomeAssistantError(
+                    f"{ERROR_GETTING_RESPONSE} Reason: {candidate.finish_reason}"
+                )
+
+            response_parts = (
+                candidate.content.parts
+                if candidate.content is not None and candidate.content.parts is not None
+                else []
+            )
+
+            content = "".join([part.text for part in response_parts if part.text])
+            tool_calls = []
+            for part in response_parts:
+                if not part.function_call:
+                    continue
+                tool_call = part.function_call
+                tool_name = tool_call.name if tool_call.name else ""
+                tool_args = _escape_decode(tool_call.args)
+                tool_calls.append(
+                    llm.ToolInput(tool_name=tool_name, tool_args=tool_args)
+                )
+
+            if tool_calls:
+                chunk["tool_calls"] = tool_calls
+
+            chunk["content"] = content
+            yield chunk
+    except (
+        APIError,
+        ValueError,
+    ) as err:
+        LOGGER.error("Error sending message: %s %s", type(err), err)
+        if isinstance(err, APIError):
+            message = err.message
+        else:
+            message = type(err).__name__
+        error = f"{ERROR_GETTING_RESPONSE}: {message}"
+        raise HomeAssistantError(error) from err
+
+
 class GoogleGenerativeAIConversationEntity(
     conversation.ConversationEntity, conversation.AbstractConversationAgent
 ):
@@ -225,6 +316,7 @@ class GoogleGenerativeAIConversationEntity(
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_supports_streaming = True
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the agent."""
@@ -296,12 +388,18 @@ class GoogleGenerativeAIConversationEntity(
                 for tool in chat_log.llm_api.tools
             ]
 
+        # Using search grounding allows the model to retrieve information from the web,
+        # however, it may interfere with how the model decides to use some tools, or entities
+        # for example weather entity may be disregarded if the model chooses to Google it.
+        if options.get(CONF_USE_GOOGLE_SEARCH_TOOL) is True:
+            tools = tools or []
+            tools.append(Tool(google_search=GoogleSearch()))
+
         model_name = self.entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
-        # Gemini 1.0 doesn't support system_instruction while 1.5 does.
-        # Assume future versions will support it (if not, the request fails with a
-        # clear message at which point we can fix).
+        # Avoid INVALID_ARGUMENT Developer instruction is not enabled for <model>
         supports_system_instruction = (
-            "gemini-1.0" not in model_name and "gemini-pro" not in model_name
+            "gemma" not in model_name
+            and "gemini-2.0-flash-preview-image-generation" not in model_name
         )
 
         prompt_content = cast(
@@ -324,11 +422,28 @@ class GoogleGenerativeAIConversationEntity(
                 tool_results.append(chat_content)
                 continue
 
+            if (
+                not isinstance(chat_content, conversation.ToolResultContent)
+                and chat_content.content == ""
+            ):
+                # Skipping is not possible since the number of function calls need to match the number of function responses
+                # and skipping one would mean removing the other and hence this would prevent a proper chat log
+                chat_content = replace(chat_content, content=" ")
+
             if tool_results:
                 messages.append(_create_google_tool_response_content(tool_results))
                 tool_results.clear()
 
             messages.append(_convert_content(chat_content))
+
+        # The SDK requires the first message to be a user message
+        # This is not the case if user used `start_conversation`
+        # Workaround from https://github.com/googleapis/python-genai/issues/529#issuecomment-2740964537
+        if messages and messages[0].role != "user":
+            messages.insert(
+                0,
+                Content(role="user", parts=[Part.from_text(text=" ")]),
+            )
 
         if tool_results:
             messages.append(_create_google_tool_response_content(tool_results))
@@ -384,68 +499,44 @@ class GoogleGenerativeAIConversationEntity(
         chat = self._genai_client.aio.chats.create(
             model=model_name, history=messages, config=generateContentConfig
         )
-        chat_request: str | Content = user_input.text
+        chat_request: str | list[Part] = user_input.text
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
             try:
-                chat_response = await chat.send_message(message=chat_request)
-
-                if chat_response.prompt_feedback:
-                    raise HomeAssistantError(
-                        f"The message got blocked due to content violations, reason: {chat_response.prompt_feedback.block_reason_message}"
-                    )
-
+                chat_response_generator = await chat.send_message_stream(
+                    message=chat_request
+                )
             except (
                 APIError,
+                ClientError,
                 ValueError,
             ) as err:
                 LOGGER.error("Error sending message: %s %s", type(err), err)
-                error = f"Sorry, I had a problem talking to Google Generative AI: {err}"
+                error = ERROR_GETTING_RESPONSE
                 raise HomeAssistantError(error) from err
 
-            response_parts = chat_response.candidates[0].content.parts
-            if not response_parts:
-                raise HomeAssistantError(
-                    "Sorry, I had a problem getting a response from Google Generative AI."
-                )
-            content = " ".join(
-                [part.text.strip() for part in response_parts if part.text]
-            )
-
-            tool_calls = []
-            for part in response_parts:
-                if not part.function_call:
-                    continue
-                tool_call = part.function_call
-                tool_name = tool_call.name
-                tool_args = _escape_decode(tool_call.args)
-                tool_calls.append(
-                    llm.ToolInput(
-                        tool_name=self._fix_tool_name(tool_name),
-                        tool_args=tool_args,
-                    )
-                )
-
-            chat_request = _create_google_tool_response_content(
+            chat_request = _create_google_tool_response_parts(
                 [
-                    tool_response
-                    async for tool_response in chat_log.async_add_assistant_content(
-                        conversation.AssistantContent(
-                            agent_id=user_input.agent_id,
-                            content=content,
-                            tool_calls=tool_calls or None,
-                        )
+                    content
+                    async for content in chat_log.async_add_delta_content_stream(
+                        user_input.agent_id,
+                        _transform_stream(chat_response_generator),
                     )
+                    if isinstance(content, conversation.ToolResultContent)
                 ]
             )
 
-            if not tool_calls:
+            if not chat_log.unresponded_tool_results:
                 break
 
         response = intent.IntentResponse(language=user_input.language)
-        response.async_set_speech(
-            " ".join([part.text.strip() for part in response_parts if part.text])
-        )
+        if not isinstance(chat_log.content[-1], conversation.AssistantContent):
+            LOGGER.error(
+                "Last content in chat log is not an AssistantContent: %s. This could be due to the model not returning a valid response",
+                chat_log.content[-1],
+            )
+            raise HomeAssistantError(f"{ERROR_GETTING_RESPONSE}")
+        response.async_set_speech(chat_log.content[-1].content or "")
         return conversation.ConversationResult(
             response=response,
             conversation_id=chat_log.conversation_id,

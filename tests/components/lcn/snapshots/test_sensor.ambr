@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_setup_lcn_sensor[sensor.sensor_led6-entry]
+# name: test_setup_lcn_sensor[sensor.testmodule_sensor_led6-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,8 +12,8 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sensor_led6',
-    'has_entity_name': False,
+    'entity_id': 'sensor.testmodule_sensor_led6',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -29,24 +29,24 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk.json-m000007-led6',
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-led6',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_lcn_sensor[sensor.sensor_led6-state]
+# name: test_setup_lcn_sensor[sensor.testmodule_sensor_led6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sensor_Led6',
+      'friendly_name': 'TestModule Sensor_Led6',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sensor_led6',
+    'entity_id': 'sensor.testmodule_sensor_led6',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_lcn_sensor[sensor.sensor_logicop1-entry]
+# name: test_setup_lcn_sensor[sensor.testmodule_sensor_logicop1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -59,8 +59,8 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sensor_logicop1',
-    'has_entity_name': False,
+    'entity_id': 'sensor.testmodule_sensor_logicop1',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -76,24 +76,24 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk.json-m000007-logicop1',
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-logicop1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_lcn_sensor[sensor.sensor_logicop1-state]
+# name: test_setup_lcn_sensor[sensor.testmodule_sensor_logicop1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sensor_LogicOp1',
+      'friendly_name': 'TestModule Sensor_LogicOp1',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sensor_logicop1',
+    'entity_id': 'sensor.testmodule_sensor_logicop1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_lcn_sensor[sensor.sensor_setpoint1-entry]
+# name: test_setup_lcn_sensor[sensor.testmodule_sensor_setpoint1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -106,8 +106,8 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sensor_setpoint1',
-    'has_entity_name': False,
+    'entity_id': 'sensor.testmodule_sensor_setpoint1',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -123,26 +123,26 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk.json-m000007-r1varsetpoint',
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-r1varsetpoint',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup_lcn_sensor[sensor.sensor_setpoint1-state]
+# name: test_setup_lcn_sensor[sensor.testmodule_sensor_setpoint1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Sensor_Setpoint1',
+      'friendly_name': 'TestModule Sensor_Setpoint1',
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sensor_setpoint1',
+    'entity_id': 'sensor.testmodule_sensor_setpoint1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_lcn_sensor[sensor.sensor_var1-entry]
+# name: test_setup_lcn_sensor[sensor.testmodule_sensor_var1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -155,8 +155,8 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sensor_var1',
-    'has_entity_name': False,
+    'entity_id': 'sensor.testmodule_sensor_var1',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -172,19 +172,19 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk.json-m000007-var1',
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-var1',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup_lcn_sensor[sensor.sensor_var1-state]
+# name: test_setup_lcn_sensor[sensor.testmodule_sensor_var1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Sensor_Var1',
+      'friendly_name': 'TestModule Sensor_Var1',
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sensor_var1',
+    'entity_id': 'sensor.testmodule_sensor_var1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

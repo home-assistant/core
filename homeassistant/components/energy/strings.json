@@ -7,7 +7,7 @@
     },
     "recorder_untracked": {
       "title": "Entity not tracked",
-      "description": "The recorder has been configured to exclude these configured entities:"
+      "description": "Home Assistant Recorder has been configured to exclude these configured entities:"
     },
     "entity_unavailable": {
       "title": "Entity unavailable",

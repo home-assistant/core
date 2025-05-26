@@ -1,8 +1,12 @@
 """The tests for the Template number platform."""
 
+from typing import Any
+
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import setup
+from homeassistant.components import number, template
 from homeassistant.components.input_number import (
     ATTR_VALUE as INPUT_NUMBER_ATTR_VALUE,
     DOMAIN as INPUT_NUMBER_DOMAIN,
@@ -18,6 +22,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.components.template import DOMAIN
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_ICON,
     CONF_ENTITY_ID,
     CONF_UNIT_OF_MEASUREMENT,
@@ -25,10 +30,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
+
+from .conftest import ConfigurationStyle
 
 from tests.common import MockConfigEntry, assert_setup_component, async_capture_events
 
-_TEST_NUMBER = "number.template_number"
+_TEST_OBJECT_ID = "template_number"
+_TEST_NUMBER = f"number.{_TEST_OBJECT_ID}"
 # Represent for number's value
 _VALUE_INPUT_NUMBER = "input_number.value"
 # Represent for number's minimum
@@ -48,6 +57,38 @@ _VALUE_INPUT_NUMBER_CONFIG = {
         "mode": "slider",
     }
 }
+
+
+async def async_setup_modern_format(
+    hass: HomeAssistant, count: int, number_config: dict[str, Any]
+) -> None:
+    """Do setup of number integration via new format."""
+    config = {"template": {"number": number_config}}
+
+    with assert_setup_component(count, template.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            template.DOMAIN,
+            config,
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+
+@pytest.fixture
+async def setup_number(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    number_config: dict[str, Any],
+) -> None:
+    """Do setup of number integration."""
+    if style == ConfigurationStyle.MODERN:
+        await async_setup_modern_format(
+            hass, count, {"name": _TEST_OBJECT_ID, **number_config}
+        )
 
 
 async def test_setup_config_entry(
@@ -565,3 +606,36 @@ async def test_device_id(
     template_entity = entity_registry.async_get("number.my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
+
+
+@pytest.mark.parametrize(
+    ("count", "number_config"),
+    [
+        (
+            1,
+            {
+                "state": "{{ 1 }}",
+                "set_value": [],
+                "step": "{{ 1 }}",
+                "optimistic": True,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [
+        ConfigurationStyle.MODERN,
+    ],
+)
+async def test_empty_action_config(hass: HomeAssistant, setup_number) -> None:
+    """Test configuration with empty script."""
+    await hass.services.async_call(
+        number.DOMAIN,
+        number.SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: _TEST_NUMBER, "value": 4},
+        blocking=True,
+    )
+
+    state = hass.states.get(_TEST_NUMBER)
+    assert float(state.state) == 4

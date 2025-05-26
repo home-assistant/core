@@ -124,7 +124,7 @@
       "drive_state": {
         "name": "Drive state",
         "state": {
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "nearing": "Nearing limit",
           "critical": "Critical",
           "exceeded": "Exceeded"

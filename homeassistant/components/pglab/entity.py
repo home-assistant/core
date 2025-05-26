@@ -37,7 +37,7 @@ class PGLabBaseEntity(Entity):
             sw_version=pglab_device.firmware_version,
             hw_version=pglab_device.hardware_version,
             model=pglab_device.type,
-            manufacturer=pglab_device.manufactor,
+            manufacturer=pglab_device.manufacturer,
             configuration_url=f"http://{pglab_device.ip}/",
             connections={(CONNECTION_NETWORK_MAC, pglab_device.mac)},
         )
