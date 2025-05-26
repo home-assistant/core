@@ -1560,6 +1560,9 @@ pycountry==24.6.1
 # homeassistant.components.microsoft
 pycsspeechtts==1.0.8
 
+# homeassistant.components.cups
+# pycups==2.0.4
+
 # homeassistant.components.daikin
 pydaikin==2.15.0
 
