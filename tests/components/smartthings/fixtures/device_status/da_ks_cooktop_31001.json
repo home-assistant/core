@@ -9,11 +9,11 @@
       },
       "samsungce.cooktopHeatingPower": {
         "manualLevel": {
-          "value": 0,
+          "value": 5,
           "timestamp": "2025-03-26T05:57:23.203Z"
         },
         "heatingMode": {
-          "value": "manual",
+          "value": "boost",
           "timestamp": "2025-03-25T18:18:28.550Z"
         },
         "manualLevelMin": {
@@ -95,7 +95,7 @@
     "main": {
       "custom.disabledComponents": {
         "disabledComponents": {
-          "value": ["burner-6"],
+          "value": ["burner-05", "burner-6"],
           "timestamp": "2025-03-25T18:18:28.464Z"
         }
       },
@@ -467,11 +467,11 @@
       },
       "samsungce.cooktopHeatingPower": {
         "manualLevel": {
-          "value": 0,
+          "value": 2,
           "timestamp": "2025-03-26T07:27:58.652Z"
         },
         "heatingMode": {
-          "value": "manual",
+          "value": "keepWarm",
           "timestamp": "2025-03-25T18:18:28.550Z"
         },
         "manualLevelMin": {

@@ -839,9 +839,9 @@ class MQTT:
         """Return a string with the exception message."""
         # if msg_callback is a partial we return the name of the first argument
         if isinstance(msg_callback, partial):
-            call_back_name = getattr(msg_callback.args[0], "__name__")
+            call_back_name = msg_callback.args[0].__name__
         else:
-            call_back_name = getattr(msg_callback, "__name__")
+            call_back_name = msg_callback.__name__
         return (
             f"Exception in {call_back_name} when handling msg on "
             f"'{msg.topic}': '{msg.payload}'"  # type: ignore[str-bytes-safe]
@@ -1109,7 +1109,7 @@ class MQTT:
             # decoding the same topic multiple times.
             topic = msg.topic
         except UnicodeDecodeError:
-            bare_topic: bytes = getattr(msg, "_topic")
+            bare_topic: bytes = msg._topic  # noqa: SLF001
             _LOGGER.warning(
                 "Skipping received%s message on invalid topic %s (qos=%s): %s",
                 " retained" if msg.retain else "",

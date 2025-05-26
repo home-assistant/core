@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 from requests.exceptions import HTTPError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import PRESET_COMFORT, PRESET_ECO
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
@@ -108,6 +108,7 @@ async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
 
     new_device = FritzDeviceSensorMock()
     new_device.ain = "7890 1234"
+    new_device.device_and_unit_id = ("7890 1234", None)
     new_device.name = "new_device"
     set_devices(fritz, devices=[device, new_device])
 

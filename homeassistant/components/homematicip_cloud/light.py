@@ -4,18 +4,18 @@ from __future__ import annotations
 
 from typing import Any
 
-from homematicip.aio.device import (
-    AsyncBrandDimmer,
-    AsyncBrandSwitchMeasuring,
-    AsyncBrandSwitchNotificationLight,
-    AsyncDimmer,
-    AsyncDinRailDimmer3,
-    AsyncFullFlushDimmer,
-    AsyncPluggableDimmer,
-    AsyncWiredDimmer3,
-)
 from homematicip.base.enums import OpticalSignalBehaviour, RGBColorState
 from homematicip.base.functionalChannels import NotificationLightChannel
+from homematicip.device import (
+    BrandDimmer,
+    BrandSwitchMeasuring,
+    BrandSwitchNotificationLight,
+    Dimmer,
+    DinRailDimmer3,
+    FullFlushDimmer,
+    PluggableDimmer,
+    WiredDimmer3,
+)
 from packaging.version import Version
 
 from homeassistant.components.light import (
@@ -28,27 +28,25 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .entity import HomematicipGenericEntity
-from .hap import HomematicipHAP
+from .hap import HomematicIPConfigEntry, HomematicipHAP
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HomematicIPConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP Cloud lights from a config entry."""
-    hap = hass.data[DOMAIN][config_entry.unique_id]
+    hap = config_entry.runtime_data
     entities: list[HomematicipGenericEntity] = []
     for device in hap.home.devices:
-        if isinstance(device, AsyncBrandSwitchMeasuring):
+        if isinstance(device, BrandSwitchMeasuring):
             entities.append(HomematicipLightMeasuring(hap, device))
-        elif isinstance(device, AsyncBrandSwitchNotificationLight):
+        elif isinstance(device, BrandSwitchNotificationLight):
             device_version = Version(device.firmwareVersion)
             entities.append(HomematicipLight(hap, device))
 
@@ -65,14 +63,14 @@ async def async_setup_entry(
                 entity_class(hap, device, device.bottomLightChannelIndex, "Bottom")
             )
 
-        elif isinstance(device, (AsyncWiredDimmer3, AsyncDinRailDimmer3)):
+        elif isinstance(device, (WiredDimmer3, DinRailDimmer3)):
             entities.extend(
                 HomematicipMultiDimmer(hap, device, channel=channel)
                 for channel in range(1, 4)
             )
         elif isinstance(
             device,
-            (AsyncDimmer, AsyncPluggableDimmer, AsyncBrandDimmer, AsyncFullFlushDimmer),
+            (Dimmer, PluggableDimmer, BrandDimmer, FullFlushDimmer),
         ):
             entities.append(HomematicipDimmer(hap, device))
 
@@ -96,11 +94,11 @@ class HomematicipLight(HomematicipGenericEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        await self._device.turn_on()
+        await self._device.turn_on_async()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        await self._device.turn_off()
+        await self._device.turn_off_async()
 
 
 class HomematicipLightMeasuring(HomematicipLight):
@@ -141,15 +139,15 @@ class HomematicipMultiDimmer(HomematicipGenericEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the dimmer on."""
         if ATTR_BRIGHTNESS in kwargs:
-            await self._device.set_dim_level(
+            await self._device.set_dim_level_async(
                 kwargs[ATTR_BRIGHTNESS] / 255.0, self._channel
             )
         else:
-            await self._device.set_dim_level(1, self._channel)
+            await self._device.set_dim_level_async(1, self._channel)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the dimmer off."""
-        await self._device.set_dim_level(0, self._channel)
+        await self._device.set_dim_level_async(0, self._channel)
 
 
 class HomematicipDimmer(HomematicipMultiDimmer, LightEntity):
@@ -239,7 +237,7 @@ class HomematicipNotificationLight(HomematicipGenericEntity, LightEntity):
         dim_level = brightness / 255.0
         transition = kwargs.get(ATTR_TRANSITION, 0.5)
 
-        await self._device.set_rgb_dim_level_with_time(
+        await self._device.set_rgb_dim_level_with_time_async(
             channelIndex=self._channel,
             rgb=simple_rgb_color,
             dimLevel=dim_level,
@@ -252,7 +250,7 @@ class HomematicipNotificationLight(HomematicipGenericEntity, LightEntity):
         simple_rgb_color = self._func_channel.simpleRGBColorState
         transition = kwargs.get(ATTR_TRANSITION, 0.5)
 
-        await self._device.set_rgb_dim_level_with_time(
+        await self._device.set_rgb_dim_level_with_time_async(
             channelIndex=self._channel,
             rgb=simple_rgb_color,
             dimLevel=0.0,

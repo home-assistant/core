@@ -51,7 +51,6 @@ from homeassistant.helpers.hassio import (
     get_supervisor_ip as _get_supervisor_ip,
     is_hassio as _is_hassio,
 )
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.service_info.hassio import (
     HassioServiceInfo as _HassioServiceInfo,
 )
@@ -105,7 +104,6 @@ from .const import (
 )
 from .coordinator import (
     HassioDataUpdateCoordinator,
-    get_addons_changelogs,  # noqa: F401
     get_addons_info,
     get_addons_stats,  # noqa: F401
     get_core_info,  # noqa: F401
@@ -160,7 +158,6 @@ CONFIG_SCHEMA = vol.Schema(
 SERVICE_ADDON_START = "addon_start"
 SERVICE_ADDON_STOP = "addon_stop"
 SERVICE_ADDON_RESTART = "addon_restart"
-SERVICE_ADDON_UPDATE = "addon_update"
 SERVICE_ADDON_STDIN = "addon_stdin"
 SERVICE_HOST_SHUTDOWN = "host_shutdown"
 SERVICE_HOST_REBOOT = "host_reboot"
@@ -241,7 +238,6 @@ MAP_SERVICE_API = {
     SERVICE_ADDON_START: APIEndpointSettings("/addons/{addon}/start", SCHEMA_ADDON),
     SERVICE_ADDON_STOP: APIEndpointSettings("/addons/{addon}/stop", SCHEMA_ADDON),
     SERVICE_ADDON_RESTART: APIEndpointSettings("/addons/{addon}/restart", SCHEMA_ADDON),
-    SERVICE_ADDON_UPDATE: APIEndpointSettings("/addons/{addon}/update", SCHEMA_ADDON),
     SERVICE_ADDON_STDIN: APIEndpointSettings(
         "/addons/{addon}/stdin", SCHEMA_ADDON_STDIN
     ),
@@ -389,18 +385,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     )
 
     last_timezone = None
+    last_country = None
 
     async def push_config(_: Event | None) -> None:
         """Push core config to Hass.io."""
         nonlocal last_timezone
+        nonlocal last_country
 
         new_timezone = str(hass.config.time_zone)
+        new_country = str(hass.config.country)
 
-        if new_timezone == last_timezone:
-            return
-
-        last_timezone = new_timezone
-        await hassio.update_hass_timezone(new_timezone)
+        if new_timezone != last_timezone or new_country != last_country:
+            last_timezone = new_timezone
+            last_country = new_country
+            await hassio.update_hass_config(new_timezone, new_country)
 
     hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, push_config)
 
@@ -411,16 +409,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     async def async_service_handler(service: ServiceCall) -> None:
         """Handle service calls for Hass.io."""
-        if service.service == SERVICE_ADDON_UPDATE:
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "update_service_deprecated",
-                breaks_in_ha_version="2025.5",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="update_service_deprecated",
-            )
         api_endpoint = MAP_SERVICE_API[service.service]
 
         data = service.data.copy()

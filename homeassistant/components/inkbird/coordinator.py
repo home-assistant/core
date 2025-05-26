@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 from inkbird_ble import INKBIRDBluetoothDeviceData, SensorUpdate
 
@@ -12,15 +13,17 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfo,
     BluetoothServiceInfoBleak,
     async_ble_device_from_address,
+    async_last_service_info,
 )
 from homeassistant.components.bluetooth.active_update_processor import (
     ActiveBluetoothProcessorCoordinator,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import CONF_DEVICE_TYPE
+from .const import CONF_DEVICE_DATA, CONF_DEVICE_TYPE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,22 +35,21 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
 ):
     """Coordinator for INKBIRD Bluetooth devices."""
 
+    _data: INKBIRDBluetoothDeviceData
+
     def __init__(
         self,
         hass: HomeAssistant,
         entry: ConfigEntry,
-        data: INKBIRDBluetoothDeviceData,
+        device_type: str | None,
+        device_data: dict[str, Any] | None,
     ) -> None:
         """Initialize the INKBIRD Bluetooth processor coordinator."""
-        self._data = data
         self._entry = entry
+        self._device_type = device_type
+        self._device_data = device_data
         address = entry.unique_id
         assert address is not None
-        entry.async_on_unload(
-            async_track_time_interval(
-                hass, self._async_schedule_poll, FALLBACK_POLL_INTERVAL
-            )
-        )
         super().__init__(
             hass=hass,
             logger=_LOGGER,
@@ -56,7 +58,32 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
             update_method=self._async_on_update,
             needs_poll_method=self._async_needs_poll,
             poll_method=self._async_poll_data,
+            connectable=False,  # Polling only happens if active scanning is disabled
         )
+
+    async def async_init(self) -> None:
+        """Initialize the coordinator."""
+        self._data = INKBIRDBluetoothDeviceData(
+            self._device_type,
+            self._device_data,
+            self.async_set_updated_data,
+            self._async_device_data_changed,
+        )
+        if not self._data.uses_notify:
+            self._entry.async_on_unload(
+                async_track_time_interval(
+                    self.hass, self._async_schedule_poll, FALLBACK_POLL_INTERVAL
+                )
+            )
+            return
+        if not (service_info := async_last_service_info(self.hass, self.address)):
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="no_advertisement",
+                translation_placeholders={"address": self.address},
+            )
+        await self._data.async_start(service_info, service_info.device)
+        self._entry.async_on_unload(self._data.async_stop)
 
     async def _async_poll_data(
         self, last_service_info: BluetoothServiceInfoBleak
@@ -76,6 +103,13 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
                     self.hass, service_info.device.address, connectable=True
                 )
             )
+        )
+
+    @callback
+    def _async_device_data_changed(self, new_device_data: dict[str, Any]) -> None:
+        """Handle device data changed."""
+        self.hass.config_entries.async_update_entry(
+            self._entry, data={**self._entry.data, CONF_DEVICE_DATA: new_device_data}
         )
 
     @callback

@@ -40,6 +40,7 @@ class FlowResultType(StrEnum):
 
 # Event that is fired when a flow is progressed via external or progress source.
 EVENT_DATA_ENTRY_FLOW_PROGRESSED = "data_entry_flow_progressed"
+EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE = "data_entry_flow_progress_update"
 
 FLOW_NOT_COMPLETE_STEPS = {
     FlowResultType.FORM,
@@ -828,6 +829,14 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         if step_id is not None:
             flow_result["step_id"] = step_id
         return flow_result
+
+    @callback
+    def async_update_progress(self, progress: float) -> None:
+        """Update the progress of a flow. `progress` must be between 0 and 1."""
+        self.hass.bus.async_fire_internal(
+            EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE,
+            {"handler": self.handler, "flow_id": self.flow_id, "progress": progress},
+        )
 
     @callback
     def async_show_progress_done(self, *, next_step_id: str) -> _FlowResultT:

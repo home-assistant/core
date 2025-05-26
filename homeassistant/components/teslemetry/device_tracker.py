@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from tesla_fleet_api.const import Scope
 from teslemetry_stream import TeslemetryStreamVehicle
 from teslemetry_stream.const import TeslaLocation
 
@@ -18,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import TeslemetryConfigEntry
-from .entity import TeslemetryVehicleEntity, TeslemetryVehicleStreamEntity
+from .entity import TeslemetryVehiclePollingEntity, TeslemetryVehicleStreamEntity
 from .models import TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
@@ -73,14 +74,21 @@ async def async_setup_entry(
     """Set up the Teslemetry device tracker platform from a config entry."""
 
     entities: list[
-        TeslemetryPollingDeviceTrackerEntity | TeslemetryStreamingDeviceTrackerEntity
+        TeslemetryVehiclePollingDeviceTrackerEntity
+        | TeslemetryStreamingDeviceTrackerEntity
     ] = []
+    # Only add vehicle location entities if the user has granted vehicle location scope.
+    if Scope.VEHICLE_LOCATION not in entry.runtime_data.scopes:
+        return
+
     for vehicle in entry.runtime_data.vehicles:
         for description in DESCRIPTIONS:
             if vehicle.api.pre2021 or vehicle.firmware < description.streaming_firmware:
                 if description.polling_prefix:
                     entities.append(
-                        TeslemetryPollingDeviceTrackerEntity(vehicle, description)
+                        TeslemetryVehiclePollingDeviceTrackerEntity(
+                            vehicle, description
+                        )
                     )
             else:
                 entities.append(
@@ -90,7 +98,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class TeslemetryPollingDeviceTrackerEntity(TeslemetryVehicleEntity, TrackerEntity):
+class TeslemetryVehiclePollingDeviceTrackerEntity(
+    TeslemetryVehiclePollingEntity, TrackerEntity
+):
     """Base class for Teslemetry Tracker Entities."""
 
     entity_description: TeslemetryDeviceTrackerEntityDescription

@@ -9,10 +9,11 @@ from functools import partial
 import logging
 from operator import attrgetter
 from types import MappingProxyType
-from typing import Any
+from typing import Any, cast
 
 from aiohomekit import Controller
 from aiohomekit.controller import TransportType
+from aiohomekit.controller.ble.discovery import BleDiscovery
 from aiohomekit.exceptions import (
     AccessoryDisconnectedError,
     AccessoryNotFoundError,
@@ -372,6 +373,16 @@ class HKDevice:
         if not self.unreliable_serial_numbers:
             identifiers.add((IDENTIFIER_SERIAL_NUMBER, accessory.serial_number))
 
+        connections: set[tuple[str, str]] = set()
+        if self.pairing.transport == Transport.BLE and (
+            discovery := self.pairing.controller.discoveries.get(
+                normalize_hkid(self.unique_id)
+            )
+        ):
+            connections = {
+                (dr.CONNECTION_BLUETOOTH, cast(BleDiscovery, discovery).device.address),
+            }
+
         device_info = DeviceInfo(
             identifiers={
                 (
@@ -379,6 +390,7 @@ class HKDevice:
                     f"{self.unique_id}:aid:{accessory.aid}",
                 )
             },
+            connections=connections,
             name=accessory.name,
             manufacturer=accessory.manufacturer,
             model=accessory.model,

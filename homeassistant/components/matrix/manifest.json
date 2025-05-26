@@ -6,5 +6,5 @@
   "iot_class": "cloud_push",
   "loggers": ["matrix_client"],
   "quality_scale": "legacy",
-  "requirements": ["matrix-nio==0.25.2", "Pillow==11.1.0"]
+  "requirements": ["matrix-nio==0.25.2", "Pillow==11.2.1"]
 }

@@ -21,7 +21,7 @@ from homeassistant.helpers.service import entity_service_call
 from homeassistant.helpers.typing import VolDictType
 
 from .const import _LOGGER, DOMAIN
-from .models import IsyData
+from .models import IsyConfigEntry
 
 # Common Services for All Platforms:
 SERVICE_SEND_PROGRAM_COMMAND = "send_program_command"
@@ -149,9 +149,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         command = service.data[CONF_COMMAND]
         isy_name = service.data.get(CONF_ISY)
 
-        for config_entry_id in hass.data[DOMAIN]:
-            isy_data: IsyData = hass.data[DOMAIN][config_entry_id]
-            isy = isy_data.root
+        config_entry: IsyConfigEntry
+        for config_entry in hass.config_entries.async_loaded_entries(DOMAIN):
+            isy = config_entry.runtime_data.root
             if isy_name and isy_name != isy.conf["name"]:
                 continue
             program = None
@@ -235,10 +235,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
 @callback
 def async_unload_services(hass: HomeAssistant) -> None:
     """Unload services for the ISY integration."""
-    if hass.data[DOMAIN]:
-        # There is still another config entry for this domain, don't remove services.
-        return
-
     existing_services = hass.services.async_services_for_domain(DOMAIN)
     if not existing_services or SERVICE_SEND_PROGRAM_COMMAND not in existing_services:
         return

@@ -88,6 +88,7 @@ OSI_APPROVED_LICENSES_SPDX = {
     "MPL-1.1",
     "MPL-2.0",
     "PSF-2.0",
+    "Python-2.0",
     "Unlicense",
     "Zlib",
     "ZPL-2.1",
@@ -190,7 +191,6 @@ EXCEPTIONS = {
     "enocean",  # https://github.com/kipe/enocean/pull/142
     "imutils",  # https://github.com/PyImageSearch/imutils/pull/292
     "iso4217",  # Public domain
-    "jaraco.itertools",  # MIT - https://github.com/jaraco/jaraco.itertools/issues/21
     "kiwiki_client",  # https://github.com/c7h/kiwiki_client/pull/6
     "ld2410-ble",  # https://github.com/930913/ld2410-ble/pull/7
     "maxcube-api",  # https://github.com/uebelack/python-maxcube-api/pull/48
@@ -201,7 +201,6 @@ EXCEPTIONS = {
     "pybbox",  # https://github.com/HydrelioxGitHub/pybbox/pull/5
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
     "pyvera",  # https://github.com/maximvelichko/pyvera/pull/164
-    "repoze.lru",
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
 }
