@@ -100,12 +100,6 @@ get_queue:
       supported_features:
         - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
 
-add_currently_playing_to_favorites:
-  target:
-    entity:
-      domain: media_player
-      integration: music_assistant
-
 search:
   fields:
     config_entry_id:
