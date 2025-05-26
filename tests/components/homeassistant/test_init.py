@@ -641,32 +641,25 @@ async def test_reload_all(
 
 
 @pytest.mark.parametrize(
-    ("installation_type", "arch", "issue_id"),
+    "installation_type",
     [
-        ("Home Assistant Core", "i386", "unsupported_method_architecture"),
-        ("Home Assistant Supervised", "i386", "unsupported_method_architecture"),
-        ("Home Assistant Core", "armhf", "unsupported_method_architecture"),
-        ("Home Assistant Supervised", "armhf", "unsupported_method_architecture"),
-        ("Home Assistant Core", "armv7", "unsupported_method_architecture"),
-        ("Home Assistant Supervised", "armv7", "unsupported_method_architecture"),
-        ("Home Assistant Core", "aarch64", "unsupported_method"),
-        ("Home Assistant Supervised", "aarch64", "unsupported_method"),
-        ("Home Assistant Core", "amd64", "unsupported_method"),
-        ("Home Assistant Supervised", "amd64", "unsupported_method"),
-        ("Home Assistant Container", "i386", "unsupported_architecture"),
-        ("Home Assistant OS", "i386", "unsupported_architecture"),
-        ("Home Assistant Container", "armhf", "unsupported_architecture"),
-        ("Home Assistant OS", "armhf", "unsupported_architecture"),
-        ("Home Assistant Container", "armv7", "unsupported_architecture"),
-        ("Home Assistant OS", "armv7", "unsupported_architecture"),
+        "Home Assistant Core",
+        "Home Assistant Supervised",
     ],
 )
-async def test_deprecated_installation_issue(
+@pytest.mark.parametrize(
+    "arch",
+    [
+        "i386",
+        "armhf",
+        "armv7",
+    ],
+)
+async def test_deprecated_installation_issue_32bit_method(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
     installation_type: str,
     arch: str,
-    issue_id: str,
 ) -> None:
     """Test deprecated installation issue."""
     with patch(
@@ -680,10 +673,109 @@ async def test_deprecated_installation_issue(
         await hass.async_block_till_done()
 
     assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, "deprecated_method_architecture"
+    )
+    assert issue.domain == HOMEASSISTANT_DOMAIN
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.translation_placeholders == {
+        "installation_type": installation_type[15:],
+        "arch": arch,
+    }
+
+
+@pytest.mark.parametrize(
+    "installation_type",
+    [
+        "Home Assistant Core",
+        "Home Assistant Supervised",
+    ],
+)
+async def test_deprecated_installation_issue_method(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    installation_type: str,
+) -> None:
+    """Test deprecated installation issue."""
+    with patch(
+        "homeassistant.components.homeassistant.async_get_system_info",
+        return_value={
+            "installation_type": installation_type,
+            "arch": "generic-x86-64",
+        },
+    ):
+        assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_method")
+    assert issue.domain == HOMEASSISTANT_DOMAIN
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.translation_placeholders == {
+        "installation_type": installation_type[15:],
+        "arch": "generic-x86-64",
+    }
+
+
+@pytest.mark.parametrize(
+    ("board", "issue_id"),
+    [
+        ("rpi3", "deprecated_os_armv7_armv8"),
+        ("rpi4", "deprecated_os_armv7_armv8"),
+        ("tinker", "deprecated_os_armv7_no_armv8"),
+        ("odroid-xu4", "deprecated_os_armv7_no_armv8"),
+        ("rpi2", "deprecated_os_armv7_no_armv8"),
+    ],
+)
+async def test_deprecated_installation_issue_armv7_armv8(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    board: str,
+    issue_id: str,
+) -> None:
+    """Test deprecated installation issue."""
+    with (
+        patch(
+            "homeassistant.components.homeassistant.async_get_system_info",
+            return_value={
+                "installation_type": "Home Assistant OS",
+                "arch": "armv7",
+            },
+        ),
+        patch(
+            "homeassistant.components.hassio.get_os_info", return_value={"board": board}
+        ),
+    ):
+        assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 1
     issue = issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
     assert issue.domain == HOMEASSISTANT_DOMAIN
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_placeholders == {
-        "method": installation_type,
-        "arch": arch,
+        "installation_guide": "https://www.home-assistant.io/installation/",
     }
+
+
+async def test_deprecated_installation_issue_armv7_container(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test deprecated installation issue."""
+    with patch(
+        "homeassistant.components.homeassistant.async_get_system_info",
+        return_value={
+            "installation_type": "Home Assistant Container",
+            "arch": "armv7",
+        },
+    ):
+        assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, "deprecated_container_armv7"
+    )
+    assert issue.domain == HOMEASSISTANT_DOMAIN
+    assert issue.severity == ir.IssueSeverity.WARNING
