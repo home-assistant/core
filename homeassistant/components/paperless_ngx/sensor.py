@@ -125,7 +125,7 @@ SENSOR_STATUS: tuple[PaperlessEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=[
-            item.value.lower() for item in StatusType if item.value.lower() != "unknown"
+            item.value.lower() for item in StatusType if item != StatusType.UNKNOWN
         ],
         value_fn=(
             lambda data: data.database.status.value.lower()
@@ -143,7 +143,7 @@ SENSOR_STATUS: tuple[PaperlessEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=[
-            item.value.lower() for item in StatusType if item.value.lower() != "unknown"
+            item.value.lower() for item in StatusType if item != StatusType.UNKNOWN
         ],
         value_fn=(
             lambda data: data.tasks.index_status.value.lower()
@@ -161,7 +161,7 @@ SENSOR_STATUS: tuple[PaperlessEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=[
-            item.value.lower() for item in StatusType if item.value.lower() != "unknown"
+            item.value.lower() for item in StatusType if item != StatusType.UNKNOWN
         ],
         value_fn=(
             lambda data: data.tasks.classifier_status.value.lower()
@@ -179,7 +179,7 @@ SENSOR_STATUS: tuple[PaperlessEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=[
-            item.value.lower() for item in StatusType if item.value.lower() != "unknown"
+            item.value.lower() for item in StatusType if item != StatusType.UNKNOWN
         ],
         value_fn=(
             lambda data: data.tasks.celery_status.value.lower()
@@ -197,7 +197,7 @@ SENSOR_STATUS: tuple[PaperlessEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=[
-            item.value.lower() for item in StatusType if item.value.lower() != "unknown"
+            item.value.lower() for item in StatusType if item != StatusType.UNKNOWN
         ],
         value_fn=(
             lambda data: data.tasks.redis_status.value.lower()
@@ -215,7 +215,7 @@ SENSOR_STATUS: tuple[PaperlessEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=[
-            item.value.lower() for item in StatusType if item.value.lower() != "unknown"
+            item.value.lower() for item in StatusType if item != StatusType.UNKNOWN
         ],
         value_fn=(
             lambda data: data.tasks.sanity_check_status.value.lower()
