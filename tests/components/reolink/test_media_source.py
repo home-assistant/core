@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from reolink_aio.exceptions import ReolinkError
+from reolink_aio.typings import VOD_trigger
 
 from homeassistant.components.media_source import (
     DOMAIN as MEDIA_SOURCE_DOMAIN,
@@ -16,6 +17,7 @@ from homeassistant.components.media_source import (
 )
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
 from homeassistant.components.reolink.const import CONF_BC_PORT, CONF_USE_HTTPS, DOMAIN
+from homeassistant.components.reolink.media_source import VOD_SPLIT_TIME
 from homeassistant.components.stream import DOMAIN as MEDIA_STREAM_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -53,6 +55,8 @@ TEST_HOUR = 13
 TEST_MINUTE = 12
 TEST_START = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}{TEST_HOUR}{TEST_MINUTE}"
 TEST_END = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}{TEST_HOUR}{TEST_MINUTE + 5}"
+TEST_START_TIME = datetime(TEST_YEAR, TEST_MONTH, TEST_DAY, 0, 0)
+TEST_END_TIME = datetime(TEST_YEAR, TEST_MONTH, TEST_DAY, 23, 59, 59)
 TEST_FILE_NAME = f"{TEST_START}00"
 TEST_FILE_NAME_MP4 = f"{TEST_START}00.mp4"
 TEST_STREAM = "main"
@@ -212,13 +216,12 @@ async def test_browsing(
 
     # browse camera recording files on day
     mock_vod_file = MagicMock()
-    mock_vod_file.start_time = datetime(
-        TEST_YEAR, TEST_MONTH, TEST_DAY, TEST_HOUR, TEST_MINUTE
-    )
+    mock_vod_file.start_time = TEST_START_TIME
     mock_vod_file.start_time_id = TEST_START
     mock_vod_file.end_time_id = TEST_END
-    mock_vod_file.duration = timedelta(minutes=15)
+    mock_vod_file.duration = timedelta(minutes=5)
     mock_vod_file.file_name = TEST_FILE_NAME
+    mock_vod_file.triggers = VOD_trigger.PERSON
     reolink_connect.request_vod_files.return_value = ([mock_status], [mock_vod_file])
 
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_day_0_id}")
@@ -232,8 +235,45 @@ async def test_browsing(
     )
     assert browse.identifier == browse_files_id
     assert browse.children[0].identifier == browse_file_id
+    reolink_connect.request_vod_files.assert_called_with(
+        int(TEST_CHANNEL),
+        TEST_START_TIME,
+        TEST_END_TIME,
+        stream=TEST_STREAM,
+        split_time=VOD_SPLIT_TIME,
+        trigger=None,
+    )
 
     reolink_connect.model = TEST_HOST_MODEL
+
+    # browse event trigger person on a NVR
+    reolink_connect.is_nvr = True
+    browse_event_person_id = f"EVE|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}|{VOD_trigger.PERSON.name}"
+
+    browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_day_0_id}")
+    assert browse.children[0].identifier == browse_event_person_id
+
+    browse = await async_browse_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/{browse_event_person_id}"
+    )
+
+    assert browse.domain == DOMAIN
+    assert (
+        browse.title
+        == f"{TEST_NVR_NAME} High res. {TEST_YEAR}/{TEST_MONTH}/{TEST_DAY} Person"
+    )
+    assert browse.identifier == browse_files_id
+    assert browse.children[0].identifier == browse_file_id
+    reolink_connect.request_vod_files.assert_called_with(
+        int(TEST_CHANNEL),
+        TEST_START_TIME,
+        TEST_END_TIME,
+        stream=TEST_STREAM,
+        split_time=VOD_SPLIT_TIME,
+        trigger=VOD_trigger.PERSON,
+    )
+
+    reolink_connect.is_nvr = False
 
 
 async def test_browsing_h265_encoding(
