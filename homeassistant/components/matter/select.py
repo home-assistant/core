@@ -30,6 +30,13 @@ NUMBER_OF_RINSES_STATE_MAP = {
 NUMBER_OF_RINSES_STATE_MAP_REVERSE = {
     v: k for k, v in NUMBER_OF_RINSES_STATE_MAP.items()
 }
+PUMP_OPERATION_MODE_MAP = {
+    clusters.PumpConfigurationAndControl.Enums.OperationModeEnum.kNormal: "normal",
+    clusters.PumpConfigurationAndControl.Enums.OperationModeEnum.kMinimum: "minimum",
+    clusters.PumpConfigurationAndControl.Enums.OperationModeEnum.kMaximum: "maximum",
+    clusters.PumpConfigurationAndControl.Enums.OperationModeEnum.kLocal: "local",
+}
+PUMP_OPERATION_MODE_MAP_REVERSE = {v: k for k, v in PUMP_OPERATION_MODE_MAP.items()}
 
 type SelectCluster = (
     clusters.ModeSelect
@@ -435,5 +442,42 @@ DISCOVERY_SCHEMAS = [
         ),
         # don't discover this entry if the supported rinses list is empty
         secondary_value_is_not=[],
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="DoorLockSoundVolume",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="door_lock_sound_volume",
+            options=["silent", "low", "medium", "high"],
+            measurement_to_ha={
+                0: "silent",
+                1: "low",
+                3: "medium",
+                2: "high",
+            }.get,
+            ha_to_native_value={
+                "silent": 0,
+                "low": 1,
+                "medium": 3,
+                "high": 2,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(clusters.DoorLock.Attributes.SoundVolume,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="PumpConfigurationAndControlOperationMode",
+            translation_key="pump_operation_mode",
+            options=list(PUMP_OPERATION_MODE_MAP.values()),
+            measurement_to_ha=PUMP_OPERATION_MODE_MAP.get,
+            ha_to_native_value=PUMP_OPERATION_MODE_MAP_REVERSE.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(
+            clusters.PumpConfigurationAndControl.Attributes.OperationMode,
+        ),
     ),
 ]
