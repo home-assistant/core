@@ -27,7 +27,9 @@ def _patch_setup():
 
 async def test_config_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test config flow setup with connection error."""
-    with patch("aioapcaccess.request_status") as mock_get:
+    with patch(
+        "homeassistant.components.apcupsd.coordinator.aioapcaccess.request_status"
+    ) as mock_get:
         mock_get.side_effect = OSError()
 
         result = await hass.config_entries.flow.async_init(
@@ -53,7 +55,9 @@ async def test_config_flow_duplicate(hass: HomeAssistant) -> None:
     mock_entry.add_to_hass(hass)
 
     with (
-        patch("aioapcaccess.request_status") as mock_request_status,
+        patch(
+            "homeassistant.components.apcupsd.coordinator.aioapcaccess.request_status"
+        ) as mock_request_status,
         _patch_setup(),
     ):
         mock_request_status.return_value = MOCK_STATUS
@@ -100,7 +104,10 @@ async def test_config_flow_duplicate(hass: HomeAssistant) -> None:
 async def test_flow_works(hass: HomeAssistant) -> None:
     """Test successful creation of config entries via user configuration."""
     with (
-        patch("aioapcaccess.request_status", return_value=MOCK_STATUS),
+        patch(
+            "homeassistant.components.apcupsd.coordinator.aioapcaccess.request_status",
+            return_value=MOCK_STATUS,
+        ),
         _patch_setup() as mock_setup,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -140,7 +147,9 @@ async def test_flow_minimal_status(
     integration will vary.
     """
     with (
-        patch("aioapcaccess.request_status") as mock_request_status,
+        patch(
+            "homeassistant.components.apcupsd.coordinator.aioapcaccess.request_status"
+        ) as mock_request_status,
         _patch_setup() as mock_setup,
     ):
         status = MOCK_MINIMAL_STATUS | extra_status
@@ -176,7 +185,10 @@ async def test_reconfigure_flow_works(hass: HomeAssistant) -> None:
     new_conf_data = {CONF_HOST: "new_host", CONF_PORT: 4321}
 
     with (
-        patch("aioapcaccess.request_status", return_value=MOCK_STATUS),
+        patch(
+            "homeassistant.components.apcupsd.coordinator.aioapcaccess.request_status",
+            return_value=MOCK_STATUS,
+        ),
         _patch_setup() as mock_setup,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -211,7 +223,10 @@ async def test_reconfigure_flow_cannot_connect(hass: HomeAssistant) -> None:
 
     # New configuration data with different host/port.
     new_conf_data = {CONF_HOST: "new_host", CONF_PORT: 4321}
-    with patch("aioapcaccess.request_status", side_effect=OSError()):
+    with patch(
+        "homeassistant.components.apcupsd.coordinator.aioapcaccess.request_status",
+        side_effect=OSError(),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=new_conf_data
         )
@@ -251,7 +266,10 @@ async def test_reconfigure_flow_wrong_device(
     # Make a copy of the status and modify the serial number if needed.
     mock_status = {k: v for k, v in MOCK_STATUS.items() if k != "SERIALNO"}
     mock_status["SERIALNO"] = unique_id_after
-    with patch("aioapcaccess.request_status", return_value=mock_status):
+    with patch(
+        "homeassistant.components.apcupsd.coordinator.aioapcaccess.request_status",
+        return_value=mock_status,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=new_conf_data
         )
