@@ -41,7 +41,19 @@ PACKAGE_REGEX = re.compile(
 PIP_REGEX = re.compile(r"^(--.+\s)?([-_\.\w\d]+.*(?:==|>=|<=|~=|!=|<|>|===)?.*$)")
 PIP_VERSION_RANGE_SEPARATOR = re.compile(r"^(==|>=|<=|~=|!=|<|>|===)?(.*)$")
 
-FORBIDDEN_PACKAGES = {"codecov", "pytest", "setuptools", "wheel"}
+FORBIDDEN_PACKAGES = {
+    # Only needed for tests
+    "codecov": "not be a runtime dependency",
+    # Does blocking I/O and should be replaced by pyserial-asyncio-fast
+    # See https://github.com/home-assistant/core/pull/116635
+    "pyserial-asyncio": "be replaced by pyserial-asyncio-fast",
+    # Only needed for tests
+    "pytest": "not be a runtime dependency",
+    # Only needed for build
+    "setuptools": "not be a runtime dependency",
+    # Only needed for build
+    "wheel": "not be a runtime dependency",
+}
 FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # In the form dict("domain": {"package": {"reason1", "reason2"}})
     # - domain is the integration domain
@@ -51,6 +63,11 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # https://github.com/timmo001/aioazuredevops/issues/67
         # aioazuredevops > incremental > setuptools
         "incremental": {"setuptools"}
+    },
+    "blackbird": {
+        # https://github.com/koolsb/pyblackbird/issues/12
+        # pyblackbird > pyserial-asyncio
+        "pyblackbird": {"pyserial-asyncio"}
     },
     "cmus": {
         # https://github.com/mtreinish/pycmus/issues/4
@@ -62,11 +79,21 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # concord232 > stevedore > pbr > setuptools
         "pbr": {"setuptools"}
     },
+    "edl21": {
+        # https://github.com/mtdcr/pysml/issues/21
+        # pysml > pyserial-asyncio
+        "pysml": {"pyserial-asyncio"}
+    },
     "efergy": {
         # https://github.com/tkdrob/pyefergy/issues/46
         # pyefergy > codecov
         # pyefergy > types-pytz
         "pyefergy": {"codecov", "types-pytz"}
+    },
+    "epson": {
+        # https://github.com/pszafer/epson_projector/pull/22
+        # epson-projector > pyserial-asyncio
+        "epson-projector": {"pyserial-asyncio"}
     },
     "fitbit": {
         # https://github.com/orcasgit/python-fitbit/pull/178
@@ -79,15 +106,30 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # aioguardian > asyncio-dgram > setuptools
         "asyncio-dgram": {"setuptools"}
     },
+    "heatmiser": {
+        # https://github.com/andylockran/heatmiserV3/issues/96
+        # heatmiserV3 > pyserial-asyncio
+        "heatmiserv3": {"pyserial-asyncio"}
+    },
     "hive": {
         # https://github.com/Pyhass/Pyhiveapi/pull/88
         # pyhive-integration > unasync > setuptools
         "unasync": {"setuptools"}
     },
+    "homeassistant_hardware": {
+        # https://github.com/zigpy/zigpy/issues/1604
+        # universal-silabs-flasher > zigpy > pyserial-asyncio
+        "zigpy": {"pyserial-asyncio"},
+    },
     "influxdb": {
         # https://github.com/influxdata/influxdb-client-python/issues/695
         # influxdb-client > setuptools
         "influxdb-client": {"setuptools"}
+    },
+    "insteon": {
+        # https://github.com/pyinsteon/pyinsteon/issues/430
+        # pyinsteon > pyserial-asyncio
+        "pyinsteon": {"pyserial-asyncio"}
     },
     "keba": {
         # https://github.com/jsbronder/asyncio-dgram/issues/20
@@ -114,10 +156,25 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pymochad > pbr > setuptools
         "pbr": {"setuptools"}
     },
+    "monoprice": {
+        # https://github.com/etsinko/pymonoprice/issues/9
+        # pymonoprice > pyserial-asyncio
+        "pymonoprice": {"pyserial-asyncio"}
+    },
+    "mysensors": {
+        # https://github.com/theolind/pymysensors/issues/818
+        # pymysensors > pyserial-asyncio
+        "pymysensors": {"pyserial-asyncio"}
+    },
     "mystrom": {
         # https://github.com/home-assistant-ecosystem/python-mystrom/issues/55
         # python-mystrom > setuptools
         "python-mystrom": {"setuptools"}
+    },
+    "ness_alarm": {
+        # https://github.com/nickw444/nessclient/issues/73
+        # nessclient > pyserial-asyncio
+        "nessclient": {"pyserial-asyncio"}
     },
     "nx584": {
         # https://bugs.launchpad.net/python-stevedore/+bug/2111694
@@ -149,6 +206,11 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # gpiozero > colorzero > setuptools
         "colorzero": {"setuptools"}
     },
+    "rflink": {
+        # https://github.com/aequitas/python-rflink/issues/78
+        # rflink > pyserial-asyncio
+        "rflink": {"pyserial-asyncio"}
+    },
     "system_bridge": {
         # https://github.com/timmo001/system-bridge-connector/pull/78
         # systembridgeconnector > incremental > setuptools
@@ -165,7 +227,10 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "zha": {
         # https://github.com/waveform80/colorzero/issues/9
         # zha > zigpy-zigate > gpiozero > colorzero > setuptools
-        "colorzero": {"setuptools"}
+        "colorzero": {"setuptools"},
+        # https://github.com/zigpy/zigpy/issues/1604
+        # zha > zigpy > pyserial-asyncio
+        "zigpy": {"pyserial-asyncio"},
     },
 }
 
@@ -343,8 +408,6 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
         all_requirements.add(package)
 
         item = deptree.get(package)
-        if forbidden_package_exceptions:
-            print(f"Integration {integration.domain}: {item}")
 
         if item is None:
             # Only warn if direct dependencies could not be resolved
@@ -358,16 +421,17 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
         package_exceptions = forbidden_package_exceptions.get(package, set())
         for pkg, version in dependencies.items():
             if pkg.startswith("types-") or pkg in FORBIDDEN_PACKAGES:
+                reason = FORBIDDEN_PACKAGES.get(pkg, "not be a runtime dependency")
                 needs_forbidden_package_exceptions = True
                 if pkg in package_exceptions:
                     integration.add_warning(
                         "requirements",
-                        f"Package {pkg} should not be a runtime dependency in {package}",
+                        f"Package {pkg} should {reason} in {package}",
                     )
                 else:
                     integration.add_error(
                         "requirements",
-                        f"Package {pkg} should not be a runtime dependency in {package}",
+                        f"Package {pkg} should {reason} in {package}",
                     )
             check_dependency_version_range(integration, package, pkg, version)
 
