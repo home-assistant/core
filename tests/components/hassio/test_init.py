@@ -404,7 +404,7 @@ async def test_setup_api_existing_hassio_user(
     assert aioclient_mock.mock_calls[0][2]["refresh_token"] == token.token
 
 
-async def test_setup_core_push_timezone(
+async def test_setup_core_push_config(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     supervisor_client: AsyncMock,
@@ -421,9 +421,10 @@ async def test_setup_core_push_timezone(
     assert aioclient_mock.mock_calls[1][2]["timezone"] == "testzone"
 
     with patch("homeassistant.util.dt.set_default_time_zone"):
-        await hass.config.async_update(time_zone="America/New_York")
+        await hass.config.async_update(time_zone="America/New_York", country="US")
     await hass.async_block_till_done()
     assert aioclient_mock.mock_calls[-1][2]["timezone"] == "America/New_York"
+    assert aioclient_mock.mock_calls[-1][2]["country"] == "US"
 
 
 async def test_setup_hassio_no_additional_data(

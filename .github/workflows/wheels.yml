@@ -138,17 +138,17 @@ jobs:
         uses: actions/checkout@v4.2.2
 
       - name: Download env_file
-        uses: actions/download-artifact@v4.2.1
+        uses: actions/download-artifact@v4.3.0
         with:
           name: env_file
 
       - name: Download build_constraints
-        uses: actions/download-artifact@v4.2.1
+        uses: actions/download-artifact@v4.3.0
         with:
           name: build_constraints
 
       - name: Download requirements_diff
-        uses: actions/download-artifact@v4.2.1
+        uses: actions/download-artifact@v4.3.0
         with:
           name: requirements_diff
 
@@ -187,22 +187,22 @@ jobs:
         uses: actions/checkout@v4.2.2
 
       - name: Download env_file
-        uses: actions/download-artifact@v4.2.1
+        uses: actions/download-artifact@v4.3.0
         with:
           name: env_file
 
       - name: Download build_constraints
-        uses: actions/download-artifact@v4.2.1
+        uses: actions/download-artifact@v4.3.0
         with:
           name: build_constraints
 
       - name: Download requirements_diff
-        uses: actions/download-artifact@v4.2.1
+        uses: actions/download-artifact@v4.3.0
         with:
           name: requirements_diff
 
       - name: Download requirements_all_wheels
-        uses: actions/download-artifact@v4.2.1
+        uses: actions/download-artifact@v4.3.0
         with:
           name: requirements_all_wheels
 

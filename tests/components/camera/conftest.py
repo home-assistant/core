@@ -165,13 +165,15 @@ async def mock_test_webrtc_cameras(hass: HomeAssistant) -> None:
         async def stream_source(self) -> str | None:
             return STREAM_SOURCE
 
-    class SyncCamera(BaseCamera):
-        """Mock Camera with native sync WebRTC support."""
+    class AsyncNoCandidateCamera(BaseCamera):
+        """Mock Camera with native async WebRTC support but not implemented candidate support."""
 
-        _attr_name = "Sync"
+        _attr_name = "Async No Candidate"
 
-        async def async_handle_web_rtc_offer(self, offer_sdp: str) -> str | None:
-            return WEBRTC_ANSWER
+        async def async_handle_async_webrtc_offer(
+            self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
+        ) -> None:
+            send_message(WebRTCAnswer(WEBRTC_ANSWER))
 
     class AsyncCamera(BaseCamera):
         """Mock Camera with native async WebRTC support."""
@@ -221,7 +223,10 @@ async def mock_test_webrtc_cameras(hass: HomeAssistant) -> None:
         ),
     )
     setup_test_component_platform(
-        hass, camera.DOMAIN, [SyncCamera(), AsyncCamera()], from_config_entry=True
+        hass,
+        camera.DOMAIN,
+        [AsyncNoCandidateCamera(), AsyncCamera()],
+        from_config_entry=True,
     )
     mock_platform(hass, f"{domain}.config_flow", Mock())
 

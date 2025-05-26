@@ -152,7 +152,7 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         await update_addon(
             self.hass, self._addon_slug, backup, self.title, self.installed_version
         )
-        await self.coordinator.force_info_update_supervisor()
+        await self.coordinator.async_refresh()
 
 
 class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
