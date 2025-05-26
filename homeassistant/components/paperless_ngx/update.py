@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+
+from pypaperless.exceptions import PaperlessConnectionError
+
 from homeassistant.components.update import (
     UpdateDeviceClass,
     UpdateEntity,
@@ -11,13 +15,15 @@ from homeassistant.components.update import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import PaperlessConfigEntry, PaperlessVersionCoordinator
+from .const import LOGGER
+from .coordinator import PaperlessConfigEntry, PaperlessStatusCoordinator
 from .entity import PaperlessEntity
 
 PAPERLESS_CHANGELOGS = "https://docs.paperless-ngx.com/changelog/"
 
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 1
+SCAN_INTERVAL = timedelta(hours=24)
 
 UPDATE_ENTITY_DESCRIPTIONS: tuple[UpdateEntityDescription, ...] = (
     UpdateEntityDescription(
@@ -36,31 +42,54 @@ async def async_setup_entry(
     """Set up Paperless-ngx update entities."""
 
     async_add_entities(
-        PaperlessUpdate(
-            coordinator=entry.runtime_data.version,
-            description=description,
-        )
-        for description in UPDATE_ENTITY_DESCRIPTIONS
+        (
+            PaperlessUpdate(
+                coordinator=entry.runtime_data.status,
+                description=description,
+            )
+            for description in UPDATE_ENTITY_DESCRIPTIONS
+        ),
+        True,
     )
 
 
-class PaperlessUpdate(PaperlessEntity[PaperlessVersionCoordinator], UpdateEntity):
+class PaperlessUpdate(PaperlessEntity[PaperlessStatusCoordinator], UpdateEntity):
     """Defines a Paperless-ngx update entity."""
 
     _attr_supported_features = UpdateEntityFeature(0)
     release_url = PAPERLESS_CHANGELOGS
 
     @property
+    def should_poll(self) -> bool:
+        """Return True because we need to poll the latest version."""
+        return True
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._attr_available
+
+    @property
     def installed_version(self) -> str | None:
         """Return the installed version."""
         return self.coordinator.api.host_version
 
-    @property
-    def latest_version(self) -> str | None:
-        """Return the latest version available."""
-        remote_version = self.coordinator.data
-        return (
-            remote_version.version.lstrip("v")
-            if remote_version and remote_version.version
-            else None
-        )
+    async def async_update(self) -> None:
+        """Update the entity."""
+        remote_version = None
+        try:
+            remote_version = await self.coordinator.api.remote_version()
+        except PaperlessConnectionError as err:
+            if self._attr_available:
+                LOGGER.warning("Could not fetch remote version: %s", err)
+                self._attr_available = False
+            return
+
+        if remote_version.version is None or remote_version.version == "0.0.0":
+            if self._attr_available:
+                LOGGER.warning("Remote version is not available or invalid")
+                self._attr_available = False
+            return
+
+        self._attr_latest_version = remote_version.version.lstrip("v")
+        self._attr_available = True

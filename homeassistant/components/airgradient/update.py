@@ -24,7 +24,7 @@ async def async_setup_entry(
 
     coordinator = config_entry.runtime_data
 
-    async_add_entities([AirGradientUpdate(coordinator)], True)
+    async_add_entities([AirGradientUpdate(coordinator)], update_before_add=True)
 
 
 class AirGradientUpdate(AirGradientEntity, UpdateEntity):

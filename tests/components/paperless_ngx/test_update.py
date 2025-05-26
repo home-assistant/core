@@ -3,18 +3,11 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pypaperless.exceptions import (
-    PaperlessConnectionError,
-    PaperlessForbiddenError,
-    PaperlessInactiveOrDeletedError,
-    PaperlessInvalidTokenError,
-)
+from pypaperless.exceptions import PaperlessConnectionError
 from pypaperless.models import RemoteVersion
 import pytest
 
-from homeassistant.components.paperless_ngx.coordinator import (
-    UPDATE_INTERVAL_REMOTE_VERSION,
-)
+from homeassistant.components.paperless_ngx.update import SCAN_INTERVAL
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -44,22 +37,6 @@ async def test_update_platfom(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_update_coordinator_error_dont_block_integration_init(
-    hass: HomeAssistant,
-    mock_paperless: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Ensure an update coordinator error does not block integration init."""
-
-    # simulate error
-    mock_paperless.remote_version.side_effect = PaperlessForbiddenError
-
-    await setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get("update.paperless_ngx_software")
-    assert state.state == STATE_UNAVAILABLE
-
-
 @pytest.mark.usefixtures("init_integration")
 async def test_update_sensor_downgrade_upgrade(
     hass: HomeAssistant,
@@ -75,7 +52,7 @@ async def test_update_sensor_downgrade_upgrade(
     # downgrade host version
     mock_paperless.host_version = "2.2.0"
 
-    freezer.tick(UPDATE_INTERVAL_REMOTE_VERSION)
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -85,7 +62,7 @@ async def test_update_sensor_downgrade_upgrade(
     # upgrade host version
     mock_paperless.host_version = "2.3.0"
 
-    freezer.tick(UPDATE_INTERVAL_REMOTE_VERSION)
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -94,28 +71,17 @@ async def test_update_sensor_downgrade_upgrade(
 
 
 @pytest.mark.usefixtures("init_integration")
-@pytest.mark.parametrize(
-    ("error_cls", "assert_state"),
-    [
-        (PaperlessConnectionError, STATE_OFF),
-        (PaperlessForbiddenError, STATE_OFF),
-        (PaperlessInactiveOrDeletedError, STATE_UNAVAILABLE),
-        (PaperlessInvalidTokenError, STATE_UNAVAILABLE),
-    ],
-)
 async def test_update_sensor_state_on_error(
     hass: HomeAssistant,
     mock_paperless: AsyncMock,
     freezer: FrozenDateTimeFactory,
     mock_remote_version_data: MagicMock,
-    error_cls,
-    assert_state,
 ) -> None:
     """Ensure update entities handle errors properly."""
     # simulate error
-    mock_paperless.remote_version.side_effect = error_cls
+    mock_paperless.remote_version.side_effect = PaperlessConnectionError
 
-    freezer.tick(UPDATE_INTERVAL_REMOTE_VERSION)
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -129,12 +95,12 @@ async def test_update_sensor_state_on_error(
         )
     )
 
-    freezer.tick(UPDATE_INTERVAL_REMOTE_VERSION)
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("update.paperless_ngx_software")
-    assert state.state == assert_state
+    assert state.state == STATE_OFF
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -156,7 +122,7 @@ async def test_update_sensor_version_unavailable(
         )
     )
 
-    freezer.tick(UPDATE_INTERVAL_REMOTE_VERSION)
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
