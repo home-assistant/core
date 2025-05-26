@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, call
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -34,7 +34,7 @@ async def test_button_press_action(
     assert state
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        "press",
+        SERVICE_PRESS,
         {
             ATTR_ENTITY_ID: entity_id,
         },

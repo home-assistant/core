@@ -39,7 +39,6 @@ class MusicAssistantFavoriteButton(MusicAssistantEntity, ButtonEntity):
     entity_description = ButtonEntityDescription(
         key="favorite_now_playing",
         translation_key="favorite_now_playing",
-        icon="mdi:heart",
     )
 
     @property
