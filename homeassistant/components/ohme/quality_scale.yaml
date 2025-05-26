@@ -75,6 +75,6 @@ rules:
     comment: |
       Not supported by the API. Accounts and devices have a one-to-one relationship.
   # Platinum
-  async-dependency: todo
-  inject-websession: todo
-  strict-typing: todo
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

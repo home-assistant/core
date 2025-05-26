@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "switch": {
+      "smart_mode": {
+        "default": "mdi:refresh-auto"
+      }
+    }
+  }
+}

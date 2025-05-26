@@ -55,6 +55,11 @@
         <VentilationMode.SENSOR_OVERRIDE: 'sensor_override'>,
       ]),
       'supported_features': <FanEntityFeature: 9>,
+      'vicare_quickmodes': list([
+        'comfort',
+        'eco',
+        'holiday',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'fan.model0_ventilation',
@@ -94,7 +99,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:fan-off',
+    'original_icon': 'mdi:fan',
     'original_name': 'Ventilation',
     'platform': 'vicare',
     'previous_unique_id': None,
@@ -108,7 +113,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'model1 Ventilation',
-      'icon': 'mdi:fan-off',
+      'icon': 'mdi:fan',
       'percentage': 0,
       'percentage_step': 25.0,
       'preset_mode': None,
@@ -118,6 +123,11 @@
         <VentilationMode.SENSOR_DRIVEN: 'sensor_driven'>,
       ]),
       'supported_features': <FanEntityFeature: 25>,
+      'vicare_quickmodes': list([
+        'comfort',
+        'eco',
+        'holiday',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'fan.model1_ventilation',
@@ -179,6 +189,11 @@
         <VentilationMode.STANDARD: 'standard'>,
       ]),
       'supported_features': <FanEntityFeature: 8>,
+      'vicare_quickmodes': list([
+        'comfort',
+        'eco',
+        'holiday',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'fan.model2_ventilation',
