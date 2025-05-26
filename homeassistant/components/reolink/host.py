@@ -466,7 +466,7 @@ class ReolinkHost:
         """Call the API of the camera device to update the internal states."""
         wake: dict[int, bool] = {}
         now = time()
-        for channel in self._api.channels:
+        for channel in self._api.stream_channels:
             # wake the battery cameras for a complete update
             if not self._api.supported(channel, "battery"):
                 wake[channel] = True
