@@ -145,7 +145,7 @@ class PushBot(BaseTelegramBot):
         try:
             await self.bot.delete_webhook()
         except:  # noqa: E722
-            _LOGGER.exception("Failed to deregister webhook URL")
+            _LOGGER.error("Failed to deregister webhook URL")
 
 
 class PushBotView(HomeAssistantView):
