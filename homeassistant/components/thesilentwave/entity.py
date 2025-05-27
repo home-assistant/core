@@ -20,11 +20,7 @@ class TheSilentWaveEntity(CoordinatorEntity):
         self._attr_unique_id = f"thesilentwave_{entry_id}"
         self._attr_should_poll = True
         # Name property will be handled by the specific entity class.
-
-    @property
-    def device_info(self):
-        """Return device info."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={("thesilentwave", self._attr_unique_id)},
             name=self.coordinator.device_name,
             manufacturer="TheSilentWave",
