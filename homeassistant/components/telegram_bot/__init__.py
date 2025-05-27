@@ -257,15 +257,9 @@ SERVICE_MAP = {
 
 
 MODULES: dict[str, ModuleType] = {
-    PLATFORM_BROADCAST: importlib.import_module(
-        f"homeassistant.components.{DOMAIN}.{PLATFORM_BROADCAST}"
-    ),
-    PLATFORM_POLLING: importlib.import_module(
-        f"homeassistant.components.{DOMAIN}.{PLATFORM_POLLING}"
-    ),
-    PLATFORM_WEBHOOKS: importlib.import_module(
-        f"homeassistant.components.{DOMAIN}.{PLATFORM_WEBHOOKS}"
-    ),
+    PLATFORM_BROADCAST: broadcast,
+    PLATFORM_POLLING: polling,
+    PLATFORM_WEBHOOKS: webhooks,
 }
 
 
