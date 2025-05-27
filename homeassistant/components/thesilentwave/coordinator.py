@@ -8,6 +8,10 @@ from pysilentwave.exceptions import SilentWaveError
 
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.config_entries import ConfigEntry
+
+# Type alias for config entry with coordinator
+TheSilentWaveConfigEntry = ConfigEntry["TheSilentWaveCoordinator"]
 
 _LOGGER = logging.getLogger(__name__)
 
