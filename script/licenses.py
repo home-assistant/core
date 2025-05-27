@@ -201,14 +201,8 @@ EXCEPTIONS = {
     "pybbox",  # https://github.com/HydrelioxGitHub/pybbox/pull/5
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
     "pyvera",  # https://github.com/maximvelichko/pyvera/pull/164
-    "repoze.lru",
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
-    # ---
-    # https://github.com/jaraco/skeleton/pull/170
-    # https://github.com/jaraco/skeleton/pull/171
-    "jaraco.itertools",  # MIT - https://github.com/jaraco/jaraco.itertools/issues/21
-    "setuptools",  # MIT
 }
 
 TODO = {

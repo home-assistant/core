@@ -36,6 +36,8 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType as HAMediaType,
     RepeatMode,
+    SearchMedia,
+    SearchMediaQuery,
     async_process_play_media_url,
 )
 from homeassistant.const import ATTR_NAME, STATE_OFF
@@ -74,7 +76,7 @@ from .const import (
     DOMAIN,
 )
 from .entity import MusicAssistantEntity
-from .media_browser import async_browse_media
+from .media_browser import async_browse_media, async_search_media
 from .schemas import QUEUE_DETAILS_SCHEMA, queue_item_dict_from_mass_item
 
 if TYPE_CHECKING:
@@ -91,6 +93,7 @@ SUPPORTED_FEATURES_BASE = (
     | MediaPlayerEntityFeature.PLAY_MEDIA
     | MediaPlayerEntityFeature.CLEAR_PLAYLIST
     | MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.SEARCH_MEDIA
     | MediaPlayerEntityFeature.MEDIA_ENQUEUE
     | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
     | MediaPlayerEntityFeature.SEEK
@@ -289,6 +292,10 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             self._attr_state = MediaPlayerState(player.state.value)
         else:
             self._attr_state = MediaPlayerState(STATE_OFF)
+        self._attr_source = player.active_source
+        self._attr_source_list = [
+            source.name for source in player.source_list if not source.passive
+        ]
 
         group_members: list[str] = []
         if player.group_childs:
@@ -457,6 +464,11 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         await self.mass.players.player_command_ungroup(self.player_id)
 
     @catch_musicassistant_error
+    async def async_select_source(self, source: str) -> None:
+        """Select input source."""
+        await self.mass.players.player_command_select_source(self.player_id, source)
+
+    @catch_musicassistant_error
     async def _async_handle_play_media(
         self,
         media_id: list[str],
@@ -596,6 +608,13 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             media_content_type,
         )
 
+    async def async_search_media(self, query: SearchMediaQuery) -> SearchMedia:
+        """Search media."""
+        return await async_search_media(
+            self.mass,
+            query,
+        )
+
     def _update_media_image_url(
         self, player: Player, queue: PlayerQueue | None
     ) -> None:
@@ -725,4 +744,6 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         if self.player.power_control != PLAYER_CONTROL_NONE:
             supported_features |= MediaPlayerEntityFeature.TURN_ON
             supported_features |= MediaPlayerEntityFeature.TURN_OFF
+        if PlayerFeature.SELECT_SOURCE in self.player.supported_features:
+            supported_features |= MediaPlayerEntityFeature.SELECT_SOURCE
         self._attr_supported_features = supported_features

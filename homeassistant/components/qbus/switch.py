@@ -9,7 +9,7 @@ from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import QbusConfigEntry, QbusControllerCoordinator
+from .coordinator import QbusConfigEntry
 from .entity import QbusEntity, add_new_outputs
 
 PARALLEL_UPDATES = 0
@@ -43,14 +43,13 @@ class QbusSwitch(QbusEntity, SwitchEntity):
 
     _state_cls = QbusMqttOnOffState
 
+    _attr_name = None
     _attr_device_class = SwitchDeviceClass.SWITCH
 
-    def __init__(
-        self, coordinator: QbusControllerCoordinator, mqtt_output: QbusMqttOutput
-    ) -> None:
+    def __init__(self, mqtt_output: QbusMqttOutput) -> None:
         """Initialize switch entity."""
 
-        super().__init__(coordinator, mqtt_output)
+        super().__init__(mqtt_output)
 
         self._attr_is_on = False
 

@@ -21,7 +21,7 @@ from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import QbusConfigEntry, QbusControllerCoordinator
+from .coordinator import QbusConfigEntry
 from .entity import QbusEntity, add_new_outputs
 
 PARALLEL_UPDATES = 0
@@ -59,18 +59,17 @@ class QbusClimate(QbusEntity, ClimateEntity):
 
     _state_cls = QbusMqttThermoState
 
+    _attr_name = None
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(
-        self, coordinator: QbusControllerCoordinator, mqtt_output: QbusMqttOutput
-    ) -> None:
+    def __init__(self, mqtt_output: QbusMqttOutput) -> None:
         """Initialize climate entity."""
 
-        super().__init__(coordinator, mqtt_output)
+        super().__init__(mqtt_output)
 
         self._attr_hvac_action = HVACAction.IDLE
         self._attr_hvac_mode = HVACMode.HEAT

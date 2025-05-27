@@ -21,7 +21,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfElectricCurrent, UnitOfPower
+from homeassistant.const import UnitOfElectricCurrent, UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -71,7 +71,9 @@ TIME_SENSORS: list[SwitcherSensorEntityDescription] = [
 TEMPERATURE_SENSORS: list[SwitcherSensorEntityDescription] = [
     SwitcherSensorEntityDescription(
         key="temperature",
-        translation_key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: cast(SwitcherThermostatBase, data).temperature,
     ),
 ]

@@ -45,7 +45,15 @@ type FroniusConfigEntry = ConfigEntry[FroniusSolarNet]
 async def async_setup_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> bool:
     """Set up fronius from a config entry."""
     host = entry.data[CONF_HOST]
-    fronius = Fronius(async_get_clientsession(hass), host)
+    fronius = Fronius(
+        async_get_clientsession(
+            hass,
+            # Fronius Gen24 firmware 1.35.4-1 redirects to HTTPS with self-signed
+            # certificate. See https://github.com/home-assistant/core/issues/138881
+            verify_ssl=False,
+        ),
+        host,
+    )
     solar_net = FroniusSolarNet(hass, entry, fronius)
     await solar_net.init_devices()
 

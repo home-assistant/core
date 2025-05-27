@@ -6,7 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, Final
 
-from aioswitcher.bridge import SwitcherBase
+from aioswitcher.device import SwitcherBase
 from aioswitcher.device.tools import validate_token
 import voluptuous as vol
 

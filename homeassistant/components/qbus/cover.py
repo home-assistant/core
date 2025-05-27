@@ -19,7 +19,7 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import QbusConfigEntry, QbusControllerCoordinator
+from .coordinator import QbusConfigEntry
 from .entity import QbusEntity, add_new_outputs
 
 PARALLEL_UPDATES = 0
@@ -53,15 +53,14 @@ class QbusCover(QbusEntity, CoverEntity):
 
     _state_cls = QbusMqttShutterState
 
+    _attr_name = None
     _attr_supported_features: CoverEntityFeature
     _attr_device_class = CoverDeviceClass.BLIND
 
-    def __init__(
-        self, coordinator: QbusControllerCoordinator, mqtt_output: QbusMqttOutput
-    ) -> None:
+    def __init__(self, mqtt_output: QbusMqttOutput) -> None:
         """Initialize cover entity."""
 
-        super().__init__(coordinator, mqtt_output)
+        super().__init__(mqtt_output)
 
         self._attr_assumed_state = False
         self._attr_current_cover_position = 0

@@ -1667,7 +1667,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Monitoring self consumption',
+    'original_name': 'Monitoring self-consumption',
     'platform': 'imeon_inverter',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1679,7 +1679,7 @@
 # name: test_sensors[sensor.imeon_inverter_monitoring_self_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Imeon inverter Monitoring self consumption',
+      'friendly_name': 'Imeon inverter Monitoring self-consumption',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -1721,7 +1721,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Monitoring self sufficiency',
+    'original_name': 'Monitoring self-sufficiency',
     'platform': 'imeon_inverter',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1733,7 +1733,7 @@
 # name: test_sensors[sensor.imeon_inverter_monitoring_self_sufficiency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Imeon inverter Monitoring self sufficiency',
+      'friendly_name': 'Imeon inverter Monitoring self-sufficiency',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),

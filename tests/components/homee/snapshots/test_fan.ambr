@@ -1,0 +1,63 @@
+# serializer version: 1
+# name: test_fan_snapshot[fan.test_fan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'preset_modes': list([
+        'manual',
+        'auto',
+        'summer',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.test_fan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'homee',
+    'previous_unique_id': None,
+    'supported_features': <FanEntityFeature: 57>,
+    'translation_key': 'homee',
+    'unique_id': '00055511EECC-77',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fan_snapshot[fan.test_fan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Fan',
+      'percentage': 37,
+      'percentage_step': 12.5,
+      'preset_mode': 'manual',
+      'preset_modes': list([
+        'manual',
+        'auto',
+        'summer',
+      ]),
+      'supported_features': <FanEntityFeature: 57>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.test_fan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
