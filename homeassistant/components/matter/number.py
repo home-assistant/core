@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import cast
 
 from chip.clusters import Objects as clusters
-from chip.clusters.ClusterObjects import ClusterAttributeDescriptor
+from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterCommand
 from matter_server.common import custom_clusters
 
 from homeassistant.components.number import (
@@ -50,11 +51,16 @@ class MatterNumberEntityDescription(NumberEntityDescription, MatterEntityDescrip
 class MatterRangeNumberEntityDescription(
     NumberEntityDescription, MatterEntityDescription
 ):
-    """Describe Matter Number Input with range entities."""
+    """Describe Matter Number Input entities with min and max values."""
 
     # attribute descriptors to get the min and max value
     min_attribute: type[ClusterAttributeDescriptor]
     max_attribute: type[ClusterAttributeDescriptor]
+
+    # command: a custom callback to create the command to send to the device
+    # the callback's argument will be the index of the selected list value
+    # if omitted the command will just be a write_attribute command to the primary attribute
+    command: Callable[[int], ClusterCommand] | None = None
 
 
 class MatterNumber(MatterEntity, NumberEntity):
@@ -81,7 +87,7 @@ class MatterNumber(MatterEntity, NumberEntity):
 
 
 class MatterRangeNumber(MatterEntity, NumberEntity):
-    """Representation of a Matter Attribute as a Number entity."""
+    """Representation of a Matter Attribute as a Number entity with min and max values."""
 
     entity_description: MatterRangeNumberEntityDescription
 
@@ -90,6 +96,13 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
         sendvalue = int(value)
         if value_convert := self.entity_description.ha_to_native_value:
             sendvalue = value_convert(value)
+        if self.entity_description.command:
+            # custom command defined to set the new value
+            await self.send_device_command(
+                self.entity_description.command(sendvalue),
+            )
+            return
+        # regular write attribute to set the new value
         await self.write_attribute(
             value=sendvalue,
         )
@@ -269,6 +282,9 @@ DISCOVERY_SCHEMAS = [
             key="TemperatureControlTemperatureSetpoint",
             name=None,
             translation_key="temperature_setpoint",
+            command=lambda value: clusters.TemperatureControl.Commands.SetTemperature(
+                targetTemperature=value
+            ),
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             measurement_to_ha=lambda x: None if x is None else x / 100,
             ha_to_native_value=lambda x: round(x * 100),

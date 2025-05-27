@@ -130,14 +130,13 @@ async def test_temperature_control_temperature_setpoint(
         },
         blocking=True,
     )
-    assert matter_client.write_attribute.call_count == 1
-    assert matter_client.write_attribute.call_args_list[0] == call(
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
         node_id=matter_node.node_id,
-        attribute_path=create_attribute_path_from_attribute(
-            endpoint_id=2,
-            attribute=clusters.TemperatureControl.Attributes.TemperatureSetpoint,
+        endpoint_id=2,
+        command=clusters.TemperatureControl.Commands.SetTemperature(
+            targetTemperature=-1700
         ),
-        value=-1700,
     )
 
 
