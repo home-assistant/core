@@ -1,17 +1,31 @@
 """Support for TheSilentWave sensors."""
 
-from homeassistant.components.sensor import SensorEntity, SensorStateClass
-from typing import Callable
+from typing import Any
 
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .coordinator import TheSilentWaveCoordinator
 from .entity import TheSilentWaveEntity
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: dict[str, Any] | None = None,
+) -> bool:
     """Set up the sensor platform."""
     return True
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the sensor from a config entry."""
     coordinator = entry.runtime_data
     async_add_entities([TheSilentWaveSensor(coordinator, entry.entry_id)], True)
@@ -20,7 +34,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class TheSilentWaveSensor(TheSilentWaveEntity, SensorEntity):
     """Representation of a TheSilentWave sensor."""
 
-    def __init__(self, coordinator, entry_id):
+    def __init__(self, coordinator: TheSilentWaveCoordinator, entry_id: str) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, entry_id)
         self._attr_state_class = SensorStateClass.MEASUREMENT
@@ -32,12 +46,12 @@ class TheSilentWaveSensor(TheSilentWaveEntity, SensorEntity):
         self._attr_unique_id = f"thesilentwave_{entry_id}_status"
 
     @property
-    def state(self):
+    def state(self) -> Any:
         """Return the state of the sensor."""
         return self.coordinator.data
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon."""
         return "mdi:power" if self.state == "on" else "mdi:power-off"
 
