@@ -36,8 +36,6 @@ def mock_random() -> Mock:
 async def test_user_selection(hass: HomeAssistant) -> None:
     """Test we can select a device."""
 
-    inject_bluetooth_service_info(hass, AUTOMOWER_SERVICE_INFO)
-    inject_bluetooth_service_info(hass, AUTOMOWER_UNNAMED_SERVICE_INFO)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     result = await hass.config_entries.flow.async_init(
@@ -73,8 +71,6 @@ async def test_user_selection_incorrect_pin(
 
     mock_config_entry.add_to_hass(hass)
 
-    inject_bluetooth_service_info(hass, AUTOMOWER_SERVICE_INFO)
-    inject_bluetooth_service_info(hass, AUTOMOWER_UNNAMED_SERVICE_INFO)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_automower_client.connect.return_value = False
@@ -208,7 +204,6 @@ async def test_successful_reauth(
 
     mock_config_entry.add_to_hass(hass)
 
-    # inject_bluetooth_service_info(hass, AUTOMOWER_SERVICE_INFO)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_automower_client.connect.return_value = False
@@ -259,7 +254,6 @@ async def test_failed_reauth(
 
     mock_config_entry.add_to_hass(hass)
 
-    # inject_bluetooth_service_info(hass, AUTOMOWER_SERVICE_INFO)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_automower_client.connect.return_value = False
@@ -293,8 +287,6 @@ async def test_duplicate_entry(
 
     mock_config_entry.add_to_hass(hass)
 
-    inject_bluetooth_service_info(hass, AUTOMOWER_SERVICE_INFO)
-
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # Test we should not discover the already configured device
@@ -323,7 +315,6 @@ async def test_exception_probe(
 ) -> None:
     """Test we can select a device."""
 
-    inject_bluetooth_service_info(hass, AUTOMOWER_SERVICE_INFO)
     inject_bluetooth_service_info(hass, AUTOMOWER_UNNAMED_SERVICE_INFO)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -350,8 +341,6 @@ async def test_exception_connect(
 
     mock_config_entry.add_to_hass(hass)
 
-    inject_bluetooth_service_info(hass, AUTOMOWER_SERVICE_INFO)
-    inject_bluetooth_service_info(hass, AUTOMOWER_UNNAMED_SERVICE_INFO)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_automower_client.connect.side_effect = BleakError
