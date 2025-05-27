@@ -271,6 +271,7 @@ class GoogleTravelTimeSensor(SensorEntity):
                 response = await self._client.compute_routes(
                     request, metadata=[("x-goog-fieldmask", FIELD_MASK)]
                 )
+                _LOGGER.debug("Received response: %s", response)
                 if response is not None and len(response.routes) > 0:
                     self._route = response.routes[0]
             except GoogleAPIError as ex:
