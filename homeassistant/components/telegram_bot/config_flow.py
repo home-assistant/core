@@ -236,7 +236,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: Mapping[str, str] = {}
         try:
-            bot: Bot = await self.hass.async_add_executor_job(
+            bot = await self.hass.async_add_executor_job(
                 initialize_bot, self.hass, MappingProxyType(user_input)
             )
             self._bot = bot
