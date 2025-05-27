@@ -541,7 +541,7 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
             continue
 
         if (
-            package in packages  # Top-level checks only only bleak is resolved
+            package in packages  # Top-level checks only util bleak is resolved
             and (requires_python := metadata(package)["Requires-Python"])
             and not all(
                 _is_dependency_version_range_valid(version_part, "SemVer")
