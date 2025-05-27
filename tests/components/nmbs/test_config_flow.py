@@ -3,21 +3,16 @@
 from typing import Any
 from unittest.mock import AsyncMock
 
-import pytest
-
 from homeassistant import config_entries
 from homeassistant.components.nmbs.config_flow import CONF_EXCLUDE_VIAS
 from homeassistant.components.nmbs.const import (
     CONF_STATION_FROM,
-    CONF_STATION_LIVE,
     CONF_STATION_TO,
     DOMAIN,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -150,126 +145,3 @@ async def test_unavailable_api(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "api_unavailable"
-
-
-@pytest.mark.parametrize(
-    ("config", "reason"),
-    [
-        (
-            {
-                CONF_STATION_FROM: DUMMY_DATA_IMPORT["STAT_BRUSSELS_NORTH"],
-                CONF_STATION_TO: "Utrecht Centraal",
-            },
-            "invalid_station",
-        ),
-        (
-            {
-                CONF_STATION_FROM: "Utrecht Centraal",
-                CONF_STATION_TO: DUMMY_DATA_IMPORT["STAT_BRUSSELS_SOUTH"],
-            },
-            "invalid_station",
-        ),
-        (
-            {
-                CONF_STATION_FROM: DUMMY_DATA_IMPORT["STAT_BRUSSELS_NORTH"],
-                CONF_STATION_TO: DUMMY_DATA_IMPORT["STAT_BRUSSELS_NORTH"],
-            },
-            "same_station",
-        ),
-    ],
-)
-async def test_invalid_station_name(
-    hass: HomeAssistant,
-    mock_nmbs_client: AsyncMock,
-    config: dict[str, Any],
-    reason: str,
-) -> None:
-    """Test importing invalid YAML."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=config,
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == reason
-
-
-async def test_sensor_id_migration_standardname(
-    hass: HomeAssistant,
-    mock_nmbs_client: AsyncMock,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test migrating unique id."""
-    old_unique_id = (
-        f"live_{DUMMY_DATA_IMPORT['STAT_BRUSSELS_NORTH']}_"
-        f"{DUMMY_DATA_IMPORT['STAT_BRUSSELS_NORTH']}_"
-        f"{DUMMY_DATA_IMPORT['STAT_BRUSSELS_SOUTH']}"
-    )
-    new_unique_id = (
-        f"nmbs_live_{DUMMY_DATA['STAT_BRUSSELS_NORTH']}_"
-        f"{DUMMY_DATA['STAT_BRUSSELS_NORTH']}_"
-        f"{DUMMY_DATA['STAT_BRUSSELS_SOUTH']}"
-    )
-    old_entry = entity_registry.async_get_or_create(
-        SENSOR_DOMAIN, DOMAIN, old_unique_id
-    )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_STATION_LIVE: DUMMY_DATA_IMPORT["STAT_BRUSSELS_NORTH"],
-            CONF_STATION_FROM: DUMMY_DATA_IMPORT["STAT_BRUSSELS_NORTH"],
-            CONF_STATION_TO: DUMMY_DATA_IMPORT["STAT_BRUSSELS_SOUTH"],
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    config_entry_id = result["result"].entry_id
-    await hass.async_block_till_done()
-    entities = er.async_entries_for_config_entry(entity_registry, config_entry_id)
-    assert len(entities) == 3
-    entities_map = {entity.unique_id: entity for entity in entities}
-    assert old_unique_id not in entities_map
-    assert new_unique_id in entities_map
-    assert entities_map[new_unique_id].id == old_entry.id
-
-
-async def test_sensor_id_migration_localized_name(
-    hass: HomeAssistant,
-    mock_nmbs_client: AsyncMock,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test migrating unique id."""
-    old_unique_id = (
-        f"live_{DUMMY_DATA_ALTERNATIVE_IMPORT['STAT_BRUSSELS_NORTH']}_"
-        f"{DUMMY_DATA_ALTERNATIVE_IMPORT['STAT_BRUSSELS_NORTH']}_"
-        f"{DUMMY_DATA_ALTERNATIVE_IMPORT['STAT_BRUSSELS_SOUTH']}"
-    )
-    new_unique_id = (
-        f"nmbs_live_{DUMMY_DATA['STAT_BRUSSELS_NORTH']}_"
-        f"{DUMMY_DATA['STAT_BRUSSELS_NORTH']}_"
-        f"{DUMMY_DATA['STAT_BRUSSELS_SOUTH']}"
-    )
-    old_entry = entity_registry.async_get_or_create(
-        SENSOR_DOMAIN, DOMAIN, old_unique_id
-    )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_STATION_LIVE: DUMMY_DATA_ALTERNATIVE_IMPORT["STAT_BRUSSELS_NORTH"],
-            CONF_STATION_FROM: DUMMY_DATA_ALTERNATIVE_IMPORT["STAT_BRUSSELS_NORTH"],
-            CONF_STATION_TO: DUMMY_DATA_ALTERNATIVE_IMPORT["STAT_BRUSSELS_SOUTH"],
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    config_entry_id = result["result"].entry_id
-    await hass.async_block_till_done()
-    entities = er.async_entries_for_config_entry(entity_registry, config_entry_id)
-    assert len(entities) == 3
-    entities_map = {entity.unique_id: entity for entity in entities}
-    assert old_unique_id not in entities_map
-    assert new_unique_id in entities_map
-    assert entities_map[new_unique_id].id == old_entry.id
