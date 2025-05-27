@@ -29,6 +29,7 @@
     'original_name': 'Battery',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_battery_percent',
@@ -75,6 +76,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -84,6 +88,7 @@
     'original_name': 'Cutting blade usage time',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cutting_blade_usage_time',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_cutting_blade_usage_time',
@@ -103,7 +108,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.034',
+    'state': '0.0341666666666667',
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_downtime-entry]
@@ -142,6 +147,7 @@
     'original_name': 'Downtime',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'downtime',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_downtime',
@@ -325,6 +331,7 @@
     'original_name': 'Error',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_error',
@@ -505,6 +512,7 @@
     'original_name': 'Front lawn last time completed',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'work_area_last_time_completed',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_123456_last_time_completed',
@@ -555,6 +563,7 @@
     'original_name': 'Front lawn progress',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'work_area_progress',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_123456_progress',
@@ -612,6 +621,7 @@
     'original_name': 'Mode',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_mode',
@@ -667,6 +677,7 @@
     'original_name': 'My lawn last time completed',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'my_lawn_last_time_completed',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_0_last_time_completed',
@@ -717,6 +728,7 @@
     'original_name': 'My lawn progress',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'my_lawn_progress',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_0_progress',
@@ -766,6 +778,7 @@
     'original_name': 'Next start',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'next_start_timestamp',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_next_start_timestamp',
@@ -816,6 +829,7 @@
     'original_name': 'Number of charging cycles',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'number_of_charging_cycles',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_number_of_charging_cycles',
@@ -866,6 +880,7 @@
     'original_name': 'Number of collisions',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'number_of_collisions',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_number_of_collisions',
@@ -927,6 +942,7 @@
     'original_name': 'Restricted reason',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'restricted_reason',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_restricted_reason',
@@ -983,6 +999,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -992,6 +1011,7 @@
     'original_name': 'Total charging time',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_charging_time',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_total_charging_time',
@@ -1011,7 +1031,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1204.000',
+    'state': '1204.0',
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_total_cutting_time-entry]
@@ -1038,6 +1058,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -1047,6 +1070,7 @@
     'original_name': 'Total cutting time',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_cutting_time',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_total_cutting_time',
@@ -1066,7 +1090,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1165.000',
+    'state': '1165.0',
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_total_drive_distance-entry]
@@ -1093,6 +1117,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
@@ -1102,6 +1129,7 @@
     'original_name': 'Total drive distance',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_drive_distance',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_total_drive_distance',
@@ -1148,6 +1176,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -1157,6 +1188,7 @@
     'original_name': 'Total running time',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_running_time',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_total_running_time',
@@ -1176,7 +1208,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1268.000',
+    'state': '1268.0',
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_total_searching_time-entry]
@@ -1203,6 +1235,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -1212,6 +1247,7 @@
     'original_name': 'Total searching time',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_searching_time',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_total_searching_time',
@@ -1231,7 +1267,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '103.000',
+    'state': '103.0',
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_uptime-entry]
@@ -1270,6 +1306,7 @@
     'original_name': 'Uptime',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_uptime',
@@ -1327,6 +1364,7 @@
     'original_name': 'Work area',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'work_area',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_work_area',
@@ -1388,6 +1426,7 @@
     'original_name': 'Battery',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1234_battery_percent',
@@ -1571,6 +1610,7 @@
     'original_name': 'Error',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error',
     'unique_id': '1234_error',
@@ -1759,6 +1799,7 @@
     'original_name': 'Mode',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode',
     'unique_id': '1234_mode',
@@ -1814,6 +1855,7 @@
     'original_name': 'Next start',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'next_start_timestamp',
     'unique_id': '1234_next_start_timestamp',
@@ -1875,6 +1917,7 @@
     'original_name': 'Restricted reason',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'restricted_reason',
     'unique_id': '1234_restricted_reason',
