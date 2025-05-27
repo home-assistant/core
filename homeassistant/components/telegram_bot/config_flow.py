@@ -241,7 +241,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             self._bot = bot
 
-            user: User = await self._bot.get_me()
+            user = await bot.get_me()
         except InvalidToken:
             _LOGGER.warning("Invalid API token")
             errors["base"] = "invalid_api_key"
