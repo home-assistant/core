@@ -444,7 +444,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             # at least for a short time.
             return self.async_abort(reason="already_in_progress")
         if current_config_entries := self._async_current_entries(include_ignore=False):
-            config_entry = next(
+            self._reconfigure_config_entry = next(
                 (
                     entry
                     for entry in current_config_entries
@@ -452,7 +452,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
                 None,
             )
-            if not config_entry:
+            if not self._reconfigure_config_entry:
                 return self.async_abort(reason="addon_required")
 
         vid = discovery_info.vid
@@ -503,17 +503,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {CONF_NAME: title}
 
         self._usb_discovery = True
-        if current_config_entries := self._async_current_entries(include_ignore=False):
-            self._reconfigure_config_entry = next(
-                (
-                    entry
-                    for entry in current_config_entries
-                    if entry.data.get(CONF_USE_ADDON)
-                ),
-                None,
-            )
-            if not self._reconfigure_config_entry:
-                return self.async_abort(reason="addon_required")
+        if current_config_entries:
             return await self.async_step_intent_migrate()
 
         return await self.async_step_installation_type()
