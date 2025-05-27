@@ -2030,7 +2030,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "swisscom",
     "switch_as_x",
     "switchbee",
-    "switchbot",
     "switchbot_cloud",
     "switcher_kis",
     "switchmate",

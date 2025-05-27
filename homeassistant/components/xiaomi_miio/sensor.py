@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from miio import AirQualityMonitor, Device as MiioDevice, DeviceException
 from miio.gateway.devices import SubDevice
@@ -854,12 +854,21 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
+class XiaomiGenericSensor(
+    XiaomiCoordinatedMiioEntity[DataUpdateCoordinator[Any]], SensorEntity
+):
     """Representation of a Xiaomi generic sensor."""
 
     entity_description: XiaomiMiioSensorDescription
 
-    def __init__(self, device, entry, unique_id, coordinator, description):
+    def __init__(
+        self,
+        device: MiioDevice,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str,
+        coordinator: DataUpdateCoordinator[Any],
+        description: XiaomiMiioSensorDescription,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(device, entry, unique_id, coordinator)
         self.entity_description = description
@@ -916,13 +925,20 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
 class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
     """Representation of a Xiaomi Air Quality Monitor."""
 
-    def __init__(self, name, device, entry, unique_id, description):
+    _device: AirQualityMonitor
+
+    def __init__(
+        self,
+        name: str,
+        device: AirQualityMonitor,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+        description: XiaomiMiioSensorDescription,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id)
 
-        self._available = None
-        self._state = None
-        self._state_attrs = {
+        self._attr_extra_state_attributes = {
             ATTR_POWER: None,
             ATTR_BATTERY_LEVEL: None,
             ATTR_CHARGING: None,
@@ -934,30 +950,15 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
         }
         self.entity_description = description
 
-    @property
-    def available(self) -> bool:
-        """Return true when state is known."""
-        return self._available
-
-    @property
-    def native_value(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the device."""
-        return self._state_attrs
-
     async def async_update(self) -> None:
         """Fetch state from the miio device."""
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
             _LOGGER.debug("Got new state: %s", state)
 
-            self._available = True
-            self._state = state.aqi
-            self._state_attrs.update(
+            self._attr_available = True
+            self._attr_native_value = state.aqi
+            self._attr_extra_state_attributes.update(
                 {
                     ATTR_POWER: state.power,
                     ATTR_CHARGING: state.usb_power,
@@ -971,8 +972,8 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
             )
 
         except DeviceException as ex:
-            if self._available:
-                self._available = False
+            if self._attr_available:
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
 
@@ -988,8 +989,8 @@ class XiaomiGatewaySensor(XiaomiGatewayDevice, SensorEntity):
     ) -> None:
         """Initialize the XiaomiSensor."""
         super().__init__(coordinator, sub_device, entry)
-        self._unique_id = f"{sub_device.sid}-{description.key}"
-        self._name = f"{description.key} ({sub_device.sid})".capitalize()
+        self._attr_unique_id = f"{sub_device.sid}-{description.key}"
+        self._attr_name = f"{description.key} ({sub_device.sid})".capitalize()
         self.entity_description = description
 
     @property
@@ -1010,29 +1011,18 @@ class XiaomiGatewayIlluminanceSensor(SensorEntity):
         )
         self._gateway = gateway_device
         self.entity_description = description
-        self._available = False
-        self._state = None
-
-    @property
-    def available(self) -> bool:
-        """Return true when state is known."""
-        return self._available
-
-    @property
-    def native_value(self):
-        """Return the state of the device."""
-        return self._state
+        self._attr_available = False
 
     async def async_update(self) -> None:
         """Fetch state from the device."""
         try:
-            self._state = await self.hass.async_add_executor_job(
+            self._attr_native_value = await self.hass.async_add_executor_job(
                 self._gateway.get_illumination
             )
-            self._available = True
+            self._attr_available = True
         except GatewayException as ex:
-            if self._available:
-                self._available = False
+            if self._attr_available:
+                self._attr_available = False
                 _LOGGER.error(
                     "Got exception while fetching the gateway illuminance state: %s", ex
                 )

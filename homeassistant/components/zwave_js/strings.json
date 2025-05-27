@@ -98,9 +98,6 @@
       "start_addon": {
         "title": "The Z-Wave add-on is starting."
       },
-      "usb_confirm": {
-        "description": "Do you want to set up {name} with the Z-Wave add-on?"
-      },
       "zeroconf_confirm": {
         "description": "Do you want to add the Z-Wave Server with home ID {home_id} found at {url} to Home Assistant?",
         "title": "Discovered Z-Wave Server"
@@ -134,7 +131,7 @@
       },
       "installation_type": {
         "title": "Set up Z-Wave",
-        "description": "Choose the installation type for your Z-Wave integration.",
+        "description": "In a few steps, we’re going to set up your Home Assistant Connect ZWA-2. Home Assistant can automatically install and configure the recommended Z-Wave setup, or you can customize it.",
         "menu_options": {
           "intent_recommended": "Recommended installation",
           "intent_custom": "Custom installation"
