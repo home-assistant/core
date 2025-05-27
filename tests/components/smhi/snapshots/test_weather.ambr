@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_clear_night[1-load_platforms0][clear-night_forecast]
+# name: test_clear_night[1][clear-night_forecast]
   dict({
     'weather.smhi_test': dict({
       'forecast': list([
@@ -59,7 +59,7 @@
     }),
   })
 # ---
-# name: test_clear_night[1-load_platforms0][clear_night]
+# name: test_clear_night[1][clear_night]
   ReadOnlyDict({
     'attribution': 'Swedish weather institute (SMHI)',
     'cloud_coverage': 100,

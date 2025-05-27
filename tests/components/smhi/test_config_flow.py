@@ -52,6 +52,7 @@ async def test_form(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Home"
+    assert result["result"].unique_id == "0.0-0.0"
     assert result["data"] == {
         "location": {
             "latitude": 0.0,

@@ -5,10 +5,11 @@ from unittest.mock import MagicMock
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
-from pysmhi import SMHIForecast, SmhiForecastException
+from pysmhi import SMHIForecast, SmhiForecastException, SMHIPointForecast
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.smhi.const import DOMAIN
 from homeassistant.components.smhi.weather import (
     ATTR_SMHI_THUNDER_PROBABILITY,
     CONDITION_CLASSES,
@@ -57,21 +58,30 @@ async def test_setup_hass(
 
 
 @pytest.mark.parametrize(
-    "load_platforms",
-    [[Platform.WEATHER]],
-)
-@pytest.mark.parametrize(
     "to_load",
     [1],
 )
 @freeze_time(datetime(2023, 8, 7, 1, tzinfo=dt_util.UTC))
 async def test_clear_night(
     hass: HomeAssistant,
-    load_int: MockConfigEntry,
+    mock_client: SMHIPointForecast,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test for successfully setting up the smhi integration."""
+    hass.config.latitude = "59.32624"
+    hass.config.longitude = "17.84197"
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=TEST_CONFIG,
+        entry_id="01JMZDH8N5PFHGJNYKKYCSCWER",
+        unique_id="59.32624-17.84197",
+        version=3,
+        title="Test",
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
     state = hass.states.get(ENTITY_ID)
 
     assert state
