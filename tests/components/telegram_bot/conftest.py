@@ -242,12 +242,12 @@ def update_callback_query():
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def mock_webhooks_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_PLATFORM: "webhooks",
+            CONF_PLATFORM: PLATFORM_WEBHOOKS,
             CONF_API_KEY: "mock api key",
             ATTR_PARSER: PARSER_MD,
             CONF_TRUSTED_NETWORKS: DEFAULT_TRUSTED_NETWORKS,

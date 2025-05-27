@@ -6,7 +6,7 @@ import logging
 from types import MappingProxyType
 from typing import Any
 
-from telegram import Bot, ChatFullInfo, User
+from telegram import Bot, ChatFullInfo
 from telegram.error import BadRequest, InvalidToken, NetworkError
 import voluptuous as vol
 
