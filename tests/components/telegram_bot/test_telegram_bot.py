@@ -159,7 +159,7 @@ async def test_send_file(hass: HomeAssistant, webhook_platform, service: str) ->
 
     # Mock the file handler read with our base64 encoded dummy file
     with patch(
-        "homeassistant.components.telegram_bot._read_file_as_bytesio",
+        "homeassistant.components.telegram_bot.bot._read_file_as_bytesio",
         _read_file_as_bytesio_mock,
     ):
         response = await hass.services.async_call(
@@ -288,7 +288,7 @@ async def test_polling_platform_message_text_update(
     update_message_text,
     mock_external_calls: None,
 ) -> None:
-    """Provide the `BaseTelegramBotEntity.update_handler` with an `Update` and assert fired `telegram_text` event."""
+    """Provide the `BaseTelegramBot.update_handler` with an `Update` and assert fired `telegram_text` event."""
     events = async_capture_events(hass, "telegram_text")
 
     with patch(
@@ -318,7 +318,7 @@ async def test_polling_platform_message_text_update(
         application.bot.defaults.tzinfo = None
         update = Update.de_json(update_message_text, application.bot)
 
-        # handle_update_callback == BaseTelegramBotEntity.update_handler
+        # handle_update_callback == BaseTelegramBot.update_handler
         await handle_update_callback(update, None)
 
     # Make sure event has fired

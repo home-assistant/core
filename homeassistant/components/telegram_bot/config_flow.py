@@ -19,7 +19,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
@@ -33,26 +33,21 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from . import (
+from . import DEFAULT_TRUSTED_NETWORKS, initialize_bot
+from .bot import TelegramBotConfigEntry
+from .const import (
     ATTR_PARSER,
     CONF_ALLOWED_CHAT_IDS,
+    CONF_BOT_COUNT,
     CONF_CHAT_ID,
-    CONF_PLATFORM,
     CONF_PROXY_URL,
     CONF_TRUSTED_NETWORKS,
-    CONF_URL,
-    DEFAULT_TRUSTED_NETWORKS,
     DOMAIN,
+    ISSUE_DEPRECATED_YAML,
+    ISSUE_DEPRECATED_YAML_HAS_MORE_PLATFORMS,
     PARSER_HTML,
     PARSER_MD,
     PARSER_MD2,
-    TelegramBotConfigEntry,
-    initialize_bot,
-)
-from .const import (
-    CONF_BOT_COUNT,
-    ISSUE_DEPRECATED_YAML,
-    ISSUE_DEPRECATED_YAML_HAS_MORE_PLATFORMS,
     PLATFORM_BROADCAST,
     PLATFORM_POLLING,
     PLATFORM_WEBHOOKS,

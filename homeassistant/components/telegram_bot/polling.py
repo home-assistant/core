@@ -8,14 +8,14 @@ from telegram.ext import ApplicationBuilder, CallbackContext, TypeHandler
 
 from homeassistant.core import HomeAssistant
 
-from . import BaseTelegramBotEntity, TelegramBotConfigEntry
+from .bot import BaseTelegramBot, TelegramBotConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
     hass: HomeAssistant, bot: Bot, config: TelegramBotConfigEntry
-) -> BaseTelegramBotEntity | None:
+) -> BaseTelegramBot | None:
     """Set up the Telegram polling platform."""
     pollbot = PollBot(hass, bot, config)
 
@@ -44,7 +44,7 @@ def error_callback(error: Exception, update: object | None = None) -> None:
             _LOGGER.error("%s: %s", error.__class__.__name__, error)
 
 
-class PollBot(BaseTelegramBotEntity):
+class PollBot(BaseTelegramBot):
     """Controls the Application object that holds the bot and an updater.
 
     The application is set up to pass telegram updates to `self.handle_update`

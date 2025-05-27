@@ -12,16 +12,13 @@ from telegram.error import TimedOut
 from telegram.ext import Application, TypeHandler
 
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.network import get_url
 
-from . import (
-    CONF_TRUSTED_NETWORKS,
-    CONF_URL,
-    BaseTelegramBotEntity,
-    TelegramBotConfigEntry,
-)
+from .bot import BaseTelegramBot, TelegramBotConfigEntry
+from .const import CONF_TRUSTED_NETWORKS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +29,7 @@ SECRET_TOKEN_LENGTH = 32
 
 async def async_setup_platform(
     hass: HomeAssistant, bot: Bot, config: TelegramBotConfigEntry
-) -> BaseTelegramBotEntity | None:
+) -> BaseTelegramBot | None:
     """Set up the Telegram webhooks platform."""
 
     # Generate an ephemeral secret token
@@ -63,7 +60,7 @@ def _get_trusted_networks(config: TelegramBotConfigEntry) -> list[IPv4Network]:
     return [IPv4Network(trusted_network) for trusted_network in trusted_networks_str]
 
 
-class PushBot(BaseTelegramBotEntity):
+class PushBot(BaseTelegramBot):
     """Handles all the push/webhook logic and passes telegram updates to `self.handle_update`."""
 
     def __init__(

@@ -12,13 +12,12 @@ from telegram.constants import AccentColor, ChatType
 from homeassistant.components.telegram_bot import (
     ATTR_PARSER,
     CONF_ALLOWED_CHAT_IDS,
-    CONF_CHAT_ID,
     CONF_TRUSTED_NETWORKS,
     DEFAULT_TRUSTED_NETWORKS,
     DOMAIN,
     PARSER_MD,
 )
-from homeassistant.components.telegram_bot.const import PLATFORM_WEBHOOKS
+from homeassistant.components.telegram_bot.const import CONF_CHAT_ID, PLATFORM_WEBHOOKS
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import (
     CONF_API_KEY,

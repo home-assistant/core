@@ -4,11 +4,11 @@ from telegram import Bot
 
 from homeassistant.core import HomeAssistant
 
-from . import BaseTelegramBotEntity, TelegramBotConfigEntry
+from .bot import BaseTelegramBot, TelegramBotConfigEntry
 
 
 async def async_setup_platform(
     hass: HomeAssistant, bot: Bot, config: TelegramBotConfigEntry
-) -> type[BaseTelegramBotEntity] | None:
+) -> type[BaseTelegramBot] | None:
     """Set up the Telegram broadcast platform."""
     return None
