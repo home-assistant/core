@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SSL,
     CONF_VERIFY_SSL,
+    CONF_VERSION,
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -55,6 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bo
     verify_tls = entry.data[CONF_VERIFY_SSL]
     location = entry.data[CONF_LOCATION]
     api_key = entry.data.get(CONF_API_KEY, "")
+    version = entry.data.get(CONF_VERSION, 6)
 
     # remove obsolet CONF_STATISTICS_ONLY from entry.data
     if CONF_STATISTICS_ONLY in entry.data:
@@ -111,6 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bo
         try:
             await api.get_data()
             await api.get_versions()
+            # TODO - determine and re-write version
         except HoleError as err:
             raise UpdateFailed(f"Failed to communicate with API: {err}") from err
         if not isinstance(api.data, dict):
