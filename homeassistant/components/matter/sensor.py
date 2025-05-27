@@ -994,6 +994,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="TargetPositionLiftPercent100ths",
             entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
             translation_key="window_covering_target_position",
             measurement_to_ha=lambda x: round((10000 - x) / 100),
             native_unit_of_measurement=PERCENTAGE,
