@@ -4,13 +4,9 @@ from __future__ import annotations
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.trigger import Trigger
+from homeassistant.util.decorator import Registry
 
-from .triggers import event, value_updated
-
-TRIGGERS = {
-    event.PLATFORM_TYPE: event.EventTrigger,
-    value_updated.PLATFORM_TYPE: value_updated.ValueUpdatedTrigger,
-}
+TRIGGERS: Registry[str, type[Trigger]] = Registry()
 
 
 async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
