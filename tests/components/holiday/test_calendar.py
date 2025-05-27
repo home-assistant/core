@@ -265,7 +265,7 @@ async def test_no_next_event(
     state = hass.states.get("calendar.germany")
     assert state is not None
     assert state.state == "off"
-    assert state.attributes == {"friendly_name": "Germany"}
+    assert state.attributes == {"friendly_name": "Germany", "color": None}
 
 
 @pytest.mark.parametrize(
@@ -306,6 +306,7 @@ async def test_language_not_exist(
         "location": "Norge",
         "message": "Første nyttårsdag",
         "start_time": "2023-01-01 00:00:00",
+        "color": None,
     }
 
     response = await hass.services.async_call(
