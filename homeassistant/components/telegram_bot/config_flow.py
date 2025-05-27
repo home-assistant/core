@@ -383,7 +383,7 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
                 if existing_subentry.unique_id == str(chat_id):
                     return self.async_abort(reason="already_configured")
 
-            chat_name: str = await _async_get_chat_name(bot, chat_id)
+            chat_name = await _async_get_chat_name(bot, chat_id)
             if chat_name:
                 return self.async_create_entry(
                     title=chat_name,
