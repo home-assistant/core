@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_VERIFY_SSL,
+    CONF_VERSION,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -55,6 +56,7 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_LOCATION: user_input[CONF_LOCATION],
                 CONF_SSL: user_input[CONF_SSL],
                 CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                CONF_VERSION: user_input[CONF_VERSION],
             }
 
             self._async_abort_entries_match(
@@ -95,6 +97,10 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_VERIFY_SSL,
                         default=user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+                    ): bool,
+                    vol.Required(
+                        CONF_VERSION,
+                        default=user_input.get(CONF_VERSION, DEFAULT_VERSION),
                     ): bool,
                 }
             ),
@@ -158,11 +164,13 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
             location=self._config[CONF_LOCATION],
             tls=self._config[CONF_SSL],
             api_token=self._config.get(CONF_API_KEY),
+            version=self._config.get(CONF_VERSION),
         )
         try:
             await pi_hole.get_data()
         except HoleError as ex:
             _LOGGER.debug("Connection failed: %s", ex)
+            #TODO detect incorrect version
             return {"base": "cannot_connect"}
         if not isinstance(pi_hole.data, dict):
             return {CONF_API_KEY: "invalid_auth"}
