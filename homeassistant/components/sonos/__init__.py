@@ -41,7 +41,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import create_eager_task
 
 from .alarms import SonosAlarms
-from .config_entry import SonosConfigEntry, SonosData, SonosRuntimeData
+from .config_entry import SonosConfigEntry, SonosData
 from .const import (
     AVAILABILITY_CHECK_INTERVAL,
     DATA_SONOS_DISCOVERY_MANAGER,
@@ -115,8 +115,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SonosConfigEntry) -> boo
     soco_config.ZGT_EVENT_FALLBACK = False
     zonegroupstate.EVENT_CACHE_TIMEOUT = SUBSCRIPTION_TIMEOUT
 
-    entry.runtime_data = SonosRuntimeData(SonosData())
-    data = entry.runtime_data.sonos_data
+    data = entry.runtime_data = SonosData()
 
     config = hass.data[DOMAIN].get("media_player", {})
     hosts = config.get(CONF_HOSTS, [])
@@ -605,7 +604,7 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: SonosConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove Sonos config entry from a device."""
-    known_devices = config_entry.runtime_data.sonos_data.discovered.keys()
+    known_devices = config_entry.runtime_data.discovered.keys()
     for identifier in device_entry.identifiers:
         if identifier[0] != DOMAIN:
             continue

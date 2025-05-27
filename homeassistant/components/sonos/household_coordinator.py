@@ -59,7 +59,7 @@ class SonosHouseholdCoordinator:
 
     async def _async_poll(self) -> None:
         """Poll any known speaker."""
-        discovered = self.config_entry.runtime_data.sonos_data.discovered
+        discovered = self.config_entry.runtime_data.discovered
 
         for uid, speaker in discovered.items():
             _LOGGER.debug("Polling %s using %s", self.class_type, speaker.soco)

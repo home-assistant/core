@@ -13,7 +13,7 @@ async def test_statistics_duplicate(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test Sonos statistics."""
-    speaker = list(config_entry.runtime_data.sonos_data.discovered.values())[0]
+    speaker = list(config_entry.runtime_data.discovered.values())[0]
 
     subscription = soco.deviceProperties.subscribe.return_value
     sub_callback = subscription.callback

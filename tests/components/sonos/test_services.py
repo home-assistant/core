@@ -33,7 +33,7 @@ async def test_media_player_join(
 
     with (
         patch.dict(
-            config_entry.runtime_data.sonos_data.entity_id_mappings,
+            config_entry.runtime_data.entity_id_mappings,
             mock_entity_id_mappings,
         ),
         patch(
@@ -47,9 +47,7 @@ async def test_media_player_join(
             blocking=True,
         )
 
-        found_speaker = config_entry.runtime_data.sonos_data.entity_id_mappings[
-            valid_entity_id
-        ]
+        found_speaker = config_entry.runtime_data.entity_id_mappings[valid_entity_id]
         mock_join_multi.assert_called_with(
             hass, config_entry, found_speaker, [mocked_speaker]
         )

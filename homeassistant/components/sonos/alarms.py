@@ -52,9 +52,7 @@ class SonosAlarms(SonosHouseholdCoordinator):
         for alarm_id, alarm in self.alarms.alarms.items():
             if alarm_id in self.created_alarm_ids:
                 continue
-            speaker = self.config_entry.runtime_data.sonos_data.discovered.get(
-                alarm.zone.uid
-            )
+            speaker = self.config_entry.runtime_data.discovered.get(alarm.zone.uid)
             if speaker:
                 async_dispatcher_send(
                     self.hass, SONOS_CREATE_ALARM, speaker, [alarm_id]

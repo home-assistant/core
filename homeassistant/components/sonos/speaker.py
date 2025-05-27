@@ -102,7 +102,7 @@ class SonosSpeaker:
         """Initialize a SonosSpeaker."""
         self.hass = hass
         self.config_entry = config_entry
-        self.data = config_entry.runtime_data.sonos_data
+        self.data = config_entry.runtime_data
         self.soco = soco
         self.websocket: SonosWebsocket | None = None
         self.household_id: str = soco.household_id
@@ -970,7 +970,7 @@ class SonosSpeaker:
         speakers: list[SonosSpeaker],
     ) -> None:
         """Form a group with other players."""
-        async with config_entry.runtime_data.sonos_data.topology_condition:
+        async with config_entry.runtime_data.topology_condition:
             group: list[SonosSpeaker] = await hass.async_add_executor_job(
                 master.join, speakers
             )
@@ -1001,7 +1001,7 @@ class SonosSpeaker:
             for speaker in joined_speakers + coordinators:
                 speaker.unjoin()
 
-        async with config_entry.runtime_data.sonos_data.topology_condition:
+        async with config_entry.runtime_data.topology_condition:
             await hass.async_add_executor_job(_unjoin_all, speakers)
             await SonosSpeaker.wait_for_groups(
                 hass, config_entry, [[s] for s in speakers]
@@ -1037,7 +1037,7 @@ class SonosSpeaker:
             for speaker in list(speakers_set):
                 speakers_set.update(speaker.sonos_group)
 
-        async with config_entry.runtime_data.sonos_data.topology_condition:
+        async with config_entry.runtime_data.topology_condition:
             await hass.async_add_executor_job(_snapshot_all, speakers_set)
 
     @soco_error()
@@ -1136,7 +1136,7 @@ class SonosSpeaker:
                 assert len(speaker.snapshot_group)
                 speakers_set.update(speaker.snapshot_group)
 
-        async with config_entry.runtime_data.sonos_data.topology_condition:
+        async with config_entry.runtime_data.topology_condition:
             groups = await hass.async_add_executor_job(
                 _restore_groups, speakers_set, with_group
             )
@@ -1170,13 +1170,11 @@ class SonosSpeaker:
         try:
             async with asyncio.timeout(5):
                 while not _test_groups(groups):
-                    await config_entry.runtime_data.sonos_data.topology_condition.wait()
+                    await config_entry.runtime_data.topology_condition.wait()
         except TimeoutError:
             _LOGGER.warning("Timeout waiting for target groups %s", groups)
 
-        any_speaker = next(
-            iter(config_entry.runtime_data.sonos_data.discovered.values())
-        )
+        any_speaker = next(iter(config_entry.runtime_data.discovered.values()))
         any_speaker.soco.zone_group_state.clear_cache()
 
     #

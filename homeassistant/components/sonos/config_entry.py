@@ -23,29 +23,20 @@ class UnjoinData:
     event: asyncio.Event = field(default_factory=asyncio.Event)
 
 
+@dataclass
 class SonosData:
     """Storage class for platform global data."""
 
-    def __init__(self) -> None:
-        """Initialize the data."""
-        # OrderedDict behavior used by SonosAlarms and SonosFavorites
-        self.discovered: OrderedDict[str, SonosSpeaker] = OrderedDict()
-        self.favorites: dict[str, SonosFavorites] = {}
-        self.alarms: dict[str, SonosAlarms] = {}
-        self.topology_condition = asyncio.Condition()
-        self.hosts_heartbeat: CALLBACK_TYPE | None = None
-        self.discovery_known: set[str] = set()
-        self.boot_counts: dict[str, int] = {}
-        self.mdns_names: dict[str, str] = {}
-        self.entity_id_mappings: dict[str, SonosSpeaker] = {}
-        self.unjoin_data: dict[str, UnjoinData] = {}
+    discovered: OrderedDict[str, "SonosSpeaker"] = field(default_factory=OrderedDict)
+    favorites: dict[str, "SonosFavorites"] = field(default_factory=dict)
+    alarms: dict[str, "SonosAlarms"] = field(default_factory=dict)
+    topology_condition: asyncio.Condition = field(default_factory=asyncio.Condition)
+    hosts_heartbeat: CALLBACK_TYPE | None = None
+    discovery_known: set[str] = field(default_factory=set)
+    boot_counts: dict[str, int] = field(default_factory=dict)
+    mdns_names: dict[str, str] = field(default_factory=dict)
+    entity_id_mappings: dict[str, "SonosSpeaker"] = field(default_factory=dict)
+    unjoin_data: dict[str, "UnjoinData"] = field(default_factory=dict)
 
 
-@dataclass
-class SonosRuntimeData:
-    """Data."""
-
-    sonos_data: SonosData
-
-
-type SonosConfigEntry = ConfigEntry[SonosRuntimeData]
+type SonosConfigEntry = ConfigEntry[SonosData]

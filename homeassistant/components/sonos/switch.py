@@ -80,7 +80,7 @@ async def async_setup_entry(
 
     async def _async_create_alarms(speaker: SonosSpeaker, alarm_ids: list[str]) -> None:
         entities = []
-        created_alarms = config_entry.runtime_data.sonos_data.alarms[
+        created_alarms = config_entry.runtime_data.alarms[
             speaker.household_id
         ].created_alarm_ids
         for alarm_id in alarm_ids:
@@ -222,7 +222,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     @property
     def alarm(self) -> Alarm:
         """Return the alarm instance."""
-        return self.config_entry.runtime_data.sonos_data.alarms[self.household_id].get(
+        return self.config_entry.runtime_data.alarms[self.household_id].get(
             self.alarm_id
         )
 
@@ -236,9 +236,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
 
     async def _async_fallback_poll(self) -> None:
         """Call the central alarm polling method."""
-        alarms: SonosAlarms = self.config_entry.runtime_data.sonos_data.alarms[
-            self.household_id
-        ]
+        alarms: SonosAlarms = self.config_entry.runtime_data.alarms[self.household_id]
         assert alarms.async_poll
         await alarms.async_poll()
 
@@ -262,9 +260,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
             return
 
         if self.speaker.soco.uid != self.alarm.zone.uid:
-            speaker = self.config_entry.runtime_data.sonos_data.discovered.get(
-                self.alarm.zone.uid
-            )
+            speaker = self.config_entry.runtime_data.discovered.get(self.alarm.zone.uid)
             assert speaker
             self.speaker = speaker
             if self.speaker is None:

@@ -52,9 +52,7 @@ async def async_get_config_entry_diagnostics(
 
     for section in ("discovered", "discovery_known"):
         payload[section] = {}
-        data: set[Any] | dict[str, Any] = getattr(
-            config_entry.runtime_data.sonos_data, section
-        )
+        data: set[Any] | dict[str, Any] = getattr(config_entry.runtime_data, section)
         if isinstance(data, set):
             payload[section] = data
             continue
@@ -79,7 +77,7 @@ async def async_get_device_diagnostics(
     if uid is None:
         return {}
 
-    if (speaker := config_entry.runtime_data.sonos_data.discovered.get(uid)) is None:
+    if (speaker := config_entry.runtime_data.discovered.get(uid)) is None:
         return {}
 
     return await async_generate_speaker_info(hass, config_entry, speaker)
@@ -136,7 +134,7 @@ async def async_generate_speaker_info(
 
     payload["enabled_entities"] = {
         entity_id
-        for entity_id, s in config_entry.runtime_data.sonos_data.entity_id_mappings.items()
+        for entity_id, s in config_entry.runtime_data.entity_id_mappings.items()
         if s is speaker
     }
     payload["media"] = await async_generate_media_info(hass, speaker)

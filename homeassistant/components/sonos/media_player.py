@@ -300,9 +300,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
     async def _async_fallback_poll(self) -> None:
         """Retrieve latest state by polling."""
-        favorites = self.config_entry.runtime_data.sonos_data.favorites[
-            self.speaker.household_id
-        ]
+        favorites = self.config_entry.runtime_data.favorites[self.speaker.household_id]
         assert favorites.async_poll
         await favorites.async_poll()
         await self.hass.async_add_executor_job(self._update)
@@ -884,11 +882,8 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Join `group_members` as a player group with the current player."""
         speakers = []
         for entity_id in group_members:
-            if (
-                speaker
-                := self.config_entry.runtime_data.sonos_data.entity_id_mappings.get(
-                    entity_id
-                )
+            if speaker := self.config_entry.runtime_data.entity_id_mappings.get(
+                entity_id
             ):
                 speakers.append(speaker)
             else:
@@ -905,7 +900,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         which optimizes the order in which speakers are removed from their groups.
         Removing coordinators last better preserves playqueues on the speakers.
         """
-        sonos_data = self.config_entry.runtime_data.sonos_data
+        sonos_data = self.config_entry.runtime_data
         household_id = self.speaker.household_id
 
         async def async_process_unjoin(now: datetime.datetime) -> None:
