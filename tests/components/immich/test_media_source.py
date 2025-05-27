@@ -101,37 +101,6 @@ async def test_browse_media_unconfigured(hass: HomeAssistant) -> None:
         await source.async_browse_media(item)
 
 
-async def test_browse_media_album_error(
-    hass: HomeAssistant,
-    mock_immich: Mock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test browse_media with unknown album."""
-    assert await async_setup_component(hass, "media_source", {})
-
-    with patch("homeassistant.components.immich.PLATFORMS", []):
-        await setup_integration(hass, mock_config_entry)
-
-    # exception in get_albums()
-    mock_immich.albums.async_get_all_albums.side_effect = ImmichError(
-        {
-            "message": "Not found or no album.read access",
-            "error": "Bad Request",
-            "statusCode": 400,
-            "correlationId": "e0hlizyl",
-        }
-    )
-
-    source = await async_get_media_source(hass)
-
-    item = MediaSourceItem(hass, DOMAIN, f"{mock_config_entry.unique_id}/albums", None)
-    result = await source.async_browse_media(item)
-
-    assert result
-    assert result.identifier is None
-    assert len(result.children) == 0
-
-
 async def test_browse_media_get_root(
     hass: HomeAssistant,
     mock_immich: Mock,
@@ -144,6 +113,8 @@ async def test_browse_media_get_root(
         await setup_integration(hass, mock_config_entry)
 
     source = await async_get_media_source(hass)
+
+    # get root
     item = MediaSourceItem(hass, DOMAIN, "", None)
     result = await source.async_browse_media(item)
 
@@ -154,6 +125,19 @@ async def test_browse_media_get_root(
     assert media_file.title == "Someone"
     assert media_file.media_content_id == (
         "media-source://immich/e7ef5713-9dab-4bd4-b899-715b0ca4379e"
+    )
+
+    # get collections
+    item = MediaSourceItem(hass, DOMAIN, "e7ef5713-9dab-4bd4-b899-715b0ca4379e", None)
+    result = await source.async_browse_media(item)
+
+    assert result
+    assert len(result.children) == 1
+    media_file = result.children[0]
+    assert isinstance(media_file, BrowseMedia)
+    assert media_file.title == "albums"
+    assert media_file.media_content_id == (
+        "media-source://immich/e7ef5713-9dab-4bd4-b899-715b0ca4379e/albums"
     )
 
 
@@ -184,6 +168,37 @@ async def test_browse_media_get_albums(
         "e7ef5713-9dab-4bd4-b899-715b0ca4379e/albums/"
         "721e1a4b-aa12-441e-8d3b-5ac7ab283bb6"
     )
+
+
+async def test_browse_media_get_albums_error(
+    hass: HomeAssistant,
+    mock_immich: Mock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test browse_media with unknown album."""
+    assert await async_setup_component(hass, "media_source", {})
+
+    with patch("homeassistant.components.immich.PLATFORMS", []):
+        await setup_integration(hass, mock_config_entry)
+
+    # exception in get_albums()
+    mock_immich.albums.async_get_all_albums.side_effect = ImmichError(
+        {
+            "message": "Not found or no album.read access",
+            "error": "Bad Request",
+            "statusCode": 400,
+            "correlationId": "e0hlizyl",
+        }
+    )
+
+    source = await async_get_media_source(hass)
+
+    item = MediaSourceItem(hass, DOMAIN, f"{mock_config_entry.unique_id}/albums", None)
+    result = await source.async_browse_media(item)
+
+    assert result
+    assert result.identifier is None
+    assert len(result.children) == 0
 
 
 async def test_browse_media_get_album_items_error(
