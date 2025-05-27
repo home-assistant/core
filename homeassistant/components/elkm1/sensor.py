@@ -14,8 +14,7 @@ from elkm1_lib.util import pretty_const
 from elkm1_lib.zones import Zone
 import voluptuous as vol
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import EntityCategory, UnitOfElectricPotential
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -248,11 +247,11 @@ class ElkZone(ElkSensor):
         if self._element.definition == ZoneType.TEMPERATURE:
             return self._temperature_unit
         return None
-    
+
     @property
     def device_class(self) -> SensorDeviceClass | None:
         """Return the device class of the sensor."""
-        if self._element.definition == "temperature":
+        if self._element.definition == ZoneType.TEMPERATURE:
             return SensorDeviceClass.TEMPERATURE
         return None
 
