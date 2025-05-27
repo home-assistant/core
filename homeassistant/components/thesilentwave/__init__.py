@@ -9,7 +9,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from pysilentwave.exceptions import SilentWaveError
 
-from .coordinator import TheSilentWaveCoordinator
+from .coordinator import TheSilentWaveCoordinator, TheSilentWaveConfigEntry
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -17,7 +17,9 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: TheSilentWaveConfigEntry
+) -> bool:
     """Set up TheSilentWave from a config entry."""
     # Fetch the configuration data from the entry.
     name = entry.data["name"]
@@ -47,7 +49,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: TheSilentWaveConfigEntry
+) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
