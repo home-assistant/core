@@ -50,4 +50,8 @@ class AmazonEntity(CoordinatorEntity[AmazonDevicesCoordinator]):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self._serial_num in self.coordinator.data
+        return (
+            super().available
+            and self._serial_num in self.coordinator.data
+            and self.device.online
+        )
