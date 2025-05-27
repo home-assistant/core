@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components.satel_integra.const import DEFAULT_PORT, DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PORT
+
+from tests.common import MockConfigEntry
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
@@ -32,3 +37,13 @@ def mock_satel() -> Generator[AsyncMock]:
         client = mock_client.return_value
 
         yield client
+
+
+@pytest.fixture(name="config_entry")
+def mock_config_entry() -> MockConfigEntry:
+    """Mock ntfy configuration entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="192.168.0.2",
+        data={CONF_HOST: "192.168.0.2", CONF_PORT: DEFAULT_PORT},
+    )

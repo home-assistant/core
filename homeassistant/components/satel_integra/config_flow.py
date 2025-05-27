@@ -241,7 +241,7 @@ class SatelOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Init step."""
         if user_input is not None:
-            return self.async_create_entry(data=user_input)
+            return self.async_create_entry(data={CONF_CODE: user_input.get(CONF_CODE)})
 
         return self.async_show_form(
             step_id="init",

@@ -1,22 +1,36 @@
 """Test the satel integra config flow."""
 
+from typing import Any
 from unittest.mock import AsyncMock
 
-from homeassistant.components.satel_integra.config_flow import (
-    ACTION_ADD,
-    ACTION_DELETE,
-    ACTION_EDIT,
-    CONF_ACTION,
-    CONF_ACTION_NUMBER,
+import pytest
+
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.satel_integra.const import (
     CONF_ARM_HOME_MODE,
     CONF_DEVICE_PARTITIONS,
+    CONF_OUTPUT_NUMBER,
     CONF_OUTPUTS,
+    CONF_PARTITION_NUMBER,
+    CONF_SWITCHABLE_OUTPUT_NUMBER,
     CONF_SWITCHABLE_OUTPUTS,
+    CONF_ZONE_NUMBER,
     CONF_ZONE_TYPE,
     CONF_ZONES,
+    DEFAULT_PORT,
+    DOMAIN,
+    SUBENTRY_TYPE_OUTPUT,
+    SUBENTRY_TYPE_PARTITION,
+    SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
+    SUBENTRY_TYPE_ZONE,
 )
-from homeassistant.components.satel_integra.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_IMPORT,
+    SOURCE_RECONFIGURE,
+    SOURCE_USER,
+    ConfigSubentry,
+    ConfigSubentryData,
+)
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -24,11 +38,34 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 CONST_HOST = "192.168.0.2"
-CONST_PORT = 7094
+CONST_PORT = 7095
+CONST_CODE = "1234"
 
 
+@pytest.mark.parametrize(
+    ("user_input", "entry_data", "entry_options"),
+    [
+        (
+            {CONF_HOST: CONST_HOST, CONF_PORT: CONST_PORT, CONF_CODE: CONST_CODE},
+            {CONF_HOST: CONST_HOST, CONF_PORT: CONST_PORT},
+            {CONF_CODE: CONST_CODE},
+        ),
+        (
+            {
+                CONF_HOST: CONST_HOST,
+            },
+            {CONF_HOST: CONST_HOST, CONF_PORT: DEFAULT_PORT},
+            {CONF_CODE: None},
+        ),
+    ],
+)
 async def test_setup_flow(
-    hass: HomeAssistant, mock_satel: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    user_input: dict[str, Any],
+    entry_data: dict[str, Any],
+    entry_options: dict[str, Any],
 ) -> None:
     """Test the setup flow."""
 
@@ -41,418 +78,144 @@ async def test_setup_flow(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: CONST_HOST, CONF_PORT: CONST_PORT, CONF_CODE: "1111"},
+        user_input,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == CONST_HOST
-    assert result["data"] == {CONF_HOST: CONST_HOST, CONF_PORT: CONST_PORT}
-    assert result["options"] == {CONF_CODE: "1111"}
+    assert result["data"] == entry_data
+    assert result["options"] == entry_options
 
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    ("user_input"),
+    [({CONF_HOST: CONST_HOST, CONF_PORT: CONST_PORT, CONF_CODE: CONST_CODE})],
+)
+async def test_setup_connection_failed(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    user_input: dict[str, Any],
+) -> None:
+    """Test the setup flow when connection fails."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    mock_satel.connect.return_value = False
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_satel.connect.return_value = True
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("import_input", "entry_data", "entry_options"),
+    [
+        (
+            {
+                CONF_HOST: CONST_HOST,
+                CONF_PORT: CONST_PORT,
+                CONF_CODE: CONST_CODE,
+                CONF_DEVICE_PARTITIONS: {
+                    "1": {CONF_NAME: "Partition Import 1", CONF_ARM_HOME_MODE: 1}
+                },
+                CONF_ZONES: {
+                    "1": {CONF_NAME: "Zone Import 1", CONF_ZONE_TYPE: "motion"},
+                    "2": {CONF_NAME: "Zone Import 2", CONF_ZONE_TYPE: "door"},
+                },
+                CONF_OUTPUTS: {
+                    "1": {CONF_NAME: "Output Import 1", CONF_ZONE_TYPE: "light"},
+                    "2": {CONF_NAME: "Output Import 2", CONF_ZONE_TYPE: "safety"},
+                },
+                CONF_SWITCHABLE_OUTPUTS: {
+                    "1": {CONF_NAME: "Switchable output Import 1"},
+                    "2": {CONF_NAME: "Switchable output Import 2"},
+                },
+            },
+            {CONF_HOST: CONST_HOST, CONF_PORT: CONST_PORT},
+            {CONF_CODE: CONST_CODE},
+        )
+    ],
+)
 async def test_import_flow(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
     mock_setup_entry: AsyncMock,
+    import_input: dict[str, Any],
+    entry_data: dict[str, Any],
+    entry_options: dict[str, Any],
 ) -> None:
     """Test the import flow."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_HOST: "192.168.0.2",
-            CONF_PORT: 7095,
-            CONF_CODE: "3333",
-            CONF_DEVICE_PARTITIONS: {
-                "1": {CONF_NAME: "Partition Import 1", CONF_ARM_HOME_MODE: 1}
-            },
-            CONF_ZONES: {
-                "1": {CONF_NAME: "Zone Import 1", CONF_ZONE_TYPE: "motion"},
-                "2": {CONF_NAME: "Zone Import 2", CONF_ZONE_TYPE: "door"},
-            },
-            CONF_OUTPUTS: {
-                "1": {CONF_NAME: "Output Import 1", CONF_ZONE_TYPE: "light"},
-                "2": {CONF_NAME: "Output Import 2", CONF_ZONE_TYPE: "safety"},
-            },
-            CONF_SWITCHABLE_OUTPUTS: {
-                "1": {CONF_NAME: "Switchable output Import 1"},
-                "2": {CONF_NAME: "Switchable output Import 2"},
-            },
-        },
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=import_input
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "192.168.0.2"
-    assert result["data"] == {CONF_HOST: "192.168.0.2", CONF_PORT: 7095}
-    assert result["options"] == {
-        CONF_CODE: "3333",
-        CONF_DEVICE_PARTITIONS: {
-            "1": {CONF_NAME: "Partition Import 1", CONF_ARM_HOME_MODE: 1}
-        },
-        CONF_ZONES: {
-            "1": {CONF_NAME: "Zone Import 1", CONF_ZONE_TYPE: "motion"},
-            "2": {CONF_NAME: "Zone Import 2", CONF_ZONE_TYPE: "door"},
-        },
-        CONF_OUTPUTS: {
-            "1": {CONF_NAME: "Output Import 1", CONF_ZONE_TYPE: "light"},
-            "2": {CONF_NAME: "Output Import 2", CONF_ZONE_TYPE: "safety"},
-        },
-        CONF_SWITCHABLE_OUTPUTS: {
-            "1": {CONF_NAME: "Switchable output Import 1"},
-            "2": {CONF_NAME: "Switchable output Import 2"},
-        },
-    }
+    assert result["title"] == CONST_HOST
+    assert result["data"] == entry_data
+    assert result["options"] == entry_options
+
+    assert len(result["subentries"]) == 7
 
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_options_general_flow(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+@pytest.mark.parametrize(
+    ("import_input"),
+    [({CONF_HOST: CONST_HOST, CONF_PORT: CONST_PORT, CONF_CODE: CONST_CODE})],
+)
+async def test_import_flow_connection_failure(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    import_input: dict[str, Any],
+) -> None:
+    """Test the import flow."""
+
+    mock_satel.connect.return_value = False
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=import_input
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "Failed to connect"
+
+
+@pytest.mark.parametrize(
+    ("user_input", "entry_options"),
+    [
+        (
+            {CONF_CODE: CONST_CODE},
+            {CONF_CODE: CONST_CODE},
+        ),
+        ({}, {CONF_CODE: None}),
+    ],
+)
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    user_input: dict[str, Any],
+    entry_options: dict[str, Any],
 ) -> None:
     """Test general options flow."""
-    entry, result = await _init_options_flow(hass, "general")
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_CODE: "2222"}
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options[CONF_CODE] == "2222"
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "general"}
-    )
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={},
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options[CONF_CODE] is None
-
-
-async def test_options_partitions_flow(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test partitions options flow."""
-    entry, result = await _init_options_flow(hass, "partitions")
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_ADD}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "partition_details"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_NAME: "Partition 1", CONF_ARM_HOME_MODE: 2}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options[CONF_DEVICE_PARTITIONS] == {
-        "1": {CONF_NAME: "Partition 1", CONF_ARM_HOME_MODE: 2}
-    }
-
-    # Check partition can only be added once
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "partitions"}
-    )
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_ADD},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "partitions"
-    assert result["errors"] == {"base": "partition_exists"}
-
-    # Check only existing partitions can be edited
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_ACTION_NUMBER: 2, CONF_ACTION: ACTION_EDIT},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "partitions"
-    assert result["errors"] == {"base": "unknown_partition"}
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_EDIT},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "partition_details"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_NAME: "Partition 1 Update", CONF_ARM_HOME_MODE: 3},
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options[CONF_DEVICE_PARTITIONS] == {
-        "1": {CONF_NAME: "Partition 1 Update", CONF_ARM_HOME_MODE: 3}
-    }
-
-    # Check only existing partitions can be deleted
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "partitions"}
-    )
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_ACTION_NUMBER: 2, CONF_ACTION: ACTION_DELETE},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "partitions"
-    assert result["errors"] == {"base": "unknown_partition"}
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_DELETE},
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options[CONF_DEVICE_PARTITIONS] == {}
-
-
-async def test_options_zones_flow(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test zones options flow."""
-    entry, result = await _init_options_flow(hass, "zones")
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_ADD}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "zone_details"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_NAME: "Zone 1", CONF_ZONE_TYPE: "motion"}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options[CONF_ZONES] == {
-        "1": {CONF_NAME: "Zone 1", CONF_ZONE_TYPE: "motion"}
-    }
-
-    # Check zones can only be added once
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "zones"}
-    )
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_ADD},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "zones"
-    assert result["errors"] == {"base": "zone_exists"}
-
-    # Check only existing zones can be edited
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_ACTION_NUMBER: 2, CONF_ACTION: ACTION_EDIT},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "zones"
-    assert result["errors"] == {"base": "unknown_zone"}
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_EDIT},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "zone_details"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_NAME: "Zone 1 Update", CONF_ZONE_TYPE: "motion"},
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options[CONF_ZONES] == {
-        "1": {CONF_NAME: "Zone 1 Update", CONF_ZONE_TYPE: "motion"}
-    }
-
-    # Check only existing zones can be deleted
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "zones"}
-    )
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_ACTION_NUMBER: 2, CONF_ACTION: ACTION_DELETE},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "zones"
-    assert result["errors"] == {"base": "unknown_zone"}
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_DELETE},
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options[CONF_ZONES] == {}
-
-
-async def test_options_outputs_flow(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test outputs options flow."""
-    entry, result = await _init_options_flow(hass, "outputs")
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_ADD}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "output_details"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_NAME: "Output 1", CONF_ZONE_TYPE: "motion"}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options[CONF_OUTPUTS] == {
-        "1": {CONF_NAME: "Output 1", CONF_ZONE_TYPE: "motion"}
-    }
-
-    # Check outputs can only be added once
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "outputs"}
-    )
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_ADD},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "outputs"
-    assert result["errors"] == {"base": "output_exists"}
-
-    # Check only existing outputs can be edited
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_ACTION_NUMBER: 2, CONF_ACTION: ACTION_EDIT},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "outputs"
-    assert result["errors"] == {"base": "unknown_output"}
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_EDIT},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "output_details"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_NAME: "Output 1 Update", CONF_ZONE_TYPE: "motion"},
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options[CONF_OUTPUTS] == {
-        "1": {CONF_NAME: "Output 1 Update", CONF_ZONE_TYPE: "motion"}
-    }
-
-    # Check only existing outputs can be deleted
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "outputs"}
-    )
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_ACTION_NUMBER: 2, CONF_ACTION: ACTION_DELETE},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "outputs"
-    assert result["errors"] == {"base": "unknown_output"}
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_DELETE},
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options[CONF_OUTPUTS] == {}
-
-
-async def test_options_switchable_outputs_flow(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test switchable outputs options flow."""
-    entry, result = await _init_options_flow(hass, "switchable_outputs")
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_ADD}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "switchable_output_details"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_NAME: "Switchable output 1"}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options[CONF_SWITCHABLE_OUTPUTS] == {
-        "1": {CONF_NAME: "Switchable output 1"}
-    }
-
-    # Check switchable outputs can only be added once
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "switchable_outputs"}
-    )
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_ADD},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "switchable_outputs"
-    assert result["errors"] == {"base": "switchable_output_exists"}
-
-    # Check only existing switchable outputs can be edited
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_ACTION_NUMBER: 2, CONF_ACTION: ACTION_EDIT},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "switchable_outputs"
-    assert result["errors"] == {"base": "unknown_switchable_output"}
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_EDIT},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "switchable_output_details"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_NAME: "Switchable output 1 Update"},
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options[CONF_SWITCHABLE_OUTPUTS] == {
-        "1": {CONF_NAME: "Switchable output 1 Update"}
-    }
-
-    # Check only existing switchable outputs can be deleted
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "switchable_outputs"}
-    )
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_ACTION_NUMBER: 2, CONF_ACTION: ACTION_DELETE},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "switchable_outputs"
-    assert result["errors"] == {"base": "unknown_switchable_output"}
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_DELETE},
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options[CONF_SWITCHABLE_OUTPUTS] == {}
-
-
-async def _init_options_flow(hass: HomeAssistant, menu_step: str):
-    """Initialize the options flow and navigate to a step."""
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
 
@@ -461,14 +224,274 @@ async def _init_options_flow(hass: HomeAssistant, menu_step: str):
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] is FlowResultType.MENU
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": menu_step}
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options == entry_options
+
+
+@pytest.mark.parametrize(
+    ("subentry_type", "user_input", "subentry"),
+    [
+        (
+            SUBENTRY_TYPE_PARTITION,
+            {CONF_NAME: "Home", CONF_PARTITION_NUMBER: 1, CONF_ARM_HOME_MODE: 1},
+            {
+                "data": {
+                    CONF_NAME: "Home",
+                    CONF_ARM_HOME_MODE: 1,
+                    CONF_PARTITION_NUMBER: 1,
+                },
+                "subentry_type": SUBENTRY_TYPE_PARTITION,
+                "title": "Home",
+                "unique_id": "partition_1",
+            },
+        ),
+        (
+            SUBENTRY_TYPE_ZONE,
+            {
+                CONF_NAME: "Backdoor",
+                CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR,
+                CONF_ZONE_NUMBER: 2,
+            },
+            {
+                "data": {
+                    CONF_NAME: "Backdoor",
+                    CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR,
+                    CONF_ZONE_NUMBER: 2,
+                },
+                "subentry_type": SUBENTRY_TYPE_ZONE,
+                "title": "Backdoor",
+                "unique_id": "zone_2",
+            },
+        ),
+        (
+            SUBENTRY_TYPE_OUTPUT,
+            {
+                CONF_NAME: "Power outage",
+                CONF_ZONE_TYPE: BinarySensorDeviceClass.SAFETY,
+                CONF_OUTPUT_NUMBER: 1,
+            },
+            {
+                "data": {
+                    CONF_NAME: "Power outage",
+                    CONF_ZONE_TYPE: BinarySensorDeviceClass.SAFETY,
+                    CONF_OUTPUT_NUMBER: 1,
+                },
+                "subentry_type": SUBENTRY_TYPE_OUTPUT,
+                "title": "Power outage",
+                "unique_id": "output_1",
+            },
+        ),
+        (
+            SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
+            {
+                CONF_NAME: "Gate",
+                CONF_SWITCHABLE_OUTPUT_NUMBER: 3,
+            },
+            {
+                "data": {
+                    CONF_NAME: "Gate",
+                    CONF_SWITCHABLE_OUTPUT_NUMBER: 3,
+                },
+                "subentry_type": SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
+                "title": "Gate",
+                "unique_id": "switchable_output_3",
+            },
+        ),
+    ],
+)
+async def test_subentry_creation(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    config_entry: MockConfigEntry,
+    subentry_type: str,
+    user_input: dict[str, Any],
+    subentry: dict[str, Any],
+) -> None:
+    """Test partitions options flow."""
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, subentry_type),
+        context={"source": SOURCE_USER},
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == menu_step
+    assert result["step_id"] == "user"
 
-    return entry, result
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input,
+    )
+
+    assert len(config_entry.subentries) == 1
+
+    subentry_id = list(config_entry.subentries)[0]
+
+    subentry["subentry_id"] = subentry_id
+    assert config_entry.subentries == {subentry_id: ConfigSubentry(**subentry)}
+
+
+@pytest.mark.parametrize(
+    (
+        "user_input",
+        "default_subentry_info",
+        "subentry",
+        "updated_subentry",
+    ),
+    [
+        (
+            {CONF_NAME: "New Home", CONF_ARM_HOME_MODE: 3},
+            {
+                "subentry_id": "ABCD",
+                "subentry_type": SUBENTRY_TYPE_PARTITION,
+                "unique_id": "partition_1",
+            },
+            ConfigSubentryData(
+                data={
+                    CONF_NAME: "Home",
+                    CONF_ARM_HOME_MODE: 1,
+                    CONF_PARTITION_NUMBER: 1,
+                },
+                title="Home",
+            ),
+            ConfigSubentryData(
+                data={
+                    CONF_NAME: "New Home",
+                    CONF_ARM_HOME_MODE: 3,
+                    CONF_PARTITION_NUMBER: 1,
+                },
+                title="New Home",
+            ),
+        ),
+        (
+            {CONF_NAME: "Backdoor", CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR},
+            {
+                "subentry_id": "ABCD",
+                "subentry_type": SUBENTRY_TYPE_ZONE,
+                "unique_id": "zone_1",
+            },
+            ConfigSubentryData(
+                data={
+                    CONF_NAME: "Zone 1",
+                    CONF_ZONE_TYPE: BinarySensorDeviceClass.MOTION,
+                    CONF_ZONE_NUMBER: 1,
+                },
+                title="Zone 1",
+            ),
+            ConfigSubentryData(
+                data={
+                    CONF_NAME: "Backdoor",
+                    CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR,
+                    CONF_ZONE_NUMBER: 1,
+                },
+                title="Backdoor",
+            ),
+        ),
+        (
+            {
+                CONF_NAME: "Alarm Triggered",
+                CONF_ZONE_TYPE: BinarySensorDeviceClass.PROBLEM,
+            },
+            {
+                "subentry_id": "ABCD",
+                "subentry_type": SUBENTRY_TYPE_OUTPUT,
+                "unique_id": "output_1",
+            },
+            ConfigSubentryData(
+                data={
+                    CONF_NAME: "Output 1",
+                    CONF_ZONE_TYPE: BinarySensorDeviceClass.SAFETY,
+                    CONF_OUTPUT_NUMBER: 1,
+                },
+                title="Output 1",
+            ),
+            ConfigSubentryData(
+                data={
+                    CONF_NAME: "Alarm Triggered",
+                    CONF_ZONE_TYPE: BinarySensorDeviceClass.PROBLEM,
+                    CONF_OUTPUT_NUMBER: 1,
+                },
+                title="Alarm Triggered",
+            ),
+        ),
+        (
+            {CONF_NAME: "Gate Lock"},
+            {
+                "subentry_id": "ABCD",
+                "subentry_type": SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
+                "unique_id": "switchable_output_1",
+            },
+            ConfigSubentryData(
+                data={
+                    CONF_NAME: "Switchable Output 1",
+                    CONF_SWITCHABLE_OUTPUT_NUMBER: 1,
+                },
+                title="Switchable Output 1",
+            ),
+            ConfigSubentryData(
+                data={
+                    CONF_NAME: "Gate Lock",
+                    CONF_SWITCHABLE_OUTPUT_NUMBER: 1,
+                },
+                title="Gate Lock",
+            ),
+        ),
+    ],
+)
+async def test_subentry_reconfigure(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    config_entry: MockConfigEntry,
+    user_input: dict[str, Any],
+    default_subentry_info: dict[str, Any],
+    subentry: ConfigSubentryData,
+    updated_subentry: ConfigSubentryData,
+) -> None:
+    """Test subentry reconfiguration."""
+
+    config_entry.add_to_hass(hass)
+    config_entry.subentries = {
+        default_subentry_info["subentry_id"]: ConfigSubentry(
+            **default_subentry_info, **subentry
+        )
+    }
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, default_subentry_info["subentry_type"]),
+        context={
+            "source": SOURCE_RECONFIGURE,
+            "subentry_id": default_subentry_info["subentry_id"],
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert len(config_entry.subentries) == 1
+
+    assert config_entry.subentries == {
+        default_subentry_info["subentry_id"]: ConfigSubentry(
+            **default_subentry_info, **updated_subentry
+        )
+    }
