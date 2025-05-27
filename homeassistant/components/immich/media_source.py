@@ -124,7 +124,7 @@ class ImmichMediaSource(MediaSource):
                 )
             ]
 
-        if identifier.collection == "albums" and identifier.collection_id is None:
+        if identifier.collection_id is None:
             LOGGER.debug("Render all albums for %s", entry.title)
             try:
                 albums = await immich_api.albums.async_get_all_albums()
@@ -145,61 +145,59 @@ class ImmichMediaSource(MediaSource):
                 for album in albums
             ]
 
-        if identifier.collection == "albums" and identifier.collection_id:
-            LOGGER.debug(
-                "Render all assets of album %s for %s",
-                identifier.collection_id,
-                entry.title,
+        LOGGER.debug(
+            "Render all assets of album %s for %s",
+            identifier.collection_id,
+            entry.title,
+        )
+        try:
+            album_info = await immich_api.albums.async_get_album_info(
+                identifier.collection_id
             )
-            try:
-                album_info = await immich_api.albums.async_get_album_info(
-                    identifier.collection_id
-                )
-            except ImmichError:
-                return []
+        except ImmichError:
+            return []
 
-            ret = [
-                BrowseMediaSource(
-                    domain=DOMAIN,
-                    identifier=(
-                        f"{identifier.unique_id}/albums/"
-                        f"{identifier.collection_id}/"
-                        f"{asset.asset_id}/"
-                        f"{asset.file_name}"
-                    ),
-                    media_class=MediaClass.IMAGE,
-                    media_content_type=asset.mime_type,
-                    title=asset.file_name,
-                    can_play=False,
-                    can_expand=False,
-                    thumbnail=f"/immich/{identifier.unique_id}/{asset.asset_id}/{asset.file_name}/thumbnail",
-                )
-                for asset in album_info.assets
-                if asset.mime_type.startswith("image/")
-            ]
-
-            ret.extend(
-                BrowseMediaSource(
-                    domain=DOMAIN,
-                    identifier=(
-                        f"{identifier.unique_id}/albums/"
-                        f"{identifier.collection_id}/"
-                        f"{asset.asset_id}/"
-                        f"{asset.file_name}"
-                    ),
-                    media_class=MediaClass.VIDEO,
-                    media_content_type=asset.mime_type,
-                    title=asset.file_name,
-                    can_play=True,
-                    can_expand=False,
-                    thumbnail=f"/immich/{identifier.unique_id}/{asset.asset_id}/thumbnail.jpg/thumbnail",
-                )
-                for asset in album_info.assets
-                if asset.mime_type.startswith("video/")
+        ret = [
+            BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=(
+                    f"{identifier.unique_id}/albums/"
+                    f"{identifier.collection_id}/"
+                    f"{asset.asset_id}/"
+                    f"{asset.file_name}"
+                ),
+                media_class=MediaClass.IMAGE,
+                media_content_type=asset.mime_type,
+                title=asset.file_name,
+                can_play=False,
+                can_expand=False,
+                thumbnail=f"/immich/{identifier.unique_id}/{asset.asset_id}/{asset.file_name}/thumbnail",
             )
+            for asset in album_info.assets
+            if asset.mime_type.startswith("image/")
+        ]
 
-            return ret
-        return []
+        ret.extend(
+            BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=(
+                    f"{identifier.unique_id}/albums/"
+                    f"{identifier.collection_id}/"
+                    f"{asset.asset_id}/"
+                    f"{asset.file_name}"
+                ),
+                media_class=MediaClass.VIDEO,
+                media_content_type=asset.mime_type,
+                title=asset.file_name,
+                can_play=True,
+                can_expand=False,
+                thumbnail=f"/immich/{identifier.unique_id}/{asset.asset_id}/thumbnail.jpg/thumbnail",
+            )
+            for asset in album_info.assets
+            if asset.mime_type.startswith("video/")
+        )
+
+        return ret
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
