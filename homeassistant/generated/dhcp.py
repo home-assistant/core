@@ -9,8 +9,98 @@ from typing import Final
 
 DHCP: Final[list[dict[str, str | bool]]] = [
     {
+        "domain": "airthings",
+        "hostname": "airthings-view",
+    },
+    {
+        "domain": "airthings",
+        "hostname": "airthings-hub",
+        "macaddress": "D0141190*",
+    },
+    {
+        "domain": "airthings",
+        "hostname": "airthings-hub",
+        "macaddress": "70B3D52A0*",
+    },
+    {
         "domain": "airzone",
         "macaddress": "E84F25*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "08A6BC*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "10BF67*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "440049*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "443D54*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "48B423*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "4C1744*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "50D45C*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "50DCE7*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "68F63B*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "74D637*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "7C6166*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "901195*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "943A91*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "98226E*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "9CC8E9*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "A8E621*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "C095CF*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "D8BE65*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "EC2BEB*",
     },
     {
         "domain": "august",
@@ -93,6 +183,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "bond",
         "hostname": "bond-*",
         "macaddress": "F44E38*",
+    },
+    {
+        "domain": "bosch_alarm",
+        "macaddress": "000463*",
     },
     {
         "domain": "broadlink",

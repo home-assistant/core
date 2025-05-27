@@ -56,7 +56,6 @@ from tests.common import (
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"
-PLATFORM = "test_platform"
 
 
 async def test_polling_only_updates_entities_it_should_poll(
@@ -1551,6 +1550,7 @@ async def test_entity_info_added_to_entity_registry(
         original_icon="nice:icon",
         original_name="best name",
         options=None,
+        suggested_object_id=None,
         supported_features=5,
         translation_key="my_translation_key",
         unit_of_measurement=PERCENTAGE,
