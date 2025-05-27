@@ -6,18 +6,18 @@ from pathlib import Path
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.blueprint import importer
+from homeassistant.components.blueprint import DOMAIN, importer
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from tests.common import load_fixture
+from tests.common import async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(scope="module")
-def community_post():
+async def community_post(hass: HomeAssistant) -> str:
     """Topic JSON with a codeblock marked as auto syntax."""
-    return load_fixture("blueprint/community_post.json")
+    return await async_load_fixture(hass, "community_post.json", DOMAIN)
 
 
 def test_get_community_post_import_url() -> None:
@@ -161,7 +161,7 @@ async def test_fetch_blueprint_from_github_gist_url(
     """Test fetching blueprint from url."""
     aioclient_mock.get(
         "https://api.github.com/gists/e717ce85dd0d2f1bdcdfc884ea25a344",
-        text=load_fixture("blueprint/github_gist.json"),
+        text=await async_load_fixture(hass, "github_gist.json", DOMAIN),
     )
 
     url = "https://gist.github.com/balloob/e717ce85dd0d2f1bdcdfc884ea25a344"
