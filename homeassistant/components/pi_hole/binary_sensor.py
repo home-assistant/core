@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import PiHoleConfigEntry
+from . import CONF_API_VERSION, PiHoleConfigEntry
 from .entity import PiHoleEntity
 
 
@@ -30,6 +30,14 @@ class PiHoleBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 
 BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
+    PiHoleBinarySensorEntityDescription(
+        key="status",
+        translation_key="status",
+        state_value=lambda api: bool(api.data.get("status") == "enabled"),
+    ),
+)
+
+BINARY_SENSOR_TYPES_V6: tuple[PiHoleBinarySensorEntityDescription, ...] = (
     PiHoleBinarySensorEntityDescription(
         key="status",
         translation_key="status",
@@ -55,7 +63,11 @@ async def async_setup_entry(
             entry.entry_id,
             description,
         )
-        for description in BINARY_SENSOR_TYPES
+        for description in (
+            BINARY_SENSOR_TYPES
+            if entry.data[CONF_API_VERSION] == 5
+            else BINARY_SENSOR_TYPES_V6
+        )
     ]
 
     async_add_entities(binary_sensors, True)

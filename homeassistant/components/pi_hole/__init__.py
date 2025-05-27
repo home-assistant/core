@@ -16,7 +16,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SSL,
     CONF_VERIFY_SSL,
-    CONF_VERSION,
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -25,7 +24,12 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_STATISTICS_ONLY, DOMAIN, MIN_TIME_BETWEEN_UPDATES
+from .const import (
+    CONF_API_VERSION,
+    CONF_STATISTICS_ONLY,
+    DOMAIN,
+    MIN_TIME_BETWEEN_UPDATES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bo
     verify_tls = entry.data[CONF_VERIFY_SSL]
     location = entry.data[CONF_LOCATION]
     api_key = entry.data.get(CONF_API_KEY, "")
-    version = entry.data.get(CONF_VERSION, 6)
+    version = entry.data.get(CONF_API_VERSION, 6)
 
     # remove obsolet CONF_STATISTICS_ONLY from entry.data
     if CONF_STATISTICS_ONLY in entry.data:
@@ -99,14 +103,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bo
     await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
     session = async_get_clientsession(hass, verify_tls)
-    api = Hole(
-        host,
-        session,
-        location=location,
-        tls=use_tls,
-        api_token=api_key,
-        version=version,
-    )
+    hole_kwargs = {
+        "host": host,
+        "session": session,
+        "location": location,
+        "version": version,
+    }
+    if version == 5:
+        hole_kwargs["tls"] = use_tls
+        hole_kwargs["api_token"] = api_key
+    if version == 6:
+        hole_kwargs["protocol"] = "https" if use_tls else "http"
+        hole_kwargs["password"] = api_key
+    api = Hole(**hole_kwargs)
 
     async def async_update_data() -> None:
         """Fetch data from API endpoint."""

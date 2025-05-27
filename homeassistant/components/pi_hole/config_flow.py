@@ -19,11 +19,12 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_VERIFY_SSL,
-    CONF_VERSION,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
+    CONF_API_VERSION,
+    DEFAULT_API_VERSION,
     DEFAULT_LOCATION,
     DEFAULT_NAME,
     DEFAULT_SSL,
@@ -56,7 +57,8 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_LOCATION: user_input[CONF_LOCATION],
                 CONF_SSL: user_input[CONF_SSL],
                 CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
-                CONF_VERSION: user_input[CONF_VERSION],
+                CONF_API_VERSION: user_input[CONF_API_VERSION],
+                CONF_API_KEY: user_input[CONF_API_KEY],
             }
 
             self._async_abort_entries_match(
@@ -91,16 +93,20 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                         default=user_input.get(CONF_LOCATION, DEFAULT_LOCATION),
                     ): str,
                     vol.Required(
+                        CONF_API_VERSION,
+                        default=user_input.get(CONF_API_VERSION, DEFAULT_API_VERSION),
+                    ): int,
+                    vol.Required(
+                        CONF_API_KEY,
+                        default=user_input.get(CONF_API_KEY),
+                    ): str,
+                    vol.Required(
                         CONF_SSL,
                         default=user_input.get(CONF_SSL, DEFAULT_SSL),
                     ): bool,
                     vol.Required(
                         CONF_VERIFY_SSL,
                         default=user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
-                    ): bool,
-                    vol.Required(
-                        CONF_VERSION,
-                        default=user_input.get(CONF_VERSION, DEFAULT_VERSION),
                     ): bool,
                 }
             ),
@@ -158,19 +164,26 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _async_try_connect(self) -> dict[str, str]:
         session = async_get_clientsession(self.hass, self._config[CONF_VERIFY_SSL])
-        pi_hole = Hole(
-            self._config[CONF_HOST],
-            session,
-            location=self._config[CONF_LOCATION],
-            tls=self._config[CONF_SSL],
-            api_token=self._config.get(CONF_API_KEY),
-            version=self._config.get(CONF_VERSION),
-        )
+        hole_kwargs = {
+            "host": self._config[CONF_HOST],
+            "session": session,
+            "location": self._config[CONF_LOCATION],
+            "verify_tls": self._config[CONF_VERIFY_SSL],
+            "version": self._config.get(CONF_API_VERSION),
+        }
+        if self._config.get(CONF_API_VERSION) == 5:
+            hole_kwargs["tls"] = self._config.get(CONF_SSL)
+            hole_kwargs["api_token"] = self._config.get(CONF_API_KEY)
+        if self._config.get(CONF_API_VERSION) == 6:
+            hole_kwargs["protocol"] = "https" if self._config.get(CONF_SSL) else "http"
+            hole_kwargs["password"] = self._config.get(CONF_API_KEY)
+
+        pi_hole = Hole(**hole_kwargs)
         try:
             await pi_hole.get_data()
         except HoleError as ex:
             _LOGGER.debug("Connection failed: %s", ex)
-            #TODO detect incorrect version
+            # TODO detect incorrect version
             return {"base": "cannot_connect"}
         if not isinstance(pi_hole.data, dict):
             return {CONF_API_KEY: "invalid_auth"}

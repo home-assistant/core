@@ -9,12 +9,12 @@
           "location": "[%key:common::config_flow::data::location%]",
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
-          "version": "Pi-Hole API version"
+          "api_version": "Pi-Hole API version"
         }
       },
       "api_key": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_key": "API Key or App Passowrd"
         }
       },
       "reauth_confirm": {
@@ -45,8 +45,15 @@
         "name": "Ads blocked today",
         "unit_of_measurement": "ads"
       },
+      "ads_blocked": {
+        "name": "Ads blocked",
+        "unit_of_measurement": "ads"
+      },
       "ads_percentage_today": {
         "name": "Ads percentage blocked today"
+      },
+      "percent_ads_blocked": {
+        "name": "Ads percentage blocked"
       },
       "clients_ever_seen": {
         "name": "Seen clients",
@@ -54,6 +61,10 @@
       },
       "dns_queries_today": {
         "name": "DNS queries today",
+        "unit_of_measurement": "queries"
+      },
+      "dns_queries": {
+        "name": "DNS queries",
         "unit_of_measurement": "queries"
       },
       "domains_being_blocked": {
