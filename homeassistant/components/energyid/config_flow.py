@@ -37,7 +37,6 @@ def _generate_energyid_device_id_for_webhook() -> str:
 class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the configuration flow for the EnergyID integration."""
 
-    VERSION = 1
     _config_entry_being_reconfigured: ConfigEntry | None = None
 
     def __init__(self) -> None:
