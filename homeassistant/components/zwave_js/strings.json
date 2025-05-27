@@ -98,9 +98,6 @@
       "start_addon": {
         "title": "The Z-Wave add-on is starting."
       },
-      "usb_confirm": {
-        "description": "Do you want to set up {name} with the Z-Wave add-on?"
-      },
       "zeroconf_confirm": {
         "description": "Do you want to add the Z-Wave Server with home ID {home_id} found at {url} to Home Assistant?",
         "title": "Discovered Z-Wave Server"
