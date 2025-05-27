@@ -179,6 +179,7 @@ async def test_active_event(
         "start_time": start.strftime(DATE_STR_FORMAT),
         "end_time": end.strftime(DATE_STR_FORMAT),
         "supported_features": 7,
+        "color": None,
     }
 
 
@@ -216,6 +217,7 @@ async def test_upcoming_event(
         "start_time": start.strftime(DATE_STR_FORMAT),
         "end_time": end.strftime(DATE_STR_FORMAT),
         "supported_features": 7,
+        "color": None,
     }
 
 

@@ -27,6 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
+from homeassistant.util.color import RGBColor
 
 from . import LocalCalendarConfigEntry
 from .const import CONF_CALENDAR_COLOR, CONF_CALENDAR_NAME, DOMAIN
@@ -74,7 +75,7 @@ class LocalCalendarEntity(CalendarEntity):
         calendar: Calendar,
         name: str,
         unique_id: str,
-        color: str | None = None,
+        color: RGBColor | None = None,
     ) -> None:
         """Initialize LocalCalendarEntity."""
         self._store = store
@@ -83,17 +84,21 @@ class LocalCalendarEntity(CalendarEntity):
         self._event: CalendarEvent | None = None
         self._attr_name = name
         self._attr_unique_id = unique_id
-        self._color: str | None = color
-
-    @property
-    def color(self) -> str | None:
-        """Return the color of the calendar entity."""
-        return self._color
+        self._attr_color: RGBColor | None = color
 
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return self._event
+
+    @property
+    def color(self) -> RGBColor | None:
+        """Return the color of the calendar entity as RGBColor."""
+        return self._attr_color
+
+    @color.setter
+    def color(self, value: RGBColor | None) -> None:
+        self._attr_color = value
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
