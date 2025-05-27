@@ -11,6 +11,7 @@ from telegram.error import BadRequest, InvalidToken, NetworkError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_IMPORT,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryData,
@@ -23,6 +24,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
@@ -81,7 +83,7 @@ STEP_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
         ),
     }
 )
-STEP_NETWORK_DATA_SCHEMA: vol.Schema = vol.Schema(
+STEP_WEBHOOKS_DATA_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.Optional(CONF_URL): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.URL)
@@ -148,11 +150,10 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Create instance of the config flow."""
         super().__init__()
         self._bot: Bot | None = None
-        self._bot_name = ""
+        self._bot_name = "Unknown bot"
 
         # for passing data between steps
         self._step_user_data: dict[str, Any] = {}
-        self._step_network_data: dict[str, Any] = {}
 
     # triggered by async_setup() from __init__.py
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
@@ -225,86 +226,103 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow to create a new config entry for a Telegram bot."""
+
+        if not user_input:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=STEP_USER_DATA_SCHEMA,
+            )
+
+        # prevent duplicates
+        await self.async_set_unique_id(user_input.get(CONF_API_KEY))
+        self._abort_if_unique_id_configured(user_input)
+
+        # validate connection to Telegram API
         errors: dict[str, str] = {}
-        if user_input is not None:
-            # prevent duplicates
-            await self.async_set_unique_id(user_input.get(CONF_API_KEY))
-            self._abort_if_unique_id_configured(user_input)
+        description_placeholders: Mapping[str, str] = {}
+        try:
+            bot: Bot = await self.hass.async_add_executor_job(
+                initialize_bot, self.hass, MappingProxyType(user_input)
+            )
+            self._bot = bot
 
-            # validate connection to Telegram API
-            description_placeholders: Mapping[str, str] = {}
-            try:
-                bot: Bot = await self.hass.async_add_executor_job(
-                    initialize_bot, self.hass, MappingProxyType(user_input)
-                )
-                self._bot = bot
+            user: User = await self._bot.get_me()
+        except InvalidToken:
+            _LOGGER.warning("Invalid API token")
+            errors["base"] = "invalid_api_key"
+        except (ValueError, NetworkError) as err:
+            _LOGGER.warning("Invalid proxy")
+            errors["base"] = "invalid_proxy_url"
+            description_placeholders = {"proxy_url_error": str(err)}
 
-                user: User = await self._bot.get_me()
-            except InvalidToken:
-                _LOGGER.warning("Invalid API token")
-                errors["base"] = "invalid_api_key"
-            except (ValueError, NetworkError) as err:
-                _LOGGER.warning("Invalid proxy")
-                errors["base"] = "invalid_proxy_url"
-                description_placeholders = {"proxy_url_error": str(err)}
+        if errors:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_USER_DATA_SCHEMA, user_input
+                ),
+                errors=errors,
+                description_placeholders=description_placeholders,
+            )
 
-            if errors:
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=self.add_suggested_values_to_schema(
-                        STEP_USER_DATA_SCHEMA, user_input
-                    ),
-                    errors=errors,
-                    description_placeholders=description_placeholders,
-                )
+        if user_input[CONF_PLATFORM] != PLATFORM_WEBHOOKS:
+            return self.async_create_entry(
+                title=user.full_name,
+                data={
+                    CONF_PLATFORM: user_input[CONF_PLATFORM],
+                    CONF_API_KEY: user_input[CONF_API_KEY],
+                    CONF_PROXY_URL: user_input.get(CONF_PROXY_URL),
+                },
+                options={
+                    # this value may come from yaml import
+                    ATTR_PARSER: user_input.get(ATTR_PARSER, PARSER_MD)
+                },
+            )
 
-            self._bot_name = user.full_name
-            self._step_user_data.update(user_input)
-            return await self.async_step_network(self._step_user_data)
+        self._bot_name = user.full_name
+        self._step_user_data.update(user_input)
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
-        )
+        if self.source == SOURCE_IMPORT:
+            return await self.async_step_webhooks(
+                {
+                    CONF_URL: user_input.get(CONF_URL),
+                    CONF_TRUSTED_NETWORKS: user_input[CONF_TRUSTED_NETWORKS],
+                }
+            )
+        return await self.async_step_webhooks()
 
-    async def async_step_network(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Handle config flow for network configuration of Telegram bot."""
-        errors: dict[str, str] = {}
+    async def async_step_webhooks(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle config flow for webhook Telegram bot."""
 
-        if self._step_user_data[CONF_PLATFORM] == PLATFORM_WEBHOOKS:
-            if CONF_TRUSTED_NETWORKS not in user_input:
-                trusted_networks: str = (
-                    ",".join(self._step_network_data[CONF_TRUSTED_NETWORKS])
-                    if self._step_network_data
-                    else ",".join(
-                        [str(network) for network in DEFAULT_TRUSTED_NETWORKS]
-                    )
-                )
-                return self.async_show_form(
-                    step_id="network",
-                    data_schema=self.add_suggested_values_to_schema(
-                        STEP_NETWORK_DATA_SCHEMA,
-                        {
-                            CONF_URL: self._step_network_data.get(CONF_URL),
-                            CONF_TRUSTED_NETWORKS: trusted_networks,
-                        },
-                    ),
-                )
-
-            trusted_network_error: str = self._validate_network(user_input, errors)
-            if errors:
-                return self.async_show_form(
-                    step_id="network",
-                    data_schema=self.add_suggested_values_to_schema(
-                        STEP_NETWORK_DATA_SCHEMA,
-                        user_input,
-                    ),
-                    errors=errors,
-                    description_placeholders={
-                        "trusted_network_error": trusted_network_error
+        if not user_input:
+            return self.async_show_form(
+                step_id="webhooks",
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_WEBHOOKS_DATA_SCHEMA,
+                    {
+                        CONF_TRUSTED_NETWORKS: ",".join(
+                            [str(network) for network in DEFAULT_TRUSTED_NETWORKS]
+                        ),
                     },
-                )
-            self._step_network_data.update(user_input)
+                ),
+            )
+
+        errors: dict[str, str] = {}
+        trusted_network_error: str = self._validate_webhooks(user_input, errors)
+        if errors:
+            return self.async_show_form(
+                step_id="webhooks",
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_WEBHOOKS_DATA_SCHEMA,
+                    user_input,
+                ),
+                errors=errors,
+                description_placeholders={
+                    "trusted_network_error": trusted_network_error
+                },
+            )
 
         return self.async_create_entry(
             title=self._bot_name,
@@ -312,18 +330,27 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PLATFORM: self._step_user_data[CONF_PLATFORM],
                 CONF_API_KEY: self._step_user_data[CONF_API_KEY],
                 CONF_PROXY_URL: self._step_user_data.get(CONF_PROXY_URL),
-                CONF_URL: self._step_network_data.get(CONF_URL),
-                CONF_TRUSTED_NETWORKS: self._step_network_data.get(
-                    CONF_TRUSTED_NETWORKS
-                ),
+                CONF_URL: user_input.get(CONF_URL),
+                CONF_TRUSTED_NETWORKS: user_input[CONF_TRUSTED_NETWORKS],
             },
             options={ATTR_PARSER: self._step_user_data.get(ATTR_PARSER, PARSER_MD)},
         )
 
-    def _validate_network(
+    def _validate_webhooks(
         self, user_input: dict[str, Any], errors: dict[str, str]
     ) -> str:
-        # validate entries in the csv
+        # validate URL
+        if CONF_URL in user_input and not user_input[CONF_URL].startswith("https"):
+            errors["base"] = "invalid_url"
+            return ""
+        if CONF_URL not in user_input:
+            try:
+                get_url(self.hass, require_ssl=True, allow_internal=False)
+            except NoURLAvailableError:
+                errors["base"] = "no_url_available"
+                return ""
+
+        # validate trusted networks
         csv_trusted_networks: list[str] = []
         formatted_trusted_networks: str = (
             user_input[CONF_TRUSTED_NETWORKS].lstrip("[").rstrip("]")
@@ -337,8 +364,8 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 return str(err)
             else:
                 csv_trusted_networks.append(formatted_trusted_network)
-
         user_input[CONF_TRUSTED_NETWORKS] = csv_trusted_networks
+
         return ""
 
 

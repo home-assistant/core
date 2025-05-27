@@ -15,7 +15,7 @@
           "proxy_url": "Proxy URL if working behind one, optionally including username and password.\n(socks5://username:password@proxy_ip:proxy_port)"
         }
       },
-      "network": {
+      "webhooks": {
         "title": "Webhooks network configuration",
         "data": {
           "url": "[%key:common::config_flow::data::url%]",
@@ -30,6 +30,8 @@
     "error": {
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "invalid_proxy_url": "{proxy_url_error}",
+      "no_url_available": "URL is required since you have not configured an external URL in Home Assistant",
+      "invalid_url": "URL must start with https",
       "invalid_trusted_networks": "Invalid trusted network: {trusted_network_error}"
     },
     "abort": {

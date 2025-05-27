@@ -44,7 +44,22 @@ async def test_webhook_platform_init(hass: HomeAssistant, webhook_platform) -> N
 
 async def test_polling_platform_init(hass: HomeAssistant, polling_platform) -> None:
     """Test initialization of the polling platform."""
-    assert hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE) is True
+    with patch(
+        "homeassistant.components.telegram_bot.polling.ApplicationBuilder"
+    ) as application_builder_class:
+        application = (
+            application_builder_class.return_value.bot.return_value.build.return_value
+        )
+        application.initialize = AsyncMock()
+        application.updater.start_polling = AsyncMock()
+        application.start = AsyncMock()
+        application.updater.stop = AsyncMock()
+        application.stop = AsyncMock()
+        application.shutdown = AsyncMock()
+
+        await hass.async_block_till_done()
+
+        assert hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE) is True
 
 
 @pytest.mark.parametrize(
@@ -279,16 +294,22 @@ async def test_polling_platform_message_text_update(
     with patch(
         "homeassistant.components.telegram_bot.polling.ApplicationBuilder"
     ) as application_builder_class:
+        # Set up the integration with the polling platform inside the patch context manager.
+        application = (
+            application_builder_class.return_value.bot.return_value.build.return_value
+        )
+        application.updater.stop = AsyncMock()
+        application.initialize = AsyncMock()
+        application.stop = AsyncMock()
+        application.shutdown = AsyncMock()
+
         await async_setup_component(
             hass,
             DOMAIN,
             config_polling,
         )
         await hass.async_block_till_done()
-        # Set up the integration with the polling platform inside the patch context manager.
-        application = (
-            application_builder_class.return_value.bot.return_value.build.return_value
-        )
+
         # Then call the callback and assert events fired.
         handler = application.add_handler.call_args[0][0]
         handle_update_callback = handler.callback
@@ -299,10 +320,6 @@ async def test_polling_platform_message_text_update(
 
         # handle_update_callback == BaseTelegramBotEntity.update_handler
         await handle_update_callback(update, None)
-
-        application.updater.stop = AsyncMock()
-        application.stop = AsyncMock()
-        application.shutdown = AsyncMock()
 
     # Make sure event has fired
     await hass.async_block_till_done()
@@ -337,6 +354,17 @@ async def test_polling_platform_add_error_handler(
     with patch(
         "homeassistant.components.telegram_bot.polling.ApplicationBuilder"
     ) as application_builder_class:
+        application = (
+            application_builder_class.return_value.bot.return_value.build.return_value
+        )
+        application.updater.stop = AsyncMock()
+        application.initialize = AsyncMock()
+        application.updater.start_polling = AsyncMock()
+        application.start = AsyncMock()
+        application.stop = AsyncMock()
+        application.shutdown = AsyncMock()
+        application.bot.defaults.tzinfo = None
+
         await async_setup_component(
             hass,
             DOMAIN,
@@ -344,16 +372,8 @@ async def test_polling_platform_add_error_handler(
         )
         await hass.async_block_till_done()
 
-        application = (
-            application_builder_class.return_value.bot.return_value.build.return_value
-        )
-        application.updater.stop = AsyncMock()
-        application.stop = AsyncMock()
-        application.shutdown = AsyncMock()
-        process_error = application.add_error_handler.call_args[0][0]
-        application.bot.defaults.tzinfo = None
         update = Update.de_json(update_message_text, application.bot)
-
+        process_error = application.add_error_handler.call_args[0][0]
         await process_error(update, MagicMock(error=error))
 
         assert log_message in caplog.text

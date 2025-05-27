@@ -13,6 +13,7 @@ from telegram.ext import Application, TypeHandler
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.network import get_url
 
 from . import (
@@ -40,14 +41,10 @@ async def async_setup_platform(
 
     pushbot = PushBot(hass, bot, config, secret_token)
 
-    if not pushbot.webhook_url.startswith("https"):
-        _LOGGER.error("Invalid telegram webhook %s must be https", pushbot.webhook_url)
-        return None
-
     await pushbot.start_application()
     webhook_registered = await pushbot.register_webhook()
     if not webhook_registered:
-        return None
+        raise ConfigEntryNotReady("Failed to register webhook with Telegram")
 
     hass.http.register_view(
         PushBotView(
@@ -148,7 +145,10 @@ class PushBot(BaseTelegramBotEntity):
     async def deregister_webhook(self):
         """Query telegram and deregister the URL for our webhook."""
         _LOGGER.debug("Deregistering webhook URL")
-        await self.bot.delete_webhook()
+        try:
+            await self.bot.delete_webhook()
+        except:  # noqa: E722
+            _LOGGER.exception("Failed to deregister webhook URL")
 
 
 class PushBotView(HomeAssistantView):
