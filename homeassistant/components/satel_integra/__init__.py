@@ -1,6 +1,5 @@
 """Support for Satel Integra devices."""
 
-import collections
 import logging
 
 from satel_integra.satel_integra import AsyncSatel
@@ -25,8 +24,12 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_ARM_HOME_MODE,
     CONF_DEVICE_PARTITIONS,
+    CONF_OUTPUT_NUMBER,
     CONF_OUTPUTS,
+    CONF_PARTITION_NUMBER,
+    CONF_SWITCHABLE_OUTPUT_NUMBER,
     CONF_SWITCHABLE_OUTPUTS,
+    CONF_ZONE_NUMBER,
     CONF_ZONE_TYPE,
     CONF_ZONES,
     DEFAULT_CONF_ARM_HOME_MODE,
@@ -36,6 +39,10 @@ from .const import (
     SIGNAL_OUTPUTS_UPDATED,
     SIGNAL_PANEL_MESSAGE,
     SIGNAL_ZONES_UPDATED,
+    SUBENTRY_TYPE_OUTPUT,
+    SUBENTRY_TYPE_PARTITION,
+    SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
+    SUBENTRY_TYPE_ZONE,
     ZONES,
     SatelConfigEntry,
     SatelData,
@@ -151,14 +158,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
 
-    partitions = entry.options.get(CONF_DEVICE_PARTITIONS, {})
-    zones = entry.options.get(CONF_ZONES, {})
-    outputs = entry.options.get(CONF_OUTPUTS, {})
-    switchable_outputs = entry.options.get(CONF_SWITCHABLE_OUTPUTS, {})
+    # Make sure we initialize the Satel controller with the configured entries to monitor
+    partitions = [
+        subentry.data[CONF_PARTITION_NUMBER]
+        for subentry in filter(
+            lambda subentry: subentry.subentry_type == SUBENTRY_TYPE_PARTITION,
+            entry.subentries.values(),
+        )
+    ]
 
-    monitored_outputs = collections.OrderedDict(
-        list(outputs.items()) + list(switchable_outputs.items())
-    )
+    zones = [
+        subentry.data[CONF_ZONE_NUMBER]
+        for subentry in filter(
+            lambda subentry: subentry.subentry_type == SUBENTRY_TYPE_ZONE,
+            entry.subentries.values(),
+        )
+    ]
+
+    outputs = [
+        subentry.data[CONF_OUTPUT_NUMBER]
+        for subentry in filter(
+            lambda subentry: subentry.subentry_type == SUBENTRY_TYPE_OUTPUT,
+            entry.subentries.values(),
+        )
+    ]
+
+    switchable_outputs = [
+        subentry.data[CONF_SWITCHABLE_OUTPUT_NUMBER]
+        for subentry in filter(
+            lambda subentry: subentry.subentry_type == SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
+            entry.subentries.values(),
+        )
+    ]
+
+    monitored_outputs = outputs + switchable_outputs
 
     controller = AsyncSatel(host, port, hass.loop, zones, monitored_outputs, partitions)
 
