@@ -1124,6 +1124,9 @@ class PipelineRun:
                     )
                     intent_response.async_set_speech(trigger_response_text)
 
+                    agent_id = conversation.HOME_ASSISTANT_AGENT
+                    processed_locally = True
+
                 intent_filter: Callable[[RecognizeResult], bool] | None = None
                 # If the LLM has API access, we filter out some sentences that are
                 # interfering with LLM operation.
