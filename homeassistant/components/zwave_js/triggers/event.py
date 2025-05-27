@@ -34,7 +34,6 @@ from ..helpers import (
     get_device_id,
     get_home_and_node_id_from_device_entry,
 )
-from ..trigger import TRIGGERS
 from .trigger_helpers import async_bypass_dynamic_config_validation
 
 # Platform type should be <DOMAIN>.<SUBMODULE_NAME>
@@ -254,7 +253,6 @@ async def async_attach_trigger(
     return async_remove
 
 
-@TRIGGERS.register(PLATFORM_TYPE)
 class EventTrigger(Trigger):
     """Z-Wave JS event trigger."""
 

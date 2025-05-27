@@ -35,7 +35,6 @@ from ..const import (
     EVENT_VALUE_UPDATED,
 )
 from ..helpers import async_get_nodes_from_targets, get_device_id
-from ..trigger import TRIGGERS
 from .trigger_helpers import async_bypass_dynamic_config_validation
 
 # Platform type should be <DOMAIN>.<SUBMODULE_NAME>
@@ -205,7 +204,6 @@ async def async_attach_trigger(
     return async_remove
 
 
-@TRIGGERS.register(PLATFORM_TYPE)
 class ValueUpdatedTrigger(Trigger):
     """Z-Wave JS value updated trigger."""
 
