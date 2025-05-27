@@ -13,6 +13,7 @@
       "user": {
         "data": {
           "calendar_name": "Calendar Name",
+          "calendar_color": "Calendar Color",
           "import": "Starting Data"
         },
         "description": "Please choose a name for your new calendar"
