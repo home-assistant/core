@@ -294,6 +294,9 @@ class PartitionSubentryFlowHandler(ConfigSubentryFlow):
                 PARTITION_SCHEMA,
                 subconfig_entry.data,
             ),
+            description_placeholders={
+                CONF_PARTITION_NUMBER: subconfig_entry.data[CONF_PARTITION_NUMBER]
+            },
         )
 
 
@@ -339,6 +342,9 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
             data_schema=self.add_suggested_values_to_schema(
                 ZONE_AND_OUTPUT_SCHEMA, subconfig_entry.data
             ),
+            description_placeholders={
+                CONF_ZONE_NUMBER: subconfig_entry.data[CONF_ZONE_NUMBER]
+            },
         )
 
 
@@ -384,6 +390,9 @@ class OutputSubentryFlowHandler(ConfigSubentryFlow):
             data_schema=self.add_suggested_values_to_schema(
                 ZONE_AND_OUTPUT_SCHEMA, subconfig_entry.data
             ),
+            description_placeholders={
+                CONF_OUTPUT_NUMBER: subconfig_entry.data[CONF_OUTPUT_NUMBER]
+            },
         )
 
 
@@ -429,4 +438,9 @@ class SwitchableOutputSubentryFlowHandler(ConfigSubentryFlow):
             data_schema=self.add_suggested_values_to_schema(
                 SWITCHABLE_OUTPUT_SCHEMA, subconfig_entry.data
             ),
+            description_placeholders={
+                CONF_SWITCHABLE_OUTPUT_NUMBER: subconfig_entry.data[
+                    CONF_SWITCHABLE_OUTPUT_NUMBER
+                ]
+            },
         )
