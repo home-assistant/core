@@ -2253,7 +2253,7 @@ pyrainbird==6.0.1
 pyrecswitch==1.0.2
 
 # homeassistant.components.rejseplanen
-pyrejseplan==0.1.7
+pyrejseplan==0.1.16
 
 # homeassistant.components.repetier
 pyrepetierng==0.1.0
