@@ -31,9 +31,8 @@ async def async_setup_entry(hass, entry):
         # Just log a simple error without including the long exception chain.
         _LOGGER.error("Failed to connect to device at %s", host)
         raise
-    except SilentWaveError:
-        _LOGGER.error("Error communicating with device at %s", host)
-        raise ConfigEntryNotReady("Failed to communicate with device")
+    except SilentWaveError as exc:
+        raise ConfigEntryNotReady("Failed to communicate with device") from exc
 
     # Register the sensor entity.
     hass.data.setdefault("thesilentwave", {})
