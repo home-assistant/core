@@ -175,7 +175,9 @@ async def ws_start_preview(
         """Forward config entry state events to websocket."""
         if last_exception:
             connection.send_message(
-                websocket_api.event_message(msg["id"], {"error": str(last_exception)})
+                websocket_api.event_message(
+                    msg["id"], {"error": str(last_exception) or "Unknown error"}
+                )
             )
         else:
             connection.send_message(
