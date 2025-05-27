@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Callable, Mapping
 import datetime
 from typing import Any
 
@@ -23,7 +24,7 @@ from homeassistant.const import (
     PERCENTAGE,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device import async_device_info_to_link_from_entity
@@ -183,6 +184,9 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
     ) -> None:
         """Initialize the HistoryStats sensor."""
         super().__init__(coordinator, name)
+        self._preview_callback: (
+            Callable[[Exception | None, str, Mapping[str, Any]], None] | None
+        ) = None
         self._attr_native_unit_of_measurement = UNITS[sensor_type]
         self._type = sensor_type
         self._attr_unique_id = unique_id
@@ -212,3 +216,29 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
             self._attr_native_value = pretty_ratio(state.seconds_matched, state.period)
         elif self._type == CONF_TYPE_COUNT:
             self._attr_native_value = state.match_count
+
+        if self._preview_callback:
+            calculated_state = self._async_calculate_state()
+            self._preview_callback(
+                None, calculated_state.state, calculated_state.attributes
+            )
+
+    async def async_start_preview(
+        self,
+        preview_callback: Callable[[Exception | None, str, Mapping[str, Any]], None],
+    ) -> CALLBACK_TYPE:
+        """Render a preview."""
+
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self._process_update, None)
+        )
+
+        self._preview_callback = preview_callback
+        calculated_state = self._async_calculate_state()
+        preview_callback(
+            self.coordinator.last_exception,
+            calculated_state.state,
+            calculated_state.attributes,
+        )
+
+        return self._call_on_remove_callbacks
