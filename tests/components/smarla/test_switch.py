@@ -1,5 +1,6 @@
 """Test switch platform for Swing2Sleep Smarla integration."""
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 from pysmarlaapi.federwiege.classes import Property
@@ -31,8 +32,18 @@ def mock_switch_property() -> MagicMock:
     return mock
 
 
+@pytest.fixture
+def switch_platform_patch() -> Generator:
+    """Limit integration to switch platform."""
+    with (
+        patch("homeassistant.components.smarla.PLATFORMS", [Platform.SWITCH]),
+    ):
+        yield
+
+
 async def test_entities(
     hass: HomeAssistant,
+    switch_platform_patch,
     mock_federwiege: MagicMock,
     mock_switch_property: MagicMock,
     mock_config_entry: MockConfigEntry,
@@ -42,14 +53,9 @@ async def test_entities(
     """Test the Smarla entities."""
     mock_federwiege.get_property.return_value = mock_switch_property
 
-    with (
-        patch("homeassistant.components.smarla.PLATFORMS", [Platform.SWITCH]),
-    ):
-        assert await setup_integration(hass, mock_config_entry)
+    assert await setup_integration(hass, mock_config_entry)
 
-        await snapshot_platform(
-            hass, entity_registry, snapshot, mock_config_entry.entry_id
-        )
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -61,6 +67,7 @@ async def test_entities(
 )
 async def test_switch_action(
     hass: HomeAssistant,
+    switch_platform_patch,
     mock_config_entry: MockConfigEntry,
     mock_federwiege: MagicMock,
     mock_switch_property: MagicMock,
@@ -84,6 +91,7 @@ async def test_switch_action(
 
 async def test_switch_state_update(
     hass: HomeAssistant,
+    switch_platform_patch,
     mock_config_entry: MockConfigEntry,
     mock_federwiege: MagicMock,
     mock_switch_property: MagicMock,
