@@ -279,7 +279,6 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterRangeNumber,
         required_attributes=(
             clusters.TemperatureControl.Attributes.TemperatureSetpoint,
-            # clusters.TemperatureControl.Attributes.FeatureMap,
             clusters.TemperatureControl.Attributes.MinTemperature,
             clusters.TemperatureControl.Attributes.MaxTemperature,
         ),
