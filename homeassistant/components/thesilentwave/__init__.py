@@ -15,9 +15,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry):
     """Fetch the configuration data from the entry."""
-    # Prevent duplicate setups.
-    if entry.entry_id in hass.data.get("thesilentwave", {}):
-        return False
 
     # Fetch the configuration data from the entry.
     name = entry.data.get("name", "TheSilentWave")
