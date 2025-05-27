@@ -6,6 +6,7 @@ import logging
 from pysilentwave import SilentWaveClient
 from pysilentwave.exceptions import SilentWaveError
 
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,7 +17,8 @@ class TheSilentWaveCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass, name, host, scan_interval):
         """Initialize the coordinator."""
-        self.client = SilentWaveClient(host)
+        websession = async_get_clientsession(hass)
+        self.client = SilentWaveClient(host, session=websession)
 
         # Store the name directly to be accessed by entities.
         self._device_name = name

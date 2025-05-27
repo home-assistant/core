@@ -12,6 +12,7 @@ from pysilentwave.exceptions import SilentWaveError
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +66,8 @@ class TheSilentWaveConfigFlow(config_entries.ConfigFlow, domain="thesilentwave")
 
     async def _async_check_device(self, host: str) -> None:
         """Check if the device is reachable."""
-        client = SilentWaveClient(host)
+        websession = async_get_clientsession(self.hass)
+        client = SilentWaveClient(host, session=websession)
         try:
             await client.get_status()
         except SilentWaveError as err:
