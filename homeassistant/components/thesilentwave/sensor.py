@@ -45,9 +45,9 @@ class TheSilentWaveSensor(TheSilentWaveEntity, SensorEntity):
         """Register callbacks when entity is added."""
         await super().async_added_to_hass()
         # Subscribe to any events from the client if available.
-        if hasattr(self.coordinator._client, "subscribe_to_events"):
+        if hasattr(self.coordinator.client, "subscribe_to_events"):
             self._unsubscribe_callback = (
-                await self.coordinator._client.subscribe_to_events(self._handle_event)
+                await self.coordinator.client.subscribe_to_events(self._handle_event)
             )
 
     async def async_will_remove_from_hass(self) -> None:

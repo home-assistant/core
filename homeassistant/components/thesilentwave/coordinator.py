@@ -16,7 +16,7 @@ class TheSilentWaveCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass, name, host, scan_interval):
         """Initialize the coordinator."""
-        self._client = SilentWaveClient(host)
+        self.client = SilentWaveClient(host)
 
         # Store the name directly to be accessed by entities.
         self._device_name = name
@@ -41,7 +41,7 @@ class TheSilentWaveCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch data from the API."""
         try:
-            status = await self._client.get_status()
+            status = await self.client.get_status()
 
             # If we previously had a connection error and now succeeded, log recovery.
             if not self._has_connection:
