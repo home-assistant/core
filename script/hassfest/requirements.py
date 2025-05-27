@@ -24,15 +24,29 @@ from .model import Config, Integration
 
 PACKAGE_CHECK_VERSION_RANGE = {
     "aiohttp": "SemVer",
-    # https://github.com/iMicknl/python-overkiz-api/issues/1644
-    # "attrs": "CalVer"
+    "attrs": "CalVer",
     "grpcio": "SemVer",
+    "httpx": "SemVer",
     "mashumaro": "SemVer",
     "pydantic": "SemVer",
     "pyjwt": "SemVer",
     "pytz": "CalVer",
     "typing_extensions": "SemVer",
     "yarl": "SemVer",
+}
+PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
+    # In the form dict("domain": {"package": {"dependency1", "dependency2"}})
+    # - domain is the integration domain
+    # - package is the package (can be transitive) referencing the dependency
+    # - dependencyX should be the name of the referenced dependency
+    "ollama": {
+        # https://github.com/ollama/ollama-python/pull/445 (not yet released)
+        "ollama": {"httpx"}
+    },
+    "overkiz": {
+        # https://github.com/iMicknl/python-overkiz-api/issues/1644 (not yet released)
+        "pyoverkiz": {"attrs"},
+    },
 }
 
 PACKAGE_REGEX = re.compile(
@@ -41,106 +55,267 @@ PACKAGE_REGEX = re.compile(
 PIP_REGEX = re.compile(r"^(--.+\s)?([-_\.\w\d]+.*(?:==|>=|<=|~=|!=|<|>|===)?.*$)")
 PIP_VERSION_RANGE_SEPARATOR = re.compile(r"^(==|>=|<=|~=|!=|<|>|===)?(.*)$")
 
-FORBIDDEN_PACKAGES = {"codecov", "pytest", "setuptools", "wheel"}
+FORBIDDEN_PACKAGES = {
+    # Not longer needed, as we could use the standard library
+    "async-timeout": "be replaced by asyncio.timeout (Python 3.11+)",
+    # Only needed for tests
+    "codecov": "not be a runtime dependency",
+    # Does blocking I/O and should be replaced by pyserial-asyncio-fast
+    # See https://github.com/home-assistant/core/pull/116635
+    "pyserial-asyncio": "be replaced by pyserial-asyncio-fast",
+    # Only needed for tests
+    "pytest": "not be a runtime dependency",
+    # Only needed for build
+    "setuptools": "not be a runtime dependency",
+    # Only needed for build
+    "wheel": "not be a runtime dependency",
+}
 FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # In the form dict("domain": {"package": {"reason1", "reason2"}})
     # - domain is the integration domain
     # - package is the package (can be transitive) referencing the dependency
     # - reasonX should be the name of the invalid dependency
+    "adax": {"adax": {"async-timeout"}, "adax-local": {"async-timeout"}},
+    "airthings": {"airthings-cloud": {"async-timeout"}},
+    "ampio": {"asmog": {"async-timeout"}},
+    "apache_kafka": {"aiokafka": {"async-timeout"}},
+    "apple_tv": {"pyatv": {"async-timeout"}},
     "azure_devops": {
+        # https://github.com/timmo001/aioazuredevops/issues/67
         # aioazuredevops > incremental > setuptools
         "incremental": {"setuptools"}
     },
+    "blackbird": {
+        # https://github.com/koolsb/pyblackbird/issues/12
+        # pyblackbird > pyserial-asyncio
+        "pyblackbird": {"pyserial-asyncio"}
+    },
+    "bsblan": {"python-bsblan": {"async-timeout"}},
+    "cloud": {"hass-nabucasa": {"async-timeout"}, "snitun": {"async-timeout"}},
     "cmus": {
+        # https://github.com/mtreinish/pycmus/issues/4
         # pycmus > pbr > setuptools
         "pbr": {"setuptools"}
     },
     "concord232": {
+        # https://bugs.launchpad.net/python-stevedore/+bug/2111694
         # concord232 > stevedore > pbr > setuptools
         "pbr": {"setuptools"}
     },
+    "delijn": {"pydelijn": {"async-timeout"}},
+    "devialet": {"async-upnp-client": {"async-timeout"}},
+    "dlna_dmr": {"async-upnp-client": {"async-timeout"}},
+    "dlna_dms": {"async-upnp-client": {"async-timeout"}},
+    "edl21": {
+        # https://github.com/mtdcr/pysml/issues/21
+        # pysml > pyserial-asyncio
+        "pysml": {"pyserial-asyncio", "async-timeout"},
+    },
     "efergy": {
+        # https://github.com/tkdrob/pyefergy/issues/46
         # pyefergy > codecov
         # pyefergy > types-pytz
         "pyefergy": {"codecov", "types-pytz"}
     },
+    "emulated_kasa": {"sense-energy": {"async-timeout"}},
+    "entur_public_transport": {"enturclient": {"async-timeout"}},
+    "epson": {
+        # https://github.com/pszafer/epson_projector/pull/22
+        # epson-projector > pyserial-asyncio
+        "epson-projector": {"pyserial-asyncio", "async-timeout"}
+    },
+    "escea": {"pescea": {"async-timeout"}},
+    "evil_genius_labs": {"pyevilgenius": {"async-timeout"}},
+    "familyhub": {"python-family-hub-local": {"async-timeout"}},
+    "ffmpeg": {"ha-ffmpeg": {"async-timeout"}},
     "fitbit": {
+        # https://github.com/orcasgit/python-fitbit/pull/178
+        # but project seems unmaintained
         # fitbit > setuptools
         "fitbit": {"setuptools"}
     },
+    "flux_led": {"flux-led": {"async-timeout"}},
+    "foobot": {"foobot-async": {"async-timeout"}},
+    "github": {"aiogithubapi": {"async-timeout"}},
     "guardian": {
+        # https://github.com/jsbronder/asyncio-dgram/issues/20
         # aioguardian > asyncio-dgram > setuptools
         "asyncio-dgram": {"setuptools"}
     },
+    "harmony": {"aioharmony": {"async-timeout"}},
+    "heatmiser": {
+        # https://github.com/andylockran/heatmiserV3/issues/96
+        # heatmiserV3 > pyserial-asyncio
+        "heatmiserv3": {"pyserial-asyncio"}
+    },
+    "here_travel_time": {
+        "here-routing": {"async-timeout"},
+        "here-transit": {"async-timeout"},
+    },
     "hive": {
+        # https://github.com/Pyhass/Pyhiveapi/pull/88
         # pyhive-integration > unasync > setuptools
         "unasync": {"setuptools"}
     },
+    "homeassistant_hardware": {
+        # https://github.com/zigpy/zigpy/issues/1604
+        # universal-silabs-flasher > zigpy > pyserial-asyncio
+        "zigpy": {"pyserial-asyncio"},
+    },
+    "homekit": {"hap-python": {"async-timeout"}},
+    "homewizard": {"python-homewizard-energy": {"async-timeout"}},
+    "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
     "influxdb": {
+        # https://github.com/influxdata/influxdb-client-python/issues/695
         # influxdb-client > setuptools
         "influxdb-client": {"setuptools"}
     },
+    "insteon": {
+        # https://github.com/pyinsteon/pyinsteon/issues/430
+        # pyinsteon > pyserial-asyncio
+        "pyinsteon": {"pyserial-asyncio"}
+    },
+    "izone": {"python-izone": {"async-timeout"}},
     "keba": {
+        # https://github.com/jsbronder/asyncio-dgram/issues/20
         # keba-kecontact > asyncio-dgram > setuptools
         "asyncio-dgram": {"setuptools"}
     },
+    "kef": {"aiokef": {"async-timeout"}},
+    "kodi": {"jsonrpc-websocket": {"async-timeout"}},
+    "ld2410_ble": {"ld2410-ble": {"async-timeout"}},
+    "led_ble": {"flux-led": {"async-timeout"}},
+    "lektrico": {"lektricowifi": {"async-timeout"}},
+    "lifx": {"aiolifx": {"async-timeout"}},
+    "linkplay": {
+        "python-linkplay": {"async-timeout"},
+        "async-upnp-client": {"async-timeout"},
+    },
+    "loqed": {"loqedapi": {"async-timeout"}},
     "lyric": {
+        # https://github.com/timmo001/aiolyric/issues/115
         # aiolyric > incremental > setuptools
         "incremental": {"setuptools"}
     },
+    "matter": {"python-matter-server": {"async-timeout"}},
+    "mediaroom": {"pymediaroom": {"async-timeout"}},
+    "met": {"pymetno": {"async-timeout"}},
+    "met_eireann": {"pymeteireann": {"async-timeout"}},
     "microbees": {
+        # https://github.com/microBeesTech/pythonSDK/issues/6
         # microbeespy > setuptools
         "microbeespy": {"setuptools"}
     },
+    "mill": {"millheater": {"async-timeout"}, "mill-local": {"async-timeout"}},
     "minecraft_server": {
+        # https://github.com/jsbronder/asyncio-dgram/issues/20
         # mcstatus > asyncio-dgram > setuptools
         "asyncio-dgram": {"setuptools"}
     },
     "mochad": {
+        # https://github.com/mtreinish/pymochad/issues/8
         # pymochad > pbr > setuptools
         "pbr": {"setuptools"}
     },
+    "monoprice": {
+        # https://github.com/etsinko/pymonoprice/issues/9
+        # pymonoprice > pyserial-asyncio
+        "pymonoprice": {"pyserial-asyncio"}
+    },
+    "mysensors": {
+        # https://github.com/theolind/pymysensors/issues/818
+        # pymysensors > pyserial-asyncio
+        "pymysensors": {"pyserial-asyncio"}
+    },
     "mystrom": {
+        # https://github.com/home-assistant-ecosystem/python-mystrom/issues/55
         # python-mystrom > setuptools
         "python-mystrom": {"setuptools"}
     },
+    "ness_alarm": {
+        # https://github.com/nickw444/nessclient/issues/73
+        # nessclient > pyserial-asyncio
+        "nessclient": {"pyserial-asyncio"}
+    },
+    "nibe_heatpump": {"nibe": {"async-timeout"}},
+    "norway_air": {"pymetno": {"async-timeout"}},
     "nx584": {
+        # https://bugs.launchpad.net/python-stevedore/+bug/2111694
         # pynx584 > stevedore > pbr > setuptools
         "pbr": {"setuptools"}
     },
+    "opengarage": {"open-garage": {"async-timeout"}},
+    "openhome": {"async-upnp-client": {"async-timeout"}},
+    "opensensemap": {"opensensemap-api": {"async-timeout"}},
     "opnsense": {
+        # https://github.com/mtreinish/pyopnsense/issues/27
         # pyopnsense > pbr > setuptools
         "pbr": {"setuptools"}
     },
     "opower": {
+        # https://github.com/arrow-py/arrow/issues/1169 (fixed not yet released)
         # opower > arrow > types-python-dateutil
         "arrow": {"types-python-dateutil"}
     },
     "osoenergy": {
+        # https://github.com/osohotwateriot/apyosohotwaterapi/pull/4
         # pyosoenergyapi > unasync > setuptools
         "unasync": {"setuptools"}
     },
     "ovo_energy": {
+        # https://github.com/timmo001/ovoenergy/issues/132
         # ovoenergy > incremental > setuptools
         "incremental": {"setuptools"}
     },
+    "pi_hole": {"hole": {"async-timeout"}},
+    "pvpc_hourly_pricing": {"aiopvpc": {"async-timeout"}},
     "remote_rpi_gpio": {
+        # https://github.com/waveform80/colorzero/issues/9
         # gpiozero > colorzero > setuptools
         "colorzero": {"setuptools"}
     },
+    "rflink": {
+        # https://github.com/aequitas/python-rflink/issues/78
+        # rflink > pyserial-asyncio
+        "rflink": {"pyserial-asyncio", "async-timeout"}
+    },
+    "ring": {"ring-doorbell": {"async-timeout"}},
+    "rmvtransport": {"pyrmvtransport": {"async-timeout"}},
+    "roborock": {"python-roborock": {"async-timeout"}},
+    "samsungtv": {"async-upnp-client": {"async-timeout"}},
+    "screenlogic": {"screenlogicpy": {"async-timeout"}},
+    "sense": {"sense-energy": {"async-timeout"}},
+    "slimproto": {"aioslimproto": {"async-timeout"}},
+    "songpal": {"async-upnp-client": {"async-timeout"}},
+    "squeezebox": {"pysqueezebox": {"async-timeout"}},
+    "ssdp": {"async-upnp-client": {"async-timeout"}},
+    "surepetcare": {"surepy": {"async-timeout"}},
     "system_bridge": {
+        # https://github.com/timmo001/system-bridge-connector/pull/78
         # systembridgeconnector > incremental > setuptools
         "incremental": {"setuptools"}
     },
     "travisci": {
-        # travisci > pytest-rerunfailures > pytest
+        # https://github.com/menegazzo/travispy seems to be unmaintained
+        # and unused https://www.home-assistant.io/integrations/travisci
+        # travispy > pytest-rerunfailures > pytest
         "pytest-rerunfailures": {"pytest"},
-        # travisci > pytest
+        # travispy > pytest
         "travispy": {"pytest"},
     },
+    "unifiprotect": {"uiprotect": {"async-timeout"}},
+    "upnp": {"async-upnp-client": {"async-timeout"}},
+    "volkszaehler": {"volkszaehler": {"async-timeout"}},
+    "whirlpool": {"whirlpool-sixth-sense": {"async-timeout"}},
+    "yeelight": {"async-upnp-client": {"async-timeout"}},
+    "zamg": {"zamg": {"async-timeout"}},
     "zha": {
+        # https://github.com/waveform80/colorzero/issues/9
         # zha > zigpy-zigate > gpiozero > colorzero > setuptools
-        "colorzero": {"setuptools"}
+        "colorzero": {"setuptools"},
+        # https://github.com/zigpy/zigpy/issues/1604
+        # zha > zigpy > pyserial-asyncio
+        "zigpy": {"pyserial-asyncio"},
     },
 }
 
@@ -309,6 +484,11 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
     )
     needs_forbidden_package_exceptions = False
 
+    package_version_check_exceptions = PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS.get(
+        integration.domain, {}
+    )
+    needs_package_version_check_exception = False
+
     while to_check:
         package = to_check.popleft()
 
@@ -318,8 +498,6 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
         all_requirements.add(package)
 
         item = deptree.get(package)
-        if forbidden_package_exceptions:
-            print(f"Integration {integration.domain}: {item}")
 
         if item is None:
             # Only warn if direct dependencies could not be resolved
@@ -333,18 +511,26 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
         package_exceptions = forbidden_package_exceptions.get(package, set())
         for pkg, version in dependencies.items():
             if pkg.startswith("types-") or pkg in FORBIDDEN_PACKAGES:
+                reason = FORBIDDEN_PACKAGES.get(pkg, "not be a runtime dependency")
                 needs_forbidden_package_exceptions = True
                 if pkg in package_exceptions:
                     integration.add_warning(
                         "requirements",
-                        f"Package {pkg} should not be a runtime dependency in {package}",
+                        f"Package {pkg} should {reason} in {package}",
                     )
                 else:
                     integration.add_error(
                         "requirements",
-                        f"Package {pkg} should not be a runtime dependency in {package}",
+                        f"Package {pkg} should {reason} in {package}",
                     )
-            check_dependency_version_range(integration, package, pkg, version)
+            if not check_dependency_version_range(
+                integration,
+                package,
+                pkg,
+                version,
+                package_version_check_exceptions.get(package, set()),
+            ):
+                needs_package_version_check_exception = True
 
         to_check.extend(dependencies)
 
@@ -354,27 +540,48 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
             f"Integration {integration.domain} runtime dependency exceptions "
             "have been resolved, please remove from `FORBIDDEN_PACKAGE_EXCEPTIONS`",
         )
+    if package_version_check_exceptions and not needs_package_version_check_exception:
+        integration.add_error(
+            "requirements",
+            f"Integration {integration.domain} version restrictions checks have been "
+            "resolved, please remove from `PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS`",
+        )
+
     return all_requirements
 
 
 def check_dependency_version_range(
-    integration: Integration, source: str, pkg: str, version: str
-) -> None:
+    integration: Integration,
+    source: str,
+    pkg: str,
+    version: str,
+    package_exceptions: set[str],
+) -> bool:
     """Check requirement version range.
 
     We want to avoid upper version bounds that are too strict for common packages.
     """
-    if version == "Any" or (convention := PACKAGE_CHECK_VERSION_RANGE.get(pkg)) is None:
-        return
-
-    if not all(
-        _is_dependency_version_range_valid(version_part, convention)
-        for version_part in version.split(";", 1)[0].split(",")
+    if (
+        version == "Any"
+        or (convention := PACKAGE_CHECK_VERSION_RANGE.get(pkg)) is None
+        or all(
+            _is_dependency_version_range_valid(version_part, convention)
+            for version_part in version.split(";", 1)[0].split(",")
+        )
     ):
+        return True
+
+    if pkg in package_exceptions:
+        integration.add_warning(
+            "requirements",
+            f"Version restrictions for {pkg} are too strict ({version}) in {source}",
+        )
+    else:
         integration.add_error(
             "requirements",
             f"Version restrictions for {pkg} are too strict ({version}) in {source}",
         )
+    return False
 
 
 def _is_dependency_version_range_valid(version_part: str, convention: str) -> bool:
