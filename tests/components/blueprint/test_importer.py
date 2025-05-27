@@ -10,14 +10,14 @@ from homeassistant.components.blueprint import DOMAIN, importer
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from tests.common import async_load_fixture
+from tests.common import async_load_fixture, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(scope="module")
-async def community_post(hass: HomeAssistant) -> str:
+def community_post():
     """Topic JSON with a codeblock marked as auto syntax."""
-    return await async_load_fixture(hass, "community_post.json", DOMAIN)
+    return load_fixture("blueprint/community_post.json")
 
 
 def test_get_community_post_import_url() -> None:
