@@ -20,8 +20,8 @@ PLATFORMS = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up TheSilentWave from a config entry."""
     # Fetch the configuration data from the entry.
-    name = entry.data.get("name", "TheSilentWave")
-    host = entry.data.get("host", "")
+    name = entry.data["name"]
+    host = entry.data["host"]
     scan_interval = 10  # Fixed scan interval
 
     # Create the coordinator with scan_interval.
