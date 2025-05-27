@@ -96,6 +96,9 @@
       "sensitivity": {
         "default": "mdi:information-outline"
       },
+      "serial_number": {
+        "default": "mdi:information-outline"
+      },
       "startup_time": {
         "default": "mdi:calendar-clock"
       },

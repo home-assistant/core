@@ -166,6 +166,9 @@
       "sensitivity": {
         "name": "Sensitivity"
       },
+      "serial_number": {
+        "name": "Serial number"
+      },
       "startup_time": {
         "name": "Startup time"
       },

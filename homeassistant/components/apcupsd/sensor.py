@@ -286,6 +286,11 @@ SENSORS: dict[str, SensorEntityDescription] = {
         translation_key="sensitivity",
         entity_registry_enabled_default=False,
     ),
+    "serialno": SensorEntityDescription(
+        key="serialno",
+        translation_key="serial_number",
+        entity_registry_enabled_default=False,
+    ),
     "starttime": SensorEntityDescription(
         key="starttime",
         translation_key="startup_time",
@@ -345,7 +350,6 @@ IGNORED_FIELDS: set[str] = {
     "apcmodel",
     "firmware",
     "model",
-    "serialno",
     "version",
     "upsname",
     # "date" marks the date and time of the network request, which is not useful to the end users.
