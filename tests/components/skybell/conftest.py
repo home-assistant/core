@@ -12,7 +12,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 USERNAME = "user"
@@ -53,39 +53,41 @@ def create_entry(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
-async def set_aioclient_responses(aioclient_mock: AiohttpClientMocker) -> None:
+async def set_aioclient_responses(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Set AioClient responses."""
     aioclient_mock.get(
         f"{BASE_URL}devices/{DEVICE_ID}/info/",
-        text=load_fixture("skybell/device_info.json"),
+        text=await async_load_fixture(hass, "device_info.json", DOMAIN),
     )
     aioclient_mock.get(
         f"{BASE_URL}devices/{DEVICE_ID}/settings/",
-        text=load_fixture("skybell/device_settings.json"),
+        text=await async_load_fixture(hass, "device_settings.json", DOMAIN),
     )
     aioclient_mock.get(
         f"{BASE_URL}devices/{DEVICE_ID}/activities/",
-        text=load_fixture("skybell/activities.json"),
+        text=await async_load_fixture(hass, "activities.json", DOMAIN),
     )
     aioclient_mock.get(
         f"{BASE_URL}devices/",
-        text=load_fixture("skybell/device.json"),
+        text=await async_load_fixture(hass, "device.json", DOMAIN),
     )
     aioclient_mock.get(
         USERS_ME_URL,
-        text=load_fixture("skybell/me.json"),
+        text=await async_load_fixture(hass, "me.json", DOMAIN),
     )
     aioclient_mock.post(
         f"{BASE_URL}login/",
-        text=load_fixture("skybell/login.json"),
+        text=await async_load_fixture(hass, "login.json", DOMAIN),
     )
     aioclient_mock.get(
         f"{BASE_URL}devices/{DEVICE_ID}/activities/1234567890ab1234567890ac/video/",
-        text=load_fixture("skybell/video.json"),
+        text=await async_load_fixture(hass, "video.json", DOMAIN),
     )
     aioclient_mock.get(
         f"{BASE_URL}devices/{DEVICE_ID}/avatar/",
-        text=load_fixture("skybell/avatar.json"),
+        text=await async_load_fixture(hass, "avatar.json", DOMAIN),
     )
     aioclient_mock.get(
         f"https://v3-production-devices-avatar.s3.us-west-2.amazonaws.com/{DEVICE_ID}.jpg",
@@ -109,7 +111,7 @@ def create_skybell(hass: HomeAssistant) -> Skybell:
         get_devices=True,
         session=async_get_clientsession(hass),
     )
-    skybell._cache = orjson.loads(load_fixture("skybell/cache.json"))
+    skybell._cache = orjson.loads(load_fixture("cache.json", DOMAIN))
     return skybell
 
 
