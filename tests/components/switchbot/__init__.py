@@ -759,3 +759,103 @@ LOCK_ULTRA_SERVICE_INFO = BluetoothServiceInfoBleak(
     connectable=True,
     tx_power=-127,
 )
+
+
+AIR_PURIFIER_TBALE_PM25_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Air Purifier Table PM25",
+    manufacturer_data={
+        2409: b"\xf0\x9e\x9e\x96j\xd6\xa1\x81\x88\xe4\x00\x01\x95\x00\x00",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"7\x00\x00\x95-\x00"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Air Purifier Table PM25",
+        manufacturer_data={
+            2409: b"\xf0\x9e\x9e\x96j\xd6\xa1\x81\x88\xe4\x00\x01\x95\x00\x00",
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"7\x00\x00\x95-\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Air Purifier Table PM25"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+AIR_PURIFIER_PM25_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Air Purifier PM25",
+    manufacturer_data={
+        2409: b'\xcc\x8d\xa2\xa7\x92>\t"\x80\x000\x00\x0f\x00\x00',
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"*\x00\x00\x15\x04\x00"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Air Purifier PM25",
+        manufacturer_data={
+            2409: b'\xcc\x8d\xa2\xa7\x92>\t"\x80\x000\x00\x0f\x00\x00',
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"*\x00\x00\x15\x04\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Air Purifier PM25"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+AIR_PURIFIER_VOC_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Air Purifier VOC",
+    manufacturer_data={
+        2409: b"\xcc\x8d\xa2\xa7\xe4\xa6\x0b\x83\x88d\x00\xea`\x00\x00",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"+\x00\x00\x15\x04\x00"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Air Purifier VOC",
+        manufacturer_data={
+            2409: b"\xcc\x8d\xa2\xa7\xe4\xa6\x0b\x83\x88d\x00\xea`\x00\x00",
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"+\x00\x00\x15\x04\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Air Purifier VOC"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+AIR_PURIFIER_TABLE_VOC_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Air Purifier Table VOC",
+    manufacturer_data={
+        2409: b"\xcc\x8d\xa2\xa7\xc1\xae\x9b\x81\x8c\xb2\x00\x01\x94\x00\x00",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"8\x00\x00\x95-\x00"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Air Purifier Table VOC",
+        manufacturer_data={
+            2409: b"\xcc\x8d\xa2\xa7\xc1\xae\x9b\x81\x8c\xb2\x00\x01\x94\x00\x00",
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"8\x00\x00\x95-\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Air Purifier Table VOC"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)

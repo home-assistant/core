@@ -113,6 +113,10 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
             ).last_cleaning_start_time
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
+        supported_fn=(
+            lambda coordinator: coordinator.device.dashboard.model_name
+            is not ModelName.GS3_MP
+        ),
     ),
 )
 

@@ -497,7 +497,9 @@ async def test_agent_info(
                 "database_included": True,
                 "date": "1970-01-01T00:00:00+00:00",
                 "extra_metadata": {},
+                "failed_addons": [],
                 "failed_agent_ids": [],
+                "failed_folders": [],
                 "folders": ["share"],
                 "homeassistant_included": True,
                 "homeassistant_version": "2024.12.0",
@@ -517,7 +519,9 @@ async def test_agent_info(
                 "database_included": False,
                 "date": "1970-01-01T00:00:00+00:00",
                 "extra_metadata": {},
+                "failed_addons": [],
                 "failed_agent_ids": [],
+                "failed_folders": [],
                 "folders": ["share"],
                 "homeassistant_included": False,
                 "homeassistant_version": None,
@@ -653,7 +657,9 @@ async def test_agent_get_backup(
             "database_included": True,
             "date": "1970-01-01T00:00:00+00:00",
             "extra_metadata": {},
+            "failed_addons": [],
             "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": ["share"],
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0",
@@ -992,7 +998,7 @@ async def test_reader_writer_create(
 @pytest.mark.parametrize(
     "addon_info_side_effect",
     # Getting info fails for one of the addons, should fall back to slug
-    [[Mock(), SupervisorError("Boom")]],
+    [[Mock(slug="core_ssh", version="0.0.0"), SupervisorError("Boom")]],
 )
 async def test_reader_writer_create_addon_folder_error(
     hass: HomeAssistant,

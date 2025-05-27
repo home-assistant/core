@@ -42,6 +42,19 @@
       "bluetooth": {
         "name": "Bluetooth"
       }
+    },
+    "notify": {
+      "speak": {
+        "name": "Speak"
+      },
+      "announce": {
+        "name": "Announce"
+      }
+    },
+    "switch": {
+      "do_not_disturb": {
+        "name": "Do not disturb"
+      }
     }
   }
 }

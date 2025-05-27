@@ -1515,7 +1515,7 @@ async def test_cleanup_triggers_and_restoring_state(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic1", "100")
     state = hass.states.get("sensor.test1")
-    assert state.state == "38"  # 100 °F -> 38 °C
+    assert round(float(state.state)) == 38  # 100 °F -> 38 °C
 
     async_fire_mqtt_message(hass, "test-topic2", "200")
     state = hass.states.get("sensor.test2")
@@ -1527,14 +1527,14 @@ async def test_cleanup_triggers_and_restoring_state(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test1")
-    assert state.state == "38"  # 100 °F -> 38 °C
+    assert round(float(state.state)) == 38  # 100 °F -> 38 °C
 
     state = hass.states.get("sensor.test2")
     assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "test-topic1", "80")
     state = hass.states.get("sensor.test1")
-    assert state.state == "27"  # 80 °F -> 27 °C
+    assert round(float(state.state)) == 27  # 80 °F -> 27 °C
 
     async_fire_mqtt_message(hass, "test-topic2", "201")
     state = hass.states.get("sensor.test2")

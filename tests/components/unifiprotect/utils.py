@@ -109,8 +109,10 @@ def ids_from_device_description(
 
     entity_name = normalize_name(device.display_name)
 
-    if description.name and isinstance(description.name, str):
-        description_entity_name = normalize_name(description.name)
+    if getattr(description, "translation_key", None):
+        description_entity_name = normalize_name(description.translation_key)
+    elif getattr(description, "device_class", None):
+        description_entity_name = normalize_name(description.device_class)
     else:
         description_entity_name = normalize_name(description.key)
 

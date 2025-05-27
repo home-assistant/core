@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from aioamazondevices.api import AmazonDevice
+from aioamazondevices.const import DEVICE_TYPE_TO_MODEL
 import pytest
 
 from homeassistant.components.amazon_devices.const import CONF_LOGIN_DATA, DOMAIN
@@ -57,6 +58,9 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
                 bluetooth_state=True,
             )
         }
+        client.get_model_details = lambda device: DEVICE_TYPE_TO_MODEL.get(
+            device.device_type
+        )
         yield client
 
 

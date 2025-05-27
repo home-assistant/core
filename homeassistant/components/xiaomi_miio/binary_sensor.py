@@ -5,7 +5,9 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+
+from miio import Device as MiioDevice
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -15,6 +17,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import CONF_DEVICE, CONF_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import VacuumCoordinatorDataAttributes
 from .const import (
@@ -213,12 +216,21 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class XiaomiGenericBinarySensor(XiaomiCoordinatedMiioEntity, BinarySensorEntity):
+class XiaomiGenericBinarySensor(
+    XiaomiCoordinatedMiioEntity[DataUpdateCoordinator[Any]], BinarySensorEntity
+):
     """Representation of a Xiaomi Humidifier binary sensor."""
 
     entity_description: XiaomiMiioBinarySensorDescription
 
-    def __init__(self, device, entry, unique_id, coordinator, description):
+    def __init__(
+        self,
+        device: MiioDevice,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str,
+        coordinator: DataUpdateCoordinator[Any],
+        description: XiaomiMiioBinarySensorDescription,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(device, entry, unique_id, coordinator)
 
