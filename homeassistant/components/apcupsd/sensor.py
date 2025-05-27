@@ -43,16 +43,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "apc": SensorEntityDescription(
-        key="apc",
-        translation_key="apc_status",
-        entity_registry_enabled_default=False,
-    ),
-    "apcmodel": SensorEntityDescription(
-        key="apcmodel",
-        translation_key="apc_model",
-        entity_registry_enabled_default=False,
-    ),
     "badbatts": SensorEntityDescription(
         key="badbatts",
         translation_key="bad_batteries",
@@ -90,11 +80,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.DURATION,
     ),
-    "date": SensorEntityDescription(
-        key="date",
-        translation_key="date",
-        entity_registry_enabled_default=False,
-    ),
     "dipsw": SensorEntityDescription(
         key="dipsw",
         translation_key="dip_switch_settings",
@@ -116,19 +101,9 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="dwake",
         translation_key="wake_delay",
     ),
-    "end apc": SensorEntityDescription(
-        key="end apc",
-        translation_key="date_and_time",
-        entity_registry_enabled_default=False,
-    ),
     "extbatts": SensorEntityDescription(
         key="extbatts",
         translation_key="external_batteries",
-    ),
-    "firmware": SensorEntityDescription(
-        key="firmware",
-        translation_key="firmware_version",
-        entity_registry_enabled_default=False,
     ),
     "hitrans": SensorEntityDescription(
         key="hitrans",
@@ -233,11 +208,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="mintimel",
         translation_key="min_time",
     ),
-    "model": SensorEntityDescription(
-        key="model",
-        translation_key="model",
-        entity_registry_enabled_default=False,
-    ),
     "nombattv": SensorEntityDescription(
         key="nombattv",
         translation_key="battery_nominal_voltage",
@@ -316,11 +286,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
         translation_key="sensitivity",
         entity_registry_enabled_default=False,
     ),
-    "serialno": SensorEntityDescription(
-        key="serialno",
-        translation_key="serial_number",
-        entity_registry_enabled_default=False,
-    ),
     "starttime": SensorEntityDescription(
         key="starttime",
         translation_key="startup_time",
@@ -356,16 +321,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="upsmode",
         translation_key="ups_mode",
     ),
-    "upsname": SensorEntityDescription(
-        key="upsname",
-        translation_key="ups_name",
-        entity_registry_enabled_default=False,
-    ),
-    "version": SensorEntityDescription(
-        key="version",
-        translation_key="version",
-        entity_registry_enabled_default=False,
-    ),
     "xoffbat": SensorEntityDescription(
         key="xoffbat",
         translation_key="transfer_from_battery",
@@ -378,6 +333,23 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="xonbatt",
         translation_key="transfer_to_battery",
     ),
+}
+
+IGNORED_FIELDS: set[str] = {
+    # "apc" and "end apc" are simple markers that are used to delimit the start and end of
+    # the status output. Their values indicate the size of the packet, the date time of the
+    # request etc. that are generally not useful to the end users.
+    "apc",
+    "end apc",
+    # The following information is provided through the device information.
+    "apcmodel",
+    "firmware",
+    "model",
+    "serialno",
+    "version",
+    "upsname",
+    # "date" marks the date and time of the network request, which is not useful to the end users.
+    "date",
 }
 
 INFERRED_UNITS = {
@@ -422,6 +394,9 @@ async def async_setup_entry(
     # when we set up the integration, and we do not know if it would ever be available. Here we
     # add it anyway and mark it as unknown initially.
     for resource in available_resources | {LAST_S_TEST}:
+        if resource in IGNORED_FIELDS:
+            continue
+
         if resource not in SENSORS:
             _LOGGER.warning("Invalid resource from APCUPSd: %s", resource.upper())
             continue

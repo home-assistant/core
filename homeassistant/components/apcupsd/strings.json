@@ -31,12 +31,6 @@
       "ambient_temperature": {
         "name": "Ambient temperature"
       },
-      "apc_status": {
-        "name": "Status data"
-      },
-      "apc_model": {
-        "name": "Model"
-      },
       "bad_batteries": {
         "name": "Bad batteries"
       },
@@ -55,9 +49,6 @@
       "total_time_on_battery": {
         "name": "Total time on battery"
       },
-      "date": {
-        "name": "Status date"
-      },
       "dip_switch_settings": {
         "name": "DIP switch settings"
       },
@@ -73,14 +64,8 @@
       "wake_delay": {
         "name": "Wake delay"
       },
-      "date_and_time": {
-        "name": "Date and time"
-      },
       "external_batteries": {
         "name": "External batteries"
-      },
-      "firmware_version": {
-        "name": "Firmware version"
       },
       "transfer_high": {
         "name": "Transfer high"
@@ -139,9 +124,6 @@
       "min_time": {
         "name": "Shutdown time"
       },
-      "model": {
-        "name": "Model"
-      },
       "battery_nominal_voltage": {
         "name": "Battery nominal voltage"
       },
@@ -184,9 +166,6 @@
       "sensitivity": {
         "name": "Sensitivity"
       },
-      "serial_number": {
-        "name": "Serial number"
-      },
       "startup_time": {
         "name": "Startup time"
       },
@@ -207,12 +186,6 @@
       },
       "ups_mode": {
         "name": "Mode"
-      },
-      "ups_name": {
-        "name": "Name"
-      },
-      "version": {
-        "name": "Daemon version"
       },
       "transfer_from_battery": {
         "name": "Transfer from battery"

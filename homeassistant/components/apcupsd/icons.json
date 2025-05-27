@@ -9,12 +9,6 @@
       "alarm_delay": {
         "default": "mdi:alarm"
       },
-      "apc_status": {
-        "default": "mdi:information-outline"
-      },
-      "apc_model": {
-        "default": "mdi:information-outline"
-      },
       "bad_batteries": {
         "default": "mdi:information-outline"
       },
@@ -29,9 +23,6 @@
       },
       "total_time_on_battery": {
         "default": "mdi:timer-outline"
-      },
-      "date": {
-        "default": "mdi:calendar-clock"
       },
       "dip_switch_settings": {
         "default": "mdi:information-outline"
@@ -48,13 +39,7 @@
       "wake_delay": {
         "default": "mdi:timer-outline"
       },
-      "date_and_time": {
-        "default": "mdi:calendar-clock"
-      },
       "external_batteries": {
-        "default": "mdi:information-outline"
-      },
-      "firmware_version": {
         "default": "mdi:information-outline"
       },
       "hostname": {
@@ -90,9 +75,6 @@
       "min_time": {
         "default": "mdi:timer-outline"
       },
-      "model": {
-        "default": "mdi:information-outline"
-      },
       "transfer_count": {
         "default": "mdi:counter"
       },
@@ -114,9 +96,6 @@
       "sensitivity": {
         "default": "mdi:information-outline"
       },
-      "serial_number": {
-        "default": "mdi:information-outline"
-      },
       "startup_time": {
         "default": "mdi:calendar-clock"
       },
@@ -136,12 +115,6 @@
         "default": "mdi:timer-outline"
       },
       "ups_mode": {
-        "default": "mdi:information-outline"
-      },
-      "ups_name": {
-        "default": "mdi:information-outline"
-      },
-      "version": {
         "default": "mdi:information-outline"
       },
       "transfer_from_battery": {
