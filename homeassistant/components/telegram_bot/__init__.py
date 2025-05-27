@@ -265,7 +265,7 @@ MODULES: dict[str, ModuleType] = {
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telegram bot component."""
-    domain_config: list[dict[str, Any]] = config[DOMAIN]
+    domain_config: list[dict[str, Any]] | None = config.get(DOMAIN)
 
     # import the last YAML config since existing behavior only works with the last config
     if domain_config:
