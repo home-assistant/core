@@ -93,7 +93,7 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
         """Return the hvac action."""
         if (
             self._heating_mode is not None
-            and self._heating_mode.current_value == 0 + self._heating_mode.minimum
+            and self._heating_mode.current_value == self._heating_mode.minimum
         ):
             return HVACAction.OFF
 
