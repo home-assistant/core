@@ -134,7 +134,7 @@
       },
       "installation_type": {
         "title": "Set up Z-Wave",
-        "description": "Choose the installation type for your Z-Wave integration.",
+        "description": "In a few steps, we’re going to set up your Home Assistant Connect ZWA-2. Home Assistant can automatically install and configure the recommended Z-Wave setup, or you can customize it.",
         "menu_options": {
           "intent_recommended": "Recommended installation",
           "intent_custom": "Custom installation"
