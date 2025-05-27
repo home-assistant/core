@@ -66,6 +66,16 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key="last_alarm_type_name",
         translation_key="last_alarm_type_name",
     ),
+    "powerStatus": SensorEntityDescription(
+        key="powerStatus",
+        translation_key="power_status",
+        entity_registry_enabled_default=False,
+    ),
+    "OnlineStatus": SensorEntityDescription(
+        key="OnlineStatus",
+        translation_key="online_status",
+        entity_registry_enabled_default=False,
+    ),
 }
 
 
@@ -77,15 +87,18 @@ async def async_setup_entry(
     """Set up EZVIZ sensors based on a config entry."""
     coordinator = entry.runtime_data
 
-    async_add_entities(
-        [
-            EzvizSensor(coordinator, camera, sensor)
-            for camera in coordinator.data
-            for sensor, value in coordinator.data[camera].items()
-            if sensor in SENSOR_TYPES
-            if value is not None
-        ]
-    )
+    for camera, sensors in coordinator.data.items():
+        for sensor, value in sensors.items():
+            if sensor in SENSOR_TYPES and value is not None:
+                entities.append(EzvizSensor(coordinator, camera, sensor))
+
+        # Adding optionals attributes
+        optionals = sensors.get("optionals", {})
+        for optional_key in ["powerStatus", "OnlineStatus"]:
+            if optional_key in optionals:
+                entities.append(EzvizSensor(coordinator, camera, optional_key))
+
+    async_add_entities(entities)
 
 
 class EzvizSensor(EzvizEntity, SensorEntity):
