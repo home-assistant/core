@@ -1,4 +1,4 @@
-"""The Homee siren platform."""
+"""The homee siren platform."""
 
 from typing import Any
 
@@ -19,7 +19,7 @@ async def async_setup_entry(
     config_entry: HomeeConfigEntry,
     async_add_devices: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the homee platform for the cover integration."""
+    """Add siren entities for homee."""
 
     async_add_devices(
         HomeeSiren(attribute, config_entry)

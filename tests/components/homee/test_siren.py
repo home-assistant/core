@@ -1,4 +1,4 @@
-"""Test Homee sirens."""
+"""Test homee sirens."""
 
 from unittest.mock import MagicMock, patch
 
