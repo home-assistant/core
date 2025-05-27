@@ -6,7 +6,7 @@ from collections.abc import Callable
 from datetime import datetime
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
@@ -23,6 +23,8 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
     RepeatMode,
+    SearchMedia,
+    SearchMediaQuery,
     async_process_play_media_url,
 )
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
@@ -75,6 +77,7 @@ ATTR_QUERY_RESULT = "query_result"
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
 
 ATTR_PARAMETERS = "parameters"
 ATTR_OTHER_PLAYER = "other_player"
@@ -203,6 +206,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.GROUPING
         | MediaPlayerEntityFeature.MEDIA_ENQUEUE
         | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
+        | MediaPlayerEntityFeature.SEARCH_MEDIA
     )
     _attr_has_entity_name = True
     _attr_name = None
@@ -329,22 +333,22 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     @property
     def media_title(self) -> str | None:
         """Title of current playing media."""
-        return str(self._player.title)
+        return cast(str | None, self._player.title)
 
     @property
     def media_channel(self) -> str | None:
         """Channel (e.g. webradio name) of current playing media."""
-        return str(self._player.remote_title)
+        return cast(str | None, self._player.remote_title)
 
     @property
     def media_artist(self) -> str | None:
         """Artist of current playing media."""
-        return str(self._player.artist)
+        return cast(str | None, self._player.artist)
 
     @property
     def media_album_name(self) -> str | None:
         """Album of current playing media."""
-        return str(self._player.album)
+        return cast(str | None, self._player.album)
 
     @property
     def repeat(self) -> RepeatMode:
@@ -470,7 +474,11 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         if announce:
             if media_type not in MediaType.MUSIC:
                 raise ServiceValidationError(
-                    "Announcements must have media type of 'music'.  Playlists are not supported"
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_announce_media_type",
+                    translation_placeholders={
+                        "media_type": str(media_type),
+                    },
                 )
 
             extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
@@ -479,7 +487,11 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
                 announce_volume = get_announce_volume(extra)
             except ValueError:
                 raise ServiceValidationError(
-                    f"{ATTR_ANNOUNCE_VOLUME} must be a number greater than 0 and less than or equal to 1"
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_announce_volume",
+                    translation_placeholders={
+                        "announce_volume": ATTR_ANNOUNCE_VOLUME,
+                    },
                 ) from None
             else:
                 self._player.set_announce_volume(announce_volume)
@@ -488,7 +500,11 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
                 announce_timeout = get_announce_timeout(extra)
             except ValueError:
                 raise ServiceValidationError(
-                    f"{ATTR_ANNOUNCE_TIMEOUT} must be a whole number greater than 0"
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_announce_timeout",
+                    translation_placeholders={
+                        "announce_timeout": ATTR_ANNOUNCE_TIMEOUT,
+                    },
                 ) from None
             else:
                 self._player.set_announce_timeout(announce_timeout)
@@ -531,6 +547,74 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         if index is not None:
             await self._player.async_index(index)
         await self.coordinator.async_refresh()
+
+    async def async_search_media(
+        self,
+        query: SearchMediaQuery,
+    ) -> SearchMedia:
+        """Search the media player."""
+
+        _valid_type_list = [
+            key
+            for key in self._browse_data.content_type_media_class
+            if key not in ["apps", "app", "radios", "radio"]
+        ]
+
+        _media_content_type_list = (
+            query.media_content_type.lower().replace(", ", ",").split(",")
+            if query.media_content_type
+            else ["albums", "tracks", "artists", "genres"]
+        )
+
+        if query.media_content_type and set(_media_content_type_list).difference(
+            _valid_type_list
+        ):
+            _LOGGER.debug("Invalid Media Content Type: %s", query.media_content_type)
+
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_search_media_content_type",
+                translation_placeholders={
+                    "media_content_type": ", ".join(_valid_type_list)
+                },
+            )
+
+        search_response_list: list[BrowseMedia] = []
+
+        for _content_type in _media_content_type_list:
+            payload = {
+                "search_type": _content_type,
+                "search_id": query.media_content_id,
+                "search_query": query.search_query,
+            }
+
+            try:
+                search_response_list.append(
+                    await build_item_response(
+                        self,
+                        self._player,
+                        payload,
+                        self.browse_limit,
+                        self._browse_data,
+                    )
+                )
+            except BrowseError:
+                _LOGGER.debug("Search Failure: Payload %s", payload)
+
+        result: list[BrowseMedia] = []
+
+        for search_response in search_response_list:
+            # Apply the media_filter_classes to the result if specified
+            if query.media_filter_classes and search_response.children:
+                search_response.children = [
+                    child
+                    for child in search_response.children
+                    if child.media_content_type in query.media_filter_classes
+                ]
+            if search_response.children:
+                result.extend(list(search_response.children))
+
+        return SearchMedia(result=result)
 
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set the repeat mode."""
@@ -594,13 +678,21 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
             other_player = ent_reg.async_get(other_player_entity_id)
             if other_player is None:
                 raise ServiceValidationError(
-                    f"Could not find player with entity_id {other_player_entity_id}"
+                    translation_domain=DOMAIN,
+                    translation_key="join_cannot_find_other_player",
+                    translation_placeholders={
+                        "other_player_entity_id": str(other_player_entity_id)
+                    },
                 )
             if other_player_id := other_player.unique_id:
                 await self._player.async_sync(other_player_id)
             else:
                 raise ServiceValidationError(
-                    f"Could not join unknown player {other_player_entity_id}"
+                    translation_domain=DOMAIN,
+                    translation_key="join_cannot_join_unknown_player",
+                    translation_placeholders={
+                        "other_player_entity_id": str(other_player_entity_id)
+                    },
                 )
 
     async def async_unjoin_player(self) -> None:

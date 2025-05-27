@@ -43,6 +43,7 @@ VALID_REPAIR_TRANSLATION_KEYS = {
     "no_subscription",
     "warn_bad_custom_domain_configuration",
     "reset_bad_custom_domain_configuration",
+    "subscription_expired",
 }
 
 
@@ -404,7 +405,12 @@ class CloudClient(Interface):
     ) -> None:
         """Create a repair issue."""
         if translation_key not in VALID_REPAIR_TRANSLATION_KEYS:
-            raise ValueError(f"Invalid translation key {translation_key}")
+            _LOGGER.error(
+                "Invalid translation key %s for repair issue %s",
+                translation_key,
+                identifier,
+            )
+            return
         async_create_issue(
             hass=self._hass,
             domain=DOMAIN,
