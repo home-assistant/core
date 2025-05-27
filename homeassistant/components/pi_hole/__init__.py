@@ -103,6 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bo
         location=location,
         tls=use_tls,
         api_token=api_key,
+        version=version,
     )
 
     async def async_update_data() -> None:
