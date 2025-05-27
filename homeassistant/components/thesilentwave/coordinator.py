@@ -23,7 +23,7 @@ type TheSilentWaveConfigEntry = ConfigEntry[TheSilentWaveCoordinator]
 class TheSilentWaveCoordinator(DataUpdateCoordinator):
     """Class to manage fetching the data from the API."""
 
-    def __init__(self, hass, name, host, scan_interval=UPDATE_INTERVAL):
+    def __init__(self, hass, name, host):
         """Initialize the coordinator."""
         websession = async_get_clientsession(hass)
         self.client = SilentWaveClient(host, session=websession)
@@ -40,7 +40,7 @@ class TheSilentWaveCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=name,
-            update_interval=scan_interval,
+            update_interval=UPDATE_INTERVAL,
         )
 
     @property
