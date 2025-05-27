@@ -86,7 +86,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up EZVIZ sensors based on a config entry."""
     coordinator = entry.runtime_data
-
+    entities = []
+    
     for camera, sensors in coordinator.data.items():
         for sensor, value in sensors.items():
             if sensor in SENSOR_TYPES and value is not None:
