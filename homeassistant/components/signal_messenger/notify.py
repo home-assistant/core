@@ -103,10 +103,7 @@ class SignalNotificationService(BaseNotificationService):
 
         _LOGGER.debug("Sending signal message")
 
-        if targets := kwargs.get(ATTR_TARGET):
-            recipients: list[str] = targets
-        else:
-            recipients = self._recp_nrs
+        recipients: list[str] = kwargs.get(ATTR_TARGET) or self._recp_nrs
 
         data = kwargs.get(ATTR_DATA)
 
