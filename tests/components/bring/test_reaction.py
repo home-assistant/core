@@ -84,7 +84,7 @@ async def test_send_reaction_exception(
     mock_bring_client.notify.side_effect = BringRequestException
     with pytest.raises(
         HomeAssistantError,
-        match="Failed to send reaction for Bring! — a connection error occurred. Please try again later",
+        match="Failed to send reaction for Bring! due to a connection error, try again later",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -146,7 +146,7 @@ async def test_send_reaction_unknown_entity(
     )
     with pytest.raises(
         ServiceValidationError,
-        match="Failed to send reaction for Bring! Unknown entity event.einkauf_activities",
+        match="Failed to send reaction for Bring! — Unknown entity event.einkauf_activities",
     ):
         await hass.services.async_call(
             DOMAIN,
