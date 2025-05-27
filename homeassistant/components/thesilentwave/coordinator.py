@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Coordinator for TheSilentWave integration."""
 
 from datetime import timedelta
@@ -10,12 +12,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.config_entries import ConfigEntry
 
-# Type alias for config entry with coordinator
-TheSilentWaveConfigEntry = ConfigEntry["TheSilentWaveCoordinator"]
-
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=10)
+
+# Type alias for config entry with coordinator
+type TheSilentWaveConfigEntry = ConfigEntry[TheSilentWaveCoordinator]
 
 
 class TheSilentWaveCoordinator(DataUpdateCoordinator):
