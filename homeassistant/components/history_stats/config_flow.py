@@ -191,7 +191,7 @@ async def ws_start_preview(
         connection.send_error(msg["id"], "invalid_schema", str(ex))
         return
 
-    if sum(param in validated_data for param in CONF_PERIOD_KEYS) != 2:
+    if sum(bool(validated_data.get(param)) for param in CONF_PERIOD_KEYS) != 2:
         connection.send_error(
             msg["id"],
             "invalid_schema",
