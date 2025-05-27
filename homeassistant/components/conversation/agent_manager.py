@@ -176,6 +176,7 @@ class AgentManager:
                 AgentInfo(
                     id=agent_id,
                     name=config_entry.title or config_entry.domain,
+                    supports_streaming=False,
                 )
             )
         return agents

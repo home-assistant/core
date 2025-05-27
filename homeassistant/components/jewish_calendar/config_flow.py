@@ -9,12 +9,7 @@ import zoneinfo
 from hdate.translator import Language
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LANGUAGE,
@@ -44,6 +39,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
 )
+from .entity import JewishCalendarConfigEntry
 
 OPTIONS_SCHEMA = vol.Schema(
     {
@@ -89,7 +85,7 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: JewishCalendarConfigEntry,
     ) -> JewishCalendarOptionsFlowHandler:
         """Get the options flow for this handler."""
         return JewishCalendarOptionsFlowHandler()

@@ -2,6 +2,7 @@
   "domain": "dhcp",
   "name": "DHCP Discovery",
   "codeowners": ["@bdraco"],
+  "dependencies": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/dhcp",
   "integration_type": "system",
   "iot_class": "local_push",
@@ -14,7 +15,7 @@
   ],
   "quality_scale": "internal",
   "requirements": [
-    "aiodhcpwatcher==1.1.1",
+    "aiodhcpwatcher==1.2.0",
     "aiodiscover==2.7.0",
     "cached-ipaddress==0.10.0"
   ]
