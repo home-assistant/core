@@ -12,7 +12,6 @@ from pysilentwave.exceptions import SilentWaveError
 from .coordinator import (
     TheSilentWaveCoordinator,
     TheSilentWaveConfigEntry,
-    UPDATE_INTERVAL,
 )
 
 
@@ -29,8 +28,7 @@ async def async_setup_entry(
     name = entry.data["name"]
     host = entry.data["host"]
 
-    # Create the coordinator with UPDATE_INTERVAL.
-    coordinator = TheSilentWaveCoordinator(hass, name, host, UPDATE_INTERVAL)
+    entry.runtime_data = coordinator = TheSilentWaveCoordinator(hass, name, host)
 
     # Try to do the first refresh to verify that the device is reachable.
     try:
@@ -42,9 +40,6 @@ async def async_setup_entry(
     # Register the sensor entity.
     hass.data.setdefault("thesilentwave", {})
     hass.data["thesilentwave"][entry.entry_id] = coordinator
-
-    # Set runtime data.
-    entry.runtime_data = {"coordinator": coordinator}
 
     # Add the sensor entity to Home Assistant.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
