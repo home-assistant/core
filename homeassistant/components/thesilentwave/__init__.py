@@ -37,10 +37,6 @@ async def async_setup_entry(
         _LOGGER.debug("Failed to communicate with device: %s", exc)
         raise ConfigEntryNotReady(f"Cannot connect to device at {host}") from exc
 
-    # Register the sensor entity.
-    hass.data.setdefault("thesilentwave", {})
-    hass.data["thesilentwave"][entry.entry_id] = coordinator
-
     # Add the sensor entity to Home Assistant.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -13,7 +13,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the sensor from a config entry."""
-    coordinator = hass.data["thesilentwave"][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities([TheSilentWaveSensor(coordinator, entry.entry_id)], True)
 
 
