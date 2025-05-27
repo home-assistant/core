@@ -250,6 +250,7 @@ async def test_active_event(
         "location": "Montreal",
         "start_time": "2007-06-28 00:00:00",
         "end_time": "2007-07-09 00:00:00",
+        "color": None,
     }
 
 
@@ -292,6 +293,7 @@ async def test_upcoming_event(
         "location": "Montreal",
         "start_time": "2007-06-28 00:00:00",
         "end_time": "2007-07-09 00:00:00",
+        "color": None,
     }
 
 
