@@ -35,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CALENDAR_NAME): str,
-        vol.Optional(CONF_CALENDAR_COLOR, default=None): vol.Any(str, None),
+        vol.Optional(CONF_CALENDAR_COLOR): selector.ColorRGBSelector(),
         vol.Optional(CONF_IMPORT, default=ATTR_CREATE_EMPTY): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=[
