@@ -14,6 +14,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
+from homeassistant.util.color import RGBColor
 
 from tests.common import (
     MockConfigEntry,
@@ -48,12 +49,16 @@ class MockCalendarEntity(CalendarEntity):
         """Initialize entity."""
         self._attr_name = name.capitalize()
         self._events = events or []
-        self._color: str | None = None
+        self._attr_color: RGBColor | None = None
 
     @property
-    def color(self) -> str | None:
-        """Return the color of the calendar entity."""
-        return self._color
+    def color(self) -> RGBColor | None:
+        """Return the color of the calendar entity as RGBColor."""
+        return self._attr_color
+
+    @color.setter
+    def color(self, value: RGBColor | None) -> None:
+        self._attr_color = value
 
     @property
     def event(self) -> CalendarEvent | None:

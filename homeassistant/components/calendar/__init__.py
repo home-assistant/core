@@ -39,6 +39,7 @@ from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.color import RGBColor, color_rgb_to_hex
 from homeassistant.util.json import JsonValueType
 
 from .const import (
@@ -516,15 +517,17 @@ class CalendarEntity(Entity):
 
     _alarm_unsubs: list[CALLBACK_TYPE] | None = None
 
+    _attr_color: RGBColor | None = None
+
+    @property
+    def color(self) -> RGBColor | None:
+        """Return the color of the calendar entity as RGBColor."""
+        return self._attr_color
+
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         raise NotImplementedError
-
-    @property
-    def color(self) -> str | None:
-        """Return the color of the calendar entity."""
-        return None
 
     @final
     @property
@@ -532,18 +535,17 @@ class CalendarEntity(Entity):
         """Return the entity state attributes."""
         if (event := self.event) is None:
             return None
-
-        attrs = {
+        return {
             "message": event.summary,
             "all_day": event.all_day,
             "start_time": event.start_datetime_local.strftime(DATE_STR_FORMAT),
             "end_time": event.end_datetime_local.strftime(DATE_STR_FORMAT),
-            "location": event.location if event.location else "",
-            "description": event.description if event.description else "",
+            "location": event.location if event.location is not None else "",
+            "description": event.description if event.description is not None else "",
+            "color": f"#{color_rgb_to_hex(*self._attr_color)}"
+            if self._attr_color is not None
+            else None,
         }
-        if (color := self.color) is not None:
-            attrs["color"] = color
-        return attrs
 
     @final
     @property
