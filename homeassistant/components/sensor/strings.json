@@ -135,6 +135,7 @@
           "name": "State class",
           "state": {
             "measurement": "Measurement",
+            "measurement_angle": "Measurement angle",
             "total": "Total",
             "total_increasing": "Total increasing"
           }

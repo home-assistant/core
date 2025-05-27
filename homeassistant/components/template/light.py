@@ -276,6 +276,8 @@ async def async_setup_platform(
 class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
     """Representation of a template lights features."""
 
+    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
+    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
     def __init__(  # pylint: disable=super-init-not-called
         self, config: dict[str, Any], initial_state: bool | None = False
     ) -> None:

@@ -49,7 +49,7 @@
         "name": "Freezer door"
       },
       "cooler_door": {
-        "name": "Cooler door"
+        "name": "Fridge door"
       },
       "cool_select_plus_door": {
         "name": "CoolSelect+ door"
@@ -116,7 +116,7 @@
         "name": "Freezer temperature"
       },
       "cooler_temperature": {
-        "name": "Cooler temperature"
+        "name": "Fridge temperature"
       },
       "cool_select_plus_temperature": {
         "name": "CoolSelect+ temperature"
@@ -242,6 +242,9 @@
           "finished": "[%key:component::smartthings::entity::sensor::oven_job_state::state::finished%]"
         }
       },
+      "cooler_temperature": {
+        "name": "Fridge temperature"
+      },
       "manual_level": {
         "name": "Burner {burner_id} level"
       },
@@ -324,6 +327,9 @@
       },
       "equivalent_carbon_dioxide": {
         "name": "Equivalent carbon dioxide"
+      },
+      "freezer_temperature": {
+        "name": "Freezer temperature"
       },
       "formaldehyde": {
         "name": "Formaldehyde"
