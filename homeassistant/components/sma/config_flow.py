@@ -184,7 +184,18 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
         self._data[CONF_HOST] = discovery_info.ip
         self._data[CONF_MAC] = format_mac(self._discovery_data[CONF_MAC])
 
-        await self.async_set_unique_id(discovery_info.hostname.replace("SMA", ""))
+        _LOGGER.debug(
+            "DHCP discovery detected SMA device: %s, IP: %s, MAC: %s",
+            self._discovery_data[CONF_NAME],
+            self._discovery_data[CONF_HOST],
+            self._discovery_data[CONF_MAC],
+        )
+
+        self._async_abort_entries_match({CONF_HOST: self._discovery_data[CONF_HOST]})
+
+        await self.async_set_unique_id(
+            discovery_info.hostname.replace("SMA", "").lower()
+        )
         self._abort_if_unique_id_configured()
 
         return await self.async_step_discovery_confirm()
