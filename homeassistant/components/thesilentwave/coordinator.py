@@ -15,11 +15,13 @@ TheSilentWaveConfigEntry = ConfigEntry["TheSilentWaveCoordinator"]
 
 _LOGGER = logging.getLogger(__name__)
 
+UPDATE_INTERVAL = timedelta(seconds=10)
+
 
 class TheSilentWaveCoordinator(DataUpdateCoordinator):
     """Class to manage fetching the data from the API."""
 
-    def __init__(self, hass, name, host, scan_interval):
+    def __init__(self, hass, name, host, scan_interval=UPDATE_INTERVAL):
         """Initialize the coordinator."""
         websession = async_get_clientsession(hass)
         self.client = SilentWaveClient(host, session=websession)
@@ -36,7 +38,7 @@ class TheSilentWaveCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=name,
-            update_interval=timedelta(seconds=scan_interval),
+            update_interval=scan_interval,
         )
 
     @property

@@ -9,7 +9,11 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from pysilentwave.exceptions import SilentWaveError
 
-from .coordinator import TheSilentWaveCoordinator, TheSilentWaveConfigEntry
+from .coordinator import (
+    TheSilentWaveCoordinator,
+    TheSilentWaveConfigEntry,
+    UPDATE_INTERVAL,
+)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,10 +28,9 @@ async def async_setup_entry(
     # Fetch the configuration data from the entry.
     name = entry.data["name"]
     host = entry.data["host"]
-    scan_interval = 10  # Fixed scan interval
 
-    # Create the coordinator with scan_interval.
-    coordinator = TheSilentWaveCoordinator(hass, name, host, scan_interval)
+    # Create the coordinator with UPDATE_INTERVAL.
+    coordinator = TheSilentWaveCoordinator(hass, name, host, UPDATE_INTERVAL)
 
     # Try to do the first refresh to verify that the device is reachable.
     try:
