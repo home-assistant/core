@@ -32,6 +32,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
+from . import broadcast, polling, webhooks
 from .bot import TelegramBotConfigEntry, TelegramNotificationService
 from .const import (
     ATTR_ALLOWS_MULTIPLE_ANSWERS,
