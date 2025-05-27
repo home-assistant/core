@@ -194,25 +194,28 @@ class NoboZone(ClimateEntity):
         self._attr_current_temperature = (
             None if current_temperature is None else float(current_temperature)
         )
-        if ClimateEntityFeature.TARGET_TEMPERATURE in self._attr_supported_features:
-            self._attr_target_temperature_high = None
-            self._attr_target_temperature_low = None
-            if self._supports_comfort:
-                temp_attr = ATTR_TEMP_COMFORT_C
-            else:
-                temp_attr = ATTR_TEMP_ECO_C
-            self._attr_target_temperature = int(self._nobo.zones[self._id][temp_attr])
-        elif (
-            ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-            in self._attr_supported_features
-        ):
-            self._attr_target_temperature_high = int(
-                self._nobo.zones[self._id][ATTR_TEMP_COMFORT_C]
-            )
-            self._attr_target_temperature_low = int(
-                self._nobo.zones[self._id][ATTR_TEMP_ECO_C]
-            )
-            self._attr_target_temperature = None
+        if self._attr_supported_features:
+            if ClimateEntityFeature.TARGET_TEMPERATURE in self._attr_supported_features:
+                self._attr_target_temperature_high = None
+                self._attr_target_temperature_low = None
+                if self._supports_comfort:
+                    temp_attr = ATTR_TEMP_COMFORT_C
+                else:
+                    temp_attr = ATTR_TEMP_ECO_C
+                self._attr_target_temperature = int(
+                    self._nobo.zones[self._id][temp_attr]
+                )
+            elif (
+                ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+                in self._attr_supported_features
+            ):
+                self._attr_target_temperature_high = int(
+                    self._nobo.zones[self._id][ATTR_TEMP_COMFORT_C]
+                )
+                self._attr_target_temperature_low = int(
+                    self._nobo.zones[self._id][ATTR_TEMP_ECO_C]
+                )
+                self._attr_target_temperature = None
 
     @callback
     def _after_update(self, hub):
