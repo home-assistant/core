@@ -170,8 +170,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _title: str
-
     def __init__(self) -> None:
         """Set up flow instance."""
         self.s0_legacy_key: str | None = None
@@ -503,18 +501,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             title = human_name.split(" - ")[0].strip()
         self.context["title_placeholders"] = {CONF_NAME: title}
-        self._title = title
-        return await self.async_step_usb_confirm()
-
-    async def async_step_usb_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle USB Discovery confirmation."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="usb_confirm",
-                description_placeholders={CONF_NAME: self._title},
-            )
 
         self._usb_discovery = True
         if current_config_entries := self._async_current_entries(include_ignore=False):
