@@ -31,11 +31,11 @@ async def async_setup_entry(
     controller = config_entry.runtime_data.controller
 
     switchable_output_subentries = filter(
-        lambda entry: entry[1].subentry_type == SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
-        config_entry.subentries.items(),
+        lambda entry: entry.subentry_type == SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
+        config_entry.subentries.values(),
     )
 
-    for subentry_id, subentry in switchable_output_subentries:
+    for subentry in switchable_output_subentries:
         switchable_output_num = subentry.data[CONF_SWITCHABLE_OUTPUT_NUMBER]
         switchable_output_name = subentry.data[CONF_NAME]
 
@@ -48,7 +48,7 @@ async def async_setup_entry(
                     config_entry.options.get(CONF_CODE),
                 ),
             ],
-            config_subentry_id=subentry_id,
+            config_subentry_id=subentry.subentry_id,
         )
 
 

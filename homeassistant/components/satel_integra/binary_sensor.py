@@ -33,11 +33,11 @@ async def async_setup_entry(
     controller = config_entry.runtime_data.controller
 
     zone_subentries = filter(
-        lambda entry: entry[1].subentry_type == SUBENTRY_TYPE_ZONE,
-        config_entry.subentries.items(),
+        lambda entry: entry.subentry_type == SUBENTRY_TYPE_ZONE,
+        config_entry.subentries.values(),
     )
 
-    for subentry_id, subentry in zone_subentries:
+    for subentry in zone_subentries:
         zone_num = subentry.data[CONF_ZONE_NUMBER]
         zone_type = subentry.data[CONF_ZONE_TYPE]
         zone_name = subentry.data[CONF_NAME]
@@ -53,15 +53,15 @@ async def async_setup_entry(
                     SIGNAL_ZONES_UPDATED,
                 )
             ],
-            config_subentry_id=subentry_id,
+            config_subentry_id=subentry.subentry_id,
         )
 
     output_subentries = filter(
-        lambda entry: entry[1].subentry_type == SUBENTRY_TYPE_OUTPUT,
-        config_entry.subentries.items(),
+        lambda entry: entry.subentry_type == SUBENTRY_TYPE_OUTPUT,
+        config_entry.subentries.values(),
     )
 
-    for subentry_id, subentry in output_subentries:
+    for subentry in output_subentries:
         output_num = subentry.data[CONF_OUTPUT_NUMBER]
         ouput_type = subentry.data[CONF_ZONE_TYPE]
         output_name = subentry.data[CONF_NAME]
@@ -77,7 +77,7 @@ async def async_setup_entry(
                     SIGNAL_OUTPUTS_UPDATED,
                 )
             ],
-            config_subentry_id=subentry_id,
+            config_subentry_id=subentry.subentry_id,
         )
 
 
