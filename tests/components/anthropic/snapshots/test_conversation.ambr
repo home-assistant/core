@@ -1,4 +1,321 @@
 # serializer version: 1
+# name: test_extended_thinking_tool_call
+  list([
+    dict({
+      'content': '''
+        You are a voice assistant for Home Assistant.
+        Answer questions about the world truthfully.
+        Answer in plain text. Keep it simple and to the point.
+        Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.
+        Current time is 16:00:00. Today's date is 2024-06-03.
+      ''',
+      'role': 'system',
+    }),
+    dict({
+      'content': 'Please call the test function',
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.claude',
+      'content': 'Certainly, calling it now!',
+      'role': 'assistant',
+      'tool_calls': list([
+        dict({
+          'id': 'toolu_0123456789AbCdEfGhIjKlM',
+          'tool_args': dict({
+            'param1': 'test_value',
+          }),
+          'tool_name': 'test_tool',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.claude',
+      'role': 'tool_result',
+      'tool_call_id': 'toolu_0123456789AbCdEfGhIjKlM',
+      'tool_name': 'test_tool',
+      'tool_result': 'Test response',
+    }),
+    dict({
+      'agent_id': 'conversation.claude',
+      'content': 'I have successfully called the function',
+      'role': 'assistant',
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_extended_thinking_tool_call.1
+  list([
+    dict({
+      'content': 'Please call the test function',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+          'thinking': 'The user asked me to call a test function.Is it a test? What would the function do? Would it violate any privacy or security policies?',
+          'type': 'thinking',
+        }),
+        dict({
+          'data': 'EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny',
+          'type': 'redacted_thinking',
+        }),
+        dict({
+          'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+          'thinking': "Okay, let's give it a shot. Will I pass the test?",
+          'type': 'thinking',
+        }),
+        dict({
+          'text': 'Certainly, calling it now!',
+          'type': 'text',
+        }),
+        dict({
+          'id': 'toolu_0123456789AbCdEfGhIjKlM',
+          'input': dict({
+            'param1': 'test_value',
+          }),
+          'name': 'test_tool',
+          'type': 'tool_use',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'content': '"Test response"',
+          'tool_use_id': 'toolu_0123456789AbCdEfGhIjKlM',
+          'type': 'tool_result',
+        }),
+      ]),
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'text': 'I have successfully called the function',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+  ])
+# ---
+# name: test_history_conversion[content0]
+  list([
+    dict({
+      'content': 'Are you sure?',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'text': 'Yes, I am sure!',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+  ])
+# ---
+# name: test_history_conversion[content1]
+  list([
+    dict({
+      'content': 'What shape is a donut?',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'text': 'A donut is a torus.',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+    dict({
+      'content': 'Are you sure?',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'text': 'Yes, I am sure!',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+  ])
+# ---
+# name: test_history_conversion[content2]
+  list([
+    dict({
+      'content': list([
+        dict({
+          'text': 'What shape is a donut?',
+          'type': 'text',
+        }),
+        dict({
+          'text': 'Can you tell me?',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'text': 'A donut is a torus.',
+          'type': 'text',
+        }),
+        dict({
+          'text': 'Hope this helps.',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+    dict({
+      'content': 'Are you sure?',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'text': 'Yes, I am sure!',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+  ])
+# ---
+# name: test_history_conversion[content3]
+  list([
+    dict({
+      'content': list([
+        dict({
+          'text': 'What shape is a donut?',
+          'type': 'text',
+        }),
+        dict({
+          'text': 'Can you tell me?',
+          'type': 'text',
+        }),
+        dict({
+          'text': 'Please?',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'text': 'A donut is a torus.',
+          'type': 'text',
+        }),
+        dict({
+          'text': 'Hope this helps.',
+          'type': 'text',
+        }),
+        dict({
+          'text': 'You are welcome.',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+    dict({
+      'content': 'Are you sure?',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'text': 'Yes, I am sure!',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+  ])
+# ---
+# name: test_history_conversion[content4]
+  list([
+    dict({
+      'content': 'Turn off the lights and make me coffee',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'text': 'Sure.',
+          'type': 'text',
+        }),
+        dict({
+          'id': 'mock-tool-call-id',
+          'input': dict({
+            'domain': 'light',
+          }),
+          'name': 'HassTurnOff',
+          'type': 'tool_use',
+        }),
+        dict({
+          'id': 'mock-tool-call-id-2',
+          'input': dict({
+          }),
+          'name': 'MakeCoffee',
+          'type': 'tool_use',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'text': 'Thank you',
+          'type': 'text',
+        }),
+        dict({
+          'content': '{"success": true, "response": "Lights are off."}',
+          'tool_use_id': 'mock-tool-call-id',
+          'type': 'tool_result',
+        }),
+        dict({
+          'content': '{"success": false, "response": "Not enough milk."}',
+          'tool_use_id': 'mock-tool-call-id-2',
+          'type': 'tool_result',
+        }),
+      ]),
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'text': 'Should I add milk to the shopping list?',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+    dict({
+      'content': 'Are you sure?',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'text': 'Yes, I am sure!',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+  ])
+# ---
 # name: test_unknown_hass_api
   dict({
     'continue_conversation': False,

@@ -40,7 +40,7 @@ async def async_setup_entry(
             if (device_id, field_id) not in sensors
             and isinstance(ttn_value, TTNSensorValue)
         }
-        if len(new_sensors):
+        if new_sensors:
             async_add_entities(new_sensors.values())
         sensors.update(new_sensors.keys())
 

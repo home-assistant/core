@@ -7,6 +7,9 @@
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Withings integration needs to re-authenticate your account"
+      },
+      "oauth_discovery": {
+        "description": "Home Assistant has found a Withings device on your network. Press **Submit** to continue setting up Withings."
       }
     },
     "error": {
@@ -313,9 +316,9 @@
       "battery": {
         "name": "[%key:component::sensor::entity_component::battery::name%]",
         "state": {
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
       }
     }

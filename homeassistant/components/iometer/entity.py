@@ -20,5 +20,5 @@ class IOmeterEntity(CoordinatorEntity[IOMeterCoordinator]):
             identifiers={(DOMAIN, status.device.id)},
             manufacturer="IOmeter GmbH",
             model="IOmeter",
-            sw_version=f"{status.device.core.version}/{status.device.bridge.version}",
+            sw_version=coordinator.current_fw_version,
         )

@@ -85,7 +85,7 @@ def mock_request():
 def mock_live_status():
     """Mock Tesla Fleet API EnergySpecific live_status method."""
     with patch(
-        "homeassistant.components.tessie.EnergySpecific.live_status",
+        "tesla_fleet_api.tessie.EnergySite.live_status",
         side_effect=lambda: deepcopy(LIVE_STATUS),
     ) as mock_live_status:
         yield mock_live_status
@@ -95,7 +95,7 @@ def mock_live_status():
 def mock_site_info():
     """Mock Tesla Fleet API EnergySpecific site_info method."""
     with patch(
-        "homeassistant.components.tessie.EnergySpecific.site_info",
+        "tesla_fleet_api.tessie.EnergySite.site_info",
         side_effect=lambda: deepcopy(SITE_INFO),
     ) as mock_live_status:
         yield mock_live_status

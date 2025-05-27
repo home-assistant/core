@@ -1116,6 +1116,16 @@
           'winner': None,
         }),
         'checklist': list([
+          dict({
+            'completed': False,
+            'id': 'a2a6702d-58e1-46c2-a3ce-422d525cc0b6',
+            'text': 'Checklist-item1',
+          }),
+          dict({
+            'completed': True,
+            'id': '9f64e1cd-b0ab-4577-8344-c7a5e1827997',
+            'text': 'Checklist-item2',
+          }),
         ]),
         'collapseChecklist': False,
         'completed': False,
@@ -1180,6 +1190,81 @@
         'value': -0.9215181434950852,
         'weeksOfMonth': list([
           3,
+        ]),
+        'yesterDaily': True,
+      }),
+      dict({
+        'alias': None,
+        'attribute': 'str',
+        'byHabitica': False,
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
+        'checklist': list([
+        ]),
+        'collapseChecklist': False,
+        'completed': False,
+        'counterDown': None,
+        'counterUp': None,
+        'createdAt': '2024-04-04T22:00:00+00:00',
+        'date': None,
+        'daysOfMonth': list([
+        ]),
+        'down': None,
+        'everyX': 1,
+        'frequency': 'monthly',
+        'group': dict({
+          'assignedDate': None,
+          'assignedUsers': list([
+          ]),
+          'assignedUsersDetail': dict({
+          }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
+        }),
+        'history': list([
+        ]),
+        'id': '369afeed-61e3-4bf7-9747-66e05807134c',
+        'isDue': False,
+        'nextDue': list([
+          '2024-12-14T23:00:00+00:00',
+          '2025-01-18T23:00:00+00:00',
+        ]),
+        'notes': 'Setze dich einmal im Monat hin, um deine Einnahmen und Ausgaben zu überprüfen und dein Budget zu planen.',
+        'priority': 1,
+        'reminders': list([
+        ]),
+        'repeat': dict({
+          'f': False,
+          'm': False,
+          's': False,
+          'su': True,
+          't': False,
+          'th': False,
+          'w': False,
+        }),
+        'startDate': '2024-04-04T22:00:00+00:00',
+        'streak': 1,
+        'tags': list([
+        ]),
+        'text': 'Monatliche Finanzübersicht erstellen',
+        'type': 'daily',
+        'up': None,
+        'updatedAt': '2024-04-04T22:00:00+00:00',
+        'userId': '5f359083-ef78-4af0-985a-0b2c6d05797c',
+        'value': -0.9215181434950852,
+        'weeksOfMonth': list([
+          0,
         ]),
         'yesterDaily': True,
       }),
@@ -3378,6 +3463,16 @@
           'winner': None,
         }),
         'checklist': list([
+          dict({
+            'completed': False,
+            'id': 'a2a6702d-58e1-46c2-a3ce-422d525cc0b6',
+            'text': 'Checklist-item1',
+          }),
+          dict({
+            'completed': True,
+            'id': '9f64e1cd-b0ab-4577-8344-c7a5e1827997',
+            'text': 'Checklist-item2',
+          }),
         ]),
         'collapseChecklist': False,
         'completed': False,
@@ -3442,6 +3537,81 @@
         'value': -0.9215181434950852,
         'weeksOfMonth': list([
           3,
+        ]),
+        'yesterDaily': True,
+      }),
+      dict({
+        'alias': None,
+        'attribute': 'str',
+        'byHabitica': False,
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
+        'checklist': list([
+        ]),
+        'collapseChecklist': False,
+        'completed': False,
+        'counterDown': None,
+        'counterUp': None,
+        'createdAt': '2024-04-04T22:00:00+00:00',
+        'date': None,
+        'daysOfMonth': list([
+        ]),
+        'down': None,
+        'everyX': 1,
+        'frequency': 'monthly',
+        'group': dict({
+          'assignedDate': None,
+          'assignedUsers': list([
+          ]),
+          'assignedUsersDetail': dict({
+          }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
+        }),
+        'history': list([
+        ]),
+        'id': '369afeed-61e3-4bf7-9747-66e05807134c',
+        'isDue': False,
+        'nextDue': list([
+          '2024-12-14T23:00:00+00:00',
+          '2025-01-18T23:00:00+00:00',
+        ]),
+        'notes': 'Setze dich einmal im Monat hin, um deine Einnahmen und Ausgaben zu überprüfen und dein Budget zu planen.',
+        'priority': 1,
+        'reminders': list([
+        ]),
+        'repeat': dict({
+          'f': False,
+          'm': False,
+          's': False,
+          'su': True,
+          't': False,
+          'th': False,
+          'w': False,
+        }),
+        'startDate': '2024-04-04T22:00:00+00:00',
+        'streak': 1,
+        'tags': list([
+        ]),
+        'text': 'Monatliche Finanzübersicht erstellen',
+        'type': 'daily',
+        'up': None,
+        'updatedAt': '2024-04-04T22:00:00+00:00',
+        'userId': '5f359083-ef78-4af0-985a-0b2c6d05797c',
+        'value': -0.9215181434950852,
+        'weeksOfMonth': list([
+          0,
         ]),
         'yesterDaily': True,
       }),
@@ -4511,6 +4681,16 @@
           'winner': None,
         }),
         'checklist': list([
+          dict({
+            'completed': False,
+            'id': 'a2a6702d-58e1-46c2-a3ce-422d525cc0b6',
+            'text': 'Checklist-item1',
+          }),
+          dict({
+            'completed': True,
+            'id': '9f64e1cd-b0ab-4577-8344-c7a5e1827997',
+            'text': 'Checklist-item2',
+          }),
         ]),
         'collapseChecklist': False,
         'completed': False,
@@ -4575,6 +4755,81 @@
         'value': -0.9215181434950852,
         'weeksOfMonth': list([
           3,
+        ]),
+        'yesterDaily': True,
+      }),
+      dict({
+        'alias': None,
+        'attribute': 'str',
+        'byHabitica': False,
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
+        'checklist': list([
+        ]),
+        'collapseChecklist': False,
+        'completed': False,
+        'counterDown': None,
+        'counterUp': None,
+        'createdAt': '2024-04-04T22:00:00+00:00',
+        'date': None,
+        'daysOfMonth': list([
+        ]),
+        'down': None,
+        'everyX': 1,
+        'frequency': 'monthly',
+        'group': dict({
+          'assignedDate': None,
+          'assignedUsers': list([
+          ]),
+          'assignedUsersDetail': dict({
+          }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
+        }),
+        'history': list([
+        ]),
+        'id': '369afeed-61e3-4bf7-9747-66e05807134c',
+        'isDue': False,
+        'nextDue': list([
+          '2024-12-14T23:00:00+00:00',
+          '2025-01-18T23:00:00+00:00',
+        ]),
+        'notes': 'Setze dich einmal im Monat hin, um deine Einnahmen und Ausgaben zu überprüfen und dein Budget zu planen.',
+        'priority': 1,
+        'reminders': list([
+        ]),
+        'repeat': dict({
+          'f': False,
+          'm': False,
+          's': False,
+          'su': True,
+          't': False,
+          'th': False,
+          'w': False,
+        }),
+        'startDate': '2024-04-04T22:00:00+00:00',
+        'streak': 1,
+        'tags': list([
+        ]),
+        'text': 'Monatliche Finanzübersicht erstellen',
+        'type': 'daily',
+        'up': None,
+        'updatedAt': '2024-04-04T22:00:00+00:00',
+        'userId': '5f359083-ef78-4af0-985a-0b2c6d05797c',
+        'value': -0.9215181434950852,
+        'weeksOfMonth': list([
+          0,
         ]),
         'yesterDaily': True,
       }),
@@ -5092,6 +5347,16 @@
           'winner': None,
         }),
         'checklist': list([
+          dict({
+            'completed': False,
+            'id': 'a2a6702d-58e1-46c2-a3ce-422d525cc0b6',
+            'text': 'Checklist-item1',
+          }),
+          dict({
+            'completed': True,
+            'id': '9f64e1cd-b0ab-4577-8344-c7a5e1827997',
+            'text': 'Checklist-item2',
+          }),
         ]),
         'collapseChecklist': False,
         'completed': False,
@@ -5156,6 +5421,81 @@
         'value': -0.9215181434950852,
         'weeksOfMonth': list([
           3,
+        ]),
+        'yesterDaily': True,
+      }),
+      dict({
+        'alias': None,
+        'attribute': 'str',
+        'byHabitica': False,
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
+        'checklist': list([
+        ]),
+        'collapseChecklist': False,
+        'completed': False,
+        'counterDown': None,
+        'counterUp': None,
+        'createdAt': '2024-04-04T22:00:00+00:00',
+        'date': None,
+        'daysOfMonth': list([
+        ]),
+        'down': None,
+        'everyX': 1,
+        'frequency': 'monthly',
+        'group': dict({
+          'assignedDate': None,
+          'assignedUsers': list([
+          ]),
+          'assignedUsersDetail': dict({
+          }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
+        }),
+        'history': list([
+        ]),
+        'id': '369afeed-61e3-4bf7-9747-66e05807134c',
+        'isDue': False,
+        'nextDue': list([
+          '2024-12-14T23:00:00+00:00',
+          '2025-01-18T23:00:00+00:00',
+        ]),
+        'notes': 'Setze dich einmal im Monat hin, um deine Einnahmen und Ausgaben zu überprüfen und dein Budget zu planen.',
+        'priority': 1,
+        'reminders': list([
+        ]),
+        'repeat': dict({
+          'f': False,
+          'm': False,
+          's': False,
+          'su': True,
+          't': False,
+          'th': False,
+          'w': False,
+        }),
+        'startDate': '2024-04-04T22:00:00+00:00',
+        'streak': 1,
+        'tags': list([
+        ]),
+        'text': 'Monatliche Finanzübersicht erstellen',
+        'type': 'daily',
+        'up': None,
+        'updatedAt': '2024-04-04T22:00:00+00:00',
+        'userId': '5f359083-ef78-4af0-985a-0b2c6d05797c',
+        'value': -0.9215181434950852,
+        'weeksOfMonth': list([
+          0,
         ]),
         'yesterDaily': True,
       }),
