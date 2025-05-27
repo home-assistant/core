@@ -2670,7 +2670,7 @@ ritassist==0.9.2
 rjpl==0.3.6
 
 # homeassistant.components.rocketchat
-rocketchat-API==0.6.1
+rocketchat-API==1.35.1
 
 # homeassistant.components.roku
 rokuecp==0.19.3
