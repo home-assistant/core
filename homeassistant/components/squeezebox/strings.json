@@ -133,6 +133,14 @@
         "unit_of_measurement": "[%key:component::squeezebox::entity::sensor::player_count::unit_of_measurement%]"
       }
     },
+    "switch": {
+      "alarm": {
+        "name": "Alarm ({alarm_id})"
+      },
+      "alarms_enabled": {
+        "name": "Alarms enabled"
+      }
+    },
     "update": {
       "newversion": {
         "name": "Lyrion Music Server"
@@ -196,6 +204,9 @@
     },
     "update_restart_failed": {
       "message": "Error trying to update LMS Plugins: Restart failed."
+    },
+    "invalid_search_media_content_type": {
+      "message": "If specified, Media content type must be one of {media_content_type}"
     }
   }
 }

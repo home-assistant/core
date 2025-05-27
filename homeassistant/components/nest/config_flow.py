@@ -31,6 +31,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
 )
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.util import get_random_string
 
 from . import api
@@ -440,3 +441,10 @@ class NestFlowHandler(
         if self._structure_config_title:
             title = self._structure_config_title
         return self.async_create_entry(title=title, data=self._data)
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by discovery."""
+        await self._async_handle_discovery_without_unique_id()
+        return await self.async_step_user()
