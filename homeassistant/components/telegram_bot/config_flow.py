@@ -229,7 +229,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         # prevent duplicates
-        await self.async_set_unique_id(user_input.get(CONF_API_KEY))
+        await self.async_set_unique_id(user_input[CONF_API_KEY])
         self._abort_if_unique_id_configured(user_input)
 
         # validate connection to Telegram API
