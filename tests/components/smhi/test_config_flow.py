@@ -48,7 +48,6 @@ async def test_form(
                 }
             },
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Home"
@@ -74,7 +73,6 @@ async def test_form(
             }
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Weather 1.0 1.0"
@@ -106,7 +104,6 @@ async def test_form_invalid_coordinates(
             }
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "wrong_location"}
@@ -122,7 +119,6 @@ async def test_form_invalid_coordinates(
             }
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Weather 2.0 2.0"
@@ -164,7 +160,6 @@ async def test_form_unique_id_exist(
             }
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -211,7 +206,6 @@ async def test_reconfigure_flow(
             }
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "wrong_location"}
@@ -227,7 +221,6 @@ async def test_reconfigure_flow(
             }
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
