@@ -146,13 +146,13 @@
       "message": "Failed to send push notification for Bring! due to a connection error, try again later"
     },
     "reaction_request_failed": {
-      "message": "Failed to send reaction for Bring! — a connection error occurred. Please try again later"
+      "message": "Failed to send reaction for Bring! due to a connection error, try again later"
     },
     "activity_not_found": {
       "message": "Failed to send reaction for Bring! — No recent activity found"
     },
     "entity_not_found": {
-      "message": "Failed to send reaction for Bring! Unknown entity {entity_id}"
+      "message": "Failed to send reaction for Bring! — Unknown entity {entity_id}"
     },
 
     "entry_not_loaded": {
