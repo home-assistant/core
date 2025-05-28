@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from decimal import Decimal, DecimalException
+from decimal import Decimal, DecimalException, InvalidOperation
 import logging
 
 import voluptuous as vol
@@ -95,6 +95,15 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_MAX_SUB_INTERVAL): cv.positive_time_period,
     }
 )
+
+
+def _is_decimal_state(state: str) -> bool:
+    try:
+        Decimal(state)
+    except (InvalidOperation, TypeError):
+        return False
+    else:
+        return True
 
 
 async def async_setup_entry(
@@ -264,7 +273,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             if (
                 self._max_sub_interval is not None
                 and source_state is not None
-                and (Decimal(source_state.state))
+                and (_is_decimal_state(source_state.state))
             ):
                 schedule_time = datetime.now(tz=UTC)
 
