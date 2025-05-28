@@ -21,9 +21,7 @@ from homeassistant.components.climate import (
     PRESET_SLEEP,
     HVACMode,
 )
-from homeassistant.components.generic_thermostat.const import (
-    DOMAIN as GENERIC_THERMOSTAT_DOMAIN,
-)
+from homeassistant.components.generic_thermostat.const import DOMAIN
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     SERVICE_RELOAD,
@@ -1492,7 +1490,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     yaml_path = get_fixture_path("configuration.yaml", "generic_thermostat")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            GENERIC_THERMOSTAT_DOMAIN,
+            DOMAIN,
             SERVICE_RELOAD,
             {},
             blocking=True,
@@ -1530,7 +1528,7 @@ async def test_device_id(
 
     helper_config_entry = MockConfigEntry(
         data={},
-        domain=GENERIC_THERMOSTAT_DOMAIN,
+        domain=DOMAIN,
         options={
             "name": "Test",
             "heater": "switch.test_source",

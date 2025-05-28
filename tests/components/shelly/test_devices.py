@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import init_integration
 
-from tests.common import load_json_object_fixture
+from tests.common import async_load_json_object_fixture
 
 
 async def test_shelly_2pm_gen3_no_relay_names(
@@ -27,7 +27,7 @@ async def test_shelly_2pm_gen3_no_relay_names(
     This device has two relays/channels,we should get a main device and two sub
     devices.
     """
-    device_fixture = load_json_object_fixture("2pm_gen3.json", DOMAIN)
+    device_fixture = await async_load_json_object_fixture(hass, "2pm_gen3.json", DOMAIN)
     monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
     monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
     monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
@@ -110,7 +110,7 @@ async def test_shelly_2pm_gen3_relay_names(
     This device has two relays/channels,we should get a main device and two sub
     devices.
     """
-    device_fixture = load_json_object_fixture("2pm_gen3.json", DOMAIN)
+    device_fixture = await async_load_json_object_fixture(hass, "2pm_gen3.json", DOMAIN)
     device_fixture["config"]["switch:0"]["name"] = "Kitchen light"
     device_fixture["config"]["switch:1"]["name"] = "Living room light"
     monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
@@ -194,7 +194,9 @@ async def test_shelly_2pm_gen3_cover(
 
     With the cover profile we should only get the main device and no subdevices.
     """
-    device_fixture = load_json_object_fixture("2pm_gen3_cover.json", DOMAIN)
+    device_fixture = await async_load_json_object_fixture(
+        hass, "2pm_gen3_cover.json", DOMAIN
+    )
     monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
     monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
     monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
@@ -249,7 +251,9 @@ async def test_shelly_2pm_gen3_cover_with_name(
 
     With the cover profile we should only get the main device and no subdevices.
     """
-    device_fixture = load_json_object_fixture("2pm_gen3_cover.json", DOMAIN)
+    device_fixture = await async_load_json_object_fixture(
+        hass, "2pm_gen3_cover.json", DOMAIN
+    )
     device_fixture["config"]["cover:0"]["name"] = "Bedroom blinds"
     monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
     monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
@@ -305,7 +309,7 @@ async def test_shelly_pro_3em(
 
     We should get the main device and three subdevices, one subdevice per one phase.
     """
-    device_fixture = load_json_object_fixture("pro_3em.json", DOMAIN)
+    device_fixture = await async_load_json_object_fixture(hass, "pro_3em.json", DOMAIN)
     monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
     monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
     monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
@@ -376,7 +380,7 @@ async def test_shelly_pro_3em_with_emeter_name(
 
     We should get the main device and three subdevices, one subdevice per one phase.
     """
-    device_fixture = load_json_object_fixture("pro_3em.json", DOMAIN)
+    device_fixture = await async_load_json_object_fixture(hass, "pro_3em.json", DOMAIN)
     device_fixture["config"]["em:0"]["name"] = "Emeter name"
     monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
     monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
