@@ -63,7 +63,7 @@ class MatterEntityDescription(EntityDescription):
     ha_to_native_value: Callable[[Any], Any] | None = None
     command_timeout: int | None = None
     # List of Matter FixedLabel or UserLabels used for name
-    name_using_matter_labels: list | None = None
+    name_using_matter_labels: list[str] | None = None
 
 
 class MatterEntity(Entity):
