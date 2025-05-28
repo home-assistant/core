@@ -34,7 +34,7 @@
         "title": "Set up SMA Solar"
       },
       "discovery_confirm": {
-        "title": "Set up SMA Solar",
+        "title": "[%key:component::sma::config::step::user::title]",
         "description": "Do you want to setup the discovered SMA ({host})?",
         "data": {
           "group": "[%key:component::sma::config::step::user::data::group]",
