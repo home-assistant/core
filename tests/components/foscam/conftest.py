@@ -1,6 +1,6 @@
 """Common stuff for Foscam tests."""
 
-from libpyfoscam.foscam import (
+from libpyfoscamcgi.foscamcgi import (
     ERROR_FOSCAM_AUTH,
     ERROR_FOSCAM_CMD,
     ERROR_FOSCAM_UNAVAILABLE,
