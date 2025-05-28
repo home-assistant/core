@@ -327,8 +327,8 @@ build.json @home-assistant/supervisor
 /tests/components/demo/ @home-assistant/core
 /homeassistant/components/denonavr/ @ol-iver @starkillerOG
 /tests/components/denonavr/ @ol-iver @starkillerOG
-/homeassistant/components/derivative/ @afaucogney
-/tests/components/derivative/ @afaucogney
+/homeassistant/components/derivative/ @afaucogney @karwosts
+/tests/components/derivative/ @afaucogney @karwosts
 /homeassistant/components/devialet/ @fwestenberg
 /tests/components/devialet/ @fwestenberg
 /homeassistant/components/device_automation/ @home-assistant/core
