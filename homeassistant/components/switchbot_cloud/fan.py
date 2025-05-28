@@ -118,17 +118,17 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         assert preset_mode in [item.value for item in list(BatteryCirculatorFanMode)]
-        if self._attr_is_on:
-            await self.send_api_command(
-                command=BatteryCirculatorFanCommands.SET_WIND_MODE,
-                parameters=preset_mode,
-            )
-            self.preset_mode = preset_mode
-            response: dict | None = await self._api.get_status(self.unique_id)
-            assert response is not None
-            fan_speed: int | None = response.get("fanSpeed")
-            if preset_mode in BatteryCirculatorFanMode.DIRECT.value:
-                self.percentage = fan_speed if fan_speed else 0
-            else:
-                self.percentage = 0
+        await self.send_api_command(
+            command=BatteryCirculatorFanCommands.SET_WIND_MODE,
+            parameters=preset_mode,
+        )
+        self.preset_mode = preset_mode
+        response: dict | None = await self._api.get_status(self.unique_id)
+        assert response is not None
+        fan_speed: int | None = response.get("fanSpeed")
+        if preset_mode in BatteryCirculatorFanMode.DIRECT.value:
+            self.percentage = fan_speed if fan_speed else 0
+        else:
+            self.percentage = 0
+
         self.async_write_ha_state()
