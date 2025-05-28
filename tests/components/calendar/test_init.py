@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.color import RGBColor
 
 from .conftest import MockCalendarEntity, MockConfigEntry
 
@@ -604,3 +605,25 @@ async def test_list_events_service_same_dates(
             blocking=True,
             return_response=True,
         )
+
+
+async def test_calendar_color_attribute(
+    hass: HomeAssistant, test_entities: list[MockCalendarEntity]
+) -> None:
+    """Test that the color attribute is exposed in state attributes only."""
+    entity = test_entities[0]
+
+    entity._attr_color = RGBColor(10, 20, 30)
+    entity.async_write_ha_state()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.attributes["color"] == "#0a141e"
+
+    entity._attr_color = None
+    entity.async_write_ha_state()
+    await hass.async_block_till_done()
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.attributes["color"] is None
