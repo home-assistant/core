@@ -10,6 +10,7 @@ from collections.abc import (
     Iterable,
 )
 from dataclasses import replace
+import datetime as dt
 from datetime import datetime
 from io import StringIO
 import os
@@ -32,7 +33,7 @@ from aiohasupervisor.models.backups import LOCATION_CLOUD_BACKUP, LOCATION_LOCAL
 from aiohasupervisor.models.mounts import MountsInfo
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import (
     DOMAIN as BACKUP_DOMAIN,
@@ -47,12 +48,13 @@ from homeassistant.components.backup import (
 from homeassistant.components.hassio import DOMAIN
 from homeassistant.components.hassio.backup import RESTORE_JOB_ID_ENV
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 
 from .test_init import MOCK_ENVIRON
 
-from tests.common import mock_platform
+from tests.common import load_json_object_fixture, mock_platform
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_BACKUP = supervisor_backups.Backup(
@@ -984,6 +986,128 @@ async def test_reader_writer_create(
 
     response = await client.receive_json()
     assert response["event"] == {"manager_state": "idle"}
+
+
+@pytest.mark.usefixtures("addon_info", "hassio_client", "setup_backup_integration")
+@pytest.mark.parametrize(
+    "addon_info_side_effect",
+    # Getting info fails for one of the addons, should fall back to slug
+    [[Mock(), SupervisorError("Boom")]],
+)
+async def test_reader_writer_create_addon_folder_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+    addon_info_side_effect: list[Any],
+) -> None:
+    """Test generating a backup."""
+    addon_info_side_effect[0].name = "Advanced SSH & Web Terminal"
+    assert dt.datetime.__name__ == "HAFakeDatetime"
+    assert dt.HAFakeDatetime.__name__ == "HAFakeDatetime"
+    client = await hass_ws_client(hass)
+    freezer.move_to("2025-01-30 13:42:12.345678")
+    supervisor_client.backups.partial_backup.return_value.job_id = UUID(TEST_JOB_ID)
+    supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
+    supervisor_client.jobs.get_job.side_effect = [
+        TEST_JOB_NOT_DONE,
+        supervisor_jobs.Job.from_dict(
+            load_json_object_fixture(
+                "backup_done_with_addon_folder_errors.json", DOMAIN
+            )["data"]
+        ),
+    ]
+
+    issue_registry = ir.async_get(hass)
+    assert not issue_registry.issues
+
+    await client.send_json_auto_id({"type": "backup/subscribe_events"})
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+    response = await client.receive_json()
+    assert response["success"]
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/config/update",
+            "create_backup": {
+                "agent_ids": ["hassio.local"],
+                "include_addons": ["core_ssh", "core_whisper"],
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": ["media", "share"],
+                "name": "Test",
+            },
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    await client.send_json_auto_id({"type": "backup/generate_with_automatic_settings"})
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": None,
+        "state": "in_progress",
+    }
+
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"backup_job_id": TEST_JOB_ID}
+
+    supervisor_client.backups.partial_backup.assert_called_once_with(
+        replace(
+            DEFAULT_BACKUP_OPTIONS,
+            addons={"core_ssh", "core_whisper"},
+            extra=DEFAULT_BACKUP_OPTIONS.extra | {"with_automatic_settings": True},
+            folders={Folder.MEDIA, Folder.SHARE, Folder.SSL},
+        )
+    )
+
+    await client.send_json_auto_id(
+        {
+            "type": "supervisor/event",
+            "data": {
+                "event": "job",
+                "data": {"done": True, "uuid": TEST_JOB_ID, "reference": "test_slug"},
+            },
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": "upload_to_agents",
+        "state": "in_progress",
+    }
+
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": None,
+        "state": "completed",
+    }
+
+    supervisor_client.backups.download_backup.assert_not_called()
+    supervisor_client.backups.remove_backup.assert_not_called()
+
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+
+    # Check that the expected issue was created
+    assert list(issue_registry.issues) == [("backup", "automatic_backup_failed")]
+    issue = issue_registry.issues[("backup", "automatic_backup_failed")]
+    assert issue.translation_key == "automatic_backup_failed_agents_addons_folders"
+    assert issue.translation_placeholders == {
+        "failed_addons": "Advanced SSH & Web Terminal, core_whisper",
+        "failed_agents": "-",
+        "failed_folders": "share, ssl, media",
+    }
 
 
 @pytest.mark.usefixtures("hassio_client", "setup_backup_integration")

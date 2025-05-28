@@ -47,6 +47,14 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
+def patch_async_ble_device_from_address(return_value: BluetoothServiceInfoBleak | None):
+    """Patch async ble device from address to return a given value."""
+    return patch(
+        "homeassistant.components.bluetooth.async_ble_device_from_address",
+        return_value=return_value,
+    )
+
+
 WOHAND_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="WoHand",
     manufacturer_data={89: b"\xfd`0U\x92W"},

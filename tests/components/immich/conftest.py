@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator, Generator
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
-from aioimmich import ImmichServer, ImmichUsers
+from aioimmich import ImmichAlbums, ImmichAssests, ImmichServer, ImmichUsers
 from aioimmich.server.models import (
     ImmichServerAbout,
     ImmichServerStatistics,
@@ -21,6 +21,10 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
+
+from .const import MOCK_ALBUM_WITH_ASSETS, MOCK_ALBUM_WITHOUT_ASSETS
 
 from tests.common import MockConfigEntry
 
@@ -49,6 +53,23 @@ def mock_config_entry() -> MockConfigEntry:
         unique_id="e7ef5713-9dab-4bd4-b899-715b0ca4379e",
         title="Someone",
     )
+
+
+@pytest.fixture
+def mock_immich_albums() -> AsyncMock:
+    """Mock the Immich server."""
+    mock = AsyncMock(spec=ImmichAlbums)
+    mock.async_get_all_albums.return_value = [MOCK_ALBUM_WITHOUT_ASSETS]
+    mock.async_get_album_info.return_value = MOCK_ALBUM_WITH_ASSETS
+    return mock
+
+
+@pytest.fixture
+def mock_immich_assets() -> AsyncMock:
+    """Mock the Immich server."""
+    mock = AsyncMock(spec=ImmichAssests)
+    mock.async_view_asset.return_value = b"xxxx"
+    return mock
 
 
 @pytest.fixture
@@ -116,7 +137,10 @@ def mock_immich_user() -> AsyncMock:
 
 @pytest.fixture
 async def mock_immich(
-    mock_immich_server: AsyncMock, mock_immich_user: AsyncMock
+    mock_immich_albums: AsyncMock,
+    mock_immich_assets: AsyncMock,
+    mock_immich_server: AsyncMock,
+    mock_immich_user: AsyncMock,
 ) -> AsyncGenerator[AsyncMock]:
     """Mock the Immich API."""
     with (
@@ -124,6 +148,8 @@ async def mock_immich(
         patch("homeassistant.components.immich.config_flow.Immich", new=mock_immich),
     ):
         client = mock_immich.return_value
+        client.albums = mock_immich_albums
+        client.assets = mock_immich_assets
         client.server = mock_immich_server
         client.users = mock_immich_user
         yield client
@@ -134,3 +160,9 @@ async def mock_non_admin_immich(mock_immich: AsyncMock) -> AsyncMock:
     """Mock the Immich API."""
     mock_immich.users.async_get_my_user.return_value.is_admin = False
     return mock_immich
+
+
+@pytest.fixture
+async def setup_media_source(hass: HomeAssistant) -> None:
+    """Set up media source."""
+    assert await async_setup_component(hass, "media_source", {})

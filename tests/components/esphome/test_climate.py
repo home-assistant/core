@@ -14,7 +14,7 @@ from aioesphomeapi import (
     ClimateSwingMode,
 )
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
