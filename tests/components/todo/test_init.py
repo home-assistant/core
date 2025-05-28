@@ -4,6 +4,7 @@ import datetime
 from typing import Any
 import zoneinfo
 
+from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
@@ -30,6 +31,7 @@ from homeassistant.exceptions import (
     ServiceValidationError,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import create_mock_platform
 
@@ -358,21 +360,24 @@ async def test_update_todo_item_service_by_id(
 
     await create_mock_platform(hass, [test_entity])
 
-    await hass.services.async_call(
-        DOMAIN,
-        TodoServices.UPDATE_ITEM,
-        {ATTR_ITEM: "1", ATTR_RENAME: new_item_name, ATTR_STATUS: "completed"},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
-        blocking=True,
-    )
+    now = dt_util.utcnow()
+    with freeze_time(now):
+        await hass.services.async_call(
+            DOMAIN,
+            TodoServices.UPDATE_ITEM,
+            {ATTR_ITEM: "1", ATTR_RENAME: new_item_name, ATTR_STATUS: "completed"},
+            target={ATTR_ENTITY_ID: "todo.entity1"},
+            blocking=True,
+        )
 
-    args = test_entity.async_update_todo_item.call_args
-    assert args
-    item = args.kwargs.get("item")
-    assert item
-    assert item.uid == "1"
-    assert item.summary == "Updated item"
-    assert item.status == TodoItemStatus.COMPLETED
+        args = test_entity.async_update_todo_item.call_args
+        assert args
+        item = args.kwargs.get("item")
+        assert item
+        assert item.uid == "1"
+        assert item.summary == "Updated item"
+        assert item.status == TodoItemStatus.COMPLETED
+        assert item.completed == now
 
 
 async def test_update_todo_item_service_by_id_status_only(
@@ -1086,6 +1091,7 @@ async def test_subscribe(
                 "status": "needs_action",
                 "due": None,
                 "description": None,
+                "completed": None,
             },
             {
                 "summary": "Item #2",
@@ -1093,6 +1099,7 @@ async def test_subscribe(
                 "status": "completed",
                 "due": None,
                 "description": None,
+                "completed": None,
             },
         ]
     }
@@ -1112,6 +1119,7 @@ async def test_subscribe(
                 "status": "needs_action",
                 "due": None,
                 "description": None,
+                "completed": None,
             },
             {
                 "summary": "Item #2",
@@ -1119,6 +1127,7 @@ async def test_subscribe(
                 "status": "completed",
                 "due": None,
                 "description": None,
+                "completed": None,
             },
             {
                 "summary": "Item #3",
@@ -1126,6 +1135,7 @@ async def test_subscribe(
                 "status": "needs_action",
                 "due": None,
                 "description": None,
+                "completed": None,
             },
         ]
     }

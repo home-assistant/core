@@ -227,6 +227,9 @@ class TodoItem:
     description: str | None = None
     """A more complete description than that provided by the summary."""
 
+    completed: datetime.datetime | None = None
+    """The date and time that a to-do item was last marked completed."""
+
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
     "todo_items",
@@ -489,7 +492,13 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
     if summary := call.data.get("rename"):
         updated_data["summary"] = summary
     if status := call.data.get("status"):
+        original_status = updated_data.get("status")
         updated_data["status"] = status
+        if (
+            original_status != TodoItemStatus.COMPLETED
+            and status == TodoItemStatus.COMPLETED
+        ):
+            updated_data["completed"] = dt_util.utcnow()
     updated_data.update(
         {
             desc.todo_item_field: call.data[desc.service_field]
