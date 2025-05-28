@@ -26,15 +26,21 @@ from homeassistant.const import (
     CONF_SOURCE,
     EVENT_HOMEASSISTANT_START,
 )
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    HomeAssistant,
+    split_entity_id,
+)
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.pil import draw_box
 
+from . import CONF_GRAPH, DOMAIN
+
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
-DOMAIN = "tensorflow"
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MATCHES = "matches"
@@ -47,7 +53,6 @@ CONF_BOTTOM = "bottom"
 CONF_CATEGORIES = "categories"
 CONF_CATEGORY = "category"
 CONF_FILE_OUT = "file_out"
-CONF_GRAPH = "graph"
 CONF_LABELS = "labels"
 CONF_LABEL_OFFSET = "label_offset"
 CONF_LEFT = "left"
@@ -110,6 +115,21 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the TensorFlow image processing platform."""
+    create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_system_packages_yaml_integration_{DOMAIN}",
+        breaks_in_ha_version="2025.12.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_system_packages_yaml_integration",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "GStreamer",
+        },
+    )
+
     model_config = config[CONF_MODEL]
     model_dir = model_config.get(CONF_MODEL_DIR) or hass.config.path("tensorflow")
     labels = model_config.get(CONF_LABELS) or hass.config.path(
