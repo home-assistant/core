@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
@@ -190,6 +191,23 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             self._discovery_data[CONF_HOST],
             self._discovery_data[CONF_MAC],
         )
+
+        existing_entries_with_host = [
+            entry
+            for entry in self._async_current_entries(include_ignore=False)
+            if entry.data.get(CONF_HOST) == self._data[CONF_HOST]
+            and not entry.data.get(CONF_MAC)
+        ]
+
+        # If we have an existing entry with the same host but no MAC address,
+        # we update the entry with the MAC address and reload it.
+        if existing_entries_with_host:
+            entry = existing_entries_with_host[0]
+            self.hass.config_entries.async_update_entry(
+                entry, data={**entry.data, CONF_MAC: self._data[CONF_MAC]}
+            )
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
+            raise AbortFlow("already_configured")
 
         # Manual installations not always provide a MAC address
         # This is the first gatekeeper to avoid duplicates
