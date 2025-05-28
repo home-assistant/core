@@ -409,7 +409,12 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         if self._max_sub_interval is not None:
             source_state = self.hass.states.get(self._sensor_source_id)
             schedule_max_sub_interval_exceeded(source_state)
-            self.async_on_remove(self._cancel_max_sub_interval_exceeded_callback)
+
+            @callback
+            def on_removed() -> None:
+                self._cancel_max_sub_interval_exceeded_callback()
+
+            self.async_on_remove(on_removed)
 
         self.async_on_remove(
             async_track_state_change_event(
