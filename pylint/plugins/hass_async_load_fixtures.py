@@ -20,9 +20,9 @@ class HassLoadFixturesChecker(BaseChecker):
     priority = -1
     msgs = {
         "W7481": (
-            "Fixtures should be loaded asynchronously in test modules",
+            "Test fixture files should be loaded asynchronously",
             "hass-async-load-fixtures",
-            "Used when a fixture is loaded synchronously",
+            "Used when a test fixture file is loaded synchronously",
         ),
     }
     options = ()
@@ -31,7 +31,7 @@ class HassLoadFixturesChecker(BaseChecker):
     _in_test_module: bool
 
     def visit_module(self, node: nodes.Module) -> None:
-        """Populate matchers for a Module node."""
+        """Visit a module definition."""
         self._in_test_module = node.name.startswith("tests.")
         self._function_queue = []
 
