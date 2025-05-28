@@ -57,7 +57,7 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
                     ): CountrySelector(),
                     vol.Required(CONF_USERNAME): cv.string,
                     vol.Required(CONF_PASSWORD): cv.string,
-                    vol.Required(CONF_CODE): cv.positive_int,
+                    vol.Required(CONF_CODE): cv.string,
                 }
             ),
         )

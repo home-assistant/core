@@ -445,6 +445,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "registered_devices": True,
     },
     {
+        "domain": "lg_thinq",
+        "macaddress": "34E6E6*",
+    },
+    {
         "domain": "lifx",
         "macaddress": "D073D5*",
     },
