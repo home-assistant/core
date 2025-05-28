@@ -18,7 +18,8 @@
         "pause",
         "set_members",
         "power",
-        "enqueue"
+        "enqueue",
+        "select_source"
       ],
       "elapsed_time": null,
       "elapsed_time_last_updated": 0,
@@ -43,7 +44,32 @@
       "hide_player_in_ui": ["when_unavailable"],
       "expose_to_ha": true,
       "can_group_with": ["00:00:00:00:00:02"],
-      "source_list": []
+      "source_list": [
+        {
+          "id": "00:00:00:00:00:01",
+          "name": "Music Assistant Queue",
+          "passive": false,
+          "can_play_pause": true,
+          "can_seek": true,
+          "can_next_previous": true
+        },
+        {
+          "id": "spotify",
+          "name": "Spotify Connect",
+          "passive": true,
+          "can_play_pause": true,
+          "can_seek": true,
+          "can_next_previous": true
+        },
+        {
+          "id": "linein",
+          "name": "Line-In",
+          "passive": false,
+          "can_play_pause": false,
+          "can_seek": false,
+          "can_next_previous": false
+        }
+      ]
     },
     {
       "player_id": "00:00:00:00:00:02",

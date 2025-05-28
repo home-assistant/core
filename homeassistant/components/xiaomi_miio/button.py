@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
+from miio import Device as MiioDevice
 from miio.integrations.vacuum.roborock.vacuum import Consumable
 
 from homeassistant.components.button import (
@@ -14,6 +16,7 @@ from homeassistant.components.button import (
 from homeassistant.const import CONF_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import MODEL_AIRFRESH_A1, MODEL_AIRFRESH_T2017, MODELS_VACUUM
 from .entity import XiaomiCoordinatedMiioEntity
@@ -148,14 +151,23 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class XiaomiGenericCoordinatedButton(XiaomiCoordinatedMiioEntity, ButtonEntity):
+class XiaomiGenericCoordinatedButton(
+    XiaomiCoordinatedMiioEntity[DataUpdateCoordinator[Any]], ButtonEntity
+):
     """A button implementation for Xiaomi."""
 
     entity_description: XiaomiMiioButtonDescription
 
     _attr_device_class = ButtonDeviceClass.RESTART
 
-    def __init__(self, device, entry, unique_id, coordinator, description):
+    def __init__(
+        self,
+        device: MiioDevice,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str,
+        coordinator: DataUpdateCoordinator[Any],
+        description: XiaomiMiioButtonDescription,
+    ) -> None:
         """Initialize the plug switch."""
         super().__init__(device, entry, unique_id, coordinator)
         self.entity_description = description
