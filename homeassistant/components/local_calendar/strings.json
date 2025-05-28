@@ -28,5 +28,14 @@
         "import_ics_file": "Upload an iCalendar file (.ics)"
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "calendar_color": "Calendar Color"
+        }
+      }
+    }
   }
 }

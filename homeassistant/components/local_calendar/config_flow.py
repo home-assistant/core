@@ -12,8 +12,13 @@ from ical.exceptions import CalendarParseError
 import voluptuous as vol
 
 from homeassistant.components.file_upload import process_uploaded_file
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 from homeassistant.util import slugify
@@ -112,6 +117,14 @@ class LocalCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler(config_entry)
+
 
 class InvalidIcsFile(HomeAssistantError):
     """Error to indicate that the uploaded file is not a valid ICS file."""
@@ -134,3 +147,31 @@ def save_uploaded_ics_file(
             raise InvalidIcsFile("Failed to upload file: Invalid ICS file") from err
         dest_path = Path(hass.config.path(STORAGE_PATH.format(key=storage_key)))
         shutil.move(file, dest_path)
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """Handle Local Calendar options."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_CALENDAR_COLOR,
+                    default=self.config_entry.options.get(
+                        CONF_CALENDAR_COLOR,
+                        self.config_entry.data.get(CONF_CALENDAR_COLOR),
+                    ),
+                ): selector.ColorRGBSelector(),
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=data_schema)
