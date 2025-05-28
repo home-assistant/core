@@ -26,7 +26,7 @@ def mock_get_property(service, property) -> MagicMock:
     return prop
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def sensor_platform_patch() -> Generator:
     """Limit integration to sensor platform."""
     with (
@@ -37,7 +37,6 @@ def sensor_platform_patch() -> Generator:
 
 async def test_entities(
     hass: HomeAssistant,
-    sensor_platform_patch,
     mock_federwiege: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
