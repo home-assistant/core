@@ -535,6 +535,10 @@ class CalendarEntity(Entity):
         """Return the entity state attributes."""
         if (event := self.event) is None:
             return None
+
+        hex_val = (
+            f"#{color_rgb_to_hex(*self._attr_color)}" if self._attr_color else None
+        )
         return {
             "message": event.summary,
             "all_day": event.all_day,
@@ -542,9 +546,7 @@ class CalendarEntity(Entity):
             "end_time": event.end_datetime_local.strftime(DATE_STR_FORMAT),
             "location": event.location if event.location is not None else "",
             "description": event.description if event.description is not None else "",
-            "color": f"#{color_rgb_to_hex(*self._attr_color)}"
-            if self._attr_color is not None
-            else None,
+            "color": hex_val,
         }
 
     @final
