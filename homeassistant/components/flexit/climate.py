@@ -78,7 +78,7 @@ class Flexit(ClimateEntity):
         self._slave = modbus_slave
         self._attr_fan_mode = None
         self._filter_hours: int | None = None
-        self._filter_alarm: int | None = None
+        self._filter_alarm: bool | None = None
         self._heat_recovery: int | None = None
         self._heater_enabled: int | None = None
         self._heating: int | None = None
@@ -113,9 +113,13 @@ class Flexit(ClimateEntity):
             CALL_TYPE_REGISTER_INPUT, 13
         )
         # # Filter alarm 0/1
-        self._filter_alarm = await self._async_read_int16_from_register(
+        filter_alarm_value = await self._async_read_int16_from_register(
             CALL_TYPE_REGISTER_INPUT, 27
         )
+        if filter_alarm_value is None:
+            self._filter_alarm = None
+        else:
+            self._filter_alarm = filter_alarm_value == 1
         # # Heater enabled or not. Does not mean it's necessarily heating
         self._heater_enabled = await self._async_read_int16_from_register(
             CALL_TYPE_REGISTER_INPUT, 28
