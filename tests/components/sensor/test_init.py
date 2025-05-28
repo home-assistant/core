@@ -159,7 +159,7 @@ async def test_temperature_conversion_wrong_device_class(
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
-    # Check temperature is not converted
+    # Check compatible unit is applied
     state = hass.states.get(entity0.entity_id)
     assert state.state == "0.0"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.FAHRENHEIT
