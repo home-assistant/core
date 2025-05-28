@@ -28,5 +28,14 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "calendar_color": "Calendar Color"
+        }
+      }
+    }
+  },
   "title": "Local Calendar"
 }
