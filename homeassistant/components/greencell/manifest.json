@@ -1,13 +1,8 @@
 {
     "domain": "greencell",
     "name": "Greencell",
-    "codeowners": ["@greencell"],
+    "codeowners": ["@BrzezowskiGC"],
     "dependencies": ["mqtt"],
     "config_flow": true,
-    "iot_class": "local_polling",
-    "supported_platforms": [
-        "sensor",
-        "switch",
-        "number"
-    ]
+    "iot_class": "local_polling"
 }
