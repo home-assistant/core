@@ -191,7 +191,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             self._discovery_data[CONF_MAC],
         )
 
-        self._async_abort_entries_match({CONF_HOST: self._discovery_data[CONF_HOST]})
+        self._async_abort_entries_match({CONF_MAC: self._discovery_data[CONF_MAC]})
 
         await self.async_set_unique_id(
             discovery_info.hostname.replace("SMA", "").lower()
