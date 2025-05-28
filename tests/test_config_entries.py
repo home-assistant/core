@@ -2226,7 +2226,7 @@ async def test_entry_subentry_no_context(
 
 @pytest.mark.parametrize(
     ("unique_id", "expected_result"),
-    [(None, does_not_raise()), ("test", pytest.raises(HomeAssistantError))],
+    [(None, does_not_raise()), ("test", pytest.raises(data_entry_flow.AbortFlow))],
 )
 async def test_entry_subentry_duplicate(
     hass: HomeAssistant,
