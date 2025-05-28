@@ -126,7 +126,7 @@ def setup_platform(
         translation_key="deprecated_system_packages_yaml_integration",
         translation_placeholders={
             "domain": DOMAIN,
-            "integration_title": "GStreamer",
+            "integration_title": "Tensorflow",
         },
     )
 
