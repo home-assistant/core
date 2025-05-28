@@ -5,7 +5,7 @@
     "data_description_country": "The country of your Amazon account.",
     "data_description_username": "The email address of your Amazon account.",
     "data_description_password": "The password of your Amazon account.",
-    "data_description_code": "The one-time password to log in to your account. Either from your OTP application, or it will be sent to your email address."
+    "data_description_code": "The one-time password to log in to your account. Currently, only tokens from OTP applications are supported."
   },
   "config": {
     "flow_title": "{username}",
