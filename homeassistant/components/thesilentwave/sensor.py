@@ -11,16 +11,6 @@ from .coordinator import TheSilentWaveCoordinator
 from .entity import TheSilentWaveEntity
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: dict[str, Any],
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, Any] | None = None,
-) -> bool:
-    """Set up the sensor platform."""
-    return True
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
