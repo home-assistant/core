@@ -7,6 +7,7 @@ from unittest.mock import patch
 from airly.exceptions import AirlyError
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.airly.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -15,7 +16,7 @@ from homeassistant.util.dt import utcnow
 
 from . import API_POINT_URL, init_integration
 
-from tests.common import async_fire_time_changed, load_fixture
+from tests.common import async_fire_time_changed, async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -62,7 +63,9 @@ async def test_availability(
     assert state.state == STATE_UNAVAILABLE
 
     aioclient_mock.clear_requests()
-    aioclient_mock.get(API_POINT_URL, text=load_fixture("valid_station.json", "airly"))
+    aioclient_mock.get(
+        API_POINT_URL, text=await async_load_fixture(hass, "valid_station.json", DOMAIN)
+    )
     future = utcnow() + timedelta(minutes=120)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
