@@ -100,18 +100,18 @@
       "manager_inverter_state": {
         "name": "Inverter state",
         "state": {
-          "unsynchronised": "Unsynchronised",
+          "not_connected": "[%key:common::state::disconnected%]",
           "grid_consumption": "Grid consumption",
           "grid_injection": "Grid injection",
-          "grid_synchronised_but_not_used": "Grid unsynchronised but used"
+          "grid_connected_but_not_used": "Grid disconnected but used"
         },
         "state_attributes": {
           "options": {
             "state": {
-              "unsynchronised": "[%key:component::imeon_inverter::entity::sensor::manager_inverter_state::state::unsynchronised%]",
+              "not_connected": "[%key:common::state::disconnected%]",
               "grid_consumption": "[%key:component::imeon_inverter::entity::sensor::manager_inverter_state::state::grid_consumption%]",
               "grid_injection": "[%key:component::imeon_inverter::entity::sensor::manager_inverter_state::state::grid_injection%]",
-              "grid_synchronised_but_not_used": "[%key:component::imeon_inverter::entity::sensor::manager_inverter_state::state::grid_synchronised_but_not_used%]"
+              "grid_connected_but_not_used": "[%key:component::imeon_inverter::entity::sensor::manager_inverter_state::state::grid_connected_but_not_used%]"
             }
           }
         }
@@ -201,7 +201,7 @@
         "name": "Timeline status",
         "state": {
           "com_lost": "Communication lost",
-          "com_ok": "Communiation Ok",
+          "com_ok": "Communiation OK",
           "warning_grid": "Warning grid",
           "warning_ond": "Warning inverter",
           "warning_soft": "Warning software",
@@ -225,10 +225,10 @@
           "warning_unknown": "Unknown warning",
           "warnings": "Warning",
           "error_unknown": "Unknown error",
-          "errors": "Error",
-          "good_1": "Ok",
-          "good_2": "Ok",
-          "good_3": "Ok"
+          "errors": "[%key:common::state::error%]",
+          "good_1": "OK",
+          "good_2": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::good_1%]",
+          "good_3": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::good_1%]"
         },
         "state_attributes": {
           "options": {
@@ -258,10 +258,10 @@
               "warning_unknown": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::warning_unknown%]",
               "warnings": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::warnings%]",
               "error_unknown": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::error_unknown%]",
-              "errors": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::errors%]",
+              "errors": "[%key:common::state::error%]",
               "good_1": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::good_1%]",
-              "good_2": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::good_2%]",
-              "good_3": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::good_3%]"
+              "good_2": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::good_1%]",
+              "good_3": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::good_1%]"
             }
           }
         }
