@@ -5,7 +5,9 @@ from unittest.mock import patch
 from switchbot_api import Remote
 
 from homeassistant.components.climate import (
+    ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
+    ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
@@ -86,13 +88,13 @@ async def test_air_conditioner_set_fan_mode(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: entity_id, "fan_mode": "high"},
+            {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: "high"},
             blocking=True,
         )
         mock_send_command.assert_called_once()
         assert "21,4,4,on" in str(mock_send_command.call_args)
 
-    assert hass.states.get(entity_id).attributes["fan_mode"] == "high"
+    assert hass.states.get(entity_id).attributes[ATTR_FAN_MODE] == "high"
 
 
 async def test_air_conditioner_set_temperature(
@@ -116,13 +118,13 @@ async def test_air_conditioner_set_temperature(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: entity_id, "temperature": 25},
+            {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 25},
             blocking=True,
         )
         mock_send_command.assert_called_once()
         assert "25,4,1,on" in str(mock_send_command.call_args)
 
-    assert hass.states.get(entity_id).attributes["temperature"] == 25
+    assert hass.states.get(entity_id).attributes[ATTR_TEMPERATURE] == 25
 
 
 async def test_air_conditioner_restore_state(
@@ -142,8 +144,8 @@ async def test_air_conditioner_restore_state(
         "climate.climate_1",
         "cool",
         {
-            "fan_mode": "high",
-            "temperature": 25,
+            ATTR_FAN_MODE: "high",
+            ATTR_TEMPERATURE: 25,
         },
     )
 
@@ -153,8 +155,8 @@ async def test_air_conditioner_restore_state(
     entity_id = "climate.climate_1"
     state = hass.states.get(entity_id)
     assert state.state == "cool"
-    assert state.attributes["fan_mode"] == "high"
-    assert state.attributes["temperature"] == 25
+    assert state.attributes[ATTR_FAN_MODE] == "high"
+    assert state.attributes[ATTR_TEMPERATURE] == 25
 
 
 async def test_air_conditioner_no_last_state(
@@ -176,5 +178,5 @@ async def test_air_conditioner_no_last_state(
     entity_id = "climate.climate_1"
     state = hass.states.get(entity_id)
     assert state.state == "fan_only"
-    assert state.attributes["fan_mode"] == "auto"
-    assert state.attributes["temperature"] == 21
+    assert state.attributes[ATTR_FAN_MODE] == "auto"
+    assert state.attributes[ATTR_TEMPERATURE] == 21
