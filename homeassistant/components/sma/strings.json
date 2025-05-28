@@ -34,10 +34,10 @@
         "title": "Set up SMA Solar"
       },
       "discovery_confirm": {
-        "title": "Set up SMA device",
+        "title": "Set up SMA Solar",
         "description": "Do you want to setup the discovered SMA ({host})?",
         "data": {
-          "group": "Group",
+          "group": "[%key:component::sma::config::step::user::data::group]",
           "password": "[%key:common::config_flow::data::password%]",
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
