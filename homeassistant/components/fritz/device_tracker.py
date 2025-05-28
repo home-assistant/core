@@ -117,5 +117,5 @@ class FritzBoxTracker(FritzDeviceBase, ScannerEntity):
         if device.ssid:
             attrs["ssid"] = device.ssid
         if device.speed:
-            attrs["speed"] = device.speed
+            attrs["speed"] = str(device.speed)
         return attrs

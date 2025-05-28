@@ -104,7 +104,7 @@ class Device:
     name: str
     ssid: str | None
     wan_access: bool | None = None
-    speed: str | None = None
+    speed: int | None = None
 
 
 class Interface(TypedDict):
