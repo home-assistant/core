@@ -2671,21 +2671,18 @@ async def test_restore_entity(
         unit_of_measurement="unit_2",
     )
     assert entry2 != entry2_restored
-    # Config entry and subentry are not restored, disabled_by and hidden_by
-    # are not restored unless set to hidden by user
+    # Config entry and subentry are not restored
     assert (
         attr.evolve(
             entry2,
             config_entry_id=None,
             config_subentry_id=None,
-            disabled_by=er.RegistryEntryDisabler.INTEGRATION,
-            hidden_by=er.RegistryEntryHider.INTEGRATION,
+            disabled_by=None,
+            hidden_by=None,
         )
         == entry2_restored
     )
-    assert entry3 != entry3_restored
-    # Disabled_by and hidden_by are not restored unless set to hidden by user
-    assert attr.evolve(entry3, disabled_by=None, hidden_by=None) == entry3_restored
+    assert entry3 == entry3_restored
 
     # Remove two of the entities again, then bump time
     entity_registry.async_remove(entry1_restored.entity_id)
