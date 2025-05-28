@@ -24,6 +24,8 @@ async def async_setup_entry(
 class TheSilentWaveSensor(TheSilentWaveEntity, SensorEntity):
     """Representation of a TheSilentWave sensor."""
 
+    _attr_translation_key = "status"
+
     def __init__(self, coordinator: TheSilentWaveCoordinator, entry_id: str) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, entry_id)
@@ -39,11 +41,6 @@ class TheSilentWaveSensor(TheSilentWaveEntity, SensorEntity):
     def state(self) -> Any:
         """Return the state of the sensor."""
         return self.coordinator.data
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return "mdi:power" if self.state == "on" else "mdi:power-off"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity is added."""
