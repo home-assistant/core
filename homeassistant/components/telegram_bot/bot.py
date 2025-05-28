@@ -4,6 +4,7 @@ from abc import abstractmethod
 import asyncio
 import io
 import logging
+from types import MappingProxyType
 from typing import Any
 
 import httpx
@@ -21,15 +22,18 @@ from telegram import (
 from telegram.constants import ParseMode
 from telegram.error import TelegramError
 from telegram.ext import CallbackContext, filters
+from telegram.request import HTTPXRequest
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
+    CONF_API_KEY,
     HTTP_BEARER_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import (
@@ -69,6 +73,8 @@ from .const import (
     ATTR_USERNAME,
     ATTR_VERIFY_SSL,
     CONF_CHAT_ID,
+    CONF_PROXY_PARAMS,
+    CONF_PROXY_URL,
     DOMAIN,
     EVENT_TELEGRAM_CALLBACK,
     EVENT_TELEGRAM_COMMAND,
@@ -235,10 +241,6 @@ class TelegramNotificationService:
         self._parse_mode = self._parsers.get(parser)
         self.bot = bot
         self.hass = hass
-
-    def get_bot(self) -> Bot:
-        """Return the Telegram bot instance."""
-        return self.bot
 
     def _get_allowed_chat_ids(self) -> list[int]:
         allowed_chat_ids: list[int] = [
@@ -784,6 +786,62 @@ class TelegramNotificationService:
         return await self._send_msg(
             self.bot.leave_chat, "Error leaving chat", None, chat_id, context=context
         )
+
+
+def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) -> Bot:
+    """Initialize telegram bot with proxy support."""
+    api_key: str = p_config[CONF_API_KEY]
+    proxy_url: str | None = p_config.get(CONF_PROXY_URL)
+    proxy_params: dict | None = p_config.get(CONF_PROXY_PARAMS)
+
+    if proxy_url is not None:
+        auth = None
+        if proxy_params is None:
+            # CONF_PROXY_PARAMS has been kept for backwards compatibility.
+            proxy_params = {}
+        elif "username" in proxy_params and "password" in proxy_params:
+            # Auth can actually be stuffed into the URL, but the docs have previously
+            # indicated to put them here.
+            auth = proxy_params.pop("username"), proxy_params.pop("password")
+            ir.create_issue(
+                hass,
+                DOMAIN,
+                "proxy_params_auth_deprecation",
+                breaks_in_ha_version="2024.10.0",
+                is_persistent=False,
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_placeholders={
+                    "proxy_params": CONF_PROXY_PARAMS,
+                    "proxy_url": CONF_PROXY_URL,
+                    "telegram_bot": "Telegram bot",
+                },
+                translation_key="proxy_params_auth_deprecation",
+                learn_more_url="https://github.com/home-assistant/core/pull/112778",
+            )
+        else:
+            ir.create_issue(
+                hass,
+                DOMAIN,
+                "proxy_params_deprecation",
+                breaks_in_ha_version="2024.10.0",
+                is_persistent=False,
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_placeholders={
+                    "proxy_params": CONF_PROXY_PARAMS,
+                    "proxy_url": CONF_PROXY_URL,
+                    "httpx": "httpx",
+                    "telegram_bot": "Telegram bot",
+                },
+                translation_key="proxy_params_deprecation",
+                learn_more_url="https://github.com/home-assistant/core/pull/112778",
+            )
+        proxy = httpx.Proxy(proxy_url, auth=auth, **proxy_params)
+        request = HTTPXRequest(connection_pool_size=8, proxy=proxy)
+    else:
+        request = HTTPXRequest(connection_pool_size=8)
+    return Bot(token=api_key, request=request)
 
 
 async def load_data(

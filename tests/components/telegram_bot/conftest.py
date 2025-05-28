@@ -116,7 +116,7 @@ def mock_external_calls() -> Generator[None]:
             self._bot_user = test_user
 
     with (
-        patch("homeassistant.components.telegram_bot.Bot", BotMock),
+        patch("homeassistant.components.telegram_bot.bot.Bot", BotMock),
         patch.object(BotMock, "get_chat", return_value=test_chat),
         patch.object(BotMock, "get_me", return_value=test_user),
         patch.object(BotMock, "bot", test_user),

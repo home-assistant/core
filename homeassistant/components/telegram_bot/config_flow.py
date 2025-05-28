@@ -1,6 +1,5 @@
 """Config flow for Telegram Bot."""
 
-from collections.abc import Mapping
 from ipaddress import AddressValueError, IPv4Network
 import logging
 from types import MappingProxyType
@@ -12,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
+    SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryData,
@@ -33,7 +33,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from . import DEFAULT_TRUSTED_NETWORKS, initialize_bot
+from . import initialize_bot
 from .bot import TelegramBotConfigEntry
 from .const import (
     ATTR_PARSER,
@@ -42,6 +42,7 @@ from .const import (
     CONF_CHAT_ID,
     CONF_PROXY_URL,
     CONF_TRUSTED_NETWORKS,
+    DEFAULT_TRUSTED_NETWORKS,
     DOMAIN,
     ISSUE_DEPRECATED_YAML,
     ISSUE_DEPRECATED_YAML_HAS_MORE_PLATFORMS,
@@ -71,6 +72,23 @@ STEP_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
+            )
+        ),
+        vol.Optional(CONF_PROXY_URL): TextSelector(
+            config=TextSelectorConfig(type=TextSelectorType.URL)
+        ),
+    }
+)
+STEP_RECONFIGURE_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
+    {
+        vol.Required(CONF_PLATFORM): SelectSelector(
+            SelectSelectorConfig(
+                options=[
+                    PLATFORM_BROADCAST,
+                    PLATFORM_POLLING,
+                    PLATFORM_WEBHOOKS,
+                ],
+                translation_key="platforms",
             )
         ),
         vol.Optional(CONF_PROXY_URL): TextSelector(
@@ -230,25 +248,14 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # prevent duplicates
         await self.async_set_unique_id(user_input[CONF_API_KEY])
-        self._abort_if_unique_id_configured(user_input)
+        self._abort_if_unique_id_configured()
 
         # validate connection to Telegram API
         errors: dict[str, str] = {}
-        description_placeholders: Mapping[str, str] = {}
-        try:
-            bot = await self.hass.async_add_executor_job(
-                initialize_bot, self.hass, MappingProxyType(user_input)
-            )
-            self._bot = bot
-
-            user = await bot.get_me()
-        except InvalidToken:
-            _LOGGER.warning("Invalid API token")
-            errors["base"] = "invalid_api_key"
-        except (ValueError, NetworkError) as err:
-            _LOGGER.warning("Invalid proxy")
-            errors["base"] = "invalid_proxy_url"
-            description_placeholders = {"proxy_url_error": str(err)}
+        description_placeholders: dict[str, str] = {}
+        bot_name = await self._validate_bot(
+            user_input, errors, description_placeholders
+        )
 
         if errors:
             return self.async_show_form(
@@ -261,8 +268,10 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         if user_input[CONF_PLATFORM] != PLATFORM_WEBHOOKS:
+            await self._shutdown_bot()
+
             return self.async_create_entry(
-                title=user.full_name,
+                title=bot_name,
                 data={
                     CONF_PLATFORM: user_input[CONF_PLATFORM],
                     CONF_API_KEY: user_input[CONF_API_KEY],
@@ -274,7 +283,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        self._bot_name = user.full_name
+        self._bot_name = bot_name
         self._step_user_data.update(user_input)
 
         if self.source == SOURCE_IMPORT:
@@ -286,12 +295,52 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         return await self.async_step_webhooks()
 
+    async def _shutdown_bot(self) -> None:
+        """Shutdown the bot if it exists."""
+        if self._bot:
+            await self._bot.shutdown()
+            self._bot = None
+
+    async def _validate_bot(
+        self,
+        user_input: dict[str, Any],
+        errors: dict[str, str],
+        placeholders: dict[str, str],
+    ) -> str:
+        try:
+            bot = await self.hass.async_add_executor_job(
+                initialize_bot, self.hass, MappingProxyType(user_input)
+            )
+            self._bot = bot
+
+            user = await bot.get_me()
+        except InvalidToken:
+            _LOGGER.warning("Invalid API token")
+            errors["base"] = "invalid_api_key"
+            return "Unknown bot"
+        except (ValueError, NetworkError) as err:
+            _LOGGER.warning("Invalid proxy")
+            errors["base"] = "invalid_proxy_url"
+            placeholders["proxy_url_error"] = str(err)
+            return "Unknown bot"
+        else:
+            return user.full_name
+
     async def async_step_webhooks(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle config flow for webhook Telegram bot."""
 
         if not user_input:
+            if self.source == SOURCE_RECONFIGURE:
+                return self.async_show_form(
+                    step_id="webhooks",
+                    data_schema=self.add_suggested_values_to_schema(
+                        STEP_WEBHOOKS_DATA_SCHEMA,
+                        self._get_reconfigure_entry().data,
+                    ),
+                )
+
             return self.async_show_form(
                 step_id="webhooks",
                 data_schema=self.add_suggested_values_to_schema(
@@ -317,6 +366,16 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 description_placeholders={
                     "trusted_network_error": trusted_network_error
                 },
+            )
+
+        await self._shutdown_bot()
+
+        if self.source == SOURCE_RECONFIGURE:
+            user_input.update(self._step_user_data)
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(),
+                title=self._bot_name,
+                data_updates=user_input,
             )
 
         return self.async_create_entry(
@@ -363,6 +422,54 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return ""
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reconfigure Telegram bot."""
+
+        api_key: str = self._get_reconfigure_entry().data[CONF_API_KEY]
+        await self.async_set_unique_id(api_key)
+        self._abort_if_unique_id_mismatch()
+
+        if not user_input:
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_RECONFIGURE_USER_DATA_SCHEMA,
+                    self._get_reconfigure_entry().data,
+                ),
+            )
+
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
+
+        user_input[CONF_API_KEY] = api_key
+        bot_name = await self._validate_bot(
+            user_input, errors, description_placeholders
+        )
+        self._bot_name = bot_name
+
+        if errors:
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_RECONFIGURE_USER_DATA_SCHEMA,
+                    user_input,
+                ),
+                errors=errors,
+                description_placeholders=description_placeholders,
+            )
+
+        if user_input[CONF_PLATFORM] != PLATFORM_WEBHOOKS:
+            await self._shutdown_bot()
+
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), title=bot_name, data_updates=user_input
+            )
+
+        self._step_user_data.update(user_input)
+        return await self.async_step_webhooks()
+
 
 class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
     """Handle a subentry flow for creating chat ID."""
@@ -379,10 +486,6 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
             bot = config_entry.runtime_data.bot
 
             chat_id: int = user_input[CONF_CHAT_ID]
-            for existing_subentry in config_entry.subentries.values():
-                if existing_subentry.unique_id == str(chat_id):
-                    return self.async_abort(reason="already_configured")
-
             chat_name = await _async_get_chat_name(bot, chat_id)
             if chat_name:
                 return self.async_create_entry(

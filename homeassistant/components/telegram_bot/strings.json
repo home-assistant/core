@@ -25,6 +25,18 @@
           "url": "Allow to overwrite the external URL from the Home Assistant configuration for different setups.",
           "trusted_networks": "Telegram server access ACL as list.\nDefault: 149.154.160.0/20, 91.108.4.0/22"
         }
+      },
+      "reconfigure": {
+        "title": "Telegram bot setup",
+        "description": "Reconfigure Telegram bot",
+        "data": {
+          "platform": "Platform",
+          "proxy_url": "Proxy URL"
+        },
+        "data_description": {
+          "platform": "Telegram bot implementation",
+          "proxy_url": "Proxy URL if working behind one, optionally including username and password.\n(socks5://username:password@proxy_ip:proxy_port)"
+        }
       }
     },
     "error": {
@@ -35,7 +47,8 @@
       "invalid_trusted_networks": "Invalid trusted network: {trusted_network_error}"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "options": {

@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-import importlib
 from ipaddress import IPv4Network, ip_network
 import logging
-from types import MappingProxyType, ModuleType
+from types import ModuleType
 from typing import Any
 
-import httpx
 from telegram import Bot
-from telegram.request import HTTPXRequest
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -29,11 +26,11 @@ from homeassistant.core import (
     SupportsResponse,
 )
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import broadcast, polling, webhooks
-from .bot import TelegramBotConfigEntry, TelegramNotificationService
+from .bot import TelegramBotConfigEntry, TelegramNotificationService, initialize_bot
 from .const import (
     ATTR_ALLOWS_MULTIPLE_ANSWERS,
     ATTR_AUTHENTICATION,
@@ -70,6 +67,7 @@ from .const import (
     CONF_PROXY_PARAMS,
     CONF_PROXY_URL,
     CONF_TRUSTED_NETWORKS,
+    DEFAULT_TRUSTED_NETWORKS,
     DOMAIN,
     PARSER_MD,
     PLATFORM_BROADCAST,
@@ -93,8 +91,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_TRUSTED_NETWORKS = [ip_network("149.154.160.0/20"), ip_network("91.108.4.0/22")]
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -265,9 +261,9 @@ MODULES: dict[str, ModuleType] = {
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telegram bot component."""
-    domain_config: list[dict[str, Any]] | None = config.get(DOMAIN)
 
     # import the last YAML config since existing behavior only works with the last config
+    domain_config: list[dict[str, Any]] | None = config.get(DOMAIN)
     if domain_config:
         trusted_networks: list[IPv4Network] = domain_config[-1].get(
             CONF_TRUSTED_NETWORKS, []
@@ -395,6 +391,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
         receiver_service = await MODULES[p_type].async_setup_platform(hass, bot, entry)
     except Exception:
         _LOGGER.exception("Error setting up Telegram bot %s", p_type)
+        await bot.shutdown()
         return False
 
     notify_service = TelegramNotificationService(
@@ -416,61 +413,7 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: TelegramBotConfigEntry
 ) -> bool:
     """Unload Telegram app."""
-    await entry.runtime_data.app.shutdown()
+    # broadcast platform has no app
+    if entry.runtime_data.app:
+        await entry.runtime_data.app.shutdown()
     return True
-
-
-def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) -> Bot:
-    """Initialize telegram bot with proxy support."""
-    api_key: str = p_config[CONF_API_KEY]
-    proxy_url: str | None = p_config.get(CONF_PROXY_URL)
-    proxy_params: dict | None = p_config.get(CONF_PROXY_PARAMS)
-
-    if proxy_url is not None:
-        auth = None
-        if proxy_params is None:
-            # CONF_PROXY_PARAMS has been kept for backwards compatibility.
-            proxy_params = {}
-        elif "username" in proxy_params and "password" in proxy_params:
-            # Auth can actually be stuffed into the URL, but the docs have previously
-            # indicated to put them here.
-            auth = proxy_params.pop("username"), proxy_params.pop("password")
-            ir.create_issue(
-                hass,
-                DOMAIN,
-                "proxy_params_auth_deprecation",
-                breaks_in_ha_version="2024.10.0",
-                is_persistent=False,
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_placeholders={
-                    "proxy_params": CONF_PROXY_PARAMS,
-                    "proxy_url": CONF_PROXY_URL,
-                    "telegram_bot": "Telegram bot",
-                },
-                translation_key="proxy_params_auth_deprecation",
-                learn_more_url="https://github.com/home-assistant/core/pull/112778",
-            )
-        else:
-            ir.create_issue(
-                hass,
-                DOMAIN,
-                "proxy_params_deprecation",
-                breaks_in_ha_version="2024.10.0",
-                is_persistent=False,
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_placeholders={
-                    "proxy_params": CONF_PROXY_PARAMS,
-                    "proxy_url": CONF_PROXY_URL,
-                    "httpx": "httpx",
-                    "telegram_bot": "Telegram bot",
-                },
-                translation_key="proxy_params_deprecation",
-                learn_more_url="https://github.com/home-assistant/core/pull/112778",
-            )
-        proxy = httpx.Proxy(proxy_url, auth=auth, **proxy_params)
-        request = HTTPXRequest(connection_pool_size=8, proxy=proxy)
-    else:
-        request = HTTPXRequest(connection_pool_size=8)
-    return Bot(token=api_key, request=request)
