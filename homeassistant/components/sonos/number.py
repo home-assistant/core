@@ -11,10 +11,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .config_entry import SonosConfigEntry
 from .const import SONOS_CREATE_LEVELS
 from .entity import SonosEntity
-from .helpers import soco_error
+from .helpers import SonosConfigEntry, soco_error
 from .speaker import SonosSpeaker
 
 LEVEL_TYPES = {

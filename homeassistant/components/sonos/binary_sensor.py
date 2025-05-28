@@ -14,10 +14,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .config_entry import SonosConfigEntry
 from .const import SONOS_CREATE_BATTERY, SONOS_CREATE_MIC_SENSOR
 from .entity import SonosEntity
-from .helpers import soco_error
+from .helpers import SonosConfigEntry, soco_error
 from .speaker import SonosSpeaker
 
 ATTR_BATTERY_POWER_SOURCE = "power_source"

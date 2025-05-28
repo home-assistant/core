@@ -49,7 +49,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from . import media_browser
-from .config_entry import UnjoinData
 from .const import (
     DOMAIN,
     MEDIA_TYPE_DIRECTORY,
@@ -66,11 +65,11 @@ from .const import (
     SOURCE_TV,
 )
 from .entity import SonosEntity
-from .helpers import soco_error
+from .helpers import UnjoinData, soco_error
 from .speaker import SonosMedia, SonosSpeaker
 
 if TYPE_CHECKING:
-    from .config_entry import SonosConfigEntry
+    from .helpers import SonosConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

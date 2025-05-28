@@ -13,9 +13,9 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .config_entry import SonosConfigEntry
 from .const import DOMAIN, SONOS_FALLBACK_POLL, SONOS_STATE_UPDATED
 from .exception import SonosUpdateError
+from .helpers import SonosConfigEntry
 from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)

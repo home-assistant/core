@@ -41,7 +41,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import create_eager_task
 
 from .alarms import SonosAlarms
-from .config_entry import SonosConfigEntry, SonosData
 from .const import (
     AVAILABILITY_CHECK_INTERVAL,
     DATA_SONOS_DISCOVERY_MANAGER,
@@ -59,7 +58,7 @@ from .const import (
 )
 from .exception import SonosUpdateError
 from .favorites import SonosFavorites
-from .helpers import sync_get_visible_zones
+from .helpers import SonosConfigEntry, SonosData, sync_get_visible_zones
 from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)

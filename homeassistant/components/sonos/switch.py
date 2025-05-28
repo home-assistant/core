@@ -18,7 +18,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_change
 
 from .alarms import SonosAlarms
-from .config_entry import SonosConfigEntry
 from .const import (
     DOMAIN,
     SONOS_ALARMS_UPDATED,
@@ -26,7 +25,7 @@ from .const import (
     SONOS_CREATE_SWITCHES,
 )
 from .entity import SonosEntity, SonosPollingEntity
-from .helpers import soco_error
+from .helpers import SonosConfigEntry, soco_error
 from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)

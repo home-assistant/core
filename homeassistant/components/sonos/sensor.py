@@ -10,7 +10,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .config_entry import SonosConfigEntry
 from .const import (
     SONOS_CREATE_AUDIO_FORMAT_SENSOR,
     SONOS_CREATE_BATTERY,
@@ -20,7 +19,7 @@ from .const import (
 )
 from .entity import SonosEntity, SonosPollingEntity
 from .favorites import SonosFavorites
-from .helpers import soco_error
+from .helpers import SonosConfigEntry, soco_error
 from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)

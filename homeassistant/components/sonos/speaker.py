@@ -64,7 +64,7 @@ from .media import SonosMedia
 from .statistics import ActivityStatistics, EventStatistics
 
 if TYPE_CHECKING:
-    from .config_entry import SonosConfigEntry
+    from .helpers import SonosConfigEntry
 
 
 NEVER_TIME = -1200.0

@@ -8,8 +8,8 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .config_entry import SonosConfigEntry
 from .const import DOMAIN
+from .helpers import SonosConfigEntry
 from .speaker import SonosSpeaker
 
 MEDIA_DIAGNOSTIC_ATTRIBUTES = (

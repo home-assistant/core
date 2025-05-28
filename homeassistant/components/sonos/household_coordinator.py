@@ -15,7 +15,7 @@ from homeassistant.helpers.debounce import Debouncer
 from .exception import SonosUpdateError
 
 if TYPE_CHECKING:
-    from .config_entry import SonosConfigEntry
+    from .helpers import SonosConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
