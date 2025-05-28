@@ -29,6 +29,7 @@ PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
+    Platform.FAN,
     Platform.LOCK,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -51,7 +52,7 @@ class SwitchbotDevices:
     sensors: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     vacuums: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     locks: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
-    fans: list[tuple[Remote, SwitchBotCoordinator]] = field(default_factory=list)
+    fans: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
 
 
 @dataclass
@@ -97,7 +98,6 @@ async def make_switchbot_devices(
             for device in devices
         ]
     )
-
     return devices_data
 
 
@@ -177,7 +177,7 @@ async def make_device_data(
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
         )
-        devices_data.switches.append((device, coordinator))
+        devices_data.fans.append((device, coordinator))
         devices_data.sensors.append((device, coordinator))
 
 
