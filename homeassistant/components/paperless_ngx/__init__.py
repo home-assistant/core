@@ -26,7 +26,7 @@ from .coordinator import (
     PaperlessStatusCoordinator,
 )
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.UPDATE]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) -> bool:
@@ -44,11 +44,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) ->
     except ConfigEntryNotReady as err:
         # Catch the error so the integration doesn't fail just because status coordinator fails.
         LOGGER.warning("Could not initialize status coordinator: %s", err)
-
-    entry.runtime_data = PaperlessData(
-        status=status_coordinator,
-        statistics=statistics_coordinator,
-    )
 
     entry.runtime_data = PaperlessData(
         status=status_coordinator,

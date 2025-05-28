@@ -6,19 +6,21 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.amazon_devices.coordinator import SCAN_INTERVAL
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
     DOMAIN as NOTIFY_DOMAIN,
     SERVICE_SEND_MESSAGE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
+from .const import TEST_SERIAL_NUMBER
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -68,3 +70,34 @@ async def test_notify_send_message(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == now.isoformat()
+
+
+async def test_offline_device(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test offline device handling."""
+
+    entity_id = "notify.echo_test_announce"
+
+    mock_amazon_devices_client.get_devices_data.return_value[
+        TEST_SERIAL_NUMBER
+    ].online = False
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_amazon_devices_client.get_devices_data.return_value[
+        TEST_SERIAL_NUMBER
+    ].online = True
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state != STATE_UNAVAILABLE
