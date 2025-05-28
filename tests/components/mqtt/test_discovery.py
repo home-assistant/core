@@ -1680,6 +1680,7 @@ async def test_rapid_rediscover_unique(
         "homeassistant/binary_sensor/bla/config",
         '{ "name": "Beer", "state_topic": "test-topic", "unique_id": "even_uniquer" }',
     )
+    # Removal, immediately followed by rediscover
     async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla/config", "")
     async_fire_mqtt_message(
         hass,
@@ -1691,8 +1692,10 @@ async def test_rapid_rediscover_unique(
     assert len(hass.states.async_entity_ids("binary_sensor")) == 2
     state = hass.states.get("binary_sensor.ale")
     assert state is not None
-    state = hass.states.get("binary_sensor.milk")
+    state = hass.states.get("binary_sensor.beer")
     assert state is not None
+    state = hass.states.get("binary_sensor.milk")
+    assert state is None
 
     assert len(events) == 4
     # Add the entity
@@ -1702,7 +1705,7 @@ async def test_rapid_rediscover_unique(
     assert events[2].data["entity_id"] == "binary_sensor.beer"
     assert events[2].data["new_state"] is None
     # Add the entity
-    assert events[3].data["entity_id"] == "binary_sensor.milk"
+    assert events[3].data["entity_id"] == "binary_sensor.beer"
     assert events[3].data["old_state"] is None
 
 
