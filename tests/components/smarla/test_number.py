@@ -29,7 +29,7 @@ def mock_number_property() -> MagicMock:
     return mock
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def number_platform_patch() -> Generator:
     """Limit integration to number platform."""
     with (
@@ -40,7 +40,6 @@ def number_platform_patch() -> Generator:
 
 async def test_entities(
     hass: HomeAssistant,
-    number_platform_patch,
     mock_federwiege: MagicMock,
     mock_number_property: MagicMock,
     mock_config_entry: MockConfigEntry,
@@ -61,7 +60,6 @@ async def test_entities(
 )
 async def test_number_action(
     hass: HomeAssistant,
-    number_platform_patch,
     mock_config_entry: MockConfigEntry,
     mock_federwiege: MagicMock,
     mock_number_property: MagicMock,
@@ -85,7 +83,6 @@ async def test_number_action(
 
 async def test_number_state_update(
     hass: HomeAssistant,
-    number_platform_patch,
     mock_config_entry: MockConfigEntry,
     mock_federwiege: MagicMock,
     mock_number_property: MagicMock,
