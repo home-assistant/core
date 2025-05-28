@@ -91,15 +91,6 @@ class LocalCalendarEntity(CalendarEntity):
         """Return the next upcoming event."""
         return self._event
 
-    @property
-    def color(self) -> RGBColor | None:
-        """Return the color of the calendar entity as RGBColor."""
-        return self._attr_color
-
-    @color.setter
-    def color(self, value: RGBColor | None) -> None:
-        self._attr_color = value
-
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
