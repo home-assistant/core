@@ -191,8 +191,11 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             self._discovery_data[CONF_MAC],
         )
 
-        self._async_abort_entries_match({CONF_HOST: self._discovery_data[CONF_HOST]})
+        # Manual installations not always provide a MAC address
+        # This is the first gatekeeper to avoid duplicates
+        self._async_abort_entries_match({CONF_MAC: self._discovery_data[CONF_MAC]})
 
+        # Finally, check if the hostname (which represents the SMA serial number) is unique
         hostname = discovery_info.hostname.lower()
         await self.async_set_unique_id(hostname.replace("sma", ""))
         self._abort_if_unique_id_configured()
