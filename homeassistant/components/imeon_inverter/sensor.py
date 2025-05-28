@@ -430,7 +430,6 @@ async def async_setup_entry(
 class InverterSensor(InverterEntity, SensorEntity):
     """Representation of an Imeon inverter sensor."""
 
-    entity_description: SensorEntityDescription
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
