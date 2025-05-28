@@ -370,14 +370,14 @@ async def test_update_todo_item_service_by_id(
             blocking=True,
         )
 
-        args = test_entity.async_update_todo_item.call_args
-        assert args
-        item = args.kwargs.get("item")
-        assert item
-        assert item.uid == "1"
-        assert item.summary == "Updated item"
-        assert item.status == TodoItemStatus.COMPLETED
-        assert item.completed == now
+    args = test_entity.async_update_todo_item.call_args
+    assert args
+    item = args.kwargs.get("item")
+    assert item
+    assert item.uid == "1"
+    assert item.summary == "Updated item"
+    assert item.status == TodoItemStatus.COMPLETED
+    assert item.completed == now
 
 
 async def test_update_todo_item_service_by_id_status_only(
