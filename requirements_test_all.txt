@@ -941,6 +941,9 @@ growattServer==1.6.0
 # homeassistant.components.google_sheets
 gspread==5.5.0
 
+# homeassistant.components.gstreamer
+gstreamer-player==1.1.2
+
 # homeassistant.components.profiler
 guppy3==3.1.5
 
