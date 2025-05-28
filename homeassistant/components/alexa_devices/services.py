@@ -11,6 +11,7 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import (
     ATTR_SOUND,
+    ATTR_SOUND_VARIANT,
     ATTR_TEXT_COMMAND,
     DOMAIN,
     SERVICE_SOUND_NOTIFICATION,
@@ -21,6 +22,7 @@ from .coordinator import AmazonConfigEntry
 SCHEMA_SOUND_SERVICE = vol.Schema(
     {
         vol.Required(ATTR_SOUND): cv.string,
+        vol.Required(ATTR_SOUND_VARIANT): cv.positive_int,
         vol.Required(ATTR_DEVICE_ID): cv.ensure_list,
     },
 )
@@ -79,18 +81,21 @@ async def _async_execute_action(
             translation_key=translation_key,
         )
 
-    if attribute == ATTR_SOUND and value not in SOUNDS_LIST.values():
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_sound_value",
-            translation_placeholders={"sound": value},
-        )
-
     coordinator = config_entry.runtime_data
     assert device.serial_number
+
     if attribute == ATTR_SOUND:
+        variant: int = call.data[ATTR_SOUND_VARIANT]
+        pad = "_" if variant > 10 else "_0"
+        file = value + pad + str(variant)
+        if value not in SOUNDS_LIST or variant > SOUNDS_LIST[value]:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_sound_value",
+                translation_placeholders={"sound": value, "variant": str(variant)},
+            )
         await coordinator.api.call_alexa_sound(
-            coordinator.data[device.serial_number], value
+            coordinator.data[device.serial_number], file
         )
     if attribute == ATTR_TEXT_COMMAND:
         await coordinator.api.call_alexa_text_command(
