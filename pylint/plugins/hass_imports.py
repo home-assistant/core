@@ -287,8 +287,6 @@ class HassImportsFormatChecker(BaseChecker):
         split_package = current_package.split(".")
         current_component = split_package[2]
 
-        self._check_for_constant_alias(node, current_component, current_component)
-
         if not node.modname and len(split_package) == node.level + 1:
             for name in node.names:
                 # Allow relative import to component root
@@ -299,6 +297,9 @@ class HassImportsFormatChecker(BaseChecker):
 
         if len(split_package) < node.level + 2:
             self.add_message("hass-absolute-import", node=node)
+            return
+
+        self._check_for_constant_alias(node, current_component, current_component)
 
     def _check_for_constant_alias(
         self,
