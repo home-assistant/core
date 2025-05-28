@@ -474,8 +474,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def __native_unit_of_measurement_compat(self) -> str | None:
         """Process ambiguous units."""
-        if (native_unit_of_measurement := self.native_unit_of_measurement) is None:
-            return None
+        native_unit_of_measurement = self.native_unit_of_measurement
         return AMBIGUOUS_UNITS.get(
             native_unit_of_measurement, native_unit_of_measurement
         )
