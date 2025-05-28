@@ -6,6 +6,7 @@ from http import HTTPStatus
 from pathlib import Path
 from unittest.mock import AsyncMock
 
+from homeassitant.const import Platform
 import pytest
 
 from homeassistant.components.stt import (
@@ -122,14 +123,16 @@ async def mock_config_entry_setup(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.STT]
+        )
         return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Unload up test config entry."""
-        await hass.config_entries.async_forward_entry_unload(config_entry, DOMAIN)
+        await hass.config_entries.async_forward_entry_unload(config_entry, Platform.STT)
         return True
 
     mock_integration(
