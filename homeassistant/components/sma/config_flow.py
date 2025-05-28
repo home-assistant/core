@@ -197,7 +197,12 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Finally, check if the hostname (which represents the SMA serial number) is unique
         hostname = discovery_info.hostname.lower()
-        await self.async_set_unique_id(hostname.replace("sma", ""))
+        # Example hostname: sma12345678-01
+        # Remove 'sma' prefix and strip everything after the dash (including the dash)
+        if hostname.startswith("sma"):
+            hostname = hostname.removeprefix("sma")
+        hostname = hostname.split("-", 1)[0]
+        await self.async_set_unique_id(hostname)
         self._abort_if_unique_id_configured()
 
         return await self.async_step_discovery_confirm()
