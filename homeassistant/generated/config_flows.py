@@ -743,6 +743,7 @@ FLOWS = {
         "syncthing",
         "syncthru",
         "synology_dsm",
+        "synology_srm",
         "system_bridge",
         "systemmonitor",
         "systemnexa2",
