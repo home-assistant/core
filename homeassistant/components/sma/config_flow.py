@@ -193,9 +193,8 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._async_abort_entries_match({CONF_HOST: self._discovery_data[CONF_HOST]})
 
-        await self.async_set_unique_id(
-            discovery_info.hostname.replace("SMA", "").lower()
-        )
+        hostname = discovery_info.hostname.lower()
+        await self.async_set_unique_id(hostname.replace("sma", ""))
         self._abort_if_unique_id_configured()
 
         return await self.async_step_discovery_confirm()
