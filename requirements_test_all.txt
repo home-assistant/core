@@ -783,6 +783,10 @@ evolutionhttp==0.0.18
 # homeassistant.components.faa_delays
 faadelays==2023.9.1
 
+# homeassistant.components.dlib_face_detect
+# homeassistant.components.dlib_face_identify
+# face-recognition==1.2.3
+
 # homeassistant.components.fastdotcom
 fastdotcom==0.0.3
 
@@ -940,6 +944,9 @@ growattServer==1.6.0
 
 # homeassistant.components.google_sheets
 gspread==5.5.0
+
+# homeassistant.components.gstreamer
+gstreamer-player==1.1.2
 
 # homeassistant.components.profiler
 guppy3==3.1.5
@@ -1714,7 +1721,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.8
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.6
+pylamarzocco==2.0.7
 
 # homeassistant.components.lastfm
 pylast==5.1.0
