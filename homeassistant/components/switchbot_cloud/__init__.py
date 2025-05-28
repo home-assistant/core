@@ -173,7 +173,10 @@ async def make_device_data(
             else:
                 devices_data.switches.append((device, coordinator))
 
-    if isinstance(device, Device) and device.device_type in ["Battery Circulator Fan"]:
+    if isinstance(device, Device) and device.device_type in [
+        "Battery Circulator Fan",
+        "Circulator Fan",
+    ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
         )
