@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.components.generic_hygrostat import (
-    DOMAIN as GENERIC_HYDROSTAT_DOMAIN,
-)
+from homeassistant.components.generic_hygrostat import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -45,7 +43,7 @@ async def test_device_cleaning(
     # Configure the configuration entry for helper
     helper_config_entry = MockConfigEntry(
         data={},
-        domain=GENERIC_HYDROSTAT_DOMAIN,
+        domain=DOMAIN,
         options={
             "device_class": "humidifier",
             "dry_tolerance": 2.0,
