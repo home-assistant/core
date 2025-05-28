@@ -1,4 +1,4 @@
-"""Test for the switchbot_cloud relay switch & bot."""
+"""Test for the switchbot_cloud climate."""
 
 from unittest.mock import patch
 
