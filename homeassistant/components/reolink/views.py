@@ -130,12 +130,23 @@ class PlaybackProxyView(HomeAssistantView):
             "apolication/octet-stream",
         ]:
             err_str = f"Reolink playback expected video/mp4 but got {reolink_response.content_type}"
-            if reolink_response.content_type == "video/x-flv" and vod_type == VodRequestType.PLAYBACK.value:
+            if (
+                reolink_response.content_type == "video/x-flv"
+                and vod_type == VodRequestType.PLAYBACK.value
+            ):
                 # next time use DOWNLOAD immediately
                 self._vod_type = VodRequestType.DOWNLOAD.value
-                _LOGGER.debug("%s, retrying using download instead of playback cmd", err_str)
+                _LOGGER.debug(
+                    "%s, retrying using download instead of playback cmd", err_str
+                )
                 return await self.get(
-                    request, config_entry_id, channel, stream_res, self._vod_type, filename, retry
+                    request,
+                    config_entry_id,
+                    channel,
+                    stream_res,
+                    self._vod_type,
+                    filename,
+                    retry,
                 )
 
             _LOGGER.error(err_str)
