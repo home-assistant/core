@@ -16,6 +16,7 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import LanguageSelector, LanguageSelectorConfig
 from homeassistant.helpers.sun import get_astral_event_date
@@ -48,7 +49,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         event_date = get_astral_event_date(hass, SUN_EVENT_SUNSET, today)
         if event_date is None:
             _LOGGER.error("Can't get sunset event date for %s", today)
-            raise ValueError("Can't get sunset event date")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="sunset_event"
+            )
         sunset = dt_util.as_local(event_date)
         _LOGGER.debug("Now: %s Sunset: %s", now, sunset)
         return now > sunset

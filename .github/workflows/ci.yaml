@@ -40,7 +40,7 @@ env:
   CACHE_VERSION: 2
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 1
-  HA_SHORT_VERSION: "2025.6"
+  HA_SHORT_VERSION: "2025.7"
   DEFAULT_PYTHON: "3.13"
   ALL_PYTHON_VERSIONS: "['3.13']"
   # 10.3 is the oldest supported version
@@ -1023,6 +1023,7 @@ jobs:
           overwrite: true
       - name: Beautify test results
         # For easier identification of parsing errors
+        if: needs.info.outputs.skip_coverage != 'true'
         run: |
           xmllint --format "junit.xml" > "junit.xml-tmp"
           mv "junit.xml-tmp" "junit.xml"
@@ -1163,6 +1164,7 @@ jobs:
           overwrite: true
       - name: Beautify test results
         # For easier identification of parsing errors
+        if: needs.info.outputs.skip_coverage != 'true'
         run: |
           xmllint --format "junit.xml" > "junit.xml-tmp"
           mv "junit.xml-tmp" "junit.xml"
@@ -1305,6 +1307,7 @@ jobs:
           overwrite: true
       - name: Beautify test results
         # For easier identification of parsing errors
+        if: needs.info.outputs.skip_coverage != 'true'
         run: |
           xmllint --format "junit.xml" > "junit.xml-tmp"
           mv "junit.xml-tmp" "junit.xml"
@@ -1457,6 +1460,7 @@ jobs:
           overwrite: true
       - name: Beautify test results
         # For easier identification of parsing errors
+        if: needs.info.outputs.skip_coverage != 'true'
         run: |
           xmllint --format "junit.xml" > "junit.xml-tmp"
           mv "junit.xml-tmp" "junit.xml"

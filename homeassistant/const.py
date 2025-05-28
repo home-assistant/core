@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2025
-MINOR_VERSION: Final = 6
+MINOR_VERSION: Final = 7
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -647,6 +647,7 @@ class UnitOfEnergyDistance(StrEnum):
     """Energy Distance units."""
 
     KILO_WATT_HOUR_PER_100_KM = "kWh/100km"
+    WATT_HOUR_PER_KM = "Wh/km"
     MILES_PER_KILO_WATT_HOUR = "mi/kWh"
     KM_PER_KILO_WATT_HOUR = "km/kWh"
 

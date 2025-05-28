@@ -207,6 +207,12 @@
     "amazon": {
       "name": "Amazon",
       "integrations": {
+        "amazon_devices": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Amazon Devices"
+        },
         "amazon_polly": {
           "integration_type": "hub",
           "config_flow": false,
@@ -4848,6 +4854,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "paperless_ngx": {
+      "name": "Paperless-ngx",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "pcs_lighting": {
       "name": "PCS Lighting",
       "integration_type": "virtual",
@@ -5045,6 +5057,12 @@
     "private_ble_device": {
       "name": "Private BLE Device",
       "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
+    "probe_plus": {
+      "name": "Probe Plus",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -6009,6 +6027,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "smarla": {
+      "name": "Swing2Sleep Smarla",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_push"
     },
     "smart_blinds": {
       "name": "Smartblinds",

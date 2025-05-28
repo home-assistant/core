@@ -40,7 +40,11 @@ from homeassistant.setup import async_setup_component
 
 from . import KnxEntityGenerator
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    load_json_object_fixture,
+)
 from tests.typing import WebSocketGenerator
 
 FIXTURE_PROJECT_DATA = load_json_object_fixture("project.json", KNX_DOMAIN)
@@ -110,8 +114,10 @@ class KNXTestKit:
             return DEFAULT
 
         if config_store_fixture:
-            self.hass_storage[KNX_CONFIG_STORAGE_KEY] = load_json_object_fixture(
-                config_store_fixture, KNX_DOMAIN
+            self.hass_storage[
+                KNX_CONFIG_STORAGE_KEY
+            ] = await async_load_json_object_fixture(
+                self.hass, config_store_fixture, KNX_DOMAIN
             )
 
         if add_entry_to_hass:
