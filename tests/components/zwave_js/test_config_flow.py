@@ -13,12 +13,30 @@ from aiohasupervisor.models import AddonsOptions, Discovery
 import aiohttp
 import pytest
 from serial.tools.list_ports_common import ListPortInfo
+from voluptuous import InInvalid
 from zwave_js_server.exceptions import FailedCommand
 from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.zwave_js.config_flow import TITLE, get_usb_ports
-from homeassistant.components.zwave_js.const import ADDON_SLUG, CONF_USB_PATH, DOMAIN
+from homeassistant.components.zwave_js.const import (
+    ADDON_SLUG,
+    CONF_ADDON_DEVICE,
+    CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY,
+    CONF_ADDON_LR_S2_AUTHENTICATED_KEY,
+    CONF_ADDON_S0_LEGACY_KEY,
+    CONF_ADDON_S2_ACCESS_CONTROL_KEY,
+    CONF_ADDON_S2_AUTHENTICATED_KEY,
+    CONF_ADDON_S2_UNAUTHENTICATED_KEY,
+    CONF_LR_S2_ACCESS_CONTROL_KEY,
+    CONF_LR_S2_AUTHENTICATED_KEY,
+    CONF_S0_LEGACY_KEY,
+    CONF_S2_ACCESS_CONTROL_KEY,
+    CONF_S2_AUTHENTICATED_KEY,
+    CONF_S2_UNAUTHENTICATED_KEY,
+    CONF_USB_PATH,
+    DOMAIN,
+)
 from homeassistant.components.zwave_js.helpers import SERVER_VERSION_TIMEOUT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -67,6 +85,31 @@ CP2652_ZIGBEE_DISCOVERY_INFO = UsbServiceInfo(
 def platforms() -> list[str]:
     """Fixture to specify platforms to test."""
     return []
+
+
+@pytest.fixture(name="discovery_info", autouse=True)
+def discovery_info_fixture() -> list[Discovery]:
+    """Fixture to set up discovery info."""
+    return [
+        Discovery(
+            addon="core_zwave_js",
+            service="zwave_js",
+            uuid=uuid4(),
+            config=ADDON_DISCOVERY_INFO,
+        )
+    ]
+
+
+@pytest.fixture(name="discovery_info_side_effect", autouse=True)
+def discovery_info_side_effect_fixture() -> Any | None:
+    """Return the discovery info from the supervisor."""
+    return None
+
+
+@pytest.fixture(name="get_addon_discovery_info", autouse=True)
+def get_addon_discovery_info_fixture(get_addon_discovery_info: AsyncMock) -> AsyncMock:
+    """Get add-on discovery info."""
+    return get_addon_discovery_info
 
 
 @pytest.fixture(name="setup_entry")
@@ -203,11 +246,12 @@ async def test_manual(hass: HomeAssistant) -> None:
     assert result2["result"].unique_id == "1234"
 
 
-async def slow_server_version(*args):
+async def slow_server_version(*args: Any) -> Any:
     """Simulate a slow server version."""
     await asyncio.sleep(0.1)
 
 
+@pytest.mark.usefixtures("integration")
 @pytest.mark.parametrize(
     ("url", "server_version_side_effect", "server_version_timeout", "error"),
     [
@@ -231,7 +275,7 @@ async def slow_server_version(*args):
         ),
     ],
 )
-async def test_manual_errors(hass: HomeAssistant, integration, url, error) -> None:
+async def test_manual_errors(hass: HomeAssistant, url: str, error: str) -> None:
     """Test all errors with a manual set up."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -275,7 +319,10 @@ async def test_manual_errors(hass: HomeAssistant, integration, url, error) -> No
     ],
 )
 async def test_reconfigure_manual_errors(
-    hass: HomeAssistant, integration, url, error
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    url: str,
+    error: str,
 ) -> None:
     """Test all errors with a manual set up in a reconfigure flow."""
     entry = integration
@@ -336,13 +383,10 @@ async def test_manual_already_configured(hass: HomeAssistant) -> None:
     assert entry.data["integration_created_addon"] is False
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+@pytest.mark.usefixtures("supervisor", "addon_running")
 async def test_supervisor_discovery(
     hass: HomeAssistant,
-    supervisor,
-    addon_running,
-    addon_options,
-    get_addon_discovery_info,
+    addon_options: dict[str, Any],
 ) -> None:
     """Test flow started from Supervisor discovery."""
 
@@ -395,13 +439,9 @@ async def test_supervisor_discovery(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize(
-    ("discovery_info", "server_version_side_effect"),
-    [({"config": ADDON_DISCOVERY_INFO}, TimeoutError())],
-)
-async def test_supervisor_discovery_cannot_connect(
-    hass: HomeAssistant, supervisor, get_addon_discovery_info
-) -> None:
+@pytest.mark.usefixtures("supervisor")
+@pytest.mark.parametrize("server_version_side_effect", [TimeoutError()])
+async def test_supervisor_discovery_cannot_connect(hass: HomeAssistant) -> None:
     """Test Supervisor discovery and cannot connect."""
 
     result = await hass.config_entries.flow.async_init(
@@ -419,13 +459,11 @@ async def test_supervisor_discovery_cannot_connect(
     assert result["reason"] == "cannot_connect"
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_clean_discovery_on_user_create(
     hass: HomeAssistant,
     supervisor,
     addon_running,
     addon_options,
-    get_addon_discovery_info,
 ) -> None:
     """Test discovery flow is cleaned up when a user flow is finished."""
 
@@ -452,6 +490,13 @@ async def test_clean_discovery_on_user_create(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_custom"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -500,8 +545,10 @@ async def test_clean_discovery_on_user_create(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("supervisor", "addon_running")
 async def test_abort_discovery_with_existing_entry(
-    hass: HomeAssistant, supervisor, addon_running, addon_options
+    hass: HomeAssistant,
+    addon_options: dict[str, Any],
 ) -> None:
     """Test discovery flow is aborted if an entry already exists."""
 
@@ -530,17 +577,16 @@ async def test_abort_discovery_with_existing_entry(
     assert entry.data["url"] == "ws://host1:3001"
 
 
-async def test_abort_hassio_discovery_with_existing_flow(
-    hass: HomeAssistant, supervisor, addon_installed, addon_options
-) -> None:
+@pytest.mark.usefixtures("supervisor", "addon_installed", "addon_info")
+async def test_abort_hassio_discovery_with_existing_flow(hass: HomeAssistant) -> None:
     """Test hassio discovery flow is aborted when another discovery has happened."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USB},
         data=USB_DISCOVERY_INFO,
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "usb_confirm"
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
 
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -557,9 +603,8 @@ async def test_abort_hassio_discovery_with_existing_flow(
     assert result2["reason"] == "already_in_progress"
 
 
-async def test_abort_hassio_discovery_for_other_addon(
-    hass: HomeAssistant, supervisor, addon_installed, addon_options
-) -> None:
+@pytest.mark.usefixtures("supervisor", "addon_installed", "addon_info")
+async def test_abort_hassio_discovery_for_other_addon(hass: HomeAssistant) -> None:
     """Test hassio discovery flow is aborted for a non official add-on discovery."""
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -580,6 +625,7 @@ async def test_abort_hassio_discovery_for_other_addon(
     assert result2["reason"] == "not_zwave_js_addon"
 
 
+@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
 @pytest.mark.parametrize(
     ("usb_discovery_info", "device", "discovery_name"),
     [
@@ -602,29 +648,12 @@ async def test_abort_hassio_discovery_for_other_addon(
         ),
     ],
 )
-@pytest.mark.parametrize(
-    "discovery_info",
-    [
-        [
-            Discovery(
-                addon="core_zwave_js",
-                service="zwave_js",
-                uuid=uuid4(),
-                config=ADDON_DISCOVERY_INFO,
-            )
-        ]
-    ],
-)
 async def test_usb_discovery(
     hass: HomeAssistant,
-    supervisor,
-    addon_not_installed,
-    install_addon,
-    addon_options,
-    get_addon_discovery_info,
+    install_addon: AsyncMock,
     mock_usb_serial_by_id: MagicMock,
-    set_addon_options,
-    start_addon,
+    set_addon_options: AsyncMock,
+    start_addon: AsyncMock,
     usb_discovery_info: UsbServiceInfo,
     device: str,
     discovery_name: str,
@@ -635,12 +664,15 @@ async def test_usb_discovery(
         context={"source": config_entries.SOURCE_USB},
         data=usb_discovery_info,
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "usb_confirm"
-    assert result["description_placeholders"] == {"name": discovery_name}
-    assert mock_usb_serial_by_id.call_count == 1
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert mock_usb_serial_by_id.call_count == 1
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+    assert result["menu_options"] == ["intent_recommended", "intent_custom"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_custom"}
+    )
 
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "install_addon"
@@ -718,28 +750,13 @@ async def test_usb_discovery(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize(
-    "discovery_info",
-    [
-        [
-            Discovery(
-                addon="core_zwave_js",
-                service="zwave_js",
-                uuid=uuid4(),
-                config=ADDON_DISCOVERY_INFO,
-            )
-        ]
-    ],
-)
+@pytest.mark.usefixtures("supervisor", "addon_installed")
 async def test_usb_discovery_addon_not_running(
     hass: HomeAssistant,
-    supervisor,
-    addon_installed,
-    addon_options,
+    addon_options: dict[str, Any],
     mock_usb_serial_by_id: MagicMock,
-    set_addon_options,
-    start_addon,
-    get_addon_discovery_info,
+    set_addon_options: AsyncMock,
+    start_addon: AsyncMock,
 ) -> None:
     """Test usb discovery when add-on is installed but not running."""
     addon_options["device"] = "/dev/incorrect_device"
@@ -749,17 +766,21 @@ async def test_usb_discovery_addon_not_running(
         context={"source": config_entries.SOURCE_USB},
         data=USB_DISCOVERY_INFO,
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "usb_confirm"
-    assert mock_usb_serial_by_id.call_count == 2
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert mock_usb_serial_by_id.call_count == 2
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_custom"}
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon_user"
 
     # Make sure the discovered usb device is preferred.
     data_schema = result["data_schema"]
+    assert data_schema is not None
     assert data_schema({}) == {
         "s0_legacy_key": "",
         "s2_access_control_key": "",
@@ -832,20 +853,7 @@ async def test_usb_discovery_addon_not_running(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("supervisor", "addon_running", "get_addon_discovery_info")
-@pytest.mark.parametrize(
-    "discovery_info",
-    [
-        [
-            Discovery(
-                addon="core_zwave_js",
-                service="zwave_js",
-                uuid=uuid4(),
-                config=ADDON_DISCOVERY_INFO,
-            )
-        ]
-    ],
-)
+@pytest.mark.usefixtures("supervisor", "addon_running")
 async def test_usb_discovery_migration(
     hass: HomeAssistant,
     addon_options: dict[str, Any],
@@ -915,12 +923,8 @@ async def test_usb_discovery_migration(
         context={"source": config_entries.SOURCE_USB},
         data=USB_DISCOVERY_INFO,
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "usb_confirm"
+
     assert mock_usb_serial_by_id.call_count == 2
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "intent_migrate"
 
@@ -982,20 +986,7 @@ async def test_usb_discovery_migration(
     assert entry.unique_id == "5678"
 
 
-@pytest.mark.usefixtures("supervisor", "addon_running", "get_addon_discovery_info")
-@pytest.mark.parametrize(
-    "discovery_info",
-    [
-        [
-            Discovery(
-                addon="core_zwave_js",
-                service="zwave_js",
-                uuid=uuid4(),
-                config=ADDON_DISCOVERY_INFO,
-            )
-        ]
-    ],
-)
+@pytest.mark.usefixtures("supervisor", "addon_running")
 async def test_usb_discovery_migration_restore_driver_ready_timeout(
     hass: HomeAssistant,
     addon_options: dict[str, Any],
@@ -1059,12 +1050,8 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
         context={"source": config_entries.SOURCE_USB},
         data=USB_DISCOVERY_INFO,
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "usb_confirm"
+
     assert mock_usb_serial_by_id.call_count == 2
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "intent_migrate"
 
@@ -1126,13 +1113,12 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
     assert integration.data["use_addon"] is True
 
 
+@pytest.mark.usefixtures("supervisor", "addon_installed")
 async def test_discovery_addon_not_running(
     hass: HomeAssistant,
-    supervisor,
-    addon_installed,
-    addon_options,
-    set_addon_options,
-    start_addon,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+    start_addon: AsyncMock,
 ) -> None:
     """Test discovery with add-on already installed but not running."""
     addon_options["device"] = None
@@ -1220,14 +1206,12 @@ async def test_discovery_addon_not_running(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
 async def test_discovery_addon_not_installed(
     hass: HomeAssistant,
-    supervisor,
-    addon_not_installed,
-    install_addon,
-    addon_options,
-    set_addon_options,
-    start_addon,
+    install_addon: AsyncMock,
+    set_addon_options: AsyncMock,
+    start_addon: AsyncMock,
 ) -> None:
     """Test discovery with add-on not installed."""
     result = await hass.config_entries.flow.async_init(
@@ -1322,9 +1306,8 @@ async def test_discovery_addon_not_installed(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_abort_usb_discovery_with_existing_flow(
-    hass: HomeAssistant, supervisor, addon_options
-) -> None:
+@pytest.mark.usefixtures("supervisor", "addon_info")
+async def test_abort_usb_discovery_with_existing_flow(hass: HomeAssistant) -> None:
     """Test usb discovery flow is aborted when another discovery has happened."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -1366,16 +1349,16 @@ async def test_usb_discovery_with_existing_usb_flow(hass: HomeAssistant) -> None
         data=first_usb_info,
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "usb_confirm"
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
 
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USB},
         data=USB_DISCOVERY_INFO,
     )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "usb_confirm"
+    assert result2["type"] is FlowResultType.MENU
+    assert result2["step_id"] == "installation_type"
 
     usb_flows_in_progress = hass.config_entries.flow.async_progress_by_handler(
         DOMAIN, match_context={"source": config_entries.SOURCE_USB}
@@ -1389,9 +1372,8 @@ async def test_usb_discovery_with_existing_usb_flow(hass: HomeAssistant) -> None
     assert len(hass.config_entries.flow.async_progress()) == 0
 
 
-async def test_abort_usb_discovery_addon_required(
-    hass: HomeAssistant, supervisor, addon_options
-) -> None:
+@pytest.mark.usefixtures("supervisor", "addon_info")
+async def test_abort_usb_discovery_addon_required(hass: HomeAssistant) -> None:
     """Test usb discovery aborted when existing entry not using add-on."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -1406,53 +1388,6 @@ async def test_abort_usb_discovery_addon_required(
         context={"source": config_entries.SOURCE_USB},
         data=USB_DISCOVERY_INFO,
     )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "addon_required"
-
-
-@pytest.mark.usefixtures(
-    "supervisor",
-    "addon_running",
-)
-async def test_abort_usb_discovery_confirm_addon_required(
-    hass: HomeAssistant,
-    addon_options: dict[str, Any],
-    mock_usb_serial_by_id: MagicMock,
-) -> None:
-    """Test usb discovery confirm aborted when existing entry not using add-on."""
-    addon_options["device"] = "/dev/another_device"
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "url": "ws://localhost:3000",
-            "usb_path": "/dev/another_device",
-            "use_addon": True,
-        },
-        title=TITLE,
-        unique_id="1234",
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USB},
-        data=USB_DISCOVERY_INFO,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "usb_confirm"
-    assert mock_usb_serial_by_id.call_count == 2
-
-    hass.config_entries.async_update_entry(
-        entry,
-        data={
-            **entry.data,
-            "use_addon": False,
-        },
-    )
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_required"
 
@@ -1486,28 +1421,38 @@ async def test_usb_discovery_same_device(
     assert mock_usb_serial_by_id.call_count == 2
 
 
+@pytest.mark.usefixtures("supervisor", "addon_info")
 @pytest.mark.parametrize(
-    "discovery_info",
+    "usb_discovery_info",
     [CP2652_ZIGBEE_DISCOVERY_INFO],
 )
 async def test_abort_usb_discovery_aborts_specific_devices(
-    hass: HomeAssistant, supervisor, addon_options, discovery_info
+    hass: HomeAssistant,
+    usb_discovery_info: UsbServiceInfo,
 ) -> None:
     """Test usb discovery flow is aborted on specific devices."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USB},
-        data=discovery_info,
+        data=usb_discovery_info,
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_zwave_device"
 
 
-async def test_not_addon(hass: HomeAssistant, supervisor) -> None:
+@pytest.mark.usefixtures("supervisor")
+async def test_not_addon(hass: HomeAssistant) -> None:
     """Test opting out of add-on on Supervisor."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_custom"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -1555,25 +1500,10 @@ async def test_not_addon(hass: HomeAssistant, supervisor) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize(
-    "discovery_info",
-    [
-        [
-            Discovery(
-                addon="core_zwave_js",
-                service="zwave_js",
-                uuid=uuid4(),
-                config=ADDON_DISCOVERY_INFO,
-            )
-        ]
-    ],
-)
+@pytest.mark.usefixtures("supervisor", "addon_running")
 async def test_addon_running(
     hass: HomeAssistant,
-    supervisor,
-    addon_running,
-    addon_options,
-    get_addon_discovery_info,
+    addon_options: dict[str, Any],
 ) -> None:
     """Test add-on already running on Supervisor."""
     addon_options["device"] = "/test"
@@ -1586,6 +1516,13 @@ async def test_addon_running(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_custom"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -1623,6 +1560,7 @@ async def test_addon_running(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("supervisor", "addon_running")
 @pytest.mark.parametrize(
     (
         "discovery_info",
@@ -1685,11 +1623,8 @@ async def test_addon_running(
 )
 async def test_addon_running_failures(
     hass: HomeAssistant,
-    supervisor,
-    addon_running,
-    addon_options,
-    get_addon_discovery_info,
-    abort_reason,
+    addon_options: dict[str, Any],
+    abort_reason: str,
 ) -> None:
     """Test all failures when add-on is running."""
     addon_options["device"] = "/test"
@@ -1697,6 +1632,13 @@ async def test_addon_running_failures(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_custom"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -1710,25 +1652,10 @@ async def test_addon_running_failures(
     assert result["reason"] == abort_reason
 
 
-@pytest.mark.parametrize(
-    "discovery_info",
-    [
-        [
-            Discovery(
-                addon="core_zwave_js",
-                service="zwave_js",
-                uuid=uuid4(),
-                config=ADDON_DISCOVERY_INFO,
-            )
-        ]
-    ],
-)
+@pytest.mark.usefixtures("supervisor", "addon_running")
 async def test_addon_running_already_configured(
     hass: HomeAssistant,
-    supervisor,
-    addon_running,
-    addon_options,
-    get_addon_discovery_info,
+    addon_options: dict[str, Any],
 ) -> None:
     """Test that only one unique instance is allowed when add-on is running."""
     addon_options["device"] = "/test_new"
@@ -1762,6 +1689,13 @@ async def test_addon_running_already_configured(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_custom"}
+    )
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
@@ -1781,32 +1715,23 @@ async def test_addon_running_already_configured(
     assert entry.data["lr_s2_authenticated_key"] == "new321"
 
 
-@pytest.mark.parametrize(
-    "discovery_info",
-    [
-        [
-            Discovery(
-                addon="core_zwave_js",
-                service="zwave_js",
-                uuid=uuid4(),
-                config=ADDON_DISCOVERY_INFO,
-            )
-        ]
-    ],
-)
+@pytest.mark.usefixtures("supervisor", "addon_installed", "addon_info")
 async def test_addon_installed(
     hass: HomeAssistant,
-    supervisor,
-    addon_installed,
-    addon_options,
-    set_addon_options,
-    start_addon,
-    get_addon_discovery_info,
+    set_addon_options: AsyncMock,
+    start_addon: AsyncMock,
 ) -> None:
     """Test add-on already installed but not running on Supervisor."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_custom"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -1883,33 +1808,24 @@ async def test_addon_installed(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize(
-    ("discovery_info", "start_addon_side_effect"),
-    [
-        (
-            Discovery(
-                addon="core_zwave_js",
-                service="zwave_js",
-                uuid=uuid4(),
-                config=ADDON_DISCOVERY_INFO,
-            ),
-            SupervisorError(),
-        )
-    ],
-)
+@pytest.mark.usefixtures("supervisor", "addon_installed", "addon_info")
+@pytest.mark.parametrize("start_addon_side_effect", [SupervisorError()])
 async def test_addon_installed_start_failure(
     hass: HomeAssistant,
-    supervisor,
-    addon_installed,
-    addon_options,
-    set_addon_options,
-    start_addon,
-    get_addon_discovery_info,
+    set_addon_options: AsyncMock,
+    start_addon: AsyncMock,
 ) -> None:
     """Test add-on start failure when add-on is installed."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_custom"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -1962,6 +1878,7 @@ async def test_addon_installed_start_failure(
     assert result["reason"] == "addon_start_failed"
 
 
+@pytest.mark.usefixtures("supervisor", "addon_installed", "addon_info")
 @pytest.mark.parametrize(
     ("discovery_info", "server_version_side_effect"),
     [
@@ -1984,17 +1901,20 @@ async def test_addon_installed_start_failure(
 )
 async def test_addon_installed_failures(
     hass: HomeAssistant,
-    supervisor,
-    addon_installed,
-    addon_options,
-    set_addon_options,
-    start_addon,
-    get_addon_discovery_info,
+    set_addon_options: AsyncMock,
+    start_addon: AsyncMock,
 ) -> None:
     """Test all failures when add-on is installed."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_custom"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -2047,35 +1967,24 @@ async def test_addon_installed_failures(
     assert result["reason"] == "addon_start_failed"
 
 
-@pytest.mark.parametrize(
-    ("set_addon_options_side_effect", "discovery_info"),
-    [
-        (
-            SupervisorError(),
-            [
-                Discovery(
-                    addon="core_zwave_js",
-                    service="zwave_js",
-                    uuid=uuid4(),
-                    config=ADDON_DISCOVERY_INFO,
-                )
-            ],
-        )
-    ],
-)
+@pytest.mark.usefixtures("supervisor", "addon_installed", "addon_info")
+@pytest.mark.parametrize("set_addon_options_side_effect", [SupervisorError()])
 async def test_addon_installed_set_options_failure(
     hass: HomeAssistant,
-    supervisor,
-    addon_installed,
-    addon_options,
-    set_addon_options,
-    start_addon,
-    get_addon_discovery_info,
+    set_addon_options: AsyncMock,
+    start_addon: AsyncMock,
 ) -> None:
     """Test all failures when add-on is installed."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_custom"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -2122,15 +2031,19 @@ async def test_addon_installed_set_options_failure(
     assert start_addon.call_count == 0
 
 
-async def test_addon_installed_usb_ports_failure(
-    hass: HomeAssistant,
-    supervisor,
-    addon_installed,
-) -> None:
+@pytest.mark.usefixtures("supervisor", "addon_installed")
+async def test_addon_installed_usb_ports_failure(hass: HomeAssistant) -> None:
     """Test usb ports failure when add-on is installed."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_custom"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -2148,27 +2061,11 @@ async def test_addon_installed_usb_ports_failure(
         assert result["reason"] == "usb_ports_failed"
 
 
-@pytest.mark.parametrize(
-    "discovery_info",
-    [
-        [
-            Discovery(
-                addon="core_zwave_js",
-                service="zwave_js",
-                uuid=uuid4(),
-                config=ADDON_DISCOVERY_INFO,
-            )
-        ]
-    ],
-)
+@pytest.mark.usefixtures("supervisor", "addon_installed", "addon_info")
 async def test_addon_installed_already_configured(
     hass: HomeAssistant,
-    supervisor,
-    addon_installed,
-    addon_options,
-    set_addon_options,
-    start_addon,
-    get_addon_discovery_info,
+    set_addon_options: AsyncMock,
+    start_addon: AsyncMock,
 ) -> None:
     """Test that only one unique instance is allowed when add-on is installed."""
     entry = MockConfigEntry(
@@ -2191,6 +2088,13 @@ async def test_addon_installed_already_configured(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_custom"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -2251,32 +2155,23 @@ async def test_addon_installed_already_configured(
     assert entry.data["lr_s2_authenticated_key"] == "new321"
 
 
-@pytest.mark.parametrize(
-    "discovery_info",
-    [
-        [
-            Discovery(
-                addon="core_zwave_js",
-                service="zwave_js",
-                uuid=uuid4(),
-                config=ADDON_DISCOVERY_INFO,
-            )
-        ]
-    ],
-)
+@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
 async def test_addon_not_installed(
     hass: HomeAssistant,
-    supervisor,
-    addon_not_installed,
-    install_addon,
-    addon_options,
-    set_addon_options,
-    start_addon,
-    get_addon_discovery_info,
+    install_addon: AsyncMock,
+    set_addon_options: AsyncMock,
+    start_addon: AsyncMock,
 ) -> None:
     """Test add-on not installed."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_custom"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -2363,14 +2258,23 @@ async def test_addon_not_installed(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("supervisor", "addon_not_installed")
 async def test_install_addon_failure(
-    hass: HomeAssistant, supervisor, addon_not_installed, install_addon
+    hass: HomeAssistant,
+    install_addon: AsyncMock,
 ) -> None:
     """Test add-on install failure."""
     install_addon.side_effect = SupervisorError()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_custom"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -2393,7 +2297,11 @@ async def test_install_addon_failure(
     assert result["reason"] == "addon_install_failed"
 
 
-async def test_reconfigure_manual(hass: HomeAssistant, client, integration) -> None:
+async def test_reconfigure_manual(
+    hass: HomeAssistant,
+    client: MagicMock,
+    integration: MockConfigEntry,
+) -> None:
     """Test manual settings in reconfigure flow."""
     entry = integration
     hass.config_entries.async_update_entry(entry, unique_id="1234")
@@ -2428,7 +2336,8 @@ async def test_reconfigure_manual(hass: HomeAssistant, client, integration) -> N
 
 
 async def test_reconfigure_manual_different_device(
-    hass: HomeAssistant, integration
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
 ) -> None:
     """Test reconfigure flow manual step connecting to different device."""
     entry = integration
@@ -2455,8 +2364,11 @@ async def test_reconfigure_manual_different_device(
     assert result["reason"] == "different_device"
 
 
+@pytest.mark.usefixtures("supervisor")
 async def test_reconfigure_not_addon(
-    hass: HomeAssistant, client, supervisor, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    integration: MockConfigEntry,
 ) -> None:
     """Test reconfigure flow and opting out of add-on on Supervisor."""
     entry = integration
@@ -2616,15 +2528,14 @@ async def test_reconfigure_not_addon_with_addon_stop_fail(
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert setup_entry.call_count == 1
     assert unload_entry.call_count == 1
-
     # avoid unload entry in teardown
     await hass.config_entries.async_unload(entry.entry_id)
     assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.usefixtures("supervisor", "addon_running")
 @pytest.mark.parametrize(
     (
-        "discovery_info",
         "entry_data",
         "old_addon_options",
         "new_addon_options",
@@ -2632,14 +2543,6 @@ async def test_reconfigure_not_addon_with_addon_stop_fail(
     ),
     [
         (
-            [
-                Discovery(
-                    addon="core_zwave_js",
-                    service="zwave_js",
-                    uuid=uuid4(),
-                    config=ADDON_DISCOVERY_INFO,
-                )
-            ],
             {},
             {
                 "device": "/test",
@@ -2665,14 +2568,6 @@ async def test_reconfigure_not_addon_with_addon_stop_fail(
             0,
         ),
         (
-            [
-                Discovery(
-                    addon="core_zwave_js",
-                    service="zwave_js",
-                    uuid=uuid4(),
-                    config=ADDON_DISCOVERY_INFO,
-                )
-            ],
             {"use_addon": True},
             {
                 "device": "/test",
@@ -2701,19 +2596,15 @@ async def test_reconfigure_not_addon_with_addon_stop_fail(
 )
 async def test_reconfigure_addon_running(
     hass: HomeAssistant,
-    client,
-    supervisor,
-    integration,
-    addon_running,
-    addon_options,
-    set_addon_options,
-    restart_addon,
-    get_addon_discovery_info,
-    discovery_info,
-    entry_data,
-    old_addon_options,
-    new_addon_options,
-    disconnect_calls,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+    restart_addon: AsyncMock,
+    entry_data: dict[str, Any],
+    old_addon_options: dict[str, Any],
+    new_addon_options: dict[str, Any],
+    disconnect_calls: int,
 ) -> None:
     """Test reconfigure flow and add-on already running on Supervisor."""
     addon_options.update(old_addon_options)
@@ -2796,18 +2687,11 @@ async def test_reconfigure_addon_running(
     assert client.disconnect.call_count == 1
 
 
+@pytest.mark.usefixtures("supervisor", "addon_running")
 @pytest.mark.parametrize(
-    ("discovery_info", "entry_data", "old_addon_options", "new_addon_options"),
+    ("entry_data", "old_addon_options", "new_addon_options"),
     [
         (
-            [
-                Discovery(
-                    addon="core_zwave_js",
-                    service="zwave_js",
-                    uuid=uuid4(),
-                    config=ADDON_DISCOVERY_INFO,
-                )
-            ],
             {},
             {
                 "device": "/test",
@@ -2837,18 +2721,14 @@ async def test_reconfigure_addon_running(
 )
 async def test_reconfigure_addon_running_no_changes(
     hass: HomeAssistant,
-    client,
-    supervisor,
-    integration,
-    addon_running,
-    addon_options,
-    set_addon_options,
-    restart_addon,
-    get_addon_discovery_info,
-    discovery_info,
-    entry_data,
-    old_addon_options,
-    new_addon_options,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+    restart_addon: AsyncMock,
+    entry_data: dict[str, Any],
+    old_addon_options: dict[str, Any],
+    new_addon_options: dict[str, Any],
 ) -> None:
     """Test reconfigure flow without changes, and add-on already running on Supervisor."""
     addon_options.update(old_addon_options)
@@ -2931,9 +2811,9 @@ async def different_device_server_version(*args):
     )
 
 
+@pytest.mark.usefixtures("supervisor", "addon_running")
 @pytest.mark.parametrize(
     (
-        "discovery_info",
         "entry_data",
         "old_addon_options",
         "new_addon_options",
@@ -2942,14 +2822,6 @@ async def different_device_server_version(*args):
     ),
     [
         (
-            [
-                Discovery(
-                    addon="core_zwave_js",
-                    service="zwave_js",
-                    uuid=uuid4(),
-                    config=ADDON_DISCOVERY_INFO,
-                )
-            ],
             {},
             {
                 "device": "/test",
@@ -2978,14 +2850,6 @@ async def different_device_server_version(*args):
             different_device_server_version,
         ),
         (
-            [
-                Discovery(
-                    addon="core_zwave_js",
-                    service="zwave_js",
-                    uuid=uuid4(),
-                    config=ADDON_DISCOVERY_INFO,
-                )
-            ],
             {},
             {
                 "device": "/test",
@@ -3016,20 +2880,15 @@ async def different_device_server_version(*args):
 )
 async def test_reconfigure_different_device(
     hass: HomeAssistant,
-    client,
-    supervisor,
-    integration,
-    addon_running,
-    addon_options,
-    set_addon_options,
-    restart_addon,
-    get_addon_discovery_info,
-    discovery_info,
-    entry_data,
-    old_addon_options,
-    new_addon_options,
-    disconnect_calls,
-    server_version_side_effect,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+    restart_addon: AsyncMock,
+    entry_data: dict[str, Any],
+    old_addon_options: dict[str, Any],
+    new_addon_options: dict[str, Any],
+    disconnect_calls: int,
 ) -> None:
     """Test reconfigure flow and configuring a different device."""
     addon_options.update(old_addon_options)
@@ -3110,9 +2969,9 @@ async def test_reconfigure_different_device(
     assert client.disconnect.call_count == 1
 
 
+@pytest.mark.usefixtures("supervisor", "addon_running")
 @pytest.mark.parametrize(
     (
-        "discovery_info",
         "entry_data",
         "old_addon_options",
         "new_addon_options",
@@ -3121,14 +2980,6 @@ async def test_reconfigure_different_device(
     ),
     [
         (
-            [
-                Discovery(
-                    addon="core_zwave_js",
-                    service="zwave_js",
-                    uuid=uuid4(),
-                    config=ADDON_DISCOVERY_INFO,
-                )
-            ],
             {},
             {
                 "device": "/test",
@@ -3157,14 +3008,6 @@ async def test_reconfigure_different_device(
             [SupervisorError(), None],
         ),
         (
-            [
-                Discovery(
-                    addon="core_zwave_js",
-                    service="zwave_js",
-                    uuid=uuid4(),
-                    config=ADDON_DISCOVERY_INFO,
-                )
-            ],
             {},
             {
                 "device": "/test",
@@ -3199,20 +3042,15 @@ async def test_reconfigure_different_device(
 )
 async def test_reconfigure_addon_restart_failed(
     hass: HomeAssistant,
-    client,
-    supervisor,
-    integration,
-    addon_running,
-    addon_options,
-    set_addon_options,
-    restart_addon,
-    get_addon_discovery_info,
-    discovery_info,
-    entry_data,
-    old_addon_options,
-    new_addon_options,
-    disconnect_calls,
-    restart_addon_side_effect,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+    restart_addon: AsyncMock,
+    entry_data: dict[str, Any],
+    old_addon_options: dict[str, Any],
+    new_addon_options: dict[str, Any],
+    disconnect_calls: int,
 ) -> None:
     """Test reconfigure flow and add-on restart failure."""
     addon_options.update(old_addon_options)
@@ -3290,76 +3128,42 @@ async def test_reconfigure_addon_restart_failed(
     assert client.disconnect.call_count == 1
 
 
-@pytest.mark.parametrize(
-    (
-        "discovery_info",
-        "entry_data",
-        "old_addon_options",
-        "new_addon_options",
-        "disconnect_calls",
-        "server_version_side_effect",
-    ),
-    [
-        (
-            [
-                Discovery(
-                    addon="core_zwave_js",
-                    service="zwave_js",
-                    uuid=uuid4(),
-                    config=ADDON_DISCOVERY_INFO,
-                )
-            ],
-            {},
-            {
-                "device": "/test",
-                "network_key": "abc123",
-                "s0_legacy_key": "abc123",
-                "s2_access_control_key": "old456",
-                "s2_authenticated_key": "old789",
-                "s2_unauthenticated_key": "old987",
-                "lr_s2_access_control_key": "old654",
-                "lr_s2_authenticated_key": "old321",
-                "log_level": "info",
-                "emulate_hardware": False,
-            },
-            {
-                "usb_path": "/test",
-                "s0_legacy_key": "abc123",
-                "s2_access_control_key": "old456",
-                "s2_authenticated_key": "old789",
-                "s2_unauthenticated_key": "old987",
-                "lr_s2_access_control_key": "old654",
-                "lr_s2_authenticated_key": "old321",
-                "log_level": "info",
-                "emulate_hardware": False,
-            },
-            0,
-            aiohttp.ClientError("Boom"),
-        ),
-    ],
-)
+@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon")
+@pytest.mark.parametrize("server_version_side_effect", [aiohttp.ClientError("Boom")])
 async def test_reconfigure_addon_running_server_info_failure(
     hass: HomeAssistant,
-    client,
-    supervisor,
-    integration,
-    addon_running,
-    addon_options,
-    set_addon_options,
-    restart_addon,
-    get_addon_discovery_info,
-    discovery_info,
-    entry_data,
-    old_addon_options,
-    new_addon_options,
-    disconnect_calls,
-    server_version_side_effect,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
 ) -> None:
     """Test reconfigure flow and add-on already running with server info failure."""
+    old_addon_options = {
+        "device": "/test",
+        "network_key": "abc123",
+        "s0_legacy_key": "abc123",
+        "s2_access_control_key": "old456",
+        "s2_authenticated_key": "old789",
+        "s2_unauthenticated_key": "old987",
+        "lr_s2_access_control_key": "old654",
+        "lr_s2_authenticated_key": "old321",
+        "log_level": "info",
+        "emulate_hardware": False,
+    }
+    new_addon_options = {
+        "usb_path": "/test",
+        "s0_legacy_key": "abc123",
+        "s2_access_control_key": "old456",
+        "s2_authenticated_key": "old789",
+        "s2_unauthenticated_key": "old987",
+        "lr_s2_access_control_key": "old654",
+        "lr_s2_authenticated_key": "old321",
+        "log_level": "info",
+        "emulate_hardware": False,
+    }
     addon_options.update(old_addon_options)
     entry = integration
-    data = {**entry.data, **entry_data}
-    hass.config_entries.async_update_entry(entry, data=data, unique_id="1234")
+    hass.config_entries.async_update_entry(entry, unique_id="1234")
 
     assert entry.data["url"] == "ws://test.org"
 
@@ -3393,14 +3197,15 @@ async def test_reconfigure_addon_running_server_info_failure(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
-    assert entry.data == data
+    assert entry.data["url"] == "ws://test.org"
+    assert set_addon_options.call_count == 0
     assert client.connect.call_count == 2
     assert client.disconnect.call_count == 1
 
 
+@pytest.mark.usefixtures("supervisor", "addon_not_installed")
 @pytest.mark.parametrize(
     (
-        "discovery_info",
         "entry_data",
         "old_addon_options",
         "new_addon_options",
@@ -3408,14 +3213,6 @@ async def test_reconfigure_addon_running_server_info_failure(
     ),
     [
         (
-            [
-                Discovery(
-                    addon="core_zwave_js",
-                    service="zwave_js",
-                    uuid=uuid4(),
-                    config=ADDON_DISCOVERY_INFO,
-                )
-            ],
             {},
             {
                 "device": "/test",
@@ -3441,14 +3238,6 @@ async def test_reconfigure_addon_running_server_info_failure(
             0,
         ),
         (
-            [
-                Discovery(
-                    addon="core_zwave_js",
-                    service="zwave_js",
-                    uuid=uuid4(),
-                    config=ADDON_DISCOVERY_INFO,
-                )
-            ],
             {"use_addon": True},
             {
                 "device": "/test",
@@ -3477,20 +3266,16 @@ async def test_reconfigure_addon_running_server_info_failure(
 )
 async def test_reconfigure_addon_not_installed(
     hass: HomeAssistant,
-    client,
-    supervisor,
-    addon_not_installed,
-    install_addon,
-    integration,
-    addon_options,
-    set_addon_options,
-    start_addon,
-    get_addon_discovery_info,
-    discovery_info,
-    entry_data,
-    old_addon_options,
-    new_addon_options,
-    disconnect_calls,
+    client: MagicMock,
+    install_addon: AsyncMock,
+    integration: MockConfigEntry,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+    start_addon: AsyncMock,
+    entry_data: dict[str, Any],
+    old_addon_options: dict[str, Any],
+    new_addon_options: dict[str, Any],
+    disconnect_calls: int,
 ) -> None:
     """Test reconfigure flow and add-on not installed on Supervisor."""
     addon_options.update(old_addon_options)
@@ -3616,7 +3401,10 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_reconfigure_migrate_no_addon(hass: HomeAssistant, integration) -> None:
+async def test_reconfigure_migrate_no_addon(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+) -> None:
     """Test migration flow fails when not using add-on."""
     entry = integration
     hass.config_entries.async_update_entry(
@@ -3660,19 +3448,7 @@ async def test_reconfigure_migrate_low_sdk_version(
     assert result["reason"] == "migration_low_sdk_version"
 
 
-@pytest.mark.parametrize(
-    "discovery_info",
-    [
-        [
-            Discovery(
-                addon="core_zwave_js",
-                service="zwave_js",
-                uuid=uuid4(),
-                config=ADDON_DISCOVERY_INFO,
-            )
-        ]
-    ],
-)
+@pytest.mark.usefixtures("supervisor", "addon_running")
 @pytest.mark.parametrize(
     (
         "reset_server_version_side_effect",
@@ -3689,13 +3465,11 @@ async def test_reconfigure_migrate_low_sdk_version(
 )
 async def test_reconfigure_migrate_with_addon(
     hass: HomeAssistant,
-    client,
-    supervisor,
-    integration,
-    addon_running,
-    restart_addon,
-    set_addon_options,
-    get_addon_discovery_info,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    restart_addon: AsyncMock,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
     get_server_version: AsyncMock,
     reset_server_version_side_effect: Exception | None,
     reset_unique_id: str,
@@ -3717,6 +3491,7 @@ async def test_reconfigure_migrate_with_addon(
             "usb_path": "/dev/ttyUSB0",
         },
     )
+    addon_options["device"] = "/dev/ttyUSB0"
 
     async def mock_backup_nvm_raw():
         await asyncio.sleep(0)
@@ -3792,7 +3567,12 @@ async def test_reconfigure_migrate_with_addon(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "choose_serial_port"
-    assert result["data_schema"].schema[CONF_USB_PATH]
+    data_schema = result["data_schema"]
+    assert data_schema is not None
+    assert data_schema.schema[CONF_USB_PATH]
+    # Ensure the old usb path is not in the list of options
+    with pytest.raises(InInvalid):
+        data_schema.schema[CONF_USB_PATH](addon_options["device"])
 
     # Reset side effect before starting the add-on.
     get_server_version.side_effect = None
@@ -3843,28 +3623,13 @@ async def test_reconfigure_migrate_with_addon(
     assert entry.unique_id == final_unique_id
 
 
-@pytest.mark.parametrize(
-    "discovery_info",
-    [
-        [
-            Discovery(
-                addon="core_zwave_js",
-                service="zwave_js",
-                uuid=uuid4(),
-                config=ADDON_DISCOVERY_INFO,
-            )
-        ]
-    ],
-)
+@pytest.mark.usefixtures("supervisor", "addon_running")
 async def test_reconfigure_migrate_reset_driver_ready_timeout(
     hass: HomeAssistant,
-    client,
-    supervisor,
-    integration,
-    addon_running,
-    restart_addon,
-    set_addon_options,
-    get_addon_discovery_info,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    restart_addon: AsyncMock,
+    set_addon_options: AsyncMock,
     get_server_version: AsyncMock,
 ) -> None:
     """Test migration flow with driver ready timeout after controller reset."""
@@ -3960,7 +3725,9 @@ async def test_reconfigure_migrate_reset_driver_ready_timeout(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "choose_serial_port"
-    assert result["data_schema"].schema[CONF_USB_PATH]
+    data_schema = result["data_schema"]
+    assert data_schema is not None
+    assert data_schema.schema[CONF_USB_PATH]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -4005,28 +3772,13 @@ async def test_reconfigure_migrate_reset_driver_ready_timeout(
     assert entry.unique_id == "5678"
 
 
-@pytest.mark.parametrize(
-    "discovery_info",
-    [
-        [
-            Discovery(
-                addon="core_zwave_js",
-                service="zwave_js",
-                uuid=uuid4(),
-                config=ADDON_DISCOVERY_INFO,
-            )
-        ]
-    ],
-)
+@pytest.mark.usefixtures("supervisor", "addon_running")
 async def test_reconfigure_migrate_restore_driver_ready_timeout(
     hass: HomeAssistant,
-    client,
-    supervisor,
-    integration,
-    addon_running,
-    restart_addon,
-    set_addon_options,
-    get_addon_discovery_info,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    restart_addon: AsyncMock,
+    set_addon_options: AsyncMock,
 ) -> None:
     """Test migration flow with driver ready timeout after nvm restore."""
     entry = integration
@@ -4111,7 +3863,9 @@ async def test_reconfigure_migrate_restore_driver_ready_timeout(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "choose_serial_port"
-    assert result["data_schema"].schema[CONF_USB_PATH]
+    data_schema = result["data_schema"]
+    assert data_schema is not None
+    assert data_schema.schema[CONF_USB_PATH]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -4158,7 +3912,9 @@ async def test_reconfigure_migrate_restore_driver_ready_timeout(
 
 
 async def test_reconfigure_migrate_backup_failure(
-    hass: HomeAssistant, integration, client
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    client: MagicMock,
 ) -> None:
     """Test backup failure."""
     entry = integration
@@ -4189,7 +3945,9 @@ async def test_reconfigure_migrate_backup_failure(
 
 
 async def test_reconfigure_migrate_backup_file_failure(
-    hass: HomeAssistant, integration, client
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    client: MagicMock,
 ) -> None:
     """Test backup file failure."""
     entry = integration
@@ -4232,20 +3990,7 @@ async def test_reconfigure_migrate_backup_file_failure(
     assert result["reason"] == "backup_failed"
 
 
-@pytest.mark.usefixtures("supervisor", "addon_running", "get_addon_discovery_info")
-@pytest.mark.parametrize(
-    "discovery_info",
-    [
-        [
-            Discovery(
-                addon="core_zwave_js",
-                service="zwave_js",
-                uuid=uuid4(),
-                config=ADDON_DISCOVERY_INFO,
-            )
-        ]
-    ],
-)
+@pytest.mark.usefixtures("supervisor", "addon_running")
 async def test_reconfigure_migrate_start_addon_failure(
     hass: HomeAssistant,
     client: MagicMock,
@@ -4330,28 +4075,12 @@ async def test_reconfigure_migrate_start_addon_failure(
     assert result["reason"] == "addon_start_failed"
 
 
-@pytest.mark.parametrize(
-    "discovery_info",
-    [
-        [
-            Discovery(
-                addon="core_zwave_js",
-                service="zwave_js",
-                uuid=uuid4(),
-                config=ADDON_DISCOVERY_INFO,
-            )
-        ]
-    ],
-)
+@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon")
 async def test_reconfigure_migrate_restore_failure(
     hass: HomeAssistant,
-    client,
-    supervisor,
-    integration,
-    addon_running,
-    restart_addon,
-    set_addon_options,
-    get_addon_discovery_info,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    set_addon_options: AsyncMock,
 ) -> None:
     """Test restore failure."""
     entry = integration
@@ -4417,6 +4146,7 @@ async def test_reconfigure_migrate_restore_failure(
         },
     )
 
+    assert set_addon_options.call_count == 1
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
@@ -4434,7 +4164,11 @@ async def test_reconfigure_migrate_restore_failure(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "restore_failed"
-    assert result["description_placeholders"]["file_path"]
+    description_placeholders = result["description_placeholders"]
+    assert description_placeholders is not None
+    assert description_placeholders["file_path"]
+    assert description_placeholders["file_url"]
+    assert description_placeholders["file_name"]
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -4528,7 +4262,11 @@ async def test_get_driver_failure_instruct_unplug(
     assert result["reason"] == "config_entry_not_loaded"
 
 
-async def test_hard_reset_failure(hass: HomeAssistant, integration, client) -> None:
+async def test_hard_reset_failure(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    client: MagicMock,
+) -> None:
     """Test hard reset failure."""
     entry = integration
     hass.config_entries.async_update_entry(
@@ -4575,7 +4313,9 @@ async def test_hard_reset_failure(hass: HomeAssistant, integration, client) -> N
 
 
 async def test_choose_serial_port_usb_ports_failure(
-    hass: HomeAssistant, integration, client
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    client: MagicMock,
 ) -> None:
     """Test choose serial port usb ports failure."""
     entry = integration
@@ -4635,8 +4375,10 @@ async def test_choose_serial_port_usb_ports_failure(
         assert result["reason"] == "usb_ports_failed"
 
 
+@pytest.mark.usefixtures("supervisor", "addon_installed")
 async def test_configure_addon_usb_ports_failure(
-    hass: HomeAssistant, integration, addon_installed, supervisor
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
 ) -> None:
     """Test configure addon usb ports failure."""
     entry = integration
@@ -4663,7 +4405,7 @@ async def test_configure_addon_usb_ports_failure(
         assert result["reason"] == "usb_ports_failed"
 
 
-async def test_get_usb_ports_sorting(hass: HomeAssistant) -> None:
+async def test_get_usb_ports_sorting() -> None:
     """Test that get_usb_ports sorts ports with 'n/a' descriptions last."""
     mock_ports = [
         ListPortInfo("/dev/ttyUSB0"),
@@ -4689,3 +4431,212 @@ async def test_get_usb_ports_sorting(hass: HomeAssistant) -> None:
             "n/a - /dev/ttyUSB0, s/n: n/a",
             "N/A - /dev/ttyUSB2, s/n: n/a",
         ]
+
+
+@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
+async def test_intent_recommended_user(
+    hass: HomeAssistant,
+    install_addon: AsyncMock,
+    start_addon: AsyncMock,
+    set_addon_options: AsyncMock,
+) -> None:
+    """Test the intent_recommended step."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_recommended"}
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "install_addon"
+
+    # Make sure the flow continues when the progress task is done.
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert install_addon.call_args == call("core_zwave_js")
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_addon_user"
+    data_schema = result["data_schema"]
+    assert data_schema is not None
+    assert data_schema.schema[CONF_USB_PATH] is not None
+    assert data_schema.schema.get(CONF_S0_LEGACY_KEY) is None
+    assert data_schema.schema.get(CONF_S2_ACCESS_CONTROL_KEY) is None
+    assert data_schema.schema.get(CONF_S2_AUTHENTICATED_KEY) is None
+    assert data_schema.schema.get(CONF_S2_UNAUTHENTICATED_KEY) is None
+    assert data_schema.schema.get(CONF_LR_S2_ACCESS_CONTROL_KEY) is None
+    assert data_schema.schema.get(CONF_LR_S2_AUTHENTICATED_KEY) is None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USB_PATH: "/test",
+        },
+    )
+
+    assert set_addon_options.call_args == call(
+        "core_zwave_js",
+        AddonsOptions(
+            config={
+                CONF_ADDON_DEVICE: "/test",
+                CONF_ADDON_S0_LEGACY_KEY: "",
+                CONF_ADDON_S2_ACCESS_CONTROL_KEY: "",
+                CONF_ADDON_S2_AUTHENTICATED_KEY: "",
+                CONF_ADDON_S2_UNAUTHENTICATED_KEY: "",
+                CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: "",
+                CONF_ADDON_LR_S2_AUTHENTICATED_KEY: "",
+            }
+        ),
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert start_addon.call_args == call("core_zwave_js")
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TITLE
+    assert result["data"] == {
+        "url": "ws://host1:3001",
+        "usb_path": "/test",
+        "s0_legacy_key": "",
+        "s2_access_control_key": "",
+        "s2_authenticated_key": "",
+        "s2_unauthenticated_key": "",
+        "lr_s2_access_control_key": "",
+        "lr_s2_authenticated_key": "",
+        "use_addon": True,
+        "integration_created_addon": True,
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
+@pytest.mark.parametrize(
+    ("usb_discovery_info", "device", "discovery_name"),
+    [
+        (
+            USB_DISCOVERY_INFO,
+            USB_DISCOVERY_INFO.device,
+            "zwave radio",
+        ),
+        (
+            UsbServiceInfo(
+                device="/dev/zwa2",
+                pid="303A",
+                vid="4001",
+                serial_number="1234",
+                description="ZWA-2 - Nabu Casa ZWA-2",
+                manufacturer="Nabu Casa",
+            ),
+            "/dev/zwa2",
+            "Home Assistant Connect ZWA-2",
+        ),
+    ],
+)
+async def test_recommended_usb_discovery(
+    hass: HomeAssistant,
+    install_addon: AsyncMock,
+    mock_usb_serial_by_id: MagicMock,
+    set_addon_options: AsyncMock,
+    start_addon: AsyncMock,
+    usb_discovery_info: UsbServiceInfo,
+    device: str,
+    discovery_name: str,
+) -> None:
+    """Test usb discovery success path."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=usb_discovery_info,
+    )
+
+    assert mock_usb_serial_by_id.call_count == 1
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+    assert result["menu_options"] == ["intent_recommended", "intent_custom"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_recommended"}
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "install_addon"
+
+    # Make sure the flow continues when the progress task is done.
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert install_addon.call_args == call("core_zwave_js")
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+
+    assert set_addon_options.call_args == call(
+        "core_zwave_js",
+        AddonsOptions(
+            config={
+                "device": device,
+                "s0_legacy_key": "",
+                "s2_access_control_key": "",
+                "s2_authenticated_key": "",
+                "s2_unauthenticated_key": "",
+                "lr_s2_access_control_key": "",
+                "lr_s2_authenticated_key": "",
+            }
+        ),
+    )
+
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert start_addon.call_args == call("core_zwave_js")
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TITLE
+    assert result["data"] == {
+        "url": "ws://host1:3001",
+        "usb_path": device,
+        "s0_legacy_key": "",
+        "s2_access_control_key": "",
+        "s2_authenticated_key": "",
+        "s2_unauthenticated_key": "",
+        "lr_s2_access_control_key": "",
+        "lr_s2_authenticated_key": "",
+        "use_addon": True,
+        "integration_created_addon": True,
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
