@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.assist_pipeline import PipelineEvent
 from homeassistant.components.assist_satellite import (
-    DOMAIN as AS_DOMAIN,
+    DOMAIN,
     AssistSatelliteAnnouncement,
     AssistSatelliteConfiguration,
     AssistSatelliteEntity,
@@ -168,7 +168,7 @@ async def init_components(
         ),
     )
     setup_test_component_platform(
-        hass, AS_DOMAIN, [entity, entity2, entity_no_features], from_config_entry=True
+        hass, DOMAIN, [entity, entity2, entity_no_features], from_config_entry=True
     )
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow", Mock())
 
