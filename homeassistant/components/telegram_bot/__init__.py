@@ -8,6 +8,7 @@ from types import ModuleType
 from typing import Any
 
 from telegram import Bot
+from telegram.error import InvalidToken
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -25,7 +26,7 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import ConfigEntryAuthFailed, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -384,6 +385,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> bool:
     """Create the Telegram bot from config entry."""
     bot: Bot = await hass.async_add_executor_job(initialize_bot, hass, entry.data)
+    try:
+        await bot.get_me()
+    except InvalidToken as err:
+        raise ConfigEntryAuthFailed("Invalid API token for Telegram Bot.") from err
+
     p_type: str = entry.data[CONF_PLATFORM]
 
     _LOGGER.debug("Setting up %s.%s", DOMAIN, p_type)

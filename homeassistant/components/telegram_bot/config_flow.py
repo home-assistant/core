@@ -1,5 +1,6 @@
 """Config flow for Telegram Bot."""
 
+from collections.abc import Mapping
 from ipaddress import AddressValueError, IPv4Network
 import logging
 from types import MappingProxyType
@@ -94,6 +95,16 @@ STEP_RECONFIGURE_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
         vol.Optional(CONF_PROXY_URL): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.URL)
         ),
+    }
+)
+STEP_REAUTH_DATA_SCHEMA: vol.Schema = vol.Schema(
+    {
+        vol.Required(CONF_API_KEY): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            )
+        )
     }
 )
 STEP_WEBHOOKS_DATA_SCHEMA: vol.Schema = vol.Schema(
@@ -470,6 +481,46 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         self._step_user_data.update(user_input)
         return await self.async_step_webhooks()
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Reauth step."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reauth confirm step."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_REAUTH_DATA_SCHEMA, self._get_reauth_entry().data
+                ),
+            )
+
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
+
+        bot_name = await self._validate_bot(
+            user_input, errors, description_placeholders
+        )
+        await self._shutdown_bot()
+
+        if errors:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_REAUTH_DATA_SCHEMA, self._get_reauth_entry().data
+                ),
+                errors=errors,
+                description_placeholders=description_placeholders,
+            )
+
+        return self.async_update_reload_and_abort(
+            self._get_reauth_entry(), title=bot_name, data_updates=user_input
+        )
+
 
 class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
     """Handle a subentry flow for creating chat ID."""
@@ -488,11 +539,14 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
             chat_id: int = user_input[CONF_CHAT_ID]
             chat_name = await _async_get_chat_name(bot, chat_id)
             if chat_name:
-                return self.async_create_entry(
-                    title=chat_name,
-                    data={CONF_CHAT_ID: chat_id},
-                    unique_id=str(chat_id),
-                )
+                try:
+                    return self.async_create_entry(
+                        title=chat_name,
+                        data={CONF_CHAT_ID: chat_id},
+                        unique_id=str(chat_id),
+                    )
+                except AbortFlow:
+                    return self.async_abort(reason="already_configured")
 
             errors["base"] = "chat_not_found"
 
