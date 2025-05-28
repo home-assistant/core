@@ -24,7 +24,7 @@ from homeassistant.components.recorder import (
     get_instance as get_recorder_instance,
 )
 from homeassistant.config_entries import SOURCE_IGNORE
-from homeassistant.const import ATTR_DOMAIN, Platform, __version__ as HA_VERSION
+from homeassistant.const import ATTR_DOMAIN, BASE_PLATFORMS, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -75,8 +75,6 @@ from .const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
-
-ENTITY_DOMAINS = {domain.value for domain in Platform}
 
 
 @dataclass
@@ -377,12 +375,9 @@ class Analytics:
 
 def _domains_from_yaml_config(yaml_configuration: dict[str, Any]) -> set[str]:
     """Extract domains from the YAML configuration."""
-    domains = set()
-    for domain, config in yaml_configuration.items():
-        domains.add(domain)
-
-        # For legacy support, we check if the domain is in the configuration set
-        if domain in ENTITY_DOMAINS and isinstance(config, list):
-            domains.update(x["platform"] for x in config if "platform" in x)
-
+    domains = set(yaml_configuration)
+    for platforms in conf_util.extract_platform_integrations(
+        yaml_configuration, BASE_PLATFORMS
+    ).values():
+        domains.update(platforms)
     return domains
