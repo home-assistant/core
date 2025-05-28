@@ -30,11 +30,8 @@ LOGGER = getLogger(__name__)
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up Immich media source."""
-    entries = hass.config_entries.async_entries(
-        DOMAIN, include_disabled=False, include_ignore=False
-    )
     hass.http.register_view(ImmichMediaView(hass))
-    return ImmichMediaSource(hass, entries)
+    return ImmichMediaSource(hass)
 
 
 class ImmichMediaSourceIdentifier:
@@ -56,18 +53,17 @@ class ImmichMediaSource(MediaSource):
 
     name = "Immich"
 
-    def __init__(self, hass: HomeAssistant, entries: list[ConfigEntry]) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize Immich media source."""
         super().__init__(DOMAIN)
         self.hass = hass
-        self.entries = entries
 
     async def async_browse_media(
         self,
         item: MediaSourceItem,
     ) -> BrowseMediaSource:
         """Return media."""
-        if not self.hass.config_entries.async_loaded_entries(DOMAIN):
+        if not (entries := self.hass.config_entries.async_loaded_entries(DOMAIN)):
             raise BrowseError("Immich is not configured")
         return BrowseMediaSource(
             domain=DOMAIN,
@@ -79,12 +75,12 @@ class ImmichMediaSource(MediaSource):
             can_expand=True,
             children_media_class=MediaClass.DIRECTORY,
             children=[
-                *await self._async_build_immich(item),
+                *await self._async_build_immich(item, entries),
             ],
         )
 
     async def _async_build_immich(
-        self, item: MediaSourceItem
+        self, item: MediaSourceItem, entries: list[ConfigEntry]
     ) -> list[BrowseMediaSource]:
         """Handle browsing different immich instances."""
         if not item.identifier:
@@ -99,7 +95,7 @@ class ImmichMediaSource(MediaSource):
                     can_play=False,
                     can_expand=True,
                 )
-                for entry in self.entries
+                for entry in entries
             ]
         identifier = ImmichMediaSourceIdentifier(item.identifier)
         entry: ImmichConfigEntry | None = (
