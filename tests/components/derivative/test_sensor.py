@@ -494,7 +494,7 @@ async def test_sub_intervals_with_time_window(hass: HomeAssistant) -> None:
             # Allow one second of slop for internal delays
             expect_min = calc_expected(time, 1) - rounding_err
 
-            assert expect_min <= derivative <= expect_max
+            assert expect_min <= derivative <= expect_max, f"Failed at time {time}"
 
 
 async def test_prefix(hass: HomeAssistant) -> None:
