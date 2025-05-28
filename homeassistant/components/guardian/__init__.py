@@ -40,12 +40,14 @@ PLATFORMS = [
     Platform.VALVE,
 ]
 
+type GuardianConfigEntry = ConfigEntry[GuardianData]
+
 
 @dataclass
 class GuardianData:
-    """Define an object to be stored in `hass.data`."""
+    """Define an object to be stored in `entry.runtime_data`."""
 
-    entry: ConfigEntry
+    entry: GuardianConfigEntry
     client: Client
     valve_controller_coordinators: dict[str, GuardianDataUpdateCoordinator]
     paired_sensor_manager: PairedSensorManager
@@ -57,7 +59,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GuardianConfigEntry) -> bool:
     """Set up Elexa Guardian from a config entry."""
     client = Client(entry.data[CONF_IP_ADDRESS], port=entry.data[CONF_PORT])
 
@@ -108,8 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await paired_sensor_manager.async_initialize()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = GuardianData(
+    entry.runtime_data = GuardianData(
         entry=entry,
         client=client,
         valve_controller_coordinators=valve_controller_coordinators,
@@ -122,13 +123,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GuardianConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class PairedSensorManager:
@@ -137,7 +134,7 @@ class PairedSensorManager:
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: GuardianConfigEntry,
         client: Client,
         api_lock: asyncio.Lock,
         sensor_pair_dump_coordinator: GuardianDataUpdateCoordinator,

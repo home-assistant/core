@@ -22,7 +22,7 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from .const import CONF_UID, DOMAIN
 
 if TYPE_CHECKING:
-    from . import GuardianData
+    from . import GuardianConfigEntry, GuardianData
 
 SERVICE_NAME_PAIR_SENSOR = "pair_sensor"
 SERVICE_NAME_UNPAIR_SENSOR = "unpair_sensor"
@@ -58,7 +58,7 @@ SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
 
 
 @callback
-def async_get_entry_id_for_service_call(call: ServiceCall) -> str:
+def async_get_entry_id_for_service_call(call: ServiceCall) -> GuardianConfigEntry:
     """Get the entry ID related to a service call (by device ID)."""
     device_id = call.data[CONF_DEVICE_ID]
     device_registry = dr.async_get(call.hass)
@@ -70,7 +70,7 @@ def async_get_entry_id_for_service_call(call: ServiceCall) -> str:
         if (entry := call.hass.config_entries.async_get_entry(entry_id)) is None:
             continue
         if entry.domain == DOMAIN:
-            return entry_id
+            return entry
 
     raise ValueError(f"No config entry for device ID: {device_id}")
 
@@ -83,8 +83,7 @@ def call_with_data(
 
     async def wrapper(call: ServiceCall) -> None:
         """Wrap the service function."""
-        entry_id = async_get_entry_id_for_service_call(call)
-        data = call.hass.data[DOMAIN][entry_id]
+        data = async_get_entry_id_for_service_call(call).runtime_data
 
         try:
             async with data.client:
