@@ -93,3 +93,18 @@ HOME_COMPATIBLE_CATEGORIES = [
     FreeboxHomeCategory.PIR,
     FreeboxHomeCategory.RTS,
 ]
+
+
+class DeviceConnectivityType(enum.StrEnum):
+    """Freebox Connectivity types for device."""
+
+    ETHERNET = "Ethernet"
+    WIFI = "Wifi"
+    WIFI_2D4GHZ = "Wifi 2.4 GHz"
+    WIFI_5GHZ = "Wifi 5 GHz"
+
+
+WIFI_BANDS_TO_CONNECTIVITY = {
+    "2d4g": DeviceConnectivityType.WIFI_2D4GHZ,
+    "5g": DeviceConnectivityType.WIFI_5GHZ,
+}
