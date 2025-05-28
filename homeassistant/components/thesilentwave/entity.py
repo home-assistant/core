@@ -4,6 +4,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import TheSilentWaveCoordinator
+from .const import DOMAIN
 
 
 class TheSilentWaveEntity(CoordinatorEntity):
@@ -17,11 +18,11 @@ class TheSilentWaveEntity(CoordinatorEntity):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._entry_id = entry_id
-        self._attr_unique_id = f"thesilentwave_{entry_id}"
+        self._attr_unique_id = f"{DOMAIN}_{entry_id}"
         self._attr_should_poll = True
         # Name property will be handled by the specific entity class.
         self._attr_device_info = DeviceInfo(
-            identifiers={("thesilentwave", self._attr_unique_id)},
+            identifiers={(DOMAIN, self._attr_unique_id)},
             name=self.coordinator.device_name,
             manufacturer="TheSilentWave",
         )

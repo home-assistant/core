@@ -9,6 +9,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .coordinator import TheSilentWaveCoordinator
 from .entity import TheSilentWaveEntity
+from .const import DOMAIN
 
 
 async def async_setup_entry(
@@ -35,7 +36,7 @@ class TheSilentWaveSensor(TheSilentWaveEntity, SensorEntity):
         )
         self._unsubscribe_callback = None
         # Set a more specific unique_id for this sensor entity.
-        self._attr_unique_id = f"thesilentwave_{entry_id}_status"
+        self._attr_unique_id = f"{DOMAIN}_{entry_id}_status"
 
     @property
     def state(self) -> Any:
@@ -46,9 +47,13 @@ class TheSilentWaveSensor(TheSilentWaveEntity, SensorEntity):
         """Register callbacks when entity is added."""
         await super().async_added_to_hass()
         # Only subscribe to events if we have a connection to the device
-        if self.coordinator.has_connection and hasattr(self.coordinator.client, "subscribe_to_events"):
+        if self.coordinator.has_connection and hasattr(
+            self.coordinator.client, "subscribe_to_events"
+        ):
             self._unsubscribe_callback = (
-                await self.coordinator.client.subscribe_to_events(self.async_write_ha_state)
+                await self.coordinator.client.subscribe_to_events(
+                    self.async_write_ha_state
+                )
             )
 
     async def async_will_remove_from_hass(self) -> None:
