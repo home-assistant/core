@@ -55,7 +55,6 @@
     'state': '25.0',
   })
 # ---
-<<<<<<< HEAD
 # name: test_sensors[sensor.imeon_inverter_battery_autonomy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -168,8 +167,6 @@
     'state': '120',
   })
 # ---
-=======
->>>>>>> 95466c66929 (Test for the new basic entity)
 # name: test_sensors[sensor.imeon_inverter_battery_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1774,7 +1771,6 @@
     'state': '2000.0',
   })
 # ---
-<<<<<<< HEAD
 # name: test_sensors[sensor.imeon_inverter_meter_power_protocol-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1832,9 +1828,6 @@
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_monitoring_building_consumption-entry]
-=======
-# name: test_sensors[sensor.imeon_inverter_none-entry]
->>>>>>> 95466c66929 (Test for the new basic entity)
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1849,7 +1842,6 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-<<<<<<< HEAD
     'entity_id': 'sensor.imeon_inverter_monitoring_building_consumption',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1963,9 +1955,6 @@
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.imeon_inverter_monitoring_economy_factor',
-=======
-    'entity_id': 'sensor.imeon_inverter_none',
->>>>>>> 95466c66929 (Test for the new basic entity)
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2005,7 +1994,6 @@
     'state': '0.8',
   })
 # ---
-<<<<<<< HEAD
 # name: test_sensors[sensor.imeon_inverter_monitoring_grid_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2564,8 +2552,6 @@
     'state': '43.3',
   })
 # ---
-=======
->>>>>>> 95466c66929 (Test for the new basic entity)
 # name: test_sensors[sensor.imeon_inverter_output_current_l1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
