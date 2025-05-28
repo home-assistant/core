@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, VacuumEntityFeature
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, frame
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -68,7 +69,7 @@ async def setup_vacuum_platform_test_entity(
     ) -> bool:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
-            config_entry, [VACUUM_DOMAIN]
+            config_entry, [Platform.VACUUM]
         )
         return True
 
