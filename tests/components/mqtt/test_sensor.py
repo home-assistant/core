@@ -996,6 +996,32 @@ async def test_invalid_state_class(
 
 
 @pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "state_class": "measurement_angle",
+                    "unit_of_measurement": "deg",
+                }
+            }
+        }
+    ],
+)
+async def test_invalid_state_class_with_unit_of_measurement(
+    mqtt_mock_entry: MqttMockHAClientGenerator, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test state_class option with invalid unit of measurement."""
+    assert await mqtt_mock_entry()
+    assert (
+        "The unit of measurement 'deg' is not valid together with state class 'measurement_angle'"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
     ("hass_config", "error_logged"),
     [
         (
