@@ -13,6 +13,7 @@ from .coordinator import (
     TheSilentWaveCoordinator,
     TheSilentWaveConfigEntry,
 )
+from .const import DOMAIN
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +50,7 @@ async def async_unload_entry(
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    if unload_ok and entry.entry_id in hass.data.get("thesilentwave", {}):
-        hass.data["thesilentwave"].pop(entry.entry_id)
+    if unload_ok and entry.entry_id in hass.data.get(DOMAIN, {}):
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
