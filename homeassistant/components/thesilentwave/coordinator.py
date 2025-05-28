@@ -33,7 +33,7 @@ class TheSilentWaveCoordinator(DataUpdateCoordinator):
         self._host = host
 
         # Track connection state to avoid log spam.
-        self._has_connection = True
+        self.has_connection = True
         self._connection_error_logged = False
 
         super().__init__(
@@ -54,14 +54,14 @@ class TheSilentWaveCoordinator(DataUpdateCoordinator):
             status = await self.client.get_status()
 
             # If we previously had a connection error and now succeeded, log recovery.
-            if not self._has_connection:
+            if not self.has_connection:
                 _LOGGER.info("Reconnected to device at %s", self._host)
-                self._has_connection = True
+                self.has_connection = True
                 self._connection_error_logged = False
 
         except SilentWaveError as exc:
             # Mark that we have a connection issue.
-            self._has_connection = False
+            self.has_connection = False
 
             # Only log the error once until we reconnect.
             if not self._connection_error_logged:
