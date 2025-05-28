@@ -14,6 +14,7 @@ from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import (
@@ -41,7 +42,7 @@ DHCP_DISCOVERY_DUPLICATE = DhcpServiceInfo(
 DHCP_DISCOVERY_DUPLICATE_001 = DhcpServiceInfo(
     ip="1.1.1.1",
     hostname="SMA123456789-001",
-    macaddress="00:15:bb:00:ab:cd",
+    macaddress="0015bb00abcd",
 )
 
 
@@ -166,8 +167,6 @@ async def test_dhcp_already_configured_duplicate(
 ) -> None:
     """Test starting a flow by DHCP when already configured and MAC is added."""
     mock_config_entry.add_to_hass(hass)
-
-    # Simulate the entry being loaded
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -181,11 +180,10 @@ async def test_dhcp_already_configured_duplicate(
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
     await hass.async_block_till_done()
 
-    assert (
-        mock_config_entry.data.get(CONF_MAC) == DHCP_DISCOVERY_DUPLICATE_001.macaddress
+    assert mock_config_entry.data.get(CONF_MAC) == format_mac(
+        DHCP_DISCOVERY_DUPLICATE_001.macaddress
     )
 
 

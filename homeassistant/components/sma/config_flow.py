@@ -209,10 +209,6 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
             raise AbortFlow("already_configured")
 
-        # Manual installations not always provide a MAC address
-        # This is the first gatekeeper to avoid duplicates
-        self._async_abort_entries_match({CONF_HOST: self._discovery_data[CONF_HOST]})
-
         # Finally, check if the hostname (which represents the SMA serial number) is unique
         hostname = discovery_info.hostname.lower()
         # Example hostname: sma12345678-01
