@@ -52,7 +52,9 @@ async def async_setup_entry(
     calendar.prodid = PRODID
 
     name = config_entry.data[CONF_CALENDAR_NAME]
-    color = config_entry.data.get(CONF_CALENDAR_COLOR)
+    color = config_entry.options.get(
+        CONF_CALENDAR_COLOR, config_entry.data.get(CONF_CALENDAR_COLOR)
+    )
     entity = LocalCalendarEntity(
         store, calendar, name, unique_id=config_entry.entry_id, color=color
     )
