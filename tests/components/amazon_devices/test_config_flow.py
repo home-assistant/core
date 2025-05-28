@@ -56,6 +56,7 @@ async def test_full_flow(
         },
     }
     assert result["result"].unique_id == TEST_USERNAME
+    mock_amazon_devices_client.login_mode_interactive.assert_called_once_with("023123")
 
 
 @pytest.mark.parametrize(
