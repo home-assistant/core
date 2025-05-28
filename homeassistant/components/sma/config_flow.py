@@ -20,7 +20,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
@@ -203,20 +202,18 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
         # we update the entry with the MAC address and reload it.
         if existing_entries_with_host:
             entry = existing_entries_with_host[0]
-            self.hass.config_entries.async_update_entry(
-                entry, data={**entry.data, CONF_MAC: self._data[CONF_MAC]}
+            self.async_update_reload_and_abort(
+                entry, data_updates={CONF_MAC: self._data[CONF_MAC]}
             )
-            self.hass.config_entries.async_schedule_reload(entry.entry_id)
-            raise AbortFlow("already_configured")
 
         # Finally, check if the hostname (which represents the SMA serial number) is unique
-        hostname = discovery_info.hostname.lower()
+        serial_number = discovery_info.hostname.lower()
         # Example hostname: sma12345678-01
         # Remove 'sma' prefix and strip everything after the dash (including the dash)
-        if hostname.startswith("sma"):
-            hostname = hostname.removeprefix("sma")
-        hostname = hostname.split("-", 1)[0]
-        await self.async_set_unique_id(hostname)
+        if serial_number.startswith("sma"):
+            serial_number = serial_number.removeprefix("sma")
+        serial_number = serial_number.split("-", 1)[0]
+        await self.async_set_unique_id(serial_number)
         self._abort_if_unique_id_configured()
 
         return await self.async_step_discovery_confirm()
