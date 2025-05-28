@@ -783,6 +783,10 @@ evolutionhttp==0.0.18
 # homeassistant.components.faa_delays
 faadelays==2023.9.1
 
+# homeassistant.components.dlib_face_detect
+# homeassistant.components.dlib_face_identify
+# face-recognition==1.2.3
+
 # homeassistant.components.fastdotcom
 fastdotcom==0.0.3
 
@@ -941,6 +945,9 @@ growattServer==1.6.0
 # homeassistant.components.google_sheets
 gspread==5.5.0
 
+# homeassistant.components.gstreamer
+gstreamer-player==1.1.2
+
 # homeassistant.components.profiler
 guppy3==3.1.5
 
@@ -994,7 +1001,7 @@ hole==0.8.0
 holidays==0.73
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250526.0
+home-assistant-frontend==20250527.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.5.7
@@ -1386,6 +1393,11 @@ peco==0.1.2
 # homeassistant.components.escea
 pescea==1.0.12
 
+# homeassistant.components.aruba
+# homeassistant.components.cisco_ios
+# homeassistant.components.pandora
+pexpect==4.9.0
+
 # homeassistant.components.modem_callerid
 phone-modem==0.1.1
 
@@ -1714,7 +1726,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.8
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.6
+pylamarzocco==2.0.7
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2422,7 +2434,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.10.0
+uiprotect==7.10.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7

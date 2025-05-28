@@ -39,6 +39,7 @@ from homeassistant.components.light import (
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASS_UNITS,
+    STATE_CLASS_UNITS,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -640,6 +641,13 @@ def validate_sensor_platform_config(
     ):
         errors[CONF_UNIT_OF_MEASUREMENT] = "invalid_uom"
 
+    if (
+        (state_class := config.get(CONF_STATE_CLASS)) is not None
+        and state_class in STATE_CLASS_UNITS
+        and config.get(CONF_UNIT_OF_MEASUREMENT) not in STATE_CLASS_UNITS[state_class]
+    ):
+        errors[CONF_UNIT_OF_MEASUREMENT] = "invalid_uom_for_state_class"
+
     return errors
 
 
@@ -676,11 +684,19 @@ class PlatformField:
 @callback
 def unit_of_measurement_selector(user_data: dict[str, Any | None]) -> Selector:
     """Return a context based unit of measurement selector."""
+
+    if (state_class := user_data.get(CONF_STATE_CLASS)) in STATE_CLASS_UNITS:
+        return SelectSelector(
+            SelectSelectorConfig(
+                options=[str(uom) for uom in STATE_CLASS_UNITS[state_class]],
+                sort=True,
+                custom_value=True,
+            )
+        )
+
     if (
-        user_data is None
-        or (device_class := user_data.get(CONF_DEVICE_CLASS)) is None
-        or device_class not in DEVICE_CLASS_UNITS
-    ):
+        device_class := user_data.get(CONF_DEVICE_CLASS)
+    ) is None or device_class not in DEVICE_CLASS_UNITS:
         return TEXT_SELECTOR
     return SelectSelector(
         SelectSelectorConfig(
