@@ -94,8 +94,6 @@ OVERRIDDEN_REQUIREMENTS_ACTIONS = {
     },
 }
 
-IGNORE_PIN = ("colorlog>2.1,<3", "urllib3")
-
 URL_PIN = (
     "https://developers.home-assistant.io/docs/"
     "creating_platform_code_review.html#1-requirements"
@@ -117,9 +115,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.67.1
-grpcio-status==1.67.1
-grpcio-reflection==1.67.1
+grpcio==1.72.0
+grpcio-status==1.72.0
+grpcio-reflection==1.72.0
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -140,8 +138,8 @@ uuid==1000000000.0.0
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
 anyio==4.9.0
-h11==0.14.0
-httpcore==1.0.7
+h11==0.16.0
+httpcore==1.0.9
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -159,7 +157,7 @@ multidict>=6.0.2
 backoff>=2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.10.6
+pydantic==2.11.3
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1
@@ -172,13 +170,9 @@ pubnub!=6.4.0
 # https://github.com/dahlia/iso4217/issues/16
 iso4217!=1.10.20220401
 
-# pyOpenSSL 24.0.0 or later required to avoid import errors when
-# cryptography 42.0.0 is installed with botocore
-pyOpenSSL>=24.0.0
-
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==5.29.2
+protobuf==6.30.2
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
@@ -241,6 +235,16 @@ async-timeout==4.0.3
 # https://github.com/home-assistant/core/issues/122508
 # https://github.com/home-assistant/core/issues/118004
 aiofiles>=24.1.0
+
+# multidict < 6.4.0 has memory leaks
+# https://github.com/aio-libs/multidict/issues/1134
+# https://github.com/aio-libs/multidict/issues/1131
+multidict>=6.4.2
+
+# rpds-py > 0.25.0 requires cargo 1.84.0
+# Stable Alpine current only ships cargo 1.83.0
+# No wheels upstream available for armhf & armv7
+rpds-py==0.24.0
 """
 
 GENERATED_MESSAGE = (
@@ -266,7 +270,8 @@ def has_tests(module: str) -> bool:
     Test if exists: tests/components/hue/__init__.py
     """
     path = (
-        Path(module.replace(".", "/").replace("homeassistant", "tests")) / "__init__.py"
+        Path(module.replace(".", "/").replace("homeassistant", "tests", 1))
+        / "__init__.py"
     )
     return path.exists()
 
@@ -418,7 +423,7 @@ def process_requirements(
     for req in module_requirements:
         if "://" in req:
             errors.append(f"{package}[Only pypi dependencies are allowed: {req}]")
-        if req.partition("==")[1] == "" and req not in IGNORE_PIN:
+        if req.partition("==")[1] == "":
             errors.append(f"{package}[Please pin requirement {req}, see {URL_PIN}]")
         reqs.setdefault(req, []).append(package)
 

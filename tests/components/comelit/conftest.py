@@ -49,15 +49,15 @@ def mock_serial_bridge() -> Generator[AsyncMock]:
         ),
     ):
         bridge = mock_comelit_serial_bridge.return_value
-        bridge.get_all_devices.return_value = BRIDGE_DEVICE_QUERY
+        bridge.get_all_devices.return_value = deepcopy(BRIDGE_DEVICE_QUERY)
         bridge.host = BRIDGE_HOST
         bridge.port = BRIDGE_PORT
-        bridge.pin = BRIDGE_PIN
+        bridge.device_pin = BRIDGE_PIN
         yield bridge
 
 
 @pytest.fixture
-def mock_serial_bridge_config_entry() -> Generator[MockConfigEntry]:
+def mock_serial_bridge_config_entry() -> MockConfigEntry:
     """Mock a Comelit config entry for Comelit bridge."""
     return MockConfigEntry(
         domain=COMELIT_DOMAIN,
@@ -67,6 +67,7 @@ def mock_serial_bridge_config_entry() -> Generator[MockConfigEntry]:
             CONF_PIN: BRIDGE_PIN,
             CONF_TYPE: BRIDGE,
         },
+        entry_id="serial_bridge_config_entry_id",
     )
 
 
@@ -93,7 +94,7 @@ def mock_vedo() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_vedo_config_entry() -> Generator[MockConfigEntry]:
+def mock_vedo_config_entry() -> MockConfigEntry:
     """Mock a Comelit config entry for Comelit vedo."""
     return MockConfigEntry(
         domain=COMELIT_DOMAIN,
@@ -103,4 +104,5 @@ def mock_vedo_config_entry() -> Generator[MockConfigEntry]:
             CONF_PIN: VEDO_PIN,
             CONF_TYPE: VEDO,
         },
+        entry_id="vedo_config_entry_id",
     )

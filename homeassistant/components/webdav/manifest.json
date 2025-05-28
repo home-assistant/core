@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["aiowebdav2"],
   "quality_scale": "bronze",
-  "requirements": ["aiowebdav2==0.4.4"]
+  "requirements": ["aiowebdav2==0.4.5"]
 }
