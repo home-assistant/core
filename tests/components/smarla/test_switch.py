@@ -32,7 +32,7 @@ def mock_switch_property() -> MagicMock:
     return mock
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def switch_platform_patch() -> Generator:
     """Limit integration to switch platform."""
     with (
@@ -43,7 +43,6 @@ def switch_platform_patch() -> Generator:
 
 async def test_entities(
     hass: HomeAssistant,
-    switch_platform_patch,
     mock_federwiege: MagicMock,
     mock_switch_property: MagicMock,
     mock_config_entry: MockConfigEntry,
@@ -67,7 +66,6 @@ async def test_entities(
 )
 async def test_switch_action(
     hass: HomeAssistant,
-    switch_platform_patch,
     mock_config_entry: MockConfigEntry,
     mock_federwiege: MagicMock,
     mock_switch_property: MagicMock,
@@ -91,7 +89,6 @@ async def test_switch_action(
 
 async def test_switch_state_update(
     hass: HomeAssistant,
-    switch_platform_patch,
     mock_config_entry: MockConfigEntry,
     mock_federwiege: MagicMock,
     mock_switch_property: MagicMock,
