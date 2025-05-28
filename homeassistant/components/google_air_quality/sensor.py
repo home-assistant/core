@@ -39,6 +39,7 @@ class AirQualitySensorEntityDescription(SensorEntityDescription):
     """Describes Air Quality sensor entity."""
 
     exists_fn: Callable[[AirQualityData], bool] = lambda _: True
+    options_fn: Callable[[AirQualityData], list[str] | None] = lambda _: None
     value_fn: Callable[[AirQualityData], StateType]
 
 
@@ -54,13 +55,7 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
         key="uaqi_category",
         translation_key="uaqi_category",
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "excellent_air_quality",
-            "good_air_quality",
-            "low_air_quality",
-            "moderate_air_quality",
-            "poor_air_quality",
-        ],
+        options_fn=lambda x: x.indexes[0].category_options,
         value_fn=lambda x: x.indexes[0].category,
     ),
     AirQualitySensorEntityDescription(
@@ -76,6 +71,7 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
         translation_key="local_category",
         device_class=SensorDeviceClass.ENUM,
         value_fn=lambda x: x.indexes[1].category,
+        options_fn=lambda x: x.indexes[1].category_options,
     ),
     AirQualitySensorEntityDescription(
         key="uaqi_dominant_pollutant",
@@ -189,3 +185,10 @@ class AirQualitySensorEntity(
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data[self.subentry_id])
+
+    @property
+    def options(self) -> list[str] | None:
+        """Return the option of the sensor."""
+        return self.entity_description.options_fn(
+            self.coordinator.data[self.subentry_id]
+        )

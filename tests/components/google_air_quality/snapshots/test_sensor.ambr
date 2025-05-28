@@ -56,7 +56,15 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'very_good_air_quality',
+        'good_air_quality',
+        'moderate_air_quality',
+        'poor_air_quality',
+        'very_poor_air_quality',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -90,6 +98,13 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': '48_9 LQI (DE) Category',
+      'options': list([
+        'very_good_air_quality',
+        'good_air_quality',
+        'moderate_air_quality',
+        'poor_air_quality',
+        'very_poor_air_quality',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.48_9_lqi_de_category',
@@ -413,8 +428,8 @@
       'options': list([
         'excellent_air_quality',
         'good_air_quality',
-        'low_air_quality',
         'moderate_air_quality',
+        'low_air_quality',
         'poor_air_quality',
       ]),
     }),
@@ -454,8 +469,8 @@
       'options': list([
         'excellent_air_quality',
         'good_air_quality',
-        'low_air_quality',
         'moderate_air_quality',
+        'low_air_quality',
         'poor_air_quality',
       ]),
     }),
