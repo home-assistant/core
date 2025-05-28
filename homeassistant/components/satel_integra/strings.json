@@ -1,7 +1,8 @@
 {
   "common": {
     "code_input_description": "Code to toggle switchable outputs",
-    "code": "Access code"
+    "code": "Access code",
+    "already_configured": "This entry is already configured"
   },
   "config": {
     "step": {
@@ -46,6 +47,9 @@
             "arm_home_mode": "Arm home mode"
           }
         }
+      },
+      "error": {
+        "already_configured": "[%key:component::satel_integra::common::already_configured%]"
       }
     },
     "zone": {
@@ -71,6 +75,9 @@
             "type": "Zone type"
           }
         }
+      },
+      "error": {
+        "already_configured": "[%key:component::satel_integra::common::already_configured%]"
       }
     },
     "output": {
@@ -96,6 +103,9 @@
             "type": "Output type"
           }
         }
+      },
+      "error": {
+        "already_configured": "[%key:component::satel_integra::common::already_configured%]"
       }
     },
     "switchable_output": {
@@ -119,6 +129,9 @@
             "name": "[%key:common::config_flow::data::name%]"
           }
         }
+      },
+      "error": {
+        "already_configured": "[%key:component::satel_integra::common::already_configured%]"
       }
     }
   },

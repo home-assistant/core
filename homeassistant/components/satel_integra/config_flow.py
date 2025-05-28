@@ -258,18 +258,28 @@ class PartitionSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """User flow to add new partition."""
+        errors: dict[str, str] = {}
+
         if user_input is not None:
-            return self.async_create_entry(
-                title=user_input[CONF_NAME],
-                data=user_input,
-                unique_id=f"{SUBENTRY_TYPE_PARTITION}_{user_input[CONF_PARTITION_NUMBER]}",
-            )
+            unique_id = f"{SUBENTRY_TYPE_PARTITION}_{user_input[CONF_PARTITION_NUMBER]}"
+
+            for existing_subentry in self._get_entry().subentries.values():
+                if existing_subentry.unique_id == unique_id:
+                    errors[CONF_PARTITION_NUMBER] = "already_configured"
+
+            if not errors:
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME], data=user_input, unique_id=unique_id
+                )
 
         return self.async_show_form(
             step_id="user",
+            errors=errors,
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_PARTITION_NUMBER): cv.positive_int,
+                    vol.Required(CONF_PARTITION_NUMBER): vol.All(
+                        vol.Coerce(int), vol.Range(min=1)
+                    ),
                 }
             ).extend(PARTITION_SCHEMA.schema),
         )
@@ -307,18 +317,28 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """User flow to add new zone."""
+        errors: dict[str, str] = {}
+
         if user_input is not None:
-            return self.async_create_entry(
-                title=user_input[CONF_NAME],
-                data=user_input,
-                unique_id=f"{SUBENTRY_TYPE_ZONE}_{user_input[CONF_ZONE_NUMBER]}",
-            )
+            unique_id = f"{SUBENTRY_TYPE_ZONE}_{user_input[CONF_ZONE_NUMBER]}"
+
+            for existing_subentry in self._get_entry().subentries.values():
+                if existing_subentry.unique_id == unique_id:
+                    errors[CONF_ZONE_NUMBER] = "already_configured"
+
+            if not errors:
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME], data=user_input, unique_id=unique_id
+                )
 
         return self.async_show_form(
             step_id="user",
+            errors=errors,
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_ZONE_NUMBER): cv.positive_int,
+                    vol.Required(CONF_ZONE_NUMBER): vol.All(
+                        vol.Coerce(int), vol.Range(min=1)
+                    ),
                 }
             ).extend(ZONE_AND_OUTPUT_SCHEMA.schema),
         )
@@ -355,18 +375,28 @@ class OutputSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """User flow to add new output."""
+        errors: dict[str, str] = {}
+
         if user_input is not None:
-            return self.async_create_entry(
-                title=user_input[CONF_NAME],
-                data=user_input,
-                unique_id=f"{SUBENTRY_TYPE_OUTPUT}_{user_input[CONF_OUTPUT_NUMBER]}",
-            )
+            unique_id = f"{SUBENTRY_TYPE_OUTPUT}_{user_input[CONF_OUTPUT_NUMBER]}"
+
+            for existing_subentry in self._get_entry().subentries.values():
+                if existing_subentry.unique_id == unique_id:
+                    errors[CONF_OUTPUT_NUMBER] = "already_configured"
+
+            if not errors:
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME], data=user_input, unique_id=unique_id
+                )
 
         return self.async_show_form(
             step_id="user",
+            errors=errors,
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_OUTPUT_NUMBER): cv.positive_int,
+                    vol.Required(CONF_OUTPUT_NUMBER): vol.All(
+                        vol.Coerce(int), vol.Range(min=1)
+                    ),
                 }
             ).extend(ZONE_AND_OUTPUT_SCHEMA.schema),
         )
@@ -403,18 +433,28 @@ class SwitchableOutputSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """User flow to add new switchable output."""
+        errors: dict[str, str] = {}
+
         if user_input is not None:
-            return self.async_create_entry(
-                title=user_input[CONF_NAME],
-                data=user_input,
-                unique_id=f"{SUBENTRY_TYPE_SWITCHABLE_OUTPUT}_{user_input[CONF_SWITCHABLE_OUTPUT_NUMBER]}",
-            )
+            unique_id = f"{SUBENTRY_TYPE_SWITCHABLE_OUTPUT}_{user_input[CONF_SWITCHABLE_OUTPUT_NUMBER]}"
+
+            for existing_subentry in self._get_entry().subentries.values():
+                if existing_subentry.unique_id == unique_id:
+                    errors[CONF_SWITCHABLE_OUTPUT_NUMBER] = "already_configured"
+
+            if not errors:
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME], data=user_input, unique_id=unique_id
+                )
 
         return self.async_show_form(
             step_id="user",
+            errors=errors,
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_SWITCHABLE_OUTPUT_NUMBER): cv.positive_int,
+                    vol.Required(CONF_SWITCHABLE_OUTPUT_NUMBER): vol.All(
+                        vol.Coerce(int), vol.Range(min=1)
+                    ),
                 }
             ).extend(SWITCHABLE_OUTPUT_SCHEMA.schema),
         )
