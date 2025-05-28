@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONCENTRATION_GRAMS_PER_CUBIC_METER,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
@@ -555,4 +556,15 @@ UNIT_CONVERTERS: dict[NumberDeviceClass, type[BaseUnitConverter]] = {
     NumberDeviceClass.REACTIVE_ENERGY: ReactiveEnergyConverter,
     NumberDeviceClass.TEMPERATURE: TemperatureConverter,
     NumberDeviceClass.VOLUME_FLOW_RATE: VolumeFlowRateConverter,
+}
+
+AMBIGUOUS_UNITS: dict[str | None, str] = {
+    "\u00b5Sv/h": "μSv/h",  # aranet: radiation rate
+    "\u00b5S/cm": UnitOfConductivity.MICROSIEMENS_PER_CM,
+    "\u00b5V": UnitOfElectricPotential.MICROVOLT,
+    "\u00b5g/ft³": CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
+    "\u00b5g/m³": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    "\u00b5mol/s⋅m²": "μmol/s⋅m²",  # fyta: light
+    "\u00b5g": UnitOfMass.MICROGRAMS,
+    "\u00b5s": UnitOfTime.MICROSECONDS,
 }
