@@ -190,17 +190,6 @@ class ThinQSelectEntity(ThinQEntity, SelectEntity):
 
         self._attr_options = self.data.options if self.data.options is not None else []
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and (
-            self.device_state is None
-            or (
-                self.device_state.device_is_on
-                and self.device_state.remote_control_enabled
-            )
-        )
-
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()
@@ -227,4 +216,6 @@ class ThinQSelectEntity(ThinQEntity, SelectEntity):
             self.property_id,
             option,
         )
+        # check device's condition
+        self.check_control_condition()
         await self.async_call_api(self.coordinator.api.post(self.property_id, option))
