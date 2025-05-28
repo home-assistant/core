@@ -18,6 +18,7 @@
       },
       "settings": {
         "data": {
+          "entity_id": "[%key:component::trend::config::step::user::data::entity_id%]",
           "attribute": "Attribute of entity that this sensor tracks",
           "invert": "Invert the result"
         }
@@ -28,6 +29,7 @@
     "step": {
       "init": {
         "data": {
+          "entity_id": "[%key:component::trend::config::step::user::data::entity_id%]",
           "attribute": "[%key:component::trend::config::step::settings::data::attribute%]",
           "invert": "[%key:component::trend::config::step::settings::data::invert%]",
           "max_samples": "Maximum number of stored samples",
