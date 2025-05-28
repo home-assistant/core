@@ -25,7 +25,7 @@ class SmhiWeatherBaseEntity(CoordinatorEntity[SMHIDataUpdateCoordinator]):
     ) -> None:
         """Initialize the SMHI base weather entity."""
         super().__init__(coordinator)
-        self._attr_unique_id: str = f"{latitude}, {longitude}"
+        self._attr_unique_id = f"{latitude}, {longitude}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"{latitude}, {longitude}")},
