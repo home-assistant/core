@@ -26,7 +26,7 @@ def mock_reauth_entry():
     return MockConfigEntry(
         domain=DOMAIN,
         data={CONF_EMAIL: "test@example.com"},
-        unique_id="compit_test@example.com",
+        unique_id=CONFIG_INPUT[CONF_EMAIL],
     )
 
 
@@ -113,10 +113,6 @@ async def test_async_step_reauth_confirm_success(
             result["flow_id"], {CONF_PASSWORD: "new-password"}
         )
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CONFIG_INPUT
-        )
-
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
         assert mock_reauth_entry.data == {
@@ -155,7 +151,7 @@ async def test_async_step_reauth_confirm_invalid(
         assert result["errors"] == {}
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CONFIG_INPUT
+            result["flow_id"], {CONF_PASSWORD: "new-password"}
         )
 
         assert result["type"] is FlowResultType.FORM

@@ -9,8 +9,8 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "email": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "email": "[%key:common::config_flow::data_description::email%]",
+          "password": "[%key:common::config_flow::data_description::password%]"
         }
       },
       "reauth_confirm": {
@@ -19,13 +19,17 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data_description::password%]"
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort":{
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
     }
   }
 }
