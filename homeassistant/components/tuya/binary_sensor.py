@@ -37,9 +37,8 @@ class TuyaBinarySensorEntityDescription(BinarySensorEntityDescription):
 class TuyaFaultSensorEntityDescription(BinarySensorEntityDescription):
     """Describes a Tuya fault sensor."""
 
-    # Fault label, and labels, used to determine if a specific fault is active
-    fault_label: str | None = None
-    fault_labels: list[str] | None = None
+    # Fault index, used to determine if a specific fault is active in the fault bitmap
+    fault_index: int | None = None
 
 
 # Commonly used sensors
@@ -408,13 +407,12 @@ async def async_setup_entry(
                                 name=fault_label,
                                 translation_key=fault_label,
                                 key=f"{DPCode.FAULT}_{fault_label}",
-                                fault_label=fault_label,
-                                fault_labels=fault_labels,
+                                fault_index=fault_index,
                                 device_class=BinarySensorDeviceClass.PROBLEM,
                                 entity_category=EntityCategory.DIAGNOSTIC,
                             ),
                         )
-                        for fault_label in fault_labels
+                        for fault_index, fault_label in enumerate(fault_labels)
                     ]
                 )
 
@@ -478,12 +476,8 @@ class TuyaFaultSensorEntity(TuyaEntity, BinarySensorEntity):
         if DPCode.FAULT not in self.device.status:
             return False
 
-        fault_label = self.entity_description.fault_label
-        if fault_label is None:
-            return False
-
-        fault_labels = self.entity_description.fault_labels
-        if fault_labels is None:
+        fault_index = self.entity_description.fault_index
+        if fault_index is None:
             return False
 
         # Tuya documentation on bitmaps:
@@ -494,8 +488,4 @@ class TuyaFaultSensorEntity(TuyaEntity, BinarySensorEntity):
         # * The first kind of fault occurs: decimal - > 1; binary - > 0001;
         # * The first and second faults occur at the same time: decimal - > 3; binary - > 0011;
         # * All faults occur simultaneously: decimal - > 15; binary - > 1111;
-        fault_bitmap = bin(self.device.status[DPCode.FAULT])[2:].zfill(
-            len(fault_labels)
-        )
-        fault_index = len(fault_labels) - fault_labels.index(fault_label) - 1
-        return fault_bitmap[fault_index] == "1"
+        return (self.device.status[DPCode.FAULT] & (1 << fault_index)) != 0
