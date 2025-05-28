@@ -31,6 +31,7 @@
     'original_name': 'IR Light 0',
     'platform': 'axis',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:40:8c:12:34:56-tns1:Device/tnsaxis:Light/Status-0',
