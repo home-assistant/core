@@ -70,7 +70,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Smarla sensors from config entry."""
     federwiege = config_entry.runtime_data
-    async_add_entities(SmarlaSensor(federwiege, desc) for desc in SENSORS)
+    async_add_entities(
+        (
+            SmarlaSensor(federwiege, desc)
+            if not desc.multiple
+            else SmarlaSensorMultiple(federwiege, desc)
+        )
+        for desc in SENSORS
+    )
 
 
 class SmarlaSensor(SmarlaBaseEntity, SensorEntity):
@@ -83,9 +90,17 @@ class SmarlaSensor(SmarlaBaseEntity, SensorEntity):
     @property
     def native_value(self) -> int:
         """Return the entity value to represent the entity state."""
-        value = self._property.get()
-        return (
-            value
-            if not self.entity_description.multiple
-            else value[self.entity_description.value_pos]
-        )
+        return self._property.get()
+
+
+class SmarlaSensorMultiple(SmarlaBaseEntity, SensorEntity):
+    """Representation of Smarla sensor with multiple values inside property."""
+
+    entity_description: SmarlaSensorEntityDescription
+
+    _property: Property[list[int]]
+
+    @property
+    def native_value(self) -> int:
+        """Return the entity value to represent the entity state."""
+        return self._property.get()[self.entity_description.value_pos]
