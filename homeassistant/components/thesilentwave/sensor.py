@@ -51,7 +51,7 @@ class TheSilentWaveSensor(TheSilentWaveEntity, SensorEntity):
         # Only subscribe to events if we have a connection to the device
         if self.coordinator._has_connection and hasattr(self.coordinator.client, "subscribe_to_events"):
             self._unsubscribe_callback = (
-                await self.coordinator.client.subscribe_to_events(self._handle_event)
+                await self.coordinator.client.subscribe_to_events(self.async_write_ha_state)
             )
 
     async def async_will_remove_from_hass(self) -> None:
@@ -61,7 +61,3 @@ class TheSilentWaveSensor(TheSilentWaveEntity, SensorEntity):
             self._unsubscribe_callback()
             self._unsubscribe_callback = None
         await super().async_will_remove_from_hass()
-
-    async def _handle_event(self, event) -> None:
-        """Handle events from the device."""
-        self.async_write_ha_state()
