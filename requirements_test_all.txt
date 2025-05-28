@@ -107,7 +107,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.40
+SQLAlchemy==2.0.41
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -945,6 +945,9 @@ growattServer==1.6.0
 # homeassistant.components.google_sheets
 gspread==5.5.0
 
+# homeassistant.components.gstreamer
+gstreamer-player==1.1.2
+
 # homeassistant.components.profiler
 guppy3==3.1.5
 
@@ -1389,6 +1392,11 @@ peco==0.1.2
 
 # homeassistant.components.escea
 pescea==1.0.12
+
+# homeassistant.components.aruba
+# homeassistant.components.cisco_ios
+# homeassistant.components.pandora
+pexpect==4.9.0
 
 # homeassistant.components.modem_callerid
 phone-modem==0.1.1
@@ -2169,7 +2177,7 @@ renault-api==0.3.1
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.13.3
+reolink-aio==0.13.4
 
 # homeassistant.components.rflink
 rflink==0.0.66
