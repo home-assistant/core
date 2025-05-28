@@ -161,17 +161,6 @@ class ThinQNumberEntity(ThinQEntity, NumberEntity):
 
     _attr_mode = NumberMode.BOX
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and (
-            self.device_state is None
-            or (
-                self.device_state.device_is_on
-                and self.device_state.remote_control_enabled
-            )
-        )
-
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()
@@ -225,5 +214,6 @@ class ThinQNumberEntity(ThinQEntity, NumberEntity):
             self.property_id,
             value,
         )
-
+        # check device's condition
+        self.check_control_condition()
         await self.async_call_api(self.coordinator.api.post(self.property_id, value))

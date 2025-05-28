@@ -15,7 +15,7 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -268,18 +268,6 @@ class ThinQSwitchEntity(ThinQEntity, SwitchEntity):
 
         return self.data.is_on
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and (
-            self.device_state is None
-            or self.is_on
-            or (
-                self.device_state.remote_control_enabled
-                and self.device_state.power_on_enabled
-            )
-        )
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         _LOGGER.debug(
@@ -288,6 +276,8 @@ class ThinQSwitchEntity(ThinQEntity, SwitchEntity):
             self.property_id,
             self.entity_description.on_key,
         )
+        # check device's condition
+        self.check_control_condition(switch=SERVICE_TURN_ON)
         if (on_command := self.entity_description.on_key) is not None:
             await self.async_call_api(
                 self.coordinator.api.post(self.property_id, on_command)
@@ -305,6 +295,8 @@ class ThinQSwitchEntity(ThinQEntity, SwitchEntity):
             self.property_id,
             self.entity_description.off_key,
         )
+        # check device's condition
+        self.check_control_condition(switch=SERVICE_TURN_OFF)
         if (off_command := self.entity_description.off_key) is not None:
             await self.async_call_api(
                 self.coordinator.api.post(self.property_id, off_command)
