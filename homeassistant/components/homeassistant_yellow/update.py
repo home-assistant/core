@@ -21,13 +21,17 @@ from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    DOMAIN,
     FIRMWARE,
     FIRMWARE_VERSION,
+    MANUFACTURER,
+    MODEL,
     NABU_CASA_FIRMWARE_RELEASES_URL,
     RADIO_DEVICE,
 )
@@ -39,7 +43,8 @@ FIRMWARE_ENTITY_DESCRIPTIONS: dict[
     ApplicationType | None, FirmwareUpdateEntityDescription
 ] = {
     ApplicationType.EZSP: FirmwareUpdateEntityDescription(
-        key="firmware",
+        key="radio_firmware",
+        translation_key="radio_firmware",
         display_precision=0,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
@@ -47,10 +52,11 @@ FIRMWARE_ENTITY_DESCRIPTIONS: dict[
         fw_type="yellow_zigbee_ncp",
         version_key="ezsp_version",
         expected_firmware_type=ApplicationType.EZSP,
-        firmware_name="EmberZNet",
+        firmware_name="EmberZNet Zigbee",
     ),
     ApplicationType.SPINEL: FirmwareUpdateEntityDescription(
-        key="firmware",
+        key="radio_firmware",
+        translation_key="radio_firmware",
         display_precision=0,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
@@ -60,8 +66,33 @@ FIRMWARE_ENTITY_DESCRIPTIONS: dict[
         expected_firmware_type=ApplicationType.SPINEL,
         firmware_name="OpenThread RCP",
     ),
+    ApplicationType.CPC: FirmwareUpdateEntityDescription(
+        key="radio_firmware",
+        translation_key="radio_firmware",
+        display_precision=0,
+        device_class=UpdateDeviceClass.FIRMWARE,
+        entity_category=EntityCategory.CONFIG,
+        version_parser=lambda fw: fw,
+        fw_type="yellow_multipan",
+        version_key="cpc_version",
+        expected_firmware_type=ApplicationType.CPC,
+        firmware_name="Multiprotocol",
+    ),
+    ApplicationType.GECKO_BOOTLOADER: FirmwareUpdateEntityDescription(
+        key="radio_firmware",
+        translation_key="radio_firmware",
+        display_precision=0,
+        device_class=UpdateDeviceClass.FIRMWARE,
+        entity_category=EntityCategory.CONFIG,
+        version_parser=lambda fw: fw,
+        fw_type=None,  # We don't want to update the bootloader
+        version_key="gecko_bootloader_version",
+        expected_firmware_type=ApplicationType.GECKO_BOOTLOADER,
+        firmware_name="Gecko Bootloader",
+    ),
     None: FirmwareUpdateEntityDescription(
-        key="firmware",
+        key="radio_firmware",
+        translation_key="radio_firmware",
         display_precision=0,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
@@ -82,9 +113,16 @@ def _async_create_update_entity(
 ) -> FirmwareUpdateEntity:
     """Create an update entity that handles firmware type changes."""
     firmware_type = config_entry.data[FIRMWARE]
-    entity_description = FIRMWARE_ENTITY_DESCRIPTIONS[
-        ApplicationType(firmware_type) if firmware_type is not None else None
-    ]
+
+    try:
+        entity_description = FIRMWARE_ENTITY_DESCRIPTIONS[
+            ApplicationType(firmware_type)
+        ]
+    except (KeyError, ValueError):
+        _LOGGER.debug(
+            "Unknown firmware type %r, using default entity description", firmware_type
+        )
+        entity_description = FIRMWARE_ENTITY_DESCRIPTIONS[None]
 
     entity = FirmwareUpdateEntity(
         device=RADIO_DEVICE,
@@ -145,8 +183,13 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     ) -> None:
         """Initialize the Yellow firmware update entity."""
         super().__init__(device, config_entry, update_coordinator, entity_description)
-
         self._attr_unique_id = self.entity_description.key
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, "yellow")},
+            name=MODEL,
+            model=MODEL,
+            manufacturer=MANUFACTURER,
+        )
 
         # Use the cached firmware info if it exists
         if self._config_entry.data[FIRMWARE] is not None:
@@ -157,6 +200,17 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
                 owners=[],
                 source="homeassistant_yellow",
             )
+
+    def _update_attributes(self) -> None:
+        """Recompute the attributes of the entity."""
+        super()._update_attributes()
+
+        assert self.device_entry is not None
+        device_registry = dr.async_get(self.hass)
+        device_registry.async_update_device(
+            device_id=self.device_entry.id,
+            sw_version=f"{self.entity_description.firmware_name} {self._attr_installed_version}",
+        )
 
     @callback
     def _firmware_info_callback(self, firmware_info: FirmwareInfo) -> None:

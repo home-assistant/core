@@ -291,7 +291,9 @@ async def test_get_current_position_no_map_data(
             "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_map_v1",
             return_value=None,
         ),
-        pytest.raises(HomeAssistantError, match="Failed to retrieve map data."),
+        pytest.raises(
+            HomeAssistantError, match="Something went wrong creating the map"
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,

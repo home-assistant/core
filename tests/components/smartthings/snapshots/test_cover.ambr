@@ -27,9 +27,10 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 7>,
     'translation_key': None,
-    'unique_id': '571af102-15db-4030-b76b-245a691f74a5',
+    'unique_id': '571af102-15db-4030-b76b-245a691f74a5_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -77,9 +78,10 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 7>,
     'translation_key': None,
-    'unique_id': '71afed1c-006d-4e48-b16e-e7f88f9fd638',
+    'unique_id': '71afed1c-006d-4e48-b16e-e7f88f9fd638_main',
     'unit_of_measurement': None,
   })
 # ---

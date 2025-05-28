@@ -6,7 +6,7 @@ import json
 from unittest.mock import patch
 
 from gios import ApiError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.gios.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as PLATFORM

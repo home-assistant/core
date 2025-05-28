@@ -42,6 +42,7 @@ from tests.typing import ClientSessionGenerator
 DEFAULT_LANG = "en_US"
 SUPPORT_LANGUAGES = ["de_CH", "de_DE", "en_GB", "en_US"]
 TEST_DOMAIN = "test"
+MOCK_DATA = b"123"
 
 
 def mock_tts_get_cache_files_fixture_helper() -> Generator[MagicMock]:
@@ -164,7 +165,7 @@ class BaseProvider:
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load TTS dat."""
-        return ("mp3", b"")
+        return ("mp3", MOCK_DATA)
 
 
 class MockTTSProvider(BaseProvider, Provider):
@@ -280,6 +281,7 @@ class MockResultStream(ResultStream):
             content_type=f"audio/mock-{extension}",
             engine="test-engine",
             use_file_cache=True,
+            supports_streaming_input=True,
             language="en",
             options={},
             _manager=hass.data[DATA_TTS_MANAGER],

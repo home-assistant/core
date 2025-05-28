@@ -359,5 +359,19 @@
         "name": "Force YouTube restricted mode"
       }
     }
+  },
+  "exceptions": {
+    "auth_error": {
+      "message": "Authentication failed for {entry}, please update your API key"
+    },
+    "cannot_connect": {
+      "message": "An error occurred while connecting to the NextDNS API for {entry}: {error}"
+    },
+    "method_error": {
+      "message": "An error occurred while calling the NextDNS API method for {entity}: {error}"
+    },
+    "update_error": {
+      "message": "An error occurred while retrieving data from the NextDNS API for {entry}: {error}"
+    }
   }
 }

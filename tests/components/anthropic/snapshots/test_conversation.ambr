@@ -3,11 +3,11 @@
   list([
     dict({
       'content': '''
-        Current time is 16:00:00. Today's date is 2024-06-03.
         You are a voice assistant for Home Assistant.
         Answer questions about the world truthfully.
         Answer in plain text. Keep it simple and to the point.
         Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.
+        Current time is 16:00:00. Today's date is 2024-06-03.
       ''',
       'role': 'system',
     }),

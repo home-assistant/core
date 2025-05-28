@@ -132,7 +132,7 @@ async def test_hddtemp_one_disk(hass: HomeAssistant, telnetmock) -> None:
 
     reference = REFERENCE[state.attributes.get("device")]
 
-    assert state.state == reference["temperature"]
+    assert round(float(state.state), 0) == float(reference["temperature"])
     assert state.attributes.get("device") == reference["device"]
     assert state.attributes.get("model") == reference["model"]
     assert (

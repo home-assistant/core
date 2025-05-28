@@ -149,5 +149,12 @@
       "run_zigbee_flasher_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::run_zigbee_flasher_addon%]",
       "uninstall_zigbee_flasher_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::uninstall_zigbee_flasher_addon%]"
     }
+  },
+  "entity": {
+    "update": {
+      "radio_firmware": {
+        "name": "Radio firmware"
+      }
+    }
   }
 }

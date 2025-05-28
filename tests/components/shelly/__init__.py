@@ -53,7 +53,7 @@ async def init_integration(
         data[CONF_GEN] = gen
 
     entry = MockConfigEntry(
-        domain=DOMAIN, data=data, unique_id=MOCK_MAC, options=options
+        domain=DOMAIN, data=data, unique_id=MOCK_MAC, options=options, title="Test name"
     )
     entry.add_to_hass(hass)
 
@@ -141,20 +141,6 @@ def get_entity(
     return entity_registry.async_get_entity_id(
         domain, DOMAIN, f"{MOCK_MAC}-{unique_id}"
     )
-
-
-def get_entity_state(hass: HomeAssistant, entity_id: str) -> str:
-    """Return entity state."""
-    entity = hass.states.get(entity_id)
-    assert entity
-    return entity.state
-
-
-def get_entity_attribute(hass: HomeAssistant, entity_id: str, attribute: str) -> str:
-    """Return entity attribute."""
-    entity = hass.states.get(entity_id)
-    assert entity
-    return entity.attributes[attribute]
 
 
 def register_device(

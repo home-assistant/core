@@ -1,8 +1,12 @@
 """The tests for the Template select platform."""
 
+from typing import Any
+
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import setup
+from homeassistant.components import select, template
 from homeassistant.components.input_select import (
     ATTR_OPTION as INPUT_SELECT_ATTR_OPTION,
     ATTR_OPTIONS as INPUT_SELECT_ATTR_OPTIONS,
@@ -17,15 +21,51 @@ from homeassistant.components.select import (
     SERVICE_SELECT_OPTION as SELECT_SERVICE_SELECT_OPTION,
 )
 from homeassistant.components.template import DOMAIN
-from homeassistant.const import ATTR_ICON, CONF_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON, CONF_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
+
+from .conftest import ConfigurationStyle
 
 from tests.common import MockConfigEntry, assert_setup_component, async_capture_events
 
-_TEST_SELECT = "select.template_select"
+_TEST_OBJECT_ID = "template_select"
+_TEST_SELECT = f"select.{_TEST_OBJECT_ID}"
 # Represent for select's current_option
 _OPTION_INPUT_SELECT = "input_select.option"
+
+
+async def async_setup_modern_format(
+    hass: HomeAssistant, count: int, select_config: dict[str, Any]
+) -> None:
+    """Do setup of select integration via new format."""
+    config = {"template": {"select": select_config}}
+
+    with assert_setup_component(count, template.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            template.DOMAIN,
+            config,
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+
+@pytest.fixture
+async def setup_select(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    select_config: dict[str, Any],
+) -> None:
+    """Do setup of select integration."""
+    if style == ConfigurationStyle.MODERN:
+        await async_setup_modern_format(
+            hass, count, {"name": _TEST_OBJECT_ID, **select_config}
+        )
 
 
 async def test_setup_config_entry(
@@ -527,3 +567,36 @@ async def test_device_id(
     template_entity = entity_registry.async_get("select.my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
+
+
+@pytest.mark.parametrize(
+    ("count", "select_config"),
+    [
+        (
+            1,
+            {
+                "state": "{{ 'b' }}",
+                "select_option": [],
+                "options": "{{ ['a', 'b'] }}",
+                "optimistic": True,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [
+        ConfigurationStyle.MODERN,
+    ],
+)
+async def test_empty_action_config(hass: HomeAssistant, setup_select) -> None:
+    """Test configuration with empty script."""
+    await hass.services.async_call(
+        select.DOMAIN,
+        select.SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: _TEST_SELECT, "option": "a"},
+        blocking=True,
+    )
+
+    state = hass.states.get(_TEST_SELECT)
+    assert state.state == "a"

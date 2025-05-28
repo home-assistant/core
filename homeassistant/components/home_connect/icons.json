@@ -113,7 +113,7 @@
       "milk_counter": {
         "default": "mdi:cup"
       },
-      "coffee_and_milk": {
+      "coffee_and_milk_counter": {
         "default": "mdi:coffee"
       },
       "ristretto_espresso_counter": {

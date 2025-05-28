@@ -186,7 +186,13 @@
       "monitoring_enabled": {
         "default": "mdi:monitor-eye"
       },
+      "current_job_mode_ventilator": {
+        "default": "mdi:format-list-bulleted"
+      },
       "current_job_mode": {
+        "default": "mdi:format-list-bulleted"
+      },
+      "current_job_mode_dehumidifier": {
         "default": "mdi:format-list-bulleted"
       },
       "operation_mode": {
