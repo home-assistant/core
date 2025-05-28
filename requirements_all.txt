@@ -759,7 +759,7 @@ dbus-fast==2.43.0
 debugpy==1.8.14
 
 # homeassistant.components.decora_wifi
-decora-wifi==1.4
+# decora-wifi==1.4
 
 # homeassistant.components.decora
 # decora==0.6
