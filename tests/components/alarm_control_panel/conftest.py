@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components.alarm_control_panel import (
-    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+    DOMAIN,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
 )
@@ -202,7 +202,7 @@ async def setup_alarm_control_panel_platform_test_entity(
 
     mock_platform(
         hass,
-        f"{TEST_DOMAIN}.{ALARM_CONTROL_PANEL_DOMAIN}",
+        f"{TEST_DOMAIN}.{DOMAIN}",
         MockPlatform(async_setup_entry=async_setup_entry_platform),
     )
 
