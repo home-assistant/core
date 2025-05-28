@@ -221,6 +221,7 @@ SWITCH_ENTITIES = (
         cmd_key="483",
         translation_key="hardwired_chime_enabled",
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
         supported=lambda api, ch: api.supported(ch, "hardwired_chime"),
         value=lambda api, ch: api.baichuan.hardwired_chime_enabled(ch),
         method=lambda api, ch, value: api.baichuan.set_ding_dong_ctrl(ch, enable=value),
