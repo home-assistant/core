@@ -84,7 +84,7 @@ class LocalCalendarEntity(CalendarEntity):
         self._event: CalendarEvent | None = None
         self._attr_name = name
         self._attr_unique_id = unique_id
-        self._attr_color: RGBColor | None = color
+        self._attr_color = color
 
     @property
     def event(self) -> CalendarEvent | None:
