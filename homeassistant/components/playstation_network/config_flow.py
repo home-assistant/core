@@ -38,9 +38,9 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_account"
 
             if npsso:
-                psn = PlaystationNetwork(npsso)
+                psn = PlaystationNetwork(self.hass, npsso)
                 try:
-                    user: User = await self.hass.async_add_executor_job(psn.get_user)
+                    user: User = await psn.get_user()
                 except PSNAWPAuthenticationError:
                     errors["base"] = "invalid_auth"
                 except PSNAWPNotFoundError:

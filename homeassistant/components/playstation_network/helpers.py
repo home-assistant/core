@@ -24,7 +24,7 @@ LEGACY_PLATFORMS = {PlatformType.PS3, PlatformType.PS4}
 class SessionData:
     """Dataclass representing console session data."""
 
-    platform: str = ""
+    platform: PlatformType = PlatformType.UNKNOWN
     title_id: str | None = None
     title_name: str | None = None
     format: PlatformType | None = None
@@ -40,8 +40,8 @@ class PlaystationNetworkData:
     username: str = ""
     account_id: str = ""
     available: bool = False
-    active_sessions: dict[str, SessionData] = field(default_factory=dict)
-    registered_platforms: set[str] = field(default_factory=set)
+    active_sessions: dict[PlatformType, SessionData] = field(default_factory=dict)
+    registered_platforms: set[PlatformType] = field(default_factory=set)
 
 
 class PlaystationNetwork:
@@ -74,7 +74,7 @@ class PlaystationNetwork:
             self.client = await self.hass.async_add_executor_job(self.psn.me)
 
         data.registered_platforms = {
-            device["deviceType"]
+            PlatformType(device["deviceType"])
             for device in await self.hass.async_add_executor_job(
                 self.client.get_account_devices
             )
@@ -90,11 +90,11 @@ class PlaystationNetwork:
         )
 
         session = SessionData()
-        session.platform = data.presence["basicPresence"]["primaryPlatformInfo"][
-            "platform"
-        ]
+        session.platform = PlatformType(
+            data.presence["basicPresence"]["primaryPlatformInfo"]["platform"]
+        )
 
-        if PlatformType(session.platform) in SUPPORTED_PLATFORMS:
+        if session.platform in SUPPORTED_PLATFORMS:
             session.status = data.presence.get("basicPresence", {}).get(
                 "primaryPlatformInfo"
             )["onlineStatus"]
@@ -106,11 +106,8 @@ class PlaystationNetwork:
             if game_title_info:
                 session.title_id = game_title_info[0]["npTitleId"]
                 session.title_name = game_title_info[0]["titleName"]
-                session.format = game_title_info[0]["format"]
-                if PlatformType(session.format) in [
-                    PlatformType.PS5,
-                    PlatformType.PSPC,
-                ]:
+                session.format = PlatformType(game_title_info[0]["format"])
+                if session.format in {PlatformType.PS5, PlatformType.PSPC}:
                     session.media_image_url = game_title_info[0]["conceptIconUrl"]
                 else:
                     session.media_image_url = game_title_info[0]["npTitleIconUrl"]
@@ -118,7 +115,7 @@ class PlaystationNetwork:
             data.active_sessions[session.platform] = session
 
         # check legacy platforms if owned
-        if set(LEGACY_PLATFORMS).issubset(data.registered_platforms):
+        if LEGACY_PLATFORMS & data.registered_platforms:
             self.legacy_profile = await self.hass.async_add_executor_job(
                 self.client.get_profile_legacy
             )
@@ -143,9 +140,11 @@ class PlaystationNetwork:
                         title = self.psn.game_title(
                             session.title_id, platform=PlatformType.PS3, account_id="me"
                         )
-                        session.media_image_url = title.get_title_icon_url()
                     except PSNAWPNotFoundError:
                         session.media_image_url = None
+
+                    if title:
+                        session.media_image_url = title.get_title_icon_url()
 
             if game_title_info["onlineStatus"] == "online":
                 data.active_sessions[session.platform] = session

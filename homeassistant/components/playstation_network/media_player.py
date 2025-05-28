@@ -18,7 +18,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PlaystationNetworkConfigEntry, PlaystationNetworkCoordinator
 from .const import DOMAIN, SUPPORTED_PLATFORMS
-from .helpers import SessionData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,12 +49,13 @@ async def async_setup_entry(
         if not SUPPORTED_PLATFORMS - devices_added:
             remove_listener()
 
-        for console in coordinator.data.active_sessions:
-            if (platform := console) and (
-                platform_type := PlatformType(platform)
-            ) not in devices_added:
-                async_add_entities([PsnMediaPlayerEntity(coordinator, platform_type)])
-                devices_added.add(platform_type)
+        new_platforms = set(coordinator.data.active_sessions.keys()) - devices_added
+        if new_platforms:
+            async_add_entities(
+                PsnMediaPlayerEntity(coordinator, platform_type)
+                for platform_type in new_platforms
+            )
+            devices_added |= new_platforms
 
     for platform in SUPPORTED_PLATFORMS:
         if device_reg.async_get_device(
@@ -91,7 +91,7 @@ class PsnMediaPlayerEntity(
         super().__init__(coordinator)
 
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{platform.value}"
-        self.key = platform.value
+        self.key = platform
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=PLATFORM_MAP[platform],
@@ -102,8 +102,8 @@ class PsnMediaPlayerEntity(
     @property
     def state(self) -> MediaPlayerState:
         """Media Player state getter."""
-        session = self.coordinator.data.active_sessions.get(self.key, SessionData())
-        if session.status == "online":
+        session = self.coordinator.data.active_sessions.get(self.key)
+        if session and session.status == "online":
             if self.coordinator.data.available and session.title_id is not None:
                 return MediaPlayerState.PLAYING
             return MediaPlayerState.ON
@@ -112,17 +112,17 @@ class PsnMediaPlayerEntity(
     @property
     def media_title(self) -> str | None:
         """Media title getter."""
-        session = self.coordinator.data.active_sessions.get(self.key, SessionData())
-        return session.title_name
+        session = self.coordinator.data.active_sessions.get(self.key)
+        return session.title_name if session else None
 
     @property
     def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
-        session = self.coordinator.data.active_sessions.get(self.key, SessionData())
-        return session.title_id
+        session = self.coordinator.data.active_sessions.get(self.key)
+        return session.title_id if session else None
 
     @property
     def media_image_url(self) -> str | None:
         """Media image url getter."""
-        session = self.coordinator.data.active_sessions.get(self.key, SessionData())
-        return session.media_image_url
+        session = self.coordinator.data.active_sessions.get(self.key)
+        return session.media_image_url if session else None
