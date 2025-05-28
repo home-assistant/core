@@ -131,7 +131,7 @@ class SMHISensor(SmhiWeatherBaseEntity, SensorEntity):
             longitude,
             coordinator,
         )
-        self._attr_unique_id += f"-{entity_description.key}"
+        self._attr_unique_id = f"{latitude}, {longitude}-{entity_description.key}"
 
     def update_entity_data(self) -> None:
         """Refresh the entity data."""
