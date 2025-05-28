@@ -107,7 +107,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.40
+SQLAlchemy==2.0.41
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -2095,6 +2095,9 @@ pytrydan==0.8.0
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
 
+# homeassistant.components.keyboard
+# pyuserinput==0.1.11
+
 # homeassistant.components.vera
 pyvera==0.3.15
 
@@ -2177,7 +2180,7 @@ renault-api==0.3.1
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.13.3
+reolink-aio==0.13.4
 
 # homeassistant.components.rflink
 rflink==0.0.66
