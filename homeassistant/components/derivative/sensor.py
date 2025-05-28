@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
 
@@ -275,7 +275,6 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 and source_state is not None
                 and (_is_decimal_state(source_state.state))
             ):
-                schedule_time = datetime.now(tz=UTC)
 
                 @callback
                 def _calc_derivative_on_max_sub_interval_exceeded_callback(
@@ -283,19 +282,8 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 ) -> None:
                     """Calculate derivative based on time and reschedule."""
 
-                    elapsed_seconds = Decimal((now - schedule_time).total_seconds())
                     self._prune_state_list(now)
-
-                    # add latest derivative to the window list. Since we're here on a timeout, the change is 0
-                    self._state_list.append((schedule_time, now, Decimal(0)))
-
-                    # If outside of time window just report derivative (is the same as modeling it in the window),
-                    # otherwise take the weighted average with the previous derivatives
-                    if elapsed_seconds > self._time_window:
-                        derivative = Decimal(0)
-                    else:
-                        derivative = self._calc_derivative_from_state_list(now)
-
+                    derivative = self._calc_derivative_from_state_list(now)
                     self._attr_native_value = round(derivative, self._round_digits)
 
                     self.async_write_ha_state()
