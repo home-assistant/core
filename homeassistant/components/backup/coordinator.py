@@ -30,8 +30,10 @@ class BackupCoordinatorData:
     """Class to hold backup data."""
 
     backup_manager_state: BackupManagerState
+    last_attempted_automatic_backup: datetime | None
     last_successful_automatic_backup: datetime | None
     next_scheduled_automatic_backup: datetime | None
+    last_event: ManagerStateEvent | BackupPlatformEvent | None
 
 
 class BackupDataUpdateCoordinator(DataUpdateCoordinator[BackupCoordinatorData]):
@@ -59,19 +61,23 @@ class BackupDataUpdateCoordinator(DataUpdateCoordinator[BackupCoordinatorData]):
         ]
 
         self.backup_manager = backup_manager
+        self._last_event: ManagerStateEvent | BackupPlatformEvent | None = None
 
     @callback
     def _on_event(self, event: ManagerStateEvent | BackupPlatformEvent) -> None:
         """Handle new event."""
         LOGGER.debug("Received backup event: %s", event)
+        self._last_event = event
         self.config_entry.async_create_task(self.hass, self.async_refresh())
 
     async def _async_update_data(self) -> BackupCoordinatorData:
         """Update backup manager data."""
         return BackupCoordinatorData(
             self.backup_manager.state,
+            self.backup_manager.config.data.last_attempted_automatic_backup,
             self.backup_manager.config.data.last_completed_automatic_backup,
             self.backup_manager.config.data.schedule.next_automatic_backup,
+            self._last_event,
         )
 
     @callback

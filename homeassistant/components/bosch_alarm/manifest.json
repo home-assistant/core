@@ -3,6 +3,11 @@
   "name": "Bosch Alarm",
   "codeowners": ["@mag1024", "@sanjay900"],
   "config_flow": true,
+  "dhcp": [
+    {
+      "macaddress": "000463*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/bosch_alarm",
   "integration_type": "device",
   "iot_class": "local_push",

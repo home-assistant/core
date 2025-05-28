@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
+    LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
     EntityCategory,
@@ -26,8 +27,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AirthingsConfigEntry, AirthingsDataCoordinatorType
+from . import AirthingsConfigEntry
 from .const import DOMAIN
+from .coordinator import AirthingsDataUpdateCoordinator
 
 SENSORS: dict[str, SensorEntityDescription] = {
     "radonShortTermAvg": SensorEntityDescription(
@@ -76,6 +78,12 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="light",
         native_unit_of_measurement=PERCENTAGE,
         translation_key="light",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "lux": SensorEntityDescription(
+        key="lux",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        native_unit_of_measurement=LIGHT_LUX,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "virusRisk": SensorEntityDescription(
@@ -133,7 +141,7 @@ async def async_setup_entry(
 
 
 class AirthingsHeaterEnergySensor(
-    CoordinatorEntity[AirthingsDataCoordinatorType], SensorEntity
+    CoordinatorEntity[AirthingsDataUpdateCoordinator], SensorEntity
 ):
     """Representation of a Airthings Sensor device."""
 
@@ -142,7 +150,7 @@ class AirthingsHeaterEnergySensor(
 
     def __init__(
         self,
-        coordinator: AirthingsDataCoordinatorType,
+        coordinator: AirthingsDataUpdateCoordinator,
         airthings_device: AirthingsDevice,
         entity_description: SensorEntityDescription,
     ) -> None:

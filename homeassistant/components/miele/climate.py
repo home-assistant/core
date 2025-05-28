@@ -26,6 +26,8 @@ from .const import DEVICE_TYPE_TAGS, DISABLED_TEMP_ENTITIES, DOMAIN, MieleApplia
 from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
 from .entity import MieleEntity
 
+PARALLEL_UPDATES = 1
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -131,16 +133,30 @@ async def async_setup_entry(
 ) -> None:
     """Set up the climate platform."""
     coordinator = config_entry.runtime_data
+    added_devices: set[str] = set()
 
-    async_add_entities(
-        MieleClimate(coordinator, device_id, definition.description)
-        for device_id, device in coordinator.data.devices.items()
-        for definition in CLIMATE_TYPES
-        if (
-            device.device_type in definition.types
-            and (definition.description.value_fn(device) not in DISABLED_TEMP_ENTITIES)
+    def _async_add_new_devices() -> None:
+        nonlocal added_devices
+
+        new_devices_set, current_devices = coordinator.async_add_devices(added_devices)
+        added_devices = current_devices
+
+        async_add_entities(
+            MieleClimate(coordinator, device_id, definition.description)
+            for device_id, device in coordinator.data.devices.items()
+            for definition in CLIMATE_TYPES
+            if (
+                device_id in new_devices_set
+                and device.device_type in definition.types
+                and (
+                    definition.description.value_fn(device)
+                    not in DISABLED_TEMP_ENTITIES
+                )
+            )
         )
-    )
+
+    config_entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
+    _async_add_new_devices()
 
 
 class MieleClimate(MieleEntity, ClimateEntity):
@@ -181,13 +197,13 @@ class MieleClimate(MieleEntity, ClimateEntity):
                 self._attr_name = None
 
         if description.zone == 2:
+            t_key = "zone_2"
             if self.device.device_type in (
                 MieleAppliance.FRIDGE_FREEZER,
                 MieleAppliance.WINE_CABINET_FREEZER,
             ):
                 t_key = DEVICE_TYPE_TAGS[MieleAppliance.FREEZER]
-            else:
-                t_key = "zone_2"
+
         elif description.zone == 3:
             t_key = "zone_3"
 
@@ -218,11 +234,11 @@ class MieleClimate(MieleEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
         try:
             await self.api.set_target_temperature(
-                self._device_id, temperature, self.entity_description.zone
+                self._device_id,
+                cast(float, kwargs.get(ATTR_TEMPERATURE)),
+                self.entity_description.zone,
             )
         except aiohttp.ClientError as err:
             raise HomeAssistantError(
