@@ -5,6 +5,8 @@ import logging
 
 from momonga import Momonga, MomongaError
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -29,15 +31,15 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
     def __init__(
         self,
         hass: HomeAssistant,
-        device: str,
-        id: str,
-        password: str,
+        entry: ConfigEntry,
     ) -> None:
         """Initialize."""
 
-        self.api = Momonga(dev=device, rbid=id, pwd=password)
-        self.device = device
-        self.bid = id
+        self.device = entry.data[CONF_DEVICE]
+        self.bid = entry.data[CONF_ID]
+        password = entry.data[CONF_PASSWORD]
+
+        self.api = Momonga(dev=self.device, rbid=self.bid, pwd=password)
 
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=DEFAULT_SCAN_INTERVAL
@@ -64,3 +66,8 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
             return await self.hass.async_add_executor_job(self._get_data)
         except MomongaError as error:
             raise UpdateFailed(error) from error
+
+    async def async_shutdown(self) -> None:
+        """Disconnect from the api."""
+        await self.api.close()
+        await super().async_shutdown()

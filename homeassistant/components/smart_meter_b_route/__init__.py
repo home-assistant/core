@@ -3,7 +3,7 @@
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_PASSWORD, Platform
+from homeassistant.const import CONF_ID, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
@@ -45,10 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BRouteConfigEntry) -> bo
     if is_duplicate(hass, entry):
         return False
 
-    device = entry.data[CONF_DEVICE]
-    bid = entry.data[CONF_ID]
-    password = entry.data[CONF_PASSWORD]
-    coordinator = BRouteUpdateCoordinator(hass, device, bid, password)
+    coordinator = BRouteUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
