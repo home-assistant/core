@@ -60,7 +60,7 @@ def mock_setup_integration(hass: HomeAssistant) -> None:
     ) -> bool:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
-            config_entry, [Platform.TODO]
+            config_entry, [Platform.CLIMATE]
         )
         return True
 
