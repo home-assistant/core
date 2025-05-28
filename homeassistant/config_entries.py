@@ -3334,15 +3334,24 @@ class ConfigSubentryFlowManager(
         if unique_id is not None and not isinstance(unique_id, str):
             raise HomeAssistantError("unique_id must be a string")
 
-        self.hass.config_entries.async_add_subentry(
-            entry,
-            ConfigSubentry(
-                data=MappingProxyType(result["data"]),
-                subentry_type=subentry_type,
-                title=result["title"],
-                unique_id=unique_id,
-            ),
-        )
+        try:
+            self.hass.config_entries.async_add_subentry(
+                entry,
+                ConfigSubentry(
+                    data=MappingProxyType(result["data"]),
+                    subentry_type=subentry_type,
+                    title=result["title"],
+                    unique_id=unique_id,
+                ),
+            )
+        except data_entry_flow.AbortFlow as err:
+            return SubentryFlowResult(
+                type=data_entry_flow.FlowResultType.ABORT,
+                flow_id=flow.flow_id,
+                handler=flow.handler,
+                reason=err.reason,
+                description_placeholders=err.description_placeholders,
+            )
 
         result["result"] = True
         return result
