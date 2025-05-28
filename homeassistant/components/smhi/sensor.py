@@ -25,9 +25,9 @@ PARALLEL_UPDATES = 0
 def get_percentage_values(entity: SMHISensor, key: str) -> int | None:
     """Return percentage values in correct range."""
     value: int | None = entity.coordinator.current.get(key)  # type: ignore[assignment]
-    if value and 0 <= value <= 100:
+    if value is not None and 0 <= value <= 100:
         return value
-    if value:
+    if value is not None:
         return 0
     return None
 
@@ -136,4 +136,5 @@ class SMHISensor(SmhiWeatherBaseEntity, SensorEntity):
     def update_entity_data(self) -> None:
         """Refresh the entity data."""
         if self.coordinator.data.daily:
+            # print(self.entity_description.key, self.coordinator.current)
             self._attr_native_value = self.entity_description.value_fn(self)
