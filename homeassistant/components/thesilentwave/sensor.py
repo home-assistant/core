@@ -46,7 +46,7 @@ class TheSilentWaveSensor(TheSilentWaveEntity, SensorEntity):
         """Register callbacks when entity is added."""
         await super().async_added_to_hass()
         # Only subscribe to events if we have a connection to the device
-        if self.coordinator._has_connection and hasattr(self.coordinator.client, "subscribe_to_events"):
+        if self.coordinator.has_connection and hasattr(self.coordinator.client, "subscribe_to_events"):
             self._unsubscribe_callback = (
                 await self.coordinator.client.subscribe_to_events(self.async_write_ha_state)
             )
