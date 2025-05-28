@@ -6,7 +6,11 @@ from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
-FUNCTION_NAMES = ("load_fixture",)
+FUNCTION_NAMES = (
+    "load_fixture",
+    "load_json_array_fixture",
+    "load_json_object_fixture",
+)
 
 
 class HassLoadFixturesChecker(BaseChecker):
