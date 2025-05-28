@@ -162,6 +162,8 @@ class PlaybackProxyView(HomeAssistantView):
             reolink_response.reason,
             response_headers,
         )
+        if "Content-Type" not in response_headers:
+            response_headers["Content-Type"] = reolink_response.content_type
         if response_headers["Content-Type"] == "apolication/octet-stream":
             response_headers["Content-Type"] = "application/octet-stream"
 
