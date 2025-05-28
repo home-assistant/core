@@ -116,4 +116,6 @@ class FritzBoxTracker(FritzDeviceBase, ScannerEntity):
             attrs["connection_type"] = device.connection_type
         if device.ssid:
             attrs["ssid"] = device.ssid
+        if device.speed:
+            attrs["speed"] = device.speed
         return attrs
