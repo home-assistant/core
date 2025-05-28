@@ -40,11 +40,12 @@ class ImmichMediaSourceIdentifier:
     def __init__(self, identifier: str) -> None:
         """Split identifier into parts."""
         parts = identifier.split("/")
-        # coonfig_entry.unique_id/album_id/asset_it/filename
+        # config_entry.unique_id/collection/collection_id/asset_id/file_name
         self.unique_id = parts[0]
-        self.album_id = parts[1] if len(parts) > 1 else None
-        self.asset_id = parts[2] if len(parts) > 2 else None
-        self.file_name = parts[3] if len(parts) > 2 else None
+        self.collection = parts[1] if len(parts) > 1 else None
+        self.collection_id = parts[2] if len(parts) > 2 else None
+        self.asset_id = parts[3] if len(parts) > 3 else None
+        self.file_name = parts[4] if len(parts) > 3 else None
 
 
 class ImmichMediaSource(MediaSource):
@@ -83,6 +84,7 @@ class ImmichMediaSource(MediaSource):
     ) -> list[BrowseMediaSource]:
         """Handle browsing different immich instances."""
         if not item.identifier:
+            LOGGER.debug("Render all Immich instances")
             return [
                 BrowseMediaSource(
                     domain=DOMAIN,
@@ -104,8 +106,22 @@ class ImmichMediaSource(MediaSource):
         assert entry
         immich_api = entry.runtime_data.api
 
-        if identifier.album_id is None:
-            # Get Albums
+        if identifier.collection is None:
+            LOGGER.debug("Render all collections for %s", entry.title)
+            return [
+                BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=f"{identifier.unique_id}/albums",
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaClass.IMAGE,
+                    title="albums",
+                    can_play=False,
+                    can_expand=True,
+                )
+            ]
+
+        if identifier.collection_id is None:
+            LOGGER.debug("Render all albums for %s", entry.title)
             try:
                 albums = await immich_api.albums.async_get_all_albums()
             except ImmichError:
@@ -114,7 +130,7 @@ class ImmichMediaSource(MediaSource):
             return [
                 BrowseMediaSource(
                     domain=DOMAIN,
-                    identifier=f"{item.identifier}/{album.album_id}",
+                    identifier=f"{identifier.unique_id}/albums/{album.album_id}",
                     media_class=MediaClass.DIRECTORY,
                     media_content_type=MediaClass.IMAGE,
                     title=album.name,
@@ -125,10 +141,14 @@ class ImmichMediaSource(MediaSource):
                 for album in albums
             ]
 
-        # Request items of album
+        LOGGER.debug(
+            "Render all assets of album %s for %s",
+            identifier.collection_id,
+            entry.title,
+        )
         try:
             album_info = await immich_api.albums.async_get_album_info(
-                identifier.album_id
+                identifier.collection_id
             )
         except ImmichError:
             return []
@@ -137,8 +157,8 @@ class ImmichMediaSource(MediaSource):
             BrowseMediaSource(
                 domain=DOMAIN,
                 identifier=(
-                    f"{identifier.unique_id}/"
-                    f"{identifier.album_id}/"
+                    f"{identifier.unique_id}/albums/"
+                    f"{identifier.collection_id}/"
                     f"{asset.asset_id}/"
                     f"{asset.file_name}"
                 ),
@@ -157,8 +177,8 @@ class ImmichMediaSource(MediaSource):
             BrowseMediaSource(
                 domain=DOMAIN,
                 identifier=(
-                    f"{identifier.unique_id}/"
-                    f"{identifier.album_id}/"
+                    f"{identifier.unique_id}/albums/"
+                    f"{identifier.collection_id}/"
                     f"{asset.asset_id}/"
                     f"{asset.file_name}"
                 ),
