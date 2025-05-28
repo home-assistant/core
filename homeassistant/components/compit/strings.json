@@ -9,8 +9,8 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "email": "[%key:common::config_flow::data_description::email%]",
-          "password": "[%key:common::config_flow::data_description::password%]"
+          "email": "Your inext.compit.pl account email",
+          "password": "Password to your inext.compit.pl account"
         }
       },
       "reauth_confirm": {
@@ -19,7 +19,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "password": "[%key:common::config_flow::data_description::password%]"
+          "password": "Password to your inext.compit.pl account"
         }
       }
     },
