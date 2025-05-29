@@ -14,14 +14,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
 from . import setup_integration
-from .helpers import GENERAL_ONLY_SITE_ID
+from .helpers import (
+    GENERAL_AND_CONTROLLED_SITE_ID,
+    GENERAL_AND_FEED_IN_SITE_ID,
+    GENERAL_ONLY_SITE_ID,
+)
 
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_amber_client_forecasts")
 async def test_get_general_forecasts(
     hass: HomeAssistant,
-    forecast_prices,
     general_channel_config_entry: MockConfigEntry,
 ) -> None:
     """Test fetching general forecasts."""
@@ -48,17 +52,20 @@ async def test_get_general_forecasts(
     assert first["descriptor"] == "very_low"
 
 
+@pytest.mark.usefixtures("mock_amber_client_forecasts")
 async def test_get_controlled_load_forecasts(
     hass: HomeAssistant,
-    forecast_prices,
-    general_channel_config_entry: MockConfigEntry,
+    general_channel_and_controlled_load_config_entry: MockConfigEntry,
 ) -> None:
     """Test fetching general forecasts."""
-    await setup_integration(hass, general_channel_config_entry)
+    await setup_integration(hass, general_channel_and_controlled_load_config_entry)
     result = await hass.services.async_call(
         DOMAIN,
         GET_FORECASTS_SERVICE,
-        {ATTR_SITE_ID: GENERAL_ONLY_SITE_ID, ATTR_CHANNEL_TYPE: "controlled_load"},
+        {
+            ATTR_SITE_ID: GENERAL_AND_CONTROLLED_SITE_ID,
+            ATTR_CHANNEL_TYPE: "controlled_load",
+        },
         blocking=True,
         return_response=True,
     )
@@ -77,17 +84,17 @@ async def test_get_controlled_load_forecasts(
     assert first["descriptor"] == "very_low"
 
 
+@pytest.mark.usefixtures("mock_amber_client_forecasts")
 async def test_get_feed_in_forecasts(
     hass: HomeAssistant,
-    forecast_prices,
-    general_channel_config_entry: MockConfigEntry,
+    general_channel_and_feed_in_config_entry: MockConfigEntry,
 ) -> None:
     """Test fetching general forecasts."""
-    await setup_integration(hass, general_channel_config_entry)
+    await setup_integration(hass, general_channel_and_feed_in_config_entry)
     result = await hass.services.async_call(
         DOMAIN,
         GET_FORECASTS_SERVICE,
-        {ATTR_SITE_ID: GENERAL_ONLY_SITE_ID, ATTR_CHANNEL_TYPE: "feed_in"},
+        {ATTR_SITE_ID: GENERAL_AND_FEED_IN_SITE_ID, ATTR_CHANNEL_TYPE: "feed_in"},
         blocking=True,
         return_response=True,
     )
@@ -106,9 +113,9 @@ async def test_get_feed_in_forecasts(
     assert first["descriptor"] == "very_low"
 
 
+@pytest.mark.usefixtures("mock_amber_client_forecasts")
 async def test_incorrect_channel_type(
     hass: HomeAssistant,
-    forecast_prices,
     general_channel_config_entry: MockConfigEntry,
 ) -> None:
     """Test error when the channel type is not found."""
@@ -129,9 +136,9 @@ async def test_incorrect_channel_type(
         )
 
 
+@pytest.mark.usefixtures("mock_amber_client_forecasts")
 async def test_service_entry_availability(
     hass: HomeAssistant,
-    forecast_prices,
     general_channel_config_entry: MockConfigEntry,
 ) -> None:
     """Test the services without valid entry."""

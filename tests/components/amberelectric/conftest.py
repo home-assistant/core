@@ -1,13 +1,9 @@
 """Provide common Amber fixtures."""
 
 from collections.abc import AsyncGenerator, Generator
-from datetime import date
 from unittest.mock import AsyncMock, Mock, patch
 
-from amberelectric.models.channel import Channel, ChannelType
 from amberelectric.models.interval import Interval
-from amberelectric.models.site import Site
-from amberelectric.models.site_status import SiteStatus
 import pytest
 
 from homeassistant.components.amberelectric.const import (
@@ -42,7 +38,7 @@ def create_amber_config_entry(site_id: str, name: str) -> MockConfigEntry:
             CONF_SITE_NAME: name,
             CONF_SITE_ID: site_id,
         },
-        unique_id=site_id,
+        entry_id=site_id,
     )
 
 
@@ -90,6 +86,12 @@ def general_channel_prices() -> list[Interval]:
 
 
 @pytest.fixture
+def general_channel_prices_with_range() -> list[Interval]:
+    """List containing general channel prices."""
+    return GENERAL_CHANNEL_WITH_RANGE
+
+
+@pytest.fixture
 def controlled_load_channel_prices() -> list[Interval]:
     """List containing controlled load channel prices."""
     return CONTROLLED_LOAD_CHANNEL
@@ -99,6 +101,12 @@ def controlled_load_channel_prices() -> list[Interval]:
 def feed_in_channel_prices() -> list[Interval]:
     """List containing feed in channel prices."""
     return FEED_IN_CHANNEL
+
+
+@pytest.fixture
+def forecast_prices() -> list[Interval]:
+    """List containing forecasts with advanced prices."""
+    return FORECASTS
 
 
 @pytest.fixture
@@ -113,11 +121,11 @@ def mock_amber_client_general_channel(
 
 @pytest.fixture
 def mock_amber_client_general_channel_with_range(
-    mock_amber_client: AsyncMock,
+    mock_amber_client: AsyncMock, general_channel_prices_with_range: list[Interval]
 ) -> Generator[AsyncMock]:
     """Fake general channel prices with a range."""
     client = mock_amber_client.return_value
-    client.get_current_prices.return_value = GENERAL_CHANNEL_WITH_RANGE
+    client.get_current_prices.return_value = general_channel_prices_with_range
     return mock_amber_client
 
 
@@ -149,28 +157,11 @@ async def mock_amber_client_general_and_feed_in(
     return mock_amber_client
 
 
-@pytest.fixture(name="forecast_prices")
-def mock_api_current_price() -> Generator:
-    """Return an authentication error."""
-    instance = Mock()
-
-    site = Site(
-        id=GENERAL_ONLY_SITE_ID,
-        nmi="11111111111",
-        channels=[
-            Channel(identifier="E1", type=ChannelType.GENERAL, tariff="A100"),
-            Channel(identifier="E2", type=ChannelType.CONTROLLEDLOAD, tariff="A180"),
-            Channel(identifier="B1", type=ChannelType.FEEDIN, tariff="A100"),
-        ],
-        network="Jemena",
-        status=SiteStatus("active"),
-        activeFrom=date(2021, 1, 1),
-        closedOn=None,
-        interval_length=30,
-    )
-
-    instance.get_sites = Mock(return_value=[site])
-    instance.get_current_prices = Mock(return_value=FORECASTS)
-
-    with patch("amberelectric.AmberApi", return_value=instance):
-        yield instance
+@pytest.fixture
+async def mock_amber_client_forecasts(
+    mock_amber_client: AsyncMock, forecast_prices: list[Interval]
+) -> AsyncGenerator[Mock]:
+    """Set up general channel and feed in channel."""
+    client = mock_amber_client.return_value
+    client.get_current_prices.return_value = forecast_prices
+    return mock_amber_client
