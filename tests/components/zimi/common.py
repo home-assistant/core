@@ -29,6 +29,32 @@ INPUT_HOST = "192.168.1.100"
 INPUT_PORT = 5003
 
 
+async def assert_on_and_off(
+    hass: HomeAssistant, entity_type: str, entity_key: str, mock_device: MagicMock
+) -> None:
+    """Assert that the entity can be turned on and off."""
+
+    services = hass.services.async_services()
+    assert entity_type in services
+    assert "turn_on" in services[entity_type]
+    await hass.services.async_call(
+        entity_type,
+        "turn_on",
+        {"entity_id": entity_key},
+        blocking=True,
+    )
+    assert mock_device.turn_on.called
+
+    assert "turn_off" in services[entity_type]
+    await hass.services.async_call(
+        entity_type,
+        "turn_off",
+        {"entity_id": entity_key},
+        blocking=True,
+    )
+    assert mock_device.turn_off.called
+
+
 def mock_entity(
     device_name: str | None = None, entity_type: str | None = None
 ) -> MagicMock:
@@ -54,6 +80,7 @@ def mock_entity(
     mock_entity.subscribe = AsyncMock()
 
     mock_entity.set_brightness = AsyncMock()
+    mock_entity.set_fanspeed = AsyncMock()
     mock_entity.turn_on = AsyncMock()
     mock_entity.turn_off = AsyncMock()
 
