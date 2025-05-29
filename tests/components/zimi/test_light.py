@@ -7,7 +7,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import ENTITY_INFO, mock_entity, setup_platform
+from .common import ENTITY_INFO, assert_on_and_off, mock_entity, setup_platform
 
 
 async def test_light_entity(
@@ -32,25 +32,7 @@ async def test_light_entity(
     assert state is not None
     assert state.state == "on"
 
-    services = hass.services.async_services()
-    assert "light" in services
-    assert "turn_on" in services["light"]
-    await hass.services.async_call(
-        "light",
-        "turn_on",
-        {"entity_id": entity_key},
-        blocking=True,
-    )
-    assert mock_api.lights[0].turn_on.called
-
-    assert "turn_off" in services["light"]
-    await hass.services.async_call(
-        "light",
-        "turn_off",
-        {"entity_id": entity_key},
-        blocking=True,
-    )
-    assert mock_api.lights[0].turn_off.called
+    await assert_on_and_off(hass, entity_type, entity_key, mock_api.lights[0])
 
 
 async def test_dimmer_entity(

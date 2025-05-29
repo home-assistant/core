@@ -6,7 +6,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import ENTITY_INFO, mock_entity, setup_platform
+from .common import ENTITY_INFO, assert_on_and_off, mock_entity, setup_platform
 
 
 async def test_switch_entity(
@@ -28,22 +28,4 @@ async def test_switch_entity(
     assert state is not None
     assert state.state == "on"
 
-    services = hass.services.async_services()
-    assert "switch" in services
-    assert "turn_on" in services["switch"]
-    await hass.services.async_call(
-        "switch",
-        "turn_on",
-        {"entity_id": entity_key},
-        blocking=True,
-    )
-    assert mock_api.outlets[0].turn_on.called
-
-    assert "turn_off" in services["switch"]
-    await hass.services.async_call(
-        "switch",
-        "turn_off",
-        {"entity_id": entity_key},
-        blocking=True,
-    )
-    assert mock_api.outlets[0].turn_off.called
+    await assert_on_and_off(hass, entity_type, entity_key, mock_api.outlets[0])
