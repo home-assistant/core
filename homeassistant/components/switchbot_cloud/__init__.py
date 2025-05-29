@@ -173,7 +173,12 @@ async def make_device_data(
             else:
                 devices_data.switches.append((device, coordinator))
 
-    if isinstance(device, Device) and device.device_type in ["Strip Light 3"]:
+    if isinstance(device, Device) and device.device_type in [
+        "Strip Light 3",
+        "Floor Lamp",
+        "Color Bulb",
+        "Strip Light",
+    ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
         )

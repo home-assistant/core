@@ -14,6 +14,11 @@ from .const import DOMAIN
 from .entity import SwitchBotCloudEntity
 
 
+def value_map_brightness(value: int) -> int:
+    """Return value for brightness map."""
+    return int(value / 255 * 100)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config: ConfigEntry,
@@ -36,8 +41,6 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
     #     | LightEntityFeature.TRANSITION
     # )
 
-    _attr_supported_color_modes = {ColorMode.RGB, ColorMode.COLOR_TEMP}
-
     _attr_max_color_temp_kelvin = 6500
     _attr_min_color_temp_kelvin = 2700
 
@@ -48,6 +51,11 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
         """Return True if entity is on."""
         response: dict | None = self.coordinator.data
         assert response is not None
+        device_type: str | None = response.get("deviceType")
+        if device_type and device_type not in "Strip Light":
+            self._attr_supported_color_modes = {ColorMode.RGB, ColorMode.COLOR_TEMP}
+        else:
+            self._attr_supported_color_modes = {ColorMode.RGB}
         if self._attr_is_on is None:
             self._attr_color_mode = ColorMode.RGB
             power: str | None = response.get("power") if response else None
