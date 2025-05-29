@@ -206,12 +206,6 @@ async def async_setup_services(
         )
         supercharger_id = call.data[ATTR_SUPERCHARGER_ID]
         order = call.data.get(ATTR_ORDER)
-        
-        _LOGGER.error(
-            "Super charger ID '%s': Order %s",
-            supercharger_id,
-            order
-        )
 
         await wake_up_vehicle(vehicle)
         await handle_vehicle_command(
