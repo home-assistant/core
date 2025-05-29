@@ -3,7 +3,6 @@
     "unavailable": "Unavailable",
     "abort": "Abort",
     "vehicle": "Vehicle",
-    "descr_pin": "4-digit code to enable or disable the setting",
     "wake_up_failed": "Failed to wake up vehicle: {message}",
     "wake_up_timeout": "Timed out trying to wake up vehicle",
     "schedule_id": "Schedule ID",
@@ -12,7 +11,20 @@
     "days_of_week_description": "Select which days this schedule should be enabled on. You can select multiple days.",
     "one_time": "One-time",
     "one_time_description": "If this is a one-time schedule.",
-    "location_description": "The approximate location the vehicle must be at to use this schedule. Defaults to Home Assistant's configured location."
+    "location_description": "The approximate location the vehicle must be at to use this schedule. Defaults to Home Assistant's configured location.",
+    "start_time": "Start time",
+    "start_time_description": "The time this schedule begins, e.g. 01:05 for 1:05 AM.",
+    "end_time": "End time",
+    "end_time_description": "The time this schedule ends, e.g. 01:05 for 1:05 AM.",
+    "precondition_time": "Precondition time",
+    "precondition_time_description": "The time the vehicle should complete preconditioning, e.g. 01:05 for 1:05 AM.",
+    "schedule_name": "Name",
+    "schedule_name_description": "The name of the schedule.",
+    "vehicle_to_schedule": "Vehicle to schedule.",
+    "vehicle_to_remove_schedule": "Vehicle to remove schedule from.",
+    "schedule_enable_description": "If this schedule should be considered for execution.",
+    "schedule_id_remove_description": "The ID of the schedule to remove.",
+    "descr_pin": "4-digit code to enable or disable the setting"
   },
   "config": {
     "abort": {
@@ -1145,7 +1157,7 @@
       "description": "Sets a time at which charging should be started.",
       "fields": {
         "device_id": {
-          "description": "Vehicle to schedule.",
+          "description": "[%key:component::teslemetry::common::vehicle_to_schedule%]",
           "name": "[%key:component::teslemetry::common::vehicle%]"
         },
         "enable": {
@@ -1167,7 +1179,7 @@
           "name": "Departure time"
         },
         "device_id": {
-          "description": "Vehicle to schedule.",
+          "description": "[%key:component::teslemetry::common::vehicle_to_schedule%]",
           "name": "[%key:component::teslemetry::common::vehicle%]"
         },
         "enable": {
@@ -1251,7 +1263,7 @@
       "description": "Adds or modifies a charging schedule for a vehicle.",
       "fields": {
         "device_id": {
-          "description": "Vehicle to schedule.",
+          "description": "[%key:component::teslemetry::common::vehicle_to_schedule%]",
           "name": "[%key:component::teslemetry::common::vehicle%]"
         },
         "days_of_week": {
@@ -1259,7 +1271,7 @@
           "name": "[%key:component::teslemetry::common::days_of_week%]"
         },
         "enable": {
-          "description": "If this schedule should be considered for execution.",
+          "description": "[%key:component::teslemetry::common::schedule_enable_description%]",
           "name": "[%key:common::action::enable%]"
         },
         "location": {
@@ -1267,12 +1279,12 @@
           "name": "Location"
         },
         "start_time": {
-          "description": "The time this schedule begins, e.g. 01:05 for 1:05 AM.",
-          "name": "Start time"
+          "description": "[%key:component::teslemetry::common::start_time_description%]",
+          "name": "[%key:component::teslemetry::common::start_time%]"
         },
         "end_time": {
-          "description": "The time this schedule ends, e.g. 01:05 for 1:05 AM.",
-          "name": "End time"
+          "description": "[%key:component::teslemetry::common::end_time_description%]",
+          "name": "[%key:component::teslemetry::common::end_time%]"
         },
         "one_time": {
           "description": "[%key:component::teslemetry::common::one_time_description%]",
@@ -1283,8 +1295,8 @@
           "name": "[%key:component::teslemetry::common::schedule_id%]"
         },
         "name": {
-          "description": "The name of the schedule.",
-          "name": "Name"
+          "description": "[%key:component::teslemetry::common::schedule_name_description%]",
+          "name": "[%key:component::teslemetry::common::schedule_name%]"
         }
       },
       "name": "Add charge schedule"
@@ -1293,11 +1305,11 @@
       "description": "Removes a charging schedule for a vehicle.",
       "fields": {
         "device_id": {
-          "description": "Vehicle to remove schedule from.",
+          "description": "[%key:component::teslemetry::common::vehicle_to_remove_schedule%]",
           "name": "[%key:component::teslemetry::common::vehicle%]"
         },
         "id": {
-          "description": "The ID of the schedule to remove.",
+          "description": "[%key:component::teslemetry::common::schedule_id_remove_description%]",
           "name": "[%key:component::teslemetry::common::schedule_id%]"
         }
       },
@@ -1307,7 +1319,7 @@
       "description": "Adds or modifies a preconditioning schedule for a vehicle.",
       "fields": {
         "device_id": {
-          "description": "Vehicle to schedule.",
+          "description": "[%key:component::teslemetry::common::vehicle_to_schedule%]",
           "name": "[%key:component::teslemetry::common::vehicle%]"
         },
         "days_of_week": {
@@ -1315,7 +1327,7 @@
           "name": "[%key:component::teslemetry::common::days_of_week%]"
         },
         "enable": {
-          "description": "If this schedule should be considered for execution.",
+          "description": "[%key:component::teslemetry::common::schedule_enable_description%]",
           "name": "[%key:common::action::enable%]"
         },
         "location": {
@@ -1323,8 +1335,8 @@
           "name": "Location"
         },
         "precondition_time": {
-          "description": "The time the vehicle should complete preconditioning, e.g. 01:05 for 1:05 AM.",
-          "name": "Precondition time"
+          "description": "[%key:component::teslemetry::common::precondition_time_description%]",
+          "name": "[%key:component::teslemetry::common::precondition_time%]"
         },
         "id": {
           "description": "[%key:component::teslemetry::common::schedule_id_description%]",
@@ -1335,8 +1347,8 @@
           "name": "[%key:component::teslemetry::common::one_time%]"
         },
         "name": {
-          "description": "The name of this schedule.",
-          "name": "Name"
+          "description": "[%key:component::teslemetry::common::schedule_name_description%]",
+          "name": "[%key:component::teslemetry::common::schedule_name%]"
         }
       },
       "name": "Add precondition schedule"
@@ -1345,11 +1357,11 @@
       "description": "Removes a preconditioning schedule for a vehicle.",
       "fields": {
         "device_id": {
-          "description": "Vehicle to remove schedule from.",
+          "description": "[%key:component::teslemetry::common::vehicle_to_remove_schedule%]",
           "name": "[%key:component::teslemetry::common::vehicle%]"
         },
         "id": {
-          "description": "The ID of the schedule to remove.",
+          "description": "[%key:component::teslemetry::common::schedule_id_remove_description%]",
           "name": "[%key:component::teslemetry::common::schedule_id%]"
         }
       },
