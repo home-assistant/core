@@ -12,13 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -41,6 +35,9 @@ class AirQualitySensorEntityDescription(SensorEntityDescription):
     exists_fn: Callable[[AirQualityData], bool] = lambda _: True
     options_fn: Callable[[AirQualityData], list[str] | None] = lambda _: None
     value_fn: Callable[[AirQualityData], StateType]
+    native_unit_of_measurement_fn: Callable[[AirQualityData], str | None] = (
+        lambda _: None
+    )
 
 
 AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
@@ -91,42 +88,42 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
         key="co",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CO,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        value_fn=lambda x: x.pollutants.co.concentration.value / 1000,
+        native_unit_of_measurement_fn=lambda x: x.pollutants.co.concentration.units,
+        value_fn=lambda x: x.pollutants.co.concentration.value,
     ),
     AirQualitySensorEntityDescription(
         key="no2",
         translation_key="nitrogen_dioxide",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        native_unit_of_measurement_fn=lambda x: x.pollutants.no2.concentration.units,
         value_fn=lambda x: x.pollutants.no2.concentration.value,
     ),
     AirQualitySensorEntityDescription(
         key="o3",
         translation_key="ozone",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        native_unit_of_measurement_fn=lambda x: x.pollutants.o3.concentration.units,
         value_fn=lambda x: x.pollutants.o3.concentration.value,
     ),
     AirQualitySensorEntityDescription(
         key="pm10",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PM10,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement_fn=lambda x: x.pollutants.pm10.concentration.units,
         value_fn=lambda x: x.pollutants.pm10.concentration.value,
     ),
     AirQualitySensorEntityDescription(
         key="pm25",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PM25,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement_fn=lambda x: x.pollutants.pm25.concentration.units,
         value_fn=lambda x: x.pollutants.pm25.concentration.value,
     ),
     AirQualitySensorEntityDescription(
         key="so2",
         translation_key="sulphur_dioxide",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        native_unit_of_measurement_fn=lambda x: x.pollutants.so2.concentration.units,
         value_fn=lambda x: x.pollutants.so2.concentration.value,
     ),
 )
@@ -192,5 +189,12 @@ class AirQualitySensorEntity(
     def options(self) -> list[str] | None:
         """Return the option of the sensor."""
         return self.entity_description.options_fn(
+            self.coordinator.data[self.subentry_id]
+        )
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the native unit of measurement of the sensor."""
+        return self.entity_description.native_unit_of_measurement_fn(
             self.coordinator.data[self.subentry_id]
         )
