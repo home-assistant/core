@@ -55,7 +55,7 @@ async def test_calendar_events(
     mock_legacy: AsyncMock,
     entity_id: str,
 ) -> None:
-    """Tests that the calendar entity is correct."""
+    """Tests that the energy tariff calendar entity events are correct."""
 
     TZ = dt_util.get_default_time_zone()
     freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=TZ))
