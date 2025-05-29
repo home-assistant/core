@@ -762,7 +762,7 @@ dbus-fast==2.43.0
 debugpy==1.8.14
 
 # homeassistant.components.decora_wifi
-# decora-wifi==1.4
+decora-wifi==1.4
 
 # homeassistant.components.decora
 # decora==0.6
@@ -1167,7 +1167,7 @@ hole==0.8.0
 holidays==0.73
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250527.0
+home-assistant-frontend==20250528.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.5.28
@@ -1835,7 +1835,7 @@ pyairnow==1.2.1
 pyairvisual==2023.08.1
 
 # homeassistant.components.aprilaire
-pyaprilaire==0.9.0
+pyaprilaire==0.9.1
 
 # homeassistant.components.asuswrt
 pyasuswrt==0.1.21

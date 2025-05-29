@@ -561,6 +561,9 @@ bluecurrent-api==1.2.3
 # homeassistant.components.bluemaestro
 bluemaestro-ble==0.4.1
 
+# homeassistant.components.decora
+# bluepy==1.3.0
+
 # homeassistant.components.bluetooth
 bluetooth-adapters==0.21.4
 
@@ -657,6 +660,9 @@ dbus-fast==2.43.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.14
+
+# homeassistant.components.decora
+# decora==0.6
 
 # homeassistant.components.ecovacs
 deebot-client==13.2.1
@@ -1004,7 +1010,7 @@ hole==0.8.0
 holidays==0.73
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250527.0
+home-assistant-frontend==20250528.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.5.28
@@ -1528,7 +1534,7 @@ pyairnow==1.2.1
 pyairvisual==2023.08.1
 
 # homeassistant.components.aprilaire
-pyaprilaire==0.9.0
+pyaprilaire==0.9.1
 
 # homeassistant.components.asuswrt
 pyasuswrt==0.1.21

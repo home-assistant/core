@@ -27,7 +27,6 @@ EXCLUDED_REQUIREMENTS_ALL = {
     "beewi-smartclim",  # depends on bluepy
     "bluepy",
     "decora",
-    "decora-wifi",
     "evdev",
     "face-recognition",
     "pybluez",
@@ -43,7 +42,6 @@ EXCLUDED_REQUIREMENTS_ALL = {
 # Requirements excluded by EXCLUDED_REQUIREMENTS_ALL which should be included when
 # building integration wheels for all architectures.
 INCLUDED_REQUIREMENTS_WHEELS = {
-    "decora-wifi",
     "evdev",
     "pycups",
     "python-gammu",
