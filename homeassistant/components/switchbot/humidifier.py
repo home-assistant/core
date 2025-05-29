@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 import switchbot
-from switchbot import HumidifierMode
+from switchbot import HumidifierAction as SwitchbotHumidifierAction, HumidifierMode
 
 from homeassistant.components.humidifier import (
     MODE_AUTO,
@@ -25,9 +25,9 @@ from .entity import SwitchbotSwitchedEntity, exception_handler
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 EVAPORATIVE_HUMIDIFIER_ACTION_MAP: dict[int, HumidifierAction] = {
-    0: HumidifierAction.OFF,
-    1: HumidifierAction.HUMIDIFYING,
-    2: HumidifierAction.DRYING,
+    SwitchbotHumidifierAction.OFF: HumidifierAction.OFF,
+    SwitchbotHumidifierAction.HUMIDIFYING: HumidifierAction.HUMIDIFYING,
+    SwitchbotHumidifierAction.DRYING: HumidifierAction.DRYING,
 }
 
 
