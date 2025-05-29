@@ -280,7 +280,7 @@ aiohue==4.7.4
 aioimaplib==2.0.1
 
 # homeassistant.components.immich
-aioimmich==0.6.0
+aioimmich==0.7.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -405,7 +405,7 @@ aiosyncthing==0.5.1
 aiotankerkoenig==0.4.2
 
 # homeassistant.components.tedee
-aiotedee==0.2.20
+aiotedee==0.2.23
 
 # homeassistant.components.tractive
 aiotractive==0.6.0
@@ -759,7 +759,7 @@ dbus-fast==2.43.0
 debugpy==1.8.14
 
 # homeassistant.components.decora_wifi
-# decora-wifi==1.4
+decora-wifi==1.4
 
 # homeassistant.components.decora
 # decora==0.6
@@ -1832,7 +1832,7 @@ pyairnow==1.2.1
 pyairvisual==2023.08.1
 
 # homeassistant.components.aprilaire
-pyaprilaire==0.9.0
+pyaprilaire==0.9.1
 
 # homeassistant.components.asuswrt
 pyasuswrt==0.1.21
