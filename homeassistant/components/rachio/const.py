@@ -75,8 +75,6 @@ KEY_PROGRAM_ID = "programId"
 KEY_PROGRAM_NAME = "programName"
 KEY_PROGRAM_RUN_SUMMARIES = "valveProgramRunSummaries"
 KEY_TOTAL_RUN_DURATION = "totalRunDurationSeconds"
-KEY_ADDRESS = "address"
-KEY_LOCALITY = "locality"
 KEY_SKIP = "skip"
 KEY_SKIPPABLE = "skippable"
 
