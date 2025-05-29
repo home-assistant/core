@@ -1,4 +1,4 @@
-"""Event."""
+"""Event platform for Ekey Bionyx integration."""
 
 from aiohttp.hdrs import METH_POST
 from aiohttp.web import Request, Response

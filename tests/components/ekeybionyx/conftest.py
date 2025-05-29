@@ -16,7 +16,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 def mock_systems(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Fixture to setup fake requests made to Fitbit API during config flow."""
+    """Fixture to setup fake requests made to Ekey Bionyx API during config flow."""
     aioclient_mock.request(
         "GET",
         "https://api.bionyx.io/3rd-party/api/systems",
@@ -42,7 +42,7 @@ def mock_systems(
 def mock_no_own_systems(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Fixture to setup fake requests made to Fitbit API during config flow."""
+    """Fixture to setup fake requests made to Ekey Bionyx API during config flow."""
     aioclient_mock.request(
         "GET",
         "https://api.bionyx.io/3rd-party/api/systems",
@@ -62,7 +62,7 @@ def mock_no_own_systems(
 def mock_no_response(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Fixture to setup fake requests made to Fitbit API during config flow."""
+    """Fixture to setup fake requests made to Ekey Bionyx API during config flow."""
     aioclient_mock.request(
         "GET",
         "https://api.bionyx.io/3rd-party/api/systems",
@@ -74,7 +74,7 @@ def mock_no_response(
 def mock_no_availible_webhooks(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Fixture to setup fake requests made to Fitbit API during config flow."""
+    """Fixture to setup fake requests made to Ekey Bionyx API during config flow."""
     aioclient_mock.request(
         "GET",
         "https://api.bionyx.io/3rd-party/api/systems",
@@ -94,7 +94,7 @@ def mock_no_availible_webhooks(
 def mock_already_set_up(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Fixture to setup fake requests made to Fitbit API during config flow."""
+    """Fixture to setup fake requests made to Ekey Bionyx API during config flow."""
     aioclient_mock.request(
         "GET",
         "https://api.bionyx.io/3rd-party/api/systems",
@@ -114,7 +114,7 @@ def mock_already_set_up(
 def mock_webhooks(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Fixture to setup fake requests made to Fitbit API during config flow."""
+    """Fixture to setup fake requests made to Ekey Bionyx API during config flow."""
     aioclient_mock.request(
         "GET",
         "https://api.bionyx.io/3rd-party/api/systems/946DA01F-9ABD-4D9D-80C7-02AF85C822A8/function-webhooks",
@@ -136,7 +136,7 @@ def mock_webhooks(
 def mock_webhook_deletion(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Fixture to setup fake requests made to Fitbit API during config flow."""
+    """Fixture to setup fake requests made to Ekey Bionyx API during config flow."""
     aioclient_mock.request(
         "DELETE",
         "https://api.bionyx.io/3rd-party/api/systems/946DA01F-9ABD-4D9D-80C7-02AF85C822A8/function-webhooks/946DA01F-9ABD-4D9D-80C7-02AF85C822B9",
@@ -148,7 +148,7 @@ def mock_webhook_deletion(
 def mock_add_webhook(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Fixture to setup fake requests made to Fitbit API during config flow."""
+    """Fixture to setup fake requests made to Ekey Bionyx API during config flow."""
     aioclient_mock.request(
         "POST",
         "https://api.bionyx.io/3rd-party/api/systems/946DA01F-9ABD-4D9D-80C7-02AF85C822A8/function-webhooks",
