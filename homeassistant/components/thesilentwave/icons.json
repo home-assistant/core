@@ -1,6 +1,6 @@
 {
   "entity": {
-    "sensor": {
+    "binary_sensor": {
       "status": {
         "default": "mdi:power",
         "state": {
