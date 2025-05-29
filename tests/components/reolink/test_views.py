@@ -58,7 +58,10 @@ def get_mock_session(
     return mock_session
 
 
-@pytest.mark.parametrize(("content_type"), [("video/mp4"), ("application/octet-stream"), ("apolication/octet-stream")])
+@pytest.mark.parametrize(
+    ("content_type"),
+    [("video/mp4"), ("application/octet-stream"), ("apolication/octet-stream")],
+)
 async def test_playback_proxy(
     hass: HomeAssistant,
     reolink_connect: MagicMock,
