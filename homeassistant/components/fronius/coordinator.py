@@ -181,8 +181,8 @@ class FroniusLoggerUpdateCoordinator(FroniusCoordinatorBase):
 class FroniusMeterUpdateCoordinator(FroniusCoordinatorBase):
     """Query Fronius system meter endpoint and keep track of seen conditions."""
 
-    default_interval = timedelta(minutes=1)
-    error_interval = timedelta(minutes=10)
+    default_interval = timedelta(seconds=10)
+    error_interval = timedelta(minutes=3)
     valid_descriptions = METER_ENTITY_DESCRIPTIONS
 
     async def _update_method(self) -> dict[SolarNetId, Any]:
