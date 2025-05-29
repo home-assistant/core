@@ -58,6 +58,7 @@ async def async_get_backup_agents(
         if entry.unique_id is not None
         and entry.runtime_data.api.file_station
         and entry.options.get(CONF_BACKUP_PATH)
+        and entry.runtime_data.coordinator_central.last_update_success
     ]
 
 
@@ -235,7 +236,7 @@ class SynologyDSMBackupAgent(BackupAgent):
                 raise BackupAgentError("Failed to read meta data") from err
 
         try:
-            files = await self._file_station.get_files(path=self.path)
+            files = await self._file_station.get_files(path=self.path, limit=1000)
         except SynologyDSMAPIErrorException as err:
             raise BackupAgentError("Failed to list backups") from err
 

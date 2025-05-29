@@ -27,9 +27,10 @@
     'original_name': 'Firmware',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
     'translation_key': None,
-    'unique_id': '286ba274-4093-4bcb-849c-a1a3efe7b1e5',
+    'unique_id': '286ba274-4093-4bcb-849c-a1a3efe7b1e5_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -87,9 +88,10 @@
     'original_name': 'Firmware',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
     'translation_key': None,
-    'unique_id': 'd0268a69-abfb-4c92-a646-61cec2e510ad',
+    'unique_id': 'd0268a69-abfb-4c92-a646-61cec2e510ad_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -147,9 +149,10 @@
     'original_name': 'Firmware',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
     'translation_key': None,
-    'unique_id': '2d9a892b-1c93-45a5-84cb-0e81889498c6',
+    'unique_id': '2d9a892b-1c93-45a5-84cb-0e81889498c6_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -207,9 +210,10 @@
     'original_name': 'Firmware',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
     'translation_key': None,
-    'unique_id': '71afed1c-006d-4e48-b16e-e7f88f9fd638',
+    'unique_id': '71afed1c-006d-4e48-b16e-e7f88f9fd638_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -267,9 +271,10 @@
     'original_name': 'Firmware',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
     'translation_key': None,
-    'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c',
+    'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -327,9 +332,10 @@
     'original_name': 'Firmware',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
     'translation_key': None,
-    'unique_id': '550a1c72-65a0-4d55-b97b-75168e055398',
+    'unique_id': '550a1c72-65a0-4d55-b97b-75168e055398_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -387,9 +393,10 @@
     'original_name': 'Firmware',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
     'translation_key': None,
-    'unique_id': 'a9f587c5-5d8b-4273-8907-e7f609af5158',
+    'unique_id': 'a9f587c5-5d8b-4273-8907-e7f609af5158_main',
     'unit_of_measurement': None,
   })
 # ---

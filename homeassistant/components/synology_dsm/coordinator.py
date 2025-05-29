@@ -35,6 +35,7 @@ class SynologyDSMData:
 
     api: SynoApi
     coordinator_central: SynologyDSMCentralUpdateCoordinator
+    coordinator_central_old_update_success: bool
     coordinator_cameras: SynologyDSMCameraUpdateCoordinator | None
     coordinator_switches: SynologyDSMSwitchUpdateCoordinator | None
 

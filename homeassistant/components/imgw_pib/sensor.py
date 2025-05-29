@@ -24,7 +24,8 @@ from .const import DOMAIN
 from .coordinator import ImgwPibConfigEntry, ImgwPibDataUpdateCoordinator
 from .entity import ImgwPibEntity
 
-PARALLEL_UPDATES = 1
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)

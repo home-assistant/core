@@ -16,12 +16,12 @@ from vacuum_map_parser_base.config.drawable import Drawable
 
 from homeassistant import config_entries
 from homeassistant.components.roborock.const import CONF_ENTRY_CODE, DOMAIN, DRAWABLES
-from homeassistant.const import CONF_USERNAME
+from homeassistant.const import CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .mock_data import MOCK_CONFIG, NETWORK_INFO, USER_DATA, USER_EMAIL
+from .mock_data import MOCK_CONFIG, NETWORK_INFO, ROBOROCK_RRUID, USER_DATA, USER_EMAIL
 
 from tests.common import MockConfigEntry
 
@@ -64,6 +64,7 @@ async def test_config_flow_success(
             )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["context"]["unique_id"] == ROBOROCK_RRUID
     assert result["title"] == USER_EMAIL
     assert result["data"] == MOCK_CONFIG
     assert result["result"]
@@ -128,6 +129,7 @@ async def test_config_flow_failures_request_code(
             )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["context"]["unique_id"] == ROBOROCK_RRUID
     assert result["title"] == USER_EMAIL
     assert result["data"] == MOCK_CONFIG
     assert result["result"]
@@ -189,6 +191,7 @@ async def test_config_flow_failures_code_login(
             )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["context"]["unique_id"] == ROBOROCK_RRUID
     assert result["title"] == USER_EMAIL
     assert result["data"] == MOCK_CONFIG
     assert result["result"]
@@ -256,6 +259,7 @@ async def test_reauth_flow(
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert mock_roborock_entry.unique_id == ROBOROCK_RRUID
     assert mock_roborock_entry.data["user_data"]["rriot"]["s"] == "new_password_hash"
 
 
@@ -264,7 +268,8 @@ async def test_account_already_configured(
     bypass_api_fixture,
     mock_roborock_entry: MockConfigEntry,
 ) -> None:
-    """Handle the config flow and make sure it succeeds."""
+    """Ensure the same account cannot be setup twice."""
+    assert mock_roborock_entry.unique_id == ROBOROCK_RRUID
     with patch(
         "homeassistant.components.roborock.async_setup_entry", return_value=True
     ):
@@ -280,8 +285,57 @@ async def test_account_already_configured(
                 result["flow_id"], {CONF_USERNAME: USER_EMAIL}
             )
 
+        assert result["step_id"] == "code"
+        assert result["type"] is FlowResultType.FORM
+        with patch(
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login",
+            return_value=USER_DATA,
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}
+            )
             assert result["type"] is FlowResultType.ABORT
             assert result["reason"] == "already_configured_account"
+
+
+async def test_reauth_wrong_account(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    mock_roborock_entry: MockConfigEntry,
+) -> None:
+    """Ensure that reauthentication must use the same account."""
+
+    # Start reauth
+    result = mock_roborock_entry.async_start_reauth(hass)
+    await hass.async_block_till_done()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    [result] = flows
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.roborock.async_setup_entry", return_value=True
+    ):
+        with patch(
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code"
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {CONF_USERNAME: USER_EMAIL}
+            )
+
+        assert result["step_id"] == "code"
+        assert result["type"] is FlowResultType.FORM
+        new_user_data = deepcopy(USER_DATA)
+        new_user_data.rruid = "new_rruid"
+        with patch(
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login",
+            return_value=new_user_data,
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}
+            )
+            assert result["type"] is FlowResultType.ABORT
+            assert result["reason"] == "wrong_account"
 
 
 async def test_discovery_not_setup(
@@ -322,16 +376,17 @@ async def test_discovery_not_setup(
             )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["context"]["unique_id"] == ROBOROCK_RRUID
     assert result["title"] == USER_EMAIL
     assert result["data"] == MOCK_CONFIG
     assert result["result"]
 
 
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
 async def test_discovery_already_setup(
     hass: HomeAssistant,
     bypass_api_fixture,
     mock_roborock_entry: MockConfigEntry,
-    cleanup_map_storage_manual,
 ) -> None:
     """Handle aborting if the device is already setup."""
     await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
@@ -347,3 +402,4 @@ async def test_discovery_already_setup(
     )
 
     assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

@@ -6,7 +6,7 @@
         "description": "[%key:component::bluetooth::config::step::user::description%]",
         "data": {
           "address": "[%key:common::config_flow::data::device%]",
-          "medium_type": "Medium Type"
+          "medium_type": "Medium type"
         }
       },
       "bluetooth_confirm": {
