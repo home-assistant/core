@@ -15,7 +15,7 @@ from homeassistant.components.event import (
     EventEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import CONF_PLATFORM, STATE_UNKNOWN
+from homeassistant.const import CONF_PLATFORM, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
@@ -254,7 +254,9 @@ async def test_name(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.EVENT]
+        )
         return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
