@@ -17,9 +17,9 @@ from .const import COMMAND_OK, VEHICLE_DATA
 
 from homeassistant.components.tesla_fleet.const import DOMAIN
 from homeassistant.components.tesla_fleet.services import (
-    SERVICE_SEND_NAVIGATION_REQUEST,
-    SERVICE_SEND_NAVIGATION_GPS_REQUEST,
-    SERVICE_SEND_NAVIGATION_SC_REQUEST,
+    SERVICE_NAVIGATION_REQUEST,
+    SERVICE_NAVIGATION_GPS_REQUEST,
+    SERVICE_NAVIGATE_TO_SUPERCHARGER_REQUEST,
     SERVICE_SHARE_TO_VEHICLE,
     ATTR_DEVICE_ID,
     ATTR_SUPERCHARGER_ID,
@@ -34,9 +34,9 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize(
     ("service", "func", "service_data"),
     [
-        (SERVICE_SEND_NAVIGATION_SC_REQUEST, "navigation_sc_request", {ATTR_SUPERCHARGER_ID: "12345"}),
-        (SERVICE_SEND_NAVIGATION_GPS_REQUEST, "navigation_gps_request", {ATTR_LOCATION: {ATTR_LATITUDE: 37.7749, ATTR_LONGITUDE: -122.4194}}),
-        (SERVICE_SEND_NAVIGATION_REQUEST, "navigation_request", {ATTR_VALUE: "Test Location"}),
+        (SERVICE_NAVIGATE_TO_SUPERCHARGER_REQUEST, "navigation_sc_request", {ATTR_SUPERCHARGER_ID: "12345"}),
+        (SERVICE_NAVIGATION_GPS_REQUEST, "navigation_gps_request", {ATTR_LOCATION: {ATTR_LATITUDE: 37.7749, ATTR_LONGITUDE: -122.4194}}),
+        (SERVICE_NAVIGATION_REQUEST, "navigation_request", {ATTR_VALUE: "Test Location"}),
         (SERVICE_SHARE_TO_VEHICLE, "navigation_request", {ATTR_VALUE: "https://example.com"})
     ],
 )
@@ -92,7 +92,7 @@ async def test_service_validation_errors(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_NAVIGATION_GPS_REQUEST,
+            SERVICE_NAVIGATION_GPS_REQUEST,
             {
                 ATTR_DEVICE_ID: "nope",
                 ATTR_LOCATION: {ATTR_LATITUDE: 37.7749, ATTR_LONGITUDE: -122.4194},

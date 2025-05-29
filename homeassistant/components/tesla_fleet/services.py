@@ -31,12 +31,12 @@ ATTR_SUPERCHARGER_ID = "supercharger_id"
 
 DEFAULT_NAVIGATION_TYPE = "share_ext_content_raw"
 
-SERVICE_SEND_NAVIGATION_REQUEST = "send_navigation_request"
-SERVICE_SEND_NAVIGATION_GPS_REQUEST = "send_navigation_gps_request"
-SERVICE_SEND_NAVIGATION_SC_REQUEST = "send_navigation_supercharger_request"
+SERVICE_NAVIGATION_REQUEST = "navigation_request"
+SERVICE_NAVIGATION_GPS_REQUEST = "navigation_gps_request"
+SERVICE_NAVIGATE_TO_SUPERCHARGER_REQUEST = "navigate_to_supercharger_request"
 SERVICE_SHARE_TO_VEHICLE = "share_to_vehicle"
 
-SCHEMA_SEND_NAVIGATION_REQUEST = vol.Schema(
+SCHEMA_NAVIGATION_REQUEST = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): cv.string,
         vol.Required(ATTR_VALUE): cv.string,
@@ -45,7 +45,7 @@ SCHEMA_SEND_NAVIGATION_REQUEST = vol.Schema(
     }
 )
 
-SCHEMA_SEND_NAVIGATION_GPS_REQUEST = vol.Schema(
+SCHEMA_NAVIGATION_GPS_REQUEST = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): cv.string,
         vol.Required(ATTR_LOCATION): vol.Schema(
@@ -58,7 +58,7 @@ SCHEMA_SEND_NAVIGATION_GPS_REQUEST = vol.Schema(
     }
 )
 
-SCHEMA_SEND_NAVIGATION_SC_REQUEST = vol.Schema(
+SCHEMA_NAVIGATE_TO_SUPERCHARGER_REQUEST = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): cv.string,
         vol.Required(ATTR_SUPERCHARGER_ID): cv.string,
@@ -161,19 +161,19 @@ async def async_setup_services(
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SEND_NAVIGATION_REQUEST,
+        SERVICE_NAVIGATION_REQUEST,
         send_navigation_or_share_handler,
-        schema=SCHEMA_SEND_NAVIGATION_REQUEST,
+        schema=SCHEMA_NAVIGATION_REQUEST,
     )
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_SHARE_TO_VEHICLE, 
         send_navigation_or_share_handler, 
-        schema=SCHEMA_SEND_NAVIGATION_REQUEST,
+        schema=SCHEMA_NAVIGATION_REQUEST,
     )
 
-    async def send_navigation_gps_request_handler(call: ServiceCall) -> None:
+    async def navigation_gps_request_handler(call: ServiceCall) -> None:
         """Service handler to send a GPS coordinate navigation request."""
         vehicle = await service_helper.get_vehicle_data_for_service(
             call.data[ATTR_DEVICE_ID]
@@ -194,12 +194,12 @@ async def async_setup_services(
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SEND_NAVIGATION_GPS_REQUEST,
-        send_navigation_gps_request_handler,
-        schema=SCHEMA_SEND_NAVIGATION_GPS_REQUEST,
+        SERVICE_NAVIGATION_GPS_REQUEST,
+        navigation_gps_request_handler,
+        schema=SCHEMA_NAVIGATION_GPS_REQUEST,
     )
 
-    async def send_navigation_sc_request_handler(call: ServiceCall) -> None:
+    async def navigate_to_supercharger_request_handler(call: ServiceCall) -> None:
         """Service handler to send a Supercharger navigation request."""
         vehicle = await service_helper.get_vehicle_data_for_service(
             call.data[ATTR_DEVICE_ID]
@@ -224,7 +224,7 @@ async def async_setup_services(
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SEND_NAVIGATION_SC_REQUEST,
-        send_navigation_sc_request_handler,
-        schema=SCHEMA_SEND_NAVIGATION_SC_REQUEST,
+        SERVICE_NAVIGATE_TO_SUPERCHARGER_REQUEST,
+        navigate_to_supercharger_request_handler,
+        schema=SCHEMA_NAVIGATE_TO_SUPERCHARGER_REQUEST,
     )
