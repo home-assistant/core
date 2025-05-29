@@ -53,9 +53,8 @@ class TheSilentWaveCoordinator(DataUpdateCoordinator):
         try:
             status = await self.client.get_status()
 
-            # If we previously had a connection error and now succeeded, log recovery.
+            # Reset connection tracking state if needed
             if not self.has_connection:
-                _LOGGER.info("Reconnected to device at %s", self._host)
                 self.has_connection = True
                 self._connection_error_logged = False
 
