@@ -467,6 +467,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 [vol.In([m.value for m in MediaClass])],
                 lambda x: {MediaClass(item) for item in x},
             ),
+            vol.Optional(ATTR_MEDIA_EXTRA, default={}): dict,
         },
         "async_internal_search_media",
         [MediaPlayerEntityFeature.SEARCH_MEDIA],
@@ -1188,6 +1189,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         media_content_type: MediaType | str | None = None,
         media_content_id: str | None = None,
         media_filter_classes: list[MediaClass] | None = None,
+        extra: dict[str, Any] | None = None,
     ) -> SearchMedia:
         return await self.async_search_media(
             query=SearchMediaQuery(
@@ -1195,6 +1197,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 media_content_type=media_content_type,
                 media_content_id=media_content_id,
                 media_filter_classes=media_filter_classes,
+                extra=extra,
             )
         )
 
