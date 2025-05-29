@@ -1,9 +1,9 @@
 {
   "config": {
     "error": {
-      "invalid_api_token": "Invalid API key",
+      "invalid_api_token": "[%key:common::config_flow::error::invalid_api_key%]",
       "no_site": "No site provided",
-      "unknown_error": "Unexpected error"
+      "unknown_error": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "site": {
@@ -25,7 +25,7 @@
   "services": {
     "get_forecasts": {
       "name": "Get price forecasts",
-      "description": "Retrieve price forecasts",
+      "description": "Retrieves price forecasts from Amber Electric for your property.",
       "fields": {
         "site_id": {
           "name": "Site",
@@ -54,7 +54,7 @@
       "options": {
         "general": "General",
         "controlled_load": "Controlled load",
-        "feed_in": "Feed in"
+        "feed_in": "Feed-in"
       }
     }
   }
