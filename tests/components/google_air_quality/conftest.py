@@ -6,7 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from google_air_quality_api.api import GoogleAirQualityApi
-from google_air_quality_api.model import AirQualityData
+from google_air_quality_api.model import AirQualityData, UserInfoResult
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -158,7 +158,10 @@ def mock_client_api(
     mock_api.async_air_quality.return_value = AirQualityData.from_dict(responses)
 
     mock_api.async_air_quality.side_effect = api_error
-
+    mock_api.get_user_info.return_value = UserInfoResult(
+        id=user_identifier,
+        name="Test Name",
+    )
     return mock_api
 
 

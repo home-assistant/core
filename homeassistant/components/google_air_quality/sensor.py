@@ -78,12 +78,14 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
         translation_key="uaqi_dominant_pollutant",
         device_class=SensorDeviceClass.ENUM,
         value_fn=lambda x: x.indexes[0].dominant_pollutant,
+        options_fn=lambda x: x.indexes[0].pollutant_options,
     ),
     AirQualitySensorEntityDescription(
         key="local_dominant_pollutant",
         translation_key="local_dominant_pollutant",
         device_class=SensorDeviceClass.ENUM,
         value_fn=lambda x: x.indexes[1].dominant_pollutant,
+        options_fn=lambda x: x.indexes[1].pollutant_options,
     ),
     AirQualitySensorEntityDescription(
         key="co",
