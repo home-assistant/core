@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import verify_domain_control
 
-from .bridge import HueBridge
+from .bridge import HueBridge, HueConfigEntry
 from .const import (
     ATTR_DYNAMIC,
     ATTR_GROUP_NAME,
@@ -37,14 +37,16 @@ def async_register_services(hass: HomeAssistant) -> None:
         dynamic = call.data.get(ATTR_DYNAMIC, False)
 
         # Call the set scene function on each bridge
+        entries: list[HueConfigEntry] = hass.config_entries.async_loaded_entries(DOMAIN)
         tasks = [
-            hue_activate_scene_v1(bridge, group_name, scene_name, transition)
-            if bridge.api_version == 1
-            else hue_activate_scene_v2(
-                bridge, group_name, scene_name, transition, dynamic
+            hue_activate_scene_v1(
+                entry.runtime_data, group_name, scene_name, transition
             )
-            for bridge in hass.data[DOMAIN].values()
-            if isinstance(bridge, HueBridge)
+            if entry.runtime_data.api_version == 1
+            else hue_activate_scene_v2(
+                entry.runtime_data, group_name, scene_name, transition, dynamic
+            )
+            for entry in entries
         ]
         results = await asyncio.gather(*tasks)
 

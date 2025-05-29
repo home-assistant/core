@@ -8,7 +8,7 @@ import json
 import logging
 from typing import Any, Concatenate
 
-from azure.core.exceptions import HttpResponseError
+from azure.core.exceptions import AzureError, HttpResponseError, ServiceRequestError
 from azure.storage.blob import BlobProperties
 
 from homeassistant.components.backup import (
@@ -79,6 +79,20 @@ def handle_backup_errors[_R, **P](
             raise BackupAgentError(
                 f"Error during backup operation in {func.__name__}:"
                 f" Status {err.status_code}, message: {err.message}"
+            ) from err
+        except ServiceRequestError as err:
+            raise BackupAgentError(
+                f"Timeout during backup operation in {func.__name__}"
+            ) from err
+        except AzureError as err:
+            _LOGGER.debug(
+                "Error during backup in %s: %s",
+                func.__name__,
+                err,
+                exc_info=True,
+            )
+            raise BackupAgentError(
+                f"Error during backup operation in {func.__name__}: {err}"
             ) from err
 
     return wrapper
@@ -175,7 +189,8 @@ class AzureStorageBackupAgent(BackupAgent):
         """Find a blob by backup id."""
         async for blob in self._client.list_blobs(include="metadata"):
             if (
-                backup_id == blob.metadata.get("backup_id", "")
+                blob.metadata is not None
+                and backup_id == blob.metadata.get("backup_id", "")
                 and blob.metadata.get("metadata_version") == METADATA_VERSION
             ):
                 return blob

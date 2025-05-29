@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import asyncio
 import mimetypes
 from pathlib import Path
 
-from google import genai  # type: ignore[attr-defined]
+from google.genai import Client
 from google.genai.errors import APIError, ClientError
+from google.genai.types import File, FileState
 from requests.exceptions import Timeout
 import voluptuous as vol
 
@@ -32,6 +34,8 @@ from .const import (
     CONF_CHAT_MODEL,
     CONF_PROMPT,
     DOMAIN,
+    FILE_POLLING_INTERVAL_SECONDS,
+    LOGGER,
     RECOMMENDED_CHAT_MODEL,
     TIMEOUT_MILLIS,
 )
@@ -43,7 +47,7 @@ CONF_FILENAMES = "filenames"
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = (Platform.CONVERSATION,)
 
-type GoogleGenerativeAIConfigEntry = ConfigEntry[genai.Client]
+type GoogleGenerativeAIConfigEntry = ConfigEntry[Client]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -91,7 +95,39 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     )
                     prompt_parts.append(uploaded_file)
 
+        async def wait_for_file_processing(uploaded_file: File) -> None:
+            """Wait for file processing to complete."""
+            while True:
+                uploaded_file = await client.aio.files.get(
+                    name=uploaded_file.name,
+                    config={"http_options": {"timeout": TIMEOUT_MILLIS}},
+                )
+                if uploaded_file.state not in (
+                    FileState.STATE_UNSPECIFIED,
+                    FileState.PROCESSING,
+                ):
+                    break
+                LOGGER.debug(
+                    "Waiting for file `%s` to be processed, current state: %s",
+                    uploaded_file.name,
+                    uploaded_file.state,
+                )
+                await asyncio.sleep(FILE_POLLING_INTERVAL_SECONDS)
+
+            if uploaded_file.state == FileState.FAILED:
+                raise HomeAssistantError(
+                    f"File `{uploaded_file.name}` processing failed, reason: {uploaded_file.error.message}"
+                )
+
         await hass.async_add_executor_job(append_files_to_prompt)
+
+        tasks = [
+            asyncio.create_task(wait_for_file_processing(part))
+            for part in prompt_parts
+            if isinstance(part, File) and part.state != FileState.ACTIVE
+        ]
+        async with asyncio.timeout(TIMEOUT_MILLIS / 1000):
+            await asyncio.gather(*tasks)
 
         try:
             response = await client.aio.models.generate_content(
@@ -139,7 +175,11 @@ async def async_setup_entry(
     """Set up Google Generative AI Conversation from a config entry."""
 
     try:
-        client = genai.Client(api_key=entry.data[CONF_API_KEY])
+
+        def _init_client() -> Client:
+            return Client(api_key=entry.data[CONF_API_KEY])
+
+        client = await hass.async_add_executor_job(_init_client)
         await client.aio.models.get(
             model=entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
             config={"http_options": {"timeout": TIMEOUT_MILLIS}},

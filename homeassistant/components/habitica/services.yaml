@@ -1,20 +1,4 @@
 # Describes the format for Habitica service
-api_call:
-  fields:
-    name:
-      required: true
-      example: "xxxNotAValidNickxxx"
-      selector:
-        text:
-    path:
-      required: true
-      example: '["tasks", "user", "post"]'
-      selector:
-        object:
-    args:
-      example: '{"text": "Use API from Home Assistant", "type": "todo"}'
-      selector:
-        object:
 cast_skill:
   fields:
     config_entry: &config_entry
@@ -347,11 +331,11 @@ update_daily:
     notes: *notes
     checklist_options: *checklist_options
     priority: *priority
-    start_date:
+    start_date: &start_date
       required: false
       selector:
         date:
-    frequency:
+    frequency: &frequency_daily
       required: false
       selector:
         select:
@@ -362,7 +346,7 @@ update_daily:
             - "yearly"
           translation_key: "frequency"
           mode: dropdown
-    every_x:
+    every_x: &every_x
       required: false
       selector:
         number:
@@ -370,7 +354,7 @@ update_daily:
           step: 1
           unit_of_measurement: "🔃"
           mode: box
-    repeat_weekly_options:
+    repeat_weekly_options: &repeat_weekly_options
       collapsed: true
       fields:
         repeat:
@@ -388,7 +372,7 @@ update_daily:
               mode: list
               translation_key: repeat
               multiple: true
-    repeat_monthly_options:
+    repeat_monthly_options: &repeat_monthly_options
       collapsed: true
       fields:
         repeat_monthly:
@@ -403,7 +387,7 @@ update_daily:
     reminder_options:
       collapsed: true
       fields:
-        reminder:
+        reminder: &reminder_daily
           required: false
           selector:
             text:
@@ -420,7 +404,7 @@ update_daily:
     developer_options:
       collapsed: true
       fields:
-        streak:
+        streak: &streak
           required: false
           selector:
             number:
@@ -429,3 +413,18 @@ update_daily:
               unit_of_measurement: "▶▶"
               mode: box
         alias: *alias
+create_daily:
+  fields:
+    config_entry: *config_entry
+    name: *name
+    notes: *notes
+    add_checklist_item: *add_checklist_item
+    priority: *priority
+    start_date: *start_date
+    frequency: *frequency_daily
+    every_x: *every_x
+    repeat_weekly_options: *repeat_weekly_options
+    repeat_monthly_options: *repeat_monthly_options
+    reminder: *reminder_daily
+    tag: *tag
+    developer_options: *developer_options

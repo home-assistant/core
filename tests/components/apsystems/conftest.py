@@ -43,6 +43,7 @@ def mock_apsystems() -> Generator[MagicMock]:
             ipAddr="127.0.01",
             minPower=0,
             maxPower=1000,
+            isBatterySystem=False,
         )
         mock_api.get_output_data.return_value = ReturnOutputData(
             p1=2.0,

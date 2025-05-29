@@ -41,9 +41,7 @@ async def async_setup_entry(
     """Add covers for a config entry."""
     entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsCover(
-            entry_data.client, device, entry_data.rooms, Capability(capability)
-        )
+        SmartThingsCover(entry_data.client, device, Capability(capability))
         for device in entry_data.devices.values()
         for capability in device.status[MAIN]
         if capability in CAPABILITIES
@@ -60,14 +58,12 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         self,
         client: SmartThings,
         device: FullDevice,
-        rooms: dict[str, str],
         capability: Capability,
     ) -> None:
         """Initialize the cover class."""
         super().__init__(
             client,
             device,
-            rooms,
             {
                 capability,
                 Capability.BATTERY,

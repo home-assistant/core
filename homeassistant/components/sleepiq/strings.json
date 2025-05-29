@@ -28,10 +28,10 @@
     "select": {
       "foot_warmer_temp": {
         "state": {
-          "off": "Off",
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High"
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
       }
     }
