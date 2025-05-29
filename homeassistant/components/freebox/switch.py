@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from freebox_api.exceptions import InsufficientPermissionsError
+from freebox_api.exceptions import HttpRequestError, InsufficientPermissionsError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -127,6 +127,8 @@ class FreeboxPortForwardingSwitch(SwitchEntity):
                 "Home Assistant does not have permissions to modify the Freebox"
                 " settings. Please refer to documentation"
             ) from err
+        except HttpRequestError as err:
+            raise HomeAssistantError(err) from err
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
