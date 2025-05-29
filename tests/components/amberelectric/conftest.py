@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from amberelectric.models.channel import Channel, ChannelType
 from amberelectric.models.interval import Interval
-from amberelectric.models.range import Range
 from amberelectric.models.site import Site
 from amberelectric.models.site_status import SiteStatus
 import pytest
@@ -25,6 +24,7 @@ from .helpers import (
     GENERAL_AND_CONTROLLED_SITE_ID,
     GENERAL_AND_FEED_IN_SITE_ID,
     GENERAL_CHANNEL,
+    GENERAL_CHANNEL_WITH_RANGE,
     GENERAL_ONLY_SITE_ID,
 )
 
@@ -113,14 +113,11 @@ def mock_amber_client_general_channel(
 
 @pytest.fixture
 def mock_amber_client_general_channel_with_range(
-    mock_amber_client: AsyncMock, general_channel_prices: list[Interval]
+    mock_amber_client: AsyncMock,
 ) -> Generator[AsyncMock]:
     """Fake general channel prices with a range."""
-    for interval in general_channel_prices:
-        interval.actual_instance.range = Range(min=7.8, max=12.4)
-
     client = mock_amber_client.return_value
-    client.get_current_prices.return_value = general_channel_prices
+    client.get_current_prices.return_value = GENERAL_CHANNEL_WITH_RANGE
     return mock_amber_client
 
 

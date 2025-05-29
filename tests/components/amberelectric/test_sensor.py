@@ -44,8 +44,8 @@ async def test_general_price_sensor_with_range(
     price = hass.states.get("sensor.mock_title_general_price")
     assert price
     attributes = price.attributes
-    assert attributes.get("range_min") == 0.08
-    assert attributes.get("range_max") == 0.12
+    assert attributes.get("range_min") == 0.07
+    assert attributes.get("range_max") == 0.09
 
 
 @pytest.mark.usefixtures("mock_amber_client_general_and_controlled_load")
@@ -140,8 +140,8 @@ async def test_general_forecast_sensor_with_range(
     assert price
     attributes = price.attributes
     first_forecast = attributes["forecasts"][0]
-    assert first_forecast.get("range_min") == 0.08
-    assert first_forecast.get("range_max") == 0.12
+    assert first_forecast.get("range_min") == 0.07
+    assert first_forecast.get("range_max") == 0.09
 
 
 @pytest.mark.usefixtures("mock_amber_client_general_and_controlled_load")

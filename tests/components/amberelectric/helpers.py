@@ -40,7 +40,9 @@ def generate_actual_interval(channel_type: ChannelType, end_time: datetime) -> I
 
 
 def generate_current_interval(
-    channel_type: ChannelType, end_time: datetime
+    channel_type: ChannelType,
+    end_time: datetime,
+    range=False,
 ) -> Interval:
     """Generate a mock current price."""
     start_time = end_time - timedelta(minutes=30)
@@ -49,7 +51,7 @@ def generate_current_interval(
         per_kwh = 4.4
     if channel_type == ChannelType.FEEDIN:
         per_kwh = 1.1
-    return Interval(
+    interval = Interval(
         CurrentInterval(
             type="CurrentInterval",
             duration=30,
@@ -66,6 +68,11 @@ def generate_current_interval(
             estimate=True,
         )
     )
+
+    if range:
+        interval.actual_instance.range = Range(min=6.7, max=9.1)
+
+    return interval
 
 
 def generate_forecast_interval(
@@ -122,6 +129,21 @@ GENERAL_CHANNEL = [
     ),
     generate_forecast_interval(
         ChannelType.GENERAL, parser.parse("2021-09-21T10:00:00+10:00")
+    ),
+]
+
+GENERAL_CHANNEL_WITH_RANGE = [
+    generate_current_interval(
+        ChannelType.GENERAL, parser.parse("2021-09-21T08:30:00+10:00"), True
+    ),
+    generate_forecast_interval(
+        ChannelType.GENERAL, parser.parse("2021-09-21T09:00:00+10:00"), True
+    ),
+    generate_forecast_interval(
+        ChannelType.GENERAL, parser.parse("2021-09-21T09:30:00+10:00"), True
+    ),
+    generate_forecast_interval(
+        ChannelType.GENERAL, parser.parse("2021-09-21T10:00:00+10:00"), True
     ),
 ]
 
