@@ -18,7 +18,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR]
 
 
 async def async_setup_entry(
@@ -38,7 +38,7 @@ async def async_setup_entry(
         _LOGGER.debug("Failed to communicate with device: %s", exc)
         raise ConfigEntryNotReady(f"Cannot connect to device at {host}") from exc
 
-    # Add the sensor entity to Home Assistant.
+    # Add the binary sensor entity to Home Assistant.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
