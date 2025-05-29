@@ -119,9 +119,9 @@ class PiHoleSensor(PiHoleEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the device."""
         try:
-            return round(get_nested(self.api.data, self.entity_description.key), 2)  # type: ignore[no-any-return]
+            return round(get_nested(self.api.data, self.entity_description.key), 2)
         except TypeError:
-            return get_nested(self.api.data, self.entity_description.key)  # type: ignore[no-any-return]
+            return get_nested(self.api.data, self.entity_description.key)
 
 
 def get_nested(data: dict, key: str) -> float | int:
