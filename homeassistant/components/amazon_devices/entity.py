@@ -1,9 +1,7 @@
 """Defines a base Amazon Devices entity."""
 
-from typing import cast
-
 from aioamazondevices.api import AmazonDevice
-from aioamazondevices.const import DEVICE_TYPE_TO_MODEL, SPEAKER_GROUP_MODEL
+from aioamazondevices.const import SPEAKER_GROUP_MODEL
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -27,9 +25,7 @@ class AmazonEntity(CoordinatorEntity[AmazonDevicesCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._serial_num = serial_num
-        model_details: dict[str, str] = cast(
-            "dict", DEVICE_TYPE_TO_MODEL.get(self.device.device_type)
-        )
+        model_details = coordinator.api.get_model_details(self.device)
         model = model_details["model"] if model_details else None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial_num)},
@@ -54,4 +50,8 @@ class AmazonEntity(CoordinatorEntity[AmazonDevicesCoordinator]):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self._serial_num in self.coordinator.data
+        return (
+            super().available
+            and self._serial_num in self.coordinator.data
+            and self.device.online
+        )

@@ -1,0 +1,13 @@
+{
+  "title": "CLOCK",
+  "from": "00:00:00:00:00:01",
+  "year": 2025,
+  "month": 5,
+  "day": 22,
+  "hour": 5,
+  "min": 53,
+  "sec": 22,
+  "mode": "DAYCL_MODE",
+  "valid": 1,
+  "to": "USER"
+}
