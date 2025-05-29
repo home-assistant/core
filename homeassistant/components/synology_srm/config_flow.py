@@ -58,7 +58,7 @@ class SynologySRMFlowHandler(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
             try:
-                api = get_api(self.hass, user_input)
+                api = get_api(user_input)
                 await self.hass.async_add_executor_job(api.mesh.get_system_info)
             except requests.exceptions.SSLError as err:
                 _LOGGER.error("SSL error: %s", err)
@@ -119,7 +119,7 @@ class SynologySRMFlowHandler(ConfigFlow, domain=DOMAIN):
             user_input = {**reauth_entry.data, **user_input}
 
             try:
-                api = get_api(self.hass, user_input)
+                api = get_api(user_input)
                 await self.hass.async_add_executor_job(api.mesh.get_system_info)
             except requests.exceptions.SSLError as err:
                 _LOGGER.error("SSL error: %s", err)
