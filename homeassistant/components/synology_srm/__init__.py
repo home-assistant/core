@@ -3,7 +3,7 @@
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 
-from .device_tracker import SynologySRMConfigEntry, SynologySrmDeviceScanner
+from .device_tracker import SynologySRMConfigEntry, SynologySrmDeviceScanner, get_api
 
 PLATFORMS = [Platform.DEVICE_TRACKER]
 
@@ -12,8 +12,8 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: SynologySRMConfigEntry
 ) -> bool:
     """Set up the Synology SRM from a config entry."""
-
-    scanner = SynologySrmDeviceScanner(hass, config_entry)
+    api = get_api(dict(config_entry.data))
+    scanner = SynologySrmDeviceScanner(hass, api, config_entry)
     await scanner.setup()
 
     async def async_close_connection(event: Event) -> None:
