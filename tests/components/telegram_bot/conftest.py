@@ -245,6 +245,7 @@ def update_callback_query():
 def mock_webhooks_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
+        unique_id="mock api key",
         domain=DOMAIN,
         data={
             CONF_PLATFORM: PLATFORM_WEBHOOKS,
