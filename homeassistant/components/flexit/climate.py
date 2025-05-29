@@ -68,6 +68,8 @@ class Flexit(ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_min_temp = 10.0
+    _attr_max_temp = 30.0
 
     def __init__(
         self, hub: ModbusHub, modbus_slave: int | None, name: str | None
