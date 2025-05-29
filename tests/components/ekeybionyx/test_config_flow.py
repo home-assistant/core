@@ -46,6 +46,7 @@ async def test_full_flow(
     setup_credentials: None,
     webhook_id: None,
     system: None,
+    token_hex: None,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -88,10 +89,20 @@ async def test_full_flow(
     )
     assert flow2.get("step_id") == "webhooks"
 
+    flow3 = await hass.config_entries.flow.async_configure(
+        flow2["flow_id"],
+        {
+            "webhook1": "Test",
+            "url": "localhost:8123",
+        },
+    )
+
+    assert flow3.get("errors") == {"url": "invalid_url"}
+
     with patch(
         "homeassistant.components.ekeybionyx.async_setup_entry", return_value=True
     ) as mock_setup:
-        flow3 = await hass.config_entries.flow.async_configure(
+        flow4 = await hass.config_entries.flow.async_configure(
             flow2["flow_id"],
             {
                 "webhook1": "Test",
@@ -104,12 +115,13 @@ async def test_full_flow(
             {
                 "webhook_id": "1234567890",
                 "name": "Test",
+                "auth": "f2156edca7fc6871e13845314a6fc68622e5ad7c58f17663a487ed28cac247f7",
                 "ekey_id": "946DA01F-9ABD-4D9D-80C7-02AF85C822A8",
             }
         ]
     }
 
-    assert flow3.get("type") is FlowResultType.CREATE_ENTRY
+    assert flow4.get("type") is FlowResultType.CREATE_ENTRY
 
     assert len(mock_setup.mock_calls) == 1
 
