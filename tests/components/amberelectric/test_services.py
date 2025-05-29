@@ -22,10 +22,10 @@ from tests.common import MockConfigEntry
 async def test_get_general_forecasts(
     hass: HomeAssistant,
     forecast_prices,
-    general_only_site_id_amber_config_entry: MockConfigEntry,
+    general_channel_config_entry: MockConfigEntry,
 ) -> None:
     """Test fetching general forecasts."""
-    await setup_integration(hass, general_only_site_id_amber_config_entry)
+    await setup_integration(hass, general_channel_config_entry)
     result = await hass.services.async_call(
         DOMAIN,
         GET_FORECASTS_SERVICE,
@@ -51,10 +51,10 @@ async def test_get_general_forecasts(
 async def test_get_controlled_load_forecasts(
     hass: HomeAssistant,
     forecast_prices,
-    general_only_site_id_amber_config_entry: MockConfigEntry,
+    general_channel_config_entry: MockConfigEntry,
 ) -> None:
     """Test fetching general forecasts."""
-    await setup_integration(hass, general_only_site_id_amber_config_entry)
+    await setup_integration(hass, general_channel_config_entry)
     result = await hass.services.async_call(
         DOMAIN,
         GET_FORECASTS_SERVICE,
@@ -80,10 +80,10 @@ async def test_get_controlled_load_forecasts(
 async def test_get_feed_in_forecasts(
     hass: HomeAssistant,
     forecast_prices,
-    general_only_site_id_amber_config_entry: MockConfigEntry,
+    general_channel_config_entry: MockConfigEntry,
 ) -> None:
     """Test fetching general forecasts."""
-    await setup_integration(hass, general_only_site_id_amber_config_entry)
+    await setup_integration(hass, general_channel_config_entry)
     result = await hass.services.async_call(
         DOMAIN,
         GET_FORECASTS_SERVICE,
@@ -109,10 +109,10 @@ async def test_get_feed_in_forecasts(
 async def test_incorrect_channel_type(
     hass: HomeAssistant,
     forecast_prices,
-    general_only_site_id_amber_config_entry: MockConfigEntry,
+    general_channel_config_entry: MockConfigEntry,
 ) -> None:
     """Test error when the channel type is not found."""
-    await setup_integration(hass, general_only_site_id_amber_config_entry)
+    await setup_integration(hass, general_channel_config_entry)
 
     with pytest.raises(
         vol.error.MultipleInvalid,
@@ -132,15 +132,13 @@ async def test_incorrect_channel_type(
 async def test_service_entry_availability(
     hass: HomeAssistant,
     forecast_prices,
-    general_only_site_id_amber_config_entry: MockConfigEntry,
+    general_channel_config_entry: MockConfigEntry,
 ) -> None:
     """Test the services without valid entry."""
-    general_only_site_id_amber_config_entry.add_to_hass(hass)
+    general_channel_config_entry.add_to_hass(hass)
     mock_config_entry2 = MockConfigEntry(domain=DOMAIN)
     mock_config_entry2.add_to_hass(hass)
-    await hass.config_entries.async_setup(
-        general_only_site_id_amber_config_entry.entry_id
-    )
+    await hass.config_entries.async_setup(general_channel_config_entry.entry_id)
     await hass.async_block_till_done()
 
     with pytest.raises(ServiceValidationError, match="Mock Title is not loaded"):
