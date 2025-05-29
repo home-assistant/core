@@ -18,7 +18,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR]  # Keep as SENSOR since we're using the sensor.py file
+PLATFORMS = [Platform.BINARY_SENSOR]
 
 
 async def async_setup_entry(
