@@ -62,8 +62,8 @@ class Flexit(ClimateEntity):
     """Representation of a Flexit AC unit."""
 
     _attr_fan_modes = ["Off", "Low", "Medium", "High"]
-    _attr_hvac_mode = HVACMode.COOL
-    _attr_hvac_modes = [HVACMode.COOL]
+    _attr_hvac_mode = HVACMode.HEAT_COOL
+    _attr_hvac_modes = [HVACMode.HEAT_COOL]
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
