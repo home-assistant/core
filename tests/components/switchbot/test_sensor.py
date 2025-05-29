@@ -596,7 +596,7 @@ async def test_relay_switch_1pm_sensor(hass: HomeAssistant) -> None:
     current_sensor_attrs = current_sensor.attributes
     assert current_sensor.state == "0.02"
     assert current_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Current"
-    assert current_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "mA"
+    assert current_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "A"
     assert current_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
     energy_sensor = hass.states.get("sensor.test_name_energy")
@@ -678,7 +678,7 @@ async def test_relay_switch_2pm_sensor(hass: HomeAssistant) -> None:
     current_sensor_1_attrs = current_sensor_1.attributes
     assert current_sensor_1.state == "0.1"
     assert current_sensor_1_attrs[ATTR_FRIENDLY_NAME] == "test-name current 1"
-    assert current_sensor_1_attrs[ATTR_UNIT_OF_MEASUREMENT] == "mA"
+    assert current_sensor_1_attrs[ATTR_UNIT_OF_MEASUREMENT] == "A"
     assert current_sensor_1_attrs[ATTR_STATE_CLASS] == "measurement"
 
     energy_sensor_1 = hass.states.get("sensor.test_name_energy_1")
@@ -706,7 +706,7 @@ async def test_relay_switch_2pm_sensor(hass: HomeAssistant) -> None:
     current_sensor_2_attrs = current_sensor_2.attributes
     assert current_sensor_2.state == "0.6"
     assert current_sensor_2_attrs[ATTR_FRIENDLY_NAME] == "test-name current 2"
-    assert current_sensor_2_attrs[ATTR_UNIT_OF_MEASUREMENT] == "mA"
+    assert current_sensor_2_attrs[ATTR_UNIT_OF_MEASUREMENT] == "A"
     assert current_sensor_2_attrs[ATTR_STATE_CLASS] == "measurement"
 
     energy_sensor_2 = hass.states.get("sensor.test_name_energy_2")
