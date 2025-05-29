@@ -32,7 +32,7 @@ from homeassistant.components.homeassistant_hardware.util import (
 )
 from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
-from homeassistant.const import EVENT_STATE_CHANGED, EntityCategory
+from homeassistant.const import EVENT_STATE_CHANGED, EntityCategory, Platform
 from homeassistant.core import (
     Event,
     EventStateChangedData,
@@ -173,7 +173,9 @@ async def mock_async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> bool:
     """Set up test config entry."""
-    await hass.config_entries.async_forward_entry_setups(config_entry, ["update"])
+    await hass.config_entries.async_forward_entry_setups(
+        config_entry, [Platform.UPDATE]
+    )
     return True
 
 
