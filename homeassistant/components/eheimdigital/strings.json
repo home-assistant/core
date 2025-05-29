@@ -67,6 +67,16 @@
         "name": "System LED brightness"
       }
     },
+    "select": {
+      "filter_mode": {
+        "name": "Filter mode",
+        "state": {
+          "manual": "Manual",
+          "pulse": "Pulse",
+          "bio": "Bio"
+        }
+      }
+    },
     "sensor": {
       "current_speed": {
         "name": "Current speed"
@@ -90,6 +100,11 @@
       "night_start_time": {
         "name": "Night start time"
       }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the EHEIM Digital hub: {error}"
     }
   }
 }

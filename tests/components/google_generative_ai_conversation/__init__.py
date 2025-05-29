@@ -2,10 +2,10 @@
 
 from unittest.mock import Mock
 
-from google.genai.errors import ClientError
+from google.genai.errors import APIError, ClientError
 import httpx
 
-CLIENT_ERROR_500 = ClientError(
+API_ERROR_500 = APIError(
     500,
     Mock(
         __class__=httpx.Response,
@@ -13,6 +13,18 @@ CLIENT_ERROR_500 = ClientError(
             return_value={
                 "message": "Internal Server Error",
                 "status": "internal-error",
+            }
+        ),
+    ),
+)
+CLIENT_ERROR_BAD_REQUEST = ClientError(
+    400,
+    Mock(
+        __class__=httpx.Response,
+        json=Mock(
+            return_value={
+                "message": "Bad Request",
+                "status": "invalid-argument",
             }
         ),
     ),
