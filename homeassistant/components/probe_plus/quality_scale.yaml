@@ -62,7 +62,7 @@ rules:
     comment: |
       The integration uses Bluetooth discovery to find devices.
   docs-data-update: done
-  docs-examples: todo
+  docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
