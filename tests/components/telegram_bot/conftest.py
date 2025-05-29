@@ -17,7 +17,11 @@ from homeassistant.components.telegram_bot import (
     DOMAIN,
     PARSER_MD,
 )
-from homeassistant.components.telegram_bot.const import CONF_CHAT_ID, PLATFORM_WEBHOOKS
+from homeassistant.components.telegram_bot.const import (
+    CONF_CHAT_ID,
+    PLATFORM_BROADCAST,
+    PLATFORM_WEBHOOKS,
+)
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import (
     CONF_API_KEY,
@@ -242,6 +246,29 @@ def update_callback_query():
 
 
 @pytest.fixture
+def mock_broadcast_config_entry() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        unique_id="mock api key",
+        domain=DOMAIN,
+        data={
+            CONF_PLATFORM: PLATFORM_BROADCAST,
+            CONF_API_KEY: "mock api key",
+        },
+        options={ATTR_PARSER: PARSER_MD},
+        subentries_data=[
+            ConfigSubentryData(
+                unique_id="1234567890",
+                data={CONF_CHAT_ID: 1234567890},
+                subentry_id="mock_id",
+                subentry_type=CONF_ALLOWED_CHAT_IDS,
+                title="mock chat",
+            )
+        ],
+    )
+
+
+@pytest.fixture
 def mock_webhooks_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
@@ -250,11 +277,13 @@ def mock_webhooks_config_entry() -> MockConfigEntry:
         data={
             CONF_PLATFORM: PLATFORM_WEBHOOKS,
             CONF_API_KEY: "mock api key",
-            ATTR_PARSER: PARSER_MD,
+            CONF_URL: "https://test",
             CONF_TRUSTED_NETWORKS: DEFAULT_TRUSTED_NETWORKS,
         },
+        options={ATTR_PARSER: PARSER_MD},
         subentries_data=[
             ConfigSubentryData(
+                unique_id="1234567890",
                 data={CONF_CHAT_ID: 1234567890},
                 subentry_id="mock_id",
                 subentry_type=CONF_ALLOWED_CHAT_IDS,

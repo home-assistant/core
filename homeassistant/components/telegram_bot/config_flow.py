@@ -53,6 +53,7 @@ from .const import (
     PLATFORM_BROADCAST,
     PLATFORM_POLLING,
     PLATFORM_WEBHOOKS,
+    SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -168,7 +169,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         cls, config_entry: TelegramBotConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
-        return {CONF_ALLOWED_CHAT_IDS: AllowedChatIdsSubEntryFlowHandler}
+        return {SUBENTRY_TYPE_ALLOWED_CHAT_IDS: AllowedChatIdsSubEntryFlowHandler}
 
     def __init__(self) -> None:
         """Create instance of the config flow."""
@@ -539,14 +540,11 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
             chat_id: int = user_input[CONF_CHAT_ID]
             chat_name = await _async_get_chat_name(bot, chat_id)
             if chat_name:
-                try:
-                    return self.async_create_entry(
-                        title=chat_name,
-                        data={CONF_CHAT_ID: chat_id},
-                        unique_id=str(chat_id),
-                    )
-                except AbortFlow:
-                    return self.async_abort(reason="already_configured")
+                return self.async_create_entry(
+                    title=chat_name,
+                    data={CONF_CHAT_ID: chat_id},
+                    unique_id=str(chat_id),
+                )
 
             errors["base"] = "chat_not_found"
 
