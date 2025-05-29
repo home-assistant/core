@@ -8,16 +8,19 @@ from telegram.error import BadRequest, InvalidToken, NetworkError
 
 from homeassistant.components.telegram_bot.const import (
     ATTR_PARSER,
+    CONF_ALLOWED_CHAT_IDS,
+    CONF_BOT_COUNT,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
     CONF_TRUSTED_NETWORKS,
     DOMAIN,
     PARSER_HTML,
+    PARSER_MD,
     PLATFORM_BROADCAST,
     PLATFORM_WEBHOOKS,
     SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
 )
-from homeassistant.config_entries import SOURCE_USER, ConfigSubentry
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -420,3 +423,69 @@ async def test_subentry_flow_chat_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_import_failed(hass: HomeAssistant) -> None:
+    """Test import flow failed."""
+
+    with patch(
+        "homeassistant.components.telegram_bot.config_flow.Bot.get_me"
+    ) as mock_bot:
+        mock_bot.side_effect = InvalidToken("mock invalid token error")
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_PLATFORM: PLATFORM_BROADCAST,
+                CONF_API_KEY: "mock api key",
+                CONF_TRUSTED_NETWORKS: ["149.154.160.0/20"],
+                CONF_BOT_COUNT: 1,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "import_failed"
+
+
+async def test_import_multiple(hass: HomeAssistant) -> None:
+    """Test import flow with multiple duplicated entries."""
+
+    data = {
+        CONF_PLATFORM: PLATFORM_BROADCAST,
+        CONF_API_KEY: "mock api key",
+        CONF_TRUSTED_NETWORKS: ["149.154.160.0/20"],
+        CONF_ALLOWED_CHAT_IDS: [3334445550],
+        CONF_BOT_COUNT: 2,
+    }
+
+    with patch(
+        "homeassistant.components.telegram_bot.config_flow.Bot.get_me",
+        return_value=User(123456, "Testbot", True),
+    ):
+        # test: import first entry success
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=data,
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["data"][CONF_PLATFORM] == PLATFORM_BROADCAST
+        assert result["data"][CONF_API_KEY] == "mock api key"
+        assert result["options"][ATTR_PARSER] == PARSER_MD
+
+        # test: import 2nd entry failed due to duplicate
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=data,
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
