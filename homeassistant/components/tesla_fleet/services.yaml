@@ -1,0 +1,125 @@
+send_navigation_request:
+  name: Send Navigation Request
+  description: >
+    Send a navigation request to your Tesla vehicle.
+  icon: mdi:map-marker
+  fields:
+    device_id:
+      name: Vehicle
+      description: >
+        The Tesla vehicle to send the request to.
+      required: true
+      selector:
+        device:
+          integration: tesla_fleet
+          multiple: false
+    value:
+      name: Location
+      description: >
+        The location to share with your Tesla vehicle. Can be either a Google Maps link or free text (i.e. Smiths Grocery Store).
+      example: "1600 Amphitheatre Parkway, Mountain View, CA"
+      required: true
+      selector: 
+        text:
+          type: text
+    type:
+      description: >
+        (Optional) The navigation request type.
+        Defaults to `share_ext_content_raw`.
+      example: "share_ext_content_raw"
+    locale:
+      description: >
+        (Optional) Locale code (e.g. `en_AU`) to format the request.
+      example: "en_AU"
+
+share_to_vehicle:
+  name: Share To Vehicle
+  description: >
+    Send either a YouTube share link or a map URI to your Tesla vehicle.
+  icon: mdi:share-variant
+  fields:
+    device_id:
+        name: Vehicle
+        description: >
+          The Tesla vehicle to send the request to.
+        required: true
+        selector:
+          device:
+            integration: tesla_fleet
+            multiple: false
+    value:
+      name: URL
+      description: >
+        The string value to send—typically a share payload or map URI.
+      example: "https://youtube.com/watch?v=dQw4w9WgXcQ"
+      required: true
+      selector: 
+        text:
+          type: url
+    type:
+      description: >
+        (Optional) The navigation request type.
+        Defaults to `share_ext_content_raw`.
+      example: "share_ext_content_raw"
+    locale:
+      description: >
+        (Optional) Locale, defaults to that of your Home Assistant instance.
+      example: "en_US"
+
+send_navigation_gps_request:
+  name: Send Navigation GPS Request
+  description: >
+    Send a latitude/longitude navigation request to your Tesla vehicle.
+  icon: mdi:map-marker-radius
+  fields:
+    device_id:
+      name: Vehicle
+      description: >
+        The Tesla vehicle to send the request to.
+      required: true
+      selector:
+        device:
+          integration: tesla_fleet
+          multiple: false
+    location:
+      name: Location
+      description: >
+        Use the map picker to choose your destination. 
+        Home Assistant will pass the latitude/longitude automatically.
+      required: true
+      selector:
+        location: {}
+    order:
+      description: >
+        (Optional) Integer order of this waypoint when sending multiple destinations.
+      example: 0
+
+send_navigation_supercharger_request:
+  name: Send Supercharger Navigation Request
+  description: >
+    Send a navigate to Supercharger request to your Tesla vehicle. 
+    
+    Note: this will start battery preconditioning if it is required.
+  icon: mdi:ev-station
+  fields:
+    device_id:
+      name: Vehicle
+      description: >
+        The Tesla vehicle to send the request to.
+      required: true
+      selector:
+        device:
+          integration: tesla_fleet
+          multiple: false
+    supercharger_id:
+      name: Supercharger ID
+      description: The Tesla Supercharger site ID. Cannot be found publicly.
+      example: 100 # Oosterhout, Netherlands
+      required: true
+      selector: 
+        text:
+          type: number
+    order:
+      description: >
+        (Optional) Integer order of this waypoint when sending multiple destinations.
+      example: 0
