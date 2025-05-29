@@ -9,11 +9,13 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from homeassistant.components.thesilentwave.const import DOMAIN
+
 
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        "thesilentwave", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}  # Expect empty dict, not None
@@ -47,7 +49,7 @@ async def test_form(hass: HomeAssistant) -> None:
 async def test_form_invalid_ip(hass: HomeAssistant) -> None:
     """Test we handle invalid IP address."""
     result = await hass.config_entries.flow.async_init(
-        "thesilentwave", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -66,7 +68,7 @@ async def test_form_invalid_ip(hass: HomeAssistant) -> None:
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
-        "thesilentwave", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
@@ -97,7 +99,7 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
         mock_get.return_value.__aenter__.return_value.text = AsyncMock(return_value="1")
 
         result = await hass.config_entries.flow.async_init(
-            "thesilentwave",
+            DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={
                 CONF_NAME: "Test Device",
@@ -116,7 +118,7 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
         mock_get.return_value.__aenter__.return_value.text = AsyncMock(return_value="1")
 
         result = await hass.config_entries.flow.async_init(
-            "thesilentwave",
+            DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={
                 CONF_NAME: "Another Device",
