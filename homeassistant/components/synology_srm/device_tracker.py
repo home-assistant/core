@@ -136,6 +136,8 @@ class SynologySrmDeviceScanner:
         self.async_on_close(
             async_track_time_interval(self.hass, self.scan_devices, self.scan_interval)
         )
+
+        await self.scan_devices()
         _LOGGER.debug("Synology SRM device scanner setup complete")
 
     async def close(self) -> None:
@@ -145,7 +147,7 @@ class SynologySrmDeviceScanner:
         self._on_close.clear()
 
     async def scan_devices(self, now: datetime | None = None) -> None:
-        """Scan for new devices and return a list with found device IDs."""
+        """Scan for new devices and return a list with found device macs."""
         await self._update_info()
 
     def _check_success_init(self) -> bool:
