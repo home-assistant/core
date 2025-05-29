@@ -1,8 +1,10 @@
 """Config flow for Ekey Bionyx."""
 
 from collections.abc import Sequence
+import json
 import logging
 import re
+import secrets
 from typing import Any, NotRequired, TypedDict
 
 import aiohttp
@@ -14,8 +16,8 @@ from homeassistant.components.webhook import (
     async_generate_path as webhook_generate_path,
 )
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import CONF_TOKEN
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.const import CONF_TOKEN, CONF_URL
+from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.selector import SelectOptionDict, SelectSelector
@@ -111,9 +113,13 @@ class OAuth2FlowHandler(
             [
                 errors.update({webhooks[0]: "invalid_name"})
                 for webhooks in user_input.items()
-                if webhooks[0] != "url"
+                if webhooks[0] != CONF_URL
                 and not re.match(r"^(?![\d\s])[\w\d\u0020\.]*[\w\d]$", webhooks[1])
             ]
+            try:
+                cv.url(user_input[CONF_URL])
+            except vol.Invalid:
+                errors[CONF_URL] = "invalid_url"
         if user_input is None or errors:
             data_schema: dict[Any, Any] = {
                 vol.Optional(f"webhook{i + 1}"): vol.All(str, vol.Length(max=50))
@@ -121,8 +127,12 @@ class OAuth2FlowHandler(
             }
             data_schema[
                 vol.Required(
-                    "url",
-                    default=get_url(self.hass, allow_external=False, allow_ip=True),
+                    CONF_URL,
+                    default=get_url(
+                        self.hass,
+                        allow_ip=True,
+                        prefer_external=False,
+                    ),
                 )
             ] = str
             return self.async_show_form(
@@ -131,20 +141,24 @@ class OAuth2FlowHandler(
         webhook_data = [
             {"webhook_id": webhook_generate_id(), "name": webhooks[1]}
             for webhooks in user_input.items()
-            if webhooks[0] != "url"
+            if webhooks[0] != CONF_URL
         ]
         for webhook in webhook_data:
+            webhook.update(auth=secrets.token_hex(32))
             wh_def: ekey_bionyxpy.WebhookData = {
                 "integrationName": "Home Assistant",
                 "functionName": webhook["name"],
                 "locationName": "Home Assistant",
                 "definition": {
-                    "url": user_input["url"]
+                    "url": user_input[CONF_URL]
                     + webhook_generate_path(webhook["webhook_id"]),
                     "authentication": {"apiAuthenticationType": "None"},
                     "securityLevel": "AllowHttp",
                     "method": "Post",
-                    "body": {"contentType": "text/plain", "content": "test"},
+                    "body": {
+                        "contentType": "application/json",
+                        "content": json.dumps({"auth": webhook["auth"]}),
+                    },
                 },
             }
             webhook.update(ekey_id=(await system.add_webhook(wh_def)).webhook_id)
