@@ -5,10 +5,10 @@ from unittest.mock import Mock, patch
 
 import pytest
 from requests.exceptions import HTTPError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import PRESET_COMFORT, PRESET_ECO
-from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
+from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICES, STATE_UNKNOWN, Platform
@@ -53,7 +53,7 @@ async def test_setup(
 
     with patch("homeassistant.components.fritzbox.PLATFORMS", [Platform.SENSOR]):
         entry = await setup_config_entry(
-            hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+            hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
         )
     assert entry.state is ConfigEntryState.LOADED
 
@@ -64,7 +64,7 @@ async def test_update(hass: HomeAssistant, fritz: Mock) -> None:
     """Test update without error."""
     device = FritzDeviceSensorMock()
     await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
     assert fritz().update_devices.call_count == 1
     assert fritz().login.call_count == 1
@@ -82,7 +82,7 @@ async def test_update_error(hass: HomeAssistant, fritz: Mock) -> None:
     device = FritzDeviceSensorMock()
     fritz().update_devices.side_effect = HTTPError("Boom")
     entry = await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert fritz().update_devices.call_count == 2
@@ -100,7 +100,7 @@ async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
     """Test adding new discovered devices during runtime."""
     device = FritzDeviceSensorMock()
     await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
     state = hass.states.get(f"{ENTITY_ID}_temperature")
@@ -150,7 +150,7 @@ async def test_next_change_sensors(
     device.nextchange_temperature = next_changes[1]
 
     await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
     base_name = f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}"

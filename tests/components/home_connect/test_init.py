@@ -46,14 +46,13 @@ async def test_entry_setup(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
 ) -> None:
     """Test setup and unload."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize("token_expiration_time", [12345])
@@ -86,7 +85,7 @@ async def test_token_refresh_success(
         client._auth = auth
         return client
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
     with (
         patch("homeassistant.components.home_connect.PLATFORMS", platforms),
         patch("homeassistant.components.home_connect.HomeConnectClient") as client_mock,
@@ -94,7 +93,7 @@ async def test_token_refresh_success(
         client_mock.side_effect = MagicMock(side_effect=init_side_effect)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     # Verify token request
     assert aioclient_mock.call_count == 1
@@ -155,7 +154,7 @@ async def test_token_refresh_error(
         **aioclient_mock_args,
     )
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
     with patch(
         "homeassistant.components.home_connect.HomeConnectClient", return_value=client
     ):
@@ -182,7 +181,6 @@ async def test_client_error(
     """Test client errors during setup integration."""
     client_with_exception.get_home_appliances.return_value = None
     client_with_exception.get_home_appliances.side_effect = exception
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert not await integration_setup(client_with_exception)
     assert config_entry.state == expected_state
     assert client_with_exception.get_home_appliances.call_count == 1
@@ -218,12 +216,12 @@ async def test_client_rate_limit_error(
     mock.side_effect = side_effect
     setattr(client, raising_exception_method, mock)
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
     with patch(
         "homeassistant.components.home_connect.coordinator.asyncio_sleep",
     ) as asyncio_sleep_mock:
         assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert mock.call_count >= 2
     asyncio_sleep_mock.assert_called_once_with(retry_after)
 
@@ -239,9 +237,8 @@ async def test_required_program_or_at_least_an_option(
 ) -> None:
     "Test that the set_program_and_options does raise an exception if no program nor options are set."
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,

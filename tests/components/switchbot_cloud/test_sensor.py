@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 from switchbot_api import Device
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switchbot_cloud.const import DOMAIN
 from homeassistant.const import Platform

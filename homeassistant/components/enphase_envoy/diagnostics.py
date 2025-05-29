@@ -64,7 +64,7 @@ async def _get_fixture_collection(envoy: Envoy, serial: str) -> dict[str, Any]:
         "/ivp/ensemble/generator",
         "/ivp/meters",
         "/ivp/meters/readings",
-        "/home,",
+        "/home",
     ]
 
     for end_point in end_points:

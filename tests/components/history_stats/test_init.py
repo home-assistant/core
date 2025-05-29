@@ -6,7 +6,7 @@ from homeassistant.components.history_stats.const import (
     CONF_END,
     CONF_START,
     DEFAULT_NAME,
-    DOMAIN as HISTORY_STATS_DOMAIN,
+    DOMAIN,
 )
 from homeassistant.components.recorder import Recorder
 from homeassistant.config_entries import ConfigEntryState
@@ -61,7 +61,7 @@ async def test_device_cleaning(
     # Configure the configuration entry for History stats
     history_stats_config_entry = MockConfigEntry(
         data={},
-        domain=HISTORY_STATS_DOMAIN,
+        domain=DOMAIN,
         options={
             CONF_NAME: DEFAULT_NAME,
             CONF_ENTITY_ID: "binary_sensor.test_source",

@@ -36,6 +36,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.home_connect.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -147,6 +148,7 @@ async def mock_integration_setup(
     config_entry.add_to_hass(hass)
 
     async def run(client: MagicMock) -> bool:
+        assert config_entry.state is ConfigEntryState.NOT_LOADED
         with (
             patch("homeassistant.components.home_connect.PLATFORMS", platforms),
             patch(

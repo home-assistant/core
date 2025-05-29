@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import core as ha
 from homeassistant.const import (
