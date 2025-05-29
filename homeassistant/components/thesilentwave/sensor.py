@@ -19,29 +19,29 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor from a config entry."""
     coordinator = entry.runtime_data
-    async_add_entities([TheSilentWaveSensor(coordinator, entry.entry_id)], True)
+    async_add_entities([TheSilentWaveBinarySensor(coordinator, entry.entry_id)], True)
 
 
-class TheSilentWaveSensor(TheSilentWaveEntity, SensorEntity):
-    """Representation of a TheSilentWave sensor."""
+class TheSilentWaveBinarySensor(TheSilentWaveEntity, BinarySensorEntity):
+    """Representation of a TheSilentWave binary sensor."""
 
     _attr_translation_key = "status"
 
     def __init__(self, coordinator: TheSilentWaveCoordinator, entry_id: str) -> None:
-        """Initialize the sensor."""
+        """Initialize the binary sensor."""
         super().__init__(coordinator, entry_id)
-        self._attr_state_class = SensorStateClass.MEASUREMENT
-        self._attr_name = (
-            None  # Set to None to use device name as this is the main sensor.
-        )
+        self._attr_name = None  # Set to None to use device name as this is the main sensor
         self._unsubscribe_callback = None
-        # Set a more specific unique_id for this sensor entity.
+        # Set a more specific unique_id for this sensor entity
         self._attr_unique_id = f"{DOMAIN}_{entry_id}_status"
 
     @property
-    def state(self) -> Any:
-        """Return the state of the sensor."""
-        return self.coordinator.data
+    def is_on(self) -> bool | None:
+        """Return true if the binary sensor is on."""
+        if self.coordinator.data is None:
+            return None
+        # Convert the coordinator data to a boolean state
+        return self.coordinator.data == "on"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity is added."""
