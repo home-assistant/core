@@ -205,8 +205,7 @@ async def async_setup_services(
             call.data[ATTR_DEVICE_ID]
         )
         supercharger_id = call.data[ATTR_SUPERCHARGER_ID]
-        # order = call.data.get(ATTR_ORDER)
-        order = 0
+        order = call.data.get(ATTR_ORDER)
         
         _LOGGER.error(
             "Super charger ID '%s': Order %s",
