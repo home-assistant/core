@@ -127,7 +127,7 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
         Camera.__init__(self)
 
         if "snapshots" not in entity_description.stream:
-            self._attr_supported_features = CameraEntityFeature.STREAM
+            self._attr_supported_features = CameraEntityFeature.STREAM | CameraEntityFeature.TWO_WAY_AUDIO
 
         if self._host.api.model in DUAL_LENS_MODELS:
             self._attr_translation_key = (
