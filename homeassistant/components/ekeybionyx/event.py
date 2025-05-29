@@ -1,11 +1,10 @@
 """Event."""
 
-from aiohttp.hdrs import METH_GET, METH_POST
+from aiohttp.hdrs import METH_POST
 from aiohttp.web import Request, Response
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.components.webhook import (
-    async_generate_url as webhook_generate_url,
     async_register as webhook_register,
     async_unregister as webhook_unregister,
 )
@@ -30,6 +29,7 @@ class EkeyEvent(EventEntity):
         self._attr_name = data["name"]
         self._attr_unique_id = data["ekey_id"]
         self._webhook_id = data["webhook_id"]
+        self._auth = data["auth"]
 
     @callback
     def _async_handle_event(self, event: str) -> None:
@@ -43,7 +43,8 @@ class EkeyEvent(EventEntity):
         async def async_webhook_handler(
             hass: HomeAssistant, webhook_id: str, request: Request
         ) -> Response | None:
-            self._async_handle_event("webhook_fired")
+            if (await request.json())["auth"] == self._auth:
+                self._async_handle_event("webhook_fired")
             return None
 
         webhook_register(
@@ -52,12 +53,7 @@ class EkeyEvent(EventEntity):
             f"Ekey {self._attr_name}",
             self._webhook_id,
             async_webhook_handler,
-            allowed_methods=[METH_GET, METH_POST],
-        )
-        LOGGER.info(
-            webhook_generate_url(
-                self.hass, self._webhook_id, allow_external=False, allow_ip=True
-            )
+            allowed_methods=[METH_POST],
         )
 
     async def async_will_remove_from_hass(self) -> None:

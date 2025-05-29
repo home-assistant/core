@@ -173,6 +173,16 @@ def mock_webhook_id():
         yield
 
 
+@pytest.fixture(name="token_hex")
+def mock_token_hex():
+    """Mock auth property."""
+    with patch(
+        "secrets.token_hex",
+        return_value="f2156edca7fc6871e13845314a6fc68622e5ad7c58f17663a487ed28cac247f7",
+    ):
+        yield
+
+
 @pytest.fixture(name="config_entry")
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create mocked config entry."""
@@ -184,6 +194,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
                 {
                     "webhook_id": "a2156edca7fb6671e13845314f6fc68622e5dd7c58f17663a487bd28cac247e7",
                     "name": "Test1",
+                    "auth": "f2156edca7fc6871e13845314a6fc68622e5ad7c58f17663a487ed28cac247f7",
                     "ekey_id": "946DA01F-9ABD-4D9D-80C7-02AF85C822A8",
                 }
             ]

@@ -37,7 +37,8 @@
       }
     },
     "error": {
-      "invalid_name": "Name is invalid"
+      "invalid_name": "Name is invalid",
+      "invalid_url": "URL is invalid"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
