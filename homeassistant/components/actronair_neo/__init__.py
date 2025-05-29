@@ -4,7 +4,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import PLATFORM
 from .coordinator import (
-    ActronNeoApiCoordinator,
+    ActronNeoApiClient,
     ActronNeoConfigEntry,
     ActronNeoRuntimeData,
     ActronNeoSystemCoordinator,
@@ -14,17 +14,17 @@ from .coordinator import (
 async def async_setup_entry(hass: HomeAssistant, entry: ActronNeoConfigEntry) -> bool:
     """Set up Actron Air Neo integration from a config entry."""
 
-    api_coordinator = ActronNeoApiCoordinator(hass, entry)
-    await api_coordinator.async_setup()
+    api_client = ActronNeoApiClient(hass, entry)
+    await api_client.async_setup()
 
     system_coordinators: dict[str, ActronNeoSystemCoordinator] = {}
-    for system in api_coordinator.systems:
-        coordinator = ActronNeoSystemCoordinator(hass, entry, api_coordinator, system)
+    for system in api_client.systems:
+        coordinator = ActronNeoSystemCoordinator(hass, entry, api_client, system)
         await coordinator.async_config_entry_first_refresh()
         system_coordinators[system["serial"]] = coordinator
 
     entry.runtime_data = ActronNeoRuntimeData(
-        api_coordinator=api_coordinator,
+        api_client=api_client,
         system_coordinators=system_coordinators,
     )
 

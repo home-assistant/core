@@ -25,7 +25,7 @@ from .const import _LOGGER, STALE_DEVICE_TIMEOUT
 class ActronNeoRuntimeData:
     """Runtime data for the Actron Air Neo integration."""
 
-    api_coordinator: "ActronNeoApiCoordinator"
+    api_client: "ActronNeoApiClient"
     system_coordinators: dict[str, "ActronNeoSystemCoordinator"]
 
 
@@ -36,11 +36,11 @@ SCAN_INTERVAL = timedelta(seconds=30)
 PARALLEL_UPDATES = 0
 
 
-class ActronNeoApiCoordinator:
-    """Coordinator for Actron Neo API."""
+class ActronNeoApiClient:
+    """Client for Actron Neo API."""
 
     def __init__(self, hass: HomeAssistant, entry: ActronNeoConfigEntry) -> None:
-        """Initialize the coordinator."""
+        """Initialize the client."""
         self.hass = hass
         self.entry = entry
         self.api = ActronNeoAPI(pairing_token=entry.data[CONF_API_TOKEN])
@@ -70,7 +70,7 @@ class ActronNeoSystemCoordinator(DataUpdateCoordinator[ActronAirNeoACSystem]):
         self,
         hass: HomeAssistant,
         entry: ActronNeoConfigEntry,
-        api_coordinator: ActronNeoApiCoordinator,
+        api_client: ActronNeoApiClient,
         system: ActronAirNeoACSystem,
     ) -> None:
         """Initialize the coordinator."""
@@ -83,7 +83,7 @@ class ActronNeoSystemCoordinator(DataUpdateCoordinator[ActronAirNeoACSystem]):
         )
         self.system = system
         self.serial_number = system["serial"]
-        self.api = api_coordinator.api
+        self.api = api_client.api
         self.status: ActronAirNeoStatus = self.api.state_manager.get_status(
             self.serial_number
         )
