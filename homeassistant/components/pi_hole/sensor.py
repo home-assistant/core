@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import Any
+
 from hole import Hole
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
@@ -120,15 +123,21 @@ class PiHoleSensor(PiHoleEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the device."""
         try:
-            return round(get_nested(self.api.data, self.entity_description.key), 2)  # type: ignore[no-any-return]
+            return round(get_nested(self.api.data, self.entity_description.key), 2)
         except TypeError:
-            return get_nested(self.api.data, self.entity_description.key)  # type: ignore[no-any-return]
+            return get_nested(self.api.data, self.entity_description.key)
 
 
-def get_nested(data: dict[str, dict[str, float | int]], key: str) -> float | int:
-    """Get a value from a nested dictionary using a dot-separated key."""
+def get_nested(data: Mapping[str, Any], key: str) -> float | int:
+    """Get a value from a nested dictionary using a dot-separated key.
+
+    Ensures type safety as it iterates into the dict.
+    """
+    current: Any = data
     for part in key.split("."):
-        if not isinstance(data, dict):
-            raise KeyError(f"Cannot access '{part}' in non-dict {data}")
-        data = data[part]
-    return data
+        if not isinstance(current, Mapping):
+            raise KeyError(f"Cannot access '{part}' in non-dict {current!r}")
+        current = current[part]
+    if not isinstance(current, (float, int)):
+        raise TypeError(f"Value at '{key}' is not a float or int: {current!r}")
+    return current

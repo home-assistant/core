@@ -118,7 +118,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bo
         try:
             await api.get_data()
             await api.get_versions()
-            # TODO - determine and re-write version
         except HoleError as err:
             raise UpdateFailed(f"Failed to communicate with API: {err}") from err
         if not isinstance(api.data, dict):
