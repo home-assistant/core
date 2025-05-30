@@ -91,24 +91,36 @@ class NoboZone(ClimateEntity):
             via_device=(DOMAIN, hub.hub_info[ATTR_SERIAL]),
             suggested_area=hub.zones[zone_id][ATTR_NAME],
         )
-        self._supports_comfort = any(
-            component["model"].supports_comfort
-            for component in hub.components.values()
-            if component["zone_id"] == zone_id
-        )
-        self._supports_eco = any(
-            component["model"].supports_eco
-            for component in hub.components.values()
-            if component["zone_id"] == zone_id
-        )
-        self._attr_supported_features = ClimateEntityFeature.PRESET_MODE
-        if self._supports_comfort and self._supports_eco:
-            self._attr_supported_features |= (
-                ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-            )
-        elif self._supports_comfort or self._supports_eco:
-            self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
+        self._supports_temp_modification = self.supports_temp_modification
+        self._attr_supported_features = self.supported_features
         self._read_state()
+
+    @property
+    def supports_temp_modification(self) -> dict[str, bool]:
+        """Determine which presets support temperature modification by checking zone components."""
+        supports_modification = {
+            nobo.API.NAME_COMFORT: False,
+            nobo.API.NAME_ECO: False,
+        }
+        for component in self._nobo.components.values():
+            if component["zone_id"] == self._id:
+                supports_modification[nobo.API.NAME_COMFORT] |= component[
+                    "model"
+                ].supports_comfort
+                supports_modification[nobo.API.NAME_ECO] |= component[
+                    "model"
+                ].supports_eco
+        return supports_modification
+
+    @property
+    def supported_features(self) -> ClimateEntityFeature:
+        """Determine supported climate entity features."""
+        supported_features = ClimateEntityFeature.PRESET_MODE
+        if all(self._supports_temp_modification):
+            supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        elif any(self._supports_temp_modification):
+            supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
+        return supported_features
 
     async def async_added_to_hass(self) -> None:
         """Register callback from hub."""
@@ -152,7 +164,7 @@ class NoboZone(ClimateEntity):
         temp_args = {}
         if ATTR_TEMPERATURE in kwargs:
             temp = round(kwargs[ATTR_TEMPERATURE])
-            if self._supports_comfort:
+            if self._supports_temp_modification[nobo.API.NAME_COMFORT]:
                 temp_args = {"temp_comfort_c": temp}
             else:
                 temp_args = {"temp_eco_c": temp}
@@ -198,7 +210,7 @@ class NoboZone(ClimateEntity):
         if self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             self._attr_target_temperature_high = None
             self._attr_target_temperature_low = None
-            if self._supports_comfort:
+            if self._supports_temp_modification[nobo.API.NAME_COMFORT]:
                 temp_attr = ATTR_TEMP_COMFORT_C
             else:
                 temp_attr = ATTR_TEMP_ECO_C
