@@ -5,7 +5,7 @@ from __future__ import annotations
 from hole import Hole
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import CONF_NAME, PERCENTAGE
+from homeassistant.const import CONF_API_VERSION, CONF_NAME, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -61,6 +61,35 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
+SENSOR_TYPES_V6: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="queries.blocked",
+        translation_key="ads_blocked",
+    ),
+    SensorEntityDescription(
+        key="queries.percent_blocked",
+        translation_key="percent_ads_blocked",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(
+        key="clients.total",
+        translation_key="clients_ever_seen",
+    ),
+    SensorEntityDescription(key="queries.total", translation_key="dns_queries"),
+    SensorEntityDescription(
+        key="gravity.domains_being_blocked",
+        translation_key="domains_being_blocked",
+    ),
+    SensorEntityDescription(key="queries.cached", translation_key="queries_cached"),
+    SensorEntityDescription(
+        key="queries.forwarded", translation_key="queries_forwarded"
+    ),
+    SensorEntityDescription(key="clients.active", translation_key="unique_clients"),
+    SensorEntityDescription(
+        key="queries.unique_domains", translation_key="unique_domains"
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -78,7 +107,9 @@ async def async_setup_entry(
             entry.entry_id,
             description,
         )
-        for description in SENSOR_TYPES
+        for description in (
+            SENSOR_TYPES if entry.data[CONF_API_VERSION] == 5 else SENSOR_TYPES_V6
+        )
     ]
     async_add_entities(sensors, True)
 
@@ -107,6 +138,15 @@ class PiHoleSensor(PiHoleEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the device."""
         try:
-            return round(self.api.data[self.entity_description.key], 2)  # type: ignore[no-any-return]
+            return round(get_nested(self.api.data, self.entity_description.key), 2)  # type: ignore[no-any-return]
         except TypeError:
-            return self.api.data[self.entity_description.key]  # type: ignore[no-any-return]
+            return get_nested(self.api.data, self.entity_description.key)  # type: ignore[no-any-return]
+
+
+def get_nested(data: dict[str, dict[str, float | int]], key: str) -> float | int:
+    """Get a value from a nested dictionary using a dot-separated key."""
+    for part in key.split("."):
+        if not isinstance(data, dict):
+            raise KeyError(f"Cannot access '{part}' in non-dict {data}")
+        result = data[part]
+    return result
