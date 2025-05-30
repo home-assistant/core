@@ -1,5 +1,162 @@
 # serializer version: 1
-# name: test_platform[media_player.playstation_5-entry]
+# name: test_platform[PS4_idle][media_player.playstation_4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.playstation_4',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'playstation_network',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'playstation',
+    'unique_id': 'my-psn-id_PS4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform[PS4_idle][media_player.playstation_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'receiver',
+      'entity_picture_local': None,
+      'friendly_name': 'PlayStation 4',
+      'media_content_type': <MediaType.GAME: 'game'>,
+      'supported_features': <MediaPlayerEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.playstation_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_platform[PS4_offline][media_player.playstation_4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.playstation_4',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'playstation_network',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'playstation',
+    'unique_id': 'my-psn-id_PS4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform[PS4_offline][media_player.playstation_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'receiver',
+      'friendly_name': 'PlayStation 4',
+      'supported_features': <MediaPlayerEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.playstation_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform[PS4_playing][media_player.playstation_4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.playstation_4',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'playstation_network',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'playstation',
+    'unique_id': 'my-psn-id_PS4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform[PS4_playing][media_player.playstation_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'receiver',
+      'entity_picture': 'http://gs2-sec.ww.prod.dl.playstation.net/gs2-sec/appkgo/prod/CUSA23081_00/5/i_f5d2adec7665af80b8550fb33fe808df10d292cdd47629a991debfdf72bdee34/i/icon0.png',
+      'entity_picture_local': '/api/media_player_proxy/media_player.playstation_4?token=123456789&cache=924f463745523102',
+      'friendly_name': 'PlayStation 4',
+      'media_content_id': 'CUSA23081_00',
+      'media_content_type': <MediaType.GAME: 'game'>,
+      'media_title': 'Untitled Goose Game',
+      'supported_features': <MediaPlayerEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.playstation_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---
+# name: test_platform[PS5_idle][media_player.playstation_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -34,7 +191,109 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform[media_player.playstation_5-state]
+# name: test_platform[PS5_idle][media_player.playstation_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'receiver',
+      'entity_picture_local': None,
+      'friendly_name': 'PlayStation 5',
+      'media_content_type': <MediaType.GAME: 'game'>,
+      'supported_features': <MediaPlayerEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.playstation_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_platform[PS5_offline][media_player.playstation_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.playstation_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'playstation_network',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'playstation',
+    'unique_id': 'my-psn-id_PS5',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform[PS5_offline][media_player.playstation_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'receiver',
+      'friendly_name': 'PlayStation 5',
+      'supported_features': <MediaPlayerEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.playstation_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform[PS5_playing][media_player.playstation_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.playstation_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'playstation_network',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'playstation',
+    'unique_id': 'my-psn-id_PS5',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform[PS5_playing][media_player.playstation_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'receiver',
