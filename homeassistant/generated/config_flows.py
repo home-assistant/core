@@ -105,6 +105,7 @@ FLOWS = {
         "bsblan",
         "bthome",
         "buienradar",
+        "bzutech",
         "caldav",
         "cambridge_audio",
         "canary",
