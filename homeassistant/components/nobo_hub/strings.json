@@ -34,13 +34,10 @@
   "options": {
     "step": {
       "init": {
-        "title": "Configure Nobø Ecohub integration",
         "data": {
           "override_type": "Override type"
         },
-        "data_description": {
-          "override_type": "Choose \"Now\" to end overrides on next week profile change."
-        }
+        "description": "Select override type \"Now\" to end override on next week profile change."
       }
     }
   },
