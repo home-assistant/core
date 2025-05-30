@@ -1,0 +1,375 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "terminal_id": "17282302393949Qyfh4",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "id": "bf7006b0dec79ed6c0z8nv",
+  "name": "Dehumidifier",
+  "category": "cs",
+  "product_id": "scpee7utfuawhrft",
+  "product_name": "Dehumidifier",
+  "online": true,
+  "sub": false,
+  "time_zone": "+03:00",
+  "active_time": "2024-10-06T15:54:28+00:00",
+  "create_time": "2024-10-06T15:54:28+00:00",
+  "update_time": "2024-10-06T15:54:28+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "dehumidify_set_value": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 30,
+        "max": 80,
+        "scale": 0,
+        "step": 5
+      }
+    },
+    "fan_speed_enum": {
+      "type": "Enum",
+      "value": {
+        "range": ["low", "high"]
+      }
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["dehumidify", "drying"]
+      }
+    },
+    "anion": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_set": {
+      "type": "Enum",
+      "value": {
+        "range": ["cancel", "1h", "2h", "3h"]
+      }
+    },
+    "filter_reset": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_unit_convert": {
+      "type": "Enum",
+      "value": {
+        "range": ["c", "f"]
+      }
+    },
+    "runtime_total_reset": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "dehumidify_set_value": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 30,
+        "max": 80,
+        "scale": 0,
+        "step": 5
+      }
+    },
+    "fan_speed_enum": {
+      "type": "Enum",
+      "value": {
+        "range": ["low", "high"]
+      }
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["dehumidify", "drying"]
+      }
+    },
+    "humidity_indoor": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 20,
+        "max": 90,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_indoor": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 5,
+        "max": 38,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "anion": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_set": {
+      "type": "Enum",
+      "value": {
+        "range": ["cancel", "1h", "2h", "3h"]
+      }
+    },
+    "fault": {
+      "type": "Bitmap",
+      "value": {
+        "label": ["E1", "CL", "CH", "LO", "FL", "Cleaning"]
+      }
+    },
+    "filter_reset": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "filter_life": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_unit_convert": {
+      "type": "Enum",
+      "value": {
+        "range": ["c", "f"]
+      }
+    },
+    "runtime_total_reset": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "switch": true,
+    "dehumidify_set_value": 60,
+    "fan_speed_enum": "low",
+    "mode": "dehumidify",
+    "humidity_indoor": 71,
+    "temp_indoor": 20,
+    "anion": true,
+    "child_lock": false,
+    "countdown_set": "cancel",
+    "fault": 16,
+    "filter_reset": false,
+    "filter_life": 100,
+    "temp_unit_convert": "c",
+    "runtime_total_reset": false
+  },
+  "home_assistant": {
+    "name": "Dehumidifier",
+    "name_by_user": null,
+    "disabled": false,
+    "disabled_by": null,
+    "entities": [
+      {
+        "disabled": false,
+        "disabled_by": null,
+        "entity_category": null,
+        "device_class": null,
+        "original_device_class": null,
+        "icon": null,
+        "original_icon": null,
+        "unit_of_measurement": null,
+        "state": {
+          "entity_id": "fan.dehumidifier",
+          "state": "on",
+          "attributes": {
+            "preset_modes": ["dehumidify", "drying"],
+            "percentage": 50,
+            "percentage_step": 50.0,
+            "preset_mode": "dehumidify",
+            "friendly_name": "Dehumidifier",
+            "supported_features": 57
+          },
+          "last_changed": "2024-10-28T21:09:15.311179+00:00",
+          "last_reported": "2024-10-28T21:09:15.311179+00:00",
+          "last_updated": "2024-10-28T21:09:15.311179+00:00"
+        }
+      },
+      {
+        "disabled": false,
+        "disabled_by": null,
+        "entity_category": null,
+        "device_class": null,
+        "original_device_class": "dehumidifier",
+        "icon": null,
+        "original_icon": null,
+        "unit_of_measurement": null,
+        "state": {
+          "entity_id": "humidifier.dehumidifier",
+          "state": "on",
+          "attributes": {
+            "min_humidity": 30,
+            "max_humidity": 80,
+            "available_modes": ["dehumidify", "drying"],
+            "current_humidity": 71,
+            "humidity": 60,
+            "mode": "dehumidify",
+            "device_class": "dehumidifier",
+            "friendly_name": "Dehumidifier",
+            "supported_features": 1
+          },
+          "last_changed": "2024-10-28T21:09:15.323967+00:00",
+          "last_reported": "2024-10-29T07:22:58.826647+00:00",
+          "last_updated": "2024-10-29T07:22:58.826647+00:00"
+        }
+      },
+      {
+        "disabled": false,
+        "disabled_by": null,
+        "entity_category": "config",
+        "device_class": null,
+        "original_device_class": null,
+        "icon": null,
+        "original_icon": null,
+        "unit_of_measurement": null,
+        "state": {
+          "entity_id": "select.dehumidifier_countdown",
+          "state": "cancel",
+          "attributes": {
+            "options": ["cancel", "1h", "2h", "3h"],
+            "friendly_name": "Dehumidifier Countdown"
+          },
+          "last_changed": "2024-10-28T21:09:15.364112+00:00",
+          "last_reported": "2024-10-28T21:09:15.364112+00:00",
+          "last_updated": "2024-10-28T21:09:15.364112+00:00"
+        }
+      },
+      {
+        "disabled": false,
+        "disabled_by": null,
+        "entity_category": null,
+        "device_class": null,
+        "original_device_class": "temperature",
+        "icon": null,
+        "original_icon": null,
+        "unit_of_measurement": "\u00b0C",
+        "state": {
+          "entity_id": "sensor.dehumidifier_temperature",
+          "state": "20.0",
+          "attributes": {
+            "state_class": "measurement",
+            "unit_of_measurement": "\u00b0C",
+            "device_class": "temperature",
+            "friendly_name": "Dehumidifier Temperature"
+          },
+          "last_changed": "2024-10-29T01:27:10.763477+00:00",
+          "last_reported": "2024-10-29T01:27:10.763477+00:00",
+          "last_updated": "2024-10-29T01:27:10.763477+00:00"
+        }
+      },
+      {
+        "disabled": false,
+        "disabled_by": null,
+        "entity_category": null,
+        "device_class": null,
+        "original_device_class": "humidity",
+        "icon": null,
+        "original_icon": null,
+        "unit_of_measurement": "%",
+        "state": {
+          "entity_id": "sensor.dehumidifier_humidity",
+          "state": "71.0",
+          "attributes": {
+            "state_class": "measurement",
+            "unit_of_measurement": "%",
+            "device_class": "humidity",
+            "friendly_name": "Dehumidifier Humidity"
+          },
+          "last_changed": "2024-10-29T07:22:58.828830+00:00",
+          "last_reported": "2024-10-29T07:22:58.828830+00:00",
+          "last_updated": "2024-10-29T07:22:58.828830+00:00"
+        }
+      },
+      {
+        "disabled": false,
+        "disabled_by": null,
+        "entity_category": "config",
+        "device_class": null,
+        "original_device_class": null,
+        "icon": null,
+        "original_icon": "mdi:atom",
+        "unit_of_measurement": null,
+        "state": {
+          "entity_id": "switch.dehumidifier_ionizer",
+          "state": "on",
+          "attributes": {
+            "icon": "mdi:atom",
+            "friendly_name": "Dehumidifier Ionizer"
+          },
+          "last_changed": "2024-10-28T21:09:15.394113+00:00",
+          "last_reported": "2024-10-28T21:09:15.394113+00:00",
+          "last_updated": "2024-10-28T21:09:15.394113+00:00"
+        }
+      },
+      {
+        "disabled": false,
+        "disabled_by": null,
+        "entity_category": "config",
+        "device_class": null,
+        "original_device_class": null,
+        "icon": null,
+        "original_icon": "mdi:account-lock",
+        "unit_of_measurement": null,
+        "state": {
+          "entity_id": "switch.dehumidifier_child_lock",
+          "state": "off",
+          "attributes": {
+            "icon": "mdi:account-lock",
+            "friendly_name": "Dehumidifier Child lock"
+          },
+          "last_changed": "2024-10-28T21:09:15.395736+00:00",
+          "last_reported": "2024-10-28T21:09:15.395736+00:00",
+          "last_updated": "2024-10-28T21:09:15.395736+00:00"
+        }
+      },
+      {
+        "disabled": false,
+        "disabled_by": null,
+        "entity_category": "config",
+        "device_class": null,
+        "original_device_class": null,
+        "icon": null,
+        "original_icon": "mdi:filter",
+        "unit_of_measurement": null,
+        "state": {
+          "entity_id": "switch.dehumidifier_filter_reset",
+          "state": "off",
+          "attributes": {
+            "icon": "mdi:filter",
+            "friendly_name": "Dehumidifier Filter reset"
+          },
+          "last_changed": "2024-10-28T21:09:15.397252+00:00",
+          "last_reported": "2024-10-28T21:09:15.397252+00:00",
+          "last_updated": "2024-10-28T21:09:15.397252+00:00"
+        }
+      }
+    ]
+  },
+  "set_up": true,
+  "support_local": true
+}
