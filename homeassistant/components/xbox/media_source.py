@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
 from .browse_media import _find_media_image
-from .const import DOMAIN
+from .const import DOMAIN, WEB_REQUEST_TIMEOUT_SEC
 
 MIME_TYPE_MAP = {
     "gameclips": "video/mp4",
@@ -96,7 +96,9 @@ class XboxSource(MediaSource):
 
     async def _build_game_library(self):
         """Display installed games across all consoles."""
-        apps = await self.client.smartglass.get_installed_apps()
+        apps = await self.client.smartglass.get_installed_apps(
+            timeout=WEB_REQUEST_TIMEOUT_SEC
+        )
         games = {
             game.one_store_product_id: game
             for game in apps.result
@@ -104,8 +106,7 @@ class XboxSource(MediaSource):
         }
 
         app_details = await self.client.catalog.get_products(
-            games.keys(),
-            FieldsTemplate.BROWSE,
+            games.keys(), FieldsTemplate.BROWSE, timeout=WEB_REQUEST_TIMEOUT_SEC
         )
 
         images = {
@@ -136,12 +137,14 @@ class XboxSource(MediaSource):
                 if owner == "my":
                     response: GameclipsResponse = (
                         await self.client.gameclips.get_recent_clips_by_xuid(
-                            self.client.xuid, title_id
+                            self.client.xuid, title_id, timeout=WEB_REQUEST_TIMEOUT_SEC
                         )
                     )
                 elif owner == "community":
-                    response: GameclipsResponse = await self.client.gameclips.get_recent_community_clips_by_title_id(
-                        title_id
+                    response: GameclipsResponse = (
+                        await self.client.gameclips.get_recent_community_clips_by_title_id(
+                            title_id, timeout=WEB_REQUEST_TIMEOUT_SEC
+                        )
                     )
                 else:
                     return None
@@ -161,12 +164,14 @@ class XboxSource(MediaSource):
                 if owner == "my":
                     response: ScreenshotResponse = (
                         await self.client.screenshots.get_recent_screenshots_by_xuid(
-                            self.client.xuid, title_id
+                            self.client.xuid, title_id, timeout=WEB_REQUEST_TIMEOUT_SEC
                         )
                     )
                 elif owner == "community":
-                    response: ScreenshotResponse = await self.client.screenshots.get_recent_community_screenshots_by_title_id(
-                        title_id
+                    response: ScreenshotResponse = (
+                        await self.client.screenshots.get_recent_community_screenshots_by_title_id(
+                            title_id, timeout=WEB_REQUEST_TIMEOUT_SEC
+                        )
                     )
                 else:
                     return None

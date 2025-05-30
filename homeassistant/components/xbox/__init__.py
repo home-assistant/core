@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 
 from . import api
-from .const import DOMAIN
+from .const import DOMAIN, WEB_REQUEST_TIMEOUT_SEC
 from .coordinator import XboxUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,7 +41,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     auth = api.AsyncConfigEntryAuth(signed_session, session)
 
     client = XboxLiveClient(auth)
-    consoles: SmartglassConsoleList = await client.smartglass.get_console_list()
+    consoles: SmartglassConsoleList = await client.smartglass.get_console_list(
+        timeout=WEB_REQUEST_TIMEOUT_SEC
+    )
     _LOGGER.debug(
         "Found %d consoles: %s",
         len(consoles.result),
