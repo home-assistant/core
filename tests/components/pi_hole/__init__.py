@@ -33,6 +33,75 @@ ZERO_DATA = {
     "unique_clients": 0,
     "unique_domains": 0,
 }
+ZERO_DATA_V6 = {
+    "queries": {
+        "total": 0,
+        "blocked": 0,
+        "percent_blocked": 0,
+        "unique_domains": 0,
+        "forwarded": 0,
+        "cached": 0,
+        "frequency": 0,
+        "types": {
+            "A": 0,
+            "AAAA": 0,
+            "ANY": 0,
+            "SRV": 0,
+            "SOA": 0,
+            "PTR": 0,
+            "TXT": 0,
+            "NAPTR": 0,
+            "MX": 0,
+            "DS": 0,
+            "RRSIG": 0,
+            "DNSKEY": 0,
+            "NS": 0,
+            "SVCB": 0,
+            "HTTPS": 0,
+            "OTHER": 0,
+        },
+        "status": {
+            "UNKNOWN": 0,
+            "GRAVITY": 0,
+            "FORWARDED": 0,
+            "CACHE": 0,
+            "REGEX": 0,
+            "DENYLIST": 0,
+            "EXTERNAL_BLOCKED_IP": 0,
+            "EXTERNAL_BLOCKED_NULL": 0,
+            "EXTERNAL_BLOCKED_NXRA": 0,
+            "GRAVITY_CNAME": 0,
+            "REGEX_CNAME": 0,
+            "DENYLIST_CNAME": 0,
+            "RETRIED": 0,
+            "RETRIED_DNSSEC": 0,
+            "IN_PROGRESS": 0,
+            "DBBUSY": 0,
+            "SPECIAL_DOMAIN": 0,
+            "CACHE_STALE": 0,
+            "EXTERNAL_BLOCKED_EDE15": 0,
+        },
+        "replies": {
+            "UNKNOWN": 0,
+            "NODATA": 0,
+            "NXDOMAIN": 0,
+            "CNAME": 0,
+            "IP": 0,
+            "DOMAIN": 0,
+            "RRNAME": 0,
+            "SERVFAIL": 0,
+            "REFUSED": 0,
+            "NOTIMP": 0,
+            "OTHER": 0,
+            "DNSSEC": 0,
+            "NONE": 0,
+            "BLOB": 0,
+        },
+    },
+    "clients": {"active": 0, "total": 0},
+    "gravity": {"domains_being_blocked": 0, "last_update": 0},
+    "took": 0,
+}
 
 V6_RESPONSE_TO_V5_ENPOINT = {
     "error": {
@@ -83,6 +152,7 @@ CONFIG_DATA_DEFAULTS = {
     CONF_SSL: DEFAULT_SSL,
     CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
     CONF_API_KEY: API_KEY,
+    CONF_API_VERSION: API_VERSION,
 }
 
 CONFIG_DATA = {
@@ -92,6 +162,7 @@ CONFIG_DATA = {
     CONF_API_KEY: API_KEY,
     CONF_SSL: SSL,
     CONF_VERIFY_SSL: VERIFY_SSL,
+    CONF_API_VERSION: API_VERSION,
 }
 
 CONFIG_FLOW_USER = {
@@ -124,6 +195,7 @@ CONFIG_ENTRY_WITHOUT_API_KEY = {
     CONF_NAME: NAME,
     CONF_SSL: SSL,
     CONF_VERIFY_SSL: VERIFY_SSL,
+    CONF_API_VERSION: API_VERSION,
 }
 SWITCH_ENTITY_ID = "switch.pi_hole"
 
@@ -152,15 +224,29 @@ def _create_mocked_hole(
     type(mocked_hole).disable = AsyncMock()
     if has_data and api_version == 5:
         mocked_hole.data = ZERO_DATA
-    if has_data and api_version == 6:
+    # if the api is actually V6 and the app password is incorrect, the try at the V5 endpoint will return this warning
+    if has_data and api_version == 6 and incorrect_app_password:
         mocked_hole.data = V6_RESPONSE_TO_V5_ENPOINT
-    else:
+    if has_data and api_version == 6 and not incorrect_app_password:
+        mocked_hole.data = ZERO_DATA_V6
+    if not has_data:
         mocked_hole.data = []
     if has_versions:
         if has_update:
-            mocked_hole.versions = SAMPLE_VERSIONS_WITH_UPDATES
+            versions = SAMPLE_VERSIONS_WITH_UPDATES
         else:
-            mocked_hole.versions = SAMPLE_VERSIONS_NO_UPDATES
+            versions = SAMPLE_VERSIONS_NO_UPDATES
+        mocked_hole.versions = versions
+        # Patch all version properties to return real values
+        mocked_hole.ftl_current = versions["FTL_current"]
+        mocked_hole.ftl_latest = versions["FTL_latest"]
+        mocked_hole.ftl_update = versions["FTL_update"]
+        mocked_hole.core_current = versions["core_current"]
+        mocked_hole.core_latest = versions["core_latest"]
+        mocked_hole.core_update = versions["core_update"]
+        mocked_hole.web_current = versions["web_current"]
+        mocked_hole.web_latest = versions["web_latest"]
+        mocked_hole.web_update = versions["web_update"]
     else:
         mocked_hole.versions = None
     return mocked_hole

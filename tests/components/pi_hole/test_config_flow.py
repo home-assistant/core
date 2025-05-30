@@ -88,7 +88,7 @@ async def test_flow_user_with_api_key_v5(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == NAME
-        v5_entry = CONFIG_ENTRY_WITH_API_KEY.copy()
+        v5_entry = {**CONFIG_ENTRY_WITH_API_KEY}
         v5_entry[CONF_API_VERSION] = 5
         assert result["data"] == v5_entry
         mock_setup.assert_called_once()
@@ -126,7 +126,7 @@ async def test_flow_user_invalid_v6(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "cannot_connect"}
+        assert result["errors"] == {CONF_API_KEY: "invalid_auth"}
 
 
 async def test_flow_reauth(hass: HomeAssistant) -> None:
